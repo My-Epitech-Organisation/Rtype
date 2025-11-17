@@ -28,5 +28,5 @@ assignees: ''
 - Size: <!-- 1 / 2 / 3 / 5 / 8 -->
 - Iteration: <!-- Sprint X -->
 
-### ⏳ Estimation
+## ⏳ Estimation
 - Estimated Time: <!-- e.g., 2h, 1d -->
