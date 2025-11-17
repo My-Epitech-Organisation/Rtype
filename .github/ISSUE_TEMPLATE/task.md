@@ -30,5 +30,5 @@ assignees: ''
 ## 💬 Notes
 <!-- Additional context, links, designs, etc. -->
 
-### ⏱ Estimation
-- ⏳ Estimated Time: <!-- e.g., 2h, 1d -->
+### ⏳ Estimation
+- Estimated Time: <!-- e.g., 2h, 1d -->
