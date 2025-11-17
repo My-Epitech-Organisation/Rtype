@@ -1,0 +1,2 @@
+add_executable(test_serialization test_serialization.cpp)
+add_test(NAME test_serialization COMMAND test_serialization)
