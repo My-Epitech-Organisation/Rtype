@@ -416,15 +416,14 @@ Typical targets:
 From **lowest** to **highest** layer:
 
 ```text
-rtype_engine          # core ECS & engine utilities
-   ▲
-   │
-rtype_network         # network helpers, packets, messages
-   ▲
-   │
-rtype_game_shared     # shared game components & systems
-   ▲
-   |______________________
+rtype_engine         rtype_engine       # core ECS & engine utilities
+   ▲                     ▲
+   │                     │
+rtype_network        rtype_network      # network helpers, packets, messages
+   ▲                     ▲
+   │                     │
+rtype_game_shared    rtype_game_shared  # shared game components & systems
+   ▲                     ▲
    │                     │
 rtype_game_server    rtype_game_client
    ▲                     ▲
