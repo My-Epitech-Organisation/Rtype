@@ -237,7 +237,7 @@ src/games/rtype/shared/
     // systems that can run on both sides
 ```
 
-* Compiled into library: **`rtype_rtype_shared`**.
+* Compiled into library: **`rtype_game_shared`**.
 * Responsibilities:
 
   * Components and systems that are **meaningful on both client and server**:
@@ -248,8 +248,8 @@ src/games/rtype/shared/
   * `rtype_engine` (ECS).
 * May be used by:
 
-  * `rtype_rtype_server` (server game module).
-  * `rtype_rtype_client` (client game module).
+  * `rtype_game_server` (server game module).
+  * `rtype_game_client` (client game module).
 
 #### 2.3.2. `src/games/rtype/server/`
 
@@ -264,7 +264,7 @@ src/games/rtype/server/
   RTypeServerModule.cpp
 ```
 
-* Compiled into library: **`rtype_rtype_server`**.
+* Compiled into library: **`rtype_game_server`**.
 * Responsibilities:
 
   * **Authoritative game logic**:
@@ -275,13 +275,13 @@ src/games/rtype/server/
     * Win/lose conditions, wave progression.
   * Integration hooks:
 
-    * `register_rtype_server_systems(Engine&)`
-    * `setup_rtype_server_world(Engine&)`
+    * `register_rtype_game_server_systems(Engine&)`
+    * `setup_rtype_game_server_world(Engine&)`
 * **Depends on**:
 
   * `rtype_engine` (ECS).
   * `rtype_network` (for event/message types, if needed).
-  * `rtype_rtype_shared` (shared components and systems).
+  * `rtype_game_shared` (shared components and systems).
 
 #### 2.3.3. `src/games/rtype/client/`
 
@@ -295,7 +295,7 @@ src/games/rtype/client/
   RTypeClientModule.cpp
 ```
 
-* Compiled into library: **`rtype_rtype_client`**.
+* Compiled into library: **`rtype_game_client`**.
 * Responsibilities:
 
   * **Client-side logic**:
@@ -306,13 +306,13 @@ src/games/rtype/client/
     * UI and HUD rendering.
   * Integration hooks:
 
-    * `register_rtype_client_systems(Engine&)`
-    * `setup_rtype_client_world(Engine&)`
+    * `register_rtype_game_client_systems(Engine&)`
+    * `setup_rtype_game_client_world(Engine&)`
 * **Depends on**:
 
   * `rtype_engine`.
   * `rtype_network` (to send inputs, receive updates).
-  * `rtype_rtype_shared`.
+  * `rtype_game_shared`.
 
 > Dependency rule: the **game module** sits on top of engine + network, and is itself used by the executables.
 
@@ -335,8 +335,8 @@ src/server/
   * Initialize logging, engine instance, network stack.
   * Call R-Type module hooks:
 
-    * `register_rtype_server_systems(engine);`
-    * `setup_rtype_server_world(engine);`
+    * `register_rtype_game_server_systems(engine);`
+    * `setup_rtype_game_server_world(engine);`
   * Run the main loop:
 
     * Poll network packets.
@@ -348,8 +348,8 @@ src/server/
 
   * `rtype_engine`
   * `rtype_network`
-  * `rtype_rtype_shared`
-  * `rtype_rtype_server`
+  * `rtype_game_shared`
+  * `rtype_game_server`
 
 > Think of `src/server/` as the **host** for the “R-Type server game”.
 
@@ -373,8 +373,8 @@ src/client/
   * Initialize engine instance + network client.
   * Call R-Type client hooks:
 
-    * `register_rtype_client_systems(engine);`
-    * `setup_rtype_client_world(engine);`
+    * `register_rtype_game_client_systems(engine);`
+    * `setup_rtype_game_client_world(engine);`
   * Run the main loop:
 
     * Collect local input, build network messages.
@@ -385,8 +385,8 @@ src/client/
 
   * `rtype_engine`
   * `rtype_network`
-  * `rtype_rtype_shared`
-  * `rtype_rtype_client`
+  * `rtype_game_shared`
+  * `rtype_game_client`
 
 > `src/client/` is the **host** for the “R-Type client game”.
 
@@ -402,9 +402,9 @@ Typical targets:
 
   * `rtype_engine`        ← `src/engine/`
   * `rtype_network`       ← `src/network/`
-  * `rtype_rtype_shared`  ← `src/games/rtype/shared/`
-  * `rtype_rtype_server`  ← `src/games/rtype/server/`
-  * `rtype_rtype_client`  ← `src/games/rtype/client/`
+  * `rtype_game_shared`  ← `src/games/rtype/shared/`
+  * `rtype_game_server`  ← `src/games/rtype/server/`
+  * `rtype_game_client`  ← `src/games/rtype/client/`
 
 * **Executables**
 
@@ -420,15 +420,16 @@ rtype_engine          # core ECS & engine utilities
    ▲
    │
 rtype_network         # network helpers, packets, messages
-   ▲       ▲
-   │       │
-rtype_rtype_shared    # shared game components & systems
-   ▲       ▲
-   │       │
-rtype_rtype_server    rtype_rtype_client
-   ▲       ▲
-   │       │
-r-type_server         r-type_client
+   ▲
+   │
+rtype_game_shared     # shared game components & systems
+   ▲
+   |______________________
+   │                     │
+rtype_game_server    rtype_game_client
+   ▲                     ▲
+   │                     │
+r-type_server        r-type_client
 ```
 
 #### Summary:
@@ -439,20 +440,20 @@ r-type_server         r-type_client
 * `rtype_network`
   ↳ Depends **only** on `rtype_engine`.
 
-* `rtype_rtype_shared`
+* `rtype_game_shared`
   ↳ Depends **only** on `rtype_engine`.
 
-* `rtype_rtype_server`
-  ↳ Depends on `rtype_engine`, `rtype_network`, `rtype_rtype_shared`.
+* `rtype_game_server`
+  ↳ Depends on `rtype_engine`, `rtype_network`, `rtype_game_shared`.
 
-* `rtype_rtype_client`
-  ↳ Depends on `rtype_engine`, `rtype_network`, `rtype_rtype_shared`.
+* `rtype_game_client`
+  ↳ Depends on `rtype_engine`, `rtype_network`, `rtype_game_shared`.
 
 * `r-type_server`
-  ↳ Depends on `rtype_engine`, `rtype_network`, `rtype_rtype_shared`, `rtype_rtype_server`.
+  ↳ Depends on `rtype_engine`, `rtype_network`, `rtype_game_shared`, `rtype_game_server`.
 
 * `r-type_client`
-  ↳ Depends on `rtype_engine`, `rtype_network`, `rtype_rtype_shared`, `rtype_rtype_client`.
+  ↳ Depends on `rtype_engine`, `rtype_network`, `rtype_game_shared`, `rtype_game_client`.
 
 > Rule of thumb: **no cyclic dependencies**. Higher-level modules may depend on lower-level ones, but never the opposite.
 
@@ -488,7 +489,7 @@ When adding new functionality, use these questions:
 
   * `tests/ecs/` → tests for `rtype_engine`.
   * `tests/network/` → tests for `rtype_network`.
-  * `tests/games/rtype/` → tests for `rtype_rtype_*`.
+  * `tests/games/rtype/` → tests for `rtype_*`.
 
 * **Architecture documentation** provides more details on design:
 
