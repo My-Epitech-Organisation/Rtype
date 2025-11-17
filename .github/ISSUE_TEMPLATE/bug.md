@@ -45,5 +45,5 @@ assignees: ''
 ## 🛠 Workaround
 <!-- Any temporary mitigation -->
 
-## ⏱ Estimation
-- ⏳ Estimated Time: <!-- e.g., 2h, 1d -->
+## ⏳ Estimation
+- Estimated Time: <!-- e.g., 2h, 1d -->
