@@ -16,7 +16,7 @@ assignees: ''
 - Verification steps
 - Monitoring/metrics to watch
 
-## 🔁 Dependencies
+## 🔄 Dependencies
 - Related to: #<issue-number>
 
 ## ⚠️ Risks & Rollback
