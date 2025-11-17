@@ -64,6 +64,13 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      - name: Validate SSH key
+        run: |
+          if [ -z "${{ secrets.GIT_SSH_PRIVATE_KEY }}" ]; then
+            echo "Error: GIT_SSH_PRIVATE_KEY secret is not configured"
+            exit 1
+          fi
+
       - name: Push to mirror repository
         uses: pixta-dev/repository-mirroring-action@v1.1.1
         with:
