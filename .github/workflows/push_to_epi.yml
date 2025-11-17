@@ -1,4 +1,4 @@
-name: RType Actions
+name: Push to Epitech
 
 on:
   push:
@@ -10,9 +10,6 @@ on:
     branches-ignore:
       - 'ga-ignore-*'
       - 'HEAD'
-
-permissions:
-  contents: write
 
 env:
   TERM: xterm
@@ -35,22 +32,32 @@ jobs:
         run: |
           REPO_URL=$(git config --get remote.origin.url)
 
-          REPO_URL=${REPO_URL%.git}
-          MIRROR_URL=${MIRROR_URL%.git}
+          extract_repo_path() {
+            local url=$1
+            url=${url#https://github.com/}
+            url=${url#git@github.com:}
+            url=${url%.git}
+            echo "$url"
+          }
 
-          if [ "$REPO_URL" == "$MIRROR_URL" ]; then
-            echo "Repository URL matches the mirror URL. Skipping further jobs."
+          REPO_PATH=$(extract_repo_path "$REPO_URL")
+          MIRROR_PATH=$(extract_repo_path "$MIRROR_URL")
+
+          if [ "$REPO_PATH" == "$MIRROR_PATH" ]; then
+            echo "Repository path matches the mirror path. Skipping further jobs."
             echo "should_cancel=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Repository URL does not match the mirror URL. Proceeding with other jobs."
+            echo "Repository path does not match the mirror path. Proceeding with other jobs."
             echo "should_cancel=false" >> "$GITHUB_OUTPUT"
           fi
 
   push_to_mirror:
-    name: Pushing to good repository
+    name: Pushing to mirror repository
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.cancel-if-mirror.outputs.should_cancel == 'false'
     needs: [cancel-if-mirror]
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
