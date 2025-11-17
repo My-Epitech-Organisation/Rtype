@@ -1,11 +1,14 @@
-#include <iostream>
+/*
+** EPITECH PROJECT, 2025
+** Rtype
+** File description:
+** Entity
+*/
 
-// Placeholder Entity implementation
+#include "rtype/engine/ecs/Entity.hpp"
+
 namespace rtype::engine::ecs {
 
-class Entity {
-public:
-    int id = -1;
-};
+// Entity implementation is mostly in the header (inline methods)
 
 } // namespace rtype::engine::ecs
