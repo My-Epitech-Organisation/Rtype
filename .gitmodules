@@ -1,0 +1,3 @@
+[submodule "client/SFML"]
+	path = client/SFML
+	url = git@github.com:SFML/SFML.git
