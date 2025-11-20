@@ -1,3 +1,6 @@
-[submodule "client/SFML"]
-	path = client/SFML
+[submodule "SFML"]
+	path = SFML
+	url = git@github.com:SFML/SFML.git
+[submodule "src/client/Graphic/SFML"]
+	path = src/client/Graphic/SFML
 	url = git@github.com:SFML/SFML.git
