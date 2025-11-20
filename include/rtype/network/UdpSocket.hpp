@@ -9,6 +9,7 @@
 
 #include <string>
 #include <cstdint>
+#include "rtype/network/CircularBuffer.hpp"
 
 namespace rtype::network {
 
@@ -27,6 +28,7 @@ public:
 
 private:
     int socket_;
+    CircularBuffer receiveBuffer;
 };
 
 }  // namespace rtype::network
