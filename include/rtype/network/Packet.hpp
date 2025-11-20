@@ -36,4 +36,4 @@ private:
     std::vector<uint8_t> data_;
 };
 
-} // namespace rtype::network
+}  // namespace rtype::network

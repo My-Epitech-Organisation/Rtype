@@ -6,6 +6,7 @@
 */
 
 #include "rtype/network/UdpSocket.hpp"
+#include <string>
 
 namespace rtype::network {
 
@@ -46,4 +47,4 @@ void UdpSocket::close() {
     socket_ = -1;
 }
 
-} // namespace rtype::network
+}  // namespace rtype::network

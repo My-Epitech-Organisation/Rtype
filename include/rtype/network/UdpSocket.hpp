@@ -29,4 +29,4 @@ private:
     int socket_;
 };
 
-} // namespace rtype::network
+}  // namespace rtype::network

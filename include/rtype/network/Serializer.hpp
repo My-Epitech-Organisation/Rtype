@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include "Packet.hpp"
 #include <vector>
 #include <cstdint>
+#include "Packet.hpp"
 
 namespace rtype::network {
 
@@ -19,4 +19,4 @@ public:
     static Packet deserialize(const std::vector<uint8_t>& data);
 };
 
-} // namespace rtype::network
+}  // namespace rtype::network
