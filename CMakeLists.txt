@@ -4,11 +4,25 @@ project(RTypeECS LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Find SFML
+find_package(SFML 2 COMPONENTS graphics window system QUIET)
+if(NOT SFML_FOUND)
+    # Try with pkg-config
+    find_package(PkgConfig)
+    if(PKG_CONFIG_FOUND)
+        pkg_check_modules(SFML sfml-graphics sfml-window sfml-system)
+    endif()
+endif()
+
 add_executable(rtype_ecs
-    src/main.cpp
+    tests.cpp
     src/ECS/Core/Entity.hpp
     src/ECS/Core/Registry.hpp
-    src/ECS/Core/Registry.cpp
+    src/ECS/Core/Registry/Registry.hpp
+    src/ECS/Core/Registry/RegistryEntity.cpp
+    src/ECS/Core/Registry/RegistryComponent.inl
+    src/ECS/Core/Registry/RegistrySingleton.inl
+    src/ECS/Core/Registry/RegistryView.inl
     src/ECS/Core/CommandBuffer.hpp
     src/ECS/Core/CommandBuffer.cpp
     src/ECS/Core/Relationship.hpp
@@ -33,52 +47,4 @@ add_executable(rtype_ecs
     src/ECS/ECS.hpp
 )
 
-add_executable(rtype_ecs_test_advanced
-    src/test_advanced.cpp
-    src/ECS/Core/Registry.cpp
-    src/ECS/Core/CommandBuffer.cpp
-    src/ECS/Core/Relationship.cpp
-    src/ECS/Core/Prefab.cpp
-    src/ECS/Signal/SignalDispatcher.cpp
-    src/ECS/System/SystemScheduler.cpp
-    src/ECS/Serialization/Serialization.cpp
-)
-
-add_executable(rtype_ecs_test_new_features
-    src/test_new_features.cpp
-    src/ECS/Core/Registry.cpp
-    src/ECS/Core/CommandBuffer.cpp
-    src/ECS/Core/Relationship.cpp
-    src/ECS/Core/Prefab.cpp
-    src/ECS/Signal/SignalDispatcher.cpp
-    src/ECS/System/SystemScheduler.cpp
-    src/ECS/Serialization/Serialization.cpp
-)
-
-add_executable(rtype_ecs_test_features
-    src/test_features.cpp
-    src/ECS/Core/Registry.cpp
-    src/ECS/Core/CommandBuffer.cpp
-    src/ECS/Core/Relationship.cpp
-    src/ECS/Core/Prefab.cpp
-    src/ECS/Signal/SignalDispatcher.cpp
-    src/ECS/System/SystemScheduler.cpp
-    src/ECS/Serialization/Serialization.cpp
-)
-
-add_executable(rtype_ecs_test_stress
-    src/test_stress.cpp
-    src/ECS/Core/Registry.cpp
-    src/ECS/Core/CommandBuffer.cpp
-    src/ECS/Core/Relationship.cpp
-    src/ECS/Core/Prefab.cpp
-    src/ECS/Signal/SignalDispatcher.cpp
-    src/ECS/System/SystemScheduler.cpp
-    src/ECS/Serialization/Serialization.cpp
-)
-
 target_include_directories(rtype_ecs PRIVATE src)
-target_include_directories(rtype_ecs_test_advanced PRIVATE src)
-target_include_directories(rtype_ecs_test_new_features PRIVATE src)
-target_include_directories(rtype_ecs_test_features PRIVATE src)
-target_include_directories(rtype_ecs_test_stress PRIVATE src)
