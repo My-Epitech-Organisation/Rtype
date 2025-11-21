@@ -102,13 +102,15 @@ namespace ECS {
             throw std::runtime_error("Cannot create prefab from entity with no components");
         }
 
-        // Note: This is a simplified version. A full implementation would need
-        // to serialize component data and store it. For now, we just create
-        // an empty prefab that needs manual configuration.
-        std::unique_lock lock(prefab_mutex);
-        prefabs[name] = [](Registry&, Entity) {
-            // Placeholder - would need component serialization
-        };
+        // TODO: Full implementation requires component serialization system
+        // This would need:
+        // 1. A way to clone/copy component data generically
+        // 2. Component serialization/deserialization
+        // 3. Type-safe component copying
+        //
+        // For now, this function is NOT IMPLEMENTED.
+        // Use register_prefab() with a manual configuration function instead.
+        throw std::runtime_error("create_from_entity is not yet implemented. Use register_prefab() instead.");
     }
 
 } // namespace ECS
