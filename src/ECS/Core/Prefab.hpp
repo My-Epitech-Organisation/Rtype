@@ -30,14 +30,14 @@ namespace ECS {
      *
      * Example:
      *   PrefabManager prefabs(registry);
-     *   
+     *
      *   // Define prefab
      *   prefabs.register_prefab("Player", [](Registry& r, Entity e) {
      *       r.emplace_component<Position>(e, 0.0f, 0.0f);
      *       r.emplace_component<Velocity>(e, 0.0f, 0.0f);
      *       r.emplace_component<Player>(e);
      *   });
-     *   
+     *
      *   // Spawn from prefab
      *   auto player = prefabs.instantiate("Player");
      */
