@@ -7,12 +7,12 @@
 
 #ifndef ECS_SIGNAL_SIGNAL_DISPATCHER_HPP
     #define ECS_SIGNAL_SIGNAL_DISPATCHER_HPP
-    #include "../Core/Entity.hpp"
     #include <functional>
     #include <vector>
     #include <typeindex>
     #include <unordered_map>
     #include <shared_mutex>
+    #include "../Core/Entity.hpp"
 
 namespace ECS {
 

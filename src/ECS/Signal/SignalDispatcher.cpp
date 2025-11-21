@@ -7,6 +7,7 @@
 
 #include "SignalDispatcher.hpp"
 #include <mutex>
+#include <utility>
 
 namespace ECS {
 
