@@ -59,10 +59,10 @@ int32_t ByteConverter::deserializeInt(const std::vector<uint8_t>& buffer, std::s
     if (!offset || *offset + 4 > buffer.size()) {
         throw std::out_of_range("Not enough bytes to deserialize int32_t");
     }
-    uint32_t uvalue = (buffer[*offset] << 24) |
-                      (buffer[*offset + 1] << 16) |
-                      (buffer[*offset + 2] << 8) |
-                      buffer[*offset + 3];
+    uint32_t uvalue = (static_cast<uint32_t>(buffer[*offset]) << 24) |
+                      (static_cast<uint32_t>(buffer[*offset + 1]) << 16) |
+                      (static_cast<uint32_t>(buffer[*offset + 2]) << 8) |
+                      static_cast<uint32_t>(buffer[*offset + 3]);
     *offset += 4;
     return static_cast<int32_t>(uvalue);
 }
@@ -71,10 +71,10 @@ float ByteConverter::deserializeFloat(const std::vector<uint8_t>& buffer, std::s
     if (!offset || *offset + 4 > buffer.size()) {
         throw std::out_of_range("Not enough bytes to deserialize float");
     }
-    uint32_t uvalue = (buffer[*offset] << 24) |
-                      (buffer[*offset + 1] << 16) |
-                      (buffer[*offset + 2] << 8) |
-                      buffer[*offset + 3];
+    uint32_t uvalue = (static_cast<uint32_t>(buffer[*offset]) << 24) |
+                      (static_cast<uint32_t>(buffer[*offset + 1]) << 16) |
+                      (static_cast<uint32_t>(buffer[*offset + 2]) << 8) |
+                      static_cast<uint32_t>(buffer[*offset + 3]);
     *offset += 4;
     float value;
     std::memcpy(&value, &uvalue, sizeof(float));
