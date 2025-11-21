@@ -97,6 +97,10 @@ namespace ECS {
          * @brief Compares two benchmark results by name.
          */
         void compare(const std::string& name1, const std::string& name2) const {
+            // Raw pointers are appropriate here: they're used as nullable references
+            // to search for results in the vector. The vector owns the data, and these
+            // pointers are only valid within this function scope. Using std::optional<std::reference_wrapper>
+            // would be more complex without adding value for this simple search pattern.
             const Result* r1 = nullptr;
             const Result* r2 = nullptr;
 

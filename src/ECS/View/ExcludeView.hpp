@@ -51,6 +51,10 @@ namespace ECS {
 
     private:
         Registry& registry;
+        // Raw pointers are appropriate here: non-owning, lightweight views for iteration.
+        // The Registry owns the component pools. These pointers are temporary and used
+        // only during view construction and iteration. Using smart pointers would imply
+        // ownership semantics which is incorrect for this use case.
         std::tuple<SparseSet<Includes>*...> include_pools;
         std::vector<ISparseSet*> exclude_pools;
         size_t smallest_pool_index;

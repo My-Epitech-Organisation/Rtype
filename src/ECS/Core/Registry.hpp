@@ -402,6 +402,9 @@ namespace ECS {
 
         template <typename T>
         const ISparseSet* get_sparse_set_const() const noexcept {
+            // Raw pointer is appropriate here: non-owning, temporary observation only.
+            // The Registry owns the actual storage via std::unique_ptr in component_pools.
+            // Returning nullptr is a valid sentinel value for "component pool not found".
             std::type_index type = std::type_index(typeid(T));
             std::shared_lock lock(component_pool_mutex);
             auto it = component_pools.find(type);
@@ -508,9 +511,7 @@ namespace ECS {
         if (!entities_ptr) return;
 
         for (auto entity : *entities_ptr) {
-            // Check entity has all required components
             if ((std::get<IncIs>(include_pools)->contains(entity) && ...)) {
-                // Check entity doesn't have any excluded components
                 if (!is_excluded(entity)) {
                     func(entity, std::get<IncIs>(include_pools)->get(entity)...);
                 }
@@ -531,11 +532,9 @@ namespace ECS {
     template<typename... Components>
     template<typename Func>
     void ParallelView<Components...>::each(Func&& func) {
-        // Get all component pools upfront
         std::tuple<SparseSet<Components>*...> pools =
             std::make_tuple(&registry.template get_sparse_set<Components>()...);
 
-        // Find smallest pool for iteration
         size_t min_size = std::numeric_limits<size_t>::max();
         const std::vector<Entity>* smallest_entities = nullptr;
 
@@ -570,9 +569,7 @@ namespace ECS {
             threads.emplace_back([&, start, end, pools]() {
                 for (size_t i = start; i < end; ++i) {
                     Entity entity = entities[i];
-                    // Check all pools contain the entity (single check per pool)
                     if ((std::get<SparseSet<Components>*>(pools)->contains(entity) && ...)) {
-                        // Direct access without additional lookup
                         func(entity, std::get<SparseSet<Components>*>(pools)->get(entity)...);
                     }
                 }
