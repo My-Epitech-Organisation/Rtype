@@ -5,7 +5,7 @@
 ** Time
 */
 
-#include "rtype/engine/core/Time.hpp"
+#include "Time.hpp"
 
 namespace rtype::engine::core {
 

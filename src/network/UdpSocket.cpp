@@ -5,7 +5,7 @@
 ** UdpSocket
 */
 
-#include "rtype/network/UdpSocket.hpp"
+#include "UdpSocket.hpp"
 #include <string>
 
 namespace rtype::network {

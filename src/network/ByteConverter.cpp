@@ -5,7 +5,7 @@
 ** ByteConverter
 */
 
-#include "rtype/network/ByteConverter.hpp"
+#include "ByteConverter.hpp"
 #include <cstring>
 #include <stdexcept>
 #include <vector>

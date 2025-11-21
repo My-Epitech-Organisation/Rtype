@@ -7,7 +7,7 @@ add_library(rtype_network STATIC
 )
 
 target_include_directories(rtype_network PUBLIC
-    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_compile_features(rtype_network PUBLIC cxx_std_20)

@@ -10,10 +10,10 @@
 #include <vector>
 #include <string>
 
-#include "rtype/network/Packet.hpp"
-#include "rtype/network/Serializer.hpp"
-#include "rtype/network/ByteConverter.hpp"
-#include "rtype/network/CircularBuffer.hpp"
+#include "../../src/network/Packet.hpp"
+#include "../../src/network/Serializer.hpp"
+#include "../../src/network/ByteConverter.hpp"
+#include "../../src/network/CircularBuffer.hpp"
 
 using namespace rtype::network;
 

@@ -5,7 +5,7 @@
 ** CircularBuffer
 */
 
-#include "rtype/network/CircularBuffer.hpp"
+#include "CircularBuffer.hpp"
 #include <algorithm>
 #include <vector>
 #include <cstdint>
