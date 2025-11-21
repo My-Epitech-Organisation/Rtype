@@ -49,5 +49,4 @@ socket.send(packet.serialize());
 
 ## Implementation Details
 
-Implementation headers are located in `src/network/`.
-This directory contains **only** abstract interfaces for public consumption.
+This directory contains the public abstract interfaces for network functionality. Implementation classes are located in `src/network/` and may not directly inherit from these interfaces.
