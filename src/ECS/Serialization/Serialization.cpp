@@ -38,7 +38,7 @@ namespace ECS {
     std::string Serializer::serialize() {
         std::ostringstream oss;
 
-        // Note: For a production system, you would need to:
+        // !TODO To implement serialization logic:
         // 1. Iterate through all entities
         // 2. For each entity, get its components
         // 3. Serialize each component using registered serializers
