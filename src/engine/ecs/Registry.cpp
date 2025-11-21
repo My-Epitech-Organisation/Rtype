@@ -5,7 +5,7 @@
 ** Registry
 */
 
-#include "rtype/engine/ecs/Registry.hpp"
+#include "Registry.hpp"
 
 namespace rtype::engine::ecs {
 
