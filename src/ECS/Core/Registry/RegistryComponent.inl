@@ -38,7 +38,6 @@
 
     template <typename T, typename... Args>
     T& Registry::emplace_component(Entity entity, Args&&... args) {
-        // Validate entity is alive
         if (!is_alive(entity)) {
             throw std::runtime_error("Cannot add component to dead entity");
         }
@@ -46,11 +45,9 @@
         std::type_index type = std::type_index(typeid(T));
         bool is_new_component = false;
 
-        // Phase 1: Track component in entity (under lock)
         {
             std::unique_lock lock(entity_mutex);
 
-            // Double-check entity is still alive (could have died between checks)
             if (entity.index() >= generations.size() ||
                 generations[entity.index()] != entity.generation()) {
                 throw std::runtime_error("Entity died during component addition");
@@ -65,10 +62,8 @@
             }
         }
 
-        // Phase 2: Add to component pool (outside entity lock)
         auto& result = get_sparse_set<T>().emplace(entity, std::forward<Args>(args)...);
 
-        // Phase 3: Dispatch construct signal (only for new components)
         if (is_new_component) {
             signal_dispatcher.dispatch_construct(type, entity);
         }
@@ -88,13 +83,10 @@
     void Registry::remove_component(Entity entity) {
         std::type_index type = std::type_index(typeid(T));
 
-        // Phase 1: Dispatch destroy signal
         signal_dispatcher.dispatch_destroy(type, entity);
 
-        // Phase 2: Remove from component pool
         get_sparse_set<T>().remove(entity);
 
-        // Phase 3: Update entity tracking
         {
             std::unique_lock lock(entity_mutex);
             auto& components = entity_components[entity.index()];
@@ -110,15 +102,11 @@
         std::type_index type = std::type_index(typeid(T));
         auto& pool = get_sparse_set<T>();
 
-        // Get all entities with this component
         std::vector<Entity> entities_to_clear = pool.get_packed();
 
-        // Remove from each entity
         for (auto entity : entities_to_clear) {
-            // Dispatch destroy signal
             signal_dispatcher.dispatch_destroy(type, entity);
 
-            // Update entity tracking
             {
                 std::unique_lock lock(entity_mutex);
                 auto& components = entity_components[entity.index()];
@@ -129,7 +117,6 @@
             }
         }
 
-        // Clear the entire pool
         pool.clear();
     }
 
@@ -192,7 +179,6 @@
     size_t Registry::remove_entities_if(Func&& predicate) {
         std::vector<Entity> to_remove;
 
-        // Collect entities to remove
         for (size_t i = 0; i < generations.size(); ++i) {
             Entity entity(i, generations[i]);
             if (is_alive(entity) && predicate(entity)) {
@@ -200,7 +186,6 @@
             }
         }
 
-        // Remove collected entities
         for (auto entity : to_remove) {
             kill_entity(entity);
         }
@@ -236,7 +221,6 @@
     auto& Registry::get_sparse_set() {
         std::type_index type = std::type_index(typeid(T));
 
-        // Fast path: check if pool exists (read lock)
         {
             std::shared_lock lock(component_pool_mutex);
             auto it = component_pools.find(type);
@@ -249,11 +233,9 @@
             }
         }
 
-        // Slow path: create pool (write lock)
         {
             std::unique_lock lock(component_pool_mutex);
 
-            // Double-check (another thread might have created it)
             auto it = component_pools.find(type);
             if (it == component_pools.end()) {
                 if constexpr (std::is_empty_v<T>) {
