@@ -1,11 +1,21 @@
+# Compiled binary files
+r-type_server
+r-type_client
+
+# Personal docs
+my_notes(do_not_delete)
+
 # Prerequisites
 *.d
 
 # Compiled Object files
+build
+build-debug
 *.slo
 *.lo
 *.o
 *.obj
+.cache
 
 # Precompiled Headers
 *.gch
