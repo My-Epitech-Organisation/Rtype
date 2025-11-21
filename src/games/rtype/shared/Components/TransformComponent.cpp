@@ -5,7 +5,7 @@
 ** TransformComponent
 */
 
-#include "rtype/games/rtype/shared/Components.hpp"
+#include "../Components.hpp"
 
 namespace rtype::games::rtype::shared {
 

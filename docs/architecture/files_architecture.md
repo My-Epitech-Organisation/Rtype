@@ -42,25 +42,40 @@ r-type/
   We do **not** vendor full third-party libraries’ source code here – only thin integration helpers.
 
 * **`include/`**
-  Public headers of all our libraries, under a single namespace directory:
+  **Public interface headers only** (abstract base classes, pure interfaces).
+
+  Following modern C++ best practices, this directory contains **only** public APIs:
+  - Abstract interfaces (`IRegistry`, `INetworkSocket`, `IPacket`)
+  - Public enums and type definitions
+  - **No implementation details** (implementation headers are co-located with `.cpp` files in `src/`)
 
   ```text
   include/
+    README.md           # API documentation overview
     rtype/
       engine/
+        IRegistry.hpp   # ECS registry interface
+        README.md
       network/
+        INetworkSocket.hpp  # UDP socket interface
+        IPacket.hpp         # Network packet interface
+        README.md
       games/
         rtype/
-          shared/
-          client/
-          server/
+          shared/       # Reserved for shared game interfaces
+          client/       # Reserved for client interfaces
+          server/       # Reserved for server interfaces
   ```
 
-  This mirrors the structure of `src/` and exposes public APIs.
+  This provides a **clean public API** while keeping implementation headers private in `src/`.
 
 * **`src/`**
-  All implementation code (C++ sources) for our libraries and executables.
+  All implementation code (C++ sources **and implementation headers**) for our libraries and executables.
   **This is the core of the project**, detailed in section 2.
+
+  **Important**: Implementation headers (`.hpp` with corresponding `.cpp`) are **co-located**
+  with their source files, not in `include/`. This improves cohesion and makes it clear
+  which headers are part of the public API versus internal implementation.
 
 * **`assets/`**
   Game resources used at runtime:
@@ -114,18 +129,23 @@ r-type/
   ```
 
 * **`tests/`**
-  Unit and integration tests, organized by module:
+  Unit and integration tests, organized by module.
+
+  **Note**: Tests use relative paths to include implementation headers from `src/`:
 
   ```text
   tests/
     CMakeLists.txt
     ecs/
-      test_registry.cpp
+      test_registry.cpp        # Includes "../../src/engine/ecs/Registry.hpp"
+      CMakeLists.txt
     network/
-      test_serialization.cpp
+      test_serialization.cpp   # Includes "../../src/network/Serializer.hpp"
+      CMakeLists.txt
     games/
       rtype/
-        test_spawning.cpp
+        test_spawning.cpp      # Includes relative paths to components
+        CMakeLists.txt
   ```
 
 * **`.github/workflows/`**
@@ -134,6 +154,41 @@ r-type/
   * Build the project.
   * Run tests.
   * Optional: static analysis / formatting checks.
+
+---
+
+## 1.1. Header Placement Strategy
+
+This project follows modern C++ best practices for header organization:
+
+### Public API Headers (`include/rtype/`)
+
+* **Only abstract interfaces** and public type definitions
+* Files like `IRegistry.hpp`, `INetworkSocket.hpp`, `IPacket.hpp`
+* **No implementation details** - these are pure interfaces
+* Stable API that external code can depend on
+
+### Implementation Headers (`src/`)
+
+* **Co-located with `.cpp` files** for better cohesion
+* Files like `Entity.hpp`, `Registry.hpp`, `UdpSocket.hpp`, `Packet.hpp`
+* Contain concrete class definitions and implementation details
+* Not exposed to external code - internal use only
+
+### Benefits
+
+* **Clear separation** between public API and implementation
+* **Better encapsulation** - clients only see what they need
+* **Easier maintenance** - implementation changes don't affect public API
+* **Module cohesion** - headers live next to their implementations
+
+### Example
+
+```text
+include/rtype/engine/IRegistry.hpp    # Public interface
+src/engine/ecs/Registry.hpp           # Implementation header (co-located)
+src/engine/ecs/Registry.cpp           # Implementation
+```
 
 ---
 
@@ -154,19 +209,26 @@ src/
 
 ### 2.1. `src/engine/` – core engine & ECS (lowest level)
 
-This directory implements the **engine core** and ECS:
+This directory implements the **engine core** and ECS.
+
+**Header placement strategy**: Implementation headers (`.hpp` files with corresponding `.cpp`)
+are **co-located** with their source files for better cohesion. Only abstract interfaces
+are exposed in `include/rtype/engine/`.
 
 ```text
 src/engine/
   ecs/
+    Entity.hpp          # Implementation header (co-located)
     Entity.cpp
+    Registry.hpp        # Implementation header (co-located)
     Registry.cpp
-    // other ECS primitives
+    CMakeLists.txt
   core/
+    Time.hpp            # Implementation header (co-located)
     Time.cpp
     Logger.cpp
     Config.cpp
-    // optional: EventBus.cpp, SceneGraph.cpp, etc.
+    CMakeLists.txt
 ```
 
 * Compiled into library: **`rtype_engine`**.
@@ -183,13 +245,17 @@ src/engine/
 
 ### 2.2. `src/network/` – shared network library
 
+**Header placement**: Implementation headers co-located with `.cpp` files.
+
 ```text
 src/network/
+  UdpSocket.hpp         # Implementation header (co-located)
   UdpSocket.cpp
+  Packet.hpp            # Implementation header (co-located)
   Packet.cpp
+  Serializer.hpp        # Implementation header (co-located)
   Serializer.cpp
-  Messages.cpp
-  // optional: ReliableChannel.cpp, ConnectionManager.cpp, etc.
+  CMakeLists.txt
 ```
 
 * Compiled into library: **`rtype_network`**.
@@ -224,17 +290,20 @@ src/games/rtype/
 
 #### 2.3.1. `src/games/rtype/shared/`
 
+**Header placement**: Shared components header co-located in `shared/`.
+
 ```text
 src/games/rtype/shared/
+  Components.hpp            # Shared components definitions (co-located)
+  CMakeLists.txt
   Components/
     TransformComponent.cpp
     VelocityComponent.cpp
     NetworkIdComponent.cpp
-    // components that exist both client & server
   Systems/
     MovementSystem.cpp
     LifetimeSystem.cpp
-    // systems that can run on both sides
+    CMakeLists.txt
 ```
 
 * Compiled into library: **`rtype_game_shared`**.
@@ -410,6 +479,14 @@ Typical targets:
 
   * `r-type_server`       ← `src/server/`
   * `r-type_client`       ← `src/client/`
+
+**CMake Include Strategy**:
+
+* Each library uses `target_include_directories` with `${CMAKE_CURRENT_SOURCE_DIR}`
+  to expose its local headers
+* Libraries propagate their include directories via `PUBLIC` linkage
+* Executables and tests access headers through library dependencies
+* `include/` is added globally for public API interfaces
 
 ### 3.2. Dependency rules (who can depend on whom?)
 

@@ -8,7 +8,7 @@ add_library(rtype_game_shared STATIC
 )
 
 target_include_directories(rtype_game_shared PUBLIC
-    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_compile_features(rtype_game_shared PUBLIC cxx_std_20)
