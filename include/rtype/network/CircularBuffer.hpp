@@ -16,7 +16,7 @@ class CircularBuffer {
     public:
         explicit CircularBuffer(size_t capacity = 4096);
         ~CircularBuffer() = default;
-        bool write(const std::vector<uint8_t>& data);
+        void write(const std::vector<uint8_t>& data);
         std::vector<uint8_t> read(size_t bytes);
         size_t size() const;
         size_t capacity() const;

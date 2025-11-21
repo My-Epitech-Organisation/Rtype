@@ -20,7 +20,7 @@ CircularBuffer::CircularBuffer(size_t capacity)
     }
 }
 
-bool CircularBuffer::write(const std::vector<uint8_t>& data) {
+void CircularBuffer::write(const std::vector<uint8_t>& data) {
     for (uint8_t byte : data) {
         if (_size == _capacity) {
             _tail = nextIndex(_tail);
@@ -30,7 +30,6 @@ bool CircularBuffer::write(const std::vector<uint8_t>& data) {
         _buffer[_head] = byte;
         _head = nextIndex(_head);
     }
-    return true;
 }
 
 std::vector<uint8_t> CircularBuffer::read(size_t bytes) {
