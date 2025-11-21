@@ -14,6 +14,8 @@
     #include <mutex>
     #include <any>
     #include <typeindex>
+    #include <unordered_map>
+    #include <utility>
 
 namespace ECS {
 
