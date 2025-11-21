@@ -1,3 +1,10 @@
+/*
+** EPITECH PROJECT, 2025
+** Rtype
+** File description:
+** ClientApp
+*/
+
 #include <iostream>
 
 // Minimal client app loop placeholder

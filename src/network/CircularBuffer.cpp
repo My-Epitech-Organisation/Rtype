@@ -32,6 +32,7 @@ bool CircularBuffer::write(const std::vector<uint8_t>& data) {
 std::vector<uint8_t> CircularBuffer::read(size_t bytes) {
     size_t toRead = std::min(bytes, _size);
     std::vector<uint8_t> result;
+
     result.reserve(toRead);
     for (size_t i = 0; i < toRead; ++i) {
         result.push_back(_buffer[_tail]);

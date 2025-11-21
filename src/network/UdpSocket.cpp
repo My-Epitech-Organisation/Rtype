@@ -10,7 +10,7 @@
 
 namespace rtype::network {
 
-UdpSocket::UdpSocket() : socket_(-1) {}
+UdpSocket::UdpSocket(size_t bufferSize) : socket_(-1), receiveBuffer(bufferSize) {}
 
 UdpSocket::~UdpSocket() {
     close();
@@ -45,6 +45,7 @@ int UdpSocket::receive(void* buffer, size_t maxSize) {
 
 void UdpSocket::close() {
     socket_ = -1;
+    receiveBuffer.clear();
 }
 
 }  // namespace rtype::network

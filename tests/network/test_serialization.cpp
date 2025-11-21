@@ -120,6 +120,29 @@ TEST(ByteConverterTest, SerializeMultipleValues) {
     EXPECT_EQ(resultStr, strVal);
 }
 
+TEST(ByteConverterTest, DeserializeNegativeStringLengthThrows) {
+    std::vector<uint8_t> buffer;
+    buffer.push_back(0xFF);
+    buffer.push_back(0xFF);
+    buffer.push_back(0xFF);
+    buffer.push_back(0xFF);
+
+    auto offset = std::make_shared<size_t>(0);
+    EXPECT_THROW(ByteConverter::deserializeString(buffer, offset), std::out_of_range);
+}
+
+TEST(ByteConverterTest, SerializeIntNullBufferThrows) {
+    EXPECT_THROW(ByteConverter::serializeInt(nullptr, 42), std::invalid_argument);
+}
+
+TEST(ByteConverterTest, SerializeFloatNullBufferThrows) {
+    EXPECT_THROW(ByteConverter::serializeFloat(nullptr, 3.14f), std::invalid_argument);
+}
+
+TEST(ByteConverterTest, SerializeStringNullBufferThrows) {
+    EXPECT_THROW(ByteConverter::serializeString(nullptr, "test"), std::invalid_argument);
+}
+
 TEST(CircularBufferTest, WriteAndRead) {
     CircularBuffer buffer(10);
     std::vector<uint8_t> data = {1, 2, 3, 4};

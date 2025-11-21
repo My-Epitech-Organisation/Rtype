@@ -15,7 +15,7 @@ namespace rtype::network {
 
 class UdpSocket {
 public:
-    UdpSocket();
+    explicit UdpSocket(size_t bufferSize = 4096);
     ~UdpSocket();
 
     bool bind(uint16_t port);

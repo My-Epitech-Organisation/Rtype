@@ -17,6 +17,7 @@ Registry::~Registry() {
 
 Entity Registry::createEntity() {
     EntityId id = nextId_++;
+
     entities_.push_back(id);
     return Entity(id);
 }
