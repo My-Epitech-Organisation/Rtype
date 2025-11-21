@@ -45,7 +45,7 @@ void ByteConverter::serializeString(std::shared_ptr<std::vector<uint8_t>> buffer
     if (!buffer) {
         throw std::invalid_argument("Buffer shared_ptr is null");
     }
-    if (value.size() > INT32_MAX) {
+    if (value.size() > static_cast<size_t>(INT32_MAX)) {
         throw std::length_error("String size exceeds maximum allowed for serialization");
     }
 

@@ -9,11 +9,15 @@
 #include <algorithm>
 #include <vector>
 #include <cstdint>
+#include <stdexcept>
 
 namespace rtype::network {
 
 CircularBuffer::CircularBuffer(size_t capacity)
     : _buffer(capacity, 0), _head(0), _tail(0), _size(0), _capacity(capacity) {
+    if (capacity == 0) {
+        throw std::invalid_argument("CircularBuffer capacity must be greater than 0");
+    }
 }
 
 bool CircularBuffer::write(const std::vector<uint8_t>& data) {

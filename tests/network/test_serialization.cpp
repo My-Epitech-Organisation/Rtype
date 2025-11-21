@@ -208,3 +208,7 @@ TEST(CircularBufferTest, CapacityAndSize) {
     EXPECT_EQ(buffer.size(), 5);
     EXPECT_TRUE(buffer.full());
 }
+
+TEST(CircularBufferTest, ZeroCapacityThrows) {
+    EXPECT_THROW(CircularBuffer(0), std::invalid_argument);
+}
