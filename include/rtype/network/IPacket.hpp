@@ -25,10 +25,10 @@ enum class PacketType : uint8_t {
 
 /**
  * @brief Public interface for network packets
- * 
+ *
  * Packets are the fundamental unit of network communication.
  * Each packet has a type and optional binary data payload.
- * 
+ *
  * Example usage:
  * @code
  * IPacket& packet = createPacket(PacketType::PlayerInput);
@@ -39,25 +39,25 @@ enum class PacketType : uint8_t {
 class IPacket {
 public:
     virtual ~IPacket() = default;
-    
+
     /**
      * @brief Get the packet type
      * @return Type of the packet
      */
     virtual PacketType type() const = 0;
-    
+
     /**
      * @brief Get the packet data payload
      * @return Reference to the data vector
      */
     virtual const std::vector<uint8_t>& data() const = 0;
-    
+
     /**
      * @brief Set the packet data payload
      * @param data New data for the packet
      */
     virtual void setData(const std::vector<uint8_t>& data) = 0;
-    
+
     /**
      * @brief Serialize the packet to binary format
      * @return Serialized packet as byte vector

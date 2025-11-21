@@ -6,7 +6,7 @@ This directory is reserved for **public shared interfaces** between client and s
 
 Currently, all shared components are implementation details located in `src/games/rtype/shared/`.
 
-If you need to expose shared game interfaces (e.g., `IGameState`, `IPlayerController`), 
+If you need to expose shared game interfaces (e.g., `IGameState`, `IPlayerController`),
 create them here following the same pattern as the engine and network interfaces.
 
 ## Implementation Details

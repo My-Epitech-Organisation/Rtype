@@ -36,7 +36,7 @@ include/rtype/
 - **`INetworkSocket.hpp`** - UDP socket communication
   - Client/server network operations
   - Send/receive data over UDP
-  
+
 - **`IPacket.hpp`** - Network packet handling
   - Packet types and serialization
   - Protocol definitions
