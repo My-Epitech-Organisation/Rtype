@@ -8,6 +8,7 @@
 #ifndef ECS_CORE_COMMAND_BUFFER_HPP
     #define ECS_CORE_COMMAND_BUFFER_HPP
     #include "Entity.hpp"
+    #include "Registry/Registry.hpp"
     #include <vector>
     #include <functional>
     #include <mutex>
@@ -15,8 +16,6 @@
     #include <typeindex>
 
 namespace ECS {
-
-    class Registry;
 
     /**
      * @brief Thread-safe command buffer for deferred ECS operations.
@@ -94,25 +93,23 @@ namespace ECS {
 
 // Template implementations (must be after Registry.hpp is included)
 #ifndef ECS_COMMAND_BUFFER_IMPL_HPP
-#define ECS_COMMAND_BUFFER_IMPL_HPP
+    #define ECS_COMMAND_BUFFER_IMPL_HPP
 
 namespace ECS {
 
     template<typename T, typename... Args>
     void CommandBuffer::emplace_component_deferred(Entity entity, Args&&... args) {
         std::lock_guard lock(commands_mutex);
-        
-        // Capture args by value for thread safety
+
         auto captured_args = std::make_tuple(std::forward<Args>(args)...);
-        
+
         commands.push_back([this, entity, captured_args = std::move(captured_args)]() mutable {
-            // Resolve placeholder if this is a spawned entity
             Entity target_entity = entity;
             auto it = placeholder_to_real.find(entity.id);
             if (it != placeholder_to_real.end()) {
                 target_entity = it->second;
             }
-            
+
             std::apply([this, target_entity](auto&&... args) {
                 registry.template emplace_component<T>(target_entity, std::forward<decltype(args)>(args)...);
             }, std::move(captured_args));
@@ -123,13 +120,12 @@ namespace ECS {
     void CommandBuffer::remove_component_deferred(Entity entity) {
         std::lock_guard lock(commands_mutex);
         commands.push_back([this, entity]() {
-            // Resolve placeholder if this is a spawned entity
             Entity target_entity = entity;
             auto it = placeholder_to_real.find(entity.id);
             if (it != placeholder_to_real.end()) {
                 target_entity = it->second;
             }
-            
+
             registry.template remove_component<T>(target_entity);
         });
     }
