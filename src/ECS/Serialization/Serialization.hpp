@@ -29,7 +29,7 @@ namespace ECS {
     class IComponentSerializer {
     public:
         virtual ~IComponentSerializer() = default;
-        
+
         /**}
          * @brief Serializes a component to string format.
          * @param entity Entity owning the component
@@ -37,7 +37,7 @@ namespace ECS {
          * @return Serialized component data
          */
         virtual std::string serialize(Entity entity, Registry& registry) const = 0;
-        
+
         /**
          * @brief Deserializes and attaches component to entity.
          * @param entity Target entity

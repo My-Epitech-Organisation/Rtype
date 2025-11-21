@@ -37,21 +37,21 @@ namespace ECS {
 
     std::string Serializer::serialize() {
         std::ostringstream oss;
-        
+
         // Note: For a production system, you would need to:
         // 1. Iterate through all entities
         // 2. For each entity, get its components
         // 3. Serialize each component using registered serializers
         // 4. Write to the output stream
-        
+
         oss << "ECS_SAVE_V1\n";
         oss << "# Format: ENTITY <index> <generation>\n";
         oss << "# Format: COMPONENT <type> <data>\n";
-        
+
         // This is a basic implementation
         // For full implementation, you would need Registry to expose entity iteration
         oss << "END\n";
-        
+
         return oss.str();
     }
 
