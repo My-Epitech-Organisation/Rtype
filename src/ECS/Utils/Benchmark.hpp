@@ -55,7 +55,6 @@ namespace ECS {
                 auto start = std::chrono::high_resolution_clock::now();
                 func();
                 auto end = std::chrono::high_resolution_clock::now();
-                
                 double elapsed_us = std::chrono::duration<double, std::micro>(end - start).count();
                 times.push_back(elapsed_us);
             }
@@ -113,7 +112,7 @@ namespace ECS {
 
             std::cout << "\n=== COMPARISON ===\n";
             std::cout << name1 << " vs " << name2 << ":\n";
-            
+
             double speedup = r1->avg_time_us / r2->avg_time_us;
             if (speedup > 1.0) {
                 std::cout << name2 << " is " << speedup << "x faster\n";
