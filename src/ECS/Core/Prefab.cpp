@@ -76,7 +76,7 @@ namespace ECS {
         std::shared_lock lock(prefab_mutex);
         std::vector<std::string> names;
         names.reserve(prefabs.size());
-        
+
         for (const auto& [name, _] : prefabs) {
             names.push_back(name);
         }
