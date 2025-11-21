@@ -24,10 +24,9 @@ namespace ECS {
         std::shared_lock lock(callbacks_mutex);
         auto it = construct_callbacks.find(type);
         if (it != construct_callbacks.end()) {
-            // Copy callbacks to avoid holding lock during execution
             std::vector<Callback> callbacks_copy = it->second;
             lock.unlock();
-            
+
             for (auto& callback : callbacks_copy) {
                 callback(entity);
             }
@@ -38,10 +37,9 @@ namespace ECS {
         std::shared_lock lock(callbacks_mutex);
         auto it = destroy_callbacks.find(type);
         if (it != destroy_callbacks.end()) {
-            // Copy callbacks to avoid holding lock during execution
             std::vector<Callback> callbacks_copy = it->second;
             lock.unlock();
-            
+
             for (auto& callback : callbacks_copy) {
                 callback(entity);
             }

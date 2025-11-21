@@ -28,7 +28,7 @@ namespace ECS {
      * - Multiple threads can register callbacks concurrently
      * - Dispatching events is safe from multiple threads
      * - Callbacks are executed WITHOUT holding locks to prevent deadlocks
-     * 
+     *
      * Deadlock Prevention:
      * - Callbacks are copied before execution
      * - Reentrant dispatch is supported (callbacks can trigger other callbacks)
@@ -44,13 +44,13 @@ namespace ECS {
         void register_destroy(std::type_index type, Callback callback);
         void dispatch_construct(std::type_index type, Entity entity);
         void dispatch_destroy(std::type_index type, Entity entity);
-        
+
         /**
          * @brief Clears all callbacks for a specific component type.
          * Useful for cleanup or testing.
          */
         void clear_callbacks(std::type_index type);
-        
+
         /**
          * @brief Clears all registered callbacks.
          */
