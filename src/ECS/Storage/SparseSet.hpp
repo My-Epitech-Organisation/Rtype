@@ -13,6 +13,7 @@
     #include <limits>
     #include <stdexcept>
     #include <mutex>
+    #include <utility>
 
 namespace ECS {
 
