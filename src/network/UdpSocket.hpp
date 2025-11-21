@@ -9,7 +9,7 @@
 
 #include <string>
 #include <cstdint>
-#include "rtype/network/CircularBuffer.hpp"
+#include "CircularBuffer.hpp"
 
 namespace rtype::network {
 
