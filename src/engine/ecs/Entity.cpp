@@ -5,7 +5,7 @@
 ** Entity
 */
 
-#include "rtype/engine/ecs/Entity.hpp"
+#include "Entity.hpp"
 
 namespace rtype::engine::ecs {
 

@@ -5,7 +5,7 @@ add_library(rtype_game_client STATIC
 )
 
 target_include_directories(rtype_game_client PUBLIC
-    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_compile_features(rtype_game_client PUBLIC cxx_std_20)

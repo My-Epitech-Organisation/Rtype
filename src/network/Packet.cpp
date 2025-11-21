@@ -5,7 +5,7 @@
 ** Packet
 */
 
-#include "rtype/network/Packet.hpp"
+#include "Packet.hpp"
 
 namespace rtype::network {
 

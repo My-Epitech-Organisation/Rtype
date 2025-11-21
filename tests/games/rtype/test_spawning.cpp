@@ -5,7 +5,7 @@
 ** test_spawning
 */
 
-#include "rtype/games/rtype/shared/Components.hpp"
+#include "../../../src/games/rtype/shared/Components.hpp"
 #include <gtest/gtest.h>
 
 using namespace rtype::games::rtype::shared;
