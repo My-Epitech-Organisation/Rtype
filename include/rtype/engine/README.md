@@ -25,5 +25,4 @@ registry.destroyEntity(player);
 
 ## Implementation Details
 
-Implementation headers (`.hpp` files with corresponding `.cpp`) are located in `src/engine/`.
-This directory contains **only** abstract interfaces for public consumption.
+This include directory exposes the public, abstract interfaces for the engine. All headers here declare abstract types and APIs for external use; concrete implementation classes and their corresponding .cpp files live under src/engine/. Implementation classes in src/engine/ may not directly inherit from these public interfaces to keep internal details separate from the public API.
