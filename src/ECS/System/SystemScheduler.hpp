@@ -48,7 +48,7 @@ namespace ECS {
          * @param func System function to execute
          * @param dependencies List of system names that must run before this one
          */
-        void add_system(const std::string& name, SystemFunc func, 
+        void add_system(const std::string& name, SystemFunc func,
                        const std::vector<std::string>& dependencies = {});
 
         /**

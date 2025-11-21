@@ -86,8 +86,6 @@ namespace ECS {
 
     void SystemScheduler::topological_sort() {
         execution_order.clear();
-        
-        // Calculate in-degree for each system
         std::unordered_map<std::string, int> in_degree;
         std::unordered_map<std::string, std::vector<std::string>> adjacency_list;
 
@@ -104,8 +102,6 @@ namespace ECS {
                 in_degree[name]++;
             }
         }
-
-        // Kahn's algorithm for topological sort
         std::queue<std::string> zero_degree;
         for (const auto& [name, degree] : in_degree) {
             if (degree == 0) {
