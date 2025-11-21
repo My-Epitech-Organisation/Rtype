@@ -78,7 +78,7 @@ namespace ECS {
         Entity spawn_entity();
         void kill_entity(Entity entity) noexcept;
         [[nodiscard]] bool is_alive(Entity entity) const noexcept;
-        
+
         /**
          * @brief Recycles tombstone entities by resetting their generations.
          * Call this periodically to reclaim entity slots. Thread-safe.
@@ -115,27 +115,25 @@ namespace ECS {
          */
         template <typename T, typename... Args>
         T& emplace_component(Entity entity, Args&&... args) {
-            // Validate entity is alive first (thread-safe check)
             if (!is_alive(entity)) {
                 throw std::runtime_error("Cannot add component to dead entity");
             }
-            
+
             std::type_index type = std::type_index(typeid(T));
-            
+
             bool is_new_component = false;
             {
                 std::unique_lock lock(entity_mutex);
-                
-                // Double-check entity is still alive after acquiring lock
+
                 if (entity.index() >= generations.size() ||
                     generations[entity.index()] != entity.generation()) {
                     throw std::runtime_error("Entity died during component addition");
                 }
-                
+
                 auto& components = entity_components[entity.index()];
                 auto it = std::find(components.begin(), components.end(), type);
                 is_new_component = (it == components.end());
-                
+
                 if (is_new_component) {
                     components.push_back(type);
                 }
@@ -358,21 +356,19 @@ namespace ECS {
         std::unordered_map<std::uint32_t, std::vector<std::type_index>> entity_components;
         std::vector<std::uint32_t> generations;
         std::vector<std::uint32_t> free_indices;
-        std::vector<std::uint32_t> tombstones; // Track tombstone slots for periodic cleanup
+        std::vector<std::uint32_t> tombstones;
         std::unordered_map<std::type_index, std::unique_ptr<ISparseSet>> component_pools;
         std::unordered_map<std::type_index, std::any> singletons;
         SignalDispatcher signal_dispatcher;
         RelationshipManager relationship_manager;
-        
-        // Thread safety
+
         mutable std::shared_mutex entity_mutex;
         mutable std::shared_mutex component_pool_mutex;
 
         template <typename T>
         auto& get_sparse_set() {
             std::type_index type = std::type_index(typeid(T));
-            
-            // Fast path: check if pool exists with shared lock
+
             {
                 std::shared_lock lock(component_pool_mutex);
                 auto it = component_pools.find(type);
@@ -384,11 +380,8 @@ namespace ECS {
                     }
                 }
             }
-            
-            // Slow path: create pool with unique lock
             {
                 std::unique_lock lock(component_pool_mutex);
-                // Double-check in case another thread created it
                 auto it = component_pools.find(type);
                 if (it == component_pools.end()) {
                     if constexpr (std::is_empty_v<T>) {
@@ -398,7 +391,7 @@ namespace ECS {
                     }
                     it = component_pools.find(type);
                 }
-                
+
                 if constexpr (std::is_empty_v<T>) {
                     return *static_cast<TagSparseSet<T>*>(it->second.get());
                 } else {
@@ -539,7 +532,7 @@ namespace ECS {
     template<typename Func>
     void ParallelView<Components...>::each(Func&& func) {
         // Get all component pools upfront
-        std::tuple<SparseSet<Components>*...> pools = 
+        std::tuple<SparseSet<Components>*...> pools =
             std::make_tuple(&registry.template get_sparse_set<Components>()...);
 
         // Find smallest pool for iteration
