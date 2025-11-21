@@ -27,7 +27,7 @@ namespace ECS {
      *       // Only entities with Position & Velocity, but NOT Dead or Frozen
      *       p.x += v.dx;
      *   });
-     * 
+     *
      * Uses type packs to separate includes and excludes
      */
     template<typename IncludePack, typename ExcludePack>
