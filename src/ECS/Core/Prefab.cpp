@@ -9,6 +9,8 @@
 #include "Registry.hpp"
 #include <stdexcept>
 #include <algorithm>
+#include <utility>
+#include <vector>
 
 namespace ECS {
 
