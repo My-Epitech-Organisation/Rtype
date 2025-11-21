@@ -5,7 +5,7 @@
 ** test_registry
 */
 
-#include "rtype/engine/ecs/Registry.hpp"
+#include "../../src/engine/ecs/Registry.hpp"
 #include <gtest/gtest.h>
 
 using namespace rtype::engine::ecs;

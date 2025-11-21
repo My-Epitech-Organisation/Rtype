@@ -5,8 +5,8 @@
 ** test_serialization
 */
 
-#include "rtype/network/Packet.hpp"
-#include "rtype/network/Serializer.hpp"
+#include "../../src/network/Packet.hpp"
+#include "../../src/network/Serializer.hpp"
 #include <gtest/gtest.h>
 
 using namespace rtype::network;
