@@ -60,7 +60,7 @@ namespace ECS {
         template <typename... Args>
         reference emplace(Entity entity, Args&&... args) {
             std::lock_guard lock(sparse_set_mutex);
-            
+
             if (contains(entity))
                 return dense[sparse[entity.index()]] = T(std::forward<Args>(args)...);
 
@@ -77,7 +77,7 @@ namespace ECS {
 
         void remove(Entity entity) override {
             std::lock_guard lock(sparse_set_mutex);
-            
+
             if (!contains(entity)) return;
 
             auto idx = entity.index();
@@ -147,7 +147,7 @@ namespace ECS {
         std::vector<T> dense;
         std::vector<Entity> packed;
         std::vector<size_t> sparse;
-        mutable std::mutex sparse_set_mutex;  // Thread safety for concurrent access
+        mutable std::mutex sparse_set_mutex;
     };
 
 } // namespace ECS

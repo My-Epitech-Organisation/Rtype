@@ -43,7 +43,6 @@ namespace ECS {
         template <typename... Args>
         T& emplace(Entity entity, Args&&...) {
             std::lock_guard lock(sparse_set_mutex);
-            
             if (contains(entity))
                 return dummy_instance;
 
@@ -58,7 +57,6 @@ namespace ECS {
 
         void remove(Entity entity) override {
             std::lock_guard lock(sparse_set_mutex);
-            
             if (!contains(entity)) return;
 
             auto idx = entity.index();
@@ -115,7 +113,7 @@ namespace ECS {
         static constexpr size_t NullIndex = std::numeric_limits<size_t>::max();
         std::vector<Entity> packed;
         std::vector<size_t> sparse;
-        mutable std::mutex sparse_set_mutex;  // Thread safety for concurrent access
+        mutable std::mutex sparse_set_mutex;
         static inline T dummy_instance{};
     };
 
