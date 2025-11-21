@@ -8,6 +8,7 @@
 #ifndef ECS_STORAGE_ISPARSE_SET_HPP
     #define ECS_STORAGE_ISPARSE_SET_HPP
     #include "../Core/Entity.hpp"
+    #include <vector>
 
 namespace ECS {
 
@@ -49,6 +50,12 @@ namespace ECS {
          * @brief Releases unused memory.
          */
         virtual void shrink_to_fit() = 0;
+
+        /**
+         * @brief Returns the packed entity array for iteration.
+         * @return Reference to the packed entity vector
+         */
+        virtual const std::vector<Entity>& get_packed() const noexcept = 0;
     };
 
 } // namespace ECS

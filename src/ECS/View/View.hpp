@@ -51,12 +51,17 @@ namespace ECS {
         auto exclude();
 
     private:
+        // Type alias to transform component types to ISparseSet pointers
+        template<typename T>
+        using PoolPtr = ISparseSet*;
+
         Registry* registry;
         // Raw pointers are appropriate here: non-owning, lightweight view for iteration.
         // The Registry owns the component pools via std::unique_ptr. These pointers are
         // temporary references used only during view iteration. Smart pointers would
         // incorrectly imply shared or exclusive ownership.
-        std::tuple<SparseSet<Components>*...> pools;
+        // Using ISparseSet* to support both regular components and tags
+        std::tuple<PoolPtr<Components>...> pools;
         size_t smallest_pool_index = 0;
 
         template<size_t... Is>
@@ -67,6 +72,9 @@ namespace ECS {
 
         template<size_t... Is>
         size_t find_smallest_pool(std::index_sequence<Is...>);
+
+        template<typename T>
+        T& get_component_data(Entity entity, ISparseSet* pool);
 
         template<typename, typename>
         friend class ExcludeView;
