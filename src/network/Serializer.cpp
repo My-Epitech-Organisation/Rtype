@@ -5,7 +5,7 @@
 ** Serializer
 */
 
-#include "rtype/network/Serializer.hpp"
+#include "Serializer.hpp"
 #include <vector>
 
 namespace rtype::network {

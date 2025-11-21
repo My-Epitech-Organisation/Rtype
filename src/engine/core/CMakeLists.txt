@@ -3,7 +3,7 @@ add_library(rtype_engine_core STATIC
 )
 
 target_include_directories(rtype_engine_core PUBLIC
-    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_compile_features(rtype_engine_core PUBLIC cxx_std_20)
