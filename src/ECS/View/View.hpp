@@ -34,7 +34,7 @@ namespace ECS {
     template<typename... Components>
     class View {
     public:
-        explicit View(Registry& registry);
+        explicit View(Registry* registry);
 
         /**
          * @brief Applies function to each entity with all required components.
@@ -51,7 +51,7 @@ namespace ECS {
         auto exclude();
 
     private:
-        Registry& registry;
+        Registry* registry;
         // Raw pointers are appropriate here: non-owning, lightweight view for iteration.
         // The Registry owns the component pools via std::unique_ptr. These pointers are
         // temporary references used only during view iteration. Smart pointers would

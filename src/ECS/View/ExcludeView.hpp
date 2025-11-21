@@ -11,6 +11,8 @@
     #include "../Storage/SparseSet.hpp"
     #include <tuple>
     #include <algorithm>
+    #include <utility>
+    #include <vector>
 
 namespace ECS {
 
@@ -37,7 +39,7 @@ namespace ECS {
     class ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>> {
     public:
         template<typename ExcludeTuple>
-        ExcludeView(Registry& reg, std::tuple<SparseSet<Includes>*...> inc_pools,
+        ExcludeView(Registry* reg, std::tuple<SparseSet<Includes>*...> inc_pools,
                     ExcludeTuple&& exc_pools, size_t smallest_idx)
             : registry(reg), include_pools(inc_pools), exclude_pools(std::forward<ExcludeTuple>(exc_pools)),
               smallest_pool_index(smallest_idx) {}
@@ -50,7 +52,7 @@ namespace ECS {
         void each(Func&& func);
 
     private:
-        Registry& registry;
+        Registry* registry;
         // Raw pointers are appropriate here: non-owning, lightweight views for iteration.
         // The Registry owns the component pools. These pointers are temporary and used
         // only during view construction and iteration. Using smart pointers would imply

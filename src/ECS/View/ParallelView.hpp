@@ -37,7 +37,7 @@ namespace ECS {
     template<typename... Components>
     class ParallelView {
     public:
-        explicit ParallelView(Registry& reg) : registry(reg) {}
+        explicit ParallelView(Registry* reg) : registry(reg) {}
 
         /**
          * @brief Applies function to entities across multiple threads.
@@ -47,7 +47,7 @@ namespace ECS {
         void each(Func&& func);
 
     private:
-        Registry& registry;
+        Registry* registry;
     };
 
 } // namespace ECS
