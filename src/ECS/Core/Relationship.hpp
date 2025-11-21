@@ -121,12 +121,12 @@ namespace ECS {
         size_t get_depth(Entity entity) const;
 
     private:
-        std::unordered_map<std::uint32_t, Entity> parent_map;  // child index -> parent entity
-        std::unordered_map<std::uint32_t, std::unordered_map<std::uint32_t, Entity>> children_map;  // parent index -> (child index -> child entity)
+        std::unordered_map<std::uint32_t, Entity> parent_map;
+        std::unordered_map<std::uint32_t, std::unordered_map<std::uint32_t, Entity>> children_map;
         mutable std::shared_mutex relationship_mutex;
 
         bool would_create_cycle(Entity child, Entity parent) const;
-        void get_descendants_recursive(Entity parent, std::vector<Entity>& result) const;
+        void get_descendants_recursive(Entity parent, std::vector<Entity>* result) const;
     };
 
 } // namespace ECS
