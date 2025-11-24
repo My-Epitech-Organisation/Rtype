@@ -17,22 +17,22 @@ class UdpClient : public QObject {
     Q_OBJECT
 
 public:
-    UdpClient(const QString &host, quint16 port, QObject *parent = nullptr) 
+    UdpClient(const QString &host, quint16 port, QObject *parent = nullptr)
         : QObject(parent), serverAddress(host), serverPort(port), messageIndex(0) {
-        
+
         socket = new QUdpSocket(this);
-        
-        std::cout << "Qt Network UDP Client connecting to " 
+
+        std::cout << "Qt Network UDP Client connecting to "
                   << host.toStdString() << ":" << port << std::endl;
-        
+
         testMessages = {
             "Hello from Qt Network!",
             "Test message 2",
             "Benchmark test"
         };
-        
+
         connect(socket, &QUdpSocket::readyRead, this, &UdpClient::processResponse);
-        
+
         // Start sending messages
         QTimer::singleShot(100, this, &UdpClient::sendNextMessage);
     }
@@ -44,24 +44,24 @@ private slots:
             QTimer::singleShot(500, qApp, &QCoreApplication::quit);
             return;
         }
-        
+
         QString message = QString::fromStdString(testMessages[messageIndex]);
         std::cout << "Sending: \"" << message.toStdString() << "\"" << std::endl;
-        
+
         socket->writeDatagram(message.toUtf8(), QHostAddress(serverAddress), serverPort);
         messageIndex++;
-        
+
         // Send next message after a delay
         QTimer::singleShot(100, this, &UdpClient::sendNextMessage);
     }
-    
+
     void processResponse() {
         while (socket->hasPendingDatagrams()) {
             QByteArray datagram;
             datagram.resize(socket->pendingDatagramSize());
-            
+
             socket->readDatagram(datagram.data(), datagram.size());
-            
+
             QString response = QString::fromUtf8(datagram);
             std::cout << "Received: \"" << response.toStdString() << "\"" << std::endl;
         }
@@ -83,15 +83,15 @@ int main(int argc, char *argv[]) {
 
     // QCoreApplication IS required for Qt event loop
     QCoreApplication app(argc, argv);
-    
+
     QString host = argv[1];
     quint16 port = QString(argv[2]).toUShort();
-    
+
     std::cout << "Qt Network UDP Client PoC" << std::endl;
     std::cout << "Note: QCoreApplication is REQUIRED for event loop" << std::endl;
-    
+
     UdpClient client(host, port);
-    
+
     return app.exec();
 }
 
