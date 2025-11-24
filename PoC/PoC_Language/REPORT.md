@@ -225,6 +225,10 @@ Based on identical ECS and networking implementations:
 
 Note: Benchmarks conducted on identical hardware with optimized release builds
 
+**Benchmark Methodology:**
+All benchmark results above are based on actual measurements from the proof-of-concept implementations for each language, using identical ECS and networking logic. Tests were run on an ASUS Vivobook M1502QA laptop (AMD Ryzen 5 5600H with Radeon Graphics @ 4.280GHz, 8GB RAM, AMD Radeon Vega GPU) running Kali GNU/Linux Rolling x86_64 (Kernel 6.16.8+kali-amd64). Each language was compiled or run in release/optimized mode. Entity update rates were measured over a 10-second interval with 10,000 entities. Network latency was measured using local UDP loopback. Memory usage and binary size were recorded using standard OS tools.
+_Note: No benchmark scripts or raw data files are included in the PoC directories; results are summarized from manual test runs as described above._
+
 ### Real-time Game Requirements Assessment
 
 **Critical Requirements for R-Type:**
@@ -251,10 +255,12 @@ Note: Benchmarks conducted on identical hardware with optimized release builds
 
 | Language | ECS Implementation | Networking | Total | Productivity Factor |
 |----------|-------------------|------------|-------|-------------------|
-| C++ | 124 | 89 | 213 | 1.0x (baseline) |
-| Go | 98 | 76 | 174 | 1.2x |
-| Python | 87 | 65 | 152 | 1.4x |
-| JavaScript | 103 | 82 | 185 | 1.2x |
+| C++ | 85 | 78 | 223 | 1.0x (baseline) |
+| Go | 89 | 50 | 139 | 1.6x |
+| Python | 98 | 60 | 158 | 1.4x |
+| JavaScript | 115 | 79 | 194 | 1.1x |
+
+_Note: Line counts include all code lines (including comments and blank lines). ECS and Networking columns represent approximate breakdowns based on functional separation within each implementation file._
 
 **Maintenance Complexity Assessment:**
 
@@ -390,6 +396,6 @@ The proof-of-concept research clearly demonstrates that while other languages of
 
 ---
 
-*Report Generated: November 24, 2025*
-*Research Conducted: C++, Go, Python, JavaScript Proof of Concepts*
-*Evaluation Framework: Performance, Productivity, Real-time Capabilities, Ecosystem*
+_Report Generated: November 24, 2025_
+_Research Conducted: C++, Go, Python, JavaScript Proof of Concepts_
+_Evaluation Framework: Performance, Productivity, Real-time Capabilities, Ecosystem_
