@@ -17,7 +17,8 @@ void RTypeClient::Graphic::pollEvents() {
 
 void RTypeClient::Graphic::display() {
     this->_window.clear();
-    // Display other sprites
+
+    this->_window.draw(this->_vessel);
     this->_window.display();
 }
 
@@ -33,9 +34,9 @@ RTypeClient::Graphic::~Graphic() {
 }
 
 RTypeClient::Graphic::Graphic() :
-    _window(sf::VideoMode({800, 600}), "R-TYPE window")
+    _window(sf::VideoMode({800, 600}), "R-TYPE window SFML")
 {
-    this->_vesselTexture = sf::Texture("assets/r-typesheet42.gif")
-    this->_vessel.setTexture()
+    this->_vesselTexture = sf::Texture("assets/r-typesheet42.gif");
+    this->_vessel.setTexture(this->_vesselTexture);
     this->loop();
 }
