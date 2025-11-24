@@ -1,6 +1,9 @@
 #include <iostream>
+#include "ClientApp.hpp"
 
 int main(int argc, char** argv) {
-    std::cout << "r-type client placeholder\n";
+    RTypeClient::ClientApp _client;
+
+    _client.run();
     return 0;
 }

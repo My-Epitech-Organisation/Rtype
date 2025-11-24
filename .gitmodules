@@ -1,0 +1,3 @@
+[submodule "src/client/graphic/raylib"]
+	path = src/client/graphic/raylib
+	url = https://github.com/raysan5/raylib
