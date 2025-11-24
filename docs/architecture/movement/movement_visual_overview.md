@@ -146,12 +146,12 @@ Entities @ 60 FPS
 
 ### Feature Comparison
 ```
-                Linear  Sine  Bézier  Script
-Performance      ████   ███   ██      █
-Simplicity       ████   ███   ██      █
-Visual Appeal    ██     ████  █████   ███
-Flexibility      █      ██    ████    █████
-Designer-Friendly ████  ███   ██      █████
+                  Linear  Sine  Bézier  Script
+Performance        ████   ███   ██      █
+Simplicity         ████   ███   ██      █
+Visual Appeal      ██     ████  █████   ███
+Flexibility        █      ██    ████    █████
+Designer-Friendly  ████   ███   ██      █████
 ```
 
 ---
