@@ -9,8 +9,7 @@ my_notes(do_not_delete)
 *.d
 
 # Compiled Object files
-build
-build-debug
+build*
 *.slo
 *.lo
 *.o
