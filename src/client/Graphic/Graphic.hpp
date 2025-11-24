@@ -13,6 +13,8 @@
 namespace RTypeClient {
     class Graphic {
     private:
+        sf::Texture _vesselTexture;
+        sf::Sprite _vessel;
         sf::RenderWindow _window;
         bool _appRunning = true;
 

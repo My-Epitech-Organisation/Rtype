@@ -1,7 +1,8 @@
 #include <iostream>
+#include "ClientApp.hpp"
 
-// Minimal client app loop placeholder
-class ClientApp {
-public:
-    void run() { std::cout << "ClientApp run\n"; }
-};
+void RTypeClient::ClientApp::run()
+{
+    Graphic graphic;
+    
+}

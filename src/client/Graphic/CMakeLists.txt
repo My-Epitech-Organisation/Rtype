@@ -1,13 +1,13 @@
 add_subdirectory(SFML)
 
-add_library(graphic STATIC
+add_library(rtype_lib_graphic STATIC
     Graphic.cpp
 )
-target_link_libraries(graphic
+target_link_libraries(rtype_lib_graphic
     sfml-system
     sfml-window
     sfml-graphics
     sfml-audio
     sfml-network)
 
-set_target_properties(graphic PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED YES)
+set_target_properties(rtype_lib_graphic PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED YES)
