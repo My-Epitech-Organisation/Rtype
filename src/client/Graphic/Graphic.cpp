@@ -34,9 +34,9 @@ RTypeClient::Graphic::~Graphic() {
 }
 
 RTypeClient::Graphic::Graphic() :
-    _window(sf::VideoMode({800, 600}), "R-TYPE window SFML")
+    _window(sf::VideoMode({800, 600}), "R-TYPE window SFML"),
+    _vesselTexture("assets/r-typesheet42.gif"),
+    _vessel(this->_vesselTexture)
 {
-    this->_vesselTexture = sf::Texture("assets/r-typesheet42.gif");
-    this->_vessel.setTexture(this->_vesselTexture);
     this->loop();
 }
