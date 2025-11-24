@@ -435,21 +435,21 @@ We recommend a **hybrid storage strategy** that leverages the strengths of each 
 │                      R-Type Game                            │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐│
-│  │  Game Loop      │  │  Menu/UI        │  │  Analytics  ││
-│  │  (60 FPS)       │  │  (Async)        │  │  (Offline)  ││
-│  └────────┬────────┘  └────────┬────────┘  └──────┬──────┘│
-│           │                    │                   │       │
-│           ▼                    ▼                   ▼       │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐│
-│  │ Binary Storage  │  │  JSON Storage   │  │   SQLite    ││
-│  │                 │  │                 │  │             ││
-│  │ • Game Saves    │  │ • Config Files  │  │ • Highscores││
-│  │ • Replays       │  │ • Level Data    │  │ • Profiles  ││
-│  │ • Network       │  │ • Asset Meta    │  │ • History   ││
-│  │                 │  │                 │  │             ││
-│  │ Fast, Compact   │  │ Readable, Flex  │  │ Queryable   ││
-│  └─────────────────┘  └─────────────────┘  └─────────────┘│
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐  │
+│  │  Game Loop      │  │  Menu/UI        │  │  Analytics  │  │
+│  │  (60 FPS)       │  │  (Async)        │  │  (Offline)  │  │
+│  └────────┬────────┘  └────────┬────────┘  └──────┬──────┘  │
+│           │                    │                   │        │
+│           ▼                    ▼                   ▼        │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐  │
+│  │ Binary Storage  │  │  JSON Storage   │  │   SQLite    │  │
+│  │                 │  │                 │  │             │  │
+│  │ • Game Saves    │  │ • Config Files  │  │ • Highscores│  │
+│  │ • Replays       │  │ • Level Data    │  │ • Profiles  │  │
+│  │ • Network       │  │ • Asset Meta    │  │ • History   │  │
+│  │                 │  │                 │  │             │  │
+│  │ Fast, Compact   │  │ Readable, Flex  │  │ Queryable   │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────┘  │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
