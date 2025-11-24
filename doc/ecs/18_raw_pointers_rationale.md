@@ -24,13 +24,13 @@ The ECS follows a clear **ownership hierarchy**:
 
 ```
 Registry (Owner)
-    └── std::unique_ptr<ISparseSet> component_pools
+    └── std::unique_ptr<ISparseSet> _componentPools
             │
             ├── Owned by Registry (unique ownership)
             └── Lifetime: Entire Registry lifetime
 
 View/ExcludeView/ParallelView (Observers)
-    └── ISparseSet* / SparseSet<T>* pools
+    └── ISparseSet* / _sparseSet<T>* pools
             │
             ├── Non-owning observation pointers
             └── Lifetime: Shorter than Registry
@@ -52,7 +52,7 @@ This follows the **Single Responsibility Principle**:
 
 ```cpp
 template <typename T>
-const ISparseSet* Registry::get_sparse_set_const() const noexcept {
+const ISparseSet* Registry::getSparseSetConst() const noexcept {
     // Returns non-owning pointer to component pool
     return it->second.get();  // Extract raw pointer from unique_ptr
 }
@@ -78,7 +78,7 @@ private:
 template<typename... Includes, typename... Excludes>
 class ExcludeView {
 private:
-    std::vector<ISparseSet*> exclude_pools;  // Raw pointers
+    std::vector<ISparseSet*> _excludePools;  // Raw pointers
 };
 ```
 
@@ -105,10 +105,10 @@ Raw pointers in this context are **observing pointers**, not owning pointers.
 
 ```cpp
 // OWNER (Registry owns the memory)
-std::unordered_map<std::type_index, std::unique_ptr<ISparseSet>> component_pools;
+std::unordered_map<std::type_index, std::unique_ptr<ISparseSet>> _componentPools;
 
 // OBSERVER (View observes temporarily)
-SparseSet<Position>* pool = &registry.get_sparse_set<Position>();
+_sparseSet<Position>* pool = &registry.getSparseSet<Position>();
 ```
 
 **C++ Core Guideline**: 
@@ -218,7 +218,7 @@ For a typical game loop processing **10,000 entities at 60 FPS**:
 ```cpp
 // ❌ Won't compile - Can't accidentally take ownership
 void dangerous(Registry& registry) {
-    auto* pool = registry.get_sparse_set<Position>();
+    auto* pool = registry.getSparseSet<Position>();
     delete pool;  // Compilation error: pool is const ISparseSet*
 }
 ```
@@ -247,10 +247,10 @@ The design prevents dangling pointers through:
 
 ```cpp
 // ❌ Anti-pattern (not possible in current design)
-SparseSet<Position>* stored_pool;
+_sparseSet<Position>* stored_pool;
 
 void setup(Registry& registry) {
-    stored_pool = &registry.get_sparse_set<Position>();  
+    stored_pool = &registry.getSparseSet<Position>();  
     // Can't do this - method returns const pointer
 }
 
@@ -272,7 +272,7 @@ Smart pointers **should** be used when:
 ```cpp
 // BAD - Ambiguous ownership
 ISparseSet* create_pool() {
-    return new SparseSet<Position>();  // Who deletes this?
+    return new _sparseSet<Position>();  // Who deletes this?
 }
 
 // GOOD - Clear ownership transfer
@@ -343,7 +343,7 @@ void physics_system(Registry& registry, float dt) {
 
 ```cpp
 void parallel_physics(Registry& registry, float dt) {
-    registry.parallel_view<Position, Velocity>().each([dt](Entity e, Position& p, Velocity& v) {
+    registry.parallelView<Position, Velocity>().each([dt](Entity e, Position& p, Velocity& v) {
         // Each thread gets raw pointers to component pools
         // No atomic reference counting overhead
         // Safe because Registry outlives all threads
@@ -360,8 +360,8 @@ void render_system(Registry& registry) {
     auto view = registry.view<Transform, Sprite>().exclude<Hidden, Dead>();
     
     // Internally uses raw pointers:
-    // - std::tuple<SparseSet<Transform>*, SparseSet<Sprite>*> include_pools
-    // - std::vector<ISparseSet*> exclude_pools (Hidden, Dead)
+    // - std::tuple<SparseSet<Transform>*, _sparseSet<Sprite>*> _includePools
+    // - std::vector<ISparseSet*> _excludePools (Hidden, Dead)
     
     view.each([](Entity e, Transform& t, Sprite& s) {
         render(s, t);
@@ -376,14 +376,14 @@ void render_system(Registry& registry) {
 class Registry {
 private:
     // Registry OWNS component pools via unique_ptr
-    std::unordered_map<std::type_index, std::unique_ptr<ISparseSet>> component_pools;
+    std::unordered_map<std::type_index, std::unique_ptr<ISparseSet>> _componentPools;
     
 public:
     // Returns non-owning OBSERVER pointer
     template <typename T>
-    const ISparseSet* get_sparse_set_const() const noexcept {
-        auto it = component_pools.find(typeid(T));
-        return (it != component_pools.end()) ? it->second.get() : nullptr;
+    const ISparseSet* getSparseSetConst() const noexcept {
+        auto it = _componentPools.find(typeid(T));
+        return (it != _componentPools.end()) ? it->second.get() : nullptr;
     }
 };
 ```

@@ -69,7 +69,7 @@ namespace ECS {
                 if (t > max_val) max_val = t;
             }
 
-            results.push_back({name, sum / iterations, min_val, max_val, iterations});
+            _results.push_back({name, sum / iterations, min_val, max_val, iterations});
         }
 
         /**
@@ -84,7 +84,7 @@ namespace ECS {
                      << std::setw(12) << "Iterations" << "\n";
             std::cout << std::string(87, '-') << "\n";
 
-            for (const auto& result : results) {
+            for (const auto& result : _results) {
                 std::cout << std::left << std::setw(30) << result.name
                          << std::right << std::setw(15) << std::fixed << std::setprecision(2) << result.avg_time_us
                          << std::setw(15) << result.min_time_us
@@ -104,7 +104,7 @@ namespace ECS {
             const Result* r1 = nullptr;
             const Result* r2 = nullptr;
 
-            for (const auto& r : results) {
+            for (const auto& r : _results) {
                 if (r.name == name1) r1 = &r;
                 if (r.name == name2) r2 = &r;
             }
@@ -129,18 +129,18 @@ namespace ECS {
          * @brief Clears all stored results.
          */
         void clear() {
-            results.clear();
+            _results.clear();
         }
 
         /**
          * @brief Returns all benchmark results.
          */
         const std::vector<Result>& get_results() const {
-            return results;
+            return _results;
         }
 
     private:
-        std::vector<Result> results;
+        std::vector<Result> _results;
     };
 
 } // namespace ECS

@@ -27,11 +27,11 @@ namespace ECS {
      * - Iteration speed is critical
      *
      * Example:
-     *   auto group = registry.create_group<Position, Velocity>();
+     *   auto group = registry.createGroup<Position, Velocity>();
      *   for (auto entity : group) {
      *       // Fast iteration, no filtering
      *   }
-     *   registry.emplace_component<Velocity>(new_entity);
+     *   registry.emplaceComponent<Velocity>(new_entity);
      *   group.rebuild(); // Update after structural change
      */
     template<typename... Components>
@@ -52,16 +52,16 @@ namespace ECS {
         template<typename Func>
         void each(Func&& func);
 
-        const std::vector<Entity>& get_entities() const noexcept { return entities; }
-        size_t size() const noexcept { return entities.size(); }
-        bool empty() const noexcept { return entities.empty(); }
+        const std::vector<Entity>& getEntities() const noexcept { return _entities; }
+        size_t size() const noexcept { return _entities.size(); }
+        bool empty() const noexcept { return _entities.empty(); }
 
-        auto begin() const noexcept { return entities.begin(); }
-        auto end() const noexcept { return entities.end(); }
+        auto begin() const noexcept { return _entities.begin(); }
+        auto end() const noexcept { return _entities.end(); }
 
     private:
-        Registry* registry;
-        std::vector<Entity> entities;
+        Registry* _registry;
+        std::vector<Entity> _entities;
     };
 
 } // namespace ECS

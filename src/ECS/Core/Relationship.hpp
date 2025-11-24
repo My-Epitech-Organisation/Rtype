@@ -33,11 +33,11 @@ namespace ECS {
      *
      * Example:
      *   RelationshipManager mgr;
-     *   auto parent = registry.spawn_entity();
-     *   auto child = registry.spawn_entity();
-     *   mgr.set_parent(child, parent);
+     *   auto parent = registry.spawnEntity();
+     *   auto child = registry.spawnEntity();
+     *   mgr.setParent(child, parent);
      *
-     *   for (auto c : mgr.get_children(parent)) {
+     *   for (auto c : mgr.getChildren(parent)) {
      *       // Process children
      *   }
      */
@@ -52,58 +52,58 @@ namespace ECS {
          * @param parent Parent entity
          * @return true if successful, false if would create cycle
          */
-        bool set_parent(Entity child, Entity parent);
+        bool setParent(Entity child, Entity parent);
 
         /**
          * @brief Removes parent relationship (orphans the child).
          */
-        void remove_parent(Entity child);
+        void removeParent(Entity child);
 
         /**
          * @brief Gets parent of entity if it has one.
          * @return Optional parent entity
          */
-        std::optional<Entity> get_parent(Entity child) const;
+        std::optional<Entity> getParent(Entity child) const;
 
         /**
          * @brief Checks if entity has a parent.
          */
-        bool has_parent(Entity child) const;
+        bool hasParent(Entity child) const;
 
         /**
          * @brief Gets all direct children of entity.
          * @return Vector of child entities
          */
-        std::vector<Entity> get_children(Entity parent) const;
+        std::vector<Entity> getChildren(Entity parent) const;
 
         /**
          * @brief Gets all descendants recursively.
          * @return Vector of all descendant entities (depth-first order)
          */
-        std::vector<Entity> get_descendants(Entity parent) const;
+        std::vector<Entity> getDescendants(Entity parent) const;
 
         /**
          * @brief Gets all ancestors (parent, grandparent, etc.).
          * @return Vector from immediate parent to root
          */
-        std::vector<Entity> get_ancestors(Entity child) const;
+        std::vector<Entity> getAncestors(Entity child) const;
 
         /**
          * @brief Gets the root entity of the hierarchy.
          * @return Root entity (entity with no parent)
          */
-        Entity get_root(Entity entity) const;
+        Entity getRoot(Entity entity) const;
 
         /**
          * @brief Checks if an entity is ancestor of another.
          */
-        bool is_ancestor(Entity potential_ancestor, Entity entity) const;
+        bool isAncestor(Entity potential_ancestor, Entity entity) const;
 
         /**
          * @brief Removes all relationships involving an entity.
          * Called automatically when entity is destroyed.
          */
-        void remove_entity(Entity entity);
+        void removeEntity(Entity entity);
 
         /**
          * @brief Clears all relationships.
@@ -113,20 +113,20 @@ namespace ECS {
         /**
          * @brief Gets number of children an entity has.
          */
-        size_t child_count(Entity parent) const;
+        size_t childCount(Entity parent) const;
 
         /**
          * @brief Gets depth of entity in hierarchy (0 = root).
          */
-        size_t get_depth(Entity entity) const;
+        size_t getDepth(Entity entity) const;
 
     private:
-        std::unordered_map<std::uint32_t, Entity> parent_map;
-        std::unordered_map<std::uint32_t, std::unordered_map<std::uint32_t, Entity>> children_map;
-        mutable std::shared_mutex relationship_mutex;
+        std::unordered_map<std::uint32_t, Entity> _parentMap;
+        std::unordered_map<std::uint32_t, std::unordered_map<std::uint32_t, Entity>> _childrenMap;
+        mutable std::shared_mutex _relationshipMutex;
 
-        bool would_create_cycle(Entity child, Entity parent) const;
-        void get_descendants_recursive(Entity parent, std::vector<Entity>* result) const;
+        bool wouldCreateCycle(Entity child, Entity parent) const;
+        void getDescendantsRecursive(Entity parent, std::vector<Entity>* result) const;
     };
 
 } // namespace ECS

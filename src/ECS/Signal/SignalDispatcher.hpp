@@ -5,8 +5,8 @@
 ** SignalDispatcher
 */
 
-#ifndef ECS_SIGNAL_SIGNAL_DISPATCHER_HPP
-    #define ECS_SIGNAL_SIGNAL_DISPATCHER_HPP
+#ifndef ECS_SIGNAL__signalDispatcher_HPP
+    #define ECS_SIGNAL__signalDispatcher_HPP
     #include <functional>
     #include <vector>
     #include <typeindex>
@@ -20,8 +20,8 @@ namespace ECS {
      * @brief Event system for component lifecycle notifications.
      *
      * Enables reactive programming patterns in ECS:
-     * - on_construct: Triggered when component is added
-     * - on_destroy: Triggered when component is removed
+     * - onConstruct: Triggered when component is added
+     * - onDestroy: Triggered when component is removed
      *
      * Thread Safety:
      * - All operations are thread-safe
@@ -40,28 +40,28 @@ namespace ECS {
     public:
         using Callback = std::function<void(Entity)>;
 
-        void register_construct(std::type_index type, Callback callback);
-        void register_destroy(std::type_index type, Callback callback);
-        void dispatch_construct(std::type_index type, Entity entity);
-        void dispatch_destroy(std::type_index type, Entity entity);
+        void registerConstruct(std::type_index type, Callback callback);
+        void registerDestroy(std::type_index type, Callback callback);
+        void dispatchConstruct(std::type_index type, Entity entity);
+        void dispatchDestroy(std::type_index type, Entity entity);
 
         /**
          * @brief Clears all callbacks for a specific component type.
          * Useful for cleanup or testing.
          */
-        void clear_callbacks(std::type_index type);
+        void clearCallbacks(std::type_index type);
 
         /**
          * @brief Clears all registered callbacks.
          */
-        void clear_all_callbacks();
+        void clearAllCallbacks();
 
     private:
-        std::unordered_map<std::type_index, std::vector<Callback>> construct_callbacks;
-        std::unordered_map<std::type_index, std::vector<Callback>> destroy_callbacks;
+        std::unordered_map<std::type_index, std::vector<Callback>> _constructCallbacks;
+        std::unordered_map<std::type_index, std::vector<Callback>> _destroyCallbacks;
         mutable std::shared_mutex callbacks_mutex;
     };
 
 } // namespace ECS
 
-#endif // ECS_SIGNAL_SIGNAL_DISPATCHER_HPP
+#endif // ECS_SIGNAL__signalDispatcher_HPP

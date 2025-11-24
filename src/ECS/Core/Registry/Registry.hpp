@@ -41,7 +41,7 @@ namespace ECS {
      * - Global singleton resource management
      *
      * Thread Safety:
-     * - parallel_view() is safe for reading/modifying DIFFERENT components
+     * - parallelView() is safe for reading/modifying DIFFERENT components
      * - DO NOT add/remove entities or components during parallel iteration
      * - DO NOT modify shared state without synchronization in callbacks
      */
@@ -57,33 +57,33 @@ namespace ECS {
          * @brief Pre-allocates memory for entities to reduce allocations.
          * @param capacity Expected number of entities
          */
-        void reserve_entities(size_t capacity);
+        void reserveEntities(size_t capacity);
 
         /**
          * @brief Creates a new entity with a unique ID.
          * @return New entity handle
          */
-        Entity spawn_entity();
+        Entity spawnEntity();
 
         /**
          * @brief Destroys an entity and all its components.
          * @param entity Entity to destroy (safe to call on dead entities)
          */
-        void kill_entity(Entity entity) noexcept;
+        void killEntity(Entity entity) noexcept;
 
         /**
          * @brief Checks if an entity is still valid.
          * @param entity Entity to check
          * @return true if entity exists and generation matches
          */
-        [[nodiscard]] bool is_alive(Entity entity) const noexcept;
+        [[nodiscard]] bool isAlive(Entity entity) const noexcept;
 
         /**
          * @brief Recycles tombstone entities by resetting their generations.
          * Call this periodically to reclaim entity slots. Thread-safe.
          * @return Number of tombstones recycled
          */
-        size_t cleanup_tombstones();
+        size_t cleanupTombstones();
 
         /**
          * @brief Removes all entities matching a predicate.
@@ -91,7 +91,7 @@ namespace ECS {
          * @return Number of entities removed
          */
         template<typename Func>
-        size_t remove_entities_if(Func&& predicate);
+        size_t removeEntitiesIf(Func&& predicate);
 
         // ========================================================================
         // COMPONENT MANAGEMENT
@@ -103,7 +103,7 @@ namespace ECS {
          * @param capacity Expected number of components
          */
         template<typename T>
-        void reserve_components(size_t capacity);
+        void reserveComponents(size_t capacity);
 
         /**
          * @brief Releases unused memory from all component pools.
@@ -116,46 +116,46 @@ namespace ECS {
          * @tparam T Component type to compact
          */
         template<typename T>
-        void compact_component();
+        void compactComponent();
 
         /**
          * @brief Constructs component in-place for entity.
-         * Triggers on_construct callbacks for new components only.
+         * Triggers onConstruct callbacks for new components only.
          * @tparam T Component type
          * @param entity Target entity
          * @param args Constructor arguments
          * @return Reference to component
          */
         template <typename T, typename... Args>
-        T& emplace_component(Entity entity, Args&&... args);
+        T& emplaceComponent(Entity entity, Args&&... args);
 
         /**
          * @brief Gets component if exists, otherwise creates it (lazy initialization).
-         * Only triggers on_construct callback if component is newly created.
+         * Only triggers onConstruct callback if component is newly created.
          * @tparam T Component type
          * @param entity Target entity
          * @param args Constructor arguments (used only if component doesn't exist)
          * @return Reference to component (existing or newly created)
          */
         template <typename T, typename... Args>
-        T& get_or_emplace(Entity entity, Args&&... args);
+        T& getOrEmplace(Entity entity, Args&&... args);
 
         /**
          * @brief Removes component from entity.
-         * Triggers on_destroy callbacks.
+         * Triggers onDestroy callbacks.
          * @tparam T Component type
          * @param entity Target entity
          */
         template <typename T>
-        void remove_component(Entity entity);
+        void removeComponent(Entity entity);
 
         /**
          * @brief Removes all components of a specific type from all entities.
-         * Triggers on_destroy callbacks for each component removed.
+         * Triggers onDestroy callbacks for each component removed.
          * @tparam T Component type
          */
         template <typename T>
-        void clear_components();
+        void clearComponents();
 
         /**
          * @brief Checks if entity has a component.
@@ -164,7 +164,7 @@ namespace ECS {
          * @return true if entity has component
          */
         template <typename T>
-        [[nodiscard]] bool has_component(Entity entity) const noexcept;
+        [[nodiscard]] bool hasComponent(Entity entity) const noexcept;
 
         /**
          * @brief Returns the number of entities with a specific component.
@@ -172,7 +172,7 @@ namespace ECS {
          * @return Count of entities having component T
          */
         template <typename T>
-        [[nodiscard]] size_t count_components() const noexcept;
+        [[nodiscard]] size_t countComponents() const noexcept;
 
         /**
          * @brief Retrieves component reference.
@@ -182,7 +182,7 @@ namespace ECS {
          * @throws std::runtime_error if entity dead or component missing
          */
         template <typename T>
-        T& get_component(Entity entity);
+        T& getComponent(Entity entity);
 
         /**
          * @brief Retrieves const component reference.
@@ -192,7 +192,7 @@ namespace ECS {
          * @throws std::runtime_error if entity dead or component missing
          */
         template <typename T>
-        const T& get_component(Entity entity) const;
+        const T& getComponent(Entity entity) const;
 
         /**
          * @brief Modifies component via callback function.
@@ -214,7 +214,7 @@ namespace ECS {
          * @param callback Function called when component is added
          */
         template<typename T>
-        void on_construct(std::function<void(Entity)> callback);
+        void onConstruct(std::function<void(Entity)> callback);
 
         /**
          * @brief Registers callback for component removal events.
@@ -222,7 +222,7 @@ namespace ECS {
          * @param callback Function called when component is removed
          */
         template<typename T>
-        void on_destroy(std::function<void(Entity)> callback);
+        void onDestroy(std::function<void(Entity)> callback);
 
         // ========================================================================
         // VIEW/QUERY SYSTEM
@@ -250,7 +250,7 @@ namespace ECS {
          * @return ParallelView object for parallel processing
          */
         template<typename... Components>
-        ParallelView<Components...> parallel_view();
+        ParallelView<Components...> parallelView();
 
         /**
          * @brief Creates a group for cached entity sets.
@@ -258,7 +258,7 @@ namespace ECS {
          * @return Group object with pre-filtered entities
          */
         template<typename... Components>
-        Group<Components...> create_group();
+        Group<Components...> createGroup();
 
         // ========================================================================
         // SINGLETON RESOURCES
@@ -271,7 +271,7 @@ namespace ECS {
          * @return Reference to singleton
          */
         template<typename T, typename... Args>
-        T& set_singleton(Args&&... args);
+        T& setSingleton(Args&&... args);
 
         /**
          * @brief Retrieves singleton resource.
@@ -280,7 +280,7 @@ namespace ECS {
          * @throws std::out_of_range if singleton doesn't exist
          */
         template<typename T>
-        T& get_singleton();
+        T& getSingleton();
 
         /**
          * @brief Checks if singleton exists.
@@ -288,14 +288,14 @@ namespace ECS {
          * @return true if singleton is registered
          */
         template<typename T>
-        [[nodiscard]] bool has_singleton() const noexcept;
+        [[nodiscard]] bool hasSingleton() const noexcept;
 
         /**
          * @brief Removes singleton resource.
          * @tparam T Singleton type
          */
         template<typename T>
-        void remove_singleton() noexcept;
+        void removeSingleton() noexcept;
 
         // ========================================================================
         // RELATIONSHIPS
@@ -305,13 +305,13 @@ namespace ECS {
          * @brief Gets the relationship manager for entity hierarchies.
          * @return Reference to relationship manager
          */
-        RelationshipManager& get_relationship_manager() noexcept;
+        RelationshipManager& getRelationshipManager() noexcept;
 
         /**
          * @brief Gets the relationship manager (const version).
          * @return Const reference to relationship manager
          */
-        const RelationshipManager& get_relationship_manager() const noexcept;
+        const RelationshipManager& getRelationshipManager() const noexcept;
 
         // ========================================================================
         // DEBUGGING/INTROSPECTION
@@ -322,7 +322,7 @@ namespace ECS {
          * @param entity Target entity
          * @return Vector of type indices for entity's components
          */
-        const std::vector<std::type_index>& get_entity_components(Entity entity) const;
+        const std::vector<std::type_index>& getEntityComponents(Entity entity) const;
 
     private:
         // ========================================================================
@@ -330,52 +330,52 @@ namespace ECS {
         // ========================================================================
 
         // Entity management
-        std::unordered_map<std::uint32_t, std::vector<std::type_index>> entity_components;
-        std::vector<std::uint32_t> generations;
-        std::vector<std::uint32_t> free_indices;
-        std::vector<std::uint32_t> tombstones;
+        std::unordered_map<std::uint32_t, std::vector<std::type_index>> _entityComponents;
+        std::vector<std::uint32_t> _generations;
+        std::vector<std::uint32_t> _freeIndices;
+        std::vector<std::uint32_t> _tombstones;
 
         // Component storage
-        std::unordered_map<std::type_index, std::unique_ptr<ISparseSet>> component_pools;
+        std::unordered_map<std::type_index, std::unique_ptr<ISparseSet>> _componentPools;
 
         // Global resources
-        std::unordered_map<std::type_index, std::any> singletons;
+        std::unordered_map<std::type_index, std::any> _singletons;
 
         // Systems
-        SignalDispatcher signal_dispatcher;
-        RelationshipManager relationship_manager;
+        SignalDispatcher _signalDispatcher;
+        RelationshipManager _relationshipManager;
 
         // Thread safety
-        mutable std::shared_mutex entity_mutex;
-        mutable std::shared_mutex component_pool_mutex;
+        mutable std::shared_mutex _entityMutex;
+        mutable std::shared_mutex _componentPoolMutex;
 
         // ========================================================================
         // INTERNAL HELPERS
         // ========================================================================
 
         /**
-         * @brief Gets or creates sparse set for component type.
+         * @brief Gets or creates _sparse set for component type.
          * @tparam T Component type
-         * @return Reference to sparse set
+         * @return Reference to _sparse set
          */
         template <typename T>
-        auto& get_sparse_set();
+        auto& getSparseSet();
 
         /**
-         * @brief Gets const sparse set pointer (returns nullptr if not found).
+         * @brief Gets const _sparse set pointer (returns nullptr if not found).
          * @tparam T Component type
-         * @return Pointer to sparse set or nullptr
+         * @return Pointer to _sparse set or nullptr
          */
         template <typename T>
-        const ISparseSet* get_sparse_set_const() const noexcept;
+        const ISparseSet* getSparseSetConst() const noexcept;
 
         /**
-         * @brief Gets typed const sparse set (throws if not found).
+         * @brief Gets typed const _sparse set (throws if not found).
          * @tparam T Component type
-         * @return Const reference to typed sparse set
+         * @return Const reference to typed _sparse set
          */
         template <typename T>
-        const auto& get_sparse_set_typed_const() const;
+        const auto& getSparseSetTypedConst() const;
 
         // Friend declarations for view access
         template<typename...> friend class View;

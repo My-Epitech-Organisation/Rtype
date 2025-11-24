@@ -38,7 +38,7 @@ namespace ECS {
     template<typename... Includes, typename... Excludes>
     class ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>> {
     private:
-        // Type alias to transform component types to ISparseSet pointers
+        // Type alias to transform component types to I_sparseSet pointers
         template<typename T>
         using PoolPtr = ISparseSet*;
 
@@ -46,8 +46,8 @@ namespace ECS {
         template<typename ExcludeTuple>
         ExcludeView(Registry* reg, std::tuple<PoolPtr<Includes>...> inc_pools,
                     ExcludeTuple&& exc_pools, size_t smallest_idx)
-            : registry(reg), include_pools(inc_pools), exclude_pools(std::forward<ExcludeTuple>(exc_pools)),
-              smallest_pool_index(smallest_idx) {}
+            : registry(reg), _includePools(inc_pools), _excludePools(std::forward<ExcludeTuple>(exc_pools)),
+              _smallestPoolIndex(smallest_idx) {}
 
         /**
          * @brief Applies function to each entity matching include/exclude criteria.
@@ -63,17 +63,17 @@ namespace ECS {
         // only during view construction and iteration. Using smart pointers would imply
         // ownership semantics which is incorrect for this use case.
         // Using ISparseSet* to support both regular components and tags
-        std::tuple<PoolPtr<Includes>...> include_pools;
-        std::vector<ISparseSet*> exclude_pools;
-        size_t smallest_pool_index;
+        std::tuple<PoolPtr<Includes>...> _includePools;
+        std::vector<ISparseSet*> _excludePools;
+        size_t _smallestPoolIndex;
 
         template<typename Func, size_t... IncIs>
-        void each_impl(Func&& func, std::index_sequence<IncIs...>);
+        void eachImpl(Func&& func, std::index_sequence<IncIs...>);
 
         bool is_excluded(Entity entity) const;
 
         template<typename T>
-        T& get_component_data(Entity entity, ISparseSet* pool);
+        T& getComponentData(Entity entity, ISparseSet* pool);
     };
 
 } // namespace ECS

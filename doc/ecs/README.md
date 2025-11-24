@@ -6,7 +6,7 @@ Welcome to the R-Type Entity Component System (ECS) technical documentation.
 
 ### Core Concepts
 - [Entity System](01_entity_system.md) - Entity identifiers and lifecycle
-- [Component Storage](02_component_storage.md) - Sparse set architecture
+- [Component Storage](02_component_storage.md) - _sparse set architecture
 - [Registry](03_registry.md) - Central ECS coordinator
 
 ### Query & Iteration
@@ -43,11 +43,11 @@ int main() {
     ECS::Registry registry;
     
     // Create entity
-    auto entity = registry.spawn_entity();
+    auto entity = registry.spawnEntity();
     
     // Add components
-    registry.emplace_component<Position>(entity, 0.0f, 0.0f);
-    registry.emplace_component<Velocity>(entity, 1.0f, 0.0f);
+    registry.emplaceComponent<Position>(entity, 0.0f, 0.0f);
+    registry.emplaceComponent<Velocity>(entity, 1.0f, 0.0f);
     
     // Query and iterate
     registry.view<Position, Velocity>().each([](auto e, auto& pos, auto& vel) {
@@ -64,7 +64,7 @@ int main() {
 The R-Type ECS is a high-performance implementation featuring:
 
 - **Entities**: Lightweight IDs with generational indices (32-bit)
-- **Components**: Plain data structures stored in cache-friendly sparse sets
+- **Components**: Plain data structures stored in cache-friendly _sparse sets
 - **Systems**: Functions that operate on component views
 - **Registry**: Central coordinator for all ECS operations
 
@@ -73,7 +73,7 @@ The R-Type ECS is a high-performance implementation featuring:
 | Operation | Complexity | Notes |
 |-----------|-----------|-------|
 | Entity creation | O(1) | Amortized constant time |
-| Component add/remove | O(1) | Direct sparse set access |
+| Component add/remove | O(1) | Direct _sparse set access |
 | Component lookup | O(1) | Array indexing |
 | View iteration | O(n) | Optimal cache utilization |
 | Parallel iteration | Linear speedup | Near-perfect scaling |
@@ -91,7 +91,7 @@ The R-Type ECS is a high-performance implementation featuring:
 ```
 src/ECS/
 ├── Core/           # Entity, Registry, CommandBuffer, Prefab, Relationship
-├── Storage/        # SparseSet, TagSparseSet, ISparseSet
+├── Storage/        # _sparseSet, TagSparseSet, I_sparseSet
 ├── View/           # View, ParallelView, Group, ExcludeView
 ├── System/         # SystemScheduler
 ├── Signal/         # SignalDispatcher

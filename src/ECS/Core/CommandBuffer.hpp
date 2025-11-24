@@ -29,39 +29,39 @@ namespace ECS {
      *
      * Example:
      *   CommandBuffer cmd(registry);
-     *   registry.parallel_view<Position>().each([&](Entity e, Position& p) {
+     *   registry.parallelView<Position>().each([&](Entity e, Position& p) {
      *       if (p.x > 100) {
-     *           cmd.destroy_entity_deferred(e);  // Safe during parallel iteration
+     *           cmd.destroyEntityDeferred(e);  // Safe during parallel iteration
      *       }
      *   });
      *   cmd.flush();  // Apply all changes at once
      */
     class CommandBuffer {
     public:
-        explicit CommandBuffer(Registry& reg) : registry(reg) {}
+        explicit CommandBuffer(Registry& reg) : _registry(reg) {}
 
         /**
          * @brief Records entity creation for later execution.
          * @return Placeholder entity (real entity created on flush)
          */
-        Entity spawn_entity_deferred();
+        Entity spawnEntityDeferred();
 
         /**
          * @brief Records entity destruction for later execution.
          */
-        void destroy_entity_deferred(Entity entity);
+        void destroyEntityDeferred(Entity entity);
 
         /**
          * @brief Records component addition for later execution.
          */
         template<typename T, typename... Args>
-        void emplace_component_deferred(Entity entity, Args&&... args);
+        void emplaceComponentDeferred(Entity entity, Args&&... args);
 
         /**
          * @brief Records component removal for later execution.
          */
         template<typename T>
-        void remove_component_deferred(Entity entity);
+        void removeComponentDeferred(Entity entity);
 
         /**
          * @brief Applies all recorded commands and clears the buffer.
@@ -72,7 +72,7 @@ namespace ECS {
         /**
          * @brief Returns number of pending commands.
          */
-        size_t pending_count() const;
+        size_t pendingCount() const;
 
         /**
          * @brief Clears all pending commands without executing them.
@@ -80,12 +80,12 @@ namespace ECS {
         void clear();
 
     private:
-        Registry& registry;
-        std::vector<std::function<void()>> commands;
-        mutable std::mutex commands_mutex;
+        Registry& _registry;
+        std::vector<std::function<void()>> _commands;
+        mutable std::mutex _commandsMutex;
 
-        std::unordered_map<std::uint32_t, Entity> placeholder_to_real;
-        std::uint32_t next_placeholder_id = 0;
+        std::unordered_map<std::uint32_t, Entity> _placeholdertoReal;
+        std::uint32_t _nextPlaceholderId = 0;
     };
 
 } // namespace ECS
@@ -99,35 +99,35 @@ namespace ECS {
 namespace ECS {
 
     template<typename T, typename... Args>
-    void CommandBuffer::emplace_component_deferred(Entity entity, Args&&... args) {
-        std::lock_guard lock(commands_mutex);
+    void CommandBuffer::emplaceComponentDeferred(Entity entity, Args&&... args) {
+        std::lock_guard lock(_commandsMutex);
 
         auto captured_args = std::make_tuple(std::forward<Args>(args)...);
 
-        commands.push_back([this, entity, captured_args = std::move(captured_args)]() mutable {
+        _commands.push_back([this, entity, captured_args = std::move(captured_args)]() mutable {
             Entity target_entity = entity;
-            auto it = placeholder_to_real.find(entity.id);
-            if (it != placeholder_to_real.end()) {
+            auto it = _placeholdertoReal.find(entity.id);
+            if (it != _placeholdertoReal.end()) {
                 target_entity = it->second;
             }
 
             std::apply([this, target_entity](auto&&... args) {
-                registry.template emplace_component<T>(target_entity, std::forward<decltype(args)>(args)...);
+                _registry.template emplaceComponent<T>(target_entity, std::forward<decltype(args)>(args)...);
             }, std::move(captured_args));
         });
     }
 
     template<typename T>
-    void CommandBuffer::remove_component_deferred(Entity entity) {
-        std::lock_guard lock(commands_mutex);
-        commands.push_back([this, entity]() {
+    void CommandBuffer::removeComponentDeferred(Entity entity) {
+        std::lock_guard lock(_commandsMutex);
+        _commands.push_back([this, entity]() {
             Entity target_entity = entity;
-            auto it = placeholder_to_real.find(entity.id);
-            if (it != placeholder_to_real.end()) {
+            auto it = _placeholdertoReal.find(entity.id);
+            if (it != _placeholdertoReal.end()) {
                 target_entity = it->second;
             }
 
-            registry.template remove_component<T>(target_entity);
+            _registry.template removeComponent<T>(target_entity);
         });
     }
 

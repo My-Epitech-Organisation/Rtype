@@ -51,7 +51,7 @@ namespace ECS {
         auto exclude();
 
     private:
-        // Type alias to transform component types to ISparseSet pointers
+        // Type alias to transform component types to I_sparseSet pointers
         template<typename T>
         using PoolPtr = ISparseSet*;
 
@@ -62,19 +62,19 @@ namespace ECS {
         // incorrectly imply shared or exclusive ownership.
         // Using ISparseSet* to support both regular components and tags
         std::tuple<PoolPtr<Components>...> pools;
-        size_t smallest_pool_index = 0;
+        size_t _smallestPoolIndex = 0;
 
         template<size_t... Is>
-        void initialize_pools(std::index_sequence<Is...>);
+        void initializePools(std::index_sequence<Is...>);
 
         template<typename Func, size_t... Is>
-        void each_impl(Func&& func, std::index_sequence<Is...>);
+        void eachImpl(Func&& func, std::index_sequence<Is...>);
 
         template<size_t... Is>
-        size_t find_smallest_pool(std::index_sequence<Is...>);
+        size_t findSmallestPool(std::index_sequence<Is...>);
 
         template<typename T>
-        T& get_component_data(Entity entity, ISparseSet* pool);
+        T& getComponentData(Entity entity, ISparseSet* pool);
 
         template<typename, typename>
         friend class ExcludeView;

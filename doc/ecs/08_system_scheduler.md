@@ -27,8 +27,8 @@ Systems can depend on other systems, ensuring execution order:
 
 ```cpp
 // Physics must run before collision
-scheduler.add_system("physics", physics_system);
-scheduler.add_system("collision", collision_system, {"physics"});
+scheduler.addSystem("physics", physics_system);
+scheduler.addSystem("collision", collision_system, {"physics"});
 ```
 
 ## Basic Usage
@@ -39,10 +39,10 @@ scheduler.add_system("collision", collision_system, {"physics"});
 ECS::SystemScheduler scheduler(registry);
 
 // Add systems
-scheduler.add_system("input", input_system);
-scheduler.add_system("physics", physics_system, {"input"});
-scheduler.add_system("collision", collision_system, {"physics"});
-scheduler.add_system("render", render_system, {"physics", "collision"});
+scheduler.addSystem("input", input_system);
+scheduler.addSystem("physics", physics_system, {"input"});
+scheduler.addSystem("collision", collision_system, {"physics"});
+scheduler.addSystem("render", render_system, {"physics", "collision"});
 
 // Execute all systems in dependency order
 scheduler.run();
@@ -54,12 +54,12 @@ scheduler.run();
 
 ```cpp
 // Add system with dependencies
-void add_system(const std::string& name, 
+void addSystem(const std::string& name, 
                 SystemFunc func,
                 const std::vector<std::string>& dependencies = {});
 
 // Remove system
-void remove_system(const std::string& name);
+void removeSystem(const std::string& name);
 
 // Clear all systems
 void clear();
@@ -72,20 +72,20 @@ void clear();
 void run();
 
 // Run specific system
-void run_system(const std::string& name);
+void runSystem(const std::string& name);
 ```
 
 ### System Control
 
 ```cpp
 // Enable/disable system
-void set_system_enabled(const std::string& name, bool enabled);
+void setSystemEnabled(const std::string& name, bool enabled);
 
 // Check if enabled
-bool is_system_enabled(const std::string& name) const;
+bool isSystemEnabled(const std::string& name) const;
 
 // Get execution order
-std::vector<std::string> get_execution_order() const;
+std::vector<std::string> getExecutionOrder() const;
 ```
 
 ## Dependency Resolution
@@ -95,10 +95,10 @@ std::vector<std::string> get_execution_order() const;
 The scheduler automatically orders systems based on dependencies:
 
 ```cpp
-scheduler.add_system("A", system_a);
-scheduler.add_system("B", system_b, {"A"});      // B depends on A
-scheduler.add_system("C", system_c, {"A"});      // C depends on A
-scheduler.add_system("D", system_d, {"B", "C"}); // D depends on B and C
+scheduler.addSystem("A", system_a);
+scheduler.addSystem("B", system_b, {"A"});      // B depends on A
+scheduler.addSystem("C", system_c, {"A"});      // C depends on A
+scheduler.addSystem("D", system_d, {"B", "C"}); // D depends on B and C
 
 // Execution order: A → (B, C in parallel) → D
 ```
@@ -124,9 +124,9 @@ Both satisfy dependencies. B and C can run in parallel.
 Cyclic dependencies are detected and cause errors:
 
 ```cpp
-scheduler.add_system("A", system_a, {"B"});
-scheduler.add_system("B", system_b, {"C"});
-scheduler.add_system("C", system_c, {"A"}); // ❌ Cycle: A→B→C→A
+scheduler.addSystem("A", system_a, {"B"});
+scheduler.addSystem("B", system_b, {"C"});
+scheduler.addSystem("C", system_c, {"A"}); // ❌ Cycle: A→B→C→A
 
 // Throws: std::runtime_error("Cyclic dependency detected")
 ```
@@ -138,10 +138,10 @@ scheduler.add_system("C", system_c, {"A"}); // ❌ Cycle: A→B→C→A
 Independent systems can run in parallel:
 
 ```cpp
-scheduler.add_system("physics", physics_system);
-scheduler.add_system("audio", audio_system);     // Independent
-scheduler.add_system("particles", particle_system); // Independent
-scheduler.add_system("render", render_system, {"physics", "audio", "particles"});
+scheduler.addSystem("physics", physics_system);
+scheduler.addSystem("audio", audio_system);     // Independent
+scheduler.addSystem("particles", particle_system); // Independent
+scheduler.addSystem("render", render_system, {"physics", "audio", "particles"});
 
 // Execution:
 // 1. physics, audio, particles run in parallel
@@ -151,12 +151,12 @@ scheduler.add_system("render", render_system, {"physics", "audio", "particles"})
 ### Conditional System Execution
 
 ```cpp
-scheduler.add_system("editor_ui", editor_ui_system);
+scheduler.addSystem("editor_ui", editor_ui_system);
 
 if (is_editor_mode) {
-    scheduler.set_system_enabled("editor_ui", true);
+    scheduler.setSystemEnabled("editor_ui", true);
 } else {
-    scheduler.set_system_enabled("editor_ui", false);
+    scheduler.setSystemEnabled("editor_ui", false);
 }
 
 scheduler.run(); // Skips disabled systems
@@ -170,15 +170,15 @@ class GameMode {
     
 public:
     void enter_play_mode() {
-        scheduler.add_system("ai", ai_system);
-        scheduler.add_system("combat", combat_system);
-        scheduler.set_system_enabled("editor_tools", false);
+        scheduler.addSystem("ai", ai_system);
+        scheduler.addSystem("combat", combat_system);
+        scheduler.setSystemEnabled("editor_tools", false);
     }
     
     void enter_edit_mode() {
-        scheduler.remove_system("ai");
-        scheduler.remove_system("combat");
-        scheduler.set_system_enabled("editor_tools", true);
+        scheduler.removeSystem("ai");
+        scheduler.removeSystem("combat");
+        scheduler.setSystemEnabled("editor_tools", true);
     }
 };
 ```
@@ -187,18 +187,18 @@ public:
 
 ```cpp
 // Early update systems
-scheduler.add_system("input", input_system);
-scheduler.add_system("ai_decision", ai_decision_system, {"input"});
+scheduler.addSystem("input", input_system);
+scheduler.addSystem("ai_decision", ai_decision_system, {"input"});
 
 // Physics systems
-scheduler.add_system("integrate_velocity", integrate_system, {"ai_decision"});
-scheduler.add_system("collision", collision_system, {"integrate_velocity"});
-scheduler.add_system("resolve_collisions", resolve_system, {"collision"});
+scheduler.addSystem("integrate_velocity", integrate_system, {"ai_decision"});
+scheduler.addSystem("collision", collision_system, {"integrate_velocity"});
+scheduler.addSystem("resolve_collisions", resolve_system, {"collision"});
 
 // Late update systems
-scheduler.add_system("animation", animation_system, {"resolve_collisions"});
-scheduler.add_system("camera", camera_system, {"animation"});
-scheduler.add_system("render", render_system, {"camera"});
+scheduler.addSystem("animation", animation_system, {"resolve_collisions"});
+scheduler.addSystem("camera", camera_system, {"animation"});
+scheduler.addSystem("render", render_system, {"camera"});
 ```
 
 ## Complete Example
@@ -234,10 +234,10 @@ int main() {
     ECS::SystemScheduler scheduler(registry);
     
     // Register systems with dependencies
-    scheduler.add_system("input", input_system);
-    scheduler.add_system("physics", physics_system, {"input"});
-    scheduler.add_system("collision", collision_system, {"physics"});
-    scheduler.add_system("render", render_system, {"collision"});
+    scheduler.addSystem("input", input_system);
+    scheduler.addSystem("physics", physics_system, {"input"});
+    scheduler.addSystem("collision", collision_system, {"physics"});
+    scheduler.addSystem("render", render_system, {"collision"});
     
     // Game loop
     while (running) {
@@ -252,7 +252,7 @@ int main() {
 
 ```cpp
 // Get and print execution order
-auto order = scheduler.get_execution_order();
+auto order = scheduler.getExecutionOrder();
 std::cout << "System execution order:\n";
 for (size_t i = 0; i < order.size(); ++i) {
     std::cout << (i + 1) << ". " << order[i] << "\n";
@@ -278,7 +278,7 @@ for (size_t i = 0; i < order.size(); ++i) {
 
 ```cpp
 // Sequential execution
-for (auto& system_name : execution_order) {
+for (auto& system_name : _executionOrder) {
     if (systems[system_name].enabled) {
         systems[system_name].func(registry); // O(1) lookup
     }
@@ -358,11 +358,11 @@ void game_frame() {
 
 ```cpp
 #ifdef DEBUG_MODE
-scheduler.add_system("debug_draw", debug_draw_system, {"render"});
-scheduler.add_system("profiler", profiler_system, {"render"});
+scheduler.addSystem("debug_draw", debug_draw_system, {"render"});
+scheduler.addSystem("profiler", profiler_system, {"render"});
 #else
-scheduler.set_system_enabled("debug_draw", false);
-scheduler.set_system_enabled("profiler", false);
+scheduler.setSystemEnabled("debug_draw", false);
+scheduler.setSystemEnabled("profiler", false);
 #endif
 ```
 
@@ -371,16 +371,16 @@ scheduler.set_system_enabled("profiler", false);
 ```cpp
 void reload_system(const std::string& name, SystemFunc new_func) {
     // Get current enabled state
-    bool was_enabled = scheduler.is_system_enabled(name);
+    bool was_enabled = scheduler.isSystemEnabled(name);
     
     // Remove old system
-    scheduler.remove_system(name);
+    scheduler.removeSystem(name);
     
     // Add new implementation
-    scheduler.add_system(name, new_func, /* same dependencies */);
+    scheduler.addSystem(name, new_func, /* same dependencies */);
     
     // Restore enabled state
-    scheduler.set_system_enabled(name, was_enabled);
+    scheduler.setSystemEnabled(name, was_enabled);
 }
 ```
 
@@ -407,11 +407,11 @@ void safe_run() {
 
 ```cpp
 void debug_print_schedule(const SystemScheduler& scheduler) {
-    auto order = scheduler.get_execution_order();
+    auto order = scheduler.getExecutionOrder();
     std::cout << "=== System Schedule ===\n";
     for (const auto& name : order) {
         std::cout << "  - " << name;
-        if (!scheduler.is_system_enabled(name)) {
+        if (!scheduler.isSystemEnabled(name)) {
             std::cout << " (disabled)";
         }
         std::cout << "\n";

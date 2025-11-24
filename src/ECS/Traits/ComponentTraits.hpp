@@ -21,9 +21,9 @@ namespace ECS {
      */
     template<typename T>
     struct ComponentTraits {
-        static constexpr bool is_empty = std::is_empty_v<T>;
-        static constexpr bool is_trivial = std::is_trivially_copyable_v<T>;
-        static constexpr bool is_trivially_destructible = std::is_trivially_destructible_v<T>;
+        static constexpr bool _isEmpty = std::is_empty_v<T>;
+        static constexpr bool _isTrivial = std::is_trivially_copyable_v<T>;
+        static constexpr bool _isTrivialDestructible = std::is_trivially_destructible_v<T>;
     };
 
     /**

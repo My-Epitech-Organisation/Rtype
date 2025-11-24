@@ -13,38 +13,38 @@
 
 namespace ECS {
 
-    void SystemScheduler::add_system(const std::string& name, SystemFunc func,
+    void SystemScheduler::addSystem(const std::string& name, SystemFunc func,
                                      const std::vector<std::string>& dependencies) {
-        if (systems.find(name) != systems.end()) {
+        if (_systems.find(name) != _systems.end()) {
             throw std::runtime_error("System '" + name + "' already registered");
         }
 
-        systems[name] = SystemNode{name, std::move(func), dependencies, true};
-        needs_reorder = true;
+        _systems[name] = SystemNode{name, std::move(func), dependencies, true};
+        _needsReorder = true;
     }
 
-    void SystemScheduler::remove_system(const std::string& name) {
-        systems.erase(name);
-        needs_reorder = true;
+    void SystemScheduler::removeSystem(const std::string& name) {
+        _systems.erase(name);
+        _needsReorder = true;
     }
 
     void SystemScheduler::run() {
-        if (needs_reorder) {
-            recompute_order();
-            needs_reorder = false;
+        if (_needsReorder) {
+            recomputeOrder();
+            _needsReorder = false;
         }
 
-        for (const auto& system_name : execution_order) {
-            auto it = systems.find(system_name);
-            if (it != systems.end() && it->second.enabled) {
+        for (const auto& system_name : _executionOrder) {
+            auto it = _systems.find(system_name);
+            if (it != _systems.end() && it->second.enabled) {
                 it->second.func(registry);
             }
         }
     }
 
-    void SystemScheduler::run_system(const std::string& name) {
-        auto it = systems.find(name);
-        if (it == systems.end()) {
+    void SystemScheduler::runSystem(const std::string& name) {
+        auto it = _systems.find(name);
+        if (it == _systems.end()) {
             throw std::runtime_error("System '" + name + "' not found");
         }
         if (it->second.enabled) {
@@ -53,50 +53,50 @@ namespace ECS {
     }
 
     void SystemScheduler::clear() {
-        systems.clear();
-        execution_order.clear();
-        needs_reorder = true;
+        _systems.clear();
+        _executionOrder.clear();
+        _needsReorder = true;
     }
 
-    std::vector<std::string> SystemScheduler::get_execution_order() const {
-        return execution_order;
+    std::vector<std::string> SystemScheduler::getExecutionOrder() const {
+        return _executionOrder;
     }
 
-    void SystemScheduler::set_system_enabled(const std::string& name, bool enabled) {
-        auto it = systems.find(name);
-        if (it == systems.end()) {
+    void SystemScheduler::setSystemEnabled(const std::string& name, bool enabled) {
+        auto it = _systems.find(name);
+        if (it == _systems.end()) {
             throw std::runtime_error("System '" + name + "' not found");
         }
         it->second.enabled = enabled;
     }
 
-    bool SystemScheduler::is_system_enabled(const std::string& name) const {
-        auto it = systems.find(name);
-        if (it == systems.end()) {
+    bool SystemScheduler::isSystemEnabled(const std::string& name) const {
+        auto it = _systems.find(name);
+        if (it == _systems.end()) {
             throw std::runtime_error("System '" + name + "' not found");
         }
         return it->second.enabled;
     }
 
-    void SystemScheduler::recompute_order() {
-        if (has_cycle()) {
+    void SystemScheduler::recomputeOrder() {
+        if (hasCycle()) {
             throw std::runtime_error("Circular dependency detected in system graph");
         }
-        topological_sort();
+        topologicalSort();
     }
 
-    void SystemScheduler::topological_sort() {
-        execution_order.clear();
+    void SystemScheduler::topologicalSort() {
+        _executionOrder.clear();
         std::unordered_map<std::string, int> in_degree;
         std::unordered_map<std::string, std::vector<std::string>> adjacency_list;
 
-        for (const auto& [name, node] : systems) {
+        for (const auto& [name, node] : _systems) {
             in_degree[name] = 0;
         }
 
-        for (const auto& [name, node] : systems) {
+        for (const auto& [name, node] : _systems) {
             for (const auto& dep : node.dependencies) {
-                if (systems.find(dep) == systems.end()) {
+                if (_systems.find(dep) == _systems.end()) {
                     throw std::runtime_error("System '" + name + "' depends on non-existent system '" + dep + "'");
                 }
                 adjacency_list[dep].push_back(name);
@@ -113,7 +113,7 @@ namespace ECS {
         while (!zero_degree.empty()) {
             std::string current = zero_degree.front();
             zero_degree.pop();
-            execution_order.push_back(current);
+            _executionOrder.push_back(current);
 
             for (const auto& neighbor : adjacency_list[current]) {
                 in_degree[neighbor]--;
@@ -123,12 +123,12 @@ namespace ECS {
             }
         }
 
-        if (execution_order.size() != systems.size()) {
+        if (_executionOrder.size() != _systems.size()) {
             throw std::runtime_error("Failed to compute execution order (possible cycle)");
         }
     }
 
-    bool SystemScheduler::has_cycle() const {
+    bool SystemScheduler::hasCycle() const {
         std::unordered_set<std::string> visited;
         std::unordered_set<std::string> rec_stack;
 
@@ -136,8 +136,8 @@ namespace ECS {
             visited.insert(name);
             rec_stack.insert(name);
 
-            auto it = systems.find(name);
-            if (it != systems.end()) {
+            auto it = _systems.find(name);
+            if (it != _systems.end()) {
                 for (const auto& dep : it->second.dependencies) {
                     if (visited.find(dep) == visited.end()) {
                         if (dfs(dep)) return true;
@@ -151,7 +151,7 @@ namespace ECS {
             return false;
         };
 
-        for (const auto& [name, _] : systems) {
+        for (const auto& [name, _] : _systems) {
             if (visited.find(name) == visited.end()) {
                 if (dfs(name)) return true;
             }

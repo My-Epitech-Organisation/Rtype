@@ -5,8 +5,8 @@
 ** ParallelView
 */
 
-#ifndef ECS_VIEW_PARALLEL_VIEW_HPP
-    #define ECS_VIEW_PARALLEL_VIEW_HPP
+#ifndef ECS_VIEW_parallelView_HPP
+    #define ECS_VIEW_parallelView_HPP
     #include "../Core/Entity.hpp"
     #include "../Storage/SparseSet.hpp"
     #include <thread>
@@ -30,14 +30,14 @@ namespace ECS {
      * - Unsafe: Shared mutable state in callback without synchronization
      *
      * Example:
-     *   registry.parallel_view<Position, Velocity>().each([](Entity e, Position& p, Velocity& v) {
+     *   registry.parallelView<Position, Velocity>().each([](Entity e, Position& p, Velocity& v) {
      *       p.x += v.dx; // Each thread processes different entities
      *   });
      */
     template<typename... Components>
     class ParallelView {
     public:
-        explicit ParallelView(Registry* reg) : registry(reg) {}
+        explicit ParallelView(Registry* reg) : _registry(reg) {}
 
         /**
          * @brief Applies function to entities across multiple threads.
@@ -47,9 +47,9 @@ namespace ECS {
         void each(Func&& func);
 
     private:
-        Registry* registry;
+        Registry* _registry;
     };
 
 } // namespace ECS
 
-#endif // ECS_VIEW_PARALLEL_VIEW_HPP
+#endif // ECS_VIEW_parallelView_HPP

@@ -33,10 +33,10 @@ namespace ECS {
      *   PrefabManager prefabs(registry);
      *
      *   // Define prefab
-     *   prefabs.register_prefab("Player", [](Registry& r, Entity e) {
-     *       r.emplace_component<Position>(e, 0.0f, 0.0f);
-     *       r.emplace_component<Velocity>(e, 0.0f, 0.0f);
-     *       r.emplace_component<Player>(e);
+     *   prefabs.registerPrefab("Player", [](Registry& r, Entity e) {
+     *       r.emplaceComponent<Position>(e, 0.0f, 0.0f);
+     *       r.emplaceComponent<Velocity>(e, 0.0f, 0.0f);
+     *       r.emplaceComponent<Player>(e);
      *   });
      *
      *   // Spawn from prefab
@@ -46,14 +46,14 @@ namespace ECS {
     public:
         using PrefabFunc = std::function<void(Registry&, Entity)>;
 
-        explicit PrefabManager(Registry& reg) : registry(reg) {}
+        explicit PrefabManager(Registry& reg) : _registry(reg) {}
 
         /**
          * @brief Registers a new prefab template.
          * @param name Unique prefab identifier
          * @param func Function that configures entity components
          */
-        void register_prefab(const std::string& name, PrefabFunc func);
+        void registerPrefab(const std::string& name, PrefabFunc func);
 
         /**
          * @brief Spawns entity from prefab template.
@@ -77,22 +77,22 @@ namespace ECS {
          * @param count Number of instances to create
          * @return Vector of created entities
          */
-        std::vector<Entity> instantiate_multiple(const std::string& name, size_t count);
+        std::vector<Entity> instantiateMultiple(const std::string& name, size_t count);
 
         /**
          * @brief Checks if prefab exists.
          */
-        bool has_prefab(const std::string& name) const;
+        bool hasPrefab(const std::string& name) const;
 
         /**
          * @brief Removes prefab definition.
          */
-        void unregister_prefab(const std::string& name);
+        void unregisterPrefab(const std::string& name);
 
         /**
          * @brief Gets all registered prefab names.
          */
-        std::vector<std::string> get_prefab_names() const;
+        std::vector<std::string> getPrefabNames() const;
 
         /**
          * @brief Clears all prefab definitions.
@@ -106,12 +106,12 @@ namespace ECS {
          * @param template_entity Entity to use as template
          * @throws std::runtime_error if entity is dead or has no components
          */
-        void create_from_entity(const std::string& name, Entity template_entity);
+        void createFromEntity(const std::string& name, Entity template_entity);
 
     private:
-        Registry& registry;
-        std::unordered_map<std::string, PrefabFunc> prefabs;
-        mutable std::shared_mutex prefab_mutex;
+        Registry& _registry;
+        std::unordered_map<std::string, PrefabFunc> _prefabs;
+        mutable std::shared_mutex _prefabMutex;
     };
 
 } // namespace ECS

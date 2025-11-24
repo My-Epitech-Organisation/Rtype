@@ -28,10 +28,10 @@ public:
     explicit Serializer(Registry& reg);
     
     template<typename T>
-    void register_serializer(std::shared_ptr<IComponentSerializer> serializer);
+    void registerSerializer(std::shared_ptr<IComponentSerializer> serializer);
     
-    bool save_to_file(const std::string& filename);
-    bool load_from_file(const std::string& filename, bool clear_existing = true);
+    bool saveToFile(const std::string& filename);
+    bool loadFromFile(const std::string& filename, bool clear_existing = true);
     
     std::string serialize();
     bool deserialize(const std::string& data, bool clear_existing = true);
@@ -40,7 +40,7 @@ public:
 
 ## Basic Usage
 
-### Define Component Serializers
+### Define Component _serializers
 
 ```cpp
 struct Position { float x, y; };
@@ -48,7 +48,7 @@ struct Position { float x, y; };
 class PositionSerializer : public IComponentSerializer {
 public:
     std::string serialize(Entity entity, Registry& registry) const override {
-        auto& pos = registry.get_component<Position>(entity);
+        auto& pos = registry.getComponent<Position>(entity);
         return std::to_string(pos.x) + "," + std::to_string(pos.y);
     }
     
@@ -56,31 +56,31 @@ public:
         size_t comma = data.find(',');
         float x = std::stof(data.substr(0, comma));
         float y = std::stof(data.substr(comma + 1));
-        registry.emplace_component<Position>(entity, x, y);
+        registry.emplaceComponent<Position>(entity, x, y);
     }
 };
 ```
 
-### Register Serializers
+### Register _serializers
 
 ```cpp
 Serializer serializer(registry);
 
-serializer.register_serializer<Position>(std::make_shared<PositionSerializer>());
-serializer.register_serializer<Velocity>(std::make_shared<VelocitySerializer>());
-serializer.register_serializer<Health>(std::make_shared<HealthSerializer>());
+serializer.registerSerializer<Position>(std::make_shared<PositionSerializer>());
+serializer.registerSerializer<Velocity>(std::make_shared<VelocitySerializer>());
+serializer.registerSerializer<Health>(std::make_shared<HealthSerializer>());
 ```
 
 ### Save and Load
 
 ```cpp
 // Save ECS state
-if (serializer.save_to_file("savegame.txt")) {
+if (serializer.saveToFile("savegame.txt")) {
     std::cout << "Game saved successfully\n";
 }
 
 // Load ECS state
-if (serializer.load_from_file("savegame.txt")) {
+if (serializer.loadFromFile("savegame.txt")) {
     std::cout << "Game loaded successfully\n";
 }
 ```
@@ -125,7 +125,7 @@ entity_index,serialized_data
 2,75
 ```
 
-## Advanced Serializers
+## Advanced _serializers
 
 ### JSON Serializer
 
@@ -135,7 +135,7 @@ entity_index,serialized_data
 class JsonPositionSerializer : public IComponentSerializer {
 public:
     std::string serialize(Entity entity, Registry& registry) const override {
-        auto& pos = registry.get_component<Position>(entity);
+        auto& pos = registry.getComponent<Position>(entity);
         nlohmann::json j;
         j["x"] = pos.x;
         j["y"] = pos.y;
@@ -144,7 +144,7 @@ public:
     
     void deserialize(Entity entity, const std::string& data, Registry& registry) const override {
         auto j = nlohmann::json::parse(data);
-        registry.emplace_component<Position>(entity, j["x"], j["y"]);
+        registry.emplaceComponent<Position>(entity, j["x"], j["y"]);
     }
 };
 ```
@@ -155,7 +155,7 @@ public:
 class BinaryPositionSerializer : public IComponentSerializer {
 public:
     std::string serialize(Entity entity, Registry& registry) const override {
-        auto& pos = registry.get_component<Position>(entity);
+        auto& pos = registry.getComponent<Position>(entity);
         std::string data;
         data.resize(sizeof(Position));
         std::memcpy(data.data(), &pos, sizeof(Position));
@@ -165,7 +165,7 @@ public:
     void deserialize(Entity entity, const std::string& data, Registry& registry) const override {
         Position pos;
         std::memcpy(&pos, data.data(), sizeof(Position));
-        registry.emplace_component<Position>(entity, pos.x, pos.y);
+        registry.emplaceComponent<Position>(entity, pos.x, pos.y);
     }
 };
 ```
@@ -203,13 +203,13 @@ class SaveGame {
 public:
     SaveGame(Registry& reg) : serializer(reg) {
         // Only register components that should be saved
-        serializer.register_serializer<Position>(std::make_shared<PositionSerializer>());
-        serializer.register_serializer<Health>(std::make_shared<HealthSerializer>());
+        serializer.registerSerializer<Position>(std::make_shared<PositionSerializer>());
+        serializer.registerSerializer<Health>(std::make_shared<HealthSerializer>());
         // Don't register transient components (Velocity, etc.)
     }
     
     void save(const std::string& filename) {
-        serializer.save_to_file(filename);
+        serializer.saveToFile(filename);
     }
 };
 ```
@@ -225,20 +225,20 @@ void save_important_entities(Registry& registry, const std::string& filename) {
     
     registry.view<Important>().each([&](Entity e, auto& important) {
         // Clone entity to temp registry
-        Entity new_e = temp_registry.spawn_entity();
+        Entity new_e = temp_registry.spawnEntity();
         
         // Copy components
-        if (registry.has_component<Position>(e)) {
-            auto& pos = registry.get_component<Position>(e);
-            temp_registry.emplace_component<Position>(new_e, pos);
+        if (registry.hasComponent<Position>(e)) {
+            auto& pos = registry.getComponent<Position>(e);
+            temp_registry.emplaceComponent<Position>(new_e, pos);
         }
         // ... copy other components
     });
     
     // Save temp registry
     Serializer temp_serializer(temp_registry);
-    temp_serializer.register_serializer<Position>(/* ... */);
-    temp_serializer.save_to_file(filename);
+    temp_serializer.registerSerializer<Position>(/* ... */);
+    temp_serializer.saveToFile(filename);
 }
 ```
 
@@ -254,7 +254,7 @@ struct Parent {
 class ParentSerializer : public IComponentSerializer {
 public:
     std::string serialize(Entity entity, Registry& registry) const override {
-        auto& parent = registry.get_component<Parent>(entity);
+        auto& parent = registry.getComponent<Parent>(entity);
         // Save parent entity ID
         return std::to_string(parent.parent_entity.id);
     }
@@ -265,7 +265,7 @@ public:
         
         // Note: Assumes parent entity exists with same ID
         // May need entity ID remapping in complex scenarios
-        registry.emplace_component<Parent>(entity, parent);
+        registry.emplaceComponent<Parent>(entity, parent);
     }
 };
 ```
@@ -282,7 +282,7 @@ public:
             return id_map[old_id];
         }
         // Create new entity and store mapping
-        Entity new_entity = registry.spawn_entity();
+        Entity new_entity = registry.spawnEntity();
         id_map[old_id] = new_entity;
         return new_entity;
     }
@@ -299,7 +299,7 @@ class VersionedHealthSerializer : public IComponentSerializer {
     
 public:
     std::string serialize(Entity entity, Registry& registry) const override {
-        auto& health = registry.get_component<Health>(entity);
+        auto& health = registry.getComponent<Health>(entity);
         return std::to_string(version) + ";" + 
                std::to_string(health.hp) + ";" + 
                std::to_string(health.max_hp);
@@ -312,13 +312,13 @@ public:
         if (saved_version == 1) {
             // Old format: just hp
             int hp = std::stoi(data.substr(first_semi + 1));
-            registry.emplace_component<Health>(entity, hp, 100); // Default max_hp
+            registry.emplaceComponent<Health>(entity, hp, 100); // Default max_hp
         } else if (saved_version == 2) {
             // New format: hp and max_hp
             size_t second_semi = data.find(';', first_semi + 1);
             int hp = std::stoi(data.substr(first_semi + 1, second_semi - first_semi - 1));
             int max_hp = std::stoi(data.substr(second_semi + 1));
-            registry.emplace_component<Health>(entity, hp, max_hp);
+            registry.emplaceComponent<Health>(entity, hp, max_hp);
         }
     }
 };
@@ -368,11 +368,11 @@ void parallel_serialize(Registry& registry) {
 struct Position { float x, y; };
 struct Health { int hp, max_hp; };
 
-// Define serializers
+// Define _serializers
 class PositionSerializer : public IComponentSerializer {
 public:
     std::string serialize(Entity entity, Registry& registry) const override {
-        auto& pos = registry.get_component<Position>(entity);
+        auto& pos = registry.getComponent<Position>(entity);
         return std::to_string(pos.x) + "," + std::to_string(pos.y);
     }
     
@@ -380,14 +380,14 @@ public:
         size_t comma = data.find(',');
         float x = std::stof(data.substr(0, comma));
         float y = std::stof(data.substr(comma + 1));
-        registry.emplace_component<Position>(entity, x, y);
+        registry.emplaceComponent<Position>(entity, x, y);
     }
 };
 
 class HealthSerializer : public IComponentSerializer {
 public:
     std::string serialize(Entity entity, Registry& registry) const override {
-        auto& health = registry.get_component<Health>(entity);
+        auto& health = registry.getComponent<Health>(entity);
         return std::to_string(health.hp) + "," + std::to_string(health.max_hp);
     }
     
@@ -395,7 +395,7 @@ public:
         size_t comma = data.find(',');
         int hp = std::stoi(data.substr(0, comma));
         int max_hp = std::stoi(data.substr(comma + 1));
-        registry.emplace_component<Health>(entity, hp, max_hp);
+        registry.emplaceComponent<Health>(entity, hp, max_hp);
     }
 };
 
@@ -403,21 +403,21 @@ int main() {
     ECS::Registry registry;
     
     // Create some entities
-    auto e1 = registry.spawn_entity();
-    registry.emplace_component<Position>(e1, 10.0f, 20.0f);
-    registry.emplace_component<Health>(e1, 100, 100);
+    auto e1 = registry.spawnEntity();
+    registry.emplaceComponent<Position>(e1, 10.0f, 20.0f);
+    registry.emplaceComponent<Health>(e1, 100, 100);
     
-    auto e2 = registry.spawn_entity();
-    registry.emplace_component<Position>(e2, 5.0f, 15.0f);
-    registry.emplace_component<Health>(e2, 50, 75);
+    auto e2 = registry.spawnEntity();
+    registry.emplaceComponent<Position>(e2, 5.0f, 15.0f);
+    registry.emplaceComponent<Health>(e2, 50, 75);
     
     // Setup serializer
     ECS::Serializer serializer(registry);
-    serializer.register_serializer<Position>(std::make_shared<PositionSerializer>());
-    serializer.register_serializer<Health>(std::make_shared<HealthSerializer>());
+    serializer.registerSerializer<Position>(std::make_shared<PositionSerializer>());
+    serializer.registerSerializer<Health>(std::make_shared<HealthSerializer>());
     
     // Save
-    if (serializer.save_to_file("game.save")) {
+    if (serializer.saveToFile("game.save")) {
         std::cout << "Saved successfully\n";
     }
     
@@ -425,7 +425,7 @@ int main() {
     registry.clear();
     
     // Load
-    if (serializer.load_from_file("game.save")) {
+    if (serializer.loadFromFile("game.save")) {
         std::cout << "Loaded successfully\n";
         
         // Verify
@@ -444,7 +444,7 @@ int main() {
 
 ### ✅ Do
 
-- Implement serializers for all persistent components
+- Implement _serializers for all persistent components
 - Version your save format
 - Test save/load thoroughly
 - Handle entity references carefully

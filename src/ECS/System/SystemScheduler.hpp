@@ -32,8 +32,8 @@ namespace ECS {
      *
      * Example:
      *   SystemScheduler scheduler(registry);
-     *   scheduler.add_system("physics", physics_system);
-     *   scheduler.add_system("render", render_system, {"physics"}); // runs after physics
+     *   scheduler.addSystem("physics", physics_system);
+     *   scheduler.addSystem("render", render_system, {"physics"}); // runs after physics
      *   scheduler.run(); // Execute all systems in order
      */
     class SystemScheduler {
@@ -48,13 +48,13 @@ namespace ECS {
          * @param func System function to execute
          * @param dependencies List of system names that must run before this one
          */
-        void add_system(const std::string& name, SystemFunc func,
+        void addSystem(const std::string& name, SystemFunc func,
                        const std::vector<std::string>& dependencies = {});
 
         /**
          * @brief Removes a system by name.
          */
-        void remove_system(const std::string& name);
+        void removeSystem(const std::string& name);
 
         /**
          * @brief Executes all systems in dependency order.
@@ -65,7 +65,7 @@ namespace ECS {
         /**
          * @brief Executes a specific system by name.
          */
-        void run_system(const std::string& name);
+        void runSystem(const std::string& name);
 
         /**
          * @brief Clears all registered systems.
@@ -75,17 +75,17 @@ namespace ECS {
         /**
          * @brief Returns execution order of systems (for debugging).
          */
-        std::vector<std::string> get_execution_order() const;
+        std::vector<std::string> getExecutionOrder() const;
 
         /**
          * @brief Enables or disables a system without removing it.
          */
-        void set_system_enabled(const std::string& name, bool enabled);
+        void setSystemEnabled(const std::string& name, bool enabled);
 
         /**
          * @brief Checks if a system is enabled.
          */
-        bool is_system_enabled(const std::string& name) const;
+        bool isSystemEnabled(const std::string& name) const;
 
     private:
         struct SystemNode {
@@ -96,13 +96,13 @@ namespace ECS {
         };
 
         Registry& registry;
-        std::unordered_map<std::string, SystemNode> systems;
-        std::vector<std::string> execution_order;
-        bool needs_reorder = true;
+        std::unordered_map<std::string, SystemNode> _systems;
+        std::vector<std::string> _executionOrder;
+        bool _needsReorder = true;
 
-        void recompute_order();
-        void topological_sort();
-        bool has_cycle() const;
+        void recomputeOrder();
+        void topologicalSort();
+        bool hasCycle() const;
     };
 
 } // namespace ECS

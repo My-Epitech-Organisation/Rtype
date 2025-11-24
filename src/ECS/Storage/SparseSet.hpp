@@ -2,11 +2,11 @@
 ** EPITECH PROJECT, 2025
 ** R-Type
 ** File description:
-** SparseSet
+** _sparseSet
 */
 
-#ifndef ECS_STORAGE_SPARSE_SET_HPP
-    #define ECS_STORAGE_SPARSE_SET_HPP
+#ifndef ECS_STORAGE__sparse_SET_HPP
+    #define ECS_STORAGE__sparse_SET_HPP
     #include "ISparseSet.hpp"
     #include <vector>
     #include <algorithm>
@@ -18,12 +18,12 @@
 namespace ECS {
 
     /**
-     * @brief Cache-efficient component storage using sparse set data structure.
+     * @brief Cache-efficient component storage using _sparse set data structure.
      *
      * Architecture:
      * - Dense: Contiguous component array (cache-friendly iteration)
-     * - Packed: Parallel entity ID array (matches dense indices)
-     * - Sparse: Entity index → dense index lookup table
+     * - _packed: Parallel entity ID array (matches dense indices)
+     * - _sparse: Entity index → dense index lookup table
      *
      * Complexity:
      * - Insert: O(1) amortized
@@ -46,10 +46,10 @@ namespace ECS {
 
         bool contains(Entity entity) const noexcept override {
             auto idx = entity.index();
-            return idx < sparse.size() &&
-                   sparse[idx] != NullIndex &&
-                   sparse[idx] < packed.size() &&
-                   packed[sparse[idx]] == entity;
+            return idx < _sparse.size() &&
+                   _sparse[idx] != NullIndex &&
+                   _sparse[idx] < _packed.size() &&
+                   _packed[_sparse[idx]] == entity;
         }
 
         /**
@@ -60,59 +60,59 @@ namespace ECS {
          */
         template <typename... Args>
         reference emplace(Entity entity, Args&&... args) {
-            std::lock_guard lock(sparse_set_mutex);
+            std::lock_guard lock(__sparseSetMutex);
 
             if (contains(entity))
-                return dense[sparse[entity.index()]] = T(std::forward<Args>(args)...);
+                return dense[_sparse[entity.index()]] = T(std::forward<Args>(args)...);
 
             auto idx = entity.index();
-            if (idx >= sparse.size())
-                sparse.resize(idx + 1, NullIndex);
+            if (idx >= _sparse.size())
+                _sparse.resize(idx + 1, NullIndex);
 
-            sparse[idx] = dense.size();
-            packed.push_back(entity);
+            _sparse[idx] = dense.size();
+            _packed.push_back(entity);
             dense.emplace_back(std::forward<Args>(args)...);
 
             return dense.back();
         }
 
         void remove(Entity entity) override {
-            std::lock_guard lock(sparse_set_mutex);
+            std::lock_guard lock(__sparseSetMutex);
 
             if (!contains(entity)) return;
 
             auto idx = entity.index();
-            size_t dense_idx = sparse[idx];
+            size_t dense_idx = _sparse[idx];
             size_t last_idx = dense.size() - 1;
 
             if (dense_idx != last_idx) {
-                Entity last_entity = packed[last_idx];
+                Entity last_entity = _packed[last_idx];
                 std::swap(dense[dense_idx], dense[last_idx]);
-                std::swap(packed[dense_idx], packed[last_idx]);
-                sparse[last_entity.index()] = dense_idx;
+                std::swap(_packed[dense_idx], _packed[last_idx]);
+                _sparse[last_entity.index()] = dense_idx;
             }
 
             dense.pop_back();
-            packed.pop_back();
-            sparse[idx] = NullIndex;
+            _packed.pop_back();
+            _sparse[idx] = NullIndex;
         }
 
         reference get(Entity entity) {
             if (!contains(entity))
-                throw std::runtime_error("Entity missing component in SparseSet::get()");
-            return dense[sparse[entity.index()]];
+                throw std::runtime_error("Entity missing component in _sparseSet::get()");
+            return dense[_sparse[entity.index()]];
         }
 
         const_reference get(Entity entity) const {
             if (!contains(entity))
-                throw std::runtime_error("Entity missing component in SparseSet::get()");
-            return dense[sparse[entity.index()]];
+                throw std::runtime_error("Entity missing component in _sparseSet::get()");
+            return dense[_sparse[entity.index()]];
         }
 
         void clear() noexcept override {
             dense.clear();
-            packed.clear();
-            sparse.clear();
+            _packed.clear();
+            _sparse.clear();
         }
 
         size_t size() const noexcept override {
@@ -124,33 +124,33 @@ namespace ECS {
         const_iterator begin() const noexcept { return dense.begin(); }
         const_iterator end() const noexcept { return dense.end(); }
 
-        const std::vector<Entity>& get_packed() const noexcept { return packed; }
+        const std::vector<Entity>& getPacked() const noexcept { return _packed; }
         const std::vector<T>& get_dense() const noexcept { return dense; }
 
         void reserve(size_t capacity) {
             dense.reserve(capacity);
-            packed.reserve(capacity);
-            sparse.reserve(capacity);
+            _packed.reserve(capacity);
+            _sparse.reserve(capacity);
         }
 
         /**
          * @brief Releases unused memory.
          * Useful after removing many components to reclaim memory.
          */
-        void shrink_to_fit() {
+        void shrinkToFit() {
             dense.shrink_to_fit();
-            packed.shrink_to_fit();
-            sparse.shrink_to_fit();
+            _packed.shrink_to_fit();
+            _sparse.shrink_to_fit();
         }
 
     private:
         static constexpr size_t NullIndex = std::numeric_limits<size_t>::max();
         std::vector<T> dense;
-        std::vector<Entity> packed;
-        std::vector<size_t> sparse;
-        mutable std::mutex sparse_set_mutex;
+        std::vector<Entity> _packed;
+        std::vector<size_t> _sparse;
+        mutable std::mutex __sparseSetMutex;
     };
 
 } // namespace ECS
 
-#endif // ECS_STORAGE_SPARSE_SET_HPP
+#endif // ECS_STORAGE__sparse_SET_HPP

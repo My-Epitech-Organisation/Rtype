@@ -10,7 +10,7 @@
 
 namespace ECS {
 
-    bool Serializer::save_to_file(const std::string& filename) {
+    bool Serializer::saveToFile(const std::string& filename) {
         std::ofstream file(filename);
         if (!file.is_open()) {
             return false;
@@ -22,7 +22,7 @@ namespace ECS {
         return true;
     }
 
-    bool Serializer::load_from_file(const std::string& filename, bool clear_existing) {
+    bool Serializer::loadFromFile(const std::string& filename, bool clearExisting) {
         std::ifstream file(filename);
         if (!file.is_open()) {
             return false;
@@ -32,7 +32,7 @@ namespace ECS {
         buffer << file.rdbuf();
         file.close();
 
-        return deserialize(buffer.str(), clear_existing);
+        return deserialize(buffer.str(), clearExisting);
     }
 
     std::string Serializer::serialize() {
@@ -41,7 +41,7 @@ namespace ECS {
         // !TODO To implement serialization logic:
         // 1. Iterate through all entities
         // 2. For each entity, get its components
-        // 3. Serialize each component using registered serializers
+        // 3. Serialize each component using registered _serializers
         // 4. Write to the output stream
 
         oss << "ECS_SAVE_V1\n";
@@ -55,9 +55,10 @@ namespace ECS {
         return oss.str();
     }
 
-    bool Serializer::deserialize(const std::string& data, bool clear_existing) {
+    bool Serializer::deserialize(const std::string& data, bool clearExisting) {
         std::istringstream iss(data);
         std::string line;
+        (void)clearExisting; // To avoid unused parameter warning
 
         if (!std::getline(iss, line) || line != "ECS_SAVE_V1") {
             return false;

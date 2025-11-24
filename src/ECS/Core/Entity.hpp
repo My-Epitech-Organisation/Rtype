@@ -17,7 +17,7 @@ namespace ECS {
     /**
      * @brief Type-safe entity identifier using generational indices.
      *
-     * Layout: 32-bit packed structure
+     * Layout: 32-bit _packed structure
      * - [19:0]  Index (20 bits)     - Entity slot position
      * - [31:20] Generation (12 bits) - Version counter
      *
@@ -25,25 +25,25 @@ namespace ECS {
      * When an entity is destroyed, its generation increments, invalidating old handles.
      */
     struct Entity {
-        std::uint32_t id = NullID;
+        std::uint32_t id = _NullID;
 
-        static constexpr std::uint32_t IndexBits = 20;
-        static constexpr std::uint32_t IndexMask = (1 << IndexBits) - 1;
-        static constexpr std::uint32_t GenerationBits = 12;
-        static constexpr std::uint32_t GenerationMask = (1 << GenerationBits) - 1;
-        static constexpr std::uint32_t MaxGeneration = GenerationMask;
-        static constexpr std::uint32_t NullID = std::numeric_limits<std::uint32_t>::max();
+        static constexpr std::uint32_t _IndexBits = 20;
+        static constexpr std::uint32_t _IndexMask = (1 << _IndexBits) - 1;
+        static constexpr std::uint32_t _GenerationBits = 12;
+        static constexpr std::uint32_t _GenerationMask = (1 << _GenerationBits) - 1;
+        static constexpr std::uint32_t _MaxGeneration = _GenerationMask;
+        static constexpr std::uint32_t _NullID = std::numeric_limits<std::uint32_t>::max();
 
         constexpr Entity() = default;
         constexpr explicit Entity(std::uint32_t raw) : id(raw) {}
         constexpr Entity(std::uint32_t index, std::uint32_t generation) {
-            id = (index & IndexMask) | ((generation & GenerationMask) << IndexBits);
+            id = (index & _IndexMask) | ((generation & _GenerationMask) << _IndexBits);
         }
 
-        [[nodiscard]] constexpr std::uint32_t index() const noexcept { return id & IndexMask; }
-        [[nodiscard]] constexpr std::uint32_t generation() const noexcept { return (id >> IndexBits) & GenerationMask; }
-        [[nodiscard]] constexpr bool is_null() const noexcept { return id == NullID; }
-        [[nodiscard]] constexpr bool is_tombstone() const noexcept { return generation() == MaxGeneration; }
+        [[nodiscard]] constexpr std::uint32_t index() const noexcept { return id & _IndexMask; }
+        [[nodiscard]] constexpr std::uint32_t generation() const noexcept { return (id >> _IndexBits) & _GenerationMask; }
+        [[nodiscard]] constexpr bool isNull() const noexcept { return id == _NullID; }
+        [[nodiscard]] constexpr bool isTombstone() const noexcept { return generation() == _MaxGeneration; }
 
         auto operator<=>(const Entity&) const noexcept = default;
     };

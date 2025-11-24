@@ -39,8 +39,8 @@ classDiagram
         +Entity(uint32_t index, uint32_t generation)
         +uint32_t index() const
         +uint32_t generation() const
-        +bool is_null() const
-        +bool is_tombstone() const
+        +bool isNull() const
+        +bool isTombstone() const
         +operator<=>(const Entity&) const
     }
     
@@ -49,81 +49,81 @@ classDiagram
     %% ============================================================================
     
     class Registry {
-        -unordered_map~uint32_t, vector~type_index~~ entity_components
+        -unordered_map~uint32_t, vector~type_index~~ _entityComponents
         -vector~uint32_t~ generations
-        -vector~uint32_t~ free_indices
+        -vector~uint32_t~ _freeIndices
         -vector~uint32_t~ tombstones
-        -unordered_map~type_index, unique_ptr~ISparseSet~~ component_pools
+        -unordered_map~type_index, unique_ptr~I_sparseSet~~ _componentPools
         -unordered_map~type_index, any~ singletons
-        -SignalDispatcher signal_dispatcher
-        -RelationshipManager relationship_manager
-        -shared_mutex entity_mutex
-        -shared_mutex component_pool_mutex
+        -SignalDispatcher _signalDispatcher
+        -RelationshipManager _relationshipManager
+        -shared_mutex _entityMutex
+        -shared_mutex _componentPoolMutex
         
         +Registry()
         
         %% Entity Management
-        +void reserve_entities(size_t capacity)
-        +Entity spawn_entity()
-        +void kill_entity(Entity entity) noexcept
-        +bool is_alive(Entity entity) const noexcept
-        +size_t cleanup_tombstones()
-        +size_t remove_entities_if(Func predicate)
+        +void reserveEntities(size_t capacity)
+        +Entity spawnEntity()
+        +void killEntity(Entity entity) noexcept
+        +bool isAlive(Entity entity) const noexcept
+        +size_t cleanupTombstones()
+        +size_t removeEntitiesIf(Func predicate)
         
         %% Component Management
-        +void reserve_components~T~(size_t capacity)
+        +void reserveComponents~T~(size_t capacity)
         +void compact()
-        +void compact_component~T~()
-        +T& emplace_component~T~(Entity entity, Args... args)
-        +T& get_or_emplace~T~(Entity entity, Args... args)
-        +void remove_component~T~(Entity entity)
-        +void clear_components~T~()
-        +bool has_component~T~(Entity entity) const
-        +size_t count_components~T~() const
-        +T& get_component~T~(Entity entity)
+        +void compactComponent~T~()
+        +T& emplaceComponent~T~(Entity entity, Args... args)
+        +T& getOrEmplace~T~(Entity entity, Args... args)
+        +void removeComponent~T~(Entity entity)
+        +void clearComponents~T~()
+        +bool hasComponent~T~(Entity entity) const
+        +size_t countComponents~T~() const
+        +T& getComponent~T~(Entity entity)
         +void patch~T~(Entity entity, Func func)
         
         %% Signals
-        +void on_construct~T~(function~void(Entity)~ callback)
-        +void on_destroy~T~(function~void(Entity)~ callback)
+        +void onConstruct~T~(function~void(Entity)~ callback)
+        +void onDestroy~T~(function~void(Entity)~ callback)
         
         %% Views
         +View~Components...~ view()
-        +ParallelView~Components...~ parallel_view()
-        +Group~Components...~ create_group()
+        +ParallelView~Components...~ parallelView()
+        +Group~Components...~ createGroup()
         
         %% Singletons
-        +T& set_singleton~T~(Args... args)
-        +T& get_singleton~T~()
-        +bool has_singleton~T~() const
-        +void remove_singleton~T~()
+        +T& setSingleton~T~(Args... args)
+        +T& getSingleton~T~()
+        +bool hasSingleton~T~() const
+        +void removeSingleton~T~()
         
         %% Relationships
-        +RelationshipManager& get_relationship_manager()
+        +RelationshipManager& getRelationshipManager()
         
-        -auto& get_sparse_set~T~()
-        -const ISparseSet* get_sparse_set_const~T~() const
-        -const auto& get_sparse_set_typed_const~T~() const
+        -auto& getSparseSet~T~()
+        -const ISparseSet* getSparseSetConst~T~() const
+        -const auto& getSparseSetTypedConst~T~() const
     }
     
     %% ============================================================================
     %% STORAGE - COMPONENT CONTAINERS
     %% ============================================================================
     
-    class ISparseSet {
+    class I_sparseSet {
         <<interface>>
         +remove(Entity entity)*
         +contains(Entity entity) const*
         +clear()*
         +size() const*
-        +shrink_to_fit()*
+        +shrinkToFit()*
     }
     
-    class SparseSet~T~ {
+    class _sparseSet~T~ {
         -vector~T~ dense
-        -vector~Entity~ packed
-        -vector~size_t~ sparse
-        -mutex sparse_set_mutex
+        -vector~Entity~ _packed
+        -vector~size_t~ _sparse
+        -mutex __sparseSetMutex
         
         +bool contains(Entity entity) const
         +T& emplace(Entity entity, Args... args)
@@ -133,17 +133,17 @@ classDiagram
         +void clear()
         +size_t size() const
         +void reserve(size_t capacity)
-        +void shrink_to_fit()
-        +const vector~Entity~& get_packed() const
+        +void shrinkToFit()
+        +const vector~Entity~& getPacked() const
         +iterator begin()
         +iterator end()
     }
     
     class TagSparseSet~T~ {
-        -vector~Entity~ packed
-        -vector~size_t~ sparse
-        -mutex sparse_set_mutex
-        -static T dummy_instance
+        -vector~Entity~ _packed
+        -vector~size_t~ _sparse
+        -mutex __sparseSetMutex
+        -static T _dummyInstance
         
         +bool contains(Entity entity) const
         +T& emplace(Entity entity, Args... args)
@@ -151,7 +151,7 @@ classDiagram
         +T& get(Entity entity)
         +void clear()
         +size_t size() const
-        +const vector~Entity~& get_packed() const
+        +const vector~Entity~& getPacked() const
     }
     
     %% ============================================================================
@@ -160,16 +160,16 @@ classDiagram
     
     class View~Components...~ {
         -Registry& registry
-        -tuple~SparseSet~Components~*...~ pools
-        -size_t smallest_pool_index
+        -tuple~_sparseSet~Components~*...~ pools
+        -size_t _smallestPoolIndex
         
         +View(Registry& registry)
         +void each(Func func)
         +ExcludeView exclude~Excluded...~()
         
-        -void initialize_pools(index_sequence)
-        -void each_impl(Func func, index_sequence)
-        -size_t find_smallest_pool(index_sequence)
+        -void initializePools(index_sequence)
+        -void eachImpl(Func func, index_sequence)
+        -size_t findSmallestPool(index_sequence)
     }
     
     class ParallelView~Components...~ {
@@ -181,13 +181,13 @@ classDiagram
     
     class ExcludeView~Includes..., Excludes...~ {
         -Registry& registry
-        -tuple~SparseSet~Includes~*...~ include_pools
-        -vector~ISparseSet*~ exclude_pools
-        -size_t smallest_pool_index
+        -tuple~_sparseSet~Includes~*...~ _includePools
+        -vector~ISparseSet*~ _excludePools
+        -size_t _smallestPoolIndex
         
         +void each(Func func)
         
-        -void each_impl(Func func, index_sequence)
+        -void eachImpl(Func func, index_sequence)
         -bool is_excluded(Entity entity) const
     }
     
@@ -198,7 +198,7 @@ classDiagram
         +Group(Registry& reg)
         +void rebuild()
         +void each(Func func)
-        +const vector~Entity~& get_entities() const
+        +const vector~Entity~& getEntities() const
     }
     
     %% ============================================================================
@@ -206,16 +206,16 @@ classDiagram
     %% ============================================================================
     
     class SignalDispatcher {
-        -unordered_map~type_index, vector~Callback~~ construct_callbacks
-        -unordered_map~type_index, vector~Callback~~ destroy_callbacks
+        -unordered_map~type_index, vector~Callback~~ _constructCallbacks
+        -unordered_map~type_index, vector~Callback~~ _destroyCallbacks
         -shared_mutex callbacks_mutex
         
-        +void register_construct(type_index type, Callback callback)
-        +void register_destroy(type_index type, Callback callback)
-        +void dispatch_construct(type_index type, Entity entity)
-        +void dispatch_destroy(type_index type, Entity entity)
-        +void clear_callbacks(type_index type)
-        +void clear_all_callbacks()
+        +void registerConstruct(type_index type, Callback callback)
+        +void registerDestroy(type_index type, Callback callback)
+        +void dispatchConstruct(type_index type, Entity entity)
+        +void dispatchDestroy(type_index type, Entity entity)
+        +void clearCallbacks(type_index type)
+        +void clearAllCallbacks()
     }
     
     %% ============================================================================
@@ -223,26 +223,26 @@ classDiagram
     %% ============================================================================
     
     class RelationshipManager {
-        -unordered_map~uint32_t, Entity~ parent_map
-        -unordered_map~uint32_t, unordered_set~Entity~~ children_map
-        -shared_mutex relationship_mutex
+        -unordered_map~uint32_t, Entity~ _parentMap
+        -unordered_map~uint32_t, unordered_set~Entity~~ _childrenMap
+        -shared_mutex _relationshipMutex
         
-        +bool set_parent(Entity child, Entity parent)
-        +void remove_parent(Entity child)
-        +optional~Entity~ get_parent(Entity child) const
-        +bool has_parent(Entity child) const
-        +vector~Entity~ get_children(Entity parent) const
-        +vector~Entity~ get_descendants(Entity parent) const
-        +vector~Entity~ get_ancestors(Entity child) const
-        +Entity get_root(Entity entity) const
-        +bool is_ancestor(Entity potential_ancestor, Entity entity) const
-        +void remove_entity(Entity entity)
+        +bool setParent(Entity child, Entity parent)
+        +void removeParent(Entity child)
+        +optional~Entity~ getParent(Entity child) const
+        +bool hasParent(Entity child) const
+        +vector~Entity~ getChildren(Entity parent) const
+        +vector~Entity~ getDescendants(Entity parent) const
+        +vector~Entity~ getAncestors(Entity child) const
+        +Entity getRoot(Entity entity) const
+        +bool isAncestor(Entity potential_ancestor, Entity entity) const
+        +void removeEntity(Entity entity)
         +void clear()
-        +size_t child_count(Entity parent) const
-        +size_t get_depth(Entity entity) const
+        +size_t childCount(Entity parent) const
+        +size_t getDepth(Entity entity) const
         
-        -bool would_create_cycle(Entity child, Entity parent) const
-        -void get_descendants_recursive(Entity parent, vector~Entity~& result) const
+        -bool wouldCreateCycle(Entity child, Entity parent) const
+        -void getDescendantsRecursive(Entity parent, vector~Entity~& result) const
     }
     
     %% ============================================================================
@@ -252,17 +252,17 @@ classDiagram
     class CommandBuffer {
         -Registry& registry
         -vector~function~void()~~ commands
-        -unordered_map~uint32_t, Entity~ placeholder_to_real
-        -uint32_t next_placeholder_id
-        -mutex commands_mutex
+        -unordered_map~uint32_t, Entity~ _placeholdertoReal
+        -uint32_t _nextPlaceholderId
+        -mutex _commandsMutex
         
         +CommandBuffer(Registry& reg)
-        +Entity spawn_entity_deferred()
-        +void destroy_entity_deferred(Entity entity)
-        +void emplace_component_deferred~T~(Entity entity, Args... args)
-        +void remove_component_deferred~T~(Entity entity)
+        +Entity spawnEntityDeferred()
+        +void destroyEntityDeferred(Entity entity)
+        +void emplaceComponentDeferred~T~(Entity entity, Args... args)
+        +void removeComponentDeferred~T~(Entity entity)
         +void flush()
-        +size_t pending_count() const
+        +size_t pendingCount() const
         +void clear()
     }
     
@@ -273,18 +273,18 @@ classDiagram
     class PrefabManager {
         -Registry& registry
         -unordered_map~string, PrefabFunc~ prefabs
-        -shared_mutex prefab_mutex
+        -shared_mutex _prefabMutex
         
         +PrefabManager(Registry& reg)
-        +void register_prefab(string name, PrefabFunc func)
+        +void registerPrefab(string name, PrefabFunc func)
         +Entity instantiate(string name)
         +Entity instantiate(string name, PrefabFunc customizer)
-        +vector~Entity~ instantiate_multiple(string name, size_t count)
-        +bool has_prefab(string name) const
-        +void unregister_prefab(string name)
-        +vector~string~ get_prefab_names() const
+        +vector~Entity~ instantiateMultiple(string name, size_t count)
+        +bool hasPrefab(string name) const
+        +void unregisterPrefab(string name)
+        +vector~string~ getPrefabNames() const
         +void clear()
-        +void create_from_entity(string name, Entity template_entity)
+        +void createFromEntity(string name, Entity template_entity)
     }
     
     %% ============================================================================
@@ -294,22 +294,22 @@ classDiagram
     class SystemScheduler {
         -Registry& registry
         -unordered_map~string, SystemNode~ systems
-        -vector~string~ execution_order
-        -bool needs_reorder
+        -vector~string~ _executionOrder
+        -bool _needsReorder
         
         +SystemScheduler(Registry& reg)
-        +void add_system(string name, SystemFunc func, vector~string~ dependencies)
-        +void remove_system(string name)
+        +void addSystem(string name, SystemFunc func, vector~string~ dependencies)
+        +void removeSystem(string name)
         +void run()
-        +void run_system(string name)
+        +void runSystem(string name)
         +void clear()
-        +vector~string~ get_execution_order() const
-        +void set_system_enabled(string name, bool enabled)
-        +bool is_system_enabled(string name) const
+        +vector~string~ getExecutionOrder() const
+        +void setSystemEnabled(string name, bool enabled)
+        +bool isSystemEnabled(string name) const
         
-        -void recompute_order()
-        -void topological_sort()
-        -bool has_cycle() const
+        -void recomputeOrder()
+        -void topologicalSort()
+        -bool hasCycle() const
     }
     
     class SystemNode {
@@ -331,12 +331,12 @@ classDiagram
     
     class Serializer {
         -Registry& registry
-        -unordered_map~type_index, unique_ptr~IComponentSerializer~~ serializers
+        -unordered_map~type_index, unique_ptr~IComponentSerializer~~ _serializers
         
         +Serializer(Registry& reg)
-        +void register_serializer~T~(unique_ptr~IComponentSerializer~ serializer)
-        +bool save_to_file(string filename)
-        +bool load_from_file(string filename, bool clear_existing)
+        +void registerSerializer~T~(unique_ptr~IComponentSerializer~ serializer)
+        +bool saveToFile(string filename)
+        +bool loadFromFile(string filename, bool clear_existing)
         +string serialize()
         +bool deserialize(string data, bool clear_existing)
     }
@@ -346,21 +346,21 @@ classDiagram
     %% ============================================================================
     
     Registry *-- Entity : manages
-    Registry *-- ISparseSet : owns
+    Registry *-- I_sparseSet : owns
     Registry *-- SignalDispatcher : contains
     Registry *-- RelationshipManager : contains
     
-    ISparseSet <|-- SparseSet : implements
-    ISparseSet <|-- TagSparseSet : implements
+    I_sparseSet <|-- _sparseSet : implements
+    I_sparseSet <|-- TagSparseSet : implements
     
-    SparseSet --> Entity : stores
+    _sparseSet --> Entity : stores
     TagSparseSet --> Entity : stores
     
     View --> Registry : observes
-    View --> SparseSet : observes pools
+    View --> _sparseSet : observes pools
     ParallelView --> Registry : observes
     ExcludeView --> Registry : observes
-    ExcludeView --> ISparseSet : observes
+    ExcludeView --> I_sparseSet : observes
     Group --> Registry : observes
     
     CommandBuffer --> Registry : defers operations
@@ -389,8 +389,8 @@ graph TB
     end
     
     subgraph Storage["Storage Module"]
-        ISparseSet[ISparseSet<br/>Storage interface]
-        SparseSet[SparseSet<br/>Component storage]
+        I_sparseSet[I_sparseSet<br/>Storage interface]
+        _sparseSet[_sparseSet<br/>Component storage]
         TagSparseSet[TagSparseSet<br/>Tag storage]
     end
     
@@ -455,11 +455,11 @@ sequenceDiagram
     %% Entity Creation
     Note over Client,RelationshipManager: Entity Creation Flow
     
-    Client->>+Registry: spawn_entity()
-    Registry->>Registry: lock(entity_mutex)
+    Client->>+Registry: spawnEntity()
+    Registry->>Registry: lock(_entityMutex)
     
     alt Free indices available
-        Registry->>EntitySystem: Get from free_indices
+        Registry->>EntitySystem: Get from _freeIndices
         Registry->>EntitySystem: Validate generation < MaxGeneration
         Registry->>EntitySystem: Create Entity(index, generation)
     else No free indices
@@ -467,29 +467,29 @@ sequenceDiagram
         Registry->>EntitySystem: Create Entity(index, 0)
     end
     
-    Registry->>Registry: entity_components[index] = []
-    Registry->>Registry: unlock(entity_mutex)
+    Registry->>Registry: _entityComponents[index] = []
+    Registry->>Registry: unlock(_entityMutex)
     Registry-->>-Client: Entity
     
     %% Component Addition
     Note over Client,RelationshipManager: Component Addition Flow
     
-    Client->>+Registry: emplace_component<Position>(entity, x, y)
-    Registry->>Registry: is_alive(entity)?
+    Client->>+Registry: emplaceComponent<Position>(entity, x, y)
+    Registry->>Registry: isAlive(entity)?
     
     alt Entity is dead
         Registry-->>Client: throw runtime_error
     end
     
-    Registry->>Registry: lock(entity_mutex)
-    Registry->>Registry: entity_components[index].push_back(type)
-    Registry->>Registry: unlock(entity_mutex)
+    Registry->>Registry: lock(_entityMutex)
+    Registry->>Registry: _entityComponents[index].push_back(type)
+    Registry->>Registry: unlock(_entityMutex)
     
-    Registry->>+ComponentPools: get_sparse_set<Position>()
+    Registry->>+ComponentPools: getSparseSet<Position>()
     ComponentPools->>ComponentPools: emplace(entity, x, y)
     ComponentPools-->>-Registry: Position&
     
-    Registry->>+SignalDispatcher: dispatch_construct(type, entity)
+    Registry->>+SignalDispatcher: dispatchConstruct(type, entity)
     SignalDispatcher->>SignalDispatcher: Get callbacks for type
     
     loop For each callback
@@ -502,17 +502,17 @@ sequenceDiagram
     %% Entity Destruction
     Note over Client,RelationshipManager: Entity Destruction Flow
     
-    Client->>+Registry: kill_entity(entity)
-    Registry->>Registry: lock(entity_mutex)
+    Client->>+Registry: killEntity(entity)
+    Registry->>Registry: lock(_entityMutex)
     Registry->>Registry: Validate entity
     Registry->>Registry: Collect components to remove
     Registry->>Registry: Increment generation
-    Registry->>Registry: Add to free_indices
-    Registry->>Registry: entity_components.erase(index)
-    Registry->>Registry: unlock(entity_mutex)
+    Registry->>Registry: Add to _freeIndices
+    Registry->>Registry: _entityComponents.erase(index)
+    Registry->>Registry: unlock(_entityMutex)
     
     loop For each component
-        Registry->>+SignalDispatcher: dispatch_destroy(type, entity)
+        Registry->>+SignalDispatcher: dispatchDestroy(type, entity)
         SignalDispatcher->>Client: callback(entity)
         SignalDispatcher-->>-Registry: void
         
@@ -520,7 +520,7 @@ sequenceDiagram
         ComponentPools-->>-Registry: void
     end
     
-    Registry->>+RelationshipManager: remove_entity(entity)
+    Registry->>+RelationshipManager: removeEntity(entity)
     RelationshipManager->>RelationshipManager: Remove parent/child links
     RelationshipManager-->>-Registry: void
     
@@ -533,39 +533,39 @@ sequenceDiagram
 sequenceDiagram
     participant Client
     participant Registry
-    participant SparseSet as SparseSet<T>
+    participant _sparseSet as _sparseSet<T>
     participant SignalDispatcher
     
     %% Get or Emplace Pattern
     Note over Client,SignalDispatcher: Get or Emplace Pattern
     
-    Client->>+Registry: get_or_emplace<Velocity>(entity, dx, dy)
-    Registry->>+SparseSet: contains(entity)?
-    SparseSet-->>-Registry: bool
+    Client->>+Registry: getOrEmplace<Velocity>(entity, dx, dy)
+    Registry->>+_sparseSet: contains(entity)?
+    _sparseSet-->>-Registry: bool
     
     alt Component exists
-        Registry->>+SparseSet: get(entity)
-        SparseSet-->>-Registry: Velocity&
+        Registry->>+_sparseSet: get(entity)
+        _sparseSet-->>-Registry: Velocity&
         Registry-->>Client: Velocity& (existing)
     else Component missing
-        Registry->>Registry: lock(entity_mutex)
-        Registry->>Registry: entity_components[index].push_back(type)
-        Registry->>Registry: unlock(entity_mutex)
+        Registry->>Registry: lock(_entityMutex)
+        Registry->>Registry: _entityComponents[index].push_back(type)
+        Registry->>Registry: unlock(_entityMutex)
         
-        Registry->>+SparseSet: emplace(entity, dx, dy)
-        SparseSet->>SparseSet: lock(sparse_set_mutex)
+        Registry->>+_sparseSet: emplace(entity, dx, dy)
+        _sparseSet->>_sparseSet: lock(__sparseSetMutex)
         
-        alt Entity index >= sparse.size()
-            SparseSet->>SparseSet: sparse.resize(index + 1)
+        alt Entity index >= _sparse.size()
+            _sparseSet->>_sparseSet: _sparse.resize(index + 1)
         end
         
-        SparseSet->>SparseSet: sparse[index] = dense.size()
-        SparseSet->>SparseSet: packed.push_back(entity)
-        SparseSet->>SparseSet: dense.emplace_back(dx, dy)
-        SparseSet->>SparseSet: unlock(sparse_set_mutex)
-        SparseSet-->>-Registry: Velocity&
+        _sparseSet->>_sparseSet: _sparse[index] = dense.size()
+        _sparseSet->>_sparseSet: _packed.push_back(entity)
+        _sparseSet->>_sparseSet: dense.emplace_back(dx, dy)
+        _sparseSet->>_sparseSet: unlock(__sparseSetMutex)
+        _sparseSet-->>-Registry: Velocity&
         
-        Registry->>+SignalDispatcher: dispatch_construct(type, entity)
+        Registry->>+SignalDispatcher: dispatchConstruct(type, entity)
         SignalDispatcher-->>-Registry: void
         
         Registry-->>Client: Velocity& (new)
@@ -576,26 +576,26 @@ sequenceDiagram
     %% Component Removal
     Note over Client,SignalDispatcher: Component Removal
     
-    Client->>+Registry: remove_component<Velocity>(entity)
+    Client->>+Registry: removeComponent<Velocity>(entity)
     
-    Registry->>+SignalDispatcher: dispatch_destroy(type, entity)
+    Registry->>+SignalDispatcher: dispatchDestroy(type, entity)
     SignalDispatcher->>SignalDispatcher: Execute callbacks
     SignalDispatcher-->>-Registry: void
     
-    Registry->>+SparseSet: remove(entity)
-    SparseSet->>SparseSet: lock(sparse_set_mutex)
-    SparseSet->>SparseSet: dense_index = sparse[entity.index()]
-    SparseSet->>SparseSet: Swap with last element
-    SparseSet->>SparseSet: dense.pop_back()
-    SparseSet->>SparseSet: packed.pop_back()
-    SparseSet->>SparseSet: Update swapped element's sparse index
-    SparseSet->>SparseSet: sparse[entity.index()] = NullIndex
-    SparseSet->>SparseSet: unlock(sparse_set_mutex)
-    SparseSet-->>-Registry: void
+    Registry->>+_sparseSet: remove(entity)
+    _sparseSet->>_sparseSet: lock(__sparseSetMutex)
+    _sparseSet->>_sparseSet: dense_index = _sparse[entity.index()]
+    _sparseSet->>_sparseSet: Swap with last element
+    _sparseSet->>_sparseSet: dense.pop_back()
+    _sparseSet->>_sparseSet: _packed.pop_back()
+    _sparseSet->>_sparseSet: Update swapped element's _sparse index
+    _sparseSet->>_sparseSet: _sparse[entity.index()] = NullIndex
+    _sparseSet->>_sparseSet: unlock(__sparseSetMutex)
+    _sparseSet-->>-Registry: void
     
-    Registry->>Registry: lock(entity_mutex)
-    Registry->>Registry: entity_components[index].erase(type)
-    Registry->>Registry: unlock(entity_mutex)
+    Registry->>Registry: lock(_entityMutex)
+    Registry->>Registry: _entityComponents[index].erase(type)
+    Registry->>Registry: unlock(_entityMutex)
     
     Registry-->>-Client: void
 ```
@@ -607,58 +607,58 @@ sequenceDiagram
     participant Client
     participant Registry
     participant View
-    participant SparseSet1 as SparseSet<Position>
-    participant SparseSet2 as SparseSet<Velocity>
+    participant _sparseSet1 as _sparseSet<Position>
+    participant _sparseSet2 as _sparseSet<Velocity>
     
     %% View Creation
-    Note over Client,SparseSet2: View Creation and Iteration
+    Note over Client,_sparseSet2: View Creation and Iteration
     
     Client->>+Registry: view<Position, Velocity>()
     Registry->>+View: View(registry)
     
-    View->>+Registry: get_sparse_set<Position>()
-    Registry-->>-View: SparseSet<Position>*
+    View->>+Registry: getSparseSet<Position>()
+    Registry-->>-View: _sparseSet<Position>*
     
-    View->>+Registry: get_sparse_set<Velocity>()
-    Registry-->>-View: SparseSet<Velocity>*
+    View->>+Registry: getSparseSet<Velocity>()
+    Registry-->>-View: _sparseSet<Velocity>*
     
     View->>View: pools = {pos_pool*, vel_pool*}
     View->>View: Find smallest pool
     
-    View->>+SparseSet1: get_packed().size()
-    SparseSet1-->>-View: 100
+    View->>+_sparseSet1: getPacked().size()
+    _sparseSet1-->>-View: 100
     
-    View->>+SparseSet2: get_packed().size()
-    SparseSet2-->>-View: 80
+    View->>+_sparseSet2: getPacked().size()
+    _sparseSet2-->>-View: 80
     
-    View->>View: smallest_pool_index = 1 (Velocity)
+    View->>View: _smallestPoolIndex = 1 (Velocity)
     
     View-->>-Registry: View<Position, Velocity>
     Registry-->>-Client: View<Position, Velocity>
     
     %% View Iteration
-    Note over Client,SparseSet2: Iteration over Entities
+    Note over Client,_sparseSet2: Iteration over Entities
     
     Client->>+View: each([](Entity e, Position& p, Velocity& v) {...})
     
-    View->>+SparseSet2: get_packed()
-    SparseSet2-->>-View: vector<Entity>& (80 entities)
+    View->>+_sparseSet2: getPacked()
+    _sparseSet2-->>-View: vector<Entity>& (80 entities)
     
     loop For each entity in smallest pool
-        View->>View: entity = packed[i]
+        View->>View: entity = _packed[i]
         
-        View->>+SparseSet1: contains(entity)?
-        SparseSet1-->>-View: true
+        View->>+_sparseSet1: contains(entity)?
+        _sparseSet1-->>-View: true
         
-        View->>+SparseSet2: contains(entity)?
-        SparseSet2-->>-View: true
+        View->>+_sparseSet2: contains(entity)?
+        _sparseSet2-->>-View: true
         
         alt All pools contain entity
-            View->>+SparseSet1: get(entity)
-            SparseSet1-->>-View: Position&
+            View->>+_sparseSet1: get(entity)
+            _sparseSet1-->>-View: Position&
             
-            View->>+SparseSet2: get(entity)
-            SparseSet2-->>-View: Velocity&
+            View->>+_sparseSet2: get(entity)
+            _sparseSet2-->>-View: Velocity&
             
             View->>Client: callback(entity, pos, vel)
             Client->>Client: p.x += v.dx
@@ -678,24 +678,24 @@ sequenceDiagram
     participant Thread1
     participant Thread2
     participant ThreadN
-    participant SparseSet as SparseSet<Position>
+    participant _sparseSet as _sparseSet<Position>
     
-    Note over Client,SparseSet: Parallel View Setup
+    Note over Client,_sparseSet: Parallel View Setup
     
-    Client->>+Registry: parallel_view<Position>()
+    Client->>+Registry: parallelView<Position>()
     Registry->>+ParallelView: ParallelView(registry)
     ParallelView-->>-Registry: ParallelView
     Registry-->>-Client: ParallelView<Position>
     
-    Note over Client,SparseSet: Parallel Execution
+    Note over Client,_sparseSet: Parallel Execution
     
     Client->>+ParallelView: each([](Entity e, Position& p) {...})
     
-    ParallelView->>+Registry: get_sparse_set<Position>()
-    Registry-->>-ParallelView: SparseSet<Position>*
+    ParallelView->>+Registry: getSparseSet<Position>()
+    Registry-->>-ParallelView: _sparseSet<Position>*
     
-    ParallelView->>+SparseSet: get_packed()
-    SparseSet-->>-ParallelView: vector<Entity>& (10000 entities)
+    ParallelView->>+_sparseSet: getPacked()
+    _sparseSet-->>-ParallelView: vector<Entity>& (10000 entities)
     
     ParallelView->>ParallelView: num_threads = hardware_concurrency()
     ParallelView->>ParallelView: chunk_size = 10000 / num_threads
@@ -705,30 +705,30 @@ sequenceDiagram
     par Thread 1 (entities 0-3333)
         ParallelView->>+Thread1: spawn([&, start=0, end=3333]() {...})
         loop i = 0 to 3333
-            Thread1->>+SparseSet: contains(entities[i])?
-            SparseSet-->>-Thread1: true
-            Thread1->>+SparseSet: get(entities[i])
-            SparseSet-->>-Thread1: Position&
+            Thread1->>+_sparseSet: contains(entities[i])?
+            _sparseSet-->>-Thread1: true
+            Thread1->>+_sparseSet: get(entities[i])
+            _sparseSet-->>-Thread1: Position&
             Thread1->>Thread1: callback(entity, pos)
         end
         Thread1-->>-ParallelView: void
     and Thread 2 (entities 3334-6666)
         ParallelView->>+Thread2: spawn([&, start=3334, end=6666]() {...})
         loop i = 3334 to 6666
-            Thread2->>+SparseSet: contains(entities[i])?
-            SparseSet-->>-Thread2: true
-            Thread2->>+SparseSet: get(entities[i])
-            SparseSet-->>-Thread2: Position&
+            Thread2->>+_sparseSet: contains(entities[i])?
+            _sparseSet-->>-Thread2: true
+            Thread2->>+_sparseSet: get(entities[i])
+            _sparseSet-->>-Thread2: Position&
             Thread2->>Thread2: callback(entity, pos)
         end
         Thread2-->>-ParallelView: void
     and Thread N (entities 6667-10000)
         ParallelView->>+ThreadN: spawn([&, start=6667, end=10000]() {...})
         loop i = 6667 to 10000
-            ThreadN->>+SparseSet: contains(entities[i])?
-            SparseSet-->>-ThreadN: true
-            ThreadN->>+SparseSet: get(entities[i])
-            SparseSet-->>-ThreadN: Position&
+            ThreadN->>+_sparseSet: contains(entities[i])?
+            _sparseSet-->>-ThreadN: true
+            ThreadN->>+_sparseSet: get(entities[i])
+            _sparseSet-->>-ThreadN: Position&
             ThreadN->>ThreadN: callback(entity, pos)
         end
         ThreadN-->>-ParallelView: void
@@ -757,35 +757,35 @@ sequenceDiagram
     %% Signal Registration
     Note over Client,System3: Signal Registration Phase
     
-    Client->>+Registry: on_construct<Sprite>(callback1)
-    Registry->>+SignalDispatcher: register_construct(typeid(Sprite), callback1)
+    Client->>+Registry: onConstruct<Sprite>(callback1)
+    Registry->>+SignalDispatcher: registerConstruct(typeid(Sprite), callback1)
     SignalDispatcher->>SignalDispatcher: lock(callbacks_mutex)
-    SignalDispatcher->>SignalDispatcher: construct_callbacks[Sprite].push_back(callback1)
+    SignalDispatcher->>SignalDispatcher: _constructCallbacks[Sprite].push_back(callback1)
     SignalDispatcher->>SignalDispatcher: unlock(callbacks_mutex)
     SignalDispatcher-->>-Registry: void
     Registry-->>-Client: void
     
-    Client->>+Registry: on_construct<Sprite>(callback2)
-    Registry->>+SignalDispatcher: register_construct(typeid(Sprite), callback2)
-    SignalDispatcher->>SignalDispatcher: construct_callbacks[Sprite].push_back(callback2)
+    Client->>+Registry: onConstruct<Sprite>(callback2)
+    Registry->>+SignalDispatcher: registerConstruct(typeid(Sprite), callback2)
+    SignalDispatcher->>SignalDispatcher: _constructCallbacks[Sprite].push_back(callback2)
     SignalDispatcher-->>-Registry: void
     Registry-->>-Client: void
     
-    Client->>+Registry: on_destroy<Sprite>(cleanup_callback)
-    Registry->>+SignalDispatcher: register_destroy(typeid(Sprite), cleanup_callback)
-    SignalDispatcher->>SignalDispatcher: destroy_callbacks[Sprite].push_back(cleanup_callback)
+    Client->>+Registry: onDestroy<Sprite>(cleanup_callback)
+    Registry->>+SignalDispatcher: registerDestroy(typeid(Sprite), cleanup_callback)
+    SignalDispatcher->>SignalDispatcher: _destroyCallbacks[Sprite].push_back(cleanup_callback)
     SignalDispatcher-->>-Registry: void
     Registry-->>-Client: void
     
     %% Component Addition Triggering Signals
     Note over Client,System3: Component Addition Event
     
-    Client->>+Registry: emplace_component<Sprite>(entity, texture)
+    Client->>+Registry: emplaceComponent<Sprite>(entity, texture)
     
     Registry->>Registry: Add component to entity
-    Registry->>Registry: Store in SparseSet
+    Registry->>Registry: Store in _sparseSet
     
-    Registry->>+SignalDispatcher: dispatch_construct(typeid(Sprite), entity)
+    Registry->>+SignalDispatcher: dispatchConstruct(typeid(Sprite), entity)
     
     SignalDispatcher->>SignalDispatcher: lock(callbacks_mutex)
     SignalDispatcher->>SignalDispatcher: Copy callbacks for Sprite
@@ -807,9 +807,9 @@ sequenceDiagram
     %% Component Removal Triggering Signals
     Note over Client,System3: Component Removal Event
     
-    Client->>+Registry: remove_component<Sprite>(entity)
+    Client->>+Registry: removeComponent<Sprite>(entity)
     
-    Registry->>+SignalDispatcher: dispatch_destroy(typeid(Sprite), entity)
+    Registry->>+SignalDispatcher: dispatchDestroy(typeid(Sprite), entity)
     
     SignalDispatcher->>SignalDispatcher: Copy callbacks for Sprite
     
@@ -820,8 +820,8 @@ sequenceDiagram
     
     SignalDispatcher-->>-Registry: void
     
-    Registry->>Registry: Remove from SparseSet
-    Registry->>Registry: Remove from entity_components
+    Registry->>Registry: Remove from _sparseSet
+    Registry->>Registry: Remove from _entityComponents
     
     Registry-->>-Client: void
 ```
@@ -844,7 +844,7 @@ sequenceDiagram
     
     Note over Client,Registry: Parallel Iteration with Deferred Operations
     
-    Client->>+Registry: parallel_view<Health>()
+    Client->>+Registry: parallelView<Health>()
     Registry-->>-Client: ParallelView
     
     Client->>ParallelView: each([&cmd](Entity e, Health& h) {...})
@@ -853,10 +853,10 @@ sequenceDiagram
         ParallelView->>+Thread1: Process entities 0-500
         loop For entities in chunk
             Thread1->>Thread1: if (health.value <= 0)
-            Thread1->>+CommandBuffer: destroy_entity_deferred(entity)
-            CommandBuffer->>CommandBuffer: lock(commands_mutex)
+            Thread1->>+CommandBuffer: destroyEntityDeferred(entity)
+            CommandBuffer->>CommandBuffer: lock(_commandsMutex)
             CommandBuffer->>CommandBuffer: commands.push_back(lambda)
-            CommandBuffer->>CommandBuffer: unlock(commands_mutex)
+            CommandBuffer->>CommandBuffer: unlock(_commandsMutex)
             CommandBuffer-->>-Thread1: void
         end
         Thread1-->>-ParallelView: Done
@@ -864,10 +864,10 @@ sequenceDiagram
         ParallelView->>+Thread2: Process entities 501-1000
         loop For entities in chunk
             Thread2->>Thread2: if (health.value <= 0)
-            Thread2->>+CommandBuffer: destroy_entity_deferred(entity)
-            CommandBuffer->>CommandBuffer: lock(commands_mutex)
+            Thread2->>+CommandBuffer: destroyEntityDeferred(entity)
+            CommandBuffer->>CommandBuffer: lock(_commandsMutex)
             CommandBuffer->>CommandBuffer: commands.push_back(lambda)
-            CommandBuffer->>CommandBuffer: unlock(commands_mutex)
+            CommandBuffer->>CommandBuffer: unlock(_commandsMutex)
             CommandBuffer-->>-Thread2: void
         end
         Thread2-->>-ParallelView: Done
@@ -877,21 +877,21 @@ sequenceDiagram
     
     Client->>+CommandBuffer: flush()
     
-    CommandBuffer->>CommandBuffer: lock(commands_mutex)
+    CommandBuffer->>CommandBuffer: lock(_commandsMutex)
     CommandBuffer->>CommandBuffer: Copy commands vector
-    CommandBuffer->>CommandBuffer: unlock(commands_mutex)
+    CommandBuffer->>CommandBuffer: unlock(_commandsMutex)
     
     loop For each deferred command
-        CommandBuffer->>+Registry: kill_entity(entity)
+        CommandBuffer->>+Registry: killEntity(entity)
         Registry->>Registry: Remove components
         Registry->>Registry: Update generations
-        Registry->>Registry: Add to free_indices
+        Registry->>Registry: Add to _freeIndices
         Registry-->>-CommandBuffer: void
     end
     
     CommandBuffer->>CommandBuffer: commands.clear()
-    CommandBuffer->>CommandBuffer: placeholder_to_real.clear()
-    CommandBuffer->>CommandBuffer: next_placeholder_id = 0
+    CommandBuffer->>CommandBuffer: _placeholdertoReal.clear()
+    CommandBuffer->>CommandBuffer: _nextPlaceholderId = 0
     
     CommandBuffer-->>-Client: void
 ```
@@ -909,29 +909,29 @@ sequenceDiagram
     
     Note over Client,RenderSystem: System Registration Phase
     
-    Client->>+SystemScheduler: add_system("physics", physics_func, {})
+    Client->>+SystemScheduler: addSystem("physics", physics_func, {})
     SystemScheduler->>SystemScheduler: systems["physics"] = {func, {}, enabled=true}
-    SystemScheduler->>SystemScheduler: needs_reorder = true
+    SystemScheduler->>SystemScheduler: _needsReorder = true
     SystemScheduler-->>-Client: void
     
-    Client->>+SystemScheduler: add_system("collision", collision_func, {"physics"})
+    Client->>+SystemScheduler: addSystem("collision", collision_func, {"physics"})
     SystemScheduler->>SystemScheduler: systems["collision"] = {func, {"physics"}, enabled=true}
-    SystemScheduler->>SystemScheduler: needs_reorder = true
+    SystemScheduler->>SystemScheduler: _needsReorder = true
     SystemScheduler-->>-Client: void
     
-    Client->>+SystemScheduler: add_system("render", render_func, {"collision"})
+    Client->>+SystemScheduler: addSystem("render", render_func, {"collision"})
     SystemScheduler->>SystemScheduler: systems["render"] = {func, {"collision"}, enabled=true}
-    SystemScheduler->>SystemScheduler: needs_reorder = true
+    SystemScheduler->>SystemScheduler: _needsReorder = true
     SystemScheduler-->>-Client: void
     
     Note over Client,RenderSystem: System Execution Phase
     
     Client->>+SystemScheduler: run()
     
-    alt needs_reorder == true
-        SystemScheduler->>SystemScheduler: topological_sort()
-        SystemScheduler->>SystemScheduler: execution_order = ["physics", "collision", "render"]
-        SystemScheduler->>SystemScheduler: needs_reorder = false
+    alt _needsReorder == true
+        SystemScheduler->>SystemScheduler: topologicalSort()
+        SystemScheduler->>SystemScheduler: _executionOrder = ["physics", "collision", "render"]
+        SystemScheduler->>SystemScheduler: _needsReorder = false
     end
     
     Note over SystemScheduler,RenderSystem: Execute systems in dependency order
@@ -968,7 +968,7 @@ sequenceDiagram
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Free: spawn_entity()
+    [*] --> Free: spawnEntity()
     
     Free: Free Slot
     Alive: Alive Entity
@@ -977,12 +977,12 @@ stateDiagram-v2
     
     Free --> Alive: Allocate<br/>generation=0
     
-    Alive --> Dead: kill_entity()<br/>generation++
+    Alive --> Dead: killEntity()<br/>generation++
     
-    Dead --> Alive: spawn_entity()<br/>Reuse index
+    Dead --> Alive: spawnEntity()<br/>Reuse index
     Dead --> Tombstone: generation >= MaxGeneration
     
-    Tombstone --> Free: cleanup_tombstones()<br/>Reset generation
+    Tombstone --> Free: cleanupTombstones()<br/>Reset generation
     
     Alive --> Alive: add/remove components
     
@@ -995,7 +995,7 @@ stateDiagram-v2
     note right of Dead
         Invalid entity ID
         Components removed
-        Index in free_indices
+        Index in _freeIndices
     end note
     
     note right of Tombstone
@@ -1016,24 +1016,24 @@ stateDiagram-v2
     Active: Component Active
     Destroying: Removing Component
     
-    NonExistent --> Constructing: emplace_component()
+    NonExistent --> Constructing: emplaceComponent()
     
-    Constructing --> Active: on_construct signals fired
+    Constructing --> Active: onConstruct signals fired
     
-    Active --> Active: patch()<br/>get_component()<br/>Modifications
+    Active --> Active: patch()<br/>getComponent()<br/>Modifications
     
-    Active --> Destroying: remove_component()<br/>kill_entity()
+    Active --> Destroying: removeComponent()<br/>killEntity()
     
-    Destroying --> NonExistent: on_destroy signals fired<br/>Memory freed
+    Destroying --> NonExistent: onDestroy signals fired<br/>Memory freed
     
-    NonExistent --> Active: get_or_emplace()<br/>(if doesn't exist)
+    NonExistent --> Active: getOrEmplace()<br/>(if doesn't exist)
     
-    Active --> Active: get_or_emplace()<br/>(if exists)
+    Active --> Active: getOrEmplace()<br/>(if exists)
     
     note right of Active
-        Component is in SparseSet
-        Accessible via get_component()
-        Entity tracked in entity_components
+        Component is in _sparseSet
+        Accessible via getComponent()
+        Entity tracked in _entityComponents
     end note
     
     note right of Constructing
@@ -1065,7 +1065,7 @@ graph TB
         Registry[Registry<br/>Central Coordinator]
         
         subgraph StorageLayer["Storage Layer"]
-            ComponentPools[Component Pools<br/>SparseSet Containers]
+            ComponentPools[Component Pools<br/>_sparseSet Containers]
         end
         
         subgraph ViewLayer["View Layer"]
@@ -1088,9 +1088,9 @@ graph TB
     end
     
     subgraph Sync["Synchronization Primitives"]
-        EntityMutex[entity_mutex<br/>shared_mutex]
-        ComponentMutex[component_pool_mutex<br/>shared_mutex]
-        SparseSetMutexes[Per-Pool Mutexes<br/>mutex]
+        EntityMutex[_entityMutex<br/>shared_mutex]
+        ComponentMutex[_componentPoolMutex<br/>shared_mutex]
+        _sparseSetMutexes[Per-Pool Mutexes<br/>mutex]
     end
     
     GameLoop --> Registry
@@ -1110,7 +1110,7 @@ graph TB
     
     Registry -.-> EntityMutex
     Registry -.-> ComponentMutex
-    ComponentPools -.-> SparseSetMutexes
+    ComponentPools -.-> _sparseSetMutexes
     
     style Registry fill:#4a90e2
     style ComponentPools fill:#50c878
@@ -1125,7 +1125,7 @@ graph TB
 ### Key Design Patterns
 
 1. **Entity-Component-System (ECS)**: Core architectural pattern
-2. **Sparse Set**: Efficient component storage with O(1) operations
+2. **_sparse Set**: Efficient component storage with O(1) operations
 3. **Observer Pattern**: Signal system for component lifecycle events
 4. **Command Pattern**: Deferred operations via CommandBuffer
 5. **Prototype Pattern**: Prefab system for entity templates
@@ -1164,9 +1164,9 @@ Registry Memory Hierarchy:
 │   └── Iterators (8-16 bytes)
 │
 └── Heap (component data)
-    ├── SparseSet::dense (contiguous components)
-    ├── SparseSet::packed (entity IDs)
-    ├── SparseSet::sparse (index lookup)
+    ├── _sparseSet::dense (contiguous components)
+    ├── _sparseSet::_packed (entity IDs)
+    ├── _sparseSet::_sparse (index lookup)
     └── Relationship graphs
 ```
 

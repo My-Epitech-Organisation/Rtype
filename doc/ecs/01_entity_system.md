@@ -17,7 +17,7 @@ struct Entity {
 
 ### Memory Layout
 
-Entities are 32-bit packed structures:
+Entities are 32-bit _packed structures:
 
 ```
 ┌─────────────┬──────────────────────┐
@@ -36,17 +36,17 @@ Generational indices solve the "dangling entity reference" problem:
 
 ```cpp
 // Create entity
-Entity e1 = registry.spawn_entity(); // id = 0x00000000 (index=0, gen=0)
+Entity e1 = registry.spawnEntity(); // id = 0x00000000 (index=0, gen=0)
 
 // Entity is destroyed
-registry.kill_entity(e1);
+registry.killEntity(e1);
 // Internally, generation is incremented: gen=1
 
 // New entity reuses the slot
-Entity e2 = registry.spawn_entity(); // id = 0x00100000 (index=0, gen=1)
+Entity e2 = registry.spawnEntity(); // id = 0x00100000 (index=0, gen=1)
 
 // Old reference is automatically invalid
-bool valid = registry.is_alive(e1); // false - generation mismatch!
+bool valid = registry.isAlive(e1); // false - generation mismatch!
 ```
 
 ### Benefits
@@ -61,13 +61,13 @@ bool valid = registry.is_alive(e1); // false - generation mismatch!
 
 ```cpp
 // Create a new entity
-Entity entity = registry.spawn_entity();
+Entity entity = registry.spawnEntity();
 
 // Destroy an entity (marks as tombstone)
-registry.kill_entity(entity);
+registry.killEntity(entity);
 
 // Check if entity is still valid
-bool alive = registry.is_alive(entity);
+bool alive = registry.isAlive(entity);
 ```
 
 ### Entity Properties
@@ -82,10 +82,10 @@ std::uint32_t idx = entity.index(); // 42
 std::uint32_t gen = entity.generation(); // 5
 
 // Check if null (uninitialized)
-bool is_null = entity.is_null();
+bool isNull = entity.isNull();
 
 // Check if tombstone (destroyed, max generation)
-bool is_tombstone = entity.is_tombstone();
+bool isTombstone = entity.isTombstone();
 ```
 
 ### Comparison
@@ -122,7 +122,7 @@ entity_names[entity] = "Player";
 
 ```cpp
 // Cleanup tombstones and recycle slots
-size_t recycled = registry.cleanup_tombstones();
+size_t recycled = registry.cleanupTombstones();
 ```
 
 This resets tombstone generations to 0, making them available for reuse.
@@ -132,7 +132,7 @@ This resets tombstone generations to 0, making them available for reuse.
 For performance, pre-allocate entity storage:
 
 ```cpp
-registry.reserve_entities(10000); // Reserve space for 10k entities
+registry.reserveEntities(10000); // Reserve space for 10k entities
 ```
 
 ## Advanced Usage
@@ -141,7 +141,7 @@ registry.reserve_entities(10000); // Reserve space for 10k entities
 
 ```cpp
 // Remove all entities matching a predicate
-size_t removed = registry.remove_entities_if([](Entity e) {
+size_t removed = registry.removeEntitiesIf([](Entity e) {
     // Return true to remove
     return should_remove(e);
 });
@@ -151,7 +151,7 @@ size_t removed = registry.remove_entities_if([](Entity e) {
 
 ```cpp
 void process_entity(Entity entity) {
-    if (!registry.is_alive(entity)) {
+    if (!registry.isAlive(entity)) {
         throw std::runtime_error("Entity is dead!");
     }
     // Safe to use entity
@@ -162,18 +162,18 @@ void process_entity(Entity entity) {
 
 | Operation | Time Complexity | Notes |
 |-----------|----------------|-------|
-| spawn_entity | O(1) amortized | May trigger vector resize |
-| kill_entity | O(k) | k = number of component types |
-| is_alive | O(1) | Array lookup + generation check |
-| cleanup_tombstones | O(n) | n = total entity slots |
+| spawnEntity | O(1) amortized | May trigger vector resize |
+| killEntity | O(k) | k = number of component types |
+| isAlive | O(1) | Array lookup + generation check |
+| cleanupTombstones | O(n) | n = total entity slots |
 
 ## Best Practices
 
 ### ✅ Do
 
-- Always check `is_alive()` before using stored entity references
-- Use `reserve_entities()` for known entity counts
-- Periodically call `cleanup_tombstones()` to reclaim memory
+- Always check `isAlive()` before using stored entity references
+- Use `reserveEntities()` for known entity counts
+- Periodically call `cleanupTombstones()` to reclaim memory
 - Store entities by value (they're just 32-bit integers)
 
 ### ❌ Don't
@@ -185,10 +185,10 @@ void process_entity(Entity entity) {
 
 ## Thread Safety
 
-- `spawn_entity()`: Thread-safe with internal locking
-- `kill_entity()`: Thread-safe with internal locking
-- `is_alive()`: Thread-safe (read-only operation)
-- `cleanup_tombstones()`: Thread-safe with internal locking
+- `spawnEntity()`: Thread-safe with internal locking
+- `killEntity()`: Thread-safe with internal locking
+- `isAlive()`: Thread-safe (read-only operation)
+- `cleanupTombstones()`: Thread-safe with internal locking
 
 ⚠️ **Warning**: Entity operations are safe, but adding/removing components during parallel iteration is **not safe**.
 
@@ -208,12 +208,12 @@ public:
             entities.pop_back();
             return e;
         }
-        return registry.spawn_entity();
+        return registry.spawnEntity();
     }
 
     void release(ECS::Entity entity) {
         // Remove all components
-        registry.kill_entity(entity);
+        registry.killEntity(entity);
         entities.push_back(entity);
     }
 };
@@ -226,7 +226,7 @@ void print_entity_info(Entity entity) {
     std::cout << "Entity["
               << "index=" << entity.index()
               << ", gen=" << entity.generation()
-              << ", alive=" << registry.is_alive(entity)
+              << ", alive=" << registry.isAlive(entity)
               << "]\n";
 }
 ```

@@ -28,17 +28,17 @@ The **RelationshipManager** provides hierarchical parent-child relationships bet
 ECS::RelationshipManager mgr;
 
 // Create entities
-auto parent = registry.spawn_entity();
-auto child1 = registry.spawn_entity();
-auto child2 = registry.spawn_entity();
+auto parent = registry.spawnEntity();
+auto child1 = registry.spawnEntity();
+auto child2 = registry.spawnEntity();
 
 // Set relationships
-mgr.set_parent(child1, parent);
-mgr.set_parent(child2, parent);
+mgr.setParent(child1, parent);
+mgr.setParent(child2, parent);
 
 // Query relationships
-auto parent_entity = mgr.get_parent(child1); // Returns std::optional<Entity>
-auto children = mgr.get_children(parent);    // Returns std::vector<Entity>
+auto parent_entity = mgr.getParent(child1); // Returns std::optional<Entity>
+auto children = mgr.getChildren(parent);    // Returns std::vector<Entity>
 ```
 
 ## API Reference
@@ -47,35 +47,35 @@ auto children = mgr.get_children(parent);    // Returns std::vector<Entity>
 
 ```cpp
 // Set parent-child relationship
-bool set_parent(Entity child, Entity parent);
+bool setParent(Entity child, Entity parent);
 
 // Remove parent (orphan the child)
-void remove_parent(Entity child);
+void removeParent(Entity child);
 ```
 
 ### Querying Relationships
 
 ```cpp
 // Get parent of entity
-std::optional<Entity> get_parent(Entity child) const;
+std::optional<Entity> getParent(Entity child) const;
 
 // Check if entity has parent
-bool has_parent(Entity child) const;
+bool hasParent(Entity child) const;
 
 // Get direct children
-std::vector<Entity> get_children(Entity parent) const;
+std::vector<Entity> getChildren(Entity parent) const;
 
 // Get all descendants (recursive)
-std::vector<Entity> get_descendants(Entity parent) const;
+std::vector<Entity> getDescendants(Entity parent) const;
 
 // Get all ancestors
-std::vector<Entity> get_ancestors(Entity child) const;
+std::vector<Entity> getAncestors(Entity child) const;
 
 // Get root of hierarchy
-Entity get_root(Entity entity) const;
+Entity getRoot(Entity entity) const;
 
 // Check if entity is ancestor of another
-bool is_ancestor(Entity potential_ancestor, Entity entity) const;
+bool isAncestor(Entity potential_ancestor, Entity entity) const;
 ```
 
 ### Hierarchy Operations
@@ -85,7 +85,7 @@ bool is_ancestor(Entity potential_ancestor, Entity entity) const;
 bool has_children(Entity parent) const;
 
 // Get child count
-size_t child_count(Entity parent) const;
+size_t childCount(Entity parent) const;
 
 // Remove entity and all descendants
 void destroy_hierarchy(Entity root);
@@ -96,14 +96,14 @@ void destroy_hierarchy(Entity root);
 The relationship manager prevents cycles:
 
 ```cpp
-auto e1 = registry.spawn_entity();
-auto e2 = registry.spawn_entity();
-auto e3 = registry.spawn_entity();
+auto e1 = registry.spawnEntity();
+auto e2 = registry.spawnEntity();
+auto e3 = registry.spawnEntity();
 
-mgr.set_parent(e2, e1); // e1 -> e2
-mgr.set_parent(e3, e2); // e1 -> e2 -> e3
+mgr.setParent(e2, e1); // e1 -> e2
+mgr.setParent(e3, e2); // e1 -> e2 -> e3
 
-bool result = mgr.set_parent(e1, e3); // Would create cycle: e1 -> e2 -> e3 -> e1
+bool result = mgr.setParent(e1, e3); // Would create cycle: e1 -> e2 -> e3 -> e1
 // result = false, cycle prevented
 ```
 
@@ -121,7 +121,7 @@ struct Transform {
 void update_transforms(Registry& reg, RelationshipManager& mgr) {
     // Update root transforms
     reg.view<Transform>().each([&](Entity e, Transform& t) {
-        if (!mgr.has_parent(e)) {
+        if (!mgr.hasParent(e)) {
             t.x = t.local_x;
             t.y = t.local_y;
         }
@@ -132,7 +132,7 @@ void update_transforms(Registry& reg, RelationshipManager& mgr) {
     
     // Add all roots to queue
     reg.view<Transform>().each([&](Entity e, Transform& t) {
-        if (!mgr.has_parent(e)) {
+        if (!mgr.hasParent(e)) {
             queue.push(e);
         }
     });
@@ -141,11 +141,11 @@ void update_transforms(Registry& reg, RelationshipManager& mgr) {
         Entity parent = queue.front();
         queue.pop();
         
-        auto& parent_transform = reg.get_component<Transform>(parent);
+        auto& parent_transform = reg.getComponent<Transform>(parent);
         
-        for (Entity child : mgr.get_children(parent)) {
-            if (reg.has_component<Transform>(child)) {
-                auto& child_transform = reg.get_component<Transform>(child);
+        for (Entity child : mgr.getChildren(parent)) {
+            if (reg.hasComponent<Transform>(child)) {
+                auto& child_transform = reg.getComponent<Transform>(child);
                 
                 // Apply parent transform
                 child_transform.x = parent_transform.x + child_transform.local_x;
@@ -171,7 +171,7 @@ struct Widget {
 void update_ui_layout(Registry& reg, RelationshipManager& mgr) {
     // Root widgets
     reg.view<Widget>().each([&](Entity e, Widget& w) {
-        if (!mgr.has_parent(e)) {
+        if (!mgr.hasParent(e)) {
             w.abs_x = w.rel_x;
             w.abs_y = w.rel_y;
         }
@@ -179,9 +179,9 @@ void update_ui_layout(Registry& reg, RelationshipManager& mgr) {
     
     // Propagate positions down hierarchy
     reg.view<Widget>().each([&](Entity e, Widget& w) {
-        auto parent_opt = mgr.get_parent(e);
-        if (parent_opt && reg.has_component<Widget>(*parent_opt)) {
-            auto& parent_widget = reg.get_component<Widget>(*parent_opt);
+        auto parent_opt = mgr.getParent(e);
+        if (parent_opt && reg.hasComponent<Widget>(*parent_opt)) {
+            auto& parent_widget = reg.getComponent<Widget>(*parent_opt);
             w.abs_x = parent_widget.abs_x + w.rel_x;
             w.abs_y = parent_widget.abs_y + w.rel_y;
         }
@@ -194,30 +194,30 @@ void update_ui_layout(Registry& reg, RelationshipManager& mgr) {
 ```cpp
 void create_player_with_weapon(Registry& reg, RelationshipManager& mgr) {
     // Create player
-    Entity player = reg.spawn_entity();
-    reg.emplace_component<Player>(player);
-    reg.emplace_component<Transform>(player, 0.0f, 0.0f);
+    Entity player = reg.spawnEntity();
+    reg.emplaceComponent<Player>(player);
+    reg.emplaceComponent<Transform>(player, 0.0f, 0.0f);
     
     // Create weapon as child
-    Entity weapon = reg.spawn_entity();
-    reg.emplace_component<Weapon>(weapon);
-    reg.emplace_component<Transform>(weapon, 1.0f, 0.0f); // Offset from player
+    Entity weapon = reg.spawnEntity();
+    reg.emplaceComponent<Weapon>(weapon);
+    reg.emplaceComponent<Transform>(weapon, 1.0f, 0.0f); // Offset from player
     
     // Attach weapon to player
-    mgr.set_parent(weapon, player);
+    mgr.setParent(weapon, player);
 }
 
 void destroy_player(Registry& reg, RelationshipManager& mgr, Entity player) {
     // Get all children (weapons, equipment, etc.)
-    auto children = mgr.get_children(player);
+    auto children = mgr.getChildren(player);
     
     // Destroy children first
     for (Entity child : children) {
-        reg.kill_entity(child);
+        reg.killEntity(child);
     }
     
     // Destroy player
-    reg.kill_entity(player);
+    reg.killEntity(player);
 }
 ```
 
@@ -226,13 +226,13 @@ void destroy_player(Registry& reg, RelationshipManager& mgr, Entity player) {
 ```cpp
 Entity instantiate_prefab_tree(Registry& reg, RelationshipManager& mgr, 
                                 const PrefabData& prefab) {
-    Entity root = reg.spawn_entity();
+    Entity root = reg.spawnEntity();
     // Add components to root...
     
     for (const auto& child_data : prefab.children) {
-        Entity child = reg.spawn_entity();
+        Entity child = reg.spawnEntity();
         // Add components to child...
-        mgr.set_parent(child, root);
+        mgr.setParent(child, root);
     }
     
     return root;
@@ -249,7 +249,7 @@ void traverse_depth_first(Entity root, RelationshipManager& mgr,
                          std::function<void(Entity)> callback) {
     callback(root);
     
-    for (Entity child : mgr.get_children(root)) {
+    for (Entity child : mgr.getChildren(root)) {
         traverse_depth_first(child, mgr, callback);
     }
 }
@@ -266,7 +266,7 @@ void traverse_breadth_first(Entity root, RelationshipManager& mgr,
         
         callback(current);
         
-        for (Entity child : mgr.get_children(current)) {
+        for (Entity child : mgr.getChildren(current)) {
             queue.push(child);
         }
     }
@@ -281,7 +281,7 @@ std::optional<Entity> find_in_hierarchy(Entity root, RelationshipManager& mgr,
                                         std::function<bool(Entity)> predicate) {
     if (predicate(root)) return root;
     
-    for (Entity child : mgr.get_children(root)) {
+    for (Entity child : mgr.getChildren(root)) {
         auto result = find_in_hierarchy(child, mgr, predicate);
         if (result) return result;
     }
@@ -291,7 +291,7 @@ std::optional<Entity> find_in_hierarchy(Entity root, RelationshipManager& mgr,
 
 // Usage
 auto enemy = find_in_hierarchy(scene_root, mgr, [&](Entity e) {
-    return registry.has_component<Enemy>(e);
+    return registry.hasComponent<Enemy>(e);
 });
 ```
 
@@ -309,9 +309,9 @@ size_t count_descendants(Entity root, RelationshipManager& mgr) {
 int get_hierarchy_depth(Entity entity, RelationshipManager& mgr) {
     int depth = 0;
     auto current = entity;
-    while (mgr.has_parent(current)) {
+    while (mgr.hasParent(current)) {
         depth++;
-        current = *mgr.get_parent(current);
+        current = *mgr.getParent(current);
     }
     return depth;
 }
@@ -323,26 +323,26 @@ The RelationshipManager is thread-safe:
 
 ```cpp
 // ✅ Safe: Concurrent reads
-std::thread t1([&] { auto children = mgr.get_children(entity1); });
-std::thread t2([&] { auto parent = mgr.get_parent(entity2); });
+std::thread t1([&] { auto children = mgr.getChildren(entity1); });
+std::thread t2([&] { auto parent = mgr.getParent(entity2); });
 
 // ✅ Safe: Concurrent modifications to different entities
-std::thread t1([&] { mgr.set_parent(child1, parent1); });
-std::thread t2([&] { mgr.set_parent(child2, parent2); });
+std::thread t1([&] { mgr.setParent(child1, parent1); });
+std::thread t2([&] { mgr.setParent(child2, parent2); });
 ```
 
 ## Performance
 
 | Operation | Complexity | Notes |
 |-----------|-----------|-------|
-| set_parent | O(1) | Plus cycle detection O(depth) |
-| remove_parent | O(1) | Hash map removal |
-| get_parent | O(1) | Hash map lookup |
-| has_parent | O(1) | Hash map lookup |
-| get_children | O(k) | k = child count |
-| get_descendants | O(n) | n = descendant count (DFS) |
-| get_ancestors | O(d) | d = depth in hierarchy |
-| is_ancestor | O(d) | d = depth in hierarchy |
+| setParent | O(1) | Plus cycle detection O(depth) |
+| removeParent | O(1) | Hash map removal |
+| getParent | O(1) | Hash map lookup |
+| hasParent | O(1) | Hash map lookup |
+| getChildren | O(k) | k = child count |
+| getDescendants | O(n) | n = descendant count (DFS) |
+| getAncestors | O(d) | d = depth in hierarchy |
+| isAncestor | O(d) | d = depth in hierarchy |
 
 ## Best Practices
 
@@ -372,18 +372,18 @@ class SceneGraph {
     
 public:
     SceneGraph(Registry& reg) : registry(reg) {
-        root = registry.spawn_entity();
-        registry.emplace_component<Transform>(root);
+        root = registry.spawnEntity();
+        registry.emplaceComponent<Transform>(root);
     }
     
     Entity create_entity(Entity parent = Entity()) {
-        Entity e = registry.spawn_entity();
-        registry.emplace_component<Transform>(e);
+        Entity e = registry.spawnEntity();
+        registry.emplaceComponent<Transform>(e);
         
-        if (parent.is_null()) {
-            relationships.set_parent(e, root);
+        if (parent.isNull()) {
+            relationships.setParent(e, root);
         } else {
-            relationships.set_parent(e, parent);
+            relationships.setParent(e, parent);
         }
         
         return e;
@@ -391,15 +391,15 @@ public:
     
     void destroy_entity(Entity e) {
         // Destroy all children recursively
-        for (Entity child : relationships.get_children(e)) {
+        for (Entity child : relationships.getChildren(e)) {
             destroy_entity(child);
         }
         
         // Remove from parent
-        relationships.remove_parent(e);
+        relationships.removeParent(e);
         
         // Destroy entity
-        registry.kill_entity(e);
+        registry.killEntity(e);
     }
     
     void update_transforms() {
@@ -408,10 +408,10 @@ public:
     
 private:
     void update_transforms_recursive(Entity entity) {
-        if (relationships.has_parent(entity)) {
-            Entity parent = *relationships.get_parent(entity);
-            auto& pt = registry.get_component<Transform>(parent);
-            auto& ct = registry.get_component<Transform>(entity);
+        if (relationships.hasParent(entity)) {
+            Entity parent = *relationships.getParent(entity);
+            auto& pt = registry.getComponent<Transform>(parent);
+            auto& ct = registry.getComponent<Transform>(entity);
             
             // Apply parent transform
             ct.world_x = pt.world_x + ct.local_x;
@@ -419,7 +419,7 @@ private:
         }
         
         // Update children
-        for (Entity child : relationships.get_children(entity)) {
+        for (Entity child : relationships.getChildren(entity)) {
             update_transforms_recursive(child);
         }
     }

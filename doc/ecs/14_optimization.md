@@ -66,10 +66,10 @@ struct Transform {
 ```cpp
 void init_game(ECS::Registry& registry) {
     // Reserve upfront to avoid reallocations
-    registry.reserve_entities(10000);
-    registry.reserve_components<Position>(10000);
-    registry.reserve_components<Velocity>(10000);
-    registry.reserve_components<Sprite>(5000);
+    registry.reserveEntities(10000);
+    registry.reserveComponents<Position>(10000);
+    registry.reserveComponents<Velocity>(10000);
+    registry.reserveComponents<Sprite>(5000);
 }
 ```
 
@@ -79,12 +79,12 @@ void init_game(ECS::Registry& registry) {
 void cleanup_level(ECS::Registry& registry) {
     // Remove all level entities
     registry.view<LevelEntity>().each([&](Entity e) {
-        registry.kill_entity(e);
+        registry.killEntity(e);
     });
     
     // Reclaim memory
     registry.compact();
-    registry.cleanup_tombstones();
+    registry.cleanupTombstones();
 }
 ```
 
@@ -93,9 +93,9 @@ void cleanup_level(ECS::Registry& registry) {
 ```cpp
 // ❌ Bad: Create and destroy frequently
 for (int i = 0; i < 1000; ++i) {
-    auto e = registry.spawn_entity();
+    auto e = registry.spawnEntity();
     // ... use entity
-    registry.kill_entity(e); // Fragments memory
+    registry.killEntity(e); // Fragments memory
 }
 
 // ✅ Good: Reuse entities with object pool
@@ -109,7 +109,7 @@ public:
             inactive.pop_back();
             return e;
         }
-        return reg.spawn_entity();
+        return reg.spawnEntity();
     }
     
     void release(Entity e) {
@@ -125,10 +125,10 @@ public:
 ```cpp
 // ❌ Bad: Manual iteration
 for (auto& [entity, components] : all_entities) {
-    if (has_component<Position>(entity) && 
-        has_component<Velocity>(entity)) {
-        auto& pos = get_component<Position>(entity);
-        auto& vel = get_component<Velocity>(entity);
+    if (hasComponent<Position>(entity) && 
+        hasComponent<Velocity>(entity)) {
+        auto& pos = getComponent<Position>(entity);
+        auto& vel = getComponent<Velocity>(entity);
         pos.x += vel.dx;
     }
 }
@@ -171,7 +171,7 @@ for (int frame = 0; frame < 1000; ++frame) {
 }
 
 // ✅ Good: Cache with group
-auto group = registry.create_group<Position, Velocity>();
+auto group = registry.createGroup<Position, Velocity>();
 group.rebuild();
 
 for (int frame = 0; frame < 1000; ++frame) {
@@ -191,7 +191,7 @@ for (int frame = 0; frame < 1000; ++frame) {
 
 void physics_update(Registry& reg) {
     // ✅ Good: Large dataset, CPU-intensive
-    reg.parallel_view<Position, Velocity, RigidBody>().each([](auto e, auto& p, auto& v, auto& rb) {
+    reg.parallelView<Position, Velocity, RigidBody>().each([](auto e, auto& p, auto& v, auto& rb) {
         // Complex physics calculations
         apply_forces(rb);
         integrate_velocity(v, rb);
@@ -206,7 +206,7 @@ void physics_update(Registry& reg) {
 
 void simple_update(Registry& reg) {
     // ❌ Bad: Too small for parallelism overhead
-    reg.parallel_view<Position>().each([](auto e, auto& p) {
+    reg.parallelView<Position>().each([](auto e, auto& p) {
         p.x += 1.0f;
     });
     
@@ -224,7 +224,7 @@ void simple_update(Registry& reg) {
 std::mutex mutex;
 std::vector<Entity> results;
 
-reg.parallel_view<Position>().each([&](Entity e, auto& pos) {
+reg.parallelView<Position>().each([&](Entity e, auto& pos) {
     if (pos.x > 100.0f) {
         std::lock_guard lock(mutex); // Contention!
         results.push_back(e);
@@ -234,7 +234,7 @@ reg.parallel_view<Position>().each([&](Entity e, auto& pos) {
 // ✅ Good: Thread-local accumulation
 thread_local std::vector<Entity> local_results;
 
-reg.parallel_view<Position>().each([&](Entity e, auto& pos) {
+reg.parallelView<Position>().each([&](Entity e, auto& pos) {
     if (pos.x > 100.0f) {
         local_results.push_back(e); // No lock needed
     }
@@ -242,9 +242,9 @@ reg.parallel_view<Position>().each([&](Entity e, auto& pos) {
 
 // Use CommandBuffer for structural changes
 CommandBuffer cmd(reg);
-reg.parallel_view<Health>().each([&](Entity e, auto& hp) {
+reg.parallelView<Health>().each([&](Entity e, auto& hp) {
     if (hp.hp <= 0) {
-        cmd.destroy_entity_deferred(e); // Thread-safe
+        cmd.destroyEntityDeferred(e); // Thread-safe
     }
 });
 cmd.flush();
@@ -254,7 +254,7 @@ cmd.flush();
 
 ### Structure of Arrays (SoA) Benefits
 
-The sparse set naturally provides SoA layout:
+The _sparse set naturally provides SoA layout:
 
 ```cpp
 // Components are stored contiguously
@@ -303,15 +303,15 @@ struct Inventory {
 ```cpp
 // ❌ Bad: Many small operations
 for (int i = 0; i < 1000; ++i) {
-    auto e = registry.spawn_entity();
-    registry.emplace_component<Position>(e, i * 1.0f, 0.0f);
+    auto e = registry.spawnEntity();
+    registry.emplaceComponent<Position>(e, i * 1.0f, 0.0f);
 }
 
 // ✅ Good: Batch with CommandBuffer
 CommandBuffer cmd(registry);
 for (int i = 0; i < 1000; ++i) {
-    auto e = cmd.spawn_entity_deferred();
-    cmd.emplace_component_deferred<Position>(e, i * 1.0f, 0.0f);
+    auto e = cmd.spawnEntityDeferred();
+    cmd.emplaceComponentDeferred<Position>(e, i * 1.0f, 0.0f);
 }
 cmd.flush(); // Single batch operation
 ```
@@ -345,11 +345,11 @@ void game_loop() {
 ```cpp
 // ❌ Bad: Repeated component checks
 registry.view<Entity>().each([&](Entity e) {
-    if (registry.has_component<Position>(e)) {
-        auto& pos = registry.get_component<Position>(e);
+    if (registry.hasComponent<Position>(e)) {
+        auto& pos = registry.getComponent<Position>(e);
     }
-    if (registry.has_component<Velocity>(e)) {
-        auto& vel = registry.get_component<Velocity>(e);
+    if (registry.hasComponent<Velocity>(e)) {
+        auto& vel = registry.getComponent<Velocity>(e);
     }
 });
 
@@ -421,11 +421,11 @@ class LivingEntity : public MovableEntity {};
 class Player : public LivingEntity {};
 
 // ✅ Good: Composition
-Entity player = registry.spawn_entity();
-registry.emplace_component<Position>(player);
-registry.emplace_component<Velocity>(player);
-registry.emplace_component<Health>(player);
-registry.emplace_component<Player>(player);
+Entity player = registry.spawnEntity();
+registry.emplaceComponent<Position>(player);
+registry.emplaceComponent<Velocity>(player);
+registry.emplaceComponent<Health>(player);
+registry.emplaceComponent<Player>(player);
 ```
 
 ### 3. Storing Pointers in Components
@@ -442,9 +442,9 @@ struct Parent {
 };
 
 // Access when needed
-auto parent = registry.get_component<Parent>(child).parent_entity;
-if (registry.is_alive(parent)) {
-    auto& pos = registry.get_component<Position>(parent);
+auto parent = registry.getComponent<Parent>(child).parent_entity;
+if (registry.isAlive(parent)) {
+    auto& pos = registry.getComponent<Position>(parent);
 }
 ```
 

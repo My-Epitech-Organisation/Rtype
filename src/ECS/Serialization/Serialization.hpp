@@ -25,7 +25,7 @@ namespace ECS {
     /**
      * @brief Component serialization interface.
      *
-     * Users must implement serializers for each component type they want to save/load.
+     * Users must implement _serializers for each component type they want to save/load.
      */
     class IComponentSerializer {
     public:
@@ -58,9 +58,9 @@ namespace ECS {
      *
      * Example:
      *   Serializer serializer(registry);
-     *   serializer.register_serializer<Position>(pos_serializer);
-     *   serializer.save_to_file("save.txt");
-     *   serializer.load_from_file("save.txt");
+     *   serializer.registerSerializer<Position>(pos_serializer);
+     *   serializer.saveToFile("save.txt");
+     *   serializer.loadFromFile("save.txt");
      */
     class Serializer {
     public:
@@ -70,9 +70,9 @@ namespace ECS {
          * @brief Registers a component serializer.
          */
         template<typename T>
-        void register_serializer(std::shared_ptr<IComponentSerializer> serializer) {
-            serializers[std::type_index(typeid(T))] = std::move(serializer);
-            type_names[std::type_index(typeid(T))] = typeid(T).name();
+        void registerSerializer(std::shared_ptr<IComponentSerializer> serializer) {
+            _serializers[std::type_index(typeid(T))] = std::move(serializer);
+            _typeNames[std::type_index(typeid(T))] = typeid(T).name();
         }
 
         /**
@@ -80,7 +80,7 @@ namespace ECS {
          * @param filename Output file path
          * @return true if successful
          */
-        bool save_to_file(const std::string& filename);
+        bool saveToFile(const std::string& filename);
 
         /**
          * @brief Loads ECS state from file.
@@ -88,7 +88,7 @@ namespace ECS {
          * @param clear_existing If true, clears registry before loading
          * @return true if successful
          */
-        bool load_from_file(const std::string& filename, bool clear_existing = true);
+        bool loadFromFile(const std::string& filename, bool clear_existing = true);
 
         /**
          * @brief Serializes ECS state to string.
@@ -102,13 +102,13 @@ namespace ECS {
 
     private:
         Registry* registry;
-        std::unordered_map<std::type_index, std::shared_ptr<IComponentSerializer>> serializers;
-        std::unordered_map<std::type_index, std::string> type_names;
-        std::unordered_map<std::string, std::type_index> name_to_type;
+        std::unordered_map<std::type_index, std::shared_ptr<IComponentSerializer>> _serializers;
+        std::unordered_map<std::type_index, std::string> _typeNames;
+        std::unordered_map<std::string, std::type_index> _nameToType;
     };
 
     /**
-     * @brief Helper template for simple component serializers.
+     * @brief Helper template for simple component _serializers.
      */
     template<typename T>
     class ComponentSerializer : public IComponentSerializer {
@@ -135,14 +135,14 @@ namespace ECS {
 namespace ECS {
     template<typename T>
     std::string ComponentSerializer<T>::serialize(Entity entity, Registry* registry) const {
-        const T& component = registry->template get_component<T>(entity);
+        const T& component = registry->template getComponent<T>(entity);
         return serialize_func(component);
     }
 
     template<typename T>
     void ComponentSerializer<T>::deserialize(Entity entity, const std::string& data, Registry* registry) const {
         T component = deserialize_func(data);
-        registry->template emplace_component<T>(entity, std::move(component));
+        registry->template emplaceComponent<T>(entity, std::move(component));
     }
 }
 

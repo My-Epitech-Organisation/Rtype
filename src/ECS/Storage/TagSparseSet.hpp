@@ -5,8 +5,8 @@
 ** TagSparseSet
 */
 
-#ifndef ECS_STORAGE_TAG_SPARSE_SET_HPP
-    #define ECS_STORAGE_TAG_SPARSE_SET_HPP
+#ifndef ECS_STORAGE_TAG__sparse_SET_HPP
+    #define ECS_STORAGE_TAG__sparse_SET_HPP
     #include "ISparseSet.hpp"
     #include <vector>
     #include <limits>
@@ -31,10 +31,10 @@ namespace ECS {
     public:
         bool contains(Entity entity) const noexcept override {
             auto idx = entity.index();
-            return idx < sparse.size() &&
-                   sparse[idx] != NullIndex &&
-                   sparse[idx] < packed.size() &&
-                   packed[sparse[idx]] == entity;
+            return idx < _sparse.size() &&
+                   _sparse[idx] != NullIndex &&
+                   _sparse[idx] < _packed.size() &&
+                   _packed[_sparse[idx]] == entity;
         }
 
         /**
@@ -43,81 +43,81 @@ namespace ECS {
          */
         template <typename... Args>
         T& emplace(Entity entity, Args&&...) {
-            std::lock_guard lock(sparse_set_mutex);
+            std::lock_guard lock(__sparseSetMutex);
             if (contains(entity))
-                return dummy_instance;
+                return _dummyInstance;
 
             auto idx = entity.index();
-            if (idx >= sparse.size())
-                sparse.resize(idx + 1, NullIndex);
+            if (idx >= _sparse.size())
+                _sparse.resize(idx + 1, NullIndex);
 
-            sparse[idx] = packed.size();
-            packed.push_back(entity);
-            return dummy_instance;
+            _sparse[idx] = _packed.size();
+            _packed.push_back(entity);
+            return _dummyInstance;
         }
 
         void remove(Entity entity) override {
-            std::lock_guard lock(sparse_set_mutex);
+            std::lock_guard lock(__sparseSetMutex);
             if (!contains(entity)) return;
 
             auto idx = entity.index();
-            size_t dense_idx = sparse[idx];
-            size_t last_idx = packed.size() - 1;
+            size_t dense_idx = _sparse[idx];
+            size_t last_idx = _packed.size() - 1;
 
             if (dense_idx != last_idx) {
-                Entity last_entity = packed[last_idx];
-                std::swap(packed[dense_idx], packed[last_idx]);
-                sparse[last_entity.index()] = dense_idx;
+                Entity last_entity = _packed[last_idx];
+                std::swap(_packed[dense_idx], _packed[last_idx]);
+                _sparse[last_entity.index()] = dense_idx;
             }
 
-            packed.pop_back();
-            sparse[idx] = NullIndex;
+            _packed.pop_back();
+            _sparse[idx] = NullIndex;
         }
 
         T& get(Entity entity) {
             if (!contains(entity))
                 throw std::runtime_error("Entity missing tag component in TagSparseSet::get()");
-            return dummy_instance;
+            return _dummyInstance;
         }
 
         const T& get(Entity entity) const {
             if (!contains(entity))
                 throw std::runtime_error("Entity missing tag component in TagSparseSet::get()");
-            return dummy_instance;
+            return _dummyInstance;
         }
 
         void clear() noexcept override {
-            packed.clear();
-            sparse.clear();
+            _packed.clear();
+            _sparse.clear();
         }
 
         size_t size() const noexcept override {
-            return packed.size();
+            return _packed.size();
         }
 
-        const std::vector<Entity>& get_packed() const noexcept { return packed; }
+        const std::vector<Entity>& getPacked() const noexcept { return _packed; }
 
         void reserve(size_t capacity) {
-            packed.reserve(capacity);
-            sparse.reserve(capacity);
+            _packed.reserve(capacity);
+            _sparse.reserve(capacity);
         }
 
         /**
          * @brief Releases unused memory.
          */
-        void shrink_to_fit() {
-            packed.shrink_to_fit();
-            sparse.shrink_to_fit();
+        void shrinkToFit() {
+            _packed.shrink_to_fit();
+            _sparse.shrink_to_fit();
         }
 
     private:
         static constexpr size_t NullIndex = std::numeric_limits<size_t>::max();
-        std::vector<Entity> packed;
-        std::vector<size_t> sparse;
-        mutable std::mutex sparse_set_mutex;
-        static inline T dummy_instance{};
+        std::vector<Entity> _packed;
+        std::vector<size_t> _sparse;
+        mutable std::mutex __sparseSetMutex;
+        static inline T _dummyInstance{};
     };
 
 } // namespace ECS
 
-#endif // ECS_STORAGE_TAG_SPARSE_SET_HPP
+#endif // ECS_STORAGE_TAG__sparse_SET_HPP

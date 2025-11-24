@@ -16,25 +16,25 @@
 // ========================================================================
 
     template<typename T, typename... Args>
-    T& Registry::set_singleton(Args&&... args) {
+    T& Registry::setSingleton(Args&&... args) {
         std::type_index type = std::type_index(typeid(T));
-        singletons[type] = std::make_any<T>(std::forward<Args>(args)...);
-        return std::any_cast<T&>(singletons[type]);
+        _singletons[type] = std::make_any<T>(std::forward<Args>(args)...);
+        return std::any_cast<T&>(_singletons[type]);
     }
 
     template<typename T>
-    T& Registry::get_singleton() {
-        return std::any_cast<T&>(singletons.at(std::type_index(typeid(T))));
+    T& Registry::getSingleton() {
+        return std::any_cast<T&>(_singletons.at(std::type_index(typeid(T))));
     }
 
     template<typename T>
-    bool Registry::has_singleton() const noexcept {
-        return singletons.find(std::type_index(typeid(T))) != singletons.end();
+    bool Registry::hasSingleton() const noexcept {
+        return _singletons.find(std::type_index(typeid(T))) != _singletons.end();
     }
 
     template<typename T>
-    void Registry::remove_singleton() noexcept {
-        singletons.erase(std::type_index(typeid(T)));
+    void Registry::removeSingleton() noexcept {
+        _singletons.erase(std::type_index(typeid(T)));
     }
 
 #endif // ECS_CORE_REGISTRY_SINGLETON_INL

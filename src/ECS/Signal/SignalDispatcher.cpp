@@ -11,20 +11,20 @@
 
 namespace ECS {
 
-    void SignalDispatcher::register_construct(std::type_index type, Callback callback) {
+    void SignalDispatcher::registerConstruct(std::type_index type, Callback callback) {
         std::unique_lock lock(callbacks_mutex);
-        construct_callbacks[type].push_back(std::move(callback));
+        _constructCallbacks[type].push_back(std::move(callback));
     }
 
-    void SignalDispatcher::register_destroy(std::type_index type, Callback callback) {
+    void SignalDispatcher::registerDestroy(std::type_index type, Callback callback) {
         std::unique_lock lock(callbacks_mutex);
-        destroy_callbacks[type].push_back(std::move(callback));
+        _destroyCallbacks[type].push_back(std::move(callback));
     }
 
-    void SignalDispatcher::dispatch_construct(std::type_index type, Entity entity) {
+    void SignalDispatcher::dispatchConstruct(std::type_index type, Entity entity) {
         std::shared_lock lock(callbacks_mutex);
-        auto it = construct_callbacks.find(type);
-        if (it != construct_callbacks.end()) {
+        auto it = _constructCallbacks.find(type);
+        if (it != _constructCallbacks.end()) {
             std::vector<Callback> callbacks_copy = it->second;
             lock.unlock();
 
@@ -34,10 +34,10 @@ namespace ECS {
         }
     }
 
-    void SignalDispatcher::dispatch_destroy(std::type_index type, Entity entity) {
+    void SignalDispatcher::dispatchDestroy(std::type_index type, Entity entity) {
         std::shared_lock lock(callbacks_mutex);
-        auto it = destroy_callbacks.find(type);
-        if (it != destroy_callbacks.end()) {
+        auto it = _destroyCallbacks.find(type);
+        if (it != _destroyCallbacks.end()) {
             std::vector<Callback> callbacks_copy = it->second;
             lock.unlock();
 
@@ -47,16 +47,16 @@ namespace ECS {
         }
     }
 
-    void SignalDispatcher::clear_callbacks(std::type_index type) {
+    void SignalDispatcher::clearCallbacks(std::type_index type) {
         std::unique_lock lock(callbacks_mutex);
-        construct_callbacks.erase(type);
-        destroy_callbacks.erase(type);
+        _constructCallbacks.erase(type);
+        _destroyCallbacks.erase(type);
     }
 
-    void SignalDispatcher::clear_all_callbacks() {
+    void SignalDispatcher::clearAllCallbacks() {
         std::unique_lock lock(callbacks_mutex);
-        construct_callbacks.clear();
-        destroy_callbacks.clear();
+        _constructCallbacks.clear();
+        _destroyCallbacks.clear();
     }
 
 } // namespace ECS

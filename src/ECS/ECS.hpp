@@ -32,12 +32,12 @@
  *
  * Architecture Overview:
  * - Entities: Lightweight IDs with generational indices
- * - Components: Plain data structures stored in sparse sets
+ * - Components: Plain data structures stored in _sparse sets
  * - Systems: Functions that operate on component views
  * - Registry: Central coordinator for all ECS operations
  *
  * Key Features:
- * - Cache-friendly sparse set storage
+ * - Cache-friendly _sparse set storage
  * - Zero-cost tag components
  * - Parallel iteration support
  * - Signal/observer pattern
@@ -53,8 +53,8 @@
  *
  * Usage:
  *   ECS::Registry registry;
- *   auto entity = registry.spawn_entity();
- *   registry.emplace_component<Position>(entity, 0.0f, 0.0f);
+ *   auto entity = registry.spawnEntity();
+ *   registry.emplaceComponent<Position>(entity, 0.0f, 0.0f);
  *
  *   registry.view<Position, Velocity>().each([](auto e, auto& p, auto& v) {
  *       p.x += v.dx;

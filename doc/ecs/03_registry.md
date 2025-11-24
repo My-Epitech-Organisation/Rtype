@@ -21,24 +21,24 @@ The **Registry** is the central coordinator of the ECS, managing entities, compo
 ECS::Registry registry;
 
 // Create entity
-Entity player = registry.spawn_entity();
+Entity player = registry.spawnEntity();
 
 // Add components
-registry.emplace_component<Position>(player, 0.0f, 0.0f);
-registry.emplace_component<Velocity>(player, 5.0f, 0.0f);
-registry.emplace_component<Player>(player); // Tag
+registry.emplaceComponent<Position>(player, 0.0f, 0.0f);
+registry.emplaceComponent<Velocity>(player, 5.0f, 0.0f);
+registry.emplaceComponent<Player>(player); // Tag
 
 // Check component
-if (registry.has_component<Position>(player)) {
-    Position& pos = registry.get_component<Position>(player);
+if (registry.hasComponent<Position>(player)) {
+    Position& pos = registry.getComponent<Position>(player);
     pos.x += 1.0f;
 }
 
 // Remove component
-registry.remove_component<Velocity>(player);
+registry.removeComponent<Velocity>(player);
 
 // Destroy entity
-registry.kill_entity(player);
+registry.killEntity(player);
 ```
 
 ## Entity Management
@@ -47,37 +47,37 @@ registry.kill_entity(player);
 
 ```cpp
 // Create single entity
-Entity entity = registry.spawn_entity();
+Entity entity = registry.spawnEntity();
 
 // Reserve capacity for batch creation
-registry.reserve_entities(10000);
+registry.reserveEntities(10000);
 std::vector<Entity> entities;
 for (int i = 0; i < 10000; ++i) {
-    entities.push_back(registry.spawn_entity());
+    entities.push_back(registry.spawnEntity());
 }
 ```
 
 ### Validation
 
 ```cpp
-Entity entity = registry.spawn_entity();
+Entity entity = registry.spawnEntity();
 
 // Check if entity is valid
-bool alive = registry.is_alive(entity);
+bool alive = registry.isAlive(entity);
 
 // Entity remains invalid after destruction
-registry.kill_entity(entity);
-alive = registry.is_alive(entity); // false
+registry.killEntity(entity);
+alive = registry.isAlive(entity); // false
 ```
 
 ### Cleanup
 
 ```cpp
 // Remove all dead entities and recycle slots
-size_t recycled = registry.cleanup_tombstones();
+size_t recycled = registry.cleanupTombstones();
 
 // Remove entities conditionally
-size_t removed = registry.remove_entities_if([](Entity e) {
+size_t removed = registry.removeEntitiesIf([](Entity e) {
     return /* condition */;
 });
 ```
@@ -88,15 +88,15 @@ size_t removed = registry.remove_entities_if([](Entity e) {
 
 ```cpp
 // Emplace with constructor arguments
-registry.emplace_component<Transform>(entity, position, rotation, scale);
+registry.emplaceComponent<Transform>(entity, position, rotation, scale);
 
 // Emplace and modify
-auto& health = registry.emplace_component<Health>(entity, 100);
+auto& health = registry.emplaceComponent<Health>(entity, 100);
 health.max_hp = 100;
 
 // Idempotent - replaces if exists
-registry.emplace_component<Position>(entity, 0.0f, 0.0f);
-registry.emplace_component<Position>(entity, 5.0f, 5.0f); // Replaces
+registry.emplaceComponent<Position>(entity, 0.0f, 0.0f);
+registry.emplaceComponent<Position>(entity, 5.0f, 5.0f); // Replaces
 ```
 
 ### Accessing Components
@@ -104,22 +104,22 @@ registry.emplace_component<Position>(entity, 5.0f, 5.0f); // Replaces
 ```cpp
 // Get component (throws if missing)
 try {
-    Position& pos = registry.get_component<Position>(entity);
+    Position& pos = registry.getComponent<Position>(entity);
     pos.x += 1.0f;
 } catch (const std::runtime_error& e) {
     // Component missing
 }
 
 // Try-get with check
-if (registry.has_component<Velocity>(entity)) {
-    auto& vel = registry.get_component<Velocity>(entity);
+if (registry.hasComponent<Velocity>(entity)) {
+    auto& vel = registry.getComponent<Velocity>(entity);
     vel.dx *= 0.99f;
 }
 
 // Get multiple components at once
 if (registry.all_of<Position, Velocity>(entity)) {
-    auto& pos = registry.get_component<Position>(entity);
-    auto& vel = registry.get_component<Velocity>(entity);
+    auto& pos = registry.getComponent<Position>(entity);
+    auto& vel = registry.getComponent<Velocity>(entity);
     pos.x += vel.dx;
 }
 ```
@@ -128,11 +128,11 @@ if (registry.all_of<Position, Velocity>(entity)) {
 
 ```cpp
 // Remove single component
-registry.remove_component<Velocity>(entity);
+registry.removeComponent<Velocity>(entity);
 
 // Check before removing
-if (registry.has_component<Temporary>(entity)) {
-    registry.remove_component<Temporary>(entity);
+if (registry.hasComponent<Temporary>(entity)) {
+    registry.removeComponent<Temporary>(entity);
 }
 ```
 
@@ -143,11 +143,11 @@ if (registry.has_component<Temporary>(entity)) {
 size_t count = registry.component_count<Position>();
 
 // Clear all components of a type
-registry.clear_components<Position>();
+registry.clearComponents<Position>();
 
 // Reserve component capacity
-registry.reserve_components<Position>(10000);
-registry.reserve_components<Velocity>(10000);
+registry.reserveComponents<Position>(10000);
+registry.reserveComponents<Velocity>(10000);
 ```
 
 ## View Creation
@@ -166,10 +166,10 @@ auto view = registry.view<Position, Velocity>()
                    .exclude<Dead, Frozen>();
 
 // Parallel iteration
-auto view = registry.parallel_view<Position, Velocity>();
+auto view = registry.parallelView<Position, Velocity>();
 
 // Cached group
-auto group = registry.create_group<Position, Velocity>();
+auto group = registry.createGroup<Position, Velocity>();
 ```
 
 See [Views](04_views.md) for detailed usage.
@@ -215,12 +215,12 @@ Register callbacks for component lifecycle events.
 
 ```cpp
 // Listen for component additions
-registry.on_construct<Health>([](Entity e) {
+registry.onConstruct<Health>([](Entity e) {
     std::cout << "Entity " << e.index() << " gained Health\n";
 });
 
 // Listen for component removals
-registry.on_destroy<Health>([](Entity e) {
+registry.onDestroy<Health>([](Entity e) {
     std::cout << "Entity " << e.index() << " lost Health\n";
 });
 ```
@@ -237,11 +237,11 @@ Pre-allocate memory to avoid reallocations:
 
 ```cpp
 // Reserve entity capacity
-registry.reserve_entities(10000);
+registry.reserveEntities(10000);
 
 // Reserve component capacity
-registry.reserve_components<Position>(10000);
-registry.reserve_components<Velocity>(10000);
+registry.reserveComponents<Position>(10000);
+registry.reserveComponents<Velocity>(10000);
 ```
 
 ### Compaction
@@ -250,7 +250,7 @@ Reclaim memory after bulk deletions:
 
 ```cpp
 // Compact specific component type
-registry.compact_component<Position>();
+registry.compactComponent<Position>();
 
 // Compact all component types
 registry.compact();
@@ -260,7 +260,7 @@ registry.compact();
 
 ```cpp
 // Clear all components of a type
-registry.clear_components<Position>();
+registry.clearComponents<Position>();
 
 // Clear all entities and components
 registry.clear();
@@ -271,30 +271,30 @@ registry.clear();
 ### Entity Operations
 
 ```cpp
-Entity spawn_entity();
-void kill_entity(Entity entity) noexcept;
-bool is_alive(Entity entity) const noexcept;
-size_t cleanup_tombstones();
-void reserve_entities(size_t capacity);
+Entity spawnEntity();
+void killEntity(Entity entity) noexcept;
+bool isAlive(Entity entity) const noexcept;
+size_t cleanupTombstones();
+void reserveEntities(size_t capacity);
 
 template<typename Func>
-size_t remove_entities_if(Func&& predicate);
+size_t removeEntitiesIf(Func&& predicate);
 ```
 
 ### Component Operations
 
 ```cpp
 template<typename T, typename... Args>
-T& emplace_component(Entity entity, Args&&... args);
+T& emplaceComponent(Entity entity, Args&&... args);
 
 template<typename T>
-void remove_component(Entity entity);
+void removeComponent(Entity entity);
 
 template<typename T>
-bool has_component(Entity entity) const;
+bool hasComponent(Entity entity) const;
 
 template<typename T>
-T& get_component(Entity entity);
+T& getComponent(Entity entity);
 
 template<typename... Ts>
 bool all_of(Entity entity) const;
@@ -306,13 +306,13 @@ template<typename T>
 size_t component_count() const;
 
 template<typename T>
-void clear_components();
+void clearComponents();
 
 template<typename T>
-void reserve_components(size_t capacity);
+void reserveComponents(size_t capacity);
 
 template<typename T>
-void compact_component();
+void compactComponent();
 
 void compact();
 ```
@@ -324,10 +324,10 @@ template<typename... Components>
 View<Components...> view();
 
 template<typename... Components>
-ParallelView<Components...> parallel_view();
+ParallelView<Components...> parallelView();
 
 template<typename... Components>
-Group<Components...> create_group();
+Group<Components...> createGroup();
 ```
 
 ### Resource Operations
@@ -350,10 +350,10 @@ void remove_resource();
 
 ```cpp
 template<typename T>
-void on_construct(std::function<void(Entity)> callback);
+void onConstruct(std::function<void(Entity)> callback);
 
 template<typename T>
-void on_destroy(std::function<void(Entity)> callback);
+void onDestroy(std::function<void(Entity)> callback);
 ```
 
 ## Thread Safety
@@ -378,9 +378,9 @@ void on_destroy(std::function<void(Entity)> callback);
 ```cpp
 CommandBuffer cmd(registry);
 
-registry.parallel_view<Position>().each([&](Entity e, Position& pos) {
+registry.parallelView<Position>().each([&](Entity e, Position& pos) {
     if (pos.x > 100.0f) {
-        cmd.destroy_entity_deferred(e); // Safe
+        cmd.destroyEntityDeferred(e); // Safe
     }
 });
 
@@ -421,22 +421,22 @@ int main() {
     ECS::Registry registry;
     
     // Reserve capacity
-    registry.reserve_entities(100);
-    registry.reserve_components<Position>(100);
+    registry.reserveEntities(100);
+    registry.reserveComponents<Position>(100);
     
     // Create player
-    auto player = registry.spawn_entity();
-    registry.emplace_component<Position>(player, 0.0f, 0.0f);
-    registry.emplace_component<Velocity>(player, 1.0f, 0.0f);
-    registry.emplace_component<Health>(player, 100);
-    registry.emplace_component<Player>(player);
+    auto player = registry.spawnEntity();
+    registry.emplaceComponent<Position>(player, 0.0f, 0.0f);
+    registry.emplaceComponent<Velocity>(player, 1.0f, 0.0f);
+    registry.emplaceComponent<Health>(player, 100);
+    registry.emplaceComponent<Player>(player);
     
     // Create enemies
     for (int i = 0; i < 10; ++i) {
-        auto enemy = registry.spawn_entity();
-        registry.emplace_component<Position>(enemy, i * 10.0f, 0.0f);
-        registry.emplace_component<Velocity>(enemy, -0.5f, 0.0f);
-        registry.emplace_component<Health>(enemy, 50);
+        auto enemy = registry.spawnEntity();
+        registry.emplaceComponent<Position>(enemy, i * 10.0f, 0.0f);
+        registry.emplaceComponent<Velocity>(enemy, -0.5f, 0.0f);
+        registry.emplaceComponent<Health>(enemy, 50);
     }
     
     // Movement system
@@ -448,12 +448,12 @@ int main() {
     // Remove dead entities
     registry.view<Health>().each([&](Entity e, Health& hp) {
         if (hp.hp <= 0) {
-            registry.kill_entity(e);
+            registry.killEntity(e);
         }
     });
     
     // Cleanup
-    registry.cleanup_tombstones();
+    registry.cleanupTombstones();
     
     return 0;
 }

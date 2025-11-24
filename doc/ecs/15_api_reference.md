@@ -4,26 +4,26 @@
 
 ### Entity Management
 ```cpp
-Entity spawn_entity();
-void kill_entity(Entity entity);
-bool is_alive(Entity entity) const;
-size_t cleanup_tombstones();
-void reserve_entities(size_t capacity);
+Entity spawnEntity();
+void killEntity(Entity entity);
+bool isAlive(Entity entity) const;
+size_t cleanupTombstones();
+void reserveEntities(size_t capacity);
 ```
 
 ### Component Management
 ```cpp
 template<typename T, typename... Args>
-T& emplace_component(Entity entity, Args&&... args);
+T& emplaceComponent(Entity entity, Args&&... args);
 
 template<typename T>
-void remove_component(Entity entity);
+void removeComponent(Entity entity);
 
 template<typename T>
-bool has_component(Entity entity) const;
+bool hasComponent(Entity entity) const;
 
 template<typename T>
-T& get_component(Entity entity);
+T& getComponent(Entity entity);
 
 template<typename... Ts>
 bool all_of(Entity entity) const;
@@ -38,10 +38,10 @@ template<typename... Components>
 View<Components...> view();
 
 template<typename... Components>
-ParallelView<Components...> parallel_view();
+ParallelView<Components...> parallelView();
 
 template<typename... Components>
-Group<Components...> create_group();
+Group<Components...> createGroup();
 ```
 
 ### Resource Management
@@ -59,10 +59,10 @@ bool has_resource() const;
 ### Signal Registration
 ```cpp
 template<typename T>
-void on_construct(std::function<void(Entity)> callback);
+void onConstruct(std::function<void(Entity)> callback);
 
 template<typename T>
-void on_destroy(std::function<void(Entity)> callback);
+void onDestroy(std::function<void(Entity)> callback);
 ```
 
 ## Entity
@@ -71,8 +71,8 @@ void on_destroy(std::function<void(Entity)> callback);
 ```cpp
 std::uint32_t index() const;
 std::uint32_t generation() const;
-bool is_null() const;
-bool is_tombstone() const;
+bool isNull() const;
+bool isTombstone() const;
 ```
 
 ### Operators
@@ -106,7 +106,7 @@ void each(Func&& func);
 void rebuild();
 size_t size() const;
 bool empty() const;
-const std::vector<Entity>& get_entities() const;
+const std::vector<Entity>& getEntities() const;
 ```
 
 ### Iteration
@@ -122,23 +122,23 @@ auto end() const;
 
 ### Entity Operations
 ```cpp
-Entity spawn_entity_deferred();
-void destroy_entity_deferred(Entity entity);
+Entity spawnEntityDeferred();
+void destroyEntityDeferred(Entity entity);
 ```
 
 ### Component Operations
 ```cpp
 template<typename T, typename... Args>
-void emplace_component_deferred(Entity entity, Args&&... args);
+void emplaceComponentDeferred(Entity entity, Args&&... args);
 
 template<typename T>
-void remove_component_deferred(Entity entity);
+void removeComponentDeferred(Entity entity);
 ```
 
 ### Execution
 ```cpp
 void flush();
-size_t pending_count() const;
+size_t pendingCount() const;
 void clear();
 ```
 
@@ -146,54 +146,54 @@ void clear();
 
 ### System Management
 ```cpp
-void add_system(const std::string& name, 
+void addSystem(const std::string& name, 
                 SystemFunc func,
                 const std::vector<std::string>& dependencies = {});
 
-void remove_system(const std::string& name);
+void removeSystem(const std::string& name);
 void clear();
 ```
 
 ### Execution
 ```cpp
 void run();
-void run_system(const std::string& name);
+void runSystem(const std::string& name);
 ```
 
 ### Control
 ```cpp
-void set_system_enabled(const std::string& name, bool enabled);
-bool is_system_enabled(const std::string& name) const;
-std::vector<std::string> get_execution_order() const;
+void setSystemEnabled(const std::string& name, bool enabled);
+bool isSystemEnabled(const std::string& name) const;
+std::vector<std::string> getExecutionOrder() const;
 ```
 
 ## RelationshipManager
 
 ### Setting Relationships
 ```cpp
-bool set_parent(Entity child, Entity parent);
-void remove_parent(Entity child);
+bool setParent(Entity child, Entity parent);
+void removeParent(Entity child);
 ```
 
 ### Querying
 ```cpp
-std::optional<Entity> get_parent(Entity child) const;
-bool has_parent(Entity child) const;
-std::vector<Entity> get_children(Entity parent) const;
-std::vector<Entity> get_descendants(Entity parent) const;
-std::vector<Entity> get_ancestors(Entity child) const;
-Entity get_root(Entity entity) const;
-bool is_ancestor(Entity potential_ancestor, Entity entity) const;
+std::optional<Entity> getParent(Entity child) const;
+bool hasParent(Entity child) const;
+std::vector<Entity> getChildren(Entity parent) const;
+std::vector<Entity> getDescendants(Entity parent) const;
+std::vector<Entity> getAncestors(Entity child) const;
+Entity getRoot(Entity entity) const;
+bool isAncestor(Entity potential_ancestor, Entity entity) const;
 ```
 
 ## PrefabManager
 
 ### Registration
 ```cpp
-void register_prefab(const std::string& name, PrefabFunc func);
-void unregister_prefab(const std::string& name);
-bool has_prefab(const std::string& name) const;
-std::vector<std::string> get_prefab_names() const;
+void registerPrefab(const std::string& name, PrefabFunc func);
+void unregisterPrefab(const std::string& name);
+bool hasPrefab(const std::string& name) const;
+std::vector<std::string> getPrefabNames() const;
 void clear();
 ```
 
@@ -201,7 +201,7 @@ void clear();
 ```cpp
 Entity instantiate(const std::string& name);
 Entity instantiate(const std::string& name, PrefabFunc customizer);
-std::vector<Entity> instantiate_multiple(const std::string& name, size_t count);
+std::vector<Entity> instantiateMultiple(const std::string& name, size_t count);
 ```
 
 ## Serializer
@@ -209,13 +209,13 @@ std::vector<Entity> instantiate_multiple(const std::string& name, size_t count);
 ### Serializer Management
 ```cpp
 template<typename T>
-void register_serializer(std::shared_ptr<IComponentSerializer> serializer);
+void registerSerializer(std::shared_ptr<IComponentSerializer> serializer);
 ```
 
 ### File Operations
 ```cpp
-bool save_to_file(const std::string& filename);
-bool load_from_file(const std::string& filename, bool clear_existing = true);
+bool saveToFile(const std::string& filename);
+bool loadFromFile(const std::string& filename, bool clear_existing = true);
 ```
 
 ### String Operations
@@ -251,9 +251,9 @@ const std::vector<Result>& get_results() const;
 
 ### Basic Entity Creation
 ```cpp
-auto entity = registry.spawn_entity();
-registry.emplace_component<Position>(entity, 0.0f, 0.0f);
-registry.emplace_component<Velocity>(entity, 1.0f, 0.0f);
+auto entity = registry.spawnEntity();
+registry.emplaceComponent<Position>(entity, 0.0f, 0.0f);
+registry.emplaceComponent<Velocity>(entity, 1.0f, 0.0f);
 ```
 
 ### View Iteration
@@ -266,7 +266,7 @@ registry.view<Position, Velocity>().each([](Entity e, Position& p, Velocity& v) 
 
 ### Parallel Iteration
 ```cpp
-registry.parallel_view<Position, Velocity>().each([](Entity e, Position& p, Velocity& v) {
+registry.parallelView<Position, Velocity>().each([](Entity e, Position& p, Velocity& v) {
     p.x += v.dx;
     p.y += v.dy;
 });
@@ -277,7 +277,7 @@ registry.parallel_view<Position, Velocity>().each([](Entity e, Position& p, Velo
 CommandBuffer cmd(registry);
 registry.view<Health>().each([&](Entity e, Health& hp) {
     if (hp.hp <= 0) {
-        cmd.destroy_entity_deferred(e);
+        cmd.destroyEntityDeferred(e);
     }
 });
 cmd.flush();
@@ -286,18 +286,18 @@ cmd.flush();
 ### System Scheduling
 ```cpp
 SystemScheduler scheduler(registry);
-scheduler.add_system("physics", physics_system);
-scheduler.add_system("collision", collision_system, {"physics"});
-scheduler.add_system("render", render_system, {"collision"});
+scheduler.addSystem("physics", physics_system);
+scheduler.addSystem("collision", collision_system, {"physics"});
+scheduler.addSystem("render", render_system, {"collision"});
 scheduler.run();
 ```
 
 ### Prefab Instantiation
 ```cpp
 PrefabManager prefabs(registry);
-prefabs.register_prefab("Enemy", [](Registry& r, Entity e) {
-    r.emplace_component<Position>(e, 0.0f, 0.0f);
-    r.emplace_component<Enemy>(e);
+prefabs.registerPrefab("Enemy", [](Registry& r, Entity e) {
+    r.emplaceComponent<Position>(e, 0.0f, 0.0f);
+    r.emplaceComponent<Enemy>(e);
 });
 Entity enemy = prefabs.instantiate("Enemy");
 ```
@@ -305,9 +305,9 @@ Entity enemy = prefabs.instantiate("Enemy");
 ### Serialization
 ```cpp
 Serializer serializer(registry);
-serializer.register_serializer<Position>(std::make_shared<PositionSerializer>());
-serializer.save_to_file("save.dat");
-serializer.load_from_file("save.dat");
+serializer.registerSerializer<Position>(std::make_shared<PositionSerializer>());
+serializer.saveToFile("save.dat");
+serializer.loadFromFile("save.dat");
 ```
 
 ## Type Aliases
@@ -343,7 +343,7 @@ Always handle exceptions in production code:
 
 ```cpp
 try {
-    auto& component = registry.get_component<Position>(entity);
+    auto& component = registry.getComponent<Position>(entity);
 } catch (const std::runtime_error& e) {
     std::cerr << "Error: " << e.what() << "\n";
 }

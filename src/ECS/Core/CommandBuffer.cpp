@@ -10,56 +10,56 @@
 
 namespace ECS {
 
-    Entity CommandBuffer::spawn_entity_deferred() {
-        std::lock_guard lock(commands_mutex);
+    Entity CommandBuffer::spawnEntityDeferred() {
+        std::lock_guard lock(_commandsMutex);
 
-        std::uint32_t placeholder_id = next_placeholder_id++;
+        std::uint32_t placeholder_id = _nextPlaceholderId++;
         Entity placeholder(placeholder_id, 0);
 
-        commands.push_back([this, placeholder_id]() {
-            Entity real_entity = registry.spawn_entity();
-            placeholder_to_real[placeholder_id] = real_entity;
+        _commands.push_back([this, placeholder_id]() {
+            Entity real_entity = _registry.spawnEntity();
+            _placeholdertoReal[placeholder_id] = real_entity;
         });
 
         return placeholder;
     }
 
-    void CommandBuffer::destroy_entity_deferred(Entity entity) {
-        std::lock_guard lock(commands_mutex);
-        commands.push_back([this, entity]() {
+    void CommandBuffer::destroyEntityDeferred(Entity entity) {
+        std::lock_guard lock(_commandsMutex);
+        _commands.push_back([this, entity]() {
             Entity target_entity = entity;
-            auto it = placeholder_to_real.find(entity.id);
-            if (it != placeholder_to_real.end()) {
+            auto it = _placeholdertoReal.find(entity.id);
+            if (it != _placeholdertoReal.end()) {
                 target_entity = it->second;
             }
 
-            registry.kill_entity(target_entity);
+            _registry.killEntity(target_entity);
         });
     }
 
     void CommandBuffer::flush() {
-        std::lock_guard lock(commands_mutex);
+        std::lock_guard lock(_commandsMutex);
 
-        placeholder_to_real.clear();
+        _placeholdertoReal.clear();
 
-        for (auto& command : commands) {
+        for (auto& command : _commands) {
             command();
         }
 
-        commands.clear();
-        next_placeholder_id = 0;
+        _commands.clear();
+        _nextPlaceholderId = 0;
     }
 
-    size_t CommandBuffer::pending_count() const {
-        std::lock_guard lock(commands_mutex);
-        return commands.size();
+    size_t CommandBuffer::pendingCount() const {
+        std::lock_guard lock(_commandsMutex);
+        return _commands.size();
     }
 
     void CommandBuffer::clear() {
-        std::lock_guard lock(commands_mutex);
-        commands.clear();
-        placeholder_to_real.clear();
-        next_placeholder_id = 0;
+        std::lock_guard lock(_commandsMutex);
+        _commands.clear();
+        _placeholdertoReal.clear();
+        _nextPlaceholderId = 0;
     }
 
 } // namespace ECS

@@ -87,13 +87,13 @@ registry.view<Position, Velocity>().each([](auto e, auto& pos, auto& vel) {
 
 ## Storage Strategy
 
-### 2. Sparse Set vs Other Storage Methods
+### 2. _sparse Set vs Other Storage Methods
 
-#### Decision: Sparse Set with Type-Erased Base
+#### Decision: _sparse Set with Type-Erased Base
 
 **Rationale:**
 
-Sparse sets provide O(1) operations while maintaining cache-friendly iteration.
+_sparse sets provide O(1) operations while maintaining cache-friendly iteration.
 
 **Alternatives Considered:**
 
@@ -114,7 +114,7 @@ std::unordered_map<Entity, Component> components;
 - O(1) average but can degrade
 
 **Benchmark:**
-- Iteration: 10× slower than sparse set
+- Iteration: 10× slower than _sparse set
 - Memory: 2× overhead per component
 
 #### B. Archetype Storage (Unity DOTS approach)
@@ -139,18 +139,18 @@ struct Archetype {
 - Less flexible for dynamic composition
 
 **Benchmark:**
-- Iteration: 20% faster than sparse set
+- Iteration: 20% faster than _sparse set
 - Component add/remove: 50× slower
 - Code complexity: 5× higher
 
-#### C. Chosen: Sparse Set
+#### C. Chosen: _sparse Set
 
 ```cpp
 template<typename T>
-class SparseSet {
+class _sparseSet {
     std::vector<T> dense;           // Contiguous components
-    std::vector<Entity> packed;     // Parallel entity IDs
-    std::vector<size_t> sparse;     // Entity → dense index mapping
+    std::vector<Entity> _packed;     // Parallel entity IDs
+    std::vector<size_t> _sparse;     // Entity → dense index mapping
 };
 ```
 
@@ -162,13 +162,13 @@ class SparseSet {
 - ✅ Stable performance characteristics
 
 **Cons:**
-- ❌ Memory overhead for sparse array
-- ❌ Not optimal for very sparse components
+- ❌ Memory overhead for _sparse array
+- ❌ Not optimal for very _sparse components
 - ❌ Index bounds need checking
 
 **Performance Metrics:**
 
-| Operation | Sparse Set | Hash Map | Archetype |
+| Operation | _sparse Set | Hash Map | Archetype |
 |-----------|------------|----------|-----------|
 | Insert | O(1) - 50ns | O(1) - 80ns | O(n) - 5μs |
 | Remove | O(1) - 60ns | O(1) - 90ns | O(n) - 5μs |
@@ -176,7 +176,7 @@ class SparseSet {
 | Iterate | O(n) - 2ns/item | O(n) - 15ns/item | O(n) - 1.5ns/item |
 | Memory | Moderate | High | Low |
 
-**Why Sparse Set:**
+**Why _sparse Set:**
 
 For R-Type's use case:
 - Frequent component add/remove (bullets created/destroyed rapidly)
@@ -196,7 +196,7 @@ Empty components (tags) only need entity tracking, not data storage.
 
 **Without TagSparseSet:**
 ```cpp
-SparseSet<Player>; // sizeof(Player) = 1 byte, but allocates full vector
+_sparseSet<Player>; // sizeof(Player) = 1 byte, but allocates full vector
 // 10,000 entities = 10,000 bytes wasted
 ```
 
@@ -208,7 +208,7 @@ TagSparseSet<Player>; // Only stores entity IDs
 
 **Pros:**
 - ✅ Zero memory overhead for tag data
-- ✅ Same O(1) performance as regular SparseSet
+- ✅ Same O(1) performance as regular _sparseSet
 - ✅ Automatic optimization via `std::is_empty_v`
 - ✅ Type safety maintained
 
@@ -218,7 +218,7 @@ TagSparseSet<Player>; // Only stores entity IDs
 
 **Memory Savings:**
 
-| Tag Count | Regular SparseSet | TagSparseSet | Savings |
+| Tag Count | Regular _sparseSet | TagSparseSet | Savings |
 |-----------|------------------|--------------|---------|
 | 1,000 | ~1 KB | 0 B | 100% |
 | 10,000 | ~10 KB | 0 B | 100% |
@@ -237,7 +237,7 @@ TagSparseSet<Player>; // Only stores entity IDs
 
 ### 4. Generational Indices vs Handle Systems
 
-#### Decision: 32-bit Packed Generational Indices
+#### Decision: 32-bit _packed Generational Indices
 
 **Structure:**
 ```cpp
@@ -282,7 +282,7 @@ struct Handle {
 - Two lookups required
 - Cache inefficiency
 
-#### C. Chosen: Packed Generational Index
+#### C. Chosen: _packed Generational Index
 
 **Pros:**
 - ✅ 32-bit size (fits in register)
@@ -309,12 +309,12 @@ struct Handle {
 
 ```cpp
 // Safety demonstration
-Entity e1 = registry.spawn_entity(); // id=0x00000000 (index=0, gen=0)
-registry.kill_entity(e1);             // gen incremented to 1
-Entity e2 = registry.spawn_entity(); // id=0x00100000 (index=0, gen=1)
+Entity e1 = registry.spawnEntity(); // id=0x00000000 (index=0, gen=0)
+registry.killEntity(e1);             // gen incremented to 1
+Entity e2 = registry.spawnEntity(); // id=0x00100000 (index=0, gen=1)
 
 // Old reference is automatically invalid
-bool alive = registry.is_alive(e1); // false - generation mismatch!
+bool alive = registry.isAlive(e1); // false - generation mismatch!
 ```
 
 **R-Type Benefits:**
@@ -338,7 +338,7 @@ Immediate recycling can cause subtle bugs; tombstones provide a grace period.
 #### A. Immediate Recycling
 
 ```cpp
-void kill_entity(Entity e) {
+void killEntity(Entity e) {
     // Immediately reuse slot
     free_list.push(e.index());
 }
@@ -355,7 +355,7 @@ void kill_entity(Entity e) {
 #### B. Never Recycle
 
 ```cpp
-void kill_entity(Entity e) {
+void killEntity(Entity e) {
     // Mark as dead, never reuse
     generations[e.index()] = DEAD;
 }
@@ -372,11 +372,11 @@ void kill_entity(Entity e) {
 #### C. Chosen: Tombstone with Manual Cleanup
 
 ```cpp
-void kill_entity(Entity e) {
+void killEntity(Entity e) {
     generations[e.index()] = MAX_GENERATION; // Tombstone
 }
 
-size_t cleanup_tombstones() {
+size_t cleanupTombstones() {
     // Manually recycle when safe
     for (auto& gen : generations) {
         if (gen == MAX_GENERATION) {
@@ -405,7 +405,7 @@ void game_loop() {
     
     // Clean up at frame boundaries
     if (frame_count % 60 == 0) {
-        registry.cleanup_tombstones();
+        registry.cleanupTombstones();
     }
 }
 ```
@@ -609,8 +609,8 @@ class PhysicsSystem : ISystem { }
 
 ```cpp
 SystemScheduler scheduler(registry);
-scheduler.add_system("physics", physics_system, {"input"});
-scheduler.add_system("collision", collision_system, {"physics"});
+scheduler.addSystem("physics", physics_system, {"input"});
+scheduler.addSystem("collision", collision_system, {"physics"});
 scheduler.run(); // Executes in dependency order
 ```
 
@@ -632,7 +632,7 @@ Teams can choose:
 ```cpp
 // Option 1: Use scheduler
 SystemScheduler scheduler(registry);
-scheduler.add_system("physics", physics_system);
+scheduler.addSystem("physics", physics_system);
 scheduler.run();
 
 // Option 2: Manual control
@@ -737,7 +737,7 @@ Make parallelism explicit to avoid hidden performance costs.
 
 ```cpp
 // All operations locked
-auto& pos = registry.get_component<Position>(e); // Acquires lock
+auto& pos = registry.getComponent<Position>(e); // Acquires lock
 ```
 
 **Pros:**
@@ -757,7 +757,7 @@ auto& pos = registry.get_component<Position>(e); // Acquires lock
 
 ```cpp
 // Components locked individually
-SparseSet<Position> positions; // Has internal mutex
+_sparseSet<Position> positions; // Has internal mutex
 ```
 
 **Pros:**
@@ -776,7 +776,7 @@ SparseSet<Position> positions; // Has internal mutex
 registry.view<Position>().each(update);
 
 // Parallel view - thread-safe iteration
-registry.parallel_view<Position>().each(update);
+registry.parallelView<Position>().each(update);
 ```
 
 **Pros:**
@@ -801,7 +801,7 @@ std::thread t1([&] { registry.view<Position>().each(update1); });
 std::thread t2([&] { registry.view<Position>().each(update2); }); // DATA RACE!
 
 // ✅ Safe: Use ParallelView
-registry.parallel_view<Position>().each(update); // Partitioned iteration
+registry.parallelView<Position>().each(update); // Partitioned iteration
 ```
 
 **Performance:**
@@ -828,7 +828,7 @@ Structural changes during iteration invalidate iterators.
 // ❌ CRASHES: Modifying during iteration
 registry.view<Health>().each([&](Entity e, Health& hp) {
     if (hp.hp <= 0) {
-        registry.kill_entity(e); // Invalidates iterator!
+        registry.killEntity(e); // Invalidates iterator!
     }
 });
 ```
@@ -846,7 +846,7 @@ registry.view<Health>().each([&](Entity e, Health& hp) {
 });
 
 for (Entity e : to_remove) {
-    registry.kill_entity(e);
+    registry.killEntity(e);
 }
 ```
 
@@ -864,9 +864,9 @@ for (Entity e : to_remove) {
 ```cpp
 CommandBuffer cmd(registry);
 
-registry.parallel_view<Health>().each([&](Entity e, Health& hp) {
+registry.parallelView<Health>().each([&](Entity e, Health& hp) {
     if (hp.hp <= 0) {
-        cmd.destroy_entity_deferred(e); // Thread-safe recording
+        cmd.destroyEntityDeferred(e); // Thread-safe recording
     }
 });
 
@@ -906,11 +906,11 @@ Balance between convenience and performance.
 
 ```cpp
 // Manual reservation for known sizes
-registry.reserve_entities(10000);
-registry.reserve_components<Position>(10000);
+registry.reserveEntities(10000);
+registry.reserveComponents<Position>(10000);
 
 // Automatic growth during gameplay
-auto e = registry.spawn_entity(); // May trigger reallocation if needed
+auto e = registry.spawnEntity(); // May trigger reallocation if needed
 ```
 
 **Alternatives:**
@@ -952,10 +952,10 @@ auto e = registry.spawn_entity(); // May trigger reallocation if needed
 ```cpp
 void init_game(Registry& registry) {
     // Reserve based on expected max
-    registry.reserve_entities(50000);    // Max entities
-    registry.reserve_components<Position>(50000);
-    registry.reserve_components<Velocity>(10000); // Not all entities move
-    registry.reserve_components<Enemy>(5000);     // Fewer enemies
+    registry.reserveEntities(50000);    // Max entities
+    registry.reserveComponents<Position>(50000);
+    registry.reserveComponents<Velocity>(10000); // Not all entities move
+    registry.reserveComponents<Enemy>(5000);     // Fewer enemies
 }
 ```
 
@@ -975,12 +975,12 @@ Automatic compaction can cause frame hitches; manual gives control.
 void end_level(Registry& registry) {
     // Clear level entities
     registry.view<LevelEntity>().each([&](Entity e) {
-        registry.kill_entity(e);
+        registry.killEntity(e);
     });
     
     // Reclaim memory
     registry.compact();
-    registry.cleanup_tombstones();
+    registry.cleanupTombstones();
 }
 ```
 
@@ -1025,7 +1025,7 @@ Templates enable zero-cost abstractions while maintaining type safety.
 **Template Approach:**
 ```cpp
 template<typename T>
-T& get_component(Entity e);
+T& getComponent(Entity e);
 
 template<typename... Components>
 View<Components...> view();
@@ -1046,13 +1046,13 @@ View<Components...> view();
 **Type Erasure for Storage:**
 
 ```cpp
-class ISparseSet { // Type-erased base
+class I_sparseSet { // Type-erased base
     virtual bool contains(Entity e) const = 0;
     virtual void remove(Entity e) = 0;
 };
 
 template<typename T>
-class SparseSet : public ISparseSet { /* ... */ };
+class _sparseSet : public I_sparseSet { /* ... */ };
 
 // Storage is polymorphic
 std::unordered_map<std::type_index, std::unique_ptr<ISparseSet>> pools;
@@ -1085,15 +1085,15 @@ ECS operations should never fail under normal use.
 
 ```cpp
 // Throws if entity is dead
-T& get_component(Entity e) {
-    if (!is_alive(e)) {
+T& getComponent(Entity e) {
+    if (!isAlive(e)) {
         throw std::runtime_error("Entity is dead");
     }
     // ...
 }
 
 // Returns optional for conditional access
-bool has_component(Entity e) const noexcept;
+bool hasComponent(Entity e) const noexcept;
 ```
 
 **Alternatives:**
@@ -1102,7 +1102,7 @@ bool has_component(Entity e) const noexcept;
 
 ```cpp
 enum class Result { Success, Failure };
-Result get_component(Entity e, T& out);
+Result getComponent(Entity e, T& out);
 ```
 
 **Pros:**
@@ -1116,8 +1116,8 @@ Result get_component(Entity e, T& out);
 #### B. Assertions Only
 
 ```cpp
-assert(is_alive(e));
-T& get_component(Entity e); // No check in release
+assert(isAlive(e));
+T& getComponent(Entity e); // No check in release
 ```
 
 **Pros:**
@@ -1143,7 +1143,7 @@ T& get_component(Entity e); // No check in release
 **Philosophy:**
 
 - Exceptions for **programmer errors** (accessing dead entity)
-- Return values for **expected conditions** (has_component)
+- Return values for **expected conditions** (hasComponent)
 - Noexcept for **performance paths** (iteration)
 
 ---
@@ -1152,7 +1152,7 @@ T& get_component(Entity e); // No check in release
 
 ### 16. Cache Optimization Decisions
 
-#### Decision: Structure of Arrays (SoA) via Sparse Sets
+#### Decision: Structure of Arrays (SoA) via _sparse Sets
 
 **Rationale:**
 
@@ -1182,9 +1182,9 @@ std::vector<GameObject> objects; // Interleaved data
 #### Structure of Arrays (SoA) - ECS
 
 ```cpp
-SparseSet<Position> positions;  // [pos][pos][pos]...
-SparseSet<Velocity> velocities; // [vel][vel][vel]...
-SparseSet<Health> health;       // [hp][hp][hp]...
+_sparseSet<Position> positions;  // [pos][pos][pos]...
+_sparseSet<Velocity> velocities; // [vel][vel][vel]...
+_sparseSet<Health> health;       // [hp][hp][hp]...
 ```
 
 **Memory Layout:**
@@ -1203,7 +1203,7 @@ Health:     [hp][hp][hp][hp]...
 | Physics Loop | 45% | 8% | 4× |
 | Render Loop | 50% | 12% | 3× |
 
-**Why SoA via Sparse Sets:**
+**Why SoA via _sparse Sets:**
 
 1. Natural SoA layout from separate component storage
 2. Only load components you need
@@ -1227,7 +1227,7 @@ Complexity not worth the benefit for typical use case.
 if (entity_count < 16) {
     use_linear_search(); // Faster for small N
 } else {
-    use_sparse_set(); // Better for large N
+    use__sparse_set(); // Better for large N
 }
 ```
 
@@ -1272,7 +1272,7 @@ For maximum performance, archetype storage (Unity DOTS approach) is optimal.
 **Current:**
 
 ```cpp
-registry.parallel_view<Position>().each(update);
+registry.parallelView<Position>().each(update);
 ```
 
 **Future:**
@@ -1330,7 +1330,7 @@ The R-Type ECS prioritizes:
 | Decision | Alternative | Chosen For |
 |----------|-------------|------------|
 | ECS over OOP | OOP inheritance | Performance, flexibility |
-| Sparse Set | Hash map, Archetype | Balanced performance |
+| _sparse Set | Hash map, Archetype | Balanced performance |
 | Generational Index | Pointers, Handles | Safety, efficiency |
 | View with Callback | Iterators | Optimization, simplicity |
 | Optional Scheduler | Forced pattern | Flexibility |

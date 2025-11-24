@@ -35,7 +35,7 @@ void lifetime_system(ECS::Registry& reg, float dt) {
     reg.view<Lifetime>().each([&, dt](ECS::Entity e, Lifetime& life) {
         life.remaining -= dt;
         if (life.remaining <= 0.0f) {
-            cmd.destroy_entity_deferred(e);
+            cmd.destroyEntityDeferred(e);
         }
     });
     
@@ -54,10 +54,10 @@ void collision_system(ECS::Registry& reg) {
             
             if (dist_sq < 25.0f) { // Collision radius
                 hp.hp -= 10;
-                cmd.destroy_entity_deferred(bullet);
+                cmd.destroyEntityDeferred(bullet);
                 
                 if (hp.hp <= 0) {
-                    cmd.destroy_entity_deferred(enemy);
+                    cmd.destroyEntityDeferred(enemy);
                 }
             }
         });
@@ -70,19 +70,19 @@ int main() {
     ECS::Registry registry;
     
     // Create player
-    auto player = registry.spawn_entity();
-    registry.emplace_component<Position>(player, 100.0f, 100.0f);
-    registry.emplace_component<Velocity>(player, 0.0f, 0.0f);
-    registry.emplace_component<Health>(player, 100);
-    registry.emplace_component<Player>(player);
+    auto player = registry.spawnEntity();
+    registry.emplaceComponent<Position>(player, 100.0f, 100.0f);
+    registry.emplaceComponent<Velocity>(player, 0.0f, 0.0f);
+    registry.emplaceComponent<Health>(player, 100);
+    registry.emplaceComponent<Player>(player);
     
     // Create enemies
     for (int i = 0; i < 10; ++i) {
-        auto enemy = registry.spawn_entity();
-        registry.emplace_component<Position>(enemy, 200.0f + i * 50.0f, 50.0f);
-        registry.emplace_component<Velocity>(enemy, -10.0f, 0.0f);
-        registry.emplace_component<Health>(enemy, 30);
-        registry.emplace_component<Enemy>(enemy);
+        auto enemy = registry.spawnEntity();
+        registry.emplaceComponent<Position>(enemy, 200.0f + i * 50.0f, 50.0f);
+        registry.emplaceComponent<Velocity>(enemy, -10.0f, 0.0f);
+        registry.emplaceComponent<Health>(enemy, 30);
+        registry.emplaceComponent<Enemy>(enemy);
     }
     
     // Game loop
@@ -90,12 +90,12 @@ int main() {
     for (int frame = 0; frame < 600; ++frame) {
         // Spawn bullet every 30 frames
         if (frame % 30 == 0) {
-            auto& player_pos = registry.get_component<Position>(player);
-            auto bullet = registry.spawn_entity();
-            registry.emplace_component<Position>(bullet, player_pos.x, player_pos.y);
-            registry.emplace_component<Velocity>(bullet, 50.0f, 0.0f);
-            registry.emplace_component<Lifetime>(bullet, 2.0f);
-            registry.emplace_component<Bullet>(bullet);
+            auto& player_pos = registry.getComponent<Position>(player);
+            auto bullet = registry.spawnEntity();
+            registry.emplaceComponent<Position>(bullet, player_pos.x, player_pos.y);
+            registry.emplaceComponent<Velocity>(bullet, 50.0f, 0.0f);
+            registry.emplaceComponent<Lifetime>(bullet, 2.0f);
+            registry.emplaceComponent<Bullet>(bullet);
         }
         
         // Run systems
@@ -138,14 +138,14 @@ void create_explosion(ECS::Registry& reg, float x, float y, int particle_count) 
         float angle = angle_dist(gen);
         float speed = speed_dist(gen);
         
-        auto particle = reg.spawn_entity();
-        reg.emplace_component<Position>(particle, x, y);
-        reg.emplace_component<Velocity>(particle, 
+        auto particle = reg.spawnEntity();
+        reg.emplaceComponent<Position>(particle, x, y);
+        reg.emplaceComponent<Velocity>(particle, 
             std::cos(angle) * speed, 
             std::sin(angle) * speed);
-        reg.emplace_component<Particle>(particle, 5.0f, 1.0f);
-        reg.emplace_component<Color>(particle, 255, 128, 0, 255);
-        reg.emplace_component<Lifetime>(particle, 2.0f);
+        reg.emplaceComponent<Particle>(particle, 5.0f, 1.0f);
+        reg.emplaceComponent<Color>(particle, 255, 128, 0, 255);
+        reg.emplaceComponent<Lifetime>(particle, 2.0f);
     }
 }
 
@@ -196,7 +196,7 @@ struct Transform {
 void update_transform_hierarchy(ECS::Registry& reg, ECS::RelationshipManager& relationships) {
     // Update root transforms
     reg.view<Transform>().each([&](ECS::Entity e, Transform& t) {
-        if (!relationships.has_parent(e)) {
+        if (!relationships.hasParent(e)) {
             t.world_x = t.local_x;
             t.world_y = t.local_y;
         }
@@ -204,10 +204,10 @@ void update_transform_hierarchy(ECS::Registry& reg, ECS::RelationshipManager& re
     
     // Recursive transform propagation
     std::function<void(ECS::Entity)> update_recursive = [&](ECS::Entity entity) {
-        for (ECS::Entity child : relationships.get_children(entity)) {
-            if (reg.has_component<Transform>(child)) {
-                auto& parent_t = reg.get_component<Transform>(entity);
-                auto& child_t = reg.get_component<Transform>(child);
+        for (ECS::Entity child : relationships.getChildren(entity)) {
+            if (reg.hasComponent<Transform>(child)) {
+                auto& parent_t = reg.getComponent<Transform>(entity);
+                auto& child_t = reg.getComponent<Transform>(child);
                 
                 // Apply parent transform
                 float cos_r = std::cos(parent_t.rotation);
@@ -226,7 +226,7 @@ void update_transform_hierarchy(ECS::Registry& reg, ECS::RelationshipManager& re
     
     // Update all roots
     reg.view<Transform>().each([&](ECS::Entity e, Transform& t) {
-        if (!relationships.has_parent(e)) {
+        if (!relationships.hasParent(e)) {
             update_recursive(e);
         }
     });
@@ -237,25 +237,25 @@ int main() {
     ECS::RelationshipManager relationships;
     
     // Create hierarchy: body -> arm -> hand
-    auto body = registry.spawn_entity();
-    registry.emplace_component<Transform>(body, 100.0f, 100.0f, 0.0f, 0.0f, 0.0f);
+    auto body = registry.spawnEntity();
+    registry.emplaceComponent<Transform>(body, 100.0f, 100.0f, 0.0f, 0.0f, 0.0f);
     
-    auto arm = registry.spawn_entity();
-    registry.emplace_component<Transform>(arm, 20.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-    relationships.set_parent(arm, body);
+    auto arm = registry.spawnEntity();
+    registry.emplaceComponent<Transform>(arm, 20.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+    relationships.setParent(arm, body);
     
-    auto hand = registry.spawn_entity();
-    registry.emplace_component<Transform>(hand, 15.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-    relationships.set_parent(hand, arm);
+    auto hand = registry.spawnEntity();
+    registry.emplaceComponent<Transform>(hand, 15.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+    relationships.setParent(hand, arm);
     
     // Animate
     for (int frame = 0; frame < 360; ++frame) {
-        auto& body_t = registry.get_component<Transform>(body);
+        auto& body_t = registry.getComponent<Transform>(body);
         body_t.rotation = frame * 0.0174f; // Convert to radians
         
         update_transform_hierarchy(registry, relationships);
         
-        auto& hand_t = registry.get_component<Transform>(hand);
+        auto& hand_t = registry.getComponent<Transform>(hand);
         if (frame % 60 == 0) {
             std::cout << "Hand position: (" << hand_t.world_x << ", " << hand_t.world_y << ")\n";
         }
@@ -285,24 +285,24 @@ public:
     ECS::Entity acquire() {
         if (!inactive_group.empty()) {
             ECS::Entity e = *inactive_group.begin();
-            registry.remove_component<Inactive>(e);
+            registry.removeComponent<Inactive>(e);
             inactive_group.rebuild();
             return e;
         }
-        return registry.spawn_entity();
+        return registry.spawnEntity();
     }
     
     void release(ECS::Entity e) {
         // Remove all components except position
-        if (registry.has_component<Velocity>(e)) {
-            registry.remove_component<Velocity>(e);
+        if (registry.hasComponent<Velocity>(e)) {
+            registry.removeComponent<Velocity>(e);
         }
-        if (registry.has_component<Health>(e)) {
-            registry.remove_component<Health>(e);
+        if (registry.hasComponent<Health>(e)) {
+            registry.removeComponent<Health>(e);
         }
         
         // Mark as inactive
-        registry.emplace_component<Inactive>(e);
+        registry.emplaceComponent<Inactive>(e);
         inactive_group.rebuild();
     }
     
@@ -317,8 +317,8 @@ int main() {
     
     // Pre-warm pool
     for (int i = 0; i < 100; ++i) {
-        auto e = registry.spawn_entity();
-        registry.emplace_component<Position>(e, 0.0f, 0.0f);
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<Position>(e, 0.0f, 0.0f);
         pool.release(e);
     }
     
@@ -328,8 +328,8 @@ int main() {
     std::vector<ECS::Entity> active_entities;
     for (int i = 0; i < 50; ++i) {
         auto e = pool.acquire();
-        registry.emplace_component<Velocity>(e, 1.0f, 0.0f);
-        registry.emplace_component<Health>(e, 100);
+        registry.emplaceComponent<Velocity>(e, 1.0f, 0.0f);
+        registry.emplaceComponent<Health>(e, 100);
         active_entities.push_back(e);
     }
     
@@ -409,8 +409,8 @@ void spatial_collision_system(ECS::Registry& reg) {
         for (ECS::Entity e2 : nearby) {
             if (e1.id >= e2.id) continue; // Avoid duplicate checks
             
-            if (reg.has_component<Position>(e2)) {
-                auto& pos2 = reg.get_component<Position>(e2);
+            if (reg.hasComponent<Position>(e2)) {
+                auto& pos2 = reg.getComponent<Position>(e2);
                 float dx = pos1.x - pos2.x;
                 float dy = pos1.y - pos2.y;
                 float dist_sq = dx * dx + dy * dy;
@@ -429,8 +429,8 @@ int main() {
     // Create entities in spatial grid
     for (int y = 0; y < 10; ++y) {
         for (int x = 0; x < 10; ++x) {
-            auto e = registry.spawn_entity();
-            registry.emplace_component<Position>(e, x * 100.0f, y * 100.0f);
+            auto e = registry.spawnEntity();
+            registry.emplaceComponent<Position>(e, x * 100.0f, y * 100.0f);
         }
     }
     
@@ -449,22 +449,22 @@ void inspect_entity(ECS::Registry& reg, ECS::Entity entity) {
     std::cout << "Entity " << entity.index() 
               << " (gen: " << entity.generation() << ")\n";
     
-    if (!reg.is_alive(entity)) {
+    if (!reg.isAlive(entity)) {
         std::cout << "  [DEAD]\n";
         return;
     }
     
     std::cout << "  Components:\n";
-    if (reg.has_component<Position>(entity)) {
-        auto& pos = reg.get_component<Position>(entity);
+    if (reg.hasComponent<Position>(entity)) {
+        auto& pos = reg.getComponent<Position>(entity);
         std::cout << "    Position: (" << pos.x << ", " << pos.y << ")\n";
     }
-    if (reg.has_component<Velocity>(entity)) {
-        auto& vel = reg.get_component<Velocity>(entity);
+    if (reg.hasComponent<Velocity>(entity)) {
+        auto& vel = reg.getComponent<Velocity>(entity);
         std::cout << "    Velocity: (" << vel.dx << ", " << vel.dy << ")\n";
     }
-    if (reg.has_component<Health>(entity)) {
-        auto& hp = reg.get_component<Health>(entity);
+    if (reg.hasComponent<Health>(entity)) {
+        auto& hp = reg.getComponent<Health>(entity);
         std::cout << "    Health: " << hp.hp << " HP\n";
     }
 }

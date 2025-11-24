@@ -12,7 +12,7 @@ The **CommandBuffer** provides thread-safe deferred ECS operations. It records s
 // ❌ UNSAFE: Modifying structure during iteration
 registry.view<Health>().each([&](Entity e, Health& hp) {
     if (hp.hp <= 0) {
-        registry.kill_entity(e); // ❌ Invalidates iterator!
+        registry.killEntity(e); // ❌ Invalidates iterator!
     }
 });
 ```
@@ -25,7 +25,7 @@ CommandBuffer cmd(registry);
 
 registry.view<Health>().each([&](Entity e, Health& hp) {
     if (hp.hp <= 0) {
-        cmd.destroy_entity_deferred(e); // ✅ Safe - recorded, not executed
+        cmd.destroyEntityDeferred(e); // ✅ Safe - recorded, not executed
     }
 });
 
@@ -46,20 +46,20 @@ CommandBuffer cmd(registry);
 
 ```cpp
 // Spawn entity (returns placeholder)
-Entity placeholder = cmd.spawn_entity_deferred();
+Entity placeholder = cmd.spawnEntityDeferred();
 
 // Destroy entity
-cmd.destroy_entity_deferred(entity);
+cmd.destroyEntityDeferred(entity);
 ```
 
 ### Component Operations
 
 ```cpp
 // Add component
-cmd.emplace_component_deferred<Position>(entity, 0.0f, 0.0f);
+cmd.emplaceComponentDeferred<Position>(entity, 0.0f, 0.0f);
 
 // Remove component
-cmd.remove_component_deferred<Velocity>(entity);
+cmd.removeComponentDeferred<Velocity>(entity);
 ```
 
 ### Execution
@@ -69,7 +69,7 @@ cmd.remove_component_deferred<Velocity>(entity);
 cmd.flush();
 
 // Get pending command count
-size_t pending = cmd.pending_count();
+size_t pending = cmd.pendingCount();
 
 // Clear without executing
 cmd.clear();
@@ -85,7 +85,7 @@ CommandBuffer cmd(registry);
 // Mark dead entities
 registry.view<Health>().each([&](Entity e, Health& hp) {
     if (hp.hp <= 0) {
-        cmd.destroy_entity_deferred(e);
+        cmd.destroyEntityDeferred(e);
     }
 });
 
@@ -101,7 +101,7 @@ CommandBuffer cmd(registry);
 // Add components based on condition
 registry.view<Position>().each([&](Entity e, const Position& pos) {
     if (pos.x > 100.0f) {
-        cmd.emplace_component_deferred<OutOfBounds>(e);
+        cmd.emplaceComponentDeferred<OutOfBounds>(e);
     }
 });
 
@@ -117,7 +117,7 @@ CommandBuffer cmd(registry);
 registry.view<Temporary, Lifetime>().each([&](Entity e, auto& temp, Lifetime& life) {
     life.remaining -= 0.016f;
     if (life.remaining <= 0.0f) {
-        cmd.remove_component_deferred<Temporary>(e);
+        cmd.removeComponentDeferred<Temporary>(e);
     }
 });
 
@@ -134,10 +134,10 @@ CommandBuffer is thread-safe, making it perfect for parallel iteration:
 CommandBuffer cmd(registry);
 
 // Parallel iteration with deferred changes
-registry.parallel_view<Position, Health>().each([&](Entity e, Position& pos, Health& hp) {
+registry.parallelView<Position, Health>().each([&](Entity e, Position& pos, Health& hp) {
     // Each thread can safely record operations
     if (hp.hp <= 0) {
-        cmd.destroy_entity_deferred(e); // Thread-safe
+        cmd.destroyEntityDeferred(e); // Thread-safe
     }
 });
 
@@ -152,11 +152,11 @@ Internal mutex protects command queue:
 ```cpp
 // Multiple threads can record commands concurrently
 std::thread t1([&] {
-    cmd.emplace_component_deferred<ComponentA>(e1);
+    cmd.emplaceComponentDeferred<ComponentA>(e1);
 });
 
 std::thread t2([&] {
-    cmd.emplace_component_deferred<ComponentB>(e2);
+    cmd.emplaceComponentDeferred<ComponentB>(e2);
 });
 
 t1.join();
@@ -172,11 +172,11 @@ When spawning entities deferred, you get a placeholder:
 CommandBuffer cmd(registry);
 
 // Spawn returns placeholder (not real entity yet)
-Entity placeholder = cmd.spawn_entity_deferred();
+Entity placeholder = cmd.spawnEntityDeferred();
 
 // Can use placeholder in other deferred operations
-cmd.emplace_component_deferred<Position>(placeholder, 0.0f, 0.0f);
-cmd.emplace_component_deferred<Velocity>(placeholder, 1.0f, 0.0f);
+cmd.emplaceComponentDeferred<Position>(placeholder, 0.0f, 0.0f);
+cmd.emplaceComponentDeferred<Velocity>(placeholder, 1.0f, 0.0f);
 
 // Flush creates real entity and applies components
 cmd.flush();
@@ -195,9 +195,9 @@ void update(Registry& registry) {
     // Phase 1: Mark entities for changes
     registry.view<Health>().each([&](Entity e, Health& hp) {
         if (hp.hp <= 0) {
-            cmd.destroy_entity_deferred(e);
+            cmd.destroyEntityDeferred(e);
         } else if (hp.hp > 100) {
-            cmd.emplace_component_deferred<Overheal>(e);
+            cmd.emplaceComponentDeferred<Overheal>(e);
         }
     });
     
@@ -213,10 +213,10 @@ void spawn_enemies(Registry& registry, int count) {
     CommandBuffer cmd(registry);
     
     for (int i = 0; i < count; ++i) {
-        Entity e = cmd.spawn_entity_deferred();
-        cmd.emplace_component_deferred<Position>(e, i * 10.0f, 0.0f);
-        cmd.emplace_component_deferred<Enemy>(e);
-        cmd.emplace_component_deferred<Health>(e, 50);
+        Entity e = cmd.spawnEntityDeferred();
+        cmd.emplaceComponentDeferred<Position>(e, i * 10.0f, 0.0f);
+        cmd.emplaceComponentDeferred<Enemy>(e);
+        cmd.emplaceComponentDeferred<Health>(e, 50);
     }
     
     // Create all enemies at once
@@ -233,17 +233,17 @@ void update_states(Registry& registry) {
     registry.view<State>().each([&](Entity e, State& state) {
         switch (state.current) {
             case State::Idle:
-                cmd.remove_component_deferred<Moving>(e);
-                cmd.emplace_component_deferred<Stationary>(e);
+                cmd.removeComponentDeferred<Moving>(e);
+                cmd.emplaceComponentDeferred<Stationary>(e);
                 break;
                 
             case State::Moving:
-                cmd.remove_component_deferred<Stationary>(e);
-                cmd.emplace_component_deferred<Moving>(e);
+                cmd.removeComponentDeferred<Stationary>(e);
+                cmd.emplaceComponentDeferred<Moving>(e);
                 break;
                 
             case State::Dead:
-                cmd.destroy_entity_deferred(e);
+                cmd.destroyEntityDeferred(e);
                 break;
         }
     });
@@ -259,15 +259,15 @@ void create_hierarchy(Registry& registry) {
     CommandBuffer cmd(registry);
     
     // Create parent
-    Entity parent = cmd.spawn_entity_deferred();
-    cmd.emplace_component_deferred<Transform>(parent);
-    cmd.emplace_component_deferred<Parent>(parent);
+    Entity parent = cmd.spawnEntityDeferred();
+    cmd.emplaceComponentDeferred<Transform>(parent);
+    cmd.emplaceComponentDeferred<Parent>(parent);
     
     // Create children
     for (int i = 0; i < 5; ++i) {
-        Entity child = cmd.spawn_entity_deferred();
-        cmd.emplace_component_deferred<Transform>(child);
-        cmd.emplace_component_deferred<Child>(child, parent);
+        Entity child = cmd.spawnEntityDeferred();
+        cmd.emplaceComponentDeferred<Transform>(child);
+        cmd.emplaceComponentDeferred<Child>(child, parent);
     }
     
     // Create all at once
@@ -282,16 +282,16 @@ void create_hierarchy(Registry& registry) {
 ```cpp
 // Without CommandBuffer: many small operations
 for (int i = 0; i < 1000; ++i) {
-    auto e = registry.spawn_entity();          // Lock acquired 1000 times
-    registry.emplace_component<Position>(e);   // Lock acquired 1000 times
+    auto e = registry.spawnEntity();          // Lock acquired 1000 times
+    registry.emplaceComponent<Position>(e);   // Lock acquired 1000 times
 }
 // Time: ~5ms
 
 // With CommandBuffer: single batch
 CommandBuffer cmd(registry);
 for (int i = 0; i < 1000; ++i) {
-    auto e = cmd.spawn_entity_deferred();
-    cmd.emplace_component_deferred<Position>(e);
+    auto e = cmd.spawnEntityDeferred();
+    cmd.emplaceComponentDeferred<Position>(e);
 }
 cmd.flush(); // Lock acquired once
 // Time: ~1ms (5× faster)
@@ -303,10 +303,10 @@ CommandBuffer stores commands as `std::function` objects:
 
 ```cpp
 // Approximate memory per command
-spawn_entity_deferred()           // ~64 bytes
-destroy_entity_deferred()         // ~64 bytes
-emplace_component_deferred<T>()   // ~64 bytes + sizeof(T)
-remove_component_deferred<T>()    // ~64 bytes
+spawnEntityDeferred()           // ~64 bytes
+destroyEntityDeferred()         // ~64 bytes
+emplaceComponentDeferred<T>()   // ~64 bytes + sizeof(T)
+removeComponentDeferred<T>()    // ~64 bytes
 ```
 
 For 10,000 commands: ~640 KB memory
@@ -379,13 +379,13 @@ CommandBuffer cmd(registry);
 
 registry.view<Position>().each([&](Entity e, Position& pos) {
     if (pos.x > 1000.0f) {
-        cmd.destroy_entity_deferred(e);
+        cmd.destroyEntityDeferred(e);
     }
 });
 
 // Only flush if there are pending commands
-if (cmd.pending_count() > 0) {
-    std::cout << "Applying " << cmd.pending_count() << " deferred operations\n";
+if (cmd.pendingCount() > 0) {
+    std::cout << "Applying " << cmd.pendingCount() << " deferred operations\n";
     cmd.flush();
 }
 ```
@@ -396,7 +396,7 @@ if (cmd.pending_count() > 0) {
 CommandBuffer cmd(registry);
 
 // Operations are recorded without validation
-cmd.destroy_entity_deferred(invalid_entity); // Recorded successfully
+cmd.destroyEntityDeferred(invalid_entity); // Recorded successfully
 
 try {
     cmd.flush(); // May throw if operations are invalid
@@ -412,15 +412,15 @@ try {
 CommandBuffer cmd(registry);
 
 // Track operations
-cmd.emplace_component_deferred<Position>(e1);
-cmd.remove_component_deferred<Velocity>(e2);
-cmd.destroy_entity_deferred(e3);
+cmd.emplaceComponentDeferred<Position>(e1);
+cmd.removeComponentDeferred<Velocity>(e2);
+cmd.destroyEntityDeferred(e3);
 
-std::cout << "Pending commands: " << cmd.pending_count() << "\n";
+std::cout << "Pending commands: " << cmd.pendingCount() << "\n";
 // Output: Pending commands: 3
 
 cmd.flush();
-std::cout << "Pending commands: " << cmd.pending_count() << "\n";
+std::cout << "Pending commands: " << cmd.pendingCount() << "\n";
 // Output: Pending commands: 0
 ```
 

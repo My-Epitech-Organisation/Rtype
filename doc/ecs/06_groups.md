@@ -30,7 +30,7 @@ for (int i = 0; i < 1000; ++i) {
 // Time: ~50ms
 
 // Group: Filters once, caches result
-auto group = registry.create_group<Position, Velocity>();
+auto group = registry.createGroup<Position, Velocity>();
 for (int i = 0; i < 1000; ++i) {
     group.each([](auto e, auto& p, auto& v) {
         // Direct iteration over cached entities
@@ -43,7 +43,7 @@ for (int i = 0; i < 1000; ++i) {
 
 ```cpp
 // Create group
-auto group = registry.create_group<Position, Velocity>();
+auto group = registry.createGroup<Position, Velocity>();
 
 // Iterate cached entities
 group.each([](Entity e, Position& pos, Velocity& vel) {
@@ -52,7 +52,7 @@ group.each([](Entity e, Position& pos, Velocity& vel) {
 });
 
 // After structural changes, rebuild
-registry.emplace_component<Velocity>(new_entity, 1.0f, 0.0f);
+registry.emplaceComponent<Velocity>(new_entity, 1.0f, 0.0f);
 group.rebuild(); // Update cache
 ```
 
@@ -62,12 +62,12 @@ group.rebuild(); // Update cache
 
 ```cpp
 template<typename... Components>
-Group<Components...> create_group();
+Group<Components...> createGroup();
 
 // Examples
-auto pos_group = registry.create_group<Position>();
-auto physics_group = registry.create_group<Position, Velocity>();
-auto renderable_group = registry.create_group<Position, Sprite, Transform>();
+auto pos_group = registry.createGroup<Position>();
+auto physics_group = registry.createGroup<Position, Velocity>();
+auto renderable_group = registry.createGroup<Position, Sprite, Transform>();
 ```
 
 ### Iteration
@@ -88,7 +88,7 @@ group.each([](Position& pos, Velocity& vel) {
 
 ```cpp
 // Get cached entity list
-const std::vector<Entity>& entities = group.get_entities();
+const std::vector<Entity>& entities = group.getEntities();
 
 // Check size
 size_t count = group.size();
@@ -120,7 +120,7 @@ Groups do NOT automatically update when:
 You must manually call `rebuild()`:
 
 ```cpp
-auto group = registry.create_group<Position, Velocity>();
+auto group = registry.createGroup<Position, Velocity>();
 
 // Initial population
 group.rebuild();
@@ -134,9 +134,9 @@ for (int frame = 0; frame < 100; ++frame) {
 
 // Add new entities
 for (int i = 0; i < 10; ++i) {
-    auto e = registry.spawn_entity();
-    registry.emplace_component<Position>(e, 0.0f, 0.0f);
-    registry.emplace_component<Velocity>(e, 1.0f, 0.0f);
+    auto e = registry.spawnEntity();
+    registry.emplaceComponent<Position>(e, 0.0f, 0.0f);
+    registry.emplaceComponent<Velocity>(e, 1.0f, 0.0f);
 }
 
 // MUST rebuild to include new entities
@@ -149,7 +149,7 @@ group.rebuild();
 
 ```cpp
 // Rebuild only when structure changes
-auto group = registry.create_group<Position, Velocity>();
+auto group = registry.createGroup<Position, Velocity>();
 group.rebuild();
 
 // Game loop
@@ -168,7 +168,7 @@ while (running) {
 #### Strategy 2: Periodic
 
 ```cpp
-auto group = registry.create_group<Position, Velocity>();
+auto group = registry.createGroup<Position, Velocity>();
 int frame_count = 0;
 
 while (running) {
@@ -187,8 +187,8 @@ while (running) {
 bool group_dirty = true;
 
 // Mark dirty on structural changes
-registry.on_construct<Velocity>([&](Entity e) { group_dirty = true; });
-registry.on_destroy<Velocity>([&](Entity e) { group_dirty = true; });
+registry.onConstruct<Velocity>([&](Entity e) { group_dirty = true; });
+registry.onDestroy<Velocity>([&](Entity e) { group_dirty = true; });
 
 // Rebuild when needed
 while (running) {
@@ -239,11 +239,11 @@ public:
 
 ```cpp
 // Broad group
-auto all_entities = registry.create_group<Position>();
+auto all_entities = registry.createGroup<Position>();
 
 // Specialized subgroups
-auto moving_entities = registry.create_group<Position, Velocity>();
-auto visible_entities = registry.create_group<Position, Sprite>();
+auto moving_entities = registry.createGroup<Position, Velocity>();
+auto visible_entities = registry.createGroup<Position, Sprite>();
 
 // Rebuild hierarchy
 all_entities.rebuild();
@@ -255,13 +255,13 @@ visible_entities.rebuild();
 
 ```cpp
 // Find entities in group A but not in group B
-auto group_a = registry.create_group<Position, Velocity>();
-auto group_b = registry.create_group<Dead>();
+auto group_a = registry.createGroup<Position, Velocity>();
+auto group_b = registry.createGroup<Dead>();
 
 group_a.rebuild();
 group_b.rebuild();
 
-const auto& dead_entities = group_b.get_entities();
+const auto& dead_entities = group_b.getEntities();
 
 group_a.each([&](Entity e, Position& pos, Velocity& vel) {
     // Check if entity is NOT dead
@@ -283,7 +283,7 @@ std::vector<Entity> entities; // Small memory footprint
 
 // Components accessed on-demand (cache-friendly if accessed sequentially)
 group.each([&](Entity e, Position& pos, Velocity& vel) {
-    // pos and vel are references to components in sparse sets
+    // pos and vel are references to components in _sparse sets
 });
 ```
 
@@ -318,7 +318,7 @@ std::thread t1([&] { group.each(update1); });
 std::thread t2([&] { group.each(update2); }); // Data race on group state
 
 // ✅ SAFE: Use ParallelView instead
-registry.parallel_view<Position, Velocity>().each(update);
+registry.parallelView<Position, Velocity>().each(update);
 
 // ✅ SAFE: External synchronization
 std::mutex group_mutex;
@@ -381,15 +381,15 @@ public:
     Entity acquire() {
         if (!inactive_group.empty()) {
             Entity e = *inactive_group.begin();
-            registry.remove_component<Inactive>(e);
+            registry.removeComponent<Inactive>(e);
             inactive_group.rebuild();
             return e;
         }
-        return registry.spawn_entity();
+        return registry.spawnEntity();
     }
     
     void release(Entity e) {
-        registry.emplace_component<Inactive>(e);
+        registry.emplaceComponent<Inactive>(e);
         inactive_group.rebuild();
     }
 };

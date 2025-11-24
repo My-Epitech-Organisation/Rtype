@@ -11,7 +11,7 @@
 #include <thread>
 
 // Parallel iteration over components
-registry.parallel_view<Position, Velocity>().each([](Entity e, Position& pos, Velocity& vel) {
+registry.parallelView<Position, Velocity>().each([](Entity e, Position& pos, Velocity& vel) {
     pos.x += vel.dx;
     pos.y += vel.dy;
 });
@@ -29,17 +29,17 @@ registry.parallel_view<Position, Velocity>().each([](Entity e, Position& pos, Ve
 
 ```cpp
 // SAFE: Each thread modifies different entities
-registry.parallel_view<Position, Velocity>().each([](Entity e, Position& pos, Velocity& vel) {
+registry.parallelView<Position, Velocity>().each([](Entity e, Position& pos, Velocity& vel) {
     pos.x += vel.dx; // Different entities, no race
     pos.y += vel.dy;
 });
 
 // SAFE: Different components, same entity
 std::thread t1([&] { 
-    registry.parallel_view<Position>().each([](auto e, auto& p) { p.x += 1.0f; }); 
+    registry.parallelView<Position>().each([](auto e, auto& p) { p.x += 1.0f; }); 
 });
 std::thread t2([&] { 
-    registry.parallel_view<Velocity>().each([](auto e, auto& v) { v.dx *= 0.99f; }); 
+    registry.parallelView<Velocity>().each([](auto e, auto& v) { v.dx *= 0.99f; }); 
 });
 ```
 
@@ -51,17 +51,17 @@ std::thread t2([&] {
 
 ```cpp
 // UNSAFE: Adding components during parallel iteration
-registry.parallel_view<Position>().each([&](Entity e, Position& pos) {
+registry.parallelView<Position>().each([&](Entity e, Position& pos) {
     if (pos.x > 100.0f) {
-        registry.emplace_component<OutOfBounds>(e); // ❌ RACE CONDITION
+        registry.emplaceComponent<OutOfBounds>(e); // ❌ RACE CONDITION
     }
 });
 
 // SAFE: Use CommandBuffer instead
 CommandBuffer cmd(registry);
-registry.parallel_view<Position>().each([&](Entity e, Position& pos) {
+registry.parallelView<Position>().each([&](Entity e, Position& pos) {
     if (pos.x > 100.0f) {
-        cmd.emplace_component_deferred<OutOfBounds>(e); // ✅ Safe
+        cmd.emplaceComponentDeferred<OutOfBounds>(e); // ✅ Safe
     }
 });
 cmd.flush();
@@ -110,7 +110,7 @@ For small datasets, this overhead can exceed the benefits.
 // Accumulation with atomic operations
 std::atomic<int> total_health{0};
 
-registry.parallel_view<Health>().each([&](Entity e, const Health& hp) {
+registry.parallelView<Health>().each([&](Entity e, const Health& hp) {
     total_health.fetch_add(hp.hp, std::memory_order_relaxed);
 });
 
@@ -118,7 +118,7 @@ registry.parallel_view<Health>().each([&](Entity e, const Health& hp) {
 std::mutex results_mutex;
 std::vector<Entity> low_health_entities;
 
-registry.parallel_view<Health>().each([&](Entity e, const Health& hp) {
+registry.parallelView<Health>().each([&](Entity e, const Health& hp) {
     if (hp.hp < 20) {
         std::lock_guard lock(results_mutex);
         low_health_entities.push_back(e);
@@ -132,7 +132,7 @@ registry.parallel_view<Health>().each([&](Entity e, const Health& hp) {
 // Each thread maintains its own accumulator
 thread_local std::vector<Entity> local_results;
 
-registry.parallel_view<Position>().each([&](Entity e, Position& pos) {
+registry.parallelView<Position>().each([&](Entity e, Position& pos) {
     if (pos.x > 100.0f) {
         local_results.push_back(e); // Thread-local, no lock needed
     }
@@ -162,7 +162,7 @@ auto end = std::chrono::high_resolution_clock::now();
 
 // Multi-threaded (ParallelView)
 auto start = std::chrono::high_resolution_clock::now();
-registry.parallel_view<Position, Velocity>().each([](auto e, auto& pos, auto& vel) {
+registry.parallelView<Position, Velocity>().each([](auto e, auto& pos, auto& vel) {
     pos.x += vel.dx;
     pos.y += vel.dy;
 });
@@ -177,13 +177,13 @@ auto end = std::chrono::high_resolution_clock::now();
 ```cpp
 void physics_update(Registry& registry, float dt) {
     // Parallel position integration
-    registry.parallel_view<Position, Velocity>().each([dt](auto e, auto& pos, auto& vel) {
+    registry.parallelView<Position, Velocity>().each([dt](auto e, auto& pos, auto& vel) {
         pos.x += vel.dx * dt;
         pos.y += vel.dy * dt;
     });
     
     // Parallel velocity damping
-    registry.parallel_view<Velocity>().each([](auto e, auto& vel) {
+    registry.parallelView<Velocity>().each([](auto e, auto& vel) {
         vel.dx *= 0.99f;
         vel.dy *= 0.99f;
     });
@@ -195,7 +195,7 @@ void physics_update(Registry& registry, float dt) {
 ```cpp
 void update_particles(Registry& registry, float dt) {
     // Update thousands of particles in parallel
-    registry.parallel_view<Particle>().each([dt](Entity e, Particle& p) {
+    registry.parallelView<Particle>().each([dt](Entity e, Particle& p) {
         p.position += p.velocity * dt;
         p.velocity += p.acceleration * dt;
         p.lifetime -= dt;
@@ -214,7 +214,7 @@ void build_spatial_hash(Registry& registry, SpatialHash& hash) {
     // Parallel insertion with per-thread buckets
     std::mutex hash_mutex;
     
-    registry.parallel_view<Position>().each([&](Entity e, const Position& pos) {
+    registry.parallelView<Position>().each([&](Entity e, const Position& pos) {
         int cell_x = static_cast<int>(pos.x / 10.0f);
         int cell_y = static_cast<int>(pos.y / 10.0f);
         
@@ -229,7 +229,7 @@ void build_spatial_hash(Registry& registry, SpatialHash& hash) {
 ```cpp
 void process_ai(Registry& registry) {
     // Process AI in parallel (each entity independent)
-    registry.parallel_view<AI, Position>().each([&](Entity e, AI& ai, Position& pos) {
+    registry.parallelView<AI, Position>().each([&](Entity e, AI& ai, Position& pos) {
         // Pathfinding, decision making, etc.
         ai.state_machine.update();
         ai.navigate_to(ai.target);
@@ -246,13 +246,13 @@ void update_with_structural_changes(Registry& registry) {
     CommandBuffer cmd(registry);
     
     // Parallel iteration with deferred changes
-    registry.parallel_view<Health>().each([&](Entity e, Health& hp) {
+    registry.parallelView<Health>().each([&](Entity e, Health& hp) {
         hp.hp -= 10; // Safe: modifying component
         
         if (hp.hp <= 0) {
             // Defer structural changes
-            cmd.emplace_component_deferred<Dead>(e);
-            cmd.remove_component_deferred<AI>(e);
+            cmd.emplaceComponentDeferred<Dead>(e);
+            cmd.removeComponentDeferred<AI>(e);
         }
     });
     
@@ -261,7 +261,7 @@ void update_with_structural_changes(Registry& registry) {
     
     // Cleanup dead entities
     registry.view<Dead>().each([&](Entity e) {
-        registry.kill_entity(e);
+        registry.killEntity(e);
     });
 }
 ```
@@ -284,7 +284,7 @@ void profile_parallel_performance(Registry& registry) {
     
     // Multi-threaded
     bench.measure("ParallelView", [&]() {
-        registry.parallel_view<Position, Velocity>().each([](auto e, auto& p, auto& v) {
+        registry.parallelView<Position, Velocity>().each([](auto e, auto& p, auto& v) {
             p.x += v.dx;
             p.y += v.dy;
         });

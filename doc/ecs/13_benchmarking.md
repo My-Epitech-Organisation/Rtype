@@ -55,9 +55,9 @@ ECS::Benchmark bench;
 
 // Populate with entities
 for (int i = 0; i < 10000; ++i) {
-    auto e = registry.spawn_entity();
-    registry.emplace_component<Position>(e, 0.0f, 0.0f);
-    registry.emplace_component<Velocity>(e, 1.0f, 0.0f);
+    auto e = registry.spawnEntity();
+    registry.emplaceComponent<Position>(e, 0.0f, 0.0f);
+    registry.emplaceComponent<Velocity>(e, 1.0f, 0.0f);
 }
 
 // Benchmark View
@@ -69,7 +69,7 @@ bench.measure("View", [&]() {
 }, 1000);
 
 // Benchmark Group
-auto group = registry.create_group<Position, Velocity>();
+auto group = registry.createGroup<Position, Velocity>();
 group.rebuild();
 
 bench.measure("Group", [&]() {
@@ -112,7 +112,7 @@ void benchmark_systems(ECS::Registry& registry) {
     
     // Benchmark collision system
     bench.measure("Collision", [&]() {
-        auto entities = registry.view<Position, Collider>().get_entities();
+        auto entities = registry.view<Position, Collider>().getEntities();
         for (size_t i = 0; i < entities.size(); ++i) {
             for (size_t j = i + 1; j < entities.size(); ++j) {
                 // Check collision
@@ -139,8 +139,8 @@ void benchmark_access_patterns(ECS::Registry& registry) {
     
     std::vector<Entity> entities;
     for (int i = 0; i < 10000; ++i) {
-        auto e = registry.spawn_entity();
-        registry.emplace_component<Position>(e, i * 1.0f, i * 1.0f);
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<Position>(e, i * 1.0f, i * 1.0f);
         entities.push_back(e);
     }
     
@@ -154,8 +154,8 @@ void benchmark_access_patterns(ECS::Registry& registry) {
     // Random access (cache-unfriendly)
     bench.measure("Random", [&]() {
         for (auto e : entities) {
-            if (registry.has_component<Position>(e)) {
-                auto& p = registry.get_component<Position>(e);
+            if (registry.hasComponent<Position>(e)) {
+                auto& p = registry.getComponent<Position>(e);
                 p.x += 1.0f;
             }
         }
@@ -174,9 +174,9 @@ void benchmark_parallelism(ECS::Registry& registry) {
     
     // Create large dataset
     for (int i = 0; i < 100000; ++i) {
-        auto e = registry.spawn_entity();
-        registry.emplace_component<Position>(e, i * 1.0f, i * 1.0f);
-        registry.emplace_component<Velocity>(e, 1.0f, 1.0f);
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<Position>(e, i * 1.0f, i * 1.0f);
+        registry.emplaceComponent<Velocity>(e, 1.0f, 1.0f);
     }
     
     // Sequential
@@ -189,7 +189,7 @@ void benchmark_parallelism(ECS::Registry& registry) {
     
     // Parallel
     bench.measure("Parallel", [&]() {
-        registry.parallel_view<Position, Velocity>().each([](auto e, auto& p, auto& v) {
+        registry.parallelView<Position, Velocity>().each([](auto e, auto& p, auto& v) {
             p.x += v.dx;
             p.y += v.dy;
         });

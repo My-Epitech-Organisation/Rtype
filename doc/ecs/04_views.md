@@ -135,8 +135,8 @@ registry.view<Position, const Velocity>().each([](Entity e, Position& pos, const
 ```cpp
 registry.view<Position>().each([&](Entity e, Position& pos) {
     // Get additional components on-demand
-    if (registry.has_component<Velocity>(e)) {
-        auto& vel = registry.get_component<Velocity>(e);
+    if (registry.hasComponent<Velocity>(e)) {
+        auto& vel = registry.getComponent<Velocity>(e);
         pos.x += vel.dx;
     }
 });
@@ -150,13 +150,13 @@ registry.view<Position>().each([&](Entity e, Position& pos) {
 registry.view<Health>().each([&](Entity e, Health& hp) {
     if (hp.hp <= 0) {
         // Mark for deletion (don't kill during iteration)
-        registry.emplace_component<Dead>(e);
+        registry.emplaceComponent<Dead>(e);
     }
 });
 
 // Remove dead entities after iteration
 registry.view<Dead>().each([&](Entity e) {
-    registry.kill_entity(e);
+    registry.killEntity(e);
 });
 ```
 
@@ -165,8 +165,8 @@ registry.view<Dead>().each([&](Entity e) {
 ```cpp
 // Process parent-child relationships
 registry.view<Transform, Parent>().each([&](Entity e, Transform& t, Parent& p) {
-    if (registry.is_alive(p.entity)) {
-        auto& parent_transform = registry.get_component<Transform>(p.entity);
+    if (registry.isAlive(p.entity)) {
+        auto& parent_transform = registry.getComponent<Transform>(p.entity);
         // Apply parent transform to child
         t.world_position = parent_transform.world_position + t.local_position;
     }
@@ -181,13 +181,13 @@ registry.view<State>().each([&](Entity e, State& state) {
         case State::Idle:
             if (/* condition */) {
                 state.current = State::Moving;
-                registry.emplace_component<Velocity>(e, 1.0f, 0.0f);
+                registry.emplaceComponent<Velocity>(e, 1.0f, 0.0f);
             }
             break;
         case State::Moving:
             if (/* condition */) {
                 state.current = State::Idle;
-                registry.remove_component<Velocity>(e);
+                registry.removeComponent<Velocity>(e);
             }
             break;
     }
@@ -238,7 +238,7 @@ std::thread t2([&] { registry.view<Velocity>().each(update_vel); });
 
 ```cpp
 // SAFE: Parallel iteration
-registry.parallel_view<Position, Velocity>().each([](Entity e, Position& pos, Velocity& vel) {
+registry.parallelView<Position, Velocity>().each([](Entity e, Position& pos, Velocity& vel) {
     pos.x += vel.dx; // Each thread processes different entities
 });
 ```
@@ -271,13 +271,13 @@ See [Parallel Processing](05_parallel_processing.md) for details.
 // Pass 1: Mark entities
 registry.view<Health>().each([&](Entity e, Health& hp) {
     if (hp.hp <= 0) {
-        registry.emplace_component<Dead>(e);
+        registry.emplaceComponent<Dead>(e);
     }
 });
 
 // Pass 2: Remove marked entities
 registry.view<Dead>().each([&](Entity e) {
-    registry.kill_entity(e);
+    registry.killEntity(e);
 });
 ```
 
@@ -338,7 +338,7 @@ void update(ECS::Registry& registry, float dt) {
     registry.view<Lifetime>().each([&](Entity e, Lifetime& life) {
         life.remaining -= dt;
         if (life.remaining <= 0.0f) {
-            registry.kill_entity(e);
+            registry.killEntity(e);
         }
     });
     
