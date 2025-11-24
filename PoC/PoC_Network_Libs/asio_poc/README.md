@@ -76,7 +76,7 @@ cd build-debug
 
 ```bash
 cd build-debug
-bash ../examples/asio_poc/test_poc.sh
+bash ../PoC/PoC_Network_Libs/asio_poc/test_poc.sh
 ```
 
 ## 📊 Results

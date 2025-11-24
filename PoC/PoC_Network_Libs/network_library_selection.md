@@ -60,7 +60,7 @@ CPMAddPackage(
 )
 ```
 
-**Integration path:** `examples/asio_poc/` contains functional proof-of-concept with UDP server/client examples.
+**Integration path:** `PoC/PoC_Network_Libs/asio_poc/` contains functional proof-of-concept with UDP server/client examples.
 
 ## Conclusion
 

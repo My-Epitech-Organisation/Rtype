@@ -21,8 +21,8 @@ Qt Network **requires** `QCoreApplication` to run the event loop. This means:
 Run the test script to generate benchmark data:
 ```bash
 cd /path/to/Rtype
-chmod +x examples/qt_network_poc/test_poc.sh
-./examples/qt_network_poc/test_poc.sh
+chmod +x PoC/PoC_Network_Libs/qt_network_poc/test_poc.sh
+./PoC/PoC_Network_Libs/qt_network_poc/test_poc.sh
 ```
 
 Results are saved to `benchmark_results.csv` with:

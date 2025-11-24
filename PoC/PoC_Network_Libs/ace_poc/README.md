@@ -27,8 +27,8 @@ This PoC uses a **simplified implementation** that mimics ACE patterns (Reactor 
 
 ```bash
 cd /path/to/Rtype
-chmod +x examples/ace_poc/test_poc.sh
-./examples/ace_poc/test_poc.sh
+chmod +x PoC/PoC_Network_Libs/ace_poc/test_poc.sh
+./PoC/PoC_Network_Libs/ace_poc/test_poc.sh
 ```
 
 The script will:

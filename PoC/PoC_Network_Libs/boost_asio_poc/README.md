@@ -11,8 +11,9 @@ Benchmark **Boost.Asio** vs **Standalone ASIO** to compare:
 Run the test script to generate benchmark data:
 ```bash
 cd /path/to/Rtype
-chmod +x examples/boost_asio_poc/test_poc.sh
-./examples/boost_asio_poc/test_poc.sh
+chmod +x PoC/PoC_Network_Libs/boost_asio_poc/test_poc.sh
+./PoC/PoC_Network_Libs/boost_asio_poc/test_poc.sh
+
 ```
 
 Results are saved to `benchmark_results.csv` with:
