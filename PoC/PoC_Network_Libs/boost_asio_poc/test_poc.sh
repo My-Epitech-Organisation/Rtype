@@ -165,7 +165,7 @@ if [ $TEST_RESULT -eq 0 ]; then
     echo -e "${GREEN}║  ✓ Boost.Asio PoC Tests PASSED!                   ║${NC}"
     echo -e "${GREEN}╚════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo -e "${CYAN}📊 Benchmark results saved to: benchmark_results.csv${NC}"
+    echo -e "${CYAN}📊 Benchmark results saved to: benchmark_results_boost_asio.csv${NC}"
     echo -e "${CYAN}📁 Build logs available in: build-boost-poc/${NC}"
 else
     echo -e "${RED}╔════════════════════════════════════════════════════╗${NC}"

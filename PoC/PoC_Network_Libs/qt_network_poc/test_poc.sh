@@ -175,7 +175,7 @@ if [ $TEST_RESULT -eq 0 ]; then
     echo -e "${GREEN}║  ✓ Qt Network PoC Tests PASSED!                   ║${NC}"
     echo -e "${GREEN}╚════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo -e "${CYAN}📊 Benchmark results saved to: benchmark_results.csv${NC}"
+    echo -e "${CYAN}📊 Benchmark results saved to: benchmark_results_qt_network.csv${NC}"
     echo -e "${CYAN}📁 Build logs available in: build-qt-poc/${NC}"
     echo ""
     echo -e "${YELLOW}⚠️  Key Finding: QCoreApplication IS REQUIRED${NC}"
