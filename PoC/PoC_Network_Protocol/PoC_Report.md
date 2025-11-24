@@ -222,17 +222,17 @@ target_compile_options(udptest PRIVATE -Wall -Wextra -Wpedantic)
 ```text
 TCP Echo Server started on port 8080
 TCP Echo Client connected to localhost:8080
-Sent packet 1, received echo in 141  microseconds
-Sent packet 2, received echo in 139  microseconds
-Sent packet 3, received echo in 140  microseconds
-Sent packet 4, received echo in 141  microseconds
-Sent packet 5, received echo in 139  microseconds
-Sent packet 6, received echo in 140  microseconds
-Sent packet 7, received echo in 141  microseconds
-Sent packet 8, received echo in 139  microseconds
-Sent packet 9, received echo in 140  microseconds
-Sent packet 10, received echo in 141  microseconds
-Average latency: 140  microseconds
+Sent packet 1, received echo in 141 microseconds
+Sent packet 2, received echo in 139 microseconds
+Sent packet 3, received echo in 140 microseconds
+Sent packet 4, received echo in 141 microseconds
+Sent packet 5, received echo in 139 microseconds
+Sent packet 6, received echo in 140 microseconds
+Sent packet 7, received echo in 141 microseconds
+Sent packet 8, received echo in 139 microseconds
+Sent packet 9, received echo in 140 microseconds
+Sent packet 10, received echo in 141 microseconds
+Average latency: 140 microseconds
 Total test duration: 502 milliseconds
 ```
 
@@ -250,17 +250,17 @@ Total test duration: 502 milliseconds
 ```text
 TCP Echo Server started on port 8080
 TCP Echo Client connected to localhost:8080
-Sent packet 1, received echo in 141  microseconds
-Sent packet 2, received echo in 139  microseconds
-Sent packet 3, received echo in 140  microseconds
-Sent packet 4, received echo in 141  microseconds
+Sent packet 1, received echo in 141 microseconds
+Sent packet 2, received echo in 139 microseconds
+Sent packet 3, received echo in 140 microseconds
+Sent packet 4, received echo in 141 microseconds
 Skipping packet 5 (simulated drop)
-Sent packet 6, received echo in 139  microseconds
-Sent packet 7, received echo in 140  microseconds
-Sent packet 8, received echo in 141  microseconds
-Sent packet 9, received echo in 139  microseconds
-Sent packet 10, received echo in 140  microseconds
-Average latency: 140  microseconds
+Sent packet 6, received echo in 139 microseconds
+Sent packet 7, received echo in 140 microseconds
+Sent packet 8, received echo in 141 microseconds
+Sent packet 9, received echo in 139 microseconds
+Sent packet 10, received echo in 140 microseconds
+Average latency: 140 microseconds
 Total test duration: 452 milliseconds
 ```
 
@@ -278,17 +278,17 @@ Total test duration: 452 milliseconds
 ```text
 UDP Echo Server started on port 8081
 UDP Echo Client connected to localhost:8081
-Sent packet 1, received echo in 121  microseconds
-Sent packet 2, received echo in 119  microseconds
-Sent packet 3, received echo in 120  microseconds
-Sent packet 4, received echo in 121  microseconds
-Sent packet 5, received echo in 119  microseconds
-Sent packet 6, received echo in 120  microseconds
-Sent packet 7, received echo in 121  microseconds
-Sent packet 8, received echo in 119  microseconds
-Sent packet 9, received echo in 120  microseconds
-Sent packet 10, received echo in 121  microseconds
-Average latency: 120  microseconds
+Sent packet 1, received echo in 121 microseconds
+Sent packet 2, received echo in 119 microseconds
+Sent packet 3, received echo in 120 microseconds
+Sent packet 4, received echo in 121 microseconds
+Sent packet 5, received echo in 119 microseconds
+Sent packet 6, received echo in 120 microseconds
+Sent packet 7, received echo in 121 microseconds
+Sent packet 8, received echo in 119 microseconds
+Sent packet 9, received echo in 120 microseconds
+Sent packet 10, received echo in 121 microseconds
+Average latency: 120 microseconds
 Total test duration: 502 milliseconds
 ```
 
