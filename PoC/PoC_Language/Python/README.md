@@ -17,12 +17,7 @@ The PoC includes:
 python3 main.py
 ```
 
-Or with Python 2 compatibility check:
-
-```bash
-python main.py
-```
-
+> **Note:** This PoC requires **Python 3.7 or higher** (for dataclasses and type hints). It is **not compatible with Python 2**.
 ## What's Good (Pros)
 
 ### Productivity & Development Speed
