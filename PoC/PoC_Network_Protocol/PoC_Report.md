@@ -34,7 +34,7 @@ developed and tested:
 
 **Key Findings:**
 
-- UDP provides **15% lower latency** (~120microseconds vs ~140microseconds) than TCP
+- UDP provides **15% lower latency** (120 microseconds vs 140 microseconds) than TCP
 - UDP eliminates head-of-line blocking, critical for real-time gaming
 - TCP packet loss causes potential 200ms+ delays; UDP processes
   subsequent packets immediately
@@ -74,10 +74,10 @@ decision between TCP and UDP protocols.
 
 ### 2.4 Success Criteria
 
-- ✅ Demonstrate measurable latency difference between protocols
-- ✅ Show UDP's immunity to head-of-line blocking
-- ✅ Provide clear architectural recommendations
-- ✅ Deliver working proof-of-concept implementations
+- [OK] Demonstrate measurable latency difference between protocols
+- [OK] Show UDP's immunity to head-of-line blocking
+- [OK] Provide clear architectural recommendations
+- [OK] Deliver working proof-of-concept implementations
 
 ---
 
@@ -89,9 +89,9 @@ Both PoCs implement echo server/client patterns with identical
 functionality:
 
 ```text
-Client → Server → Client (Echo Response)
-   ↓        ↓        ↓
-Send → Process → Echo Back
+Client -> Server -> Client (Echo Response)
+   |         |         | 
+Send -> Process -> Echo Back
 ```
 
 ### 3.2 TCP Implementation (`TcpTest.cpp`)
@@ -194,7 +194,7 @@ target_compile_options(udptest PRIVATE -Wall -Wextra -Wpedantic)
 - **Latency Calculation**: Microsecond precision using
   `std::chrono::high_resolution_clock`
 - **Packet Format**: "Packet N - " + 100 'X' characters (108 bytes total)
-- **Timing Points**: Send start → Receive complete
+- **Timing Points**: Send start -> Receive complete
 - **Test Duration**: Total time for all packets including delays
 
 ### 4.4 Test Execution
@@ -222,24 +222,24 @@ target_compile_options(udptest PRIVATE -Wall -Wextra -Wpedantic)
 ```text
 TCP Echo Server started on port 8080
 TCP Echo Client connected to localhost:8080
-Sent packet 1, received echo in 141 microseconds
-Sent packet 2, received echo in 139 microseconds
-Sent packet 3, received echo in 140 microseconds
-Sent packet 4, received echo in 141 microseconds
-Sent packet 5, received echo in 139 microseconds
-Sent packet 6, received echo in 140 microseconds
-Sent packet 7, received echo in 141 microseconds
-Sent packet 8, received echo in 139 microseconds
-Sent packet 9, received echo in 140 microseconds
-Sent packet 10, received echo in 141 microseconds
-Average latency: 140 microseconds
+Sent packet 1, received echo in 141  microseconds
+Sent packet 2, received echo in 139  microseconds
+Sent packet 3, received echo in 140  microseconds
+Sent packet 4, received echo in 141  microseconds
+Sent packet 5, received echo in 139  microseconds
+Sent packet 6, received echo in 140  microseconds
+Sent packet 7, received echo in 141  microseconds
+Sent packet 8, received echo in 139  microseconds
+Sent packet 9, received echo in 140  microseconds
+Sent packet 10, received echo in 141  microseconds
+Average latency: 140  microseconds
 Total test duration: 502 milliseconds
 ```
 
 **Key Metrics:**
 
-- Average latency: **140microseconds per packet**
-- Latency range: 139-141microseconds (very consistent)
+- Average latency: **140 microseconds per packet**
+- Latency range: 139-141 microseconds (very consistent)
 - Total duration: 502ms (includes 50ms delays between packets)
 - Packet delivery: 100% reliable
 
@@ -250,23 +250,23 @@ Total test duration: 502 milliseconds
 ```text
 TCP Echo Server started on port 8080
 TCP Echo Client connected to localhost:8080
-Sent packet 1, received echo in 141 microseconds
-Sent packet 2, received echo in 139 microseconds
-Sent packet 3, received echo in 140 microseconds
-Sent packet 4, received echo in 141 microseconds
+Sent packet 1, received echo in 141  microseconds
+Sent packet 2, received echo in 139  microseconds
+Sent packet 3, received echo in 140  microseconds
+Sent packet 4, received echo in 141  microseconds
 Skipping packet 5 (simulated drop)
-Sent packet 6, received echo in 139 microseconds
-Sent packet 7, received echo in 140 microseconds
-Sent packet 8, received echo in 141 microseconds
-Sent packet 9, received echo in 139 microseconds
-Sent packet 10, received echo in 140 microseconds
-Average latency: 140 microseconds
+Sent packet 6, received echo in 139  microseconds
+Sent packet 7, received echo in 140  microseconds
+Sent packet 8, received echo in 141  microseconds
+Sent packet 9, received echo in 139  microseconds
+Sent packet 10, received echo in 140  microseconds
+Average latency: 140  microseconds
 Total test duration: 452 milliseconds
 ```
 
 **Key Metrics:**
 
-- Average latency: **140microseconds per packet** (unchanged)
+- Average latency: **140 microseconds per packet** (unchanged)
 - Total duration: **452ms** (reduced due to skipped packet)
 - **Limitation**: No actual TCP blocking observed (application-level
   simulation)
@@ -278,24 +278,24 @@ Total test duration: 452 milliseconds
 ```text
 UDP Echo Server started on port 8081
 UDP Echo Client connected to localhost:8081
-Sent packet 1, received echo in 121 microseconds
-Sent packet 2, received echo in 119 microseconds
-Sent packet 3, received echo in 120 microseconds
-Sent packet 4, received echo in 121 microseconds
-Sent packet 5, received echo in 119 microseconds
-Sent packet 6, received echo in 120 microseconds
-Sent packet 7, received echo in 121 microseconds
-Sent packet 8, received echo in 119 microseconds
-Sent packet 9, received echo in 120 microseconds
-Sent packet 10, received echo in 121 microseconds
-Average latency: 120 microseconds
+Sent packet 1, received echo in 121  microseconds
+Sent packet 2, received echo in 119  microseconds
+Sent packet 3, received echo in 120  microseconds
+Sent packet 4, received echo in 121  microseconds
+Sent packet 5, received echo in 119  microseconds
+Sent packet 6, received echo in 120  microseconds
+Sent packet 7, received echo in 121  microseconds
+Sent packet 8, received echo in 119  microseconds
+Sent packet 9, received echo in 120  microseconds
+Sent packet 10, received echo in 121  microseconds
+Average latency: 120  microseconds
 Total test duration: 502 milliseconds
 ```
 
 **Key Metrics:**
 
-- Average latency: **120microseconds per packet** (15% faster than TCP)
-- Latency range: 119-121microseconds (very consistent)
+- Average latency: **120 microseconds per packet** (15% faster than TCP)
+- Latency range: 119-121 microseconds (very consistent)
 - Total duration: 502ms (same timing structure)
 - Packet delivery: 100% reliable (local network)
 
@@ -307,16 +307,16 @@ Total test duration: 502 milliseconds
 UDP Client ready to send to 127.0.0.1:8081
 Sending 10 packets...
 Will simulate losing packet 5 to demonstrate UDP behavior
-Packet 1 - Latency: 128microseconds - Echo: Packet 1 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 2 - Latency: 78microseconds - Echo: Packet 2 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 3 - Latency: 213microseconds - Echo: Packet 3 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 4 - Latency: 109microseconds - Echo: Packet 4 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 1 - Latency: 128 microseconds - Echo: Packet 1 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 2 - Latency: 78 microseconds - Echo: Packet 2 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 3 - Latency: 213 microseconds - Echo: Packet 3 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 4 - Latency: 109 microseconds - Echo: Packet 4 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
 SIMULATING LOSS: Skipping packet 5 at 200ms
-Packet 6 - Latency: 167microseconds - Echo: Packet 6 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 7 - Latency: 205microseconds - Echo: Packet 7 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 8 - Latency: 155microseconds - Echo: Packet 8 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 9 - Latency: 229microseconds - Echo: Packet 9 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 10 - Latency: 213microseconds - Echo: Packet 10 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 6 - Latency: 167 microseconds - Echo: Packet 6 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 7 - Latency: 205 microseconds - Echo: Packet 7 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 8 - Latency: 155 microseconds - Echo: Packet 8 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 9 - Latency: 229 microseconds - Echo: Packet 9 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 10 - Latency: 213 microseconds - Echo: Packet 10 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
 
 Total test duration: 452ms
 Test completed
@@ -333,7 +333,7 @@ Processed packet: Packet 10 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
 
 **Key Metrics:**
 
-- Average latency: **Variable** (78-229microseconds range due to timeout handling)
+- Average latency: **Variable** (78-229 microseconds range due to timeout handling)
 - Total duration: **452ms** (no blocking delay for subsequent packets)
 - **Critical Finding**: Packets 6-10 processed immediately despite
   packet 5 loss
@@ -346,8 +346,8 @@ Processed packet: Packet 10 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
 
 | Metric | TCP | UDP | Difference |
 | -------- | ----- | ----- | ------------ |
-| Average Latency | 140microseconds | 120microseconds | 15% faster |
-| Latency Consistency | 139-141microseconds | 119-121microseconds | Very consistent |
+| Average Latency | 140 microseconds | 120 microseconds | 15% faster |
+| Latency Consistency | 139-141 microseconds | 119-121 microseconds | Very consistent |
 | Head-of-Line Blocking | Yes | No | Critical advantage |
 | Connection Overhead | High (3-way handshake) | None | Significant advantage |
 | Reliability | Guaranteed | None | Trade-off consideration |
@@ -466,11 +466,11 @@ public:
 This PoC successfully demonstrated the critical differences between TCP
 and UDP protocols for real-time gaming:
 
-- **✅ Measurable Performance Data**: UDP provides 15% lower latency
+- **[OK] Measurable Performance Data**: UDP provides 15% lower latency
   than TCP
-- **✅ Blocking Behavior Proven**: UDP eliminates head-of-line blocking
-- **✅ Clear Architectural Path**: Hybrid UDP/TCP approach recommended
-- **✅ Working Implementations**: Both protocols fully implemented and
+- **[OK] Blocking Behavior Proven**: UDP eliminates head-of-line blocking
+- **[OK] Clear Architectural Path**: Hybrid UDP/TCP approach recommended
+- **[OK] Working Implementations**: Both protocols fully implemented and
   tested
 
 ### 8.2 Business Impact
