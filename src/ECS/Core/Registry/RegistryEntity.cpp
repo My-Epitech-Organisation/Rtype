@@ -81,10 +81,7 @@ namespace ECS {
                 if (it != component_pools.end()) {
                     it->second->remove(entity);
                 }
-            } catch (...) {
-                // Swallow exceptions to maintain noexcept guarantee
-                // In production, you might want to log this error
-            }
+            } catch (...) { }
         }
 
         relationship_manager.remove_entity(entity);
@@ -93,9 +90,6 @@ namespace ECS {
     bool Registry::is_alive(Entity entity) const noexcept {
         std::shared_lock lock(entity_mutex);
 
-        // Entity is alive if:
-        // 1. Its index is within bounds
-        // 2. Its generation matches the current generation
         return entity.index() < generations.size() &&
                generations[entity.index()] == entity.generation();
     }
