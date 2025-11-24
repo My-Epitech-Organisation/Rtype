@@ -11,6 +11,8 @@ The PoC includes:
 
 ## Building and Running
 
+**Requires Python 3.7 or higher** (uses dataclasses and type hints).
+
 ```bash
 python3 main.py
 ```
