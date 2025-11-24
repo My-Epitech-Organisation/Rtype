@@ -17,7 +17,7 @@
 
 class SimpleUdpClient {
 public:
-    SimpleUdpClient(const std::string& host, unsigned short port) 
+    SimpleUdpClient(const std::string& host, unsigned short port)
         : host_(host), port_(port), socket_fd_(-1) {
         std::cout << "ACE-style UDP Client (Simple Implementation)" << std::endl;
     }
@@ -38,7 +38,7 @@ public:
         std::memset(&server_addr_, 0, sizeof(server_addr_));
         server_addr_.sin_family = AF_INET;
         server_addr_.sin_port = htons(port_);
-        
+
         if (inet_pton(AF_INET, host_.c_str(), &server_addr_.sin_addr) <= 0) {
             std::cerr << "Invalid address: " << host_ << std::endl;
             close(socket_fd_);
@@ -55,7 +55,7 @@ public:
 
         ssize_t sent = sendto(socket_fd_, message.c_str(), message.length(), 0,
                              (struct sockaddr*)&server_addr_, sizeof(server_addr_));
-        
+
         if (sent < 0) {
             std::cerr << "Send error" << std::endl;
             return false;
@@ -64,13 +64,13 @@ public:
         // Receive response
         char buffer[1024];
         std::memset(buffer, 0, sizeof(buffer));
-        
+
         struct sockaddr_in from_addr;
         socklen_t from_len = sizeof(from_addr);
-        
+
         ssize_t recv_len = recvfrom(socket_fd_, buffer, sizeof(buffer) - 1, 0,
                                    (struct sockaddr*)&from_addr, &from_len);
-        
+
         if (recv_len > 0) {
             std::string response(buffer, recv_len);
             std::cout << "Received: \"" << response << "\"" << std::endl;

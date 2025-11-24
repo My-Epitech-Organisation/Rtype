@@ -58,10 +58,10 @@ public:
 
         while (true) {
             std::memset(buffer, 0, sizeof(buffer));
-            
+
             ssize_t recv_len = recvfrom(socket_fd_, buffer, sizeof(buffer) - 1, 0,
                                        (struct sockaddr*)&client_addr, &client_len);
-            
+
             if (recv_len < 0) {
                 std::cerr << "Receive error" << std::endl;
                 continue;
@@ -91,9 +91,9 @@ int main(int argc, char* argv[]) {
     }
 
     unsigned short port = static_cast<unsigned short>(std::atoi(argv[1]));
-    
+
     SimpleUdpServer server(port);
-    
+
     if (!server.open()) {
         return 1;
     }
