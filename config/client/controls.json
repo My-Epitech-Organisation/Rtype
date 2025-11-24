@@ -1,0 +1,7 @@
+{
+  "move_up": "Up",
+  "move_down": "Down",
+  "move_left": "Left",
+  "move_right": "Right",
+  "fire": "Space"
+}

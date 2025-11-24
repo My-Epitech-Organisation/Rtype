@@ -1,5 +1,11 @@
-add_subdirectory(Graphic)
+add_executable(r-type_client main.cpp ClientApp.cpp)
 
-add_executable(r-type_client main.cpp)
-target_link_libraries(r-type_client graphic)
-set_target_properties(r-type_client PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED YES)
+target_compile_features(r-type_client PRIVATE cxx_std_20)
+
+# Client executable depends on all client-side modules
+target_link_libraries(r-type_client PRIVATE
+    rtype_engine
+    rtype_network
+    rtype_game_shared
+    rtype_game_client
+)

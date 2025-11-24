@@ -1,0 +1,3 @@
+add_subdirectory(ecs)
+add_subdirectory(network)
+add_subdirectory(games)
