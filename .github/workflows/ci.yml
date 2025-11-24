@@ -46,8 +46,7 @@ jobs:
 
       - name: Build
         run: |
-          cd build && cmake --build . -- --parrallel
-
+          cmake --build build --config Release --parallel
       - name: Publish build artifacts
         uses: actions/upload-artifact@v4
         with:
