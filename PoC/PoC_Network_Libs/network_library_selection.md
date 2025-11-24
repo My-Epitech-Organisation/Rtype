@@ -3,7 +3,7 @@
 ## Decision: ASIO Standalone
 
 **Selected Library:** ASIO Standalone 1.30.2
-**Date:** 24 novembre 2025
+**Date:** 24 November 2025
 **Status:** ✅ APPROVED
 
 ## Executive Summary
