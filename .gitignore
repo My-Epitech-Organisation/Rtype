@@ -51,4 +51,3 @@ build-debug
 *.dwo
 /build
 .vscode/
-PoC/
