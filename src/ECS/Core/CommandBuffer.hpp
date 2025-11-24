@@ -84,7 +84,6 @@ namespace ECS {
         std::vector<std::function<void()>> commands;
         mutable std::mutex commands_mutex;
 
-        // For entity spawning, we need to store placeholder->real mapping
         std::unordered_map<std::uint32_t, Entity> placeholder_to_real;
         std::uint32_t next_placeholder_id = 0;
     };
