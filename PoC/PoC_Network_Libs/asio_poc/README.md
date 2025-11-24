@@ -182,6 +182,6 @@ ASIO standalone has been validated for UDP networking in R-Type. The PoC demonst
 
 ---
 
-**Date**: 24 novembre 2025
+**Date**: 24 November 2025
 **Status**: ✅ Completed
 **Deliverable**: Working UDP server + client binaries
