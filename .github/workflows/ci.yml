@@ -29,8 +29,6 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure C++ with CMake
-        env:
-          CMAKE_CXX_COMPILER_LAUNCHER: ${{ matrix.os == 'ubuntu-latest' && 'ccache' || '' }}
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
