@@ -25,7 +25,7 @@ public:
     // Enemy-specific methods
     void shoot(); // NOTE: This is duplicated from Player! OOP Problem #1
     int getScoreValue() const { return scoreValue; }
-    
+
     // AI behavior
     virtual void updateAI(float deltaTime);
 

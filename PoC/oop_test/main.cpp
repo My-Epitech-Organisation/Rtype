@@ -1,16 +1,16 @@
 /**
  * @file main.cpp
  * @brief OOP PoC for R-Type - Demonstrating Traditional OOP Approach
- * 
+ *
  * This Proof of Concept demonstrates the traditional Object-Oriented Programming
  * approach for game development, specifically highlighting:
- * 
+ *
  * 1. Inheritance hierarchies (GameObject -> Movable -> Player/Enemy)
  * 2. Code duplication problems
  * 3. Diamond inheritance issues
  * 4. Fragile base class problem
  * 5. Inflexibility in behavior composition
- * 
+ *
  * @date 26/11/2025 - 27/11/2025
  * @see Related to Issue #51: [Spike] Engine Architecture PoC (ECS vs OOP)
  */
@@ -35,47 +35,47 @@ void printSeparator(const std::string& title = "") {
 
 void demonstrateBasicInheritance() {
     printSeparator("1. BASIC INHERITANCE HIERARCHY");
-    
+
     std::cout << "\nCreating a GameObject..." << std::endl;
     GameObject obj(100, 100);
     obj.update(0.016f);
     obj.render();
-    
+
     std::cout << "\nCreating a Movable..." << std::endl;
     Movable movable(200, 200, 100, 5.0f);
     movable.setVelocity(10.0f, 5.0f);
     movable.update(0.016f);
     movable.render();
-    
+
     std::cout << "\n✓ Basic inheritance works fine for simple hierarchies" << std::endl;
     std::cout << "✗ But GameObject has movement data even if it never moves!" << std::endl;
 }
 
 void demonstratePlayerAndEnemy() {
     printSeparator("2. PLAYER AND ENEMY CLASSES");
-    
+
     std::cout << "\nCreating a Player..." << std::endl;
     Player player(50, 300);
-    
+
     std::cout << "\nPlayer actions:" << std::endl;
     player.moveRight(0.016f);
     player.shoot();
     player.shoot(); // Should be on cooldown
     player.addScore(100);
     player.render();
-    
+
     std::cout << "\n\nCreating an Enemy..." << std::endl;
     Enemy enemy(800, 300, "fighter");
     enemy.update(0.016f);
     enemy.shoot();
     enemy.render();
-    
+
     std::cout << "\n\nCreating a Boss..." << std::endl;
     Boss boss(900, 400);
     boss.update(0.016f);
     boss.takeDamage(50);
     boss.render();
-    
+
     std::cout << "\n✗ PROBLEM: Player::shoot() and Enemy::shoot() are duplicated!" << std::endl;
     std::cout << "✗ Can't easily extract shooting into a shared component" << std::endl;
     std::cout << "✗ Boss inherits 4 levels deep (GameObject->Movable->Enemy->Boss)" << std::endl;
@@ -83,23 +83,23 @@ void demonstratePlayerAndEnemy() {
 
 void demonstrateDiamondProblem() {
     printSeparator("3. DIAMOND INHERITANCE PROBLEM");
-    
+
     std::cout << "\nTrying to create objects with multiple behaviors..." << std::endl;
-    
+
     std::cout << "\nCreating a Shootable object..." << std::endl;
     Shootable shootable(100, 100, 0.5f);
     shootable.shoot();
     shootable.shoot();
     shootable.reload();
-    
+
     std::cout << "\nCreating a Damageable object..." << std::endl;
     Damageable damageable(200, 200, 50.0f);
     damageable.takeDamage(100);
-    
+
     std::cout << "\nCreating a ShootingPowerUp (composition workaround)..." << std::endl;
     ShootingPowerUp powerup(300, 300);
     powerup.shoot();
-    
+
     std::cout << "\n✗ PROBLEM: Can't create a class that is BOTH Shootable AND Damageable!" << std::endl;
     std::cout << "✗ Would need virtual inheritance (complex, performance cost)" << std::endl;
     std::cout << "✗ Or composition with lots of forwarding methods (verbose)" << std::endl;
@@ -108,22 +108,22 @@ void demonstrateDiamondProblem() {
 
 void demonstratePolymorphism() {
     printSeparator("4. POLYMORPHISM AND HETEROGENEOUS COLLECTIONS");
-    
+
     std::cout << "\nCreating a collection of GameObjects..." << std::endl;
     std::vector<std::unique_ptr<GameObject>> gameObjects;
-    
+
     gameObjects.push_back(std::make_unique<Player>(100, 300));
     gameObjects.push_back(std::make_unique<Enemy>(700, 200, "scout"));
     gameObjects.push_back(std::make_unique<Enemy>(750, 350, "fighter"));
     gameObjects.push_back(std::make_unique<Boss>(900, 300));
-    
+
     std::cout << "\nUpdating all objects polymorphically..." << std::endl;
     for (auto& obj : gameObjects) {
         obj->update(0.016f);
         obj->render();
         std::cout << std::endl;
     }
-    
+
     std::cout << "✓ Polymorphism works with std::vector<GameObject*>" << std::endl;
     std::cout << "✗ BUT: All objects in memory are scattered (cache misses)" << std::endl;
     std::cout << "✗ Virtual function calls have overhead" << std::endl;
@@ -132,27 +132,27 @@ void demonstratePolymorphism() {
 
 void demonstrateRuntimeFlexibility() {
     printSeparator("5. RUNTIME FLEXIBILITY (OR LACK THEREOF)");
-    
+
     std::cout << "\nCreating a stationary GameObject..." << std::endl;
     GameObject staticObj(400, 300);
-    
+
     std::cout << "\n❌ IMPOSSIBLE: Can't make this object movable at runtime!" << std::endl;
     std::cout << "   - Would need to change its type to Movable" << std::endl;
     std::cout << "   - Can't add/remove behaviors dynamically" << std::endl;
     std::cout << "   - All capabilities must be in the class hierarchy" << std::endl;
-    
+
     std::cout << "\n❌ IMPOSSIBLE: Can't make Player temporarily invincible AND invisible!" << std::endl;
     std::cout << "   - Would need Invincible and Invisible classes" << std::endl;
     std::cout << "   - Multiple inheritance leads to diamond problem" << std::endl;
     std::cout << "   - Or need to add ALL possible power-ups to Player class (bloat)" << std::endl;
-    
+
     std::cout << "\n✗ OOP forces compile-time behavior decisions" << std::endl;
     std::cout << "✗ Can't compose behaviors dynamically like: Player + Shield + Homing + Rapid-Fire" << std::endl;
 }
 
 void printComplexityAnalysis() {
     printSeparator("COMPLEXITY ANALYSIS - OOP APPROACH");
-    
+
     std::cout << R"(
 📊 METRICS:
    - Lines of Code: ~500+ for basic hierarchy
@@ -252,13 +252,13 @@ int main() {
         demonstratePolymorphism();
         demonstrateRuntimeFlexibility();
         printComplexityAnalysis();
-        
+
         printSeparator("DEMONSTRATION COMPLETE");
         std::cout << "\n✅ PoC completed successfully!" << std::endl;
         std::cout << "📋 Review the output above to understand OOP limitations" << std::endl;
         std::cout << "📊 See COMPLEXITY ANALYSIS for detailed evaluation" << std::endl;
         std::cout << "\n💡 Next: Compare with ECS implementation" << std::endl;
-        
+
         return 0;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

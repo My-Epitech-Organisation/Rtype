@@ -4,7 +4,7 @@
 
 /**
  * @brief Base class for all game objects in the R-Type game
- * 
+ *
  * This demonstrates the traditional OOP approach where all game entities
  * inherit from a common base class.
  */

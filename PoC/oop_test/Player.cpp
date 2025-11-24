@@ -48,10 +48,10 @@ void Player::activateInvincibility(float duration) {
 
 void Player::update(float deltaTime) {
     Movable::update(deltaTime);
-    
+
     // Update shooting cooldown
     timeSinceLastShot += deltaTime;
-    
+
     // Update invincibility
     if (isInvincible) {
         invincibilityTimer -= deltaTime;
@@ -67,9 +67,9 @@ void Player::takeDamage(int damage) {
         std::cout << "[Player] Invincible! No damage taken." << std::endl;
         return;
     }
-    
+
     GameObject::takeDamage(damage);
-    
+
     if (!isAlive()) {
         loseLife();
     }

@@ -46,7 +46,7 @@ void Movable::accelerate(float ax, float ay) {
 void Movable::applyFriction(float friction) {
     velocityX *= (1.0f - friction);
     velocityY *= (1.0f - friction);
-    
+
     // Stop completely if velocity is very small
     if (std::abs(velocityX) < 0.01f) velocityX = 0.0f;
     if (std::abs(velocityY) < 0.01f) velocityY = 0.0f;

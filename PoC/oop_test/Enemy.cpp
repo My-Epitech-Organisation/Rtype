@@ -21,7 +21,7 @@ void Enemy::shoot() {
 void Enemy::updateAI(float deltaTime) {
     // Simple AI: move towards left (towards player)
     velocityX = -speed;
-    
+
     // Randomly shoot
     if (timeSinceLastShot >= fireRate) {
         shoot();

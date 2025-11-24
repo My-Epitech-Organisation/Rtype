@@ -4,7 +4,7 @@
 
 /**
  * @brief Movable class adds movement capabilities to GameObject
- * 
+ *
  * This class demonstrates the first level of inheritance.
  * Problem: What if we want some GameObjects to be movable and others not?
  */
@@ -24,7 +24,7 @@ public:
     void moveRight(float deltaTime);
     void moveUp(float deltaTime);
     void moveDown(float deltaTime);
-    
+
     void setSpeed(float newSpeed) { speed = newSpeed; }
     float getSpeed() const { return speed; }
 

@@ -4,7 +4,7 @@
 
 /**
  * @brief Player class representing the player's spaceship in R-Type
- * 
+ *
  * This demonstrates deeper inheritance hierarchy.
  * Player inherits from Movable which inherits from GameObject.
  */

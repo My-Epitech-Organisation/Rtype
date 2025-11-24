@@ -45,7 +45,7 @@ void Damageable::takeDamage(int damage) {
     float actualDamage = damage * (1.0f - armor / 100.0f);
     health -= static_cast<int>(actualDamage);
     std::cout << "[Damageable] Took " << actualDamage << " damage (reduced by armor). Health: " << health << std::endl;
-    
+
     if (!isAlive() && canBeDestroyed) {
         std::cout << "[Damageable] DESTROYED!" << std::endl;
     }
@@ -64,24 +64,24 @@ ShootingPowerUp::ShootingPowerUp(float x, float y)
 
 /**
  * COMPLEXITY ANALYSIS SUMMARY:
- * 
+ *
  * Lines of Code: ~200+ for this simple example
  * Inheritance Depth: Up to 4 levels (GameObject -> Movable -> Enemy -> Boss)
  * Code Duplication: shoot() method duplicated in Player and Enemy
- * 
+ *
  * Problems Encountered:
  * 1. Can't make PowerUp both Shootable AND Damageable without diamond problem
  * 2. Had to duplicate armor/canBeDestroyed fields
  * 3. Deep inheritance makes code hard to follow
  * 4. Can't change behavior at runtime
  * 5. Testing requires mocking entire inheritance chain
- * 
+ *
  * Maintenance Concerns:
  * - Adding a new feature (e.g., "Teleportable") requires new class in hierarchy
  * - Changing GameObject affects ALL entities
  * - Can't easily share behavior between unrelated classes
  * - Memory overhead from virtual function tables
- * 
+ *
  * vs ECS Benefits (theoretical):
  * - Components can be mixed freely
  * - No inheritance hierarchies
