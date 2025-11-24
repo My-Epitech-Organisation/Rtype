@@ -84,5 +84,5 @@ endif()
 
 # Add examples if enabled
 if(BUILD_EXAMPLES)
-    add_subdirectory(examples)
+    add_subdirectory(PoC/PoC_Network_Libs)
 endif()
