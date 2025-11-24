@@ -49,4 +49,3 @@ build-debug
 
 # debug information files
 *.dwo
-.vscode
