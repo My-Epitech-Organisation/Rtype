@@ -9,9 +9,9 @@
 
 Graphic::Graphic()
 {
-    InitWindow(800, 450, "Raylib [core] example - basic window");
+    InitWindow(800, 450, "RTYPE Raylib - POC");
     SetTargetFPS(60);
-    this->_image = LoadImage("assets/r-typesheet42.gif"); 
+    this->_image = LoadImage("assets/r-typesheet42.gif");
     this->_texture = LoadTextureFromImage(this->_image);
 }
 
