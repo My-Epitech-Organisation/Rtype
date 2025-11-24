@@ -74,24 +74,34 @@ cd ..
 # Wait for binaries to be available
 sleep 1
 
-# Check if binaries exist
-if [ ! -f "qt_udp_server" ]; then
-    echo -e "${RED}✗ Server binary not found at project root${NC}"
-    echo "Looking in build directory..."
-    find build-qt-poc -name "qt_udp_server" -type f || echo "Not found"
-    exit 1
+# Determine binary paths
+SERVER_BIN="./build-qt-poc/bin/qt_udp_server"
+CLIENT_BIN="./build-qt-poc/bin/qt_udp_client"
+
+# Check if binaries exist in build directory
+if [ ! -f "$SERVER_BIN" ]; then
+    # Fallback: check project root
+    if [ -f "./qt_udp_server" ]; then
+        SERVER_BIN="./qt_udp_server"
+    else
+        echo -e "${RED}✗ Server binary not found${NC}"
+        exit 1
+    fi
 fi
 
-if [ ! -f "qt_udp_client" ]; then
-    echo -e "${RED}✗ Client binary not found at project root${NC}"
-    echo "Looking in build directory..."
-    find build-qt-poc -name "qt_udp_client" -type f || echo "Not found"
-    exit 1
+if [ ! -f "$CLIENT_BIN" ]; then
+    # Fallback: check project root
+    if [ -f "./qt_udp_client" ]; then
+        CLIENT_BIN="./qt_udp_client"
+    else
+        echo -e "${RED}✗ Client binary not found${NC}"
+        exit 1
+    fi
 fi
 
 # Measure binary sizes
-server_size=$(stat -f%z "qt_udp_server" 2>/dev/null || stat -c%s "qt_udp_server" 2>/dev/null || echo "0")
-client_size=$(stat -f%z "qt_udp_client" 2>/dev/null || stat -c%s "qt_udp_client" 2>/dev/null || echo "0")
+server_size=$(stat -f%z "$SERVER_BIN" 2>/dev/null || stat -c%s "$SERVER_BIN" 2>/dev/null || echo "0")
+client_size=$(stat -f%z "$CLIENT_BIN" 2>/dev/null || stat -c%s "$CLIENT_BIN" 2>/dev/null || echo "0")
 
 # Convert to KB
 server_size_kb=$(echo "scale=2; $server_size / 1024" | bc)
@@ -109,29 +119,23 @@ echo -e "  ${CYAN}Server size:${NC}  ${server_size_kb} KB (${server_size} bytes)
 echo -e "  ${CYAN}Client size:${NC}  ${client_size_kb} KB (${client_size} bytes)"
 
 # Save results to CSV
-echo "Metric,Value" > benchmark_results.csv
-echo "Config Time (s),${config_time}" >> benchmark_results.csv
-echo "Build Time (s),${build_time}" >> benchmark_results.csv
-echo "Server Size (KB),${server_size_kb}" >> benchmark_results.csv
-echo "Client Size (KB),${client_size_kb}" >> benchmark_results.csv
-echo "Server Size (bytes),${server_size}" >> benchmark_results.csv
-echo "Client Size (bytes),${client_size}" >> benchmark_results.csv
-echo "QCoreApplication Required,YES" >> benchmark_results.csv
+echo "Metric,Value" > benchmark_results_qt_network.csv
+echo "Config Time (s),${config_time}" >> benchmark_results_qt_network.csv
+echo "Build Time (s),${build_time}" >> benchmark_results_qt_network.csv
+echo "Server Size (KB),${server_size_kb}" >> benchmark_results_qt_network.csv
+echo "Client Size (KB),${client_size_kb}" >> benchmark_results_qt_network.csv
+echo "Server Size (bytes),${server_size}" >> benchmark_results_qt_network.csv
+echo "Client Size (bytes),${client_size}" >> benchmark_results_qt_network.csv
+echo "QCoreApplication Required,YES" >> benchmark_results_qt_network.csv
 
 echo ""
 echo -e "${YELLOW}═══ Functional Test: Qt Network ═══${NC}"
-
-# Check if binaries exist
-if [ ! -f "./qt_udp_server" ] || [ ! -f "./qt_udp_client" ]; then
-    echo -e "${RED}Error: Binaries not found after build!${NC}"
-    exit 1
-fi
 
 echo -e "${GREEN}✓ Binaries found${NC}"
 
 # Start server in background
 echo -e "${YELLOW}Starting UDP server on port 4242...${NC}"
-./qt_udp_server 4242 > server.log 2>&1 &
+$SERVER_BIN 4242 > server.log 2>&1 &
 SERVER_PID=$!
 
 # Give server time to start
@@ -148,7 +152,7 @@ echo -e "${GREEN}✓ Server started (PID: $SERVER_PID)${NC}"
 
 # Run client
 echo -e "${YELLOW}Running client tests...${NC}"
-if timeout 5 ./qt_udp_client 127.0.0.1 4242 > client.log 2>&1; then
+if timeout 5 $CLIENT_BIN 127.0.0.1 4242 > client.log 2>&1; then
     echo -e "${GREEN}✓ Client tests passed${NC}"
     TEST_RESULT=0
 else
