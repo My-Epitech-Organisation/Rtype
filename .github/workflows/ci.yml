@@ -8,7 +8,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
 
       - uses: actions/checkout@v4
@@ -55,3 +55,4 @@ jobs:
           path: |
             build/src/client/Release
             build/src/client/r-type_client
+            build/**/*.exe
