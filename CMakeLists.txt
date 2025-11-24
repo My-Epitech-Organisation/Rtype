@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.28)
 project(RType VERSION 1.0.0 LANGUAGES CXX)
 
 if(NOT DEFINED CMAKE_CXX_COMPILER AND NOT DEFINED ENV{CXX})
@@ -18,11 +18,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_TESTS "Build test suite" ON)
 option(BUILD_POC "Build Proof of Concepts" ON)
 
-# Add subdirectories
-add_subdirectory(src/ECS)
 
 if(BUILD_POC)
-    add_subdirectory(PoC)
+    add_subdirectory(PoC/ECS)
 endif()
 
 # Tests (if enabled)
