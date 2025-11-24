@@ -10,6 +10,7 @@
 class Graphic
 {
     private:
+        Image _image;
         Texture2D _texture;
 
     public:

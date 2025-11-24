@@ -11,7 +11,8 @@ Graphic::Graphic()
 {
     InitWindow(800, 450, "Raylib [core] example - basic window");
     SetTargetFPS(60);
-    _texture = LoadTexture("assets/character.png");
+    this->_image = LoadImage("assets/r-typesheet42.gif"); 
+    this->_texture = LoadTextureFromImage(this->_image);
 }
 
 void Graphic::loop()
@@ -25,6 +26,7 @@ void Graphic::loop()
 }
 
 Graphic::~Graphic() {
-    UnloadTexture(_textures);
+    UnloadTexture(this->_texture);
+    UnloadImage(this->_image);
     CloseWindow();
 }
