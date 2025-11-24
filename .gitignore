@@ -11,6 +11,7 @@ my_notes(do_not_delete)
 # Compiled Object files
 build
 build-debug
+build-poc
 *.slo
 *.lo
 *.o
