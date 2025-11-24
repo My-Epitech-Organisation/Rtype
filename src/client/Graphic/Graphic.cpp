@@ -38,5 +38,4 @@ RTypeClient::Graphic::Graphic() :
     _vesselTexture("assets/r-typesheet42.gif"),
     _vessel(this->_vesselTexture)
 {
-    this->loop();
 }

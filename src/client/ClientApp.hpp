@@ -1,3 +1,10 @@
+/*
+** EPITECH PROJECT, 2025
+** Rtype
+** File description:
+** ClientApp
+*/
+
 #include "Graphic/Graphic.hpp"
 
 namespace RTypeClient

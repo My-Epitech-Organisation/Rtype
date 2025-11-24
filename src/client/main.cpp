@@ -10,8 +10,6 @@
 int main()
 {
     RTypeClient::ClientApp client;
-    std::cout << "Hello" << std::endl;
     client.run();
-    std::cout << "Good bye" << std::endl;
     return 0;
 }
