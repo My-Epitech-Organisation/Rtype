@@ -34,7 +34,7 @@ developed and tested:
 
 **Key Findings:**
 
-- UDP provides **15% lower latency** (~120μs vs ~140μs) than TCP
+- UDP provides **15% lower latency** (~120microseconds vs ~140microseconds) than TCP
 - UDP eliminates head-of-line blocking, critical for real-time gaming
 - TCP packet loss causes potential 200ms+ delays; UDP processes
   subsequent packets immediately
@@ -238,8 +238,8 @@ Total test duration: 502 milliseconds
 
 **Key Metrics:**
 
-- Average latency: **140μs per packet**
-- Latency range: 139-141μs (very consistent)
+- Average latency: **140microseconds per packet**
+- Latency range: 139-141microseconds (very consistent)
 - Total duration: 502ms (includes 50ms delays between packets)
 - Packet delivery: 100% reliable
 
@@ -266,7 +266,7 @@ Total test duration: 452 milliseconds
 
 **Key Metrics:**
 
-- Average latency: **140μs per packet** (unchanged)
+- Average latency: **140microseconds per packet** (unchanged)
 - Total duration: **452ms** (reduced due to skipped packet)
 - **Limitation**: No actual TCP blocking observed (application-level
   simulation)
@@ -294,8 +294,8 @@ Total test duration: 502 milliseconds
 
 **Key Metrics:**
 
-- Average latency: **120μs per packet** (15% faster than TCP)
-- Latency range: 119-121μs (very consistent)
+- Average latency: **120microseconds per packet** (15% faster than TCP)
+- Latency range: 119-121microseconds (very consistent)
 - Total duration: 502ms (same timing structure)
 - Packet delivery: 100% reliable (local network)
 
@@ -307,16 +307,16 @@ Total test duration: 502 milliseconds
 UDP Client ready to send to 127.0.0.1:8081
 Sending 10 packets...
 Will simulate losing packet 5 to demonstrate UDP behavior
-Packet 1 - Latency: 128μs - Echo: Packet 1 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 2 - Latency: 78μs - Echo: Packet 2 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 3 - Latency: 213μs - Echo: Packet 3 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 4 - Latency: 109μs - Echo: Packet 4 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 1 - Latency: 128microseconds - Echo: Packet 1 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 2 - Latency: 78microseconds - Echo: Packet 2 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 3 - Latency: 213microseconds - Echo: Packet 3 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 4 - Latency: 109microseconds - Echo: Packet 4 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
 SIMULATING LOSS: Skipping packet 5 at 200ms
-Packet 6 - Latency: 167μs - Echo: Packet 6 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 7 - Latency: 205μs - Echo: Packet 7 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 8 - Latency: 155μs - Echo: Packet 8 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 9 - Latency: 229μs - Echo: Packet 9 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
-Packet 10 - Latency: 213μs - Echo: Packet 10 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 6 - Latency: 167microseconds - Echo: Packet 6 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 7 - Latency: 205microseconds - Echo: Packet 7 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 8 - Latency: 155microseconds - Echo: Packet 8 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 9 - Latency: 229microseconds - Echo: Packet 9 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
+Packet 10 - Latency: 213microseconds - Echo: Packet 10 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
 
 Total test duration: 452ms
 Test completed
@@ -333,7 +333,7 @@ Processed packet: Packet 10 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
 
 **Key Metrics:**
 
-- Average latency: **Variable** (78-229μs range due to timeout handling)
+- Average latency: **Variable** (78-229microseconds range due to timeout handling)
 - Total duration: **452ms** (no blocking delay for subsequent packets)
 - **Critical Finding**: Packets 6-10 processed immediately despite
   packet 5 loss
@@ -346,8 +346,8 @@ Processed packet: Packet 10 - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...
 
 | Metric | TCP | UDP | Difference |
 | -------- | ----- | ----- | ------------ |
-| Average Latency | 140μs | 120μs | 15% faster |
-| Latency Consistency | 139-141μs | 119-121μs | Very consistent |
+| Average Latency | 140microseconds | 120microseconds | 15% faster |
+| Latency Consistency | 139-141microseconds | 119-121microseconds | Very consistent |
 | Head-of-Line Blocking | Yes | No | Critical advantage |
 | Connection Overhead | High (3-way handshake) | None | Significant advantage |
 | Reliability | Guaranteed | None | Trade-off consideration |
