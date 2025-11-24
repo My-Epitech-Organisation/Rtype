@@ -12,6 +12,8 @@ The PoC includes:
 ## Building and Running
 
 ```bash
+# (Optional) npm install is not required for this PoC as there are no dependencies,
+# but is included here for completeness.
 npm install
 npm start
 ```
