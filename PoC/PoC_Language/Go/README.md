@@ -59,7 +59,7 @@ go build -o rtype_poc main.go
 - **GC pauses**: Garbage collection can cause unpredictable pauses, though generally short
 - **No manual memory control**: Cannot fine-tune memory layouts for cache efficiency
 - **Runtime overhead**: Some performance overhead compared to C++ for CPU-intensive tasks
-- **No templates**: Lack of generics (pre-1.18) or limited generics can lead to code duplication
+- **No templates**: Go 1.21 supports generics, but they are more limited than C++ templates and may not cover all advanced use cases, which can still lead to some code duplication
 
 ### Language Limitations
 
