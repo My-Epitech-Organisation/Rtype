@@ -1,0 +1,64 @@
+=== Binary Custom Packet Size Test ===
+
+--- Position (x, y) ---
+Binary position                         8 bytes
+Expected: 8 bytes (2 floats)
+Decoded: x=100.5, y=200.75
+
+--- Position (x, y, rotation) ---
+Binary position + rotation             12 bytes
+Expected: 12 bytes (3 floats)
+
+--- Entity State (compact) ---
+Binary entity (compact)                20 bytes
+Expected: 20 bytes (1 uint32 + 4 floats)
+
+--- Entity State (full) ---
+Binary entity (full)                   26 bytes
+Expected: 26 bytes (1 uint32 + 5 floats + 2 uint8)
+
+--- Game State Packet (5 entities) ---
+Binary packet (5 entities)            105 bytes
+Expected: 105 bytes (5 header + 5 * 20 entity)
+
+--- Game State Packet (10 entities) ---
+Binary packet (10 entities)           205 bytes
+Expected: 205 bytes (5 header + 10 * 20 entity)
+
+=== Bandwidth Analysis (60 packets/sec) ===
+
+Position only @ 60 packets/sec:
+  Size per packet: 8 bytes
+  Bandwidth: 480.00 B/s = 3.75 Kbps = 0.00 Mbps
+
+Single entity @ 60 packets/sec:
+  Size per packet: 20 bytes
+  Bandwidth: 1200.00 B/s = 9.38 Kbps = 0.01 Mbps
+
+5 entities packet @ 60 packets/sec:
+  Size per packet: 105 bytes
+  Bandwidth: 6300.00 B/s = 49.22 Kbps = 0.05 Mbps
+
+=== Comparison with JSON ===
+Structure                Binary      JSON        Reduction
+-----------------------------------------------------------------
+Position                   8 B        31 B        74.2 %
+Entity                    20 B        95 B        78.9 %
+5 entities               105 B       439 B        76.1 %
+10 entities              205 B       856 B        76.1 %
+
+=== Maximum Entities per Packet ===
+(Target: < 1500 bytes MTU, < 10 Kbps @ 60 pkt/s)
+  Header overhead: 5 bytes
+  Entity size: 20 bytes
+  Max entities (MTU 1500): 74
+  Max entities (10 Kbps @ 60Hz): 0
+
+=== Verdict ===
+⚠ 5 entities @ 60 Hz = 49.22 Kbps
+
+Conclusion:
+  ✓ Binary size: 8-20 bytes per entity (vs 95 bytes JSON)
+  ✓ Bandwidth reduction: ~75-80% vs JSON
+  ✓ Can handle 0 entities @ 10 Kbps, 60 Hz
+  ✓ RECOMMENDED for production network protocol
