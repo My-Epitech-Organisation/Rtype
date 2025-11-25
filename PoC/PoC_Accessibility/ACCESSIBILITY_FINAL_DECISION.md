@@ -14,7 +14,7 @@ This document synthesizes the findings from three Proof of Concept studies on ac
 
 | Feature | Status | Accessibility Impact | Technical Complexity | Priority |
 |---------|--------|---------------------|---------------------|----------|
-| **Slow Mode / Time Scaling** | ✅ Validated | High | Low | ⭐⭐⭐⭐⭐ Critical |
+| **Slow Mode / Time Scaling** | 📋 Research Complete | High | Low | ⭐⭐⭐⭐⭐ Critical |
 | **Custom Control Remapping** | 📋 Research Complete | High | Medium | ⭐⭐⭐⭐⭐ Critical |
 | **Colorblind Support** | 📋 Research Complete | Medium | Medium | ⭐⭐⭐⭐ High |
 
