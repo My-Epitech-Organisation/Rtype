@@ -11,4 +11,4 @@ namespace rtype::games::rtype::shared {
 
 // Component definitions are in the header (structs)
 
-} // namespace rtype::games::rtype::shared
+}  // namespace rtype::games::rtype::shared

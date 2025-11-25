@@ -7,13 +7,14 @@
 
 #pragma once
 
-#include "Entity.hpp"
 #include <vector>
+
+#include "Entity.hpp"
 
 namespace rtype::engine::ecs {
 
 class Registry {
-public:
+   public:
     Registry();
     ~Registry();
 
@@ -23,9 +24,9 @@ public:
     void clear();
     size_t entityCount() const;
 
-private:
+   private:
     EntityId nextId_;
     std::vector<EntityId> entities_;
 };
 
-} // namespace rtype::engine::ecs
+}  // namespace rtype::engine::ecs
