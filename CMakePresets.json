@@ -19,9 +19,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER": "cl",
-        "CMAKE_CXX_COMPILER": "cl",
-        "CMAKE_CXX_FLAGS": "/D_CRT_SECURE_NO_WARNINGS",
-        "CMAKE_C_FLAGS": "/D_CRT_SECURE_NO_WARNINGS"
+        "CMAKE_CXX_COMPILER": "cl"
       }
     },
     {
@@ -32,9 +30,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "cl",
-        "CMAKE_CXX_COMPILER": "cl",
-        "CMAKE_CXX_FLAGS": "/D_CRT_SECURE_NO_WARNINGS",
-        "CMAKE_C_FLAGS": "/D_CRT_SECURE_NO_WARNINGS"
+        "CMAKE_CXX_COMPILER": "cl"
       }
     },
     {
