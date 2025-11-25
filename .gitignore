@@ -10,6 +10,9 @@ my_notes(do_not_delete)
 
 # Compiled Object files
 build
+build2
+vcpkg/vcpkg
+vcpkg_installed
 build-debug
 *.slo
 *.lo
