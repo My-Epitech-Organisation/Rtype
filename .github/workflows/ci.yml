@@ -23,6 +23,7 @@ jobs:
           libx11-dev \
           libxrandr-dev \
           libxcursor-dev \
+          libXinerama \
 
       - name: Setup MSVC Developer Command Prompt
         if: matrix.os == 'windows-latest'
