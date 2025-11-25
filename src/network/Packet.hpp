@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <vector>
 #include <cstdint>
+#include <vector>
 
 namespace rtype::network {
 
@@ -21,19 +21,19 @@ enum class PacketType : uint8_t {
 };
 
 class Packet {
-public:
+   public:
     Packet();
     explicit Packet(PacketType type);
 
     PacketType type() const { return type_; }
-    const std::vector<uint8_t>& data() const { return data_; }
+    const std::vector<uint8_t> &data() const { return data_; }
 
     void setType(PacketType type) { type_ = type; }
-    void setData(const std::vector<uint8_t>& data) { data_ = data; }
+    void setData(const std::vector<uint8_t> &data) { data_ = data; }
 
-private:
+   private:
     PacketType type_;
     std::vector<uint8_t> data_;
 };
 
-} // namespace rtype::network
+}  // namespace rtype::network

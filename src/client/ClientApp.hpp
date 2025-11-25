@@ -5,7 +5,7 @@
 ** ClientApp
 */
 
-#include "GraphicSFML/Graphic.hpp"
+#include "GraphicSDL/Graphic.hpp"
 
 namespace RTypeClient
 {

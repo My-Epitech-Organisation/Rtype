@@ -5,7 +5,7 @@
 ** main.cpp
 */
 #include <iostream>
-#include "./ClientApp.hpp"
+#include "ClientApp.hpp"
 
 int main()
 {

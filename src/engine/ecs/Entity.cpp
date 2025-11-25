@@ -11,4 +11,4 @@ namespace rtype::engine::ecs {
 
 // Entity implementation is mostly in the header (inline methods)
 
-} // namespace rtype::engine::ecs
+}  // namespace rtype::engine::ecs
