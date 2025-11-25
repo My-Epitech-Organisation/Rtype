@@ -12,4 +12,4 @@ void initServerSystems() {
     // Server system initialization
 }
 
-} // namespace rtype::games::rtype::server
+}  // namespace rtype::games::rtype::server

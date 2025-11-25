@@ -12,4 +12,4 @@ void initClientSystems() {
     // Client system initialization
 }
 
-} // namespace rtype::games::rtype::client
+}  // namespace rtype::games::rtype::client
