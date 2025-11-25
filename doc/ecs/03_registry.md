@@ -116,12 +116,15 @@ if (registry.hasComponent<Velocity>(entity)) {
     vel.dx *= 0.99f;
 }
 
-// Get multiple components at once
-if (registry.all_of<Position, Velocity>(entity)) {
-    auto& pos = registry.getComponent<Position>(entity);
-    auto& vel = registry.getComponent<Velocity>(entity);
-    pos.x += vel.dx;
-}
+// Get or create (lazy initialization)
+auto& health = registry.getOrEmplace<Health>(entity, 100);
+health.hp -= 10;
+
+// Patch component with callback
+registry.patch<Position>(entity, [](Position& pos) {
+    pos.x += 1.0f;
+    pos.y += 1.0f;
+});
 ```
 
 ### Removing Components
@@ -140,7 +143,7 @@ if (registry.hasComponent<Temporary>(entity)) {
 
 ```cpp
 // Get component count for a type
-size_t count = registry.component_count<Position>();
+size_t count = registry.countComponents<Position>();
 
 // Clear all components of a type
 registry.clearComponents<Position>();
@@ -174,7 +177,7 @@ auto group = registry.createGroup<Position, Velocity>();
 
 See [Views](04_views.md) for detailed usage.
 
-## Resource Management
+## Singleton Resources
 
 Singleton resources are globally accessible objects.
 
@@ -187,19 +190,19 @@ struct GameConfig {
 };
 
 // Add resource
-registry.set_resource<GameConfig>(1920, 1080, 1.0f);
+registry.setSingleton<GameConfig>(1920, 1080, 1.0f);
 
 // Access resource
-GameConfig& config = registry.get_resource<GameConfig>();
+GameConfig& config = registry.getSingleton<GameConfig>();
 config.time_scale = 0.5f; // Slow motion
 
 // Check existence
-if (registry.has_resource<GameConfig>()) {
+if (registry.hasSingleton<GameConfig>()) {
     // Use resource
 }
 
 // Remove resource
-registry.remove_resource<GameConfig>();
+registry.removeSingleton<GameConfig>();
 ```
 
 ### Resource Use Cases
@@ -287,6 +290,9 @@ size_t removeEntitiesIf(Func&& predicate);
 template<typename T, typename... Args>
 T& emplaceComponent(Entity entity, Args&&... args);
 
+template<typename T, typename... Args>
+T& getOrEmplace(Entity entity, Args&&... args);
+
 template<typename T>
 void removeComponent(Entity entity);
 
@@ -296,14 +302,14 @@ bool hasComponent(Entity entity) const;
 template<typename T>
 T& getComponent(Entity entity);
 
-template<typename... Ts>
-bool all_of(Entity entity) const;
+template<typename T>
+const T& getComponent(Entity entity) const;
 
-template<typename... Ts>
-bool any_of(Entity entity) const;
+template<typename T, typename Func>
+void patch(Entity entity, Func&& func);
 
 template<typename T>
-size_t component_count() const;
+size_t countComponents() const;
 
 template<typename T>
 void clearComponents();
@@ -330,20 +336,20 @@ template<typename... Components>
 Group<Components...> createGroup();
 ```
 
-### Resource Operations
+### Singleton Operations
 
 ```cpp
 template<typename T, typename... Args>
-T& set_resource(Args&&... args);
+T& setSingleton(Args&&... args);
 
 template<typename T>
-T& get_resource();
+T& getSingleton();
 
 template<typename T>
-bool has_resource() const;
+bool hasSingleton() const;
 
 template<typename T>
-void remove_resource();
+void removeSingleton();
 ```
 
 ### Signal Operations
@@ -419,18 +425,18 @@ struct Player {}; // Tag
 
 int main() {
     ECS::Registry registry;
-    
+
     // Reserve capacity
     registry.reserveEntities(100);
     registry.reserveComponents<Position>(100);
-    
+
     // Create player
     auto player = registry.spawnEntity();
     registry.emplaceComponent<Position>(player, 0.0f, 0.0f);
     registry.emplaceComponent<Velocity>(player, 1.0f, 0.0f);
     registry.emplaceComponent<Health>(player, 100);
     registry.emplaceComponent<Player>(player);
-    
+
     // Create enemies
     for (int i = 0; i < 10; ++i) {
         auto enemy = registry.spawnEntity();
@@ -438,23 +444,23 @@ int main() {
         registry.emplaceComponent<Velocity>(enemy, -0.5f, 0.0f);
         registry.emplaceComponent<Health>(enemy, 50);
     }
-    
+
     // Movement system
     registry.view<Position, Velocity>().each([](auto e, auto& pos, auto& vel) {
         pos.x += vel.dx;
         pos.y += vel.dy;
     });
-    
+
     // Remove dead entities
     registry.view<Health>().each([&](Entity e, Health& hp) {
         if (hp.hp <= 0) {
             registry.killEntity(e);
         }
     });
-    
+
     // Cleanup
     registry.cleanupTombstones();
-    
+
     return 0;
 }
 ```
