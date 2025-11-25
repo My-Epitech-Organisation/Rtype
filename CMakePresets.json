@@ -30,7 +30,7 @@
       }
     },
     {
-      "name": "linux-debug",
+      "name": "ubuntu-debug",
       "displayName": "Linux Debug",
       "inherits": "base",
       "cacheVariables": {
@@ -39,7 +39,7 @@
       }
     },
     {
-      "name": "linux-latest",
+      "name": "ubuntu-latest",
       "displayName": "Linux Release",
       "inherits": "base",
       "cacheVariables": {
@@ -50,12 +50,12 @@
   ],
   "buildPresets": [
     {
-      "name": "linux-debug",
-      "configurePreset": "linux-debug"
+      "name": "ubuntu-debug",
+      "configurePreset": "ubuntu-debug"
     },
     {
-      "name": "linux-latest",
-      "configurePreset": "linux-latest"
+      "name": "ubuntu-latest",
+      "configurePreset": "ubuntu-latest"
     },
     {
       "name": "windows-debug",
