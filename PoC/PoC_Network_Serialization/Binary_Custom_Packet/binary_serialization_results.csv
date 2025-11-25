@@ -1,0 +1,14 @@
+Metric,Binary,JSON,Improvement
+Position Size (bytes),8,31,74.2%
+Entity Size (bytes),20,95,78.9%
+5 Entities Packet (bytes),105,439,76.1%
+10 Entities Packet (bytes),205,856,76.1%
+Bandwidth 5 entities @ 60Hz (Kbps),49.2,205.8,76.1%
+Bandwidth 10 entities @ 60Hz (Kbps),96.1,401.2,76.1%
+Max Entities MTU 1500,74,17,335%
+Max Entities 10 Kbps @ 60Hz,6,1,500%
+Serialization Time 5 entities (µs),<0.05,~5,>99%
+Max Throughput 5 entities (pkt/s),>20000000,~200000,>10000%
+Suitable for 60Hz,YES,YES,
+Suitable for Low Bandwidth,YES,NO,
+Recommended for Production,YES,NO,

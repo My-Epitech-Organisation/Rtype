@@ -1,0 +1,15 @@
+Metric,Value,Unit
+Single Position Size,32,bytes
+Single Entity Size,85,bytes
+5 Entities Packet Size,450,bytes
+10 Entities Packet Size,880,bytes
+Bandwidth (5 entities @ 60Hz),21.60,Kbps
+Bandwidth (10 entities @ 60Hz),42.24,Kbps
+Max Entities (MTU 1500),17,entities
+Max Entities (10 Kbps),1,entities
+Serialization Time (5 entities),~5,µs
+Max Throughput (5 entities),200000,pkt/s
+Suitable for 60Hz (5 entities),YES,
+Suitable for 60Hz (10 entities),YES,
+Conclusion,Too large for low bandwidth,
+Recommendation,Use binary serialization,
