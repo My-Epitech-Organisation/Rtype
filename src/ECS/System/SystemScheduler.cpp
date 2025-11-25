@@ -37,7 +37,7 @@ namespace ECS {
         for (const auto& system_name : _executionOrder) {
             auto it = _systems.find(system_name);
             if (it != _systems.end() && it->second.enabled) {
-                it->second.func(registry);
+                it->second.func(registry.get());
             }
         }
     }
@@ -48,7 +48,7 @@ namespace ECS {
             throw std::runtime_error("System '" + name + "' not found");
         }
         if (it->second.enabled) {
-            it->second.func(registry);
+            it->second.func(registry.get());
         }
     }
 

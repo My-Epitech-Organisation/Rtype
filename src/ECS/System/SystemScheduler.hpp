@@ -40,7 +40,7 @@ namespace ECS {
     public:
         using SystemFunc = std::function<void(Registry&)>;
 
-        explicit SystemScheduler(Registry& reg) : registry(reg) {}
+        explicit SystemScheduler(std::reference_wrapper<Registry> reg) : registry(reg) {}
 
         /**
          * @brief Registers a system with optional dependencies.
@@ -95,7 +95,7 @@ namespace ECS {
             bool enabled = true;
         };
 
-        Registry& registry;
+        std::reference_wrapper<Registry> registry;
         std::unordered_map<std::string, SystemNode> _systems;
         std::vector<std::string> _executionOrder;
         bool _needsReorder = true;
