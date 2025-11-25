@@ -17,7 +17,6 @@ my_notes(do_not_delete)
 *.d
 
 # Compiled Object files
-build*
 vcpkg/vcpkg
 vcpkg_installed
 *.slo
@@ -67,5 +66,4 @@ my-build-debug
 cmake-build-debug
 my-build-release
 cmake-build-release
-build
 windows-build
