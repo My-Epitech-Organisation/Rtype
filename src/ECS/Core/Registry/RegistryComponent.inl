@@ -126,14 +126,14 @@
 
     template <typename T>
     bool Registry::hasComponent(Entity entity) const noexcept {
-        const auto* pool = getSparseSetConst<T>();
-        return pool != nullptr && pool->contains(entity);
+        auto pool = getSparseSetConst<T>();
+        return pool.has_value() && pool->get().contains(entity);
     }
 
     template <typename T>
     size_t Registry::countComponents() const noexcept {
-        const auto* pool = getSparseSetConst<T>();
-        return pool != nullptr ? pool->size() : 0;
+        auto pool = getSparseSetConst<T>();
+        return pool.has_value() ? pool->get().size() : 0;
     }
 
     template <typename T>
@@ -155,7 +155,7 @@
         if (!hasComponent<T>(entity)) {
             throw std::runtime_error("Entity does not have requested component");
         }
-        return getSparseSetTypedConst<T>().get(entity);
+        return getSparseSetTypedConst<T>().get().get(entity);
     }
 
     template <typename T, typename Func>
@@ -226,9 +226,9 @@
             auto it = _componentPools.find(type);
             if (it != _componentPools.end()) {
                 if constexpr (std::is_empty_v<T>) {
-                    return *static_cast<TagSparseSet<T>*>(it->second.get());
+                    return static_cast<TagSparseSet<T>&>(*it->second);
                 } else {
-                    return *static_cast<SparseSet<T>*>(it->second.get());
+                    return static_cast<SparseSet<T>&>(*it->second);
                 }
             }
         }
@@ -247,31 +247,28 @@
             }
 
             if constexpr (std::is_empty_v<T>) {
-                return *static_cast<TagSparseSet<T>*>(it->second.get());
+                return static_cast<TagSparseSet<T>&>(*it->second);
             } else {
-                return *static_cast<SparseSet<T>*>(it->second.get());
+                return static_cast<SparseSet<T>&>(*it->second);
             }
         }
     }
 
     template <typename T>
-    const ISparseSet* Registry::getSparseSetConst() const noexcept {
-        // Raw pointer is appropriate here: non-owning, temporary observation only.
-        // The Registry owns the actual storage via std::unique_ptr in _componentPools.
-        // Returning nullptr is a valid sentinel value for "component pool not found".
+    std::optional<std::reference_wrapper<const ISparseSet>> Registry::getSparseSetConst() const noexcept {
         std::type_index type = std::type_index(typeid(T));
         std::shared_lock lock(_componentPoolMutex);
 
         auto it = _componentPools.find(type);
         if (it == _componentPools.end()) {
-            return nullptr;
+            return std::nullopt;
         }
 
-        return it->second.get();
+        return std::cref(*it->second);
     }
 
     template <typename T>
-    const auto& Registry::getSparseSetTypedConst() const {
+    auto Registry::getSparseSetTypedConst() const {
         std::type_index type = std::type_index(typeid(T));
         std::shared_lock lock(_componentPoolMutex);
 
@@ -281,9 +278,9 @@
         }
 
         if constexpr (std::is_empty_v<T>) {
-            return *static_cast<const TagSparseSet<T>*>(it->second.get());
+            return std::cref(static_cast<const TagSparseSet<T>&>(*it->second));
         } else {
-            return *static_cast<const SparseSet<T>*>(it->second.get());
+            return std::cref(static_cast<const SparseSet<T>&>(*it->second));
         }
     }
 

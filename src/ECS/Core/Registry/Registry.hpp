@@ -23,6 +23,8 @@
     #include <memory>
     #include <vector>
     #include <any>
+    #include <optional>
+    #include <functional>
     #include <algorithm>
     #include <mutex>
     #include <shared_mutex>
@@ -362,20 +364,20 @@ namespace ECS {
         auto& getSparseSet();
 
         /**
-         * @brief Gets const _sparse set pointer (returns nullptr if not found).
+         * @brief Gets const _sparse set reference (returns std::nullopt if not found).
          * @tparam T Component type
-         * @return Pointer to _sparse set or nullptr
+         * @return Optional reference to _sparse set or std::nullopt
          */
         template <typename T>
-        const ISparseSet* getSparseSetConst() const noexcept;
+        std::optional<std::reference_wrapper<const ISparseSet>> getSparseSetConst() const noexcept;
 
         /**
          * @brief Gets typed const _sparse set (throws if not found).
          * @tparam T Component type
-         * @return Const reference to typed _sparse set
+         * @return Reference wrapper to typed _sparse set
          */
         template <typename T>
-        const auto& getSparseSetTypedConst() const;
+        auto getSparseSetTypedConst() const;
 
         // Friend declarations for view access
         template<typename...> friend class View;
