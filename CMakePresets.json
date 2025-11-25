@@ -17,7 +17,9 @@
       "description": "Build Debug pour Windows avec MSVC",
       "inherits": "base",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "/D_CRT_SECURE_NO_WARNINGS",
+        "CMAKE_C_FLAGS": "/D_CRT_SECURE_NO_WARNINGS"
       }
     },
     {
@@ -26,7 +28,9 @@
       "description": "Build Release pour Windows avec MSVC",
       "inherits": "base",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS": "/D_CRT_SECURE_NO_WARNINGS",
+        "CMAKE_C_FLAGS": "/D_CRT_SECURE_NO_WARNINGS"
       }
     },
     {
