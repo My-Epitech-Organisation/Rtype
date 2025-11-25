@@ -214,7 +214,7 @@
     }
 
     // ========================================================================
-    // INTERNAL _sparse SET ACCESS
+    // INTERNAL Sparse SET ACCESS
     // ========================================================================
 
     template <typename T>
@@ -226,9 +226,9 @@
             auto it = _componentPools.find(type);
             if (it != _componentPools.end()) {
                 if constexpr (std::is_empty_v<T>) {
-                    return static_cast<TagSparseSet<T>&>(*it->second);
+                    return static_cast<TagSparseSet<T>&>(*(it->second.get()));
                 } else {
-                    return static_cast<SparseSet<T>&>(*it->second);
+                    return static_cast<SparseSet<T>&>(*(it->second.get()));
                 }
             }
         }
@@ -247,9 +247,9 @@
             }
 
             if constexpr (std::is_empty_v<T>) {
-                return static_cast<TagSparseSet<T>&>(*it->second);
+                return static_cast<TagSparseSet<T>&>(*(it->second.get()));
             } else {
-                return static_cast<SparseSet<T>&>(*it->second);
+                return static_cast<SparseSet<T>&>(*(it->second.get()));
             }
         }
     }
@@ -264,7 +264,7 @@
             return std::nullopt;
         }
 
-        return std::cref(*it->second);
+        return std::cref(*(it->second.get()));
     }
 
     template <typename T>
@@ -278,9 +278,9 @@
         }
 
         if constexpr (std::is_empty_v<T>) {
-            return std::cref(static_cast<const TagSparseSet<T>&>(*it->second));
+            return std::cref(static_cast<const TagSparseSet<T>&>(*(it->second.get())));
         } else {
-            return std::cref(static_cast<const SparseSet<T>&>(*it->second));
+            return std::cref(static_cast<const SparseSet<T>&>(*(it->second.get())));
         }
     }
 
