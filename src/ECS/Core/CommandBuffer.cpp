@@ -17,7 +17,7 @@ namespace ECS {
         Entity placeholder(placeholder_id, 0);
 
         _commands.push_back([this, placeholder_id]() {
-            Entity real_entity = _registry.spawnEntity();
+            Entity real_entity = _registry.get().spawnEntity();
             _placeholdertoReal[placeholder_id] = real_entity;
         });
 
@@ -33,7 +33,7 @@ namespace ECS {
                 target_entity = it->second;
             }
 
-            _registry.killEntity(target_entity);
+            _registry.get().killEntity(target_entity);
         });
     }
 

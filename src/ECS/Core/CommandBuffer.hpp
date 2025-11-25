@@ -38,7 +38,7 @@ namespace ECS {
      */
     class CommandBuffer {
     public:
-        explicit CommandBuffer(Registry& reg) : _registry(reg) {}
+        explicit CommandBuffer(std::reference_wrapper<Registry> reg) : _registry(reg) {}
 
         /**
          * @brief Records entity creation for later execution.
@@ -80,7 +80,7 @@ namespace ECS {
         void clear();
 
     private:
-        Registry& _registry;
+        std::reference_wrapper<Registry> _registry;
         std::vector<std::function<void()>> _commands;
         mutable std::mutex _commandsMutex;
 
@@ -112,7 +112,7 @@ namespace ECS {
             }
 
             std::apply([this, target_entity](auto&&... args) {
-                _registry.template emplaceComponent<T>(target_entity, std::forward<decltype(args)>(args)...);
+                _registry.get().template emplaceComponent<T>(target_entity, std::forward<decltype(args)>(args)...);
             }, std::move(captured_args));
         });
     }
@@ -127,7 +127,7 @@ namespace ECS {
                 target_entity = it->second;
             }
 
-            _registry.template removeComponent<T>(target_entity);
+            _registry.get().template removeComponent<T>(target_entity);
         });
     }
 
