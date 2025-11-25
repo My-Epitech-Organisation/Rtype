@@ -47,5 +47,23 @@
         "CMAKE_CXX_COMPILER": "g++"
       }
     }
+  ],
+  "buildPresets": [
+    {
+      "name": "linux-debug",
+      "configurePreset": "linux-debug"
+    },
+    {
+      "name": "linux-latest",
+      "configurePreset": "linux-latest"
+    },
+    {
+      "name": "windows-debug",
+      "configurePreset": "windows-debug"
+    },
+    {
+      "name": "windows-latest",
+      "configurePreset": "windows-latest"
+    }
   ]
 }
