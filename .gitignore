@@ -50,3 +50,4 @@ build-debug
 # debug information files
 *.dwo
 .vscode
+my-build-*

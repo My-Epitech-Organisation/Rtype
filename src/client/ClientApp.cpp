@@ -1,7 +1,8 @@
 #include <iostream>
+#include "ClientApp.hpp"
+#include "Graphic/Graphic.hpp"
 
-// Minimal client app loop placeholder
-class ClientApp {
-public:
-    void run() { std::cout << "ClientApp run\n"; }
-};
+void ClientApp::run() {
+    Graphic graphic;
+    graphic.loop();
+}
