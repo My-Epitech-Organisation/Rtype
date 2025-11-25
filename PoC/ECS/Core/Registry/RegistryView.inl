@@ -17,22 +17,22 @@
 
     template<typename... Components>
     View<Components...> Registry::view() {
-        return View<Components...>(*this);
+        return View<Components...>(std::ref(*this));
     }
 
     template<typename... Components>
     View<Components...> Registry::view() const {
-        return View<Components...>(const_cast<Registry&>(*this));
+        return View<Components...>(std::ref(const_cast<Registry&>(*this)));
     }
 
     template<typename... Components>
     ParallelView<Components...> Registry::parallelView() {
-        return ParallelView<Components...>(*this);
+        return ParallelView<Components...>(std::ref(*this));
     }
 
     template<typename... Components>
     Group<Components...> Registry::createGroup() {
-        return Group<Components...>(*this);
+        return Group<Components...>(std::ref(*this));
     }
 
     // ========================================================================
