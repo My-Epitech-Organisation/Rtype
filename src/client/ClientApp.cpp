@@ -1,7 +1,15 @@
-#include <iostream>
+/*
+** EPITECH PROJECT, 2025
+** Rtype [WSL: FedoraLinux-42]
+** File description:
+** ClientApp
+*/
 
-// Minimal client app loop placeholder
-class ClientApp {
-   public:
-    void run() { std::cout << "ClientApp run\n"; }
-};
+#include <iostream>
+#include "ClientApp.hpp"
+
+void RTypeClient::ClientApp::run()
+{
+    Graphic graphic;
+    graphic.loop();
+}

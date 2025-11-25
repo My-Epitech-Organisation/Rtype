@@ -138,7 +138,7 @@ jobs:
 
 **Rebuild with Changes**:
 
-- Vcpkg: 1.69 seconds  
+- Vcpkg: 1.69 seconds
 - CMake CPM: 22.2 seconds
 - Time saved: 20.51 seconds (92% faster)
 
