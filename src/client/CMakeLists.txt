@@ -1,4 +1,4 @@
-add_subdirectory(Graphic)
+add_subdirectory(GraphicSDL)
 
 add_executable(r-type_client main.cpp ClientApp.cpp)
 
