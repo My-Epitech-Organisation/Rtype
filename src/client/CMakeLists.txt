@@ -1,3 +1,4 @@
+add_subdirectory(GraphicRaylib)
 add_subdirectory(GraphicSFML)
 
 add_executable(r-type_client main.cpp ClientApp.cpp)
@@ -9,5 +10,6 @@ target_link_libraries(r-type_client PRIVATE
     rtype_network
     rtype_game_shared
     rtype_game_client
-    rtype_lib_graphic
+    rtype_graphic_client_raylib
+    rtype_graphic_client_sfml
 )

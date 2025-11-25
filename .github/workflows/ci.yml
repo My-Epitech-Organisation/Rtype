@@ -11,6 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
 
+
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
@@ -32,15 +33,13 @@ jobs:
           libogg-dev \
           libvorbis-dev \
           libopenal-dev \
-          ccache
+          libxinerama-dev \
 
       - name: Setup MSVC Developer Command Prompt
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure C++ with CMake
-        env:
-          CMAKE_CXX_COMPILER_LAUNCHER: ${{ matrix.os == 'ubuntu-latest' && 'ccache' || '' }}
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
