@@ -1,0 +1,369 @@
+Detecting compiler hash for triplet x64-linux...
+Compiler found: /usr/bin/c++
+The following packages will be built and installed:
+    asio:x64-linux@1.32.0
+  * brotli:x64-linux@1.2.0
+  * bzip2[core,tool]:x64-linux@1.0.8#6
+  * egl-registry:x64-linux@2024-01-25
+  * freetype[brotli,bzip2,core,png,zlib]:x64-linux@2.13.3
+  * libflac[core,stack-protector]:x64-linux@1.5.0
+  * libogg:x64-linux@1.3.6#1
+  * libpng:x64-linux@1.6.50
+  * libvorbis:x64-linux@1.3.7#4
+  * miniaudio:x64-linux@0.11.23
+  * opengl:x64-linux@2022-12-04#3
+  * opengl-registry:x64-linux@2024-02-10#1
+    sfml[audio,core,graphics,network,window]:x64-linux@3.0.2
+  * stb:x64-linux@2024-07-29#1
+  * vcpkg-cmake:x64-linux@2024-04-23
+  * vcpkg-cmake-config:x64-linux@2024-05-23
+  * zlib:x64-linux@1.3.1
+Additional packages (*) will be modified to complete this operation.
+Restored 0 package(s) from /home/toujourspasmoi/.cache/vcpkg/archives in 22.1 us. Use --debug to see more details.
+Installing 1/17 vcpkg-cmake-config:x64-linux@2024-05-23...
+Building vcpkg-cmake-config:x64-linux@2024-05-23...
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/vcpkg-cmake-config_x64-linux/share/vcpkg-cmake-config/vcpkg_cmake_config_fixup.cmake
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/vcpkg-cmake-config_x64-linux/share/vcpkg-cmake-config/vcpkg-port-config.cmake
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/vcpkg-cmake-config_x64-linux/share/vcpkg-cmake-config/copyright
+-- Skipping post-build validation due to VCPKG_POLICY_EMPTY_PACKAGE
+Starting submission of vcpkg-cmake-config:x64-linux@2024-05-23 to 1 binary cache(s) in the background
+Elapsed time to handle vcpkg-cmake-config:x64-linux: 18 ms
+vcpkg-cmake-config:x64-linux package ABI: 9f3713cca6ce1063c5b5754c860bb36af06c55ad2ee2f5a08b09a58f67e46fdf
+Installing 2/17 vcpkg-cmake:x64-linux@2024-04-23...
+Building vcpkg-cmake:x64-linux@2024-04-23...
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/vcpkg-cmake_x64-linux/share/vcpkg-cmake/vcpkg_cmake_configure.cmake
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/vcpkg-cmake_x64-linux/share/vcpkg-cmake/vcpkg_cmake_build.cmake
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/vcpkg-cmake_x64-linux/share/vcpkg-cmake/vcpkg_cmake_install.cmake
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/vcpkg-cmake_x64-linux/share/vcpkg-cmake/vcpkg-port-config.cmake
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/vcpkg-cmake_x64-linux/share/vcpkg-cmake/copyright
+-- Performing post-build validation
+Starting submission of vcpkg-cmake:x64-linux@2024-04-23 to 1 binary cache(s) in the background
+Elapsed time to handle vcpkg-cmake:x64-linux: 18.9 ms
+vcpkg-cmake:x64-linux package ABI: 6ec35f9564472625393ee1b3357942650f6ac72f60933ed51dcc7fccb69fa4c1
+Completed submission of vcpkg-cmake-config:x64-linux@2024-05-23 to 1 binary cache(s) in 2.91 ms
+Installing 3/17 asio:x64-linux@1.32.0...
+Building asio:x64-linux@1.32.0...
+Downloading https://github.com/chriskohlhoff/asio/archive/asio-1-32-0.tar.gz -> chriskohlhoff-asio-asio-1-32-0.tar.gz
+Successfully downloaded chriskohlhoff-asio-asio-1-32-0.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/chriskohlhoff-asio-asio-1-32-0.tar.gz
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/asio/src/sio-1-32-0-e4cfb7a1b9.clean
+-- Configuring x64-linux
+-- Building x64-linux-rel
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/asio_x64-linux/share/pkgconfig/asio.pc
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/asio_x64-linux/share/asio/asio-config.cmake
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/asio_x64-linux/share/asio/copyright
+-- Performing post-build validation
+Starting submission of asio:x64-linux@1.32.0 to 1 binary cache(s) in the background
+Elapsed time to handle asio:x64-linux: 1.8 s
+asio:x64-linux package ABI: f0cd369e4af498b8efb5786db2ad9b50bed7dab74ed44c1b388ada40254fd6fe
+Completed submission of vcpkg-cmake:x64-linux@2024-04-23 to 1 binary cache(s) in 2.14 ms
+Installing 4/17 egl-registry:x64-linux@2024-01-25...
+Building egl-registry:x64-linux@2024-01-25...
+Downloading https://github.com/KhronosGroup/EGL-Registry/archive/7db3005d4c2cb439f129a0adc931f3274f9019e6.tar.gz -> KhronosGroup-EGL-Registry-7db3005d4c2cb439f129a0adc931f3274f9019e6.tar.gz
+Successfully downloaded KhronosGroup-EGL-Registry-7db3005d4c2cb439f129a0adc931f3274f9019e6.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/KhronosGroup-EGL-Registry-7db3005d4c2cb439f129a0adc931f3274f9019e6.tar.gz
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/egl-registry/src/274f9019e6-49d6bdb34a.clean
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/egl-registry_x64-linux/share/egl-registry/copyright
+Downloading https://github.com/NixOS/patchelf/releases/download/0.15.5/patchelf-0.15.5-x86_64.tar.gz -> patchelf-0.15.5-x86_64.tar.gz
+Successfully downloaded patchelf-0.15.5-x86_64.tar.gz
+-- Performing post-build validation
+Starting submission of egl-registry:x64-linux@2024-01-25 to 1 binary cache(s) in the background
+Elapsed time to handle egl-registry:x64-linux: 2.7 s
+egl-registry:x64-linux package ABI: cdc535d80aa9886a9bfe6bea5521dd8af1c10243ad7b0415b7669fc61e91e092
+Completed submission of asio:x64-linux@1.32.0 to 1 binary cache(s) in 87.8 ms
+Installing 5/17 opengl-registry:x64-linux@2024-02-10#1...
+Building opengl-registry:x64-linux@2024-02-10#1...
+Downloading https://github.com/KhronosGroup/OpenGL-Registry/archive/3530768138c5ba3dfbb2c43c830493f632f7ea33.tar.gz -> KhronosGroup-OpenGL-Registry-3530768138c5ba3dfbb2c43c830493f632f7ea33.tar.gz
+Successfully downloaded KhronosGroup-OpenGL-Registry-3530768138c5ba3dfbb2c43c830493f632f7ea33.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/KhronosGroup-OpenGL-Registry-3530768138c5ba3dfbb2c43c830493f632f7ea33.tar.gz
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/opengl-registry/src/f632f7ea33-4952f9ace9.clean
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/opengl-registry_x64-linux/share/opengl-registry/copyright
+-- Performing post-build validation
+Starting submission of opengl-registry:x64-linux@2024-02-10#1 to 1 binary cache(s) in the background
+Elapsed time to handle opengl-registry:x64-linux: 14 s
+opengl-registry:x64-linux package ABI: a9d83a5b45fd7d604b6302e857473e66c19a7cc3b23d37adb310670ec0be2abb
+Completed submission of egl-registry:x64-linux@2024-01-25 to 1 binary cache(s) in 6.34 ms
+Installing 6/17 opengl:x64-linux@2022-12-04#3...
+Building opengl:x64-linux@2022-12-04#3...
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/opengl_x64-linux/share/opengl/usage
+-- Skipping post-build validation due to VCPKG_POLICY_EMPTY_PACKAGE
+Starting submission of opengl:x64-linux@2022-12-04#3 to 1 binary cache(s) in the background
+Elapsed time to handle opengl:x64-linux: 22.2 ms
+opengl:x64-linux package ABI: 5c761b949c7ce67661dc6a2ffccc6fc93d13ba6a430eaab43538e65bee3ae996
+Installing 7/17 stb:x64-linux@2024-07-29#1...
+Building stb:x64-linux@2024-07-29#1...
+Downloading https://github.com/nothings/stb/archive/f75e8d1cad7d90d72ef7a4661f1b994ef78b4e31.tar.gz -> nothings-stb-f75e8d1cad7d90d72ef7a4661f1b994ef78b4e31.tar.gz
+Successfully downloaded nothings-stb-f75e8d1cad7d90d72ef7a4661f1b994ef78b4e31.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/nothings-stb-f75e8d1cad7d90d72ef7a4661f1b994ef78b4e31.tar.gz
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/stb/src/4ef78b4e31-bf024d35de.clean
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/stb_x64-linux/share/stb/FindStb.cmake
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/stb_x64-linux/share/stb/vcpkg-cmake-wrapper.cmake
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/stb_x64-linux/share/stb/usage
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/stb_x64-linux/share/stb/copyright
+-- Performing post-build validation
+Starting submission of stb:x64-linux@2024-07-29#1 to 1 binary cache(s) in the background
+Elapsed time to handle stb:x64-linux: 1.3 s
+stb:x64-linux package ABI: 751b1e46b12594d27ef0d30840c16276e0f3c90afe3d7d2f3f4fd9e718dbc361
+Completed submission of opengl-registry:x64-linux@2024-02-10#1 to 1 binary cache(s) in 65.5 ms
+Completed submission of opengl:x64-linux@2022-12-04#3 to 1 binary cache(s) in 1.84 ms
+Installing 8/17 zlib:x64-linux@1.3.1...
+Building zlib:x64-linux@1.3.1...
+Downloading https://github.com/madler/zlib/archive/v1.3.1.tar.gz -> madler-zlib-v1.3.1.tar.gz
+Successfully downloaded madler-zlib-v1.3.1.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/madler-zlib-v1.3.1.tar.gz
+-- Applying patch 0001-Prevent-invalid-inclusions-when-HAVE_-is-set-to-0.patch
+-- Applying patch 0002-build-static-or-shared-not-both.patch
+-- Applying patch 0003-android-and-mingw-fixes.patch
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/zlib/src/v1.3.1-2e5db616bf.clean
+-- Configuring x64-linux
+-- Building x64-linux-dbg
+-- Building x64-linux-rel
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/zlib_x64-linux/share/zlib/vcpkg-cmake-wrapper.cmake
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/zlib_x64-linux/lib/pkgconfig/zlib.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/zlib_x64-linux/debug/lib/pkgconfig/zlib.pc
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/zlib_x64-linux/share/zlib/copyright
+-- Performing post-build validation
+Starting submission of zlib:x64-linux@1.3.1 to 1 binary cache(s) in the background
+Elapsed time to handle zlib:x64-linux: 2.6 s
+zlib:x64-linux package ABI: e7f42c23bb4ea0fe2a72832efc376cbd0fc9d0dc5072b468dd7d039b6a7a6b5f
+Completed submission of stb:x64-linux@2024-07-29#1 to 1 binary cache(s) in 46.8 ms
+Installing 9/17 libpng:x64-linux@1.6.50...
+Building libpng:x64-linux@1.6.50...
+Downloading https://github.com/pnggroup/libpng/archive/v1.6.50.tar.gz -> pnggroup-libpng-v1.6.50.tar.gz
+Successfully downloaded pnggroup-libpng-v1.6.50.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/pnggroup-libpng-v1.6.50.tar.gz
+-- Applying patch cmake.patch
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/libpng/src/v1.6.50-13b6aa9451.clean
+-- Configuring x64-linux
+-- Building x64-linux-dbg
+-- Building x64-linux-rel
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libpng_x64-linux/share/png/vcpkg-cmake-wrapper.cmake
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libpng_x64-linux/share/libpng/libpng-config.cmake
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libpng_x64-linux/lib/pkgconfig/libpng16.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libpng_x64-linux/debug/lib/pkgconfig/libpng16.pc
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libpng_x64-linux/debug/lib/pkgconfig/libpng.pc
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libpng_x64-linux/lib/pkgconfig/libpng.pc
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libpng_x64-linux/share/libpng/usage
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libpng_x64-linux/share/libpng/copyright
+-- Performing post-build validation
+Starting submission of libpng:x64-linux@1.6.50 to 1 binary cache(s) in the background
+Elapsed time to handle libpng:x64-linux: 4 s
+libpng:x64-linux package ABI: cb468d4109b207ef7912bf0cb0831a29f8c09cfcbcee627d76118f3fc0c39be7
+Completed submission of zlib:x64-linux@1.3.1 to 1 binary cache(s) in 23.6 ms
+Installing 10/17 bzip2[core,tool]:x64-linux@1.0.8#6...
+Building bzip2[core,tool]:x64-linux@1.0.8#6...
+Downloading bzip2-1.0.8.tar.gz, trying https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz
+Successfully downloaded bzip2-1.0.8.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/bzip2-1.0.8.tar.gz
+-- Applying patch fix-import-export-macros.patch
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/bzip2/src/bzip2-1-336d4794a3.clean
+-- Configuring x64-linux
+-- Building x64-linux-dbg
+-- Building x64-linux-rel
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/bzip2_x64-linux/lib/pkgconfig/bzip2.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/bzip2_x64-linux/debug/lib/pkgconfig/bzip2.pc
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/bzip2_x64-linux/share/bzip2/copyright
+-- Adjusted RPATH of '/home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/bzip2_x64-linux/tools/bzip2/bzip2' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/bzip2_x64-linux/tools/bzip2/bzip2recover' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Performing post-build validation
+Starting submission of bzip2[core,tool]:x64-linux@1.0.8#6 to 1 binary cache(s) in the background
+Elapsed time to handle bzip2:x64-linux: 4 s
+bzip2:x64-linux package ABI: 04c199de322bc74113ea2250ae84b792cbca969e19374f0ade052cb95871209e
+Completed submission of libpng:x64-linux@1.6.50 to 1 binary cache(s) in 67.4 ms
+Installing 11/17 brotli:x64-linux@1.2.0...
+Building brotli:x64-linux@1.2.0...
+Downloading https://github.com/google/brotli/archive/v1.2.0.tar.gz -> google-brotli-v1.2.0.tar.gz
+Successfully downloaded google-brotli-v1.2.0.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/google-brotli-v1.2.0.tar.gz
+-- Applying patch install.patch
+-- Applying patch pkgconfig.patch
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/brotli/src/v1.2.0-7af7ca71ad.clean
+-- Configuring x64-linux
+-- Building x64-linux-dbg
+-- Building x64-linux-rel
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/brotli_x64-linux/lib/pkgconfig/libbrotlicommon.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/brotli_x64-linux/lib/pkgconfig/libbrotlidec.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/brotli_x64-linux/lib/pkgconfig/libbrotlienc.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/brotli_x64-linux/debug/lib/pkgconfig/libbrotlicommon.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/brotli_x64-linux/debug/lib/pkgconfig/libbrotlidec.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/brotli_x64-linux/debug/lib/pkgconfig/libbrotlienc.pc
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/brotli_x64-linux/share/brotli/usage
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/brotli_x64-linux/share/brotli/copyright
+-- Adjusted RPATH of '/home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/brotli_x64-linux/tools/brotli/brotli' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Performing post-build validation
+Starting submission of brotli:x64-linux@1.2.0 to 1 binary cache(s) in the background
+Elapsed time to handle brotli:x64-linux: 10 s
+brotli:x64-linux package ABI: 571fe214c1ca41daff879d2495714c563cad56bb3f1d357a85fb33c5dba7d1d8
+Completed submission of bzip2[core,tool]:x64-linux@1.0.8#6 to 1 binary cache(s) in 21.5 ms
+Installing 12/17 freetype[brotli,bzip2,core,png,zlib]:x64-linux@2.13.3...
+Building freetype[brotli,bzip2,core,png,zlib]:x64-linux@2.13.3...
+Downloading https://gitlab.freedesktop.org//freetype/freetype/-/archive/VER-2-13-3/freetype-VER-2-13-3.tar.gz -> freetype-freetype-VER-2-13-3.tar.gz
+Successfully downloaded freetype-freetype-VER-2-13-3.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/freetype-freetype-VER-2-13-3.tar.gz
+-- Applying patch 0003-Fix-UWP.patch
+-- Applying patch brotli-static.patch
+-- Applying patch bzip2.patch
+-- Applying patch fix-exports.patch
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/freetype/src/VER-2-13-3-8b423a038b.clean
+-- Configuring x64-linux
+-- Building x64-linux-dbg
+-- Building x64-linux-rel
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/freetype_x64-linux/lib/pkgconfig/freetype2.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/freetype_x64-linux/debug/lib/pkgconfig/freetype2.pc
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/freetype_x64-linux/share/freetype/usage
+-- Performing post-build validation
+Starting submission of freetype[brotli,bzip2,core,png,zlib]:x64-linux@2.13.3 to 1 binary cache(s) in the background
+Elapsed time to handle freetype:x64-linux: 7.2 s
+freetype:x64-linux package ABI: d1486ed1f829e64c6a5c06a621c9ac70dad8cdedad5492892b37eccb25b234b9
+Completed submission of brotli:x64-linux@1.2.0 to 1 binary cache(s) in 191 ms
+Installing 13/17 miniaudio:x64-linux@0.11.23...
+Building miniaudio:x64-linux@0.11.23...
+Downloading https://github.com/mackron/miniaudio/archive/0.11.23.tar.gz -> mackron-miniaudio-0.11.23.tar.gz
+Successfully downloaded mackron-miniaudio-0.11.23.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/mackron-miniaudio-0.11.23.tar.gz
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/miniaudio/src/0.11.23-fcc418cb79.clean
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/miniaudio_x64-linux/include/miniaudio.h
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/miniaudio_x64-linux/share/miniaudio/copyright
+-- Performing post-build validation
+Starting submission of miniaudio:x64-linux@0.11.23 to 1 binary cache(s) in the background
+Elapsed time to handle miniaudio:x64-linux: 1.3 s
+miniaudio:x64-linux package ABI: a08bdf195e9438f551212f15769eabe871a87d9f6af7052381ad1d867e620a3c
+Completed submission of freetype[brotli,bzip2,core,png,zlib]:x64-linux@2.13.3 to 1 binary cache(s) in 251 ms
+Installing 14/17 libogg:x64-linux@1.3.6#1...
+Building libogg:x64-linux@1.3.6#1...
+Downloading https://github.com/xiph/ogg/archive/v1.3.6.tar.gz -> xiph-ogg-v1.3.6.tar.gz
+Successfully downloaded xiph-ogg-v1.3.6.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/xiph-ogg-v1.3.6.tar.gz
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/libogg/src/v1.3.6-4ad11a7327.clean
+-- Configuring x64-linux
+-- Building x64-linux-dbg
+-- Building x64-linux-rel
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libogg_x64-linux/lib/pkgconfig/ogg.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libogg_x64-linux/debug/lib/pkgconfig/ogg.pc
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libogg_x64-linux/share/libogg/copyright
+-- Performing post-build validation
+Starting submission of libogg:x64-linux@1.3.6#1 to 1 binary cache(s) in the background
+Elapsed time to handle libogg:x64-linux: 2.4 s
+libogg:x64-linux package ABI: f5d570d5eb4a4aeba1cdfe28a3b395304478d3405788f7c8b5a35cbbb7b36f1f
+Completed submission of miniaudio:x64-linux@0.11.23 to 1 binary cache(s) in 75.4 ms
+Installing 15/17 libvorbis:x64-linux@1.3.7#4...
+Building libvorbis:x64-linux@1.3.7#4...
+Downloading https://github.com/xiph/vorbis/archive/v1.3.7.tar.gz -> xiph-vorbis-v1.3.7.tar.gz
+Successfully downloaded xiph-vorbis-v1.3.7.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/xiph-vorbis-v1.3.7.tar.gz
+-- Applying patch 0001-Dont-export-vorbisenc-functions.patch
+-- Applying patch 0002-Fixup-pkgconfig-libs.patch
+-- Applying patch 0003-def-mingw-compat.patch
+-- Applying patch 0004-ogg-find-dependency.patch
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/libvorbis/src/v1.3.7-c32164610e.clean
+-- Configuring x64-linux
+-- Building x64-linux-dbg
+-- Building x64-linux-rel
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libvorbis_x64-linux/lib/pkgconfig/vorbis.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libvorbis_x64-linux/lib/pkgconfig/vorbisenc.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libvorbis_x64-linux/lib/pkgconfig/vorbisfile.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libvorbis_x64-linux/debug/lib/pkgconfig/vorbis.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libvorbis_x64-linux/debug/lib/pkgconfig/vorbisenc.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libvorbis_x64-linux/debug/lib/pkgconfig/vorbisfile.pc
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libvorbis_x64-linux/share/libvorbis/usage
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libvorbis_x64-linux/share/libvorbis/copyright
+-- Performing post-build validation
+Starting submission of libvorbis:x64-linux@1.3.7#4 to 1 binary cache(s) in the background
+Elapsed time to handle libvorbis:x64-linux: 3.7 s
+libvorbis:x64-linux package ABI: c98b9552bba64563fe9e4d4abc47a126d37ce03b879f474bc02bfd4333d31e0b
+Completed submission of libogg:x64-linux@1.3.6#1 to 1 binary cache(s) in 6.21 ms
+Installing 16/17 libflac[core,stack-protector]:x64-linux@1.5.0...
+Building libflac[core,stack-protector]:x64-linux@1.5.0...
+Downloading https://github.com/xiph/flac/archive/1.5.0.tar.gz -> xiph-flac-1.5.0.tar.gz
+Successfully downloaded xiph-flac-1.5.0.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/xiph-flac-1.5.0.tar.gz
+-- Applying patch android-cmake.diff
+-- Applying patch fix-compile-options.patch
+-- Applying patch fix-find-threads.patch
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/libflac/src/1.5.0-5ec0185c23.clean
+-- Configuring x64-linux
+-- Building x64-linux-dbg
+-- Building x64-linux-rel
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libflac_x64-linux/lib/pkgconfig/flac++.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libflac_x64-linux/lib/pkgconfig/flac.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libflac_x64-linux/debug/lib/pkgconfig/flac++.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libflac_x64-linux/debug/lib/pkgconfig/flac.pc
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libflac_x64-linux/share/libflac/copyright
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/libflac_x64-linux/share/libflac/usage
+-- Performing post-build validation
+Starting submission of libflac[core,stack-protector]:x64-linux@1.5.0 to 1 binary cache(s) in the background
+Elapsed time to handle libflac:x64-linux: 6.2 s
+libflac:x64-linux package ABI: 2a03f2e0cadd58d7e0cf7d2a3acaace91d5c465e2a6758bf3beace35937ed475
+Completed submission of libvorbis:x64-linux@1.3.7#4 to 1 binary cache(s) in 87 ms
+Installing 17/17 sfml[audio,core,graphics,network,window]:x64-linux@3.0.2...
+Building sfml[audio,core,graphics,network,window]:x64-linux@3.0.2...
+Downloading https://github.com/SFML/SFML/archive/3.0.2.tar.gz -> SFML-SFML-3.0.2.tar.gz
+Successfully downloaded SFML-SFML-3.0.2.tar.gz
+-- Extracting source /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/downloads/SFML-SFML-3.0.2.tar.gz
+-- Applying patch 01-fix-dependency-resolve.patch
+-- Applying patch 03-fix-android-install-path.patch
+-- Using source at /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/buildtrees/sfml/src/3.0.2-1655203d87.clean
+-- SFML currently requires the following libraries from the system package manager:
+    libudev
+    libx11
+    libxi
+    libxrandr
+    libxcursor
+    opengl
+
+These can be installed on Ubuntu systems via apt-get install libx11-dev libxi-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev libgl1-mesa-dev
+-- Configuring x64-linux
+-- Building x64-linux-dbg
+-- Building x64-linux-rel
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/lib/pkgconfig/sfml-all.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/lib/pkgconfig/sfml-audio.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/lib/pkgconfig/sfml-graphics.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/lib/pkgconfig/sfml-network.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/lib/pkgconfig/sfml-system.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/lib/pkgconfig/sfml-window.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/debug/lib/pkgconfig/sfml-all.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/debug/lib/pkgconfig/sfml-audio.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/debug/lib/pkgconfig/sfml-graphics.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/debug/lib/pkgconfig/sfml-network.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/debug/lib/pkgconfig/sfml-system.pc
+-- Fixing pkgconfig file: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/debug/lib/pkgconfig/sfml-window.pc
+-- Installing: /home/toujourspasmoi/tek3/Rtype/PoC/PoC_Package_Manager/vcpkg/vcpkg/packages/sfml_x64-linux/share/sfml/copyright
+-- Performing post-build validation
+Starting submission of sfml[audio,core,graphics,network,window]:x64-linux@3.0.2 to 1 binary cache(s) in the background
+Elapsed time to handle sfml:x64-linux: 28 s
+sfml:x64-linux package ABI: 74c4ef50be90bedd8fdba83fb42a74f377f5401d35b31f2e490fcf087c278028
+Installed contents are licensed to you by owners. Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+Some packages did not declare an SPDX license. Check the `copyright` file for each package for more information about their licensing.
+Packages installed in this vcpkg installation declare the following licenses:
+(FTL OR GPL-2.0-or-later)
+(MIT OR CC-PDDC)
+(Unlicense OR MIT-0)
+BSD-3-Clause
+BSL-1.0
+MIT
+Zlib
+bzip2-1.0.6
+libpng-2.0
+asio provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(asio CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE asio::asio)
+
+asio provides pkg-config modules:
+
+  # A cross-platform C++ library for network and low-level I/O programming that provides developers with a consistent asynchronous model using a modern C++ approach.
+  asio
+
+The package sfml provides CMake targets:
+
+    find_package(SFML COMPONENTS Network Graphics Window Audio System CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE SFML::Network SFML::Graphics SFML::Window SFML::Audio SFML::System)
+
+    # If you want SFML to provide an implementation of main():
+    target_link_libraries(main PRIVATE SFML::Main)
+
+Completed submission of libflac[core,stack-protector]:x64-linux@1.5.0 to 1 binary cache(s) in 92.4 ms
+Waiting for 1 remaining binary cache submissions...
+Completed submission of sfml[audio,core,graphics,network,window]:x64-linux@3.0.2 to 1 binary cache(s) in 1.3 s (1/1)
+All requested installations completed successfully in: 1.5 min
