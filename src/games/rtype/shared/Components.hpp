@@ -24,4 +24,4 @@ struct NetworkIdComponent {
     unsigned int networkId = 0;
 };
 
-} // namespace rtype::games::rtype::shared
+}  // namespace rtype::games::rtype::shared

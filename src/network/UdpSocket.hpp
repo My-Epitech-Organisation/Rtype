@@ -7,26 +7,26 @@
 
 #pragma once
 
-#include <string>
 #include <cstdint>
+#include <string>
 
 namespace rtype::network {
 
 class UdpSocket {
-public:
+   public:
     UdpSocket();
     ~UdpSocket();
 
     bool bind(uint16_t port);
-    bool connect(const std::string& host, uint16_t port);
+    bool connect(const std::string &host, uint16_t port);
 
-    int send(const void* data, size_t size);
-    int receive(void* buffer, size_t maxSize);
+    int send(const void *data, size_t size);
+    int receive(void *buffer, size_t maxSize);
 
     void close();
 
-private:
+   private:
     int socket_;
 };
 
-} // namespace rtype::network
+}  // namespace rtype::network

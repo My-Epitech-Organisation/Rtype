@@ -2,6 +2,6 @@
 
 // Minimal client app loop placeholder
 class ClientApp {
-public:
+   public:
     void run() { std::cout << "ClientApp run\n"; }
 };

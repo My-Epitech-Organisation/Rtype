@@ -10,17 +10,17 @@
 namespace rtype::engine::core {
 
 class Time {
-public:
+   public:
     Time();
 
     void update();
     double deltaTime() const { return deltaTime_; }
     double totalTime() const { return totalTime_; }
 
-private:
+   private:
     double deltaTime_;
     double totalTime_;
     double lastFrameTime_;
 };
 
-} // namespace rtype::engine::core
+}  // namespace rtype::engine::core

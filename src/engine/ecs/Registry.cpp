@@ -11,9 +11,7 @@ namespace rtype::engine::ecs {
 
 Registry::Registry() : nextId_(1) {}
 
-Registry::~Registry() {
-    clear();
-}
+Registry::~Registry() { clear(); }
 
 Entity Registry::createEntity() {
     EntityId id = nextId_++;
@@ -35,8 +33,6 @@ void Registry::clear() {
     nextId_ = 1;
 }
 
-size_t Registry::entityCount() const {
-    return entities_.size();
-}
+size_t Registry::entityCount() const { return entities_.size(); }
 
-} // namespace rtype::engine::ecs
+}  // namespace rtype::engine::ecs
