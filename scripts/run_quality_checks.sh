@@ -106,27 +106,30 @@ else
     if [ ! -f "$CLANG_FORMAT_CONFIG" ]; then
         log_error "Clang-Format config not found at $CLANG_FORMAT_CONFIG"
     else
-        log_info "Applying clang-format to all files (multiple passes for convergence)..."
-
-        for pass in 1 2 3; do
-            if [ $VERBOSE -eq 1 ]; then
-                log_info "Format pass $pass..."
-            fi
-            for file in $CPP_FILES; do
-                if ! clang-format -style=file:"$CLANG_FORMAT_CONFIG" -i "$file" 2>/dev/null; then
-                    log_error "Failed to format: $file"
+        if [ $FIX_MODE -eq 1 ]; then
+            log_info "Applying clang-format to all files (multiple passes for convergence)..."
+            for pass in 1 2 3; do
+                if [ $VERBOSE -eq 1 ]; then
+                    log_info "Format pass $pass..."
                 fi
+                for file in $CPP_FILES; do
+                    if ! clang-format -style=file:"$CLANG_FORMAT_CONFIG" -i "$file" 2>/dev/null; then
+                        log_error "Failed to format: $file"
+                    fi
+                done
             done
-        done
+        else
+            log_info "Checking formatting (without applying changes)..."
+        fi
 
         log_info "Checking for remaining formatting issues..."
         for file in $CPP_FILES; do
             REPLACEMENTS=$(clang-format -style=file:"$CLANG_FORMAT_CONFIG" -output-replacements-xml "$file" 2>/dev/null)
             if echo "$REPLACEMENTS" | grep -q "<replacement "; then
                 CLANG_FORMAT_ERRORS=$((CLANG_FORMAT_ERRORS + 1))
-                FORMAT_FAILED="${FORMAT_FAILED}  ✗ Still needs formatting: $file\n"
+                FORMAT_FAILED="${FORMAT_FAILED}  ✗ Needs formatting: $file\n"
                 if [ $VERBOSE -eq 1 ]; then
-                    log_warning "File still needs formatting: $file"
+                    log_warning "File needs formatting: $file"
                 fi
             fi
         done
@@ -212,7 +215,11 @@ else
     else
         TIDY_OUTPUT=$(clang-tidy --config-file="$CLANG_TIDY_CONFIG" $TIDY_FILES -- -std=c++20 -Iinclude 2>&1 | grep "warning:" | head -50 || true)
 
-        CLANG_TIDY_ERRORS=$(echo "$TIDY_OUTPUT" | wc -l)
+        if [ -z "$TIDY_OUTPUT" ]; then
+            CLANG_TIDY_ERRORS=0
+        else
+            CLANG_TIDY_ERRORS=$(echo "$TIDY_OUTPUT" | wc -l)
+        fi
 
         if [ $CLANG_TIDY_ERRORS -eq 0 ]; then
             log_success "Clang-Tidy: No warnings found ✓"
