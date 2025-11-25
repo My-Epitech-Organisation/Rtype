@@ -1,4 +1,7 @@
 ---
+# Minimum clang-format version: 17.0 or later
+# This configuration uses advanced options (AlignConsecutiveTableGenBreakingDAGArgColons,
+# AlignConsecutiveShortCaseStatements, etc.) that require clang-format 17.0+
 Language:        Cpp
 AccessModifierOffset: -1
 AlignAfterOpenBracket: Align
@@ -122,7 +125,7 @@ CompactNamespaces: false
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
 Cpp11BracedListStyle: true
-DerivePointerAlignment: true
+DerivePointerAlignment: false
 DisableFormat:   false
 EmptyLineAfterAccessModifier: Never
 EmptyLineBeforeAccessModifier: LogicalBlock
