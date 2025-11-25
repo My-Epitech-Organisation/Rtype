@@ -47,12 +47,36 @@ jobs:
       - name: Build
         run: |
           cmake --build build --config Release --parallel
+
+      - name: Prepare client artifact (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          BINARY_PATH=$(find build/ -name r-type_client -type f | head -n 1)
+          cp "$BINARY_PATH" r-type_client
+
+      - name: Prepare client artifact (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          BINARY_PATH=$(find build/ -name r-type_client.exe -type f | head -n 1)
+          cp "$BINARY_PATH" .\r-type_client.exe
+
+      - name: Prepare server artifact (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          BINARY_PATH=$(find build/ -name r-type_server -type f | head -n 1)
+          cp "$BINARY_PATH" r-type_server
+      - name: Prepare server artifact (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          BINARY_PATH=$(find build/ -name r-type_server.exe -type f | head -n 1)
+          cp "$BINARY_PATH" .\r-type_server.exe
+
       - name: Publish build artifacts client windows
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
           name: r-type-client-${{ matrix.os }}
-          path: build/**/r-type_client.exe
+          path: r-type_client.exe
           compression-level: 0
 
       - name: Publish build artifacts client linux
@@ -60,7 +84,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: r-type-client-${{ matrix.os }}
-          path: build/**/r-type_client
+          path: r-type_client
           compression-level: 0
 
       - name: Publish build artifacts server windows
@@ -68,7 +92,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: r-type-server-${{ matrix.os }}
-          path: build/**/r-type_server.exe
+          path: r-type_server.exe
           compression-level: 0
 
       - name: Publish build artifacts server linux
@@ -76,7 +100,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: r-type-server-${{ matrix.os }}
-          path: build/**/r-type_server
+          path: r-type_server
           compression-level: 0
 
       - name: Create a Release
