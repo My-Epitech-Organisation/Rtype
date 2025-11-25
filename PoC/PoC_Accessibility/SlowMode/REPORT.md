@@ -4,7 +4,7 @@
 
 This Proof of Concept validates the implementation of a **Global Time Scale** system to support players with slower reaction times or motor disabilities. The PoC successfully demonstrates that time scaling can be applied uniformly across all gameplay systems without breaking physics or causing desynchronization.
 
-**Status**: ✅ **VALIDATED - Ready for Integration**
+**Status**: ⚠️ **RESEARCH PHASE - Implementation Pending**
 
 ---
 
