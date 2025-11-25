@@ -13,6 +13,7 @@
     #include <algorithm>
     #include <utility>
     #include <vector>
+    #include <functional>
 
 namespace ECS {
 
@@ -38,13 +39,13 @@ namespace ECS {
     template<typename... Includes, typename... Excludes>
     class ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>> {
     private:
-        // Type alias to transform component types to I_sparseSet pointers
+        // Type alias to transform component types to ISparseSet references
         template<typename T>
-        using PoolPtr = ISparseSet*;
+        using PoolPtr = std::reference_wrapper<ISparseSet>;
 
     public:
         template<typename ExcludeTuple>
-        ExcludeView(Registry* reg, std::tuple<PoolPtr<Includes>...> inc_pools,
+        ExcludeView(std::reference_wrapper<Registry> reg, std::tuple<PoolPtr<Includes>...> inc_pools,
                     ExcludeTuple&& exc_pools, size_t smallest_idx)
             : registry(reg), _includePools(inc_pools), _excludePools(std::forward<ExcludeTuple>(exc_pools)),
               _smallestPoolIndex(smallest_idx) {}
@@ -57,14 +58,9 @@ namespace ECS {
         void each(Func&& func);
 
     private:
-        Registry* registry;
-        // Raw pointers are appropriate here: non-owning, lightweight views for iteration.
-        // The Registry owns the component pools. These pointers are temporary and used
-        // only during view construction and iteration. Using smart pointers would imply
-        // ownership semantics which is incorrect for this use case.
-        // Using ISparseSet* to support both regular components and tags
+        std::reference_wrapper<Registry> registry;
         std::tuple<PoolPtr<Includes>...> _includePools;
-        std::vector<ISparseSet*> _excludePools;
+        std::vector<std::reference_wrapper<ISparseSet>> _excludePools;
         size_t _smallestPoolIndex;
 
         template<typename Func, size_t... IncIs>
@@ -73,7 +69,7 @@ namespace ECS {
         bool is_excluded(Entity entity) const;
 
         template<typename T>
-        T& getComponentData(Entity entity, ISparseSet* pool);
+        T& getComponentData(Entity entity, const ISparseSet& pool);
     };
 
 } // namespace ECS

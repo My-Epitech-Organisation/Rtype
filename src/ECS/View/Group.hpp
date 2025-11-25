@@ -37,7 +37,7 @@ namespace ECS {
     template<typename... Components>
     class Group {
     public:
-        explicit Group(Registry* reg);
+        explicit Group(std::reference_wrapper<Registry> reg);
 
         /**
          * @brief Rebuilds entity list by re-filtering all entities.
@@ -60,7 +60,7 @@ namespace ECS {
         auto end() const noexcept { return _entities.end(); }
 
     private:
-        Registry* _registry;
+        std::reference_wrapper<Registry> _registry;
         std::vector<Entity> _entities;
     };
 
