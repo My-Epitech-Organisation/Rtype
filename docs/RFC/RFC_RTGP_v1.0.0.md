@@ -83,7 +83,7 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 
 **Flag Bitmask Values:**
 
-  * **0x01 - RELIABLE:** The sender requests an acknowledgement for this packet. The receiver **MUST** eventually acknowledge this packet (either via a dedicated ACK or piggybacking).
+  * **0x01 - RELIABLE:** The sender requests an acknowledgement for this packet. The receiver **MUST** acknowledge this packet (either via a dedicated ACK or piggybacking).
   * **0x02 - IS\_ACK:** The `Ack ID` field in this header is valid and acknowledges a previously received packet.
 
 **Behavior:**
