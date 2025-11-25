@@ -1,0 +1,150 @@
+# Accessibility: Colorblind-friendly Visuals & Visual Sound Cues
+
+## 1. Problem Statement
+
+Some players cannot easily distinguish enemy colors (e.g., Bydos bullets) or perceive audio cues such as missile launches or hit indicators. This document provides strategies for improving visual clarity for colorblind users and offering visual equivalents to important sound cues.
+
+---
+
+## 2. Scope
+
+### Visual
+
+* Develop a **colorblind-safe palette** ensuring that enemy bullets and effects remain distinguishable from the starfield background.
+* Introduce **high-contrast outlines**, shapes, or patterns to differentiate projectiles.
+
+### Audio
+
+* Implement **visual sound cues** such as flashes, icons, or screen-edge indicators whenever important sounds occur.
+
+### Optional (if narrative text exists)
+
+* Develop a plan for a **Subtitles / Closed Captions** system.
+
+---
+
+## 3. Requirements
+
+### Functional Requirements
+
+* Enemy bullets must remain readable across all main types of color vision deficiency (CVD): Protanopia, Deuteranopia, Tritanopia.
+* Critical game sounds (missile warnings, damage, power-up appearance) must have **visual equivalents**.
+* If story/narrative exists, subtitles/captions must be provided.
+
+### Non‑Functional Requirements
+
+* Visual clarity should not reduce game performance.
+* Guidelines must be usable by asset creators and level designers.
+* Compliance with common accessibility standards.
+
+---
+
+## 4. Colorblind-Friendly Palette Research
+
+Players with CVD perceive color differently, making certain hues indistinguishable.
+
+### Recommended Strategies
+
+1. **Use high-contrast color pairs**
+
+   * Avoid red/green and blue/purple combinations.
+   * Bullet colors should contrast strongly with dark starfield backgrounds.
+
+2. **Add shape or outline cues**
+
+   * Projectiles can have thick outlines, glows, or unique silhouettes.
+
+3. **Use patterns or motion cues**
+
+   * Add flicker, pulsation, or animation to improve visibility.
+
+### Tools & References
+
+* Adobe Color Colorblind Simulation: [https://color.adobe.com/create/color-accessibility](https://color.adobe.com/create/color-accessibility)
+* Game Accessibility Guidelines (CVD section): [https://gameaccessibilityguidelines.com/colour-blindness](https://gameaccessibilityguidelines.com/colour-blindness)
+* W3C Contrast Requirements (useful reference): [https://www.w3.org/TR/WCAG21/#contrast-minimum](https://www.w3.org/TR/WCAG21/#contrast-minimum)
+
+---
+
+## 5. Asset Creation Guidelines
+
+To meet accessibility requirements, all projectiles and enemies must follow:
+
+### Mandatory Rules
+
+* **All projectiles must have a high-contrast outline** relative to both background and enemy colors.
+* Use at least **4.5:1 contrast ratio** where possible.
+* Enemy types should be identifiable by **shape + color**, not color alone.
+* Explosions and damage cues should use **luminance contrast**, not only hue.
+
+### Suggested Pipeline Practices
+
+* Designers test assets using a **CVD simulation tool**.
+* QA validates visibility under Protanopia and Deuteranopia filters.
+
+---
+
+## 6. Visual Sound Cues
+
+Many players cannot perceive audio warnings. Important sound events must include visual equivalents.
+
+### Examples of Visual Indicators
+
+* **Hit Indicator:** Brief red flash on screen edges.
+* **Missile Incoming:** Animated icon, blinking arrow from direction of threat.
+* **Power-Up Spawn:** Screen sparkles or radial glow.
+
+### Recommended Implementation
+
+* Create a **SoundEvent → VisualCue mapping table**.
+* Each sound event triggers a corresponding VFX prefab.
+
+### References
+
+* Microsoft Accessibility Sound Guidelines: [https://learn.microsoft.com/en-us/gaming/accessibility/apx-audio](https://learn.microsoft.com/en-us/gaming/accessibility/apx-audio)
+* Destiny 2 Visual Cues Analysis (GDC): [https://www.gdcvault.com/play/1026357/](https://www.gdcvault.com/play/1026357/) (for design inspiration)
+
+---
+
+## 7. Subtitles & Closed Captions (Optional)
+
+If the game includes dialogue or narrative elements, add:
+
+### Subtitles
+
+* Support for resizing, background opacity, and color.
+* Minimum font size recommendations (e.g., 18–24 px at 1080p).
+
+### Closed Captions
+
+* Describe sound types ("[Explosion]", "[Missile Lock]").
+* Position captions near the source when possible.
+
+### References
+
+* Netflix Captioning Guidelines (industry standard baseline): [https://partnerhelp.netflixstudios.com/hc/en-us/articles/215758617](https://partnerhelp.netflixstudios.com/hc/en-us/articles/215758617)
+* BBC Subtitle Guidelines: [https://www.bbc.co.uk/guidelines/futuremedia/accessibility/subtitles](https://www.bbc.co.uk/guidelines/futuremedia/accessibility/subtitles)
+
+---
+
+## 8. Validation Strategy
+
+* Run assets through colorblind simulators.
+* Ensure each important audio cue has at least one visual cue.
+* User testing with accessibility-first testers.
+* Accessibility review using compliance checklists.
+
+---
+
+## 9. Deliverables
+
+* Updated **Asset Creation Guidelines** document.
+* Colorblind-friendly **palette & outline rules**.
+* Plan for a **Subtitles / Closed Captions** system.
+* Sound-to-Visual mapping framework.
+
+---
+
+## 10. Conclusion
+
+This document defines the strategy to improve visual clarity for colorblind players and provide visual alternatives to audio cues. Implementing these guidelines will significantly improve accessibility and align the game with modern inclusive design standards.
