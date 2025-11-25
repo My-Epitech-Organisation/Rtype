@@ -1,7 +1,7 @@
 #include "VisualCueSystem.hpp"
 #include <cmath>
 
-void VisualCueSystem::triggerCue(VisualCueType type, sf::Vector2f position, 
+void VisualCueSystem::triggerCue(VisualCueType type, sf::Vector2f position,
                                 sf::Vector2f direction) {
     float lifetime = 0.5f; // Default lifetime
 
@@ -60,7 +60,7 @@ void VisualCueSystem::drawHitIndicator(sf::RenderWindow& window, const VisualCue
     // Create semi-transparent red overlay
     sf::RectangleShape overlay(sf::Vector2f(windowSize.x, windowSize.y));
     overlay.setFillColor(sf::Color(255, 0, 0, static_cast<sf::Uint8>(alpha)));
-    
+
     window.draw(overlay);
 
     // Add pulsing edge borders

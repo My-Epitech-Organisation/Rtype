@@ -16,9 +16,9 @@ add_executable(colorblind_poc
 )
 
 # Link SFML
-target_link_libraries(colorblind_poc PRIVATE 
-    sfml-graphics 
-    sfml-window 
+target_link_libraries(colorblind_poc PRIVATE
+    sfml-graphics
+    sfml-window
     sfml-system
 )
 

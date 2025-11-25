@@ -1,10 +1,10 @@
-# Récap de la documentation sur raylib
+# Summary of the raylib documentation
 
-La raylib, dans le cadre de ce projet, est orientée C. Cela signifie qu'il est nécessaire de créer nos propres constructeurs et destructeurs, ce qui n'est pas toujours pratique. 
+For this project, raylib is used with C. This means we must create our own constructors and destructors, which is not always convenient.
 
-## Exemple de fonctionnement pour afficher une image
+## Example of how to display an image
 
-Voici un exemple de code pour afficher une image en utilisant raylib :
+Below is an example showing how to display an image using raylib:
 
 ```C
 void main()

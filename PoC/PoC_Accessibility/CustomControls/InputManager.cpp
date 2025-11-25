@@ -16,9 +16,9 @@ bool InputManager::bindKey(Action action, KeyCode key) {
         std::cerr << "Key already bound to another action!" << std::endl;
         return false;
     }
-    
+
     bindings_[action] = key;
-    std::cout << "Bound " << actionToString(action) 
+    std::cout << "Bound " << actionToString(action)
               << " to " << keyCodeToString(key) << std::endl;
     return true;
 }

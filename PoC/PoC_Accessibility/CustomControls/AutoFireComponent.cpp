@@ -24,7 +24,7 @@ bool AutoFireComponent::isEnabled() const {
 void AutoFireComponent::setMode(Mode mode) {
     mode_ = mode;
     autoFireActive_ = false; // Reset active state when changing modes
-    std::cout << "Auto-fire mode set to: " 
+    std::cout << "Auto-fire mode set to: "
               << (mode_ == Mode::Hold ? "Hold" : "Toggle") << std::endl;
 }
 
@@ -41,14 +41,14 @@ void AutoFireComponent::handleFireKeyPress(std::function<void()> fireCallback) {
         }
         return;
     }
-    
+
     // Auto-fire logic based on mode
     if (mode_ == Mode::Toggle) {
         // Toggle mode: press once to activate, press again to deactivate
         autoFireActive_ = !autoFireActive_;
-        std::cout << "Auto-fire " << (autoFireActive_ ? "activated" : "deactivated") 
+        std::cout << "Auto-fire " << (autoFireActive_ ? "activated" : "deactivated")
                   << " (Toggle mode)" << std::endl;
-        
+
         // Fire immediately when activated
         if (autoFireActive_ && canFire()) {
             fireCallback();
@@ -68,7 +68,7 @@ void AutoFireComponent::update(std::function<void()> fireCallback) {
     if (!enabled_ || !autoFireActive_) {
         return;
     }
-    
+
     // Fire weapon at intervals
     if (canFire()) {
         fireCallback();

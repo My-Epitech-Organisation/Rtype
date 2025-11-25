@@ -29,7 +29,7 @@ struct VisualCue {
 
 /**
  * @brief Manages visual cues for important audio events
- * 
+ *
  * This system provides visual alternatives to sound effects, helping
  * players who cannot perceive audio cues.
  */
@@ -43,7 +43,7 @@ public:
      * @param position World position where the event occurred
      * @param direction Optional direction vector (for directional cues)
      */
-    void triggerCue(VisualCueType type, sf::Vector2f position, 
+    void triggerCue(VisualCueType type, sf::Vector2f position,
                    sf::Vector2f direction = {0, 0});
 
     /**

@@ -5,7 +5,7 @@
 
 /**
  * @brief Represents a projectile with colorblind-safe visuals
- * 
+ *
  * This class demonstrates the accessibility guidelines:
  * - High-contrast outline
  * - Shape-based differentiation
@@ -51,10 +51,10 @@ private:
     sf::Vector2f m_position;
     sf::Vector2f m_velocity;
     float m_animationTime;
-    
+
     // Visual properties for accessibility
     static constexpr float OUTLINE_THICKNESS = 3.0f;
-    
+
     /**
      * @brief Get base color for projectile type (before CVD transformation)
      */

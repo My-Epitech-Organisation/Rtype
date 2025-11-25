@@ -144,11 +144,11 @@ From the document:
 
 This PoC successfully validates the technical feasibility of the accessibility features described in the `accessibility_custom_controls` document. All core requirements are met:
 
-✅ Custom keybinding remapping  
-✅ JSON config persistence  
-✅ Auto-fire (Hold and Toggle modes)  
-✅ Duplicate key validation  
-✅ Backward compatibility  
-✅ Low performance overhead  
+✅ Custom keybinding remapping
+✅ JSON config persistence
+✅ Auto-fire (Hold and Toggle modes)
+✅ Duplicate key validation
+✅ Backward compatibility
+✅ Low performance overhead
 
 The implementation provides a solid foundation for integrating these accessibility features into the R-Type game engine.

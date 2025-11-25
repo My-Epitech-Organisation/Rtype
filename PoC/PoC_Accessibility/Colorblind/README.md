@@ -17,7 +17,7 @@ This Proof of Concept demonstrates the colorblind accessibility features describ
 The PoC implements transformation matrices for three main types of CVD:
 
 - **Protanopia** (Red-blind): ~1% of males
-- **Deuteranopia** (Green-blind): ~1% of males  
+- **Deuteranopia** (Green-blind): ~1% of males
 - **Tritanopia** (Blue-blind): ~0.001% of population
 
 Press keys `1-4` to cycle through Normal, Protanopia, Deuteranopia, and Tritanopia modes.

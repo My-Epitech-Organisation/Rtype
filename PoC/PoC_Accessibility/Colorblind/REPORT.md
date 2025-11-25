@@ -45,7 +45,7 @@ This Proof of Concept investigates and validates colorblind accessibility featur
 
 1. **Player Ship**: Typically blue/cyan - may be difficult for tritanopes
 2. **Enemy Ships**: Often red - invisible to protanopes against red backgrounds
-3. **Power-ups**: 
+3. **Power-ups**:
    - Red (weapon upgrade) vs Green (shield) - problematic for red/green colorblind
    - Blue (speed) - problematic for tritanopes
 4. **Projectiles**:
@@ -118,8 +118,8 @@ vec3 daltonize(vec3 color, int cvdType) {
 }
 ```
 
-**Pros**: Universal solution, no asset duplication  
-**Cons**: Complex to implement, GPU overhead  
+**Pros**: Universal solution, no asset duplication
+**Cons**: Complex to implement, GPU overhead
 **Recommendation**: Consider for future iteration
 
 ### Solution 4: Customizable UI Elements ✅ RECOMMENDED
@@ -361,7 +361,7 @@ This phased approach allows incremental implementation while delivering immediat
 
 ---
 
-**Report Generated**: November 25, 2025  
-**Author**: R-Type Accessibility Team  
-**Version**: 1.0  
+**Report Generated**: November 25, 2025
+**Author**: R-Type Accessibility Team
+**Version**: 1.0
 **Status**: Research Complete - Awaiting Implementation Decision

@@ -4,7 +4,7 @@
 
 /**
  * @brief Manages difficulty presets based on time scaling
- * 
+ *
  * Provides accessibility-focused difficulty modes that scale game speed
  * to accommodate different reaction time capabilities.
  */

@@ -40,7 +40,7 @@ error: no match for 'operator<<' (operand types are 'std::ostream' and 'const My
 
 // Clang error (clear and actionable)
 error: invalid operands to binary expression ('std::ostream' and 'const MyClass')
-note: candidate function [with T = MyClass] not viable: no known conversion from 
+note: candidate function [with T = MyClass] not viable: no known conversion from
       'const MyClass' to 'int' for 1st argument
 ```
 

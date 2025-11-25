@@ -11,13 +11,13 @@
 
 /**
  * @brief Colorblind Accessibility PoC
- * 
+ *
  * This PoC demonstrates the accessibility features described in the documentation:
  * 1. Colorblind-safe palette with high-contrast outlines
  * 2. Shape-based projectile differentiation
  * 3. Visual sound cues (hit indicator, missile warning, power-up spawn)
  * 4. Real-time colorblind vision simulation
- * 
+ *
  * Controls:
  * - Arrow Keys: Move player ship
  * - Space: Fire player bullet
@@ -31,7 +31,7 @@
 
 class ColorblindPoC {
 public:
-    ColorblindPoC() 
+    ColorblindPoC()
         : m_window(sf::VideoMode(1280, 720), "Colorblind Accessibility PoC - R-Type")
         , m_cvdType(CVDType::Normal)
         , m_playerPos(100.0f, 360.0f)
@@ -67,7 +67,7 @@ private:
     sf::RenderWindow m_window;
     sf::Font m_font;
     CVDType m_cvdType;
-    
+
     // Player
     sf::Vector2f m_playerPos;
     float m_playerSpeed;
@@ -75,7 +75,7 @@ private:
     // Game objects
     std::vector<Projectile> m_projectiles;
     std::vector<sf::CircleShape> m_starfield;
-    
+
     // Systems
     VisualCueSystem m_visualCues;
 
@@ -288,12 +288,12 @@ private:
         ship.setPoint(0, sf::Vector2f(20, 0));
         ship.setPoint(1, sf::Vector2f(-15, -12));
         ship.setPoint(2, sf::Vector2f(-15, 12));
-        
+
         sf::Color shipColor = ColorblindSimulator::transformColor(
-            sf::Color(0, 255, 100), 
+            sf::Color(0, 255, 100),
             m_cvdType
         );
-        
+
         ship.setFillColor(shipColor);
         ship.setOutlineColor(sf::Color::White);
         ship.setOutlineThickness(2.0f);

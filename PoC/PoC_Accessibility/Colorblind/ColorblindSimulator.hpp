@@ -15,7 +15,7 @@ enum class CVDType {
 
 /**
  * @brief Simulates colorblind vision by applying transformation matrices
- * 
+ *
  * This class applies mathematical transformations to RGB colors to simulate
  * how they would appear to people with different types of color vision deficiency.
  */
@@ -42,7 +42,7 @@ private:
      * @param b Blue component (0-255)
      * @param matrix 3x3 transformation matrix
      */
-    static void applyMatrix(float& r, float& g, float& b, 
+    static void applyMatrix(float& r, float& g, float& b,
                           const std::array<std::array<float, 3>, 3>& matrix);
 
     // Transformation matrices for different CVD types

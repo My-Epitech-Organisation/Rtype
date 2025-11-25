@@ -5,7 +5,7 @@
 
 /**
  * @brief Loads and saves keybindings from/to a config file
- * 
+ *
  * This class handles serialization of input bindings to JSON format
  * as specified in the accessibility document.
  */
@@ -18,10 +18,10 @@ public:
      * @param autoFireEnabled Output parameter for auto-fire setting
      * @return true if loading was successful
      */
-    static bool loadFromFile(const std::string& filename, 
+    static bool loadFromFile(const std::string& filename,
                            InputManager& inputManager,
                            bool& autoFireEnabled);
-    
+
     /**
      * @brief Save keybindings to a JSON config file
      * @param filename Path to the config file
@@ -44,7 +44,7 @@ private:
     static bool parseJsonConfig(const std::string& content,
                                std::unordered_map<Action, KeyCode>& bindings,
                                bool& autoFireEnabled);
-    
+
     /**
      * @brief Generate JSON string from bindings
      * @param bindings The bindings to serialize

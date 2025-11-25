@@ -13,11 +13,11 @@ TimeSystem::TimeSystem()
 void TimeSystem::update() {
     TimePoint currentTime = Clock::now();
     Duration elapsed = currentTime - m_lastFrameTime;
-    
+
     m_rawDeltaTime = elapsed.count();
     m_scaledDeltaTime = m_rawDeltaTime * m_globalTimeScale;
     m_totalScaledTime += m_scaledDeltaTime;
-    
+
     m_lastFrameTime = currentTime;
 }
 

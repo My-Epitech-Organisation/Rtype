@@ -78,7 +78,7 @@ sf::Color Projectile::getOutlineColor() const {
 void Projectile::createShape(sf::ConvexShape& shape) const {
     // Different shapes for different projectile types
     // This provides shape-based differentiation in addition to color
-    
+
     switch (m_type) {
         case Type::PlayerBullet:
             // Elongated diamond shape

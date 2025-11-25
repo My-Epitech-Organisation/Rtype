@@ -91,19 +91,19 @@ class InputMapper {
 public:
     // Bind an action to a key/button
     void bindAction(InputAction action, InputKey key);
-    
+
     // Check if action is currently pressed
     bool isActionPressed(InputAction action);
-    
+
     // Check if action was just pressed this frame
     bool isActionJustPressed(InputAction action);
-    
+
     // Get all bindings for an action (support multiple keys)
     std::vector<InputKey> getBindings(InputAction action);
-    
+
     // Validate no conflicts
     bool hasConflicts();
-    
+
     // Save/Load configuration
     void saveToFile(const std::string& path);
     void loadFromFile(const std::string& path);
@@ -218,7 +218,7 @@ bool InputMapper::validateBindings() {
     // Check for direct conflicts within same context
     for (auto action1 : gameplayActions) {
         for (auto action2 : gameplayActions) {
-            if (action1 != action2 && 
+            if (action1 != action2 &&
                 hasSharedBinding(action1, action2)) {
                 return false; // Conflict detected
             }
@@ -384,19 +384,19 @@ secondary = { device = "mouse", button = 0 }
 ## Technical Challenges & Solutions
 
 ### Challenge 1: Scancodes vs Keycodes
-**Problem**: Different keyboard layouts have different key positions  
+**Problem**: Different keyboard layouts have different key positions
 **Solution**: Use scancodes (physical position) for binding, display localized key names
 
 ### Challenge 2: Gamepad Variety
-**Problem**: Different gamepads have different button layouts  
+**Problem**: Different gamepads have different button layouts
 **Solution**: Support SDL2 GameController API (unified mapping)
 
 ### Challenge 3: Simultaneous Bindings
-**Problem**: Player wants both keyboard and gamepad bound to same action  
+**Problem**: Player wants both keyboard and gamepad bound to same action
 **Solution**: Support primary and secondary bindings per action
 
 ### Challenge 4: Input Conflicts in Menus
-**Problem**: Gameplay key conflicts with menu navigation  
+**Problem**: Gameplay key conflicts with menu navigation
 **Solution**: Separate contexts (gameplay vs menu) with context-aware binding
 
 ---
@@ -410,7 +410,7 @@ secondary = { device = "mouse", button = 0 }
 3. **Conflict Detection**: System catches and warns about conflicts
 4. **Device Switching**: Swap between keyboard and gamepad mid-game
 5. **Save/Load**: Configuration persists across sessions
-6. **Edge Cases**: 
+6. **Edge Cases**:
    - Unbind all keys
    - Bind same key to everything (should warn)
    - Use special keys (Fn, Windows key, etc.)
@@ -532,7 +532,7 @@ secondary = { device = "mouse", button = 0 }
 
 Custom control remapping is **essential for accessibility and player satisfaction**. The system is technically straightforward to implement and provides enormous value to players with diverse needs.
 
-**Priority Recommendation**: 
+**Priority Recommendation**:
 - **Phase 1-2**: ⭐⭐⭐⭐⭐ **Critical** - Core functionality
 - **Phase 3**: ⭐⭐⭐⭐ **High** - Standard features
 - **Phase 4**: ⭐⭐⭐ **Medium** - Accessibility-specific
@@ -552,7 +552,7 @@ Custom control remapping is **essential for accessibility and player satisfactio
 
 ---
 
-**Report Generated**: November 25, 2025  
-**Author**: R-Type Accessibility Team  
-**Version**: 1.0  
+**Report Generated**: November 25, 2025
+**Author**: R-Type Accessibility Team
+**Version**: 1.0
 **Status**: Research Complete - Awaiting Implementation Decision

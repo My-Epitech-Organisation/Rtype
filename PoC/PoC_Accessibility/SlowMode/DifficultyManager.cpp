@@ -9,7 +9,7 @@ DifficultyManager::DifficultyManager()
 
 float DifficultyManager::setPreset(Preset preset) {
     m_currentPreset = preset;
-    
+
     switch (preset) {
         case Preset::Slow:
             m_currentTimeScale = 0.5f;
@@ -24,7 +24,7 @@ float DifficultyManager::setPreset(Preset preset) {
             // Keep current custom scale
             break;
     }
-    
+
     return m_currentTimeScale;
 }
 

@@ -4,7 +4,7 @@
 
 /**
  * @brief Central Time System managing global time scale for accessibility
- * 
+ *
  * This system allows slowing down or speeding up the entire game by
  * scaling delta time, which is crucial for players with slower reaction times.
  */
