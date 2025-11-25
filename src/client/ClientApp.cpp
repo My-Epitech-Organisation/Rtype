@@ -1,8 +1,15 @@
+/*
+** EPITECH PROJECT, 2025
+** Rtype
+** File description:
+** ClientApp
+*/
+
 #include <iostream>
 #include "ClientApp.hpp"
-#include "GraphicSDL/Graphic.hpp"
 
-void ClientApp::run() {
+void RTypeClient::ClientApp::run()
+{
     Graphic graphic;
     graphic.loop();
 }

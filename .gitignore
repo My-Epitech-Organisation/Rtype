@@ -2,6 +2,14 @@
 r-type_server
 r-type_client
 
+# PoC binaries
+asio_udp_server
+asio_udp_client
+boost_udp_server
+boost_udp_client
+qt_udp_server
+qt_udp_client
+
 # Personal docs
 my_notes(do_not_delete)
 
@@ -9,8 +17,9 @@ my_notes(do_not_delete)
 *.d
 
 # Compiled Object files
-build
-build-debug
+build*
+vcpkg/vcpkg
+vcpkg_installed
 *.slo
 *.lo
 *.o
@@ -49,5 +58,14 @@ build-debug
 
 # debug information files
 *.dwo
+
 .vscode
-my-build-*
+.idea
+*.Identifier
+
+my-build-debug
+cmake-build-debug
+my-build-release
+cmake-build-release
+build
+windows-build

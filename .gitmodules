@@ -1,6 +1,6 @@
-[submodule "src/client/Graphic/SDL"]
-	path = src/client/Graphic/SDL
-	url = git@github.com:libsdl-org/SDL.git
+[submodule "src/client/GraphicSFML/SFML"]
+	path = src/client/GraphicSFML/SFML
+	url = git@github.com:SFML/SFML.git
 [submodule "src/client/GraphicSDL/SDL"]
 	path = src/client/GraphicSDL/SDL
 	url = git@github.com:libsdl-org/SDL.git
