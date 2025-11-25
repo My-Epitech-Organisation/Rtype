@@ -62,6 +62,7 @@ vcpkg_installed
 .idea
 *.Identifier
 
+build
 my-build-debug
 cmake-build-debug
 my-build-release
