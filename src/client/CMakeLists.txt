@@ -1,4 +1,4 @@
-add_subdirectory(graphic)
+add_subdirectory(GraphicRaylib)
 
 add_executable(r-type_client main.cpp ClientApp.cpp)
 
