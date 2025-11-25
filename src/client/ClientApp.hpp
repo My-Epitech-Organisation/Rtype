@@ -1,14 +1,16 @@
 /*
 ** EPITECH PROJECT, 2025
-** Rtype [WSL: FedoraLinux-42]
+** Rtype
 ** File description:
 ** ClientApp
 */
 
-namespace RTypeClient {
-class ClientApp {
-public:
-    void run();
-};
-}
+#include "GraphicSFML/Graphic.hpp"
 
+namespace RTypeClient
+{
+class ClientApp {
+    public:
+        void run();
+    };
+}

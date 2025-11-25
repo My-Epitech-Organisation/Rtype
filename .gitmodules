@@ -1,6 +1,6 @@
-[submodule "src/client/graphic/raylib"]
-	path = src/client/graphic/raylib
-	url = https://github.com/raysan5/raylib
+[submodule "src/client/GraphicSFML/SFML"]
+	path = src/client/GraphicSFML/SFML
+	url = git@github.com:SFML/SFML.git
 [submodule "src/client/GraphicRaylib/raylib"]
 	path = src/client/GraphicRaylib/raylib
 	url = git@github.com:raysan5/raylib.git

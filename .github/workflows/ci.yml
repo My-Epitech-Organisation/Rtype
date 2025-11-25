@@ -11,6 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
 
+
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
@@ -23,12 +24,16 @@ jobs:
           libx11-dev \
           libxrandr-dev \
           libxcursor-dev \
-          libxinerama-dev \
           libxi-dev \
-          libgl1-mesa-dev \
           libudev-dev \
+          libgl1-mesa-dev \
           libfreetype6-dev \
-          libopenal-dev
+          libharfbuzz-dev \
+          libflac-dev \
+          libogg-dev \
+          libvorbis-dev \
+          libopenal-dev \
+          libxinerama-dev \
 
       - name: Setup MSVC Developer Command Prompt
         if: matrix.os == 'windows-latest'

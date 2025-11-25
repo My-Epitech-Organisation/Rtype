@@ -7,9 +7,9 @@
 
 #include <iostream>
 #include "ClientApp.hpp"
-#include "GraphicRaylib/graphic.hpp"
 
-void RTypeClient::ClientApp::run() {
-    Graphic _graphic;
-    _graphic.loop();
+void RTypeClient::ClientApp::run()
+{
+    Graphic graphic;
+    graphic.loop();
 }

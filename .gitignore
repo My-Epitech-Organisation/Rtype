@@ -10,6 +10,9 @@ my_notes(do_not_delete)
 
 # Compiled Object files
 build
+build2
+vcpkg/vcpkg
+vcpkg_installed
 build-debug
 *.slo
 *.lo
@@ -49,5 +52,14 @@ build-debug
 
 # debug information files
 *.dwo
+
 .vscode
-my-build-*
+.idea
+*.Identifier
+
+my-build-debug
+cmake-build-debug
+my-build-release
+cmake-build-release
+build
+windows-build
