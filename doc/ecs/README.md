@@ -6,7 +6,7 @@ Welcome to the R-Type Entity Component System (ECS) technical documentation.
 
 ### Core Concepts
 - [Entity System](01_entity_system.md) - Entity identifiers and lifecycle
-- [Component Storage](02_component_storage.md) - _sparse set architecture
+- [Component Storage](02_component_storage.md) - Sparse set architecture
 - [Registry](03_registry.md) - Central ECS coordinator
 
 ### Query & Iteration
@@ -64,7 +64,7 @@ int main() {
 The R-Type ECS is a high-performance implementation featuring:
 
 - **Entities**: Lightweight IDs with generational indices (32-bit)
-- **Components**: Plain data structures stored in cache-friendly _sparse sets
+- **Components**: Plain data structures stored in cache-friendly sparse sets
 - **Systems**: Functions that operate on component views
 - **Registry**: Central coordinator for all ECS operations
 
@@ -73,7 +73,7 @@ The R-Type ECS is a high-performance implementation featuring:
 | Operation | Complexity | Notes |
 |-----------|-----------|-------|
 | Entity creation | O(1) | Amortized constant time |
-| Component add/remove | O(1) | Direct _sparse set access |
+| Component add/remove | O(1) | Direct sparse set access |
 | Component lookup | O(1) | Array indexing |
 | View iteration | O(n) | Optimal cache utilization |
 | Parallel iteration | Linear speedup | Near-perfect scaling |
@@ -90,12 +90,34 @@ The R-Type ECS is a high-performance implementation featuring:
 
 ```
 src/ECS/
-├── Core/           # Entity, Registry, CommandBuffer, Prefab, Relationship
-├── Storage/        # _sparseSet, TagSparseSet, I_sparseSet
-├── View/           # View, ParallelView, Group, ExcludeView
-├── System/         # SystemScheduler
-├── Signal/         # SignalDispatcher
-├── Serialization/  # Serialization
-├── Traits/         # ComponentTraits
-└── Utils/          # Benchmark
+├── Core/
+│   ├── Entity.hpp              # Entity identifier with generational indices
+│   ├── Registry/               # Registry implementation (split across files)
+│   │   ├── Registry.hpp        # Main interface and declarations
+│   │   ├── RegistryEntity.cpp  # Entity lifecycle implementation
+│   │   ├── RegistryComponent.inl   # Component management (template)
+│   │   ├── RegistrySingleton.inl   # Singleton resources (template)
+│   │   └── RegistryView.inl        # View creation (template)
+│   ├── CommandBuffer.hpp       # Deferred ECS operations
+│   ├── Prefab.hpp              # Entity templates
+│   └── Relationship.hpp        # Parent-child hierarchies
+├── Storage/
+│   ├── ISparseSet.hpp          # Sparse set interface
+│   ├── SparseSet.hpp           # Generic component storage
+│   └── TagSparseSet.hpp        # Zero-size tag components
+├── View/
+│   ├── View.hpp                # Standard component queries
+│   ├── ParallelView.hpp        # Multi-threaded iteration
+│   ├── Group.hpp               # Cached entity collections
+│   └── ExcludeView.hpp         # Exclusion filtering
+├── System/
+│   └── SystemScheduler.hpp     # Dependency-based system execution
+├── Signal/
+│   └── SignalDispatcher.hpp    # Component lifecycle events
+├── Serialization/
+│   └── Serialization.hpp       # Save/load ECS state
+├── Traits/
+│   └── ComponentTraits.hpp     # Component type analysis
+└── Utils/
+    └── Benchmark.hpp           # Performance measurement
 ```

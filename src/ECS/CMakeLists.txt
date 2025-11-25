@@ -93,3 +93,11 @@ export(TARGETS rtype_ecs_static rtype_ecs_shared
     FILE "${CMAKE_CURRENT_BINARY_DIR}/RTypeECSTargets.cmake"
     NAMESPACE RType::ECS::
 )
+
+# ============================================================================
+# TEST EXECUTABLE
+# ============================================================================
+
+add_executable(ecs_test test_main.cpp)
+target_link_libraries(ecs_test PRIVATE rtype_ecs_static Threads::Threads)
+target_include_directories(ecs_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
