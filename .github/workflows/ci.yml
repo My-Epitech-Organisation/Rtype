@@ -53,14 +53,15 @@ jobs:
         with:
           name: r-type-client-${{ matrix.os }}
           path: build/**/r-type_client.exe
+          compression-level: 0
 
       - name: Publish build artifacts client linux
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           name: r-type-client-${{ matrix.os }}
-          path: |
-            build/**/r-type_client
+          path: build/**/r-type_client
+          compression-level: 0
 
       - name: Publish build artifacts server windows
         if: matrix.os == 'windows-latest'
@@ -68,6 +69,7 @@ jobs:
         with:
           name: r-type-server-${{ matrix.os }}
           path: build/**/r-type_server.exe
+          compression-level: 0
 
       - name: Publish build artifacts server linux
         if: matrix.os == 'ubuntu-latest'
@@ -75,6 +77,7 @@ jobs:
         with:
           name: r-type-server-${{ matrix.os }}
           path: build/**/r-type_server
+          compression-level: 0
 
       - name: Create a Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
