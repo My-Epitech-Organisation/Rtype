@@ -1,0 +1,153 @@
+# Accessibility: Slow Mode, Reaction-Time Support & UI Clarity
+
+## 1. Problem Statement
+
+R-Type is a fast-paced side-scrolling shooter. However, players with slower reaction times or certain cognitive or motor disabilities may struggle to keep up. This document analyzes how to introduce a **Slow Mode** or time-scaling mechanism, and how to improve UI clarity for better readability and reduced photosensitivity risks.
+
+---
+
+## 2. Scope
+
+### Game Speed Modifiers
+
+* Investigate whether the engine can globally scale **DeltaTime** to slow down the entire game loop without breaking physics or animations.
+* Decide between a **Global Time Scale** variable vs. per-system scaling.
+
+### UI Clarity & Photosensitivity Safety
+
+* Research best practices for accessible UI elements (icons, fonts, readability).
+* Define rules to avoid rapid flashes or strong visual strobing.
+
+---
+
+## 3. Requirements
+
+### Functional
+
+* Player must be able to enable a **Slow Mode** (e.g., 50% speed).
+* Slow Mode must scale: movement, firing rates, enemy speed, animations.
+* UI elements must remain readable and uncluttered.
+
+### Non-Functional
+
+* Time scaling must not cause game-breaking inconsistencies.
+* UI must follow accessibility guidelines for contrast, font size, and motion safety.
+
+---
+
+## 4. Global Time Scale Prototype Logic
+
+A **GlobalTimeScale** parameter allows the game to run slower or faster by multiplying DeltaTime.
+
+### Proposed Architecture
+
+* Central **Time System** storing:
+
+  * `float GlobalTimeScale = 1.0f;`
+  * `float GetScaledDeltaTime() { return RawDeltaTime * GlobalTimeScale; }`
+
+### Pseudocode
+
+```
+GlobalTimeScale = config.slow_mode_enabled ? 0.5f : 1.0f;
+scaled_dt = raw_dt * GlobalTimeScale;
+
+UpdatePlayer(scaled_dt);
+UpdateEnemies(scaled_dt);
+UpdateProjectiles(scaled_dt);
+UpdateAnimations(scaled_dt);
+```
+
+### Edge Cases
+
+* Projectile lifetimes and cooldown timers must also scale.
+* UI animations should remain unscaled to avoid sluggish usability.
+
+### Technical References
+
+* Unity Time.timeScale: [https://docs.unity3d.com/ScriptReference/Time-timeScale.html](https://docs.unity3d.com/ScriptReference/Time-timeScale.html)
+* Unreal Engine Time Dilation: [https://docs.unrealengine.com/5.0/en-US/time-dilation-in-unreal-engine/](https://docs.unrealengine.com/5.0/en-US/time-dilation-in-unreal-engine/)
+* GDC Talk: "Designing for Slow Mode Accessibility" (2022 recap): [https://gdcvault.com](https://gdcvault.com)
+
+---
+
+## 5. Difficulty Settings Strategy
+
+Based on GlobalTimeScale, propose difficulty presets:
+
+* **Normal:** TimeScale = 1.0
+* **Slow Mode:** TimeScale ≈ 0.5 — beginner or accessibility mode
+* **Custom:** Player-defined slider from 0.3 to 1.0
+
+These settings can be stored via Config:
+
+```json
+{
+  "accessibility": {
+    "time_scale": 0.5
+  }
+}
+```
+
+---
+
+## 6. UI Clarity Guidelines
+
+Clear UI helps players with slower reaction times better process information.
+
+### Iconography
+
+* Use simple, silhouette-based icons.
+* Avoid color-only distinctions (add shape cues).
+
+### Fonts
+
+* Minimum font size: **16–18 px** at 1080p.
+* Use sans-serif fonts with high readability.
+* Maintain WCAG-compliant contrast ratios: **4.5:1 minimum**.
+
+### Layout
+
+* Ensure predictable layout (persistent UI panels).
+* Avoid clutter and motion behind text.
+
+### Photosensitivity & Epilepsy Safety
+
+**Avoid:**
+
+* Flashing lights above **3 flashes per second**.
+* High-intensity strobing.
+
+**Use:**
+
+* Smooth fades instead of rapid blinks.
+* Contrast-based highlight instead of flashing.
+
+### References
+
+* Game Accessibility Guidelines (Cognitive & Photosensitivity): [https://gameaccessibilityguidelines.com/](https://gameaccessibilityguidelines.com/)
+* WCAG Contrast Standards: [https://www.w3.org/TR/WCAG21/#contrast-minimum](https://www.w3.org/TR/WCAG21/#contrast-minimum)
+* Epilepsy Safety Guidelines: [https://www.epilepsy.com/living-epilepsy/triggers/photosensitivity](https://www.epilepsy.com/living-epilepsy/triggers/photosensitivity)
+
+---
+
+## 7. Validation Strategy
+
+* Test gameplay with TimeScale at 0.3, 0.5, 0.75.
+* Ensure no physics breaks or AI timing desynchronization.
+* Conduct UX tests with slow-reaction players.
+* Run photosensitivity validation using automated strobe detectors.
+
+---
+
+## 8. Deliverables
+
+* **GlobalTimeScale prototype logic** (pseudocode + architecture).
+* **UI Style Guide** focused on clarity and accessibility.
+* **Difficulty Mode Strategy** based on time scaling.
+
+---
+
+## 9. Conclusion
+
+Supporting players with slower reaction times improves overall accessibility and provides a smoother onboarding experience. Implementing a Global TimeScale, combined with clean UI design and photosensitivity safeguards, allows the game to offer an accessible and inclusive experience.

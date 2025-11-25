@@ -1,0 +1,9 @@
+Compiler,Generator,Config Time (s),Build Time (s),Warnings,Errors,Status
+GCC,Unix Makefiles,.308726376,1.710518684,0
+0,0,PASSED
+GCC,Ninja,.234543645,.092621345,0
+0,0,PASSED
+Clang,Unix Makefiles,.311638728,1.810020188,0
+0,0,PASSED
+Clang,Ninja,.277515618,.109026935,0
+0,0,PASSED
