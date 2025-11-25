@@ -8,16 +8,25 @@ The Entity System is the foundation of the ECS architecture. Entities are lightw
 
 ```cpp
 struct Entity {
-    std::uint32_t id = NullID;
-    
-    static constexpr std::uint32_t IndexBits = 20;     // Entity slot position
-    static constexpr std::uint32_t GenerationBits = 12; // Version counter
+    std::uint32_t id = _NullID;
+
+    static constexpr std::uint32_t _IndexBits = 20;     // Entity slot position
+    static constexpr std::uint32_t _GenerationBits = 12; // Version counter
+    static constexpr std::uint32_t _IndexMask = (1 << _IndexBits) - 1;
+    static constexpr std::uint32_t _GenerationMask = (1 << _GenerationBits) - 1;
+    static constexpr std::uint32_t _MaxGeneration = _GenerationMask;
+    static constexpr std::uint32_t _NullID = std::numeric_limits<std::uint32_t>::max();
+
+    constexpr std::uint32_t index() const noexcept;
+    constexpr std::uint32_t generation() const noexcept;
+    constexpr bool isNull() const noexcept;
+    constexpr bool isTombstone() const noexcept;
 };
 ```
 
 ### Memory Layout
 
-Entities are 32-bit _packed structures:
+Entities are 32-bit packed structures:
 
 ```
 ┌─────────────┬──────────────────────┐
