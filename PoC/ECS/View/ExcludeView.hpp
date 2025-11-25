@@ -39,7 +39,6 @@ namespace ECS {
     template<typename... Includes, typename... Excludes>
     class ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>> {
     private:
-        // Type alias to transform component types to ISparseSet references
         template<typename T>
         using PoolPtr = std::reference_wrapper<ISparseSet>;
 

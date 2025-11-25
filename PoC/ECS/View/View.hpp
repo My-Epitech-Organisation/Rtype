@@ -52,7 +52,6 @@ namespace ECS {
         auto exclude();
 
     private:
-        // Type alias to transform component types to ISparseSet references
         template<typename T>
         using PoolPtr = std::reference_wrapper<ISparseSet>;
 
