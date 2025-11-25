@@ -45,10 +45,11 @@ jobs:
 
       - name: Configure C++ with CMake
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --preset ${{ matrix.os }}
+
       - name: Build
         run: |
-          cmake --build build --config Release --parallel
+          cmake --build --preset ${{ matrix.os }}
       - name: Publish build artifacts
         uses: actions/upload-artifact@v4
         with:
