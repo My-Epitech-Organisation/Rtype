@@ -31,13 +31,13 @@ namespace ECS {
     public:
         virtual ~IComponentSerializer() = default;
 
-        /**}
+        /**
          * @brief Serializes a component to string format.
          * @param entity Entity owning the component
          * @param registry Reference to registry
          * @return Serialized component data
          */
-        virtual std::string serialize(Entity entity, Registry* registry) const = 0;
+        virtual std::string serialize(Entity entity, std::reference_wrapper<Registry> registry) const = 0;
 
         /**
          * @brief Deserializes and attaches component to entity.
@@ -45,7 +45,7 @@ namespace ECS {
          * @param data Serialized component data
          * @param registry Reference to registry
          */
-        virtual void deserialize(Entity entity, const std::string& data, Registry* registry) const = 0;
+        virtual void deserialize(Entity entity, const std::string& data, std::reference_wrapper<Registry> registry) const = 0;
     };
 
     /**
@@ -64,7 +64,7 @@ namespace ECS {
      */
     class Serializer {
     public:
-        explicit Serializer(Registry* reg) : registry(reg) {}
+        explicit Serializer(std::reference_wrapper<Registry> reg) : registry(reg) {}
 
         /**
          * @brief Registers a component serializer.
@@ -101,7 +101,7 @@ namespace ECS {
         bool deserialize(const std::string& data, bool clear_existing = true);
 
     private:
-        Registry* registry;
+        std::reference_wrapper<Registry> registry;
         std::unordered_map<std::type_index, std::shared_ptr<IComponentSerializer>> _serializers;
         std::unordered_map<std::type_index, std::string> _typeNames;
         std::unordered_map<std::string, std::type_index> _nameToType;
@@ -119,8 +119,8 @@ namespace ECS {
         ComponentSerializer(SerializeFunc ser, DeserializeFunc deser)
             : serialize_func(std::move(ser)), deserialize_func(std::move(deser)) {}
 
-        std::string serialize(Entity entity, Registry* registry) const override;
-        void deserialize(Entity entity, const std::string& data, Registry* registry) const override;
+        std::string serialize(Entity entity, std::reference_wrapper<Registry> registry) const override;
+        void deserialize(Entity entity, const std::string& data, std::reference_wrapper<Registry> registry) const override;
 
     private:
         SerializeFunc serialize_func;
@@ -134,15 +134,15 @@ namespace ECS {
 
 namespace ECS {
     template<typename T>
-    std::string ComponentSerializer<T>::serialize(Entity entity, Registry* registry) const {
-        const T& component = registry->template getComponent<T>(entity);
+    std::string ComponentSerializer<T>::serialize(Entity entity, std::reference_wrapper<Registry> registry) const {
+        const T& component = registry.get().template getComponent<T>(entity);
         return serialize_func(component);
     }
 
     template<typename T>
-    void ComponentSerializer<T>::deserialize(Entity entity, const std::string& data, Registry* registry) const {
+    void ComponentSerializer<T>::deserialize(Entity entity, const std::string& data, std::reference_wrapper<Registry> registry) const {
         T component = deserialize_func(data);
-        registry->template emplaceComponent<T>(entity, std::move(component));
+        registry.get().template emplaceComponent<T>(entity, std::move(component));
     }
 }
 
