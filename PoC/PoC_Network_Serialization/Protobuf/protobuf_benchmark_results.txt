@@ -1,0 +1,25 @@
+=== Protobuf Serialization Benchmark ===
+Iterations: 100000
+Target: 60 packets/s
+
+--- Serialize ---
+  Entities      Avg Time        Max Thpt  60Hz
+----------------------------------------------
+         1          0.04 µs        28144501 pkt/s   ✓
+         2          0.06 µs        18139737 pkt/s   ✓
+         5          0.13 µs         7666241 pkt/s   ✓
+        10          0.23 µs         4341600 pkt/s   ✓
+        20          0.42 µs         2356445 pkt/s   ✓
+        50          1.06 µs          945873 pkt/s   ✓
+       100          2.22 µs          450695 pkt/s   ✓
+
+--- Serialize + Deserialize ---
+  Entities      Avg Time        Max Thpt  60Hz
+----------------------------------------------
+         1          0.12 µs         8002816 pkt/s   ✓
+         2          0.24 µs         4220465 pkt/s   ✓
+         5          0.66 µs         1508093 pkt/s   ✓
+        10          1.29 µs          772555 pkt/s   ✓
+        20          2.39 µs          417560 pkt/s   ✓
+        50          6.06 µs          164986 pkt/s   ✓
+       100         11.55 µs           86588 pkt/s   ✓

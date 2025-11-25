@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package rtype.serialization;
+
+message Vec2 {
+  float x = 1;
+  float y = 2;
+}
+
+message EntityState {
+  uint32 id = 1;
+  Vec2 position = 2;
+  Vec2 velocity = 3;
+}
+
+message GameState {
+  uint32 timestamp = 1;
+  repeated EntityState entities = 2;
+}
