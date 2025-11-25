@@ -9,5 +9,5 @@ target_link_libraries(r-type_client PRIVATE
     rtype_network
     rtype_game_shared
     rtype_game_client
-    rtype_graphics_client
+    rtype_graphic_client_sdl
 )
