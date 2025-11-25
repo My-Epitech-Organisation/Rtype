@@ -1,0 +1,17 @@
+# Enemy movement script example
+# Format: CommandType(Param1=Value1, Param2=Value2, ...)
+
+# Move right for a bit
+Move(Type=Linear, Speed=50, DirX=1, DirY=0)
+Wait(Duration=1.0)
+
+# Move to specific position
+MoveTo(X=100, Y=50, Speed=75)
+Wait(Duration=0.5)
+
+# Move down
+Move(Type=Linear, Speed=30, DirX=0, DirY=1)
+Wait(Duration=1.5)
+
+# Return to origin
+MoveTo(X=0, Y=0, Speed=100)
