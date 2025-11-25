@@ -8,7 +8,7 @@
 #include "Graphic.hpp"
 #include "../assets/r-typesheet30a.h"
 
-Graphic::Graphic() : _window(nullptr), _renderer(nullptr), _isRunning(true)
+RTypeClient::Graphic::Graphic() : _window(nullptr), _renderer(nullptr), _isRunning(true)
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
@@ -26,7 +26,7 @@ Graphic::Graphic() : _window(nullptr), _renderer(nullptr), _isRunning(true)
     }
 }
 
-SDL_Texture* Graphic::loadTextureFromMemory(const unsigned char* data, size_t size)
+SDL_Texture* RTypeClient::Graphic::loadTextureFromMemory(const unsigned char* data, size_t size)
 {
     SDL_IOStream* io = SDL_IOFromConstMem(data, size);
     if (!io) {
@@ -47,7 +47,7 @@ SDL_Texture* Graphic::loadTextureFromMemory(const unsigned char* data, size_t si
     return texture;
 }
 
-Graphic::~Graphic()
+RTypeClient::Graphic::~Graphic()
 {
     if (_playerTexture)
         SDL_DestroyTexture(_playerTexture);
@@ -58,7 +58,7 @@ Graphic::~Graphic()
     SDL_Quit();
 }
 
-void Graphic::loop()
+void RTypeClient::Graphic::loop()
 {
     SDL_Event event;
 

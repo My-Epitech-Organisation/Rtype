@@ -11,7 +11,7 @@ target_link_libraries(r-type_client PRIVATE
     rtype_network
     rtype_game_shared
     rtype_game_client
-    rtype_graphic_client_raylib
-    rtype_graphic_client_sfml
+    # rtype_graphic_client_raylib
+    # rtype_graphic_client_sfml
     rtype_graphic_client_sdl
 )
