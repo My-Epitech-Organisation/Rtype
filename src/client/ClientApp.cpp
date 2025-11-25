@@ -1,6 +1,6 @@
 /*
 ** EPITECH PROJECT, 2025
-** Rtype
+** Rtype [WSL: FedoraLinux-42]
 ** File description:
 ** ClientApp
 */

@@ -10,8 +10,6 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-
-
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
@@ -33,6 +31,7 @@ jobs:
           libogg-dev \
           libvorbis-dev \
           libopenal-dev \
+          libxinerama-dev \
           gnome-desktop-testing \
           libasound2-dev libpulse-dev \
           libaudio-dev libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \

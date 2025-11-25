@@ -90,7 +90,7 @@ functionality:
 
 ```text
 Client -> Server -> Client (Echo Response)
-   |         |         | 
+   |         |         |
 Send -> Process -> Echo Back
 ```
 
