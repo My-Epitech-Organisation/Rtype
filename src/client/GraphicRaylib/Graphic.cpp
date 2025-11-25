@@ -5,7 +5,7 @@
 ** graphic
 */
 
-#include "graphic.hpp"
+#include "Graphic.hpp"
 
 Graphic::Graphic()
 {

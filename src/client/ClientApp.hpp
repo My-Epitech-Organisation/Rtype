@@ -5,7 +5,7 @@
 ** ClientApp
 */
 
-#include "GraphicRaylib/graphic.hpp"
+#include "GraphicRaylib/Graphic.hpp"
 
 namespace RTypeClient
 {
