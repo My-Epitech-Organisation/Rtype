@@ -46,7 +46,7 @@ namespace ECS {
     public:
         using PrefabFunc = std::function<void(Registry&, Entity)>;
 
-        explicit PrefabManager(Registry& reg) : _registry(reg) {}
+        explicit PrefabManager(std::reference_wrapper<Registry> reg) : _registry(reg) {}
 
         /**
          * @brief Registers a new prefab template.
@@ -109,7 +109,7 @@ namespace ECS {
         void createFromEntity(const std::string& name, Entity template_entity);
 
     private:
-        Registry& _registry;
+        std::reference_wrapper<Registry> _registry;
         std::unordered_map<std::string, PrefabFunc> _prefabs;
         mutable std::shared_mutex _prefabMutex;
     };

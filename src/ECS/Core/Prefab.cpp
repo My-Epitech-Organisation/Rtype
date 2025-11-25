@@ -30,14 +30,14 @@ namespace ECS {
             func = it->second;
         }
 
-        auto entity = _registry.spawnEntity();
-        func(_registry, entity);
+        auto entity = _registry.get().spawnEntity();
+        func(_registry.get(), entity);
         return entity;
     }
 
     Entity PrefabManager::instantiate(const std::string& name, PrefabFunc customizer) {
         auto entity = instantiate(name);
-        customizer(_registry, entity);
+        customizer(_registry.get(), entity);
         return entity;
     }
 
@@ -56,8 +56,8 @@ namespace ECS {
         entities.reserve(count);
 
         for (size_t i = 0; i < count; ++i) {
-            auto entity = _registry.spawnEntity();
-            func(_registry, entity);
+            auto entity = _registry.get().spawnEntity();
+            func(_registry.get(), entity);
             entities.push_back(entity);
         }
 
@@ -93,17 +93,17 @@ namespace ECS {
     }
 
     void PrefabManager::createFromEntity(const std::string& name, Entity template_entity) {
-        if (!_registry.isAlive(template_entity)) {
+        if (!_registry.get().isAlive(template_entity)) {
             throw std::runtime_error("Cannot create prefab from dead entity");
         }
         (void)name; // To avoid unused parameter warning
 
-        const auto& component_types = _registry.getEntityComponents(template_entity);
+        const auto& component_types = _registry.get().getEntityComponents(template_entity);
         if (component_types.empty()) {
             throw std::runtime_error("Cannot create prefab from entity with no components");
         }
 
-        // TODO: Full implementation requires component serialization system
+        // TODO(SamTess): Full implementation requires component serialization system
         // This would need:
         // 1. A way to clone/copy component data generically
         // 2. Component serialization/deserialization
