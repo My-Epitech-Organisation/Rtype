@@ -52,4 +52,14 @@ build-debug
 
 # debug information files
 *.dwo
+
 .vscode
+.idea
+*.Identifier
+
+my-build-debug
+cmake-build-debug
+my-build-release
+cmake-build-release
+build
+windows-build

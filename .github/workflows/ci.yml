@@ -4,13 +4,54 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
+
       - uses: actions/checkout@v4
-      - name: Configure
+        with:
+          submodules: 'true'
+
+      - name: Install SFML Dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          mkdir build && cd build
-          cmake ..
+          sudo apt-get update
+          sudo apt-get install -y \
+          libx11-dev \
+          libxrandr-dev \
+          libxcursor-dev \
+          libxi-dev \
+          libudev-dev \
+          libgl1-mesa-dev \
+          libfreetype6-dev \
+          libharfbuzz-dev \
+          libflac-dev \
+          libogg-dev \
+          libvorbis-dev \
+          libopenal-dev \
+          ccache
+
+      - name: Setup MSVC Developer Command Prompt
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure C++ with CMake
+        env:
+          CMAKE_CXX_COMPILER_LAUNCHER: ${{ matrix.os == 'ubuntu-latest' && 'ccache' || '' }}
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
       - name: Build
         run: |
-          cd build && cmake --build . -- -j
+          cmake --build build --config Release --parallel
+      - name: Publish build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: r-type-client-${{ matrix.os }}
+          path: |
+            build/src/client/Release
+            build/src/client/r-type_client
+            build/**/*.exe
