@@ -18,6 +18,8 @@ my_notes(do_not_delete)
 
 # Compiled Object files
 build*
+vcpkg/vcpkg
+vcpkg_installed
 *.slo
 *.lo
 *.o
@@ -56,3 +58,4 @@ build*
 
 # debug information files
 *.dwo
+.vscode

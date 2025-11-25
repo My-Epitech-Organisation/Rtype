@@ -1,0 +1,27 @@
+{
+  "name": "rtype-javascript-poc",
+  "version": "1.0.0",
+  "description": "R-Type JavaScript Proof of Concept - ECS and UDP networking demo",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "node main.js"
+  },
+  "keywords": [
+    "game-development",
+    "ecs",
+    "udp",
+    "networking",
+    "r-type",
+    "proof-of-concept"
+  ],
+  "author": "R-Type Development Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/My-Epitech-Organisation/Rtype"
+  }
+}
