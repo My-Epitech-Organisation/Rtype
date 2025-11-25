@@ -14,10 +14,12 @@
     {
       "name": "windows-debug",
       "displayName": "Windows Debug",
-      "description": "Build Debug pour Windows avec MSVC",
+      "description": "Build Debug pour Windows avec MSVC (cl.exe)",
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_CXX_FLAGS": "/D_CRT_SECURE_NO_WARNINGS",
         "CMAKE_C_FLAGS": "/D_CRT_SECURE_NO_WARNINGS"
       }
@@ -25,10 +27,12 @@
     {
       "name": "windows-latest",
       "displayName": "Windows Release",
-      "description": "Build Release pour Windows avec MSVC",
+      "description": "Build Release pour Windows avec MSVC (cl.exe)",
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_CXX_FLAGS": "/D_CRT_SECURE_NO_WARNINGS",
         "CMAKE_C_FLAGS": "/D_CRT_SECURE_NO_WARNINGS"
       }
