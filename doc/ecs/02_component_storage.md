@@ -2,12 +2,12 @@
 
 ## Overview
 
-Components are stored using the **_sparse Set** data structure, which provides O(1) operations while maintaining cache-friendly iteration. The R-Type ECS uses two specialized implementations:
+Components are stored using the **Sparse Set** data structure, which provides O(1) operations while maintaining cache-friendly iteration. The R-Type ECS uses two specialized implementations:
 
-- **_sparseSet<T>**: For regular components with data
+- **SparseSet<T>**: For regular components with data
 - **TagSparseSet<T>**: For zero-size marker components (tags)
 
-## _sparse Set Architecture
+## Sparse Set Architecture
 
 ### Data Structure
 
@@ -16,19 +16,19 @@ Entities: [E5, E2, E7, E1, E9]  ← Alive entities
 
 Component Storage:
 ┌─────────────────────────────┐
-│  Dense Array (Components)   │  ← Contiguous, cache-friendly
+│  dense Array (Components)   │  ← Contiguous, cache-friendly
 ├─────────────────────────────┤
 │  [C5] [C2] [C7] [C1] [C9]   │
 └─────────────────────────────┘
 
 ┌─────────────────────────────┐
-│  _packed Array (Entity IDs)  │  ← Parallel to dense
+│  _packed Array (Entity IDs) │  ← Parallel to dense
 ├─────────────────────────────┤
 │  [E5] [E2] [E7] [E1] [E9]   │
 └─────────────────────────────┘
 
 ┌───────────────────────────────────┐
-│  _sparse Array (Index Lookup)      │  ← Maps entity index to dense index
+│  _sparse Array (Index Lookup)     │  ← Maps entity index to dense index
 ├───────────────────────────────────┤
 │  [1: 3] [2: 1] [5: 0] [7: 2] ...  │
 └───────────────────────────────────┘
@@ -41,7 +41,7 @@ Component Storage:
 3. **Lookup**: `dense[_sparse[entity.index()]]`
 4. **Iteration**: Linear scan over dense array (optimal cache usage)
 
-## _sparseSet<T>
+## SparseSet<T>
 
 For components with data (non-empty types).
 
@@ -49,32 +49,34 @@ For components with data (non-empty types).
 
 ```cpp
 template<typename T>
-class _sparseSet : public I_sparseSet {
+class SparseSet : public ISparseSet {
 public:
     // Add or update component
     template<typename... Args>
     T& emplace(Entity entity, Args&&... args);
-    
+
     // Remove component
     void remove(Entity entity) override;
-    
+
     // Check if entity has component
     bool contains(Entity entity) const noexcept override;
-    
+
     // Get component reference
     T& get(Entity entity);
     const T& get(Entity entity) const;
-    
+
     // Iteration
     iterator begin() noexcept;
     iterator end() noexcept;
-    
+    const_iterator begin() const noexcept;
+    const_iterator end() const noexcept;
+
     // Capacity management
     void reserve(size_t capacity);
     void shrinkToFit();
     void clear() noexcept override;
     size_t size() const noexcept override;
-    
+
     // Direct access (advanced)
     const std::vector<Entity>& getPacked() const noexcept;
     const std::vector<T>& get_dense() const noexcept;
@@ -89,26 +91,23 @@ struct Position {
     float x, y;
 };
 
-// Get _sparse set from registry
-auto& pos_storage = registry.getSparseSet<Position>();
-
-// Add component
+// Use registry methods (recommended)
 Entity entity = registry.spawnEntity();
-pos_storage.emplace(entity, 10.0f, 20.0f);
+registry.emplaceComponent<Position>(entity, 10.0f, 20.0f);
 
 // Check existence
-if (pos_storage.contains(entity)) {
-    Position& pos = pos_storage.get(entity);
+if (registry.hasComponent<Position>(entity)) {
+    Position& pos = registry.getComponent<Position>(entity);
     pos.x += 1.0f;
 }
 
-// Iterate all positions
-for (Position& pos : pos_storage) {
+// Iterate all positions using views
+registry.view<Position>().each([](Entity e, Position& pos) {
     pos.x *= 0.99f; // Apply friction
-}
+});
 
 // Remove component
-pos_storage.remove(entity);
+registry.removeComponent<Position>(entity);
 ```
 
 ## TagSparseSet<T>
@@ -142,12 +141,10 @@ struct Dead {};            // sizeof(Dead) = 1 byte
 
 ```cpp
 // Tags are used identically to regular components
-auto& player_tags = registry.getSparseSet<Player>();
-
 Entity entity = registry.spawnEntity();
-player_tags.emplace(entity); // No data needed
+registry.emplaceComponent<Player>(entity); // No data needed
 
-if (player_tags.contains(entity)) {
+if (registry.hasComponent<Player>(entity)) {
     // Entity is tagged as Player
 }
 ```
@@ -179,14 +176,14 @@ registry.view<Position>().each([](auto e, Position& pos) {
 });
 ```
 
-## I_sparseSet Interface
+## ISparseSet Interface
 
 Base interface for type-erased operations:
 
 ```cpp
-class I_sparseSet {
+class ISparseSet {
 public:
-    virtual ~I_sparseSet() = default;
+    virtual ~ISparseSet() = default;
     virtual bool contains(Entity entity) const noexcept = 0;
     virtual void remove(Entity entity) = 0;
     virtual void clear() noexcept = 0;
@@ -223,7 +220,7 @@ registry.compact();
 
 ```cpp
 // Remove all components of a type
-registry.getSparseSet<Position>().clear();
+registry.clearComponents<Position>();
 ```
 
 ## Thread Safety
