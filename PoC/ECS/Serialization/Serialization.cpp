@@ -38,7 +38,7 @@ namespace ECS {
     std::string Serializer::serialize() {
         std::ostringstream oss;
 
-        // !TODO To implement serialization logic:
+        // !TODO(SamTess): To implement serialization logic:
         // 1. Iterate through all entities
         // 2. For each entity, get its components
         // 3. Serialize each component using registered _serializers
@@ -63,8 +63,7 @@ namespace ECS {
         if (!std::getline(iss, line) || line != "ECS_SAVE_V1") {
             return false;
         }
-
-        // Skip comments and process entities/components
+        //TODO(SamTess): Implement deserialization logic
         while (std::getline(iss, line)) {
             if (line.empty() || line[0] == '#') {
                 continue;
@@ -73,9 +72,6 @@ namespace ECS {
             if (line == "END") {
                 break;
             }
-
-            // Parse ENTITY and COMPONENT lines
-            // This is a basic implementation
         }
 
         return true;
