@@ -24,6 +24,11 @@ jobs:
           libxrandr-dev \
           libxcursor-dev \
           libxinerama-dev \
+          libxi-dev \
+          libgl1-mesa-dev \
+          libudev-dev \
+          libfreetype6-dev \
+          libopenal-dev
 
       - name: Setup MSVC Developer Command Prompt
         if: matrix.os == 'windows-latest'
