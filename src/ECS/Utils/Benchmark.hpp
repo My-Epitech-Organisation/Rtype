@@ -11,6 +11,7 @@
     #include <string>
     #include <vector>
     #include <functional>
+    #include <optional>
     #include <iostream>
     #include <iomanip>
 
@@ -97,19 +98,18 @@ namespace ECS {
          * @brief Compares two benchmark results by name.
          */
         void compare(const std::string& name1, const std::string& name2) const {
-            // Raw pointers are appropriate here: they're used as nullable references
-            // to search for results in the vector. The vector owns the data, and these
-            // pointers are only valid within this function scope. Using std::optional<std::reference_wrapper>
-            // would be more complex without adding value for this simple search pattern.
-            const Result* r1 = nullptr;
-            const Result* r2 = nullptr;
+            // Using std::optional<std::reference_wrapper> for type-safe nullable references.
+            // The vector owns the data, and these optional references are only valid within
+            // this function scope. This ensures we cannot accidentally dereference null pointers.
+            std::optional<std::reference_wrapper<const Result>> r1;
+            std::optional<std::reference_wrapper<const Result>> r2;
 
             for (const auto& r : _results) {
-                if (r.name == name1) r1 = &r;
-                if (r.name == name2) r2 = &r;
+                if (r.name == name1) r1 = std::cref(r);
+                if (r.name == name2) r2 = std::cref(r);
             }
 
-            if (!r1 || !r2) {
+            if (!r1.has_value() || !r2.has_value()) {
                 std::cout << "Cannot compare: one or both tests not found\n";
                 return;
             }
@@ -117,7 +117,7 @@ namespace ECS {
             std::cout << "\n=== COMPARISON ===\n";
             std::cout << name1 << " vs " << name2 << ":\n";
 
-            double speedup = r1->avg_time_us / r2->avg_time_us;
+            double speedup = r1->get().avg_time_us / r2->get().avg_time_us;
             if (speedup > 1.0) {
                 std::cout << name2 << " is " << speedup << "x faster\n";
             } else {
