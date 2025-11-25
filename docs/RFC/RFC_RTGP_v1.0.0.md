@@ -104,7 +104,13 @@ The User ID field validates the source of the packet at the application layer.
 * **Description:** Request a list of currently connected players (Lobby).
 * **Payload:** Empty.
 
-#### **0x05 \- S\_UPDATE\_STATE**
+#### **0x05 \- R\_GET\_USERS**
+
+* **Sender:** Server
+* **Description:** Server responds to C_GET_USERS with the list of currently connected users.
+* **Payload:** Number of Users (uint8) * List of User IDs (uint32 each).
+
+#### **0x06 \- S\_UPDATE\_STATE**
 
 * **Sender:** Server
 * **Description:** Notifies clients of a global game state change (e.g., Lobby \-\> GameStart).
