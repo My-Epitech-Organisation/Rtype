@@ -57,20 +57,19 @@ jobs:
       - name: Prepare client artifact (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          BINARY_PATH=$(find build/ -name r-type_client.exe -type f | head -n 1)
-          cp "$BINARY_PATH" .\r-type_client.exe
+          $BinaryPath = Get-ChildItem -Path "build" -Filter "r-type_client.exe" -Recurse | Select-Object -First 1
+          Copy-Item -Path $BinaryPath.FullName -Destination ".\r-type_client.exe"
 
       - name: Prepare server artifact (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           BINARY_PATH=$(find build/ -name r-type_server -type f | head -n 1)
           cp "$BINARY_PATH" r-type_server
-      - name: Prepare server artifact (Windows)
+      - name: Prepare server artifact (Windows) 🛠️
         if: matrix.os == 'windows-latest'
         run: |
-          BINARY_PATH=$(find build/ -name r-type_server.exe -type f | head -n 1)
-          cp "$BINARY_PATH" .\r-type_server.exe
-
+          $BinaryPath = Get-ChildItem -Path "build" -Filter "r-type_server.exe" -Recurse | Select-Object -First 1
+          Copy-Item -Path $BinaryPath.FullName -Destination ".\r-type_server.exe"
       - name: Publish build artifacts client windows
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
