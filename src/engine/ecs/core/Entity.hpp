@@ -54,7 +54,7 @@ namespace std {
     template<>
     struct hash<ECS::Entity> {
         std::size_t operator()(const ECS::Entity& entity) const noexcept {
-            return hash<uint32_t>{}(entity.id);
+            return hash<std::uint32_t>{}(entity.id);
         }
     };
 }
