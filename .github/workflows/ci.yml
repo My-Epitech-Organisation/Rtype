@@ -99,7 +99,6 @@ jobs:
 
   lint:
     name: "🔍 Code Quality"
-    needs: [cache-check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -112,12 +111,24 @@ jobs:
       - name: Make quality script executable
         run: chmod +x scripts/run_quality_checks.sh
 
+      - name: Debug - List source files
+        run: |
+          echo "=== Checking src directory ==="
+          find src -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) 2>/dev/null | head -20 || echo "No files found in src/"
+          echo ""
+          echo "=== Checking include directory ==="
+          find include -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) 2>/dev/null | head -20 || echo "No files found in include/"
+          echo ""
+          echo "=== Checking config files ==="
+          ls -la config/clang/ 2>/dev/null || echo "No config/clang/ directory"
+          ls -la config/cpplint/ 2>/dev/null || echo "No config/cpplint/ directory"
+
       - name: Run Code Quality Checks
         id: quality-checks
         continue-on-error: true
         run: |
-          ./scripts/run_quality_checks.sh --verbose 2>&1 | tee quality_report.txt
-          EXIT_CODE=${PIPESTATUS[0]}
+          ./scripts/run_quality_checks.sh --verbose
+          EXIT_CODE=$?
 
           if [ $EXIT_CODE -eq 0 ]; then
             echo "result=success" >> $GITHUB_OUTPUT
