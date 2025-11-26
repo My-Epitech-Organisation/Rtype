@@ -6,10 +6,19 @@ include(GoogleTest)
 
 # List of all ECS test files (without .cpp extension)
 set(ECS_TESTS
+    # Core tests
     core/test_entity
+    core/test_registry_entity
+    core/test_registry_component
+    core/test_registry_singleton
+    core/test_registry_view
+    core/test_registry_signal
+    core/test_registry_relationship
+    # Storage tests
     storage/test_isparse_set
     storage/test_sparse_set
     storage/test_tag_sparse_set
+    # Traits tests
     traits/test_component_traits
 )
 
