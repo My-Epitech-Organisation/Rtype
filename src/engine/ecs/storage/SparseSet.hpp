@@ -11,6 +11,7 @@
     #include <vector>
     #include <algorithm>
     #include <limits>
+    #include <memory>
     #include <stdexcept>
     #include <mutex>
     #include <utility>
@@ -59,8 +60,12 @@ namespace ECS {
         T& emplace(Entity entity, Args&&... args) {
             std::lock_guard lock(_sparseSetMutex);
 
-            if (containsUnsafe(entity))
-                return _dense[_sparse[entity.index()]] = T(std::forward<Args>(args)...);
+            if (containsUnsafe(entity)) {
+                T& ref = _dense[_sparse[entity.index()]];
+                std::destroy_at(std::addressof(ref));
+                std::construct_at(std::addressof(ref), std::forward<Args>(args)...);
+                return ref;
+            }
 
             auto idx = entity.index();
             if (idx >= _sparse.size())
@@ -136,15 +141,19 @@ namespace ECS {
         std::vector<T>::const_iterator begin() const noexcept { return _dense.begin(); }
         std::vector<T>::const_iterator end() const noexcept { return _dense.end(); }
 
+        /**
+         * @brief Direct access to internal arrays.
+         * @warning NOT THREAD-SAFE: Returns reference to internal data.
+         *          The lock is released after returning, so the reference
+         *          can be invalidated by concurrent modifications.
+         *          External synchronization is required during access.
+         *          Typically safe when systems run sequentially in the game loop.
+         */
         const std::vector<Entity>& getPacked() const noexcept override {
-            std::lock_guard lock(_sparseSetMutex);
-
             return _packed;
         }
 
         const std::vector<T>& getDense() const noexcept {
-            std::lock_guard lock(_sparseSetMutex);
-
             return _dense;
         }
 

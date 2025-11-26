@@ -105,9 +105,15 @@ namespace ECS {
             return _packed.size();
         }
 
+        /**
+         * @brief Direct access to internal entity array.
+         * @warning NOT THREAD-SAFE: Returns reference to internal data.
+         *          The lock is released after returning, so the reference
+         *          can be invalidated by concurrent modifications.
+         *          External synchronization is required during access.
+         *          Typically safe when systems run sequentially in the game loop.
+         */
         const std::vector<Entity>& getPacked() const noexcept override {
-            std::lock_guard lock(_sparseSetMutex);
-
             return _packed;
         }
 
