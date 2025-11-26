@@ -30,7 +30,7 @@ namespace ECS {
 
     public:
         bool contains(Entity entity) const noexcept override {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
             auto idx = entity.index();
             return idx < _sparse.size() &&
@@ -45,7 +45,7 @@ namespace ECS {
          */
         template <typename... Args>
         T& emplace(Entity entity, Args&&...) {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
             if (containsUnsafe(entity))
                 return _dummyInstance;
 
@@ -59,7 +59,7 @@ namespace ECS {
         }
 
         void remove(Entity entity) override {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
             if (!containsUnsafe(entity)) return;
 
             auto idx = entity.index();
@@ -77,7 +77,7 @@ namespace ECS {
         }
 
         T& get(Entity entity) {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
             if (!containsUnsafe(entity))
                 throw std::runtime_error("Entity missing tag component in TagSparseSet::get()");
@@ -85,7 +85,7 @@ namespace ECS {
         }
 
         const T& get(Entity entity) const {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
             if (!containsUnsafe(entity))
                 throw std::runtime_error("Entity missing tag component in TagSparseSet::get()");
@@ -93,20 +93,31 @@ namespace ECS {
         }
 
         void clear() noexcept override {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
             _packed.clear();
             _sparse.clear();
         }
 
         size_t size() const noexcept override {
+            std::lock_guard lock(_sparseSetMutex);
+
             return _packed.size();
         }
 
-        const std::vector<Entity>& getPacked() const noexcept override { return _packed; }
+        std::vector<Entity>& getPacked() const noexcept override {
+            std::lock_guard lock(_sparseSetMutex);
 
+            return _packed;
+        }
+
+        /**
+         * @brief Pre-allocates memory for expected number of entities.
+         * @param capacity Number of entities to reserve space for
+         * @note Thread-safe. Not part of ISparseSet interface (type-specific optimization).
+         */
         void reserve(size_t capacity) {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
             _packed.reserve(capacity);
             _sparse.reserve(capacity);
@@ -116,7 +127,7 @@ namespace ECS {
          * @brief Releases unused memory.
          */
         void shrinkToFit() override {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
             _packed.shrink_to_fit();
             _sparse.shrink_to_fit();
@@ -126,7 +137,7 @@ namespace ECS {
         static constexpr size_t NullIndex = std::numeric_limits<size_t>::max();
         std::vector<Entity> _packed;
         std::vector<size_t> _sparse;
-        mutable std::mutex __sparseSetMutex;
+        mutable std::mutex _sparseSetMutex;
         static inline T _dummyInstance{};
 
         /**
