@@ -34,6 +34,17 @@ npm install
 
 #### 1. Start Docusaurus Dev Server
 
+From project root:
+```bash
+make docs-serve
+```
+
+Or directly:
+```bash
+./scripts/serve_docs.sh
+```
+
+Or manually:
 ```bash
 cd docs/website
 npm start
@@ -43,6 +54,13 @@ This opens `http://localhost:3000` with live reload.
 
 #### 2. Generate Doxygen Documentation
 
+From project root:
+```bash
+# Doxygen is generated automatically with make docs
+make docs
+```
+
+Or manually:
 ```bash
 cd docs
 doxygen Doxyfile
@@ -50,13 +68,23 @@ doxygen Doxyfile
 
 #### 3. Generate Complete Documentation
 
+From project root (recommended):
+```bash
+make docs
+```
+
+Or using the script directly:
+```bash
+./scripts/generate_docs.sh
+```
+
+Or from the docs directory:
 ```bash
 cd docs
-./generate-docs.sh
+./generate-docs.sh  # Deprecated wrapper, redirects to new script
 ```
 
 Or from the website directory:
-
 ```bash
 cd docs/website
 npm run docs:full
