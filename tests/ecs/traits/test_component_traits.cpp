@@ -90,19 +90,19 @@ protected:
 };
 
 TEST_F(ComponentTraitsTest, IsEmpty_TrueForEmptyStruct) {
-    EXPECT_TRUE(ComponentTraits<EmptyTag>::_isEmpty);
-    EXPECT_TRUE(ComponentTraits<MarkerComponent>::_isEmpty);
+    EXPECT_TRUE(ComponentTraits<EmptyTag>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<MarkerComponent>::isEmpty);
 }
 
 TEST_F(ComponentTraitsTest, IsEmpty_FalseForDataComponents) {
-    EXPECT_FALSE(ComponentTraits<TrivialComponent>::_isEmpty);
-    EXPECT_FALSE(ComponentTraits<PODComponent>::_isEmpty);
-    EXPECT_FALSE(ComponentTraits<NonTrivialComponent>::_isEmpty);
-    EXPECT_FALSE(ComponentTraits<VectorComponent>::_isEmpty);
+    EXPECT_FALSE(ComponentTraits<TrivialComponent>::isEmpty);
+    EXPECT_FALSE(ComponentTraits<PODComponent>::isEmpty);
+    EXPECT_FALSE(ComponentTraits<NonTrivialComponent>::isEmpty);
+    EXPECT_FALSE(ComponentTraits<VectorComponent>::isEmpty);
 }
 
 TEST_F(ComponentTraitsTest, IsEmpty_FalseForMoveOnlyComponent) {
-    EXPECT_FALSE(ComponentTraits<MoveOnlyComponent>::_isEmpty);
+    EXPECT_FALSE(ComponentTraits<MoveOnlyComponent>::isEmpty);
 }
 
 // ============================================================================
@@ -110,26 +110,26 @@ TEST_F(ComponentTraitsTest, IsEmpty_FalseForMoveOnlyComponent) {
 // ============================================================================
 
 TEST_F(ComponentTraitsTest, IsTrivial_TrueForPODTypes) {
-    EXPECT_TRUE(ComponentTraits<TrivialComponent>::_isTrivial);
-    EXPECT_TRUE(ComponentTraits<PODComponent>::_isTrivial);
+    EXPECT_TRUE(ComponentTraits<TrivialComponent>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<PODComponent>::isTrivial);
 }
 
 TEST_F(ComponentTraitsTest, IsTrivial_TrueForEmptyTypes) {
-    EXPECT_TRUE(ComponentTraits<EmptyTag>::_isTrivial);
-    EXPECT_TRUE(ComponentTraits<MarkerComponent>::_isTrivial);
+    EXPECT_TRUE(ComponentTraits<EmptyTag>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<MarkerComponent>::isTrivial);
 }
 
 TEST_F(ComponentTraitsTest, IsTrivial_FalseForNonTrivialTypes) {
-    EXPECT_FALSE(ComponentTraits<NonTrivialComponent>::_isTrivial);
-    EXPECT_FALSE(ComponentTraits<VectorComponent>::_isTrivial);
-    EXPECT_FALSE(ComponentTraits<ResourceComponent>::_isTrivial);
+    EXPECT_FALSE(ComponentTraits<NonTrivialComponent>::isTrivial);
+    EXPECT_FALSE(ComponentTraits<VectorComponent>::isTrivial);
+    EXPECT_FALSE(ComponentTraits<ResourceComponent>::isTrivial);
 }
 
 TEST_F(ComponentTraitsTest, IsTrivial_TrueForPrimitives) {
-    EXPECT_TRUE(ComponentTraits<int>::_isTrivial);
-    EXPECT_TRUE(ComponentTraits<float>::_isTrivial);
-    EXPECT_TRUE(ComponentTraits<double>::_isTrivial);
-    EXPECT_TRUE(ComponentTraits<char>::_isTrivial);
+    EXPECT_TRUE(ComponentTraits<int>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<float>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<double>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<char>::isTrivial);
 }
 
 // ============================================================================
@@ -137,25 +137,25 @@ TEST_F(ComponentTraitsTest, IsTrivial_TrueForPrimitives) {
 // ============================================================================
 
 TEST_F(ComponentTraitsTest, IsTrivialDestructible_TrueForPODTypes) {
-    EXPECT_TRUE(ComponentTraits<TrivialComponent>::_isTrivialDestructible);
-    EXPECT_TRUE(ComponentTraits<PODComponent>::_isTrivialDestructible);
+    EXPECT_TRUE(ComponentTraits<TrivialComponent>::isTrivialDestructible);
+    EXPECT_TRUE(ComponentTraits<PODComponent>::isTrivialDestructible);
 }
 
 TEST_F(ComponentTraitsTest, IsTrivialDestructible_TrueForEmptyTypes) {
-    EXPECT_TRUE(ComponentTraits<EmptyTag>::_isTrivialDestructible);
-    EXPECT_TRUE(ComponentTraits<MarkerComponent>::_isTrivialDestructible);
+    EXPECT_TRUE(ComponentTraits<EmptyTag>::isTrivialDestructible);
+    EXPECT_TRUE(ComponentTraits<MarkerComponent>::isTrivialDestructible);
 }
 
 TEST_F(ComponentTraitsTest, IsTrivialDestructible_FalseForNonTrivialTypes) {
-    EXPECT_FALSE(ComponentTraits<NonTrivialComponent>::_isTrivialDestructible);
-    EXPECT_FALSE(ComponentTraits<VectorComponent>::_isTrivialDestructible);
-    EXPECT_FALSE(ComponentTraits<ResourceComponent>::_isTrivialDestructible);
+    EXPECT_FALSE(ComponentTraits<NonTrivialComponent>::isTrivialDestructible);
+    EXPECT_FALSE(ComponentTraits<VectorComponent>::isTrivialDestructible);
+    EXPECT_FALSE(ComponentTraits<ResourceComponent>::isTrivialDestructible);
 }
 
 TEST_F(ComponentTraitsTest, IsTrivialDestructible_TrueForPrimitives) {
-    EXPECT_TRUE(ComponentTraits<int>::_isTrivialDestructible);
-    EXPECT_TRUE(ComponentTraits<float>::_isTrivialDestructible);
-    EXPECT_TRUE(ComponentTraits<double>::_isTrivialDestructible);
+    EXPECT_TRUE(ComponentTraits<int>::isTrivialDestructible);
+    EXPECT_TRUE(ComponentTraits<float>::isTrivialDestructible);
+    EXPECT_TRUE(ComponentTraits<double>::isTrivialDestructible);
 }
 
 // ============================================================================
@@ -195,9 +195,9 @@ TEST_F(ComponentTraitsTest, ComponentConcept_SatisfiedByPrimitives) {
 
 TEST_F(ComponentTraitsTest, CompileTime_TraitsAreConstexpr) {
     // Verify traits can be used at compile time
-    constexpr bool empty_is_empty = ComponentTraits<EmptyTag>::_isEmpty;
-    constexpr bool trivial_is_trivial = ComponentTraits<TrivialComponent>::_isTrivial;
-    constexpr bool pod_is_destructible = ComponentTraits<PODComponent>::_isTrivialDestructible;
+    constexpr bool empty_is_empty = ComponentTraits<EmptyTag>::isEmpty;
+    constexpr bool trivial_is_trivial = ComponentTraits<TrivialComponent>::isTrivial;
+    constexpr bool pod_is_destructible = ComponentTraits<PODComponent>::isTrivialDestructible;
 
     static_assert(empty_is_empty, "EmptyTag should be empty at compile time");
     static_assert(trivial_is_trivial, "TrivialComponent should be trivial at compile time");
@@ -209,9 +209,9 @@ TEST_F(ComponentTraitsTest, CompileTime_TraitsAreConstexpr) {
 TEST_F(ComponentTraitsTest, CompileTime_ConditionalCompilation) {
     // Test that traits can be used for if constexpr
     auto test_func = []<typename T>() {
-        if constexpr (ComponentTraits<T>::_isEmpty) {
+        if constexpr (ComponentTraits<T>::isEmpty) {
             return 1;
-        } else if constexpr (ComponentTraits<T>::_isTrivial) {
+        } else if constexpr (ComponentTraits<T>::isTrivial) {
             return 2;
         } else {
             return 3;
@@ -228,27 +228,27 @@ TEST_F(ComponentTraitsTest, CompileTime_ConditionalCompilation) {
 // ============================================================================
 
 TEST_F(ComponentTraitsTest, StdTypes_String) {
-    EXPECT_FALSE(ComponentTraits<std::string>::_isEmpty);
-    EXPECT_FALSE(ComponentTraits<std::string>::_isTrivial);
-    EXPECT_FALSE(ComponentTraits<std::string>::_isTrivialDestructible);
+    EXPECT_FALSE(ComponentTraits<std::string>::isEmpty);
+    EXPECT_FALSE(ComponentTraits<std::string>::isTrivial);
+    EXPECT_FALSE(ComponentTraits<std::string>::isTrivialDestructible);
 }
 
 TEST_F(ComponentTraitsTest, StdTypes_Vector) {
-    EXPECT_FALSE(ComponentTraits<std::vector<int>>::_isEmpty);
-    EXPECT_FALSE(ComponentTraits<std::vector<int>>::_isTrivial);
-    EXPECT_FALSE(ComponentTraits<std::vector<int>>::_isTrivialDestructible);
+    EXPECT_FALSE(ComponentTraits<std::vector<int>>::isEmpty);
+    EXPECT_FALSE(ComponentTraits<std::vector<int>>::isTrivial);
+    EXPECT_FALSE(ComponentTraits<std::vector<int>>::isTrivialDestructible);
 }
 
 TEST_F(ComponentTraitsTest, StdTypes_UniquePtr) {
-    EXPECT_FALSE(ComponentTraits<std::unique_ptr<int>>::_isEmpty);
-    EXPECT_FALSE(ComponentTraits<std::unique_ptr<int>>::_isTrivial);
-    EXPECT_FALSE(ComponentTraits<std::unique_ptr<int>>::_isTrivialDestructible);
+    EXPECT_FALSE(ComponentTraits<std::unique_ptr<int>>::isEmpty);
+    EXPECT_FALSE(ComponentTraits<std::unique_ptr<int>>::isTrivial);
+    EXPECT_FALSE(ComponentTraits<std::unique_ptr<int>>::isTrivialDestructible);
 }
 
 TEST_F(ComponentTraitsTest, StdTypes_SharedPtr) {
-    EXPECT_FALSE(ComponentTraits<std::shared_ptr<int>>::_isEmpty);
-    EXPECT_FALSE(ComponentTraits<std::shared_ptr<int>>::_isTrivial);
-    EXPECT_FALSE(ComponentTraits<std::shared_ptr<int>>::_isTrivialDestructible);
+    EXPECT_FALSE(ComponentTraits<std::shared_ptr<int>>::isEmpty);
+    EXPECT_FALSE(ComponentTraits<std::shared_ptr<int>>::isTrivial);
+    EXPECT_FALSE(ComponentTraits<std::shared_ptr<int>>::isTrivialDestructible);
 }
 
 // ============================================================================
@@ -257,21 +257,21 @@ TEST_F(ComponentTraitsTest, StdTypes_SharedPtr) {
 
 TEST_F(ComponentTraitsTest, CombinedTraits_EmptyAndTrivial) {
     // Empty types are always trivially copyable and destructible
-    EXPECT_TRUE(ComponentTraits<EmptyTag>::_isEmpty);
-    EXPECT_TRUE(ComponentTraits<EmptyTag>::_isTrivial);
-    EXPECT_TRUE(ComponentTraits<EmptyTag>::_isTrivialDestructible);
+    EXPECT_TRUE(ComponentTraits<EmptyTag>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<EmptyTag>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<EmptyTag>::isTrivialDestructible);
 }
 
 TEST_F(ComponentTraitsTest, CombinedTraits_TrivialButNotEmpty) {
-    EXPECT_FALSE(ComponentTraits<TrivialComponent>::_isEmpty);
-    EXPECT_TRUE(ComponentTraits<TrivialComponent>::_isTrivial);
-    EXPECT_TRUE(ComponentTraits<TrivialComponent>::_isTrivialDestructible);
+    EXPECT_FALSE(ComponentTraits<TrivialComponent>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<TrivialComponent>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<TrivialComponent>::isTrivialDestructible);
 }
 
 TEST_F(ComponentTraitsTest, CombinedTraits_NonTrivialNonEmpty) {
-    EXPECT_FALSE(ComponentTraits<NonTrivialComponent>::_isEmpty);
-    EXPECT_FALSE(ComponentTraits<NonTrivialComponent>::_isTrivial);
-    EXPECT_FALSE(ComponentTraits<NonTrivialComponent>::_isTrivialDestructible);
+    EXPECT_FALSE(ComponentTraits<NonTrivialComponent>::isEmpty);
+    EXPECT_FALSE(ComponentTraits<NonTrivialComponent>::isTrivial);
+    EXPECT_FALSE(ComponentTraits<NonTrivialComponent>::isTrivialDestructible);
 }
 
 // ============================================================================
@@ -288,9 +288,9 @@ struct PaddedComponent {
 };
 
 TEST_F(ComponentTraitsTest, EdgeCase_PaddedComponent) {
-    EXPECT_FALSE(ComponentTraits<PaddedComponent>::_isEmpty);
-    EXPECT_TRUE(ComponentTraits<PaddedComponent>::_isTrivial);
-    EXPECT_TRUE(ComponentTraits<PaddedComponent>::_isTrivialDestructible);
+    EXPECT_FALSE(ComponentTraits<PaddedComponent>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<PaddedComponent>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<PaddedComponent>::isTrivialDestructible);
 }
 
 // Component with bit fields
@@ -301,9 +301,9 @@ struct BitFieldComponent {
 };
 
 TEST_F(ComponentTraitsTest, EdgeCase_BitFieldComponent) {
-    EXPECT_FALSE(ComponentTraits<BitFieldComponent>::_isEmpty);
-    EXPECT_TRUE(ComponentTraits<BitFieldComponent>::_isTrivial);
-    EXPECT_TRUE(ComponentTraits<BitFieldComponent>::_isTrivialDestructible);
+    EXPECT_FALSE(ComponentTraits<BitFieldComponent>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<BitFieldComponent>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<BitFieldComponent>::isTrivialDestructible);
 }
 
 // Component with static members only (still empty in terms of instance size)
@@ -315,8 +315,8 @@ int StaticOnlyComponent::counter = 0;
 
 TEST_F(ComponentTraitsTest, EdgeCase_StaticOnlyComponent) {
     // Static members don't contribute to instance size
-    EXPECT_TRUE(ComponentTraits<StaticOnlyComponent>::_isEmpty);
-    EXPECT_TRUE(ComponentTraits<StaticOnlyComponent>::_isTrivial);
+    EXPECT_TRUE(ComponentTraits<StaticOnlyComponent>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<StaticOnlyComponent>::isTrivial);
 }
 
 // Nested empty struct
@@ -334,12 +334,12 @@ struct DerivedFromEmpty : EmptyBase {
 TEST_F(ComponentTraitsTest, EdgeCase_NestedEmpty) {
     // A struct containing an empty member is NOT empty (EBO doesn't apply to members)
     // Each object must have a unique address, so sizeof(OuterEmpty) >= 1
-    EXPECT_FALSE(ComponentTraits<OuterEmpty>::_isEmpty);
-    EXPECT_TRUE(ComponentTraits<OuterEmpty>::_isTrivial);
+    EXPECT_FALSE(ComponentTraits<OuterEmpty>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<OuterEmpty>::isTrivial);
 }
 
 TEST_F(ComponentTraitsTest, EdgeCase_EmptyBaseOptimization) {
     // EBO applies to inheritance - a class derived from empty base with no members is empty
-    EXPECT_TRUE(ComponentTraits<DerivedFromEmpty>::_isEmpty);
-    EXPECT_TRUE(ComponentTraits<DerivedFromEmpty>::_isTrivial);
+    EXPECT_TRUE(ComponentTraits<DerivedFromEmpty>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<DerivedFromEmpty>::isTrivial);
 }
