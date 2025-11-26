@@ -17,7 +17,7 @@ namespace ECS {
     /**
      * @brief Type-safe entity identifier using generational indices.
      *
-     * Layout: 32-bit _packed structure
+     * Layout: 32-bit Packed structure
      * - [19:0]  Index (20 bits)     - Entity slot position
      * - [31:20] Generation (12 bits) - Version counter
      *
