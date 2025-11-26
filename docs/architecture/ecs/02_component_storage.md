@@ -265,11 +265,11 @@ if (set.contains(entity)) {
 ### Direct Dense Array Access
 
 For maximum performance, iterate the dense array directly:
-> **Note:** To access the dense array of components, use the `get_dense()` method of the SparseSet. This returns a `const std::vector<Position>&` (or similar container), allowing direct indexed access. Ensure you use the correct method name as implemented in your codebase (e.g., `get_dense()` or `getPacked()`).
+> **Note:** To access the dense array of components, use the `getDense()` method of the SparseSet. This returns a `const std::vector<Position>&` (or similar container), allowing direct indexed access. Ensure you use the correct method name as implemented in your codebase (e.g., `getDense()` or `getPacked()`).
 
 ```cpp
 auto& pos_set = registry.getSparseSet<Position>();
-const auto& positions = pos_set.get_dense(); // Returns reference to dense array of Position
+const auto& positions = pos_set.getDense(); // Returns reference to dense array of Position
 const auto& entities = pos_set.getPacked();  // Returns reference to packed entity array
 for (size_t i = 0; i < positions.size(); ++i) {
     Entity e = entities[i];
