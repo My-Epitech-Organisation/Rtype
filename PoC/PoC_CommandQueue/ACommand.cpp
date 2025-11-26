@@ -8,7 +8,7 @@
 #include <iostream>
 #include "ACommand.hpp"
 
-void ACommand::addNewCommand(const std::string &command)
+void ACommand::addNewCommand(const Message &command)
 {
     std::lock_guard<std::mutex> lock(_mutex);
     this->_commands.push(command);

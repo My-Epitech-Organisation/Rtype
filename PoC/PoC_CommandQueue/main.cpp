@@ -17,7 +17,7 @@ int main()
     std::thread t1([&game, &commandQueue](){
         std::cout << "Thread Network started" << std::endl;
         for (int i = 0; i < 5; ++i) {
-            commandQueue.addNewCommand("Thread 1 - Count: " + std::to_string(i));
+            commandQueue.addNewCommand(Message("Thread 1",  "- Count: " + std::to_string(i)));
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         std::cout << "Thread Network ended" << std::endl;

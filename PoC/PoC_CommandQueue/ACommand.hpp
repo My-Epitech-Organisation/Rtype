@@ -17,13 +17,13 @@
 
 class ACommand : public ICommand {
     private:
-        std::queue<std::string> _commands;
+        std::queue<Message> _commands;
         std::mutex _mutex;
 
     public:
         ACommand() = default;
         void execute(Game &game) override;
-        void addNewCommand(const std::string &command) override;
+        void addNewCommand(const Message &command) override;
         bool isEmpty() override {
             std::lock_guard<std::mutex> lock(_mutex);
             return this->_commands.empty();
