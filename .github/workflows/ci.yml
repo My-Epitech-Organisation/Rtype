@@ -125,24 +125,15 @@ jobs:
 
       - name: Run Code Quality Checks
         id: quality-checks
-        continue-on-error: true
         run: |
           ./scripts/run_quality_checks.sh --verbose
-          EXIT_CODE=$?
-
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "result=success" >> $GITHUB_OUTPUT
-          else
-            echo "result=failure" >> $GITHUB_OUTPUT
-          fi
-          exit $EXIT_CODE
 
       - name: Upload Quality Report
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: code-quality-report
-          path: quality_report.txt
+          path: /tmp/rtype_quality_report.txt
           if-no-files-found: warn
 
       - name: Lint Summary
@@ -151,13 +142,12 @@ jobs:
           echo "### 🔍 Code Quality Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Script:** \`scripts/run_quality_checks.sh\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Status:** ${{ steps.quality-checks.outcome == 'success' && '✅ All checks passed' || '⚠️ Issues found' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ steps.quality-checks.outcome == 'success' && '✅ All checks passed' || '❌ Issues found - pipeline blocked' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f quality_report.txt ]; then
+          if [ -f /tmp/rtype_quality_report.txt ]; then
             echo "#### Detailed Report" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            # Extract the summary section from the report
-            sed -n '/SUMMARY/,$p' quality_report.txt | head -20 >> $GITHUB_STEP_SUMMARY
+            cat /tmp/rtype_quality_report.txt >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
