@@ -2,11 +2,11 @@
 ** EPITECH PROJECT, 2025
 ** R-Type
 ** File description:
-** _sparseSet
+** SparseSet
 */
 
-#ifndef ECS_STORAGE__sparse_SET_HPP
-    #define ECS_STORAGE__sparse_SET_HPP
+#ifndef ECS_STORAGE_SPARSE_SET_HPP
+    #define ECS_STORAGE_SPARSE_SET_HPP
     #include "ISparseSet.hpp"
     #include <vector>
     #include <algorithm>
@@ -18,7 +18,7 @@
 namespace ECS {
 
     /**
-     * @brief Cache-efficient component storage using _sparse set data structure.
+     * @brief Cache-efficient component storage using sparse set data structure.
      *
      * Architecture:
      * - Dense: Contiguous component array (cache-friendly iteration)
@@ -99,13 +99,13 @@ namespace ECS {
 
         reference get(Entity entity) {
             if (!contains(entity))
-                throw std::runtime_error("Entity missing component in _sparseSet::get()");
+                throw std::runtime_error("Entity missing component in SparseSet::get()");
             return dense[_sparse[entity.index()]];
         }
 
         const_reference get(Entity entity) const {
             if (!contains(entity))
-                throw std::runtime_error("Entity missing component in _sparseSet::get()");
+                throw std::runtime_error("Entity missing component in SparseSet::get()");
             return dense[_sparse[entity.index()]];
         }
 
@@ -124,7 +124,7 @@ namespace ECS {
         const_iterator begin() const noexcept { return dense.begin(); }
         const_iterator end() const noexcept { return dense.end(); }
 
-        const std::vector<Entity>& getPacked() const noexcept { return _packed; }
+        const std::vector<Entity>& getPacked() const noexcept override { return _packed; }
         const std::vector<T>& get_dense() const noexcept { return dense; }
 
         void reserve(size_t capacity) {
@@ -137,7 +137,7 @@ namespace ECS {
          * @brief Releases unused memory.
          * Useful after removing many components to reclaim memory.
          */
-        void shrinkToFit() {
+        void shrinkToFit() override {
             dense.shrink_to_fit();
             _packed.shrink_to_fit();
             _sparse.shrink_to_fit();
@@ -153,4 +153,4 @@ namespace ECS {
 
 } // namespace ECS
 
-#endif // ECS_STORAGE__sparse_SET_HPP
+#endif // ECS_STORAGE_SPARSE_SET_HPP
