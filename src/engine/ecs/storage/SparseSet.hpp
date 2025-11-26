@@ -8,6 +8,7 @@
 #ifndef ECS_STORAGE_SPARSE_SET_HPP
     #define ECS_STORAGE_SPARSE_SET_HPP
     #include "ISparseSet.hpp"
+    #include "../traits/ComponentTraits.hpp"
     #include <vector>
     #include <algorithm>
     #include <limits>
@@ -32,9 +33,16 @@ namespace ECS {
      * - Lookup: O(1) direct access
      * - Iterate: O(n) linear scan (optimal cache utilization)
      *
-     * @tparam T Component type (non-empty)
+     * Thread Safety:
+     * - Mutating operations (emplace, remove, clear, reserve, shrinkToFit) are thread-safe.
+     * - Read operations (contains, get, size) are thread-safe.
+     * - Iteration (begin/end) and direct access (getPacked/getDense) are NOT thread-safe.
+     *   These require external synchronization if concurrent modifications may occur.
+     * - Typically safe when ECS systems run sequentially in the game loop.
+     *
+     * @tparam T Component type (must satisfy Component concept: move-constructible)
      */
-    template <typename T>
+    template <Component T>
     class SparseSet : public ISparseSet {
     public:
 

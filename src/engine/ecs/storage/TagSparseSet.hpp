@@ -8,6 +8,7 @@
 #ifndef ECS_STORAGE_TAG_SPARSE_SET_HPP
     #define ECS_STORAGE_TAG_SPARSE_SET_HPP
     #include "ISparseSet.hpp"
+    #include "../traits/ComponentTraits.hpp"
     #include <vector>
     #include <limits>
     #include <stdexcept>
@@ -22,9 +23,19 @@ namespace ECS {
      * Tags are marker components without data (e.g., "Player", "Enemy").
      * This specialized container stores only entity IDs, eliminating wasted memory.
      *
-     * @tparam T Must be an empty type (sizeof(T) == 1, no members)
+     * Thread Safety:
+     * - Mutating operations (emplace, remove, clear, reserve, shrinkToFit) are thread-safe.
+     * - Read operations (contains, get, size) are thread-safe.
+     * - Direct access (getPacked) is NOT thread-safe and requires external synchronization.
+     * - Typically safe when ECS systems run sequentially in the game loop.
+     *
+     * Implementation Note:
+     * - _dummyInstance is shared across all TagSparseSet<T> instances (static inline const).
+     *   This is safe because empty types have no mutable state.
+     *
+     * @tparam T Must be an empty type (sizeof(T) == 1, no members) and satisfy Component concept
      */
-    template <typename T>
+    template <Component T>
     class TagSparseSet : public ISparseSet {
         static_assert(std::is_empty_v<T>, "TagSparseSet requires empty type");
 
@@ -41,10 +52,10 @@ namespace ECS {
 
         /**
          * @brief Adds tag to entity (idempotent).
-         * @return Dummy reference (tags have no data)
+         * @return Const reference to dummy instance (tags have no data)
          */
         template <typename... Args>
-        T& emplace(Entity entity, Args&&...) {
+        const T& emplace(Entity entity, Args&&...) {
             std::lock_guard lock(_sparseSetMutex);
             if (containsUnsafe(entity))
                 return _dummyInstance;
@@ -76,7 +87,7 @@ namespace ECS {
             _sparse[idx] = NullIndex;
         }
 
-        T& get(Entity entity) {
+        const T& get(Entity entity) {
             std::lock_guard lock(_sparseSetMutex);
 
             if (!containsUnsafe(entity))
@@ -144,7 +155,7 @@ namespace ECS {
         std::vector<Entity> _packed;
         std::vector<size_t> _sparse;
         mutable std::mutex _sparseSetMutex;
-        static inline T _dummyInstance{};
+        static inline T const _dummyInstance{};
 
         /**
          * @brief Internal contains check without locking (caller must hold lock).
