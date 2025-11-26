@@ -7,7 +7,7 @@
 
 #ifndef ECS_STORAGE_I_sparse_SET_HPP
     #define ECS_STORAGE_I_sparse_SET_HPP
-    #include "../Core/Entity.hpp"
+    #include "../core/Entity.hpp"
     #include <vector>
 
 namespace ECS {
