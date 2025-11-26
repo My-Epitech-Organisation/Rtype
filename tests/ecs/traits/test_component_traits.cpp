@@ -50,7 +50,7 @@ struct VectorComponent {
 // Component with unique_ptr (non-copyable)
 struct ResourceComponent {
     std::unique_ptr<int> resource;
-    
+
     ResourceComponent() = default;
     ResourceComponent(ResourceComponent&&) = default;
     ResourceComponent& operator=(ResourceComponent&&) = default;
@@ -59,7 +59,7 @@ struct ResourceComponent {
 // Simple move-only component
 struct MoveOnlyComponent {
     int value;
-    
+
     MoveOnlyComponent() = default;
     MoveOnlyComponent(int v) : value(v) {}
     MoveOnlyComponent(const MoveOnlyComponent&) = delete;
@@ -71,7 +71,7 @@ struct MoveOnlyComponent {
 // Non-movable component (invalid for ECS)
 struct NonMovableComponent {
     int value;
-    
+
     NonMovableComponent() = default;
     NonMovableComponent(const NonMovableComponent&) = delete;
     NonMovableComponent& operator=(const NonMovableComponent&) = delete;
@@ -169,14 +169,14 @@ TEST_F(ComponentTraitsTest, ComponentConcept_SatisfiedByMoveConstructibleTypes) 
     static_assert(Component<NonTrivialComponent>, "NonTrivialComponent should satisfy Component concept");
     static_assert(Component<MoveOnlyComponent>, "MoveOnlyComponent should satisfy Component concept");
     static_assert(Component<ResourceComponent>, "ResourceComponent should satisfy Component concept");
-    
+
     SUCCEED();
 }
 
 TEST_F(ComponentTraitsTest, ComponentConcept_NotSatisfiedByNonMovableTypes) {
     // NonMovableComponent should NOT satisfy the Component concept
     static_assert(!Component<NonMovableComponent>, "NonMovableComponent should NOT satisfy Component concept");
-    
+
     SUCCEED();
 }
 
@@ -185,7 +185,7 @@ TEST_F(ComponentTraitsTest, ComponentConcept_SatisfiedByPrimitives) {
     static_assert(Component<float>, "float should satisfy Component concept");
     static_assert(Component<double>, "double should satisfy Component concept");
     static_assert(Component<std::string>, "std::string should satisfy Component concept");
-    
+
     SUCCEED();
 }
 
@@ -198,11 +198,11 @@ TEST_F(ComponentTraitsTest, CompileTime_TraitsAreConstexpr) {
     constexpr bool empty_is_empty = ComponentTraits<EmptyTag>::_isEmpty;
     constexpr bool trivial_is_trivial = ComponentTraits<TrivialComponent>::_isTrivial;
     constexpr bool pod_is_destructible = ComponentTraits<PODComponent>::_isTrivialDestructible;
-    
+
     static_assert(empty_is_empty, "EmptyTag should be empty at compile time");
     static_assert(trivial_is_trivial, "TrivialComponent should be trivial at compile time");
     static_assert(pod_is_destructible, "PODComponent should be trivially destructible at compile time");
-    
+
     SUCCEED();
 }
 
@@ -217,7 +217,7 @@ TEST_F(ComponentTraitsTest, CompileTime_ConditionalCompilation) {
             return 3;
         }
     };
-    
+
     EXPECT_EQ(test_func.template operator()<EmptyTag>(), 1);
     EXPECT_EQ(test_func.template operator()<TrivialComponent>(), 2);
     EXPECT_EQ(test_func.template operator()<NonTrivialComponent>(), 3);
