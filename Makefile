@@ -47,7 +47,7 @@ docs-serve: ## Start Docusaurus development server
 	@./scripts/serve_docs.sh
 
 docs-build: ## Build Docusaurus for production only
-	@./scripts/build_docs.sh
+	@cd docs/website && npm run build
 
 docs-install: ## Install documentation dependencies (npm)
 	@echo "📦 Installing documentation dependencies..."
