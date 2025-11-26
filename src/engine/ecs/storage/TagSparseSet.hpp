@@ -30,6 +30,8 @@ namespace ECS {
 
     public:
         bool contains(Entity entity) const noexcept override {
+            std::lock_guard lock(__sparseSetMutex);
+
             auto idx = entity.index();
             return idx < _sparse.size() &&
                    _sparse[idx] != NullIndex &&
@@ -91,6 +93,8 @@ namespace ECS {
         }
 
         void clear() noexcept override {
+            std::lock_guard lock(__sparseSetMutex);
+
             _packed.clear();
             _sparse.clear();
         }
