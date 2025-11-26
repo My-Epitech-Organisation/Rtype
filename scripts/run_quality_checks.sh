@@ -148,7 +148,7 @@ fi
 echo ""
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}  CPPLINT - Google Style Compliance${NC}"
+echo -e "${BLUE}  CPPLINT - Google Style Compliances${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 log_info "Running CppLint checks..."
 echo "" >> "$REPORT_FILE"
