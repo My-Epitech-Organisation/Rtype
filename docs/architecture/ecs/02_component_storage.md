@@ -28,7 +28,7 @@ Component Storage:
 └─────────────────────────────┘
 
 ┌───────────────────────────────────┐
-│  _sparse Array (Index Lookup)     │  ← Maps entity index to dense index
+│  Sparse Array (Index Lookup)      │  ← Maps entity index to dense index
 ├───────────────────────────────────┤
 │  [1: 3] [2: 1] [5: 0] [7: 2] ...  │
 └───────────────────────────────────┘
@@ -36,9 +36,9 @@ Component Storage:
 
 ### How It Works
 
-1. **Insert**: Append to dense/_packed, update _sparse mapping
-2. **Remove**: Swap-and-pop with last element, update _sparse
-3. **Lookup**: `dense[_sparse[entity.index()]]`
+1. **Insert**: Append to dense/_packed, update Sparse mapping
+2. **Remove**: Swap-and-pop with last element, update Sparse
+3. **Lookup**: `dense[Sparse[entity.index()]]`
 4. **Iteration**: Linear scan over dense array (optimal cache usage)
 
 ## SparseSet<T>
@@ -133,7 +133,7 @@ struct Dead {};            // sizeof(Dead) = 1 byte
 
 // 10,000 entities with Health: 10,000 * 4 = 40 KB
 // 10,000 entities with Dead tag:
-//   - Regular _sparseSet: 10,000 * 1 = 10 KB
+//   - Regular SparseSet: 10,000 * 1 = 10 KB
 //   - TagSparseSet: 0 KB (only entity IDs stored)
 ```
 
@@ -245,7 +245,7 @@ registry.parallelView<Position>().each([](auto e, auto& p) {
 
 ### Locking
 
-_sparseSet operations are internally locked:
+SparseSet operations are internally locked:
 
 ```cpp
 // Thread-safe individual operations
@@ -303,8 +303,8 @@ Compile-time optimization based on component properties:
 template<typename T>
 struct ComponentTraits {
     static constexpr bool _isEmpty = std::is_empty_v<T>;
-    static constexpr bool _isTrivial = std::_isTrivially_copyable_v<T>;
-    static constexpr bool _isTrivialDestructible = std::_isTrivialDestructible_v<T>;
+    static constexpr bool _isTrivial = std::is_trivially_copyable_v<T>;
+    static constexpr bool _isTrivialDestructible = std::is_trivially_destructible_v<T>;
 };
 
 // Automatically uses TagSparseSet for empty types
@@ -318,7 +318,7 @@ struct ComponentTraits {
 - Keep components small and cache-friendly (POD types preferred)
 - Use tags for boolean flags (no data overhead)
 - Reserve capacity when you know entity counts
-- Use views for iteration (not direct _sparse set access)
+- Use views for iteration (not direct Sparse set access)
 - Compact after bulk deletions
 
 ### ❌ Don't
