@@ -7,16 +7,14 @@
 
 #include "Graphic.hpp"
 
-Graphic::Graphic()
-{
+Graphic::Graphic() {
     InitWindow(800, 450, "RTYPE Raylib - POC");
     SetTargetFPS(60);
     this->_image = LoadImage("assets/r-typesheet42.gif");
     this->_texture = LoadTextureFromImage(this->_image);
 }
 
-void Graphic::loop()
-{
+void Graphic::loop() {
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
