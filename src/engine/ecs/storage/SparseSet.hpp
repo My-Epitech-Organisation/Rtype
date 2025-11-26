@@ -40,7 +40,7 @@ namespace ECS {
         SparseSet() = default;
 
         bool contains(Entity entity) const noexcept override {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
             auto idx = entity.index();
             return idx < _sparse.size() &&
@@ -57,7 +57,7 @@ namespace ECS {
          */
         template <typename... Args>
         T& emplace(Entity entity, Args&&... args) {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
             if (containsUnsafe(entity))
                 return dense[_sparse[entity.index()]] = T(std::forward<Args>(args)...);
@@ -66,21 +66,21 @@ namespace ECS {
             if (idx >= _sparse.size())
                 _sparse.resize(idx + 1, NullIndex);
 
-            _sparse[idx] = dense.size();
+            _sparse[idx] = _dense.size();
             _packed.push_back(entity);
-            dense.emplace_back(std::forward<Args>(args)...);
+            _dense.emplace_back(std::forward<Args>(args)...);
 
-            return dense.back();
+            return _dense.back();
         }
 
         void remove(Entity entity) override {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
             if (!containsUnsafe(entity)) return;
 
             auto idx = entity.index();
             size_t dense_idx = _sparse[idx];
-            size_t last_idx = dense.size() - 1;
+            size_t last_idx = _dense.size() - 1;
 
             if (dense_idx != last_idx) {
                 Entity last_entity = _packed[last_idx];
@@ -89,13 +89,13 @@ namespace ECS {
                 _sparse[last_entity.index()] = dense_idx;
             }
 
-            dense.pop_back();
+            _dense.pop_back();
             _packed.pop_back();
             _sparse[idx] = NullIndex;
         }
 
         T& get(Entity entity) {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
             if (!containsUnsafe(entity))
                 throw std::runtime_error("Entity missing component in SparseSet::get()");
@@ -103,7 +103,7 @@ namespace ECS {
         }
 
         const T& get(Entity entity) const {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
             if (!containsUnsafe(entity))
                 throw std::runtime_error("Entity missing component in SparseSet::get()");
@@ -111,29 +111,52 @@ namespace ECS {
         }
 
         void clear() noexcept override {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
-            dense.clear();
+            _dense.clear();
             _packed.clear();
             _sparse.clear();
         }
 
         size_t size() const noexcept override {
-            return dense.size();
+            std::lock_guard lock(_sparseSetMutex);
+
+            return _dense.size();
         }
 
-        std::vector<T>::iterator begin() noexcept { return dense.begin(); }
-        std::vector<T>::iterator end() noexcept { return dense.end(); }
-        std::vector<T>::const_iterator begin() const noexcept { return dense.begin(); }
-        std::vector<T>::const_iterator end() const noexcept { return dense.end(); }
+        /**
+         * @brief Iterator access for range-based loops and STL algorithms.
+         * @warning NOT THREAD-SAFE: These methods do not acquire locks.
+         *          External synchronization is required if iterating while
+         *          another thread may modify the container (emplace/remove/clear).
+         *          Typically safe when systems run sequentially in the game loop.
+         */
+        std::vector<T>::iterator begin() noexcept { return _dense.begin(); }
+        std::vector<T>::iterator end() noexcept { return _dense.end(); }
+        std::vector<T>::const_iterator begin() const noexcept { return _dense.begin(); }
+        std::vector<T>::const_iterator end() const noexcept { return _dense.end(); }
 
-        const std::vector<Entity>& getPacked() const noexcept override { return _packed; }
-        const std::vector<T>& get_dense() const noexcept { return dense; }
+        std::vector<Entity>& getPacked() const noexcept override {
+            std::lock_guard lock(_sparseSetMutex);
 
+            return _packed;
+        }
+
+        std::vector<T>& getDense() const noexcept {
+            std::lock_guard lock(_sparseSetMutex);
+
+            return _dense;
+        }
+
+        /**
+         * @brief Pre-allocates memory for expected number of entities.
+         * @param capacity Number of entities to reserve space for
+         * @note Thread-safe. Not part of ISparseSet interface (type-specific optimization).
+         */
         void reserve(size_t capacity) {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
-            dense.reserve(capacity);
+            _dense.reserve(capacity);
             _packed.reserve(capacity);
             _sparse.reserve(capacity);
         }
@@ -143,19 +166,19 @@ namespace ECS {
          * Useful after removing many components to reclaim memory.
          */
         void shrinkToFit() override {
-            std::lock_guard lock(__sparseSetMutex);
+            std::lock_guard lock(_sparseSetMutex);
 
-            dense.shrink_to_fit();
+            _dense.shrink_to_fit();
             _packed.shrink_to_fit();
             _sparse.shrink_to_fit();
         }
 
     private:
         static constexpr size_t NullIndex = std::numeric_limits<size_t>::max();
-        std::vector<T> dense;
+        std::vector<T> _dense;
         std::vector<Entity> _packed;
         std::vector<size_t> _sparse;
-        mutable std::mutex __sparseSetMutex;
+        mutable std::mutex _sparseSetMutex;
 
         /**
          * @brief Internal contains check without locking (caller must hold lock).
