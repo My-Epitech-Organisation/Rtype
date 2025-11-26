@@ -158,7 +158,7 @@ echo "2. CPPLINT RESULTS" >> "$REPORT_FILE"
 echo "======================================" >> "$REPORT_FILE"
 
 CPPLINT_ERRORS=0
-CPPLINT_SCRIPT="$PROJECT_ROOT/PoC/PoC_Code_Quality/cpplint/cpplint.py"
+CPPLINT_SCRIPT="$PROJECT_ROOT/config/cpplint/cpplint.py"
 
 if [ ! -f "$CPPLINT_SCRIPT" ]; then
     log_warning "CppLint script not found at $CPPLINT_SCRIPT"

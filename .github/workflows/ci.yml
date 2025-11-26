@@ -2,60 +2,434 @@ name: CI
 
 on: [push, pull_request]
 
-jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
+env:
+  CACHE_KEY_PREFIX: v1
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
+jobs:
+  cache-check:
+    name: "🔍 Cache Check"
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit-linux: ${{ steps.cache-check-linux.outputs.cache-hit }}
+      cache-hit-windows: ${{ steps.cache-check-windows.outputs.cache-hit }}
+      cache-key-linux: ${{ steps.cache-keys.outputs.linux }}
+      cache-key-windows: ${{ steps.cache-keys.outputs.windows }}
+      cache-key-linux-global: ${{ steps.cache-keys.outputs.linux-global }}
+      cache-key-windows-global: ${{ steps.cache-keys.outputs.windows-global }}
+      deps-hash: ${{ steps.cache-keys.outputs.hash }}
+      branch-name: ${{ steps.cache-keys.outputs.branch }}
+      is-main: ${{ steps.cache-keys.outputs.is-main }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate cache keys
+        id: cache-keys
+        run: |
+          HASH=$(sha256sum vcpkg.json 2>/dev/null | cut -d' ' -f1 || echo "no-vcpkg")
+          echo "hash=${HASH}" >> $GITHUB_OUTPUT
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH="${{ github.head_ref }}"
+          else
+            BRANCH="${{ github.ref_name }}"
+          fi
+          BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-50)
+          echo "branch=${BRANCH_SAFE}" >> $GITHUB_OUTPUT
+
+          if [ "$BRANCH" = "main" ]; then
+            echo "is-main=true" >> $GITHUB_OUTPUT
+          else
+            echo "is-main=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "linux=${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-${BRANCH_SAFE}-${HASH}" >> $GITHUB_OUTPUT
+          echo "windows=${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-${BRANCH_SAFE}-${HASH}" >> $GITHUB_OUTPUT
+
+          echo "linux-global=${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-main-${HASH}" >> $GITHUB_OUTPUT
+          echo "windows-global=${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-main-${HASH}" >> $GITHUB_OUTPUT
+
+      - name: Check Linux cache (branch-specific first, then global)
+        id: cache-check-linux
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cache/vcpkg/archives
+          key: ${{ steps.cache-keys.outputs.linux }}
+          restore-keys: |
+            ${{ steps.cache-keys.outputs.linux-global }}
+            ${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-main-
+            ${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-
+          lookup-only: true
+
+      - name: Check Windows cache (branch-specific first, then global)
+        id: cache-check-windows
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/AppData/Local/vcpkg/archives
+            C:/vcpkg/archives
+          key: ${{ steps.cache-keys.outputs.windows }}
+          restore-keys: |
+            ${{ steps.cache-keys.outputs.windows-global }}
+            ${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-main-
+            ${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-
+          lookup-only: true
+
+      - name: Cache status summary
+        run: |
+          echo "### 📦 Cache Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ steps.cache-keys.outputs.branch }}\` ${{ steps.cache-keys.outputs.is-main == 'true' && '(GLOBAL)' || '(feature)' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Dependencies Hash:** \`${{ steps.cache-keys.outputs.hash }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Branch Cache Key | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|------------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux | \`${{ steps.cache-keys.outputs.linux }}\` | ${{ steps.cache-check-linux.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Windows | \`${{ steps.cache-keys.outputs.windows }}\` | ${{ steps.cache-check-windows.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Fallback Strategy:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Branch cache: \`...-${{ steps.cache-keys.outputs.branch }}-{hash}\`" >> $GITHUB_STEP_SUMMARY
+          echo "2. Global cache: \`...-main-{hash}\`" >> $GITHUB_STEP_SUMMARY
+          echo "3. Any previous: \`...-vcpkg-\`" >> $GITHUB_STEP_SUMMARY
+
+  lint:
+    name: "🔍 Code Quality"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install linting tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format clang-tidy python3
+
+      - name: Make quality script executable
+        run: chmod +x scripts/run_quality_checks.sh
+
+      - name: Run Code Quality Checks
+        id: quality-checks
+        continue-on-error: true
+        run: |
+          ./scripts/run_quality_checks.sh --verbose 2>&1 | tee quality_report.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "result=success" >> $GITHUB_OUTPUT
+          else
+            echo "result=failure" >> $GITHUB_OUTPUT
+          fi
+          exit $EXIT_CODE
+
+      - name: Upload Quality Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality-report
+          path: quality_report.txt
+          if-no-files-found: warn
+
+      - name: Lint Summary
+        if: always()
+        run: |
+          echo "### 🔍 Code Quality Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Script:** \`scripts/run_quality_checks.sh\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ steps.quality-checks.outcome == 'success' && '✅ All checks passed' || '⚠️ Issues found' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f quality_report.txt ]; then
+            echo "#### Detailed Report" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            # Extract the summary section from the report
+            sed -n '/SUMMARY/,$p' quality_report.txt | head -20 >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "💡 **Tip:** Run \`./scripts/run_quality_checks.sh --fix\` locally to auto-fix formatting issues" >> $GITHUB_STEP_SUMMARY
+
+  test:
+    name: "🧪 Unit Tests"
+    runs-on: ubuntu-latest
+    needs: [cache-check]
+    steps:
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
 
-      - name: Install SFML Dependencies (Linux)
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgJsonGlob: 'vcpkg.json'
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Restore vcpkg cache (branch-first, then global fallback)
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cache/vcpkg/archives
+          key: ${{ needs.cache-check.outputs.cache-key-linux }}
+          restore-keys: |
+            ${{ needs.cache-check.outputs.cache-key-linux-global }}
+            ${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-main-
+            ${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ninja-build \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libudev-dev libgl1-mesa-dev libfreetype6-dev \
+            libharfbuzz-dev libflac-dev libogg-dev libvorbis-dev \
+            libopenal-dev libxinerama-dev libasound2-dev libpulse-dev \
+            libxkbcommon-dev libdrm-dev libgbm-dev libgles2-mesa-dev \
+            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libthai-dev
+
+      - name: Configure CMake
+        run: |
+          cmake --preset ubuntu-latest \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DBUILD_TESTS=ON
+
+      - name: Build tests
+        run: cmake --build --preset ubuntu-latest --target all
+
+      - name: Run tests
+        run: |
+          cd build/ubuntu-latest
+          ctest --output-on-failure --timeout 120 || true
+
+      - name: Save branch cache (feature branches only)
+        if: needs.cache-check.outputs.is-main != 'true' && steps.cache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cache/vcpkg/archives
+          key: ${{ needs.cache-check.outputs.cache-key-linux }}
+
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "### 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "**Cache restored:** ${{ steps.cache-restore.outputs.cache-hit == 'true' && '✅ Yes' || '❌ No (rebuilt)' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Cache key used:** \`${{ steps.cache-restore.outputs.cache-matched-key || 'none' }}\`" >> $GITHUB_STEP_SUMMARY
+          if [ -f build/ubuntu-latest/Testing/Temporary/LastTest.log ]; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -50 build/ubuntu-latest/Testing/Temporary/LastTest.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+  build:
+    name: "🔨 Build (${{ matrix.os }})"
+    needs: [cache-check, lint]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cache-key: cache-key-linux
+            cache-key-global: cache-key-linux-global
+            cache-path: ~/.cache/vcpkg/archives
+            triplet: x64-linux
+          - os: windows-latest
+            cache-key: cache-key-windows
+            cache-key-global: cache-key-windows-global
+            cache-path: |
+              ~/AppData/Local/vcpkg/archives
+              C:/vcpkg/archives
+            triplet: x64-windows
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgJsonGlob: 'vcpkg.json'
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Restore vcpkg cache (branch-first, then global fallback)
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ matrix.cache-path }}
+          key: ${{ needs.cache-check.outputs[matrix.cache-key] }}
+          restore-keys: |
+            ${{ needs.cache-check.outputs[matrix.cache-key-global] }}
+            ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vcpkg-main-
+            ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vcpkg-
+
+      - name: Install system dependencies (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-          libx11-dev \
-          libxrandr-dev \
-          libxcursor-dev \
-          libxi-dev \
-          libudev-dev \
-          libgl1-mesa-dev \
-          libfreetype6-dev \
-          libharfbuzz-dev \
-          libflac-dev \
-          libogg-dev \
-          libvorbis-dev \
-          libopenal-dev \
-          libxinerama-dev \
-          gnome-desktop-testing \
-          libasound2-dev libpulse-dev \
-          libaudio-dev libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
-          libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
-          libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
-          libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev \
+            ninja-build \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libudev-dev libgl1-mesa-dev libfreetype6-dev \
+            libharfbuzz-dev libflac-dev libogg-dev libvorbis-dev \
+            libopenal-dev libxinerama-dev libasound2-dev libpulse-dev \
+            libxkbcommon-dev libdrm-dev libgbm-dev libgles2-mesa-dev \
+            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libthai-dev
 
       - name: Setup MSVC Developer Command Prompt
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Configure C++ with CMake
+      - name: Configure CMake
+        shell: bash
         run: |
-          cmake --preset ${{ matrix.os }}
+          cmake --preset ${{ matrix.os }} \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }}
 
       - name: Build
-        run: |
-          cmake --build --preset ${{ matrix.os }}
-      - name: Publish build artifacts
+        run: cmake --build --preset ${{ matrix.os }}
+
+      - name: Save GLOBAL vcpkg cache (main branch only)
+        if: needs.cache-check.outputs.is-main == 'true' && steps.cache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ matrix.cache-path }}
+          key: ${{ needs.cache-check.outputs[matrix.cache-key] }}
+
+      - name: Save BRANCH vcpkg cache (feature branches only)
+        if: needs.cache-check.outputs.is-main != 'true' && steps.cache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ matrix.cache-path }}
+          key: ${{ needs.cache-check.outputs[matrix.cache-key] }}
+
+      - name: Upload Client Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: r-type-client-${{ matrix.os }}
+          name: r-type_client-${{ matrix.os }}
           path: |
-            build/src/client/Release
-            build/src/client/r-type_client
-            build/**/*.exe
+            build/${{ matrix.os }}/src/client/Release/*
+            build/${{ matrix.os }}/src/client/r-type_client*
+            build/${{ matrix.os }}/src/client/*.exe
+          if-no-files-found: warn
+
+      - name: Upload Server Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: r-type_server-${{ matrix.os }}
+          path: |
+            build/${{ matrix.os }}/src/server/Release/*
+            build/${{ matrix.os }}/src/server/r-type_server*
+            build/${{ matrix.os }}/src/server/*.exe
+          if-no-files-found: warn
+
+      - name: Build Summary
+        shell: bash
+        run: |
+          echo "### 🔨 Build Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | \`${{ needs.cache-check.outputs.branch-name }}\` ${{ needs.cache-check.outputs.is-main == 'true' && '🌍 GLOBAL' || '🌿 feature' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cache Restored | ${{ steps.cache-restore.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS (rebuilt)' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cache Key Used | \`${{ steps.cache-restore.outputs.cache-matched-key || 'none (new build)' }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Triplet | \`${{ matrix.triplet }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | ✅ Success |" >> $GITHUB_STEP_SUMMARY
+
+  mirror:
+    name: "🪞 Push to Epitech Mirror"
+    runs-on: ubuntu-latest
+    needs: [build, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Validate SSH key
+        run: |
+          if [ -z "${{ secrets.GIT_SSH_PRIVATE_KEY }}" ]; then
+            echo "::warning::GIT_SSH_PRIVATE_KEY secret is not configured, skipping mirror"
+            exit 0
+          fi
+
+      - name: Push to Epitech mirror
+        uses: pixta-dev/repository-mirroring-action@v1.1.1
+        with:
+          target_repo_url: git@github.com:EpitechPGE3-2025/G-CPP-500-NAN-5-2-rtype-3.git
+          ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
+
+  cache-cleanup:
+    name: "🧹 Cache Cleanup"
+    runs-on: ubuntu-latest
+    needs: [build, cache-check]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cleanup old caches
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT_HASH: ${{ needs.cache-check.outputs.deps-hash }}
+        run: |
+          echo "### 🧹 Cache Cleanup" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Current dependencies hash:** \`${CURRENT_HASH}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          CACHES=$(gh cache list --json id,key,ref,createdAt --limit 100 2>/dev/null || echo "[]")
+
+          if [ "$CACHES" = "[]" ]; then
+            echo "No caches found" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          echo "| Cache Key | Branch | Action |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+
+          DELETED=0
+          KEPT=0
+
+          echo "$CACHES" | jq -r '.[] | "\(.id)|\(.key)|\(.ref)"' | while IFS='|' read -r id key ref; do
+            if echo "$key" | grep -q "vcpkg"; then
+              CACHE_HASH=$(echo "$key" | rev | cut -d'-' -f1 | rev)
+
+              if echo "$key" | grep -q "vcpkg-main-" && [ "$CACHE_HASH" = "$CURRENT_HASH" ]; then
+                echo "| \`${key:0:60}...\` | main | ✅ Kept (current global) |" >> $GITHUB_STEP_SUMMARY
+                KEPT=$((KEPT + 1))
+              elif echo "$key" | grep -q "vcpkg-main-"; then
+                echo "Deleting stale global cache: $key"
+                gh cache delete "$id" 2>/dev/null || true
+                echo "| \`${key:0:60}...\` | main | 🗑️ Deleted (old hash) |" >> $GITHUB_STEP_SUMMARY
+                DELETED=$((DELETED + 1))
+              else
+                echo "| \`${key:0:60}...\` | feature | ⏳ Kept (branch cache) |" >> $GITHUB_STEP_SUMMARY
+                KEPT=$((KEPT + 1))
+              fi
+            fi
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Summary:** Kept $KEPT caches, deleted $DELETED stale caches" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Current global cache keys:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Linux: \`${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-main-${CURRENT_HASH}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Windows: \`${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-main-${CURRENT_HASH}\`" >> $GITHUB_STEP_SUMMARY
