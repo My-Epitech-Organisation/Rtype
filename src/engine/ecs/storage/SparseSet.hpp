@@ -63,16 +63,17 @@ namespace ECS {
          * @param entity Target entity
          * @param args Constructor arguments
          * @return Reference to emplaced component
+         * @note Provides strong exception guarantee: if construction fails,
+         *       the existing component (if any) is preserved.
          */
         template <typename... Args>
         T& emplace(Entity entity, Args&&... args) {
             std::lock_guard lock(_sparseSetMutex);
 
             if (containsUnsafe(entity)) {
-                T& ref = _dense[_sparse[entity.index()]];
-                std::destroy_at(std::addressof(ref));
-                std::construct_at(std::addressof(ref), std::forward<Args>(args)...);
-                return ref;
+                T newComponent(std::forward<Args>(args)...);
+                _dense[_sparse[entity.index()]] = std::move(newComponent);
+                return _dense[_sparse[entity.index()]];
             }
 
             auto idx = entity.index();

@@ -155,7 +155,7 @@ namespace ECS {
         std::vector<Entity> _packed;
         std::vector<size_t> _sparse;
         mutable std::mutex _sparseSetMutex;
-        static inline T const _dummyInstance{};
+        static inline const T _dummyInstance{};
 
         /**
          * @brief Internal contains check without locking (caller must hold lock).
