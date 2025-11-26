@@ -302,9 +302,9 @@ Compile-time optimization based on component properties:
 ```cpp
 template<typename T>
 struct ComponentTraits {
-    static constexpr bool _isEmpty = std::is_empty_v<T>;
-    static constexpr bool _isTrivial = std::is_trivially_copyable_v<T>;
-    static constexpr bool _isTrivialDestructible = std::is_trivially_destructible_v<T>;
+    static constexpr bool isEmpty = std::is_empty_v<T>;
+    static constexpr bool isTrivial = std::is_trivially_copyable_v<T>;
+    static constexpr bool isTrivialDestructible = std::is_trivially_destructible_v<T>;
 };
 
 // Automatically uses TagSparseSet for empty types
