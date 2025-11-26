@@ -105,7 +105,7 @@ namespace ECS {
             return _packed.size();
         }
 
-        std::vector<Entity>& getPacked() const noexcept override {
+        const std::vector<Entity>& getPacked() const noexcept override {
             std::lock_guard lock(_sparseSetMutex);
 
             return _packed;

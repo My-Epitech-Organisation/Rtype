@@ -60,7 +60,7 @@ namespace ECS {
             std::lock_guard lock(_sparseSetMutex);
 
             if (containsUnsafe(entity))
-                return dense[_sparse[entity.index()]] = T(std::forward<Args>(args)...);
+                return _dense[_sparse[entity.index()]] = T(std::forward<Args>(args)...);
 
             auto idx = entity.index();
             if (idx >= _sparse.size())
@@ -84,7 +84,7 @@ namespace ECS {
 
             if (dense_idx != last_idx) {
                 Entity last_entity = _packed[last_idx];
-                std::swap(dense[dense_idx], dense[last_idx]);
+                std::swap(_dense[dense_idx], _dense[last_idx]);
                 std::swap(_packed[dense_idx], _packed[last_idx]);
                 _sparse[last_entity.index()] = dense_idx;
             }
@@ -99,7 +99,7 @@ namespace ECS {
 
             if (!containsUnsafe(entity))
                 throw std::runtime_error("Entity missing component in SparseSet::get()");
-            return dense[_sparse[entity.index()]];
+            return _dense[_sparse[entity.index()]];
         }
 
         const T& get(Entity entity) const {
@@ -107,7 +107,7 @@ namespace ECS {
 
             if (!containsUnsafe(entity))
                 throw std::runtime_error("Entity missing component in SparseSet::get()");
-            return dense[_sparse[entity.index()]];
+            return _dense[_sparse[entity.index()]];
         }
 
         void clear() noexcept override {
@@ -136,13 +136,13 @@ namespace ECS {
         std::vector<T>::const_iterator begin() const noexcept { return _dense.begin(); }
         std::vector<T>::const_iterator end() const noexcept { return _dense.end(); }
 
-        std::vector<Entity>& getPacked() const noexcept override {
+        const std::vector<Entity>& getPacked() const noexcept override {
             std::lock_guard lock(_sparseSetMutex);
 
             return _packed;
         }
 
-        std::vector<T>& getDense() const noexcept {
+        const std::vector<T>& getDense() const noexcept {
             std::lock_guard lock(_sparseSetMutex);
 
             return _dense;
