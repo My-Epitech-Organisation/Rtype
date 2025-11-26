@@ -6,11 +6,7 @@
   "homepage": "https://github.com/My-Epitech-Organisation/Rtype",
   "builtin-baseline": "da93ad9cabf14d54dd9b460a12a458d359a970ff",
   "dependencies": [
-    {
-      "name": "sfml",
-      "default-features": true,
-      "features": ["graphics", "window", "system", "network", "audio"]
-    },
+    "sfml",
     "asio"
   ]
 }

@@ -100,6 +100,7 @@ jobs:
   lint:
     name: "🔍 Code Quality"
     runs-on: ubuntu-latest
+    needs: [cache-check]
     steps:
       - uses: actions/checkout@v4
 
@@ -157,6 +158,18 @@ jobs:
         with:
           submodules: 'true'
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ninja-build \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libudev-dev libgl1-mesa-dev libfreetype6-dev \
+            libharfbuzz-dev libflac-dev libogg-dev libvorbis-dev \
+            libopenal-dev libxinerama-dev libasound2-dev libpulse-dev \
+            libxkbcommon-dev libdrm-dev libgbm-dev libgles2-mesa-dev \
+            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libthai-dev
+
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
@@ -180,18 +193,6 @@ jobs:
             ${{ needs.cache-check.outputs.cache-key-linux-global }}
             ${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-main-
             ${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            ninja-build \
-            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
-            libudev-dev libgl1-mesa-dev libfreetype6-dev \
-            libharfbuzz-dev libflac-dev libogg-dev libvorbis-dev \
-            libopenal-dev libxinerama-dev libasound2-dev libpulse-dev \
-            libxkbcommon-dev libdrm-dev libgbm-dev libgles2-mesa-dev \
-            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libthai-dev
 
       - name: Configure CMake
         run: |
@@ -252,6 +253,23 @@ jobs:
         with:
           submodules: 'true'
 
+      - name: Install system dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ninja-build \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libudev-dev libgl1-mesa-dev libfreetype6-dev \
+            libharfbuzz-dev libflac-dev libogg-dev libvorbis-dev \
+            libopenal-dev libxinerama-dev libasound2-dev libpulse-dev \
+            libxkbcommon-dev libdrm-dev libgbm-dev libgles2-mesa-dev \
+            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libthai-dev
+
+      - name: Setup MSVC Developer Command Prompt
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
@@ -274,23 +292,6 @@ jobs:
             ${{ needs.cache-check.outputs[matrix.cache-key-global] }}
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vcpkg-main-
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vcpkg-
-
-      - name: Install system dependencies (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            ninja-build \
-            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
-            libudev-dev libgl1-mesa-dev libfreetype6-dev \
-            libharfbuzz-dev libflac-dev libogg-dev libvorbis-dev \
-            libopenal-dev libxinerama-dev libasound2-dev libpulse-dev \
-            libxkbcommon-dev libdrm-dev libgbm-dev libgles2-mesa-dev \
-            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libthai-dev
-
-      - name: Setup MSVC Developer Command Prompt
-        if: matrix.os == 'windows-latest'
-        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure CMake
         shell: bash
