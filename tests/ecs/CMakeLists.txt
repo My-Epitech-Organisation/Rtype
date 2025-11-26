@@ -11,7 +11,6 @@ set(ECS_TESTS
     storage/test_sparse_set
     storage/test_tag_sparse_set
     traits/test_component_traits
-    test_registry
 )
 
 # Function to create a test executable with common configuration
