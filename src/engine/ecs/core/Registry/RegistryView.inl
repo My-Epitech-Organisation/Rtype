@@ -266,9 +266,10 @@
 
     template<typename... Components>
     template<typename T>
-    T& View<Components...>::getComponentData(Entity entity, const ISparseSet& pool) {
+    decltype(auto) View<Components...>::getComponentData(Entity entity, const ISparseSet& pool) {
         if constexpr (std::is_empty_v<T>) {
-            return const_cast<TagSparseSet<T>&>(static_cast<const TagSparseSet<T>&>(pool)).get(entity);
+            // Tags return const T& from TagSparseSet::get()
+            return static_cast<const TagSparseSet<T>&>(pool).get(entity);
         } else {
             return const_cast<SparseSet<T>&>(static_cast<const SparseSet<T>&>(pool)).get(entity);
         }
@@ -276,11 +277,12 @@
 
     template<typename... Includes, typename... Excludes>
     template<typename T>
-    T& ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>>::getComponentData(
+    decltype(auto) ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>>::getComponentData(
         Entity entity, const ISparseSet& pool
     ) {
         if constexpr (std::is_empty_v<T>) {
-            return const_cast<TagSparseSet<T>&>(static_cast<const TagSparseSet<T>&>(pool)).get(entity);
+            // Tags return const T& from TagSparseSet::get()
+            return static_cast<const TagSparseSet<T>&>(pool).get(entity);
         } else {
             return const_cast<SparseSet<T>&>(static_cast<const SparseSet<T>&>(pool)).get(entity);
         }
