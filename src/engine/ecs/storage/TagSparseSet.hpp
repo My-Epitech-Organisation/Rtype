@@ -102,6 +102,8 @@ namespace ECS {
         const std::vector<Entity>& getPacked() const noexcept override { return _packed; }
 
         void reserve(size_t capacity) {
+            std::lock_guard lock(__sparseSetMutex);
+
             _packed.reserve(capacity);
             _sparse.reserve(capacity);
         }
@@ -110,6 +112,8 @@ namespace ECS {
          * @brief Releases unused memory.
          */
         void shrinkToFit() override {
+            std::lock_guard lock(__sparseSetMutex);
+
             _packed.shrink_to_fit();
             _sparse.shrink_to_fit();
         }

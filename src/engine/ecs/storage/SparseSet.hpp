@@ -127,6 +127,8 @@ namespace ECS {
         const std::vector<T>& get_dense() const noexcept { return dense; }
 
         void reserve(size_t capacity) {
+            std::lock_guard lock(__sparseSetMutex);
+
             dense.reserve(capacity);
             _packed.reserve(capacity);
             _sparse.reserve(capacity);
@@ -137,6 +139,8 @@ namespace ECS {
          * Useful after removing many components to reclaim memory.
          */
         void shrinkToFit() override {
+            std::lock_guard lock(__sparseSetMutex);
+
             dense.shrink_to_fit();
             _packed.shrink_to_fit();
             _sparse.shrink_to_fit();
