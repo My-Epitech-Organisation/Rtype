@@ -11,6 +11,7 @@ docs/website/build/
 docs/website/.docusaurus/
 docs/website/node_modules/
 docs/website/static/api/
+docs/website/package-lock.json
 
 # Prerequisites
 *.d
