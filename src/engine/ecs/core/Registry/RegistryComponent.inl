@@ -37,7 +37,7 @@
     // ========================================================================
 
     template <typename T, typename... Args>
-    T& Registry::emplaceComponent(Entity entity, Args&&... args) {
+    decltype(auto) Registry::emplaceComponent(Entity entity, Args&&... args) {
         if (!isAlive(entity)) {
             throw std::runtime_error("Cannot add component to dead entity");
         }
@@ -62,17 +62,23 @@
             }
         }
 
-        auto& result = getSparseSet<T>().emplace(entity, std::forward<Args>(args)...);
-
-        if (is_new_component) {
-            _signalDispatcher.dispatchConstruct(type, entity);
+        if constexpr (std::is_empty_v<T>) {
+            const T& result = getSparseSet<T>().emplace(entity, std::forward<Args>(args)...);
+            if (is_new_component) {
+                _signalDispatcher.dispatchConstruct(type, entity);
+            }
+            return result;
+        } else {
+            T& result = getSparseSet<T>().emplace(entity, std::forward<Args>(args)...);
+            if (is_new_component) {
+                _signalDispatcher.dispatchConstruct(type, entity);
+            }
+            return result;
         }
-
-        return result;
     }
 
     template <typename T, typename... Args>
-    T& Registry::getOrEmplace(Entity entity, Args&&... args) {
+    decltype(auto) Registry::getOrEmplace(Entity entity, Args&&... args) {
         if (hasComponent<T>(entity)) {
             return getComponent<T>(entity);
         }
@@ -137,14 +143,18 @@
     }
 
     template <typename T>
-    T& Registry::getComponent(Entity entity) {
+    decltype(auto) Registry::getComponent(Entity entity) {
         if (!isAlive(entity)) {
             throw std::runtime_error("Attempted to get component from dead entity");
         }
         if (!hasComponent<T>(entity)) {
             throw std::runtime_error("Entity does not have requested component");
         }
-        return getSparseSet<T>().get(entity);
+        if constexpr (std::is_empty_v<T>) {
+            return getSparseSet<T>().get(entity);  // Returns const T&
+        } else {
+            return getSparseSet<T>().get(entity);  // Returns T&
+        }
     }
 
     template <typename T>
