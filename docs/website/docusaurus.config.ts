@@ -25,7 +25,8 @@ const config: Config = {
   organizationName: 'My-Epitech-Organisation', // Usually your GitHub org/user name.
   projectName: 'Rtype', // Usually your repo name.
 
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
+  onBrokenMarkdownLinks: 'warn',
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -92,7 +93,6 @@ const config: Config = {
           label: 'API Reference',
           position: 'left',
         },
-        {to: '/blog', label: 'Blog', position: 'left'},
         {
           href: 'https://github.com/My-Epitech-Organisation/Rtype',
           label: 'GitHub',
