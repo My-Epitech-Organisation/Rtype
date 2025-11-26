@@ -5,8 +5,8 @@
 ** TagSparseSet
 */
 
-#ifndef ECS_STORAGE_TAG__sparse_SET_HPP
-    #define ECS_STORAGE_TAG__sparse_SET_HPP
+#ifndef ECS_STORAGE_TAG_SPARSE_SET_HPP
+    #define ECS_STORAGE_TAG_SPARSE_SET_HPP
     #include "ISparseSet.hpp"
     #include <vector>
     #include <limits>
@@ -95,7 +95,7 @@ namespace ECS {
             return _packed.size();
         }
 
-        const std::vector<Entity>& getPacked() const noexcept { return _packed; }
+        const std::vector<Entity>& getPacked() const noexcept override { return _packed; }
 
         void reserve(size_t capacity) {
             _packed.reserve(capacity);
@@ -105,7 +105,7 @@ namespace ECS {
         /**
          * @brief Releases unused memory.
          */
-        void shrinkToFit() {
+        void shrinkToFit() override {
             _packed.shrink_to_fit();
             _sparse.shrink_to_fit();
         }
@@ -120,4 +120,4 @@ namespace ECS {
 
 } // namespace ECS
 
-#endif // ECS_STORAGE_TAG__sparse_SET_HPP
+#endif // ECS_STORAGE_TAG_SPARSE_SET_HPP
