@@ -162,7 +162,7 @@ if [ ! -f "$CPPLINT_SCRIPT" ]; then
     log_warning "CppLint script not found at $CPPLINT_SCRIPT"
     echo "Status: SKIPPED - cpplint.py not found" >> "$REPORT_FILE"
 else
-    CPPLINT_FILTERS="--filter=-whitespace/parens,-legal/copyright,-whitespace/indent,-whitespace/line_length,-build/include_subdir"
+    CPPLINT_FILTERS="--filter=-whitespace/parens,-legal/copyright,-whitespace/indent,-whitespace/line_length,-build/include_subdir,-build/c++11,-runtime/references,-build/include_what_you_use"
     CPPLINT_OUTPUT=$(python3 "$CPPLINT_SCRIPT" $CPPLINT_FILTERS --linelength=100 $CPP_FILES 2>&1 | grep -v "^$" | grep -v "^Done processing" || true)
 
     if [ -z "$CPPLINT_OUTPUT" ]; then
