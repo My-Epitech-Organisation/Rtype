@@ -36,11 +36,6 @@ namespace ECS {
     template <typename T>
     class SparseSet : public ISparseSet {
     public:
-        using value_type = T;
-        using reference = T&;
-        using const_reference = const T&;
-        using iterator = typename std::vector<T>::iterator;
-        using const_iterator = typename std::vector<T>::const_iterator;
 
         SparseSet() = default;
 
@@ -59,10 +54,10 @@ namespace ECS {
          * @return Reference to emplaced component
          */
         template <typename... Args>
-        reference emplace(Entity entity, Args&&... args) {
+        T& emplace(Entity entity, Args&&... args) {
             std::lock_guard lock(__sparseSetMutex);
 
-            if (contains(entity))
+            if (containsUnsafe(entity))
                 return dense[_sparse[entity.index()]] = T(std::forward<Args>(args)...);
 
             auto idx = entity.index();
@@ -79,7 +74,7 @@ namespace ECS {
         void remove(Entity entity) override {
             std::lock_guard lock(__sparseSetMutex);
 
-            if (!contains(entity)) return;
+            if (!containsUnsafe(entity)) return;
 
             auto idx = entity.index();
             size_t dense_idx = _sparse[idx];
@@ -97,14 +92,18 @@ namespace ECS {
             _sparse[idx] = NullIndex;
         }
 
-        reference get(Entity entity) {
-            if (!contains(entity))
+        T& get(Entity entity) {
+            std::lock_guard lock(__sparseSetMutex);
+
+            if (!containsUnsafe(entity))
                 throw std::runtime_error("Entity missing component in SparseSet::get()");
             return dense[_sparse[entity.index()]];
         }
 
-        const_reference get(Entity entity) const {
-            if (!contains(entity))
+        const T& get(Entity entity) const {
+            std::lock_guard lock(__sparseSetMutex);
+
+            if (!containsUnsafe(entity))
                 throw std::runtime_error("Entity missing component in SparseSet::get()");
             return dense[_sparse[entity.index()]];
         }
@@ -119,10 +118,10 @@ namespace ECS {
             return dense.size();
         }
 
-        iterator begin() noexcept { return dense.begin(); }
-        iterator end() noexcept { return dense.end(); }
-        const_iterator begin() const noexcept { return dense.begin(); }
-        const_iterator end() const noexcept { return dense.end(); }
+        std::vector<T>::iterator begin() noexcept { return dense.begin(); }
+        std::vector<T>::iterator end() noexcept { return dense.end(); }
+        std::vector<T>::const_iterator begin() const noexcept { return dense.begin(); }
+        std::vector<T>::const_iterator end() const noexcept { return dense.end(); }
 
         const std::vector<Entity>& getPacked() const noexcept override { return _packed; }
         const std::vector<T>& get_dense() const noexcept { return dense; }
@@ -149,6 +148,17 @@ namespace ECS {
         std::vector<Entity> _packed;
         std::vector<size_t> _sparse;
         mutable std::mutex __sparseSetMutex;
+
+        /**
+         * @brief Internal contains check without locking (caller must hold lock).
+         */
+        bool containsUnsafe(Entity entity) const noexcept {
+            auto idx = entity.index();
+            return idx < _sparse.size() &&
+                   _sparse[idx] != NullIndex &&
+                   _sparse[idx] < _packed.size() &&
+                   _packed[_sparse[idx]] == entity;
+        }
     };
 
 } // namespace ECS
