@@ -99,6 +99,7 @@ jobs:
 
   lint:
     name: "🔍 Code Quality"
+    needs: [cache-check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -154,7 +155,7 @@ jobs:
   test:
     name: "🧪 Unit Tests"
     runs-on: ubuntu-latest
-    needs: [cache-check]
+    needs: [cache-check, lint]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -232,7 +233,7 @@ jobs:
 
   build:
     name: "🔨 Build (${{ matrix.os }})"
-    needs: [cache-check, lint]
+    needs: [cache-check, lint, test]
     strategy:
       fail-fast: false
       matrix:
