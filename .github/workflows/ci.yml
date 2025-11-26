@@ -163,7 +163,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             ninja-build \
-            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev \
             libudev-dev libgl1-mesa-dev libfreetype6-dev \
             libharfbuzz-dev libflac-dev libogg-dev libvorbis-dev \
             libopenal-dev libxinerama-dev libasound2-dev libpulse-dev \
@@ -259,7 +259,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             ninja-build \
-            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev \
             libudev-dev libgl1-mesa-dev libfreetype6-dev \
             libharfbuzz-dev libflac-dev libogg-dev libvorbis-dev \
             libopenal-dev libxinerama-dev libasound2-dev libpulse-dev \
