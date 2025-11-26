@@ -126,10 +126,10 @@ namespace ECS {
          * @tparam T Component type
          * @param entity Target entity
          * @param args Constructor arguments
-         * @return Reference to component
+         * @return Reference to component (const for tags, mutable for data components)
          */
         template <typename T, typename... Args>
-        T& emplaceComponent(Entity entity, Args&&... args);
+        decltype(auto) emplaceComponent(Entity entity, Args&&... args);
 
         /**
          * @brief Gets component if exists, otherwise creates it (lazy initialization).
@@ -137,10 +137,10 @@ namespace ECS {
          * @tparam T Component type
          * @param entity Target entity
          * @param args Constructor arguments (used only if component doesn't exist)
-         * @return Reference to component (existing or newly created)
+         * @return Reference to component (const for tags, mutable for data components)
          */
         template <typename T, typename... Args>
-        T& getOrEmplace(Entity entity, Args&&... args);
+        decltype(auto) getOrEmplace(Entity entity, Args&&... args);
 
         /**
          * @brief Removes component from entity.
@@ -180,11 +180,11 @@ namespace ECS {
          * @brief Retrieves component reference.
          * @tparam T Component type
          * @param entity Target entity
-         * @return Mutable reference to component
+         * @return Reference to component (const for tags, mutable for data components)
          * @throws std::runtime_error if entity dead or component missing
          */
         template <typename T>
-        T& getComponent(Entity entity);
+        decltype(auto) getComponent(Entity entity);
 
         /**
          * @brief Retrieves const component reference.
