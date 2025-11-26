@@ -22,6 +22,9 @@ if(NOT ECS_SOURCES)
         ${CMAKE_CURRENT_SOURCE_DIR}/..
     )
 
+    # C++20 standard requirement
+    target_compile_features(rtype_ecs INTERFACE cxx_std_20)
+
     # Threading support
     find_package(Threads REQUIRED)
     target_link_libraries(rtype_ecs INTERFACE Threads::Threads)
@@ -34,6 +37,9 @@ else()
     target_include_directories(rtype_ecs PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/..
     )
+
+    # C++20 standard requirement
+    target_compile_features(rtype_ecs PUBLIC cxx_std_20)
 
     # Threading support
     find_package(Threads REQUIRED)
