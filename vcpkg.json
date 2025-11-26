@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "R-Type multiplayer game remake",
   "homepage": "https://github.com/My-Epitech-Organisation/Rtype",
+  "builtin-baseline": "da93ad9cabf14d54dd9b460a12a458d359a970ff",
   "dependencies": [
     {
       "name": "sfml",
