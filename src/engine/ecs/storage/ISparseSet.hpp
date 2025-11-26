@@ -2,11 +2,11 @@
 ** EPITECH PROJECT, 2025
 ** R-Type
 ** File description:
-** I_sparseSet
+** ISparseSet
 */
 
-#ifndef ECS_STORAGE_I_sparse_SET_HPP
-    #define ECS_STORAGE_I_sparse_SET_HPP
+#ifndef ECS_STORAGE_ISPARSE_SET_HPP
+    #define ECS_STORAGE_ISPARSE_SET_HPP
     #include "../core/Entity.hpp"
     #include <vector>
 
@@ -52,12 +52,12 @@ namespace ECS {
         virtual void shrinkToFit() = 0;
 
         /**
-         * @brief Returns the _packed entity array for iteration.
-         * @return Reference to the _packed entity vector
+         * @brief Returns the packed entity array for iteration.
+         * @return Reference to the packed entity vector
          */
         virtual const std::vector<Entity>& getPacked() const noexcept = 0;
     };
 
 } // namespace ECS
 
-#endif // ECS_STORAGE_I_sparse_SET_HPP
+#endif // ECS_STORAGE_ISPARSE_SET_HPP
