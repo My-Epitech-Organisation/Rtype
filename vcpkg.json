@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "r-type",
+  "version": "1.0.0",
+  "description": "R-Type multiplayer game remake",
+  "homepage": "https://github.com/My-Epitech-Organisation/Rtype",
+  "dependencies": [
+    {
+      "name": "sfml",
+      "default-features": true,
+      "features": ["graphics", "window", "system", "network", "audio"]
+    },
+    "asio"
+  ]
+}
