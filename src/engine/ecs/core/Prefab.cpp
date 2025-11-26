@@ -6,7 +6,7 @@
 */
 
 #include "Prefab.hpp"
-#include "Registry.hpp"
+#include "Registry/Registry.hpp"
 #include <stdexcept>
 #include <algorithm>
 #include <utility>

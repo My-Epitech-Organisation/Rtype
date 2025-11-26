@@ -6,7 +6,7 @@
 */
 
 #include "CommandBuffer.hpp"
-#include "Registry.hpp"
+#include "Registry/Registry.hpp"
 
 namespace ECS {
 
