@@ -75,14 +75,21 @@ ctest --output-on-failure
 To generate both Doxygen and Docusaurus documentation:
 
 ```bash
-cd docs
-./generate-docs.sh
+# From project root
+make docs
 ```
 
-View the documentation:
+To view the documentation with live reload:
 
 ```bash
-cd website
+make docs-serve
+```
+
+Or manually:
+
+```bash
+./scripts/generate_docs.sh
+cd docs/website
 npm start
 ```
 
