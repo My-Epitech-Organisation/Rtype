@@ -5,11 +5,11 @@
 ** ClientApp
 */
 
-#include <iostream>
 #include "ClientApp.hpp"
 
-void RTypeClient::ClientApp::run()
-{
+#include <iostream>
+
+void RTypeClient::ClientApp::run() {
     Graphic graphic;
     graphic.loop();
 }
