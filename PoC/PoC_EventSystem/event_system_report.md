@@ -18,7 +18,8 @@ Our goal is to achieve **Decoupled Subsystems** while maintaining performance an
 - [2. Hardcoded Coupling vs Observer Pattern](#2-hardcoded-coupling-vs-observer-pattern)
 - [3. Command Queue Implementations](#3-command-queue-implementations)
 - [4. How Event Bus Enables Decoupled Subsystems](#4-how-event-bus-enables-decoupled-subsystems)
-- [5. Recommendations](#5-recommendations)
+- [5. Final Decision: Command Queue](#5-final-decision-command-queue)
+- [6. Recommendations](#6-recommendations)
 
 ---
 
@@ -357,7 +358,126 @@ void onPacketReceived(Packet& p) {
 
 ---
 
-## 5. Recommendations
+## 5. Final Decision: Command Queue
+
+### Decision
+
+**We have chosen the Command Queue pattern with CircularBuffer** as our primary inter-thread communication mechanism for the R-Type project.
+
+**Date**: November 26, 2025
+**Status**: ✅ APPROVED
+
+---
+
+### Why Command Queue?
+
+After evaluating all three approaches, we selected the Command Queue pattern for the following reasons:
+
+#### 1. Thread-Safety by Design
+
+The Command Queue naturally handles producer-consumer scenarios between threads:
+
+```cpp
+// Network Thread (Producer)
+commandQueue.addNewCommand(Message("MOVE", "player1,100,200"));
+
+// Graphics Thread (Consumer)
+commandQueue.execute(game);  // Processes all queued commands
+```
+
+This is essential for R-Type where the **Network thread** must communicate with the **Graphics/Game thread** without race conditions.
+
+#### 2. Simplicity Over Complexity
+
+| Approach | Complexity | Our Need |
+|----------|------------|----------|
+| Hardcoded Calls | Low | ❌ Not thread-safe |
+| Event Bus | Medium | ❌ Overkill for our use case |
+| Command Queue | Low-Medium | ✅ Perfect fit |
+
+The Event Bus adds unnecessary abstraction when we primarily need **thread-to-thread messaging**, not **system-to-system decoupling**.
+
+#### 3. CircularBuffer for Performance
+
+We chose `CircularBuffer` over `std::queue` because:
+
+- **No runtime allocations** — Pre-allocated fixed buffer
+- **Better cache performance** — Contiguous memory
+- **Bounded memory** — Predictable resource usage
+- **Network-friendly** — Already works with serialized byte streams
+
+```cpp
+// Message serialization fits naturally with network packets
+std::vector<uint8_t> serialized = message.serialize();
+_buffer.write(serialized);  // Same format as network send
+```
+
+#### 4. Clear Separation of Concerns
+
+```
+┌─────────────────┐                      ┌─────────────────┐
+│  Network Thread │                      │  Game Thread    │
+│                 │                      │                 │
+│  receive()      │                      │  update()       │
+│       │         │                      │       │         │
+│       ▼         │                      │       ▼         │
+│  addNewCommand()│─────────────────────►│  execute()      │
+│                 │    CircularBuffer    │                 │
+└─────────────────┘    (thread-safe)     └─────────────────┘
+```
+
+---
+
+### What We Did NOT Choose
+
+#### ❌ Hardcoded Function Calls
+
+- Not suitable for multi-threaded architecture
+- Would require manual synchronization everywhere
+- No message buffering capability
+
+#### ❌ Event Bus (for thread communication)
+
+- Adds complexity we don't need
+- Observer pattern better suited for same-thread system communication
+- Overhead of subscription management unnecessary for our use case
+
+---
+
+### Implementation Summary
+
+Our final implementation in `PoC_CircularBuffer`:
+
+| Component | Implementation |
+|-----------|----------------|
+| Buffer | `CircularBuffer` (4096 bytes default) |
+| Thread-safety | `std::mutex` with `std::lock_guard` |
+| Message format | Serialized with length prefix |
+| Interface | `ICommand` → `ACommand` |
+
+```cpp
+class ACommand : public ICommand {
+    rtype::network::CircularBuffer _buffer;
+    std::mutex _mutex;
+
+    void addNewCommand(const Message& cmd);  // Thread-safe push
+    void execute(Game& game);                 // Thread-safe consume
+    bool isEmpty();                           // Thread-safe check
+};
+```
+
+---
+
+### Next Steps
+
+1. **Integrate** `CircularBuffer`-based Command Queue into `src/network/`
+2. **Connect** Network thread to Game thread using this pattern
+3. **Define** standard `Message` types for game events (MOVE, SHOOT, SPAWN, etc.)
+4. **Benchmark** under load to validate buffer size (4096 bytes)
+
+---
+
+## 6. Recommendations
 
 ### Final Architecture Decision
 
