@@ -5,48 +5,51 @@
 ** test_registry
 */
 
-#include "../../src/engine/ecs/Registry.hpp"
+#include "ecs/ECS.hpp"
 #include <gtest/gtest.h>
 
-using namespace rtype::engine::ecs;
+using namespace ECS;
 
-TEST(RegistryTest, CreateEntity) {
+TEST(RegistryTest, SpawnEntity) {
     Registry registry;
-    auto entity = registry.createEntity();
+    auto entity = registry.spawnEntity();
 
-    EXPECT_TRUE(entity.valid());
-    EXPECT_GT(entity.id(), 0u);
+    EXPECT_FALSE(entity.isNull());
+    EXPECT_TRUE(registry.isAlive(entity));
 }
 
-TEST(RegistryTest, EntityCount) {
+TEST(RegistryTest, SpawnMultipleEntities) {
     Registry registry;
-    EXPECT_EQ(registry.entityCount(), 0u);
 
-    registry.createEntity();
-    EXPECT_EQ(registry.entityCount(), 1u);
+    auto entity1 = registry.spawnEntity();
+    auto entity2 = registry.spawnEntity();
 
-    registry.createEntity();
-    EXPECT_EQ(registry.entityCount(), 2u);
+    EXPECT_TRUE(registry.isAlive(entity1));
+    EXPECT_TRUE(registry.isAlive(entity2));
+    EXPECT_NE(entity1.id, entity2.id);
 }
 
-TEST(RegistryTest, DestroyEntity) {
+TEST(RegistryTest, KillEntity) {
     Registry registry;
-    auto entity = registry.createEntity();
+    auto entity = registry.spawnEntity();
 
-    EXPECT_EQ(registry.entityCount(), 1u);
+    EXPECT_TRUE(registry.isAlive(entity));
 
-    registry.destroyEntity(entity);
-    EXPECT_EQ(registry.entityCount(), 0u);
+    registry.killEntity(entity);
+    EXPECT_FALSE(registry.isAlive(entity));
 }
 
-TEST(RegistryTest, Clear) {
+TEST(RegistryTest, EntityGenerations) {
     Registry registry;
-    registry.createEntity();
-    registry.createEntity();
-    registry.createEntity();
+    auto entity1 = registry.spawnEntity();
+    auto idx = entity1.index();
 
-    EXPECT_EQ(registry.entityCount(), 3u);
+    registry.killEntity(entity1);
 
-    registry.clear();
-    EXPECT_EQ(registry.entityCount(), 0u);
+    auto entity2 = registry.spawnEntity();
+
+    // The new entity should reuse the index but have a different generation
+    if (entity2.index() == idx) {
+        EXPECT_NE(entity1.generation(), entity2.generation());
+    }
 }
