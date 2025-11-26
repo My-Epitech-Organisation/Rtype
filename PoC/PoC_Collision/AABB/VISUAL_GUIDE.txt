@@ -1,0 +1,252 @@
+```
+AABB Collision Detection - Visual Guide
+========================================
+
+1. BASIC COLLISION (TRUE)
+   ┌─────────┐
+   │    A    │
+   │    ┌────┼────┐
+   │    │    │  B │
+   └────┼────┘    │
+        └─────────┘
+   Overlap detected on both axes ✓
+
+
+2. SEPARATED ON X-AXIS (FALSE)
+   ┌─────┐         ┌─────┐
+   │  A  │         │  B  │
+   └─────┘         └─────┘
+   
+   Gap on X-axis → No collision ✗
+
+
+3. SEPARATED ON Y-AXIS (FALSE)
+   ┌─────┐
+   │  A  │
+   └─────┘
+   
+   ┌─────┐
+   │  B  │
+   └─────┘
+   
+   Gap on Y-axis → No collision ✗
+
+
+4. EDGE TOUCHING (TRUE/FALSE - configurable)
+   ┌─────┐┌─────┐
+   │  A  ││  B  │
+   └─────┘└─────┘
+   
+   checkCollision() → TRUE ✓
+   checkCollisionStrict() → FALSE ✗
+
+
+5. COMPLETE CONTAINMENT (TRUE)
+   ┌───────────────┐
+   │       A       │
+   │   ┌─────┐     │
+   │   │  B  │     │
+   │   └─────┘     │
+   └───────────────┘
+   
+   B fully inside A → Collision ✓
+
+
+6. POINT COLLISION (TRUE)
+   ┌─────────┐
+   │    ●    │  ← Point inside
+   │         │
+   └─────────┘
+   
+   containsPoint() → TRUE ✓
+
+
+7. ALGORITHM FLOW
+   ┌─────────────────────────────┐
+   │ checkCollision(Rect A, B)   │
+   └──────────┬──────────────────┘
+              │
+              ▼
+   ┌─────────────────────────────┐
+   │ Check X-axis separation?    │
+   │ A.right < B.left? OR        │
+   │ B.right < A.left?           │
+   └──────────┬──────────────────┘
+              │
+         ┌────┴────┐
+         │   YES   │ → Return FALSE (no collision)
+         └─────────┘
+              │
+         ┌────┴────┐
+         │   NO    │
+         └────┬────┘
+              │
+              ▼
+   ┌─────────────────────────────┐
+   │ Check Y-axis separation?    │
+   │ A.bottom < B.top? OR        │
+   │ B.bottom < A.top?           │
+   └──────────┬──────────────────┘
+              │
+         ┌────┴────┐
+         │   YES   │ → Return FALSE (no collision)
+         └─────────┘
+              │
+         ┌────┴────┐
+         │   NO    │
+         └────┬────┘
+              │
+              ▼
+   ┌─────────────────────────────┐
+   │ Return TRUE (collision!)    │
+   └─────────────────────────────┘
+
+
+8. OVERLAP DEPTH VISUALIZATION
+   
+        overlapX = 5
+        ↔
+   ┌────────┐
+   │   A    │····┐  ↕ overlapY = 5
+   │    ┌───┼──┐ │
+   │    │   │  │ │
+   └────┼───┘  │ │
+        │   B  │ │
+        └──────┘·┘
+   
+   Used for collision response:
+   - Push objects apart by minimum overlap
+   - Choose smallest axis for natural resolution
+
+
+9. ROTATION PROBLEM (LIMITATION)
+   
+   Axis-Aligned (✓ Works):
+   ┌────┐
+   │ A  │
+   └────┘
+   
+   Rotated (✗ Doesn't work):
+      ◆
+     ╱ ╲
+    ◆   ◆  ← Must use bounding box
+     ╲ ╱      (conservative approximation)
+      ◆
+
+
+10. ECS INTEGRATION PATTERN
+    
+    ┌─────────────────────────────────────┐
+    │          ECS Registry               │
+    └─────────────────────────────────────┘
+                   │
+        ┌──────────┼──────────┐
+        │          │          │
+        ▼          ▼          ▼
+    ┌───────┐ ┌─────────┐ ┌──────────┐
+    │Entity1│ │Entity2  │ │Entity3   │
+    └───┬───┘ └────┬────┘ └─────┬────┘
+        │          │            │
+    ┌───┴────┐ ┌───┴────┐  ┌───┴────┐
+    │Transform│ │Transform│  │Transform│
+    │x:0 y:0 │ │x:5 y:5 │  │x:20 y:20│
+    └────────┘ └────────┘  └────────┘
+    ┌────────┐ ┌────────┐  ┌────────┐
+    │BoxCol. │ │BoxCol. │  │BoxCol. │
+    │w:10h:10│ │w:10h:10│  │w:5 h:5 │
+    └────────┘ └────────┘  └────────┘
+        │          │            │
+        └────┬─────┴─────┬──────┘
+             │           │
+        ┌────▼───────────▼────┐
+        │ Collision System    │
+        │                     │
+        │ for each pair:      │
+        │   if checkCollision │
+        │     → handle        │
+        └─────────────────────┘
+
+
+11. PERFORMANCE CHARACTERISTICS
+    
+    Time Complexity: O(1)
+    ┌────────────────────────────────┐
+    │ Number of Rectangles           │
+    │         vs                     │
+    │ Time per Check                 │
+    │                                │
+    │ Time │                         │
+    │      │───────────────          │
+    │      │ Constant ≈0.024µs      │
+    │      └────────────────→        │
+    │           Objects              │
+    └────────────────────────────────┘
+    
+    Naive All-Pairs: O(n²)
+    ┌────────────────────────────────┐
+    │ Number of Objects              │
+    │         vs                     │
+    │ Total Checks                   │
+    │                                │
+    │Checks│              ╱│         │
+    │      │            ╱  │         │
+    │      │          ╱    │         │
+    │      │        ╱      │         │
+    │      │      ╱        │         │
+    │      │    ╱          │         │
+    │      │  ╱            │         │
+    │      └────────────────→        │
+    │           Objects              │
+    └────────────────────────────────┘
+    
+    Solution: Spatial Partitioning → O(n log n)
+
+
+12. R-TYPE RECOMMENDED ARCHITECTURE
+    
+    ┌─────────────────────────────────────┐
+    │         Collision Pipeline          │
+    └─────────────────────────────────────┘
+                     │
+                     ▼
+    ┌─────────────────────────────────────┐
+    │   Phase 1: Spatial Partitioning     │
+    │   (QuadTree) - O(n log n)           │
+    │   → Get nearby entities only        │
+    └──────────────┬──────────────────────┘
+                   │
+                   ▼
+    ┌─────────────────────────────────────┐
+    │   Phase 2: AABB Broad Phase         │
+    │   (This PoC) - O(1) per pair        │
+    │   → Quickly eliminate non-colliding │
+    └──────────────┬──────────────────────┘
+                   │
+                   ▼
+    ┌─────────────────────────────────────┐
+    │   Phase 3: Narrow Phase             │
+    │   (Circle/Pixel-Perfect)            │
+    │   → Accurate collision detection    │
+    └──────────────┬──────────────────────┘
+                   │
+                   ▼
+    ┌─────────────────────────────────────┐
+    │   Phase 4: Collision Response       │
+    │   (Physics/Game Logic)              │
+    │   → Handle collision effects        │
+    └─────────────────────────────────────┘
+
+
+LEGEND:
+──────
+┌─┐  Box/Rectangle
+ │   Line
+ ▼   Flow direction
+ ✓   Success/True
+ ✗   Failure/False
+ ●   Point
+ ◆   Rotated object
+═══  Strong boundary
+───  Normal boundary
+···  Overlap indicator
+```

@@ -32,87 +32,30 @@ jobs:
           libogg-dev \
           libvorbis-dev \
           libopenal-dev \
-          ccache
+          libxinerama-dev \
+          gnome-desktop-testing \
+          libasound2-dev libpulse-dev \
+          libaudio-dev libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+          libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+          libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+          libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev \
 
       - name: Setup MSVC Developer Command Prompt
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure C++ with CMake
-        env:
-          CMAKE_CXX_COMPILER_LAUNCHER: ${{ matrix.os == 'ubuntu-latest' && 'ccache' || '' }}
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --preset ${{ matrix.os }}
 
       - name: Build
         run: |
-          cmake --build build --config Release --parallel
-
-      - name: Prepare client artifact (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          BINARY_PATH=$(find build/ -name r-type_client -type f | head -n 1)
-          cp "$BINARY_PATH" r-type_client
-
-      - name: Prepare client artifact (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          $BinaryPath = Get-ChildItem -Path "build" -Filter "r-type_client.exe" -Recurse | Select-Object -First 1
-          Copy-Item -Path $BinaryPath.FullName -Destination ".\r-type_client.exe"
-
-      - name: Prepare server artifact (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          BINARY_PATH=$(find build/ -name r-type_server -type f | head -n 1)
-          cp "$BINARY_PATH" r-type_server
-      - name: Prepare server artifact (Windows) 🛠️
-        if: matrix.os == 'windows-latest'
-        run: |
-          $BinaryPath = Get-ChildItem -Path "build" -Filter "r-type_server.exe" -Recurse | Select-Object -First 1
-          Copy-Item -Path $BinaryPath.FullName -Destination ".\r-type_server.exe"
-      - name: Publish build artifacts client windows
-        if: matrix.os == 'windows-latest'
+          cmake --build --preset ${{ matrix.os }}
+      - name: Publish build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: r-type-client-${{ matrix.os }}
-          path: r-type_client.exe
-          compression-level: 0
-
-      - name: Publish build artifacts client linux
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: r-type-client-${{ matrix.os }}
-          path: r-type_client
-          compression-level: 0
-
-      - name: Publish build artifacts server windows
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: r-type-server-${{ matrix.os }}
-          path: r-type_server.exe
-          compression-level: 0
-
-      - name: Publish build artifacts server linux
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: r-type-server-${{ matrix.os }}
-          path: r-type_server
-          compression-level: 0
-
-      - name: Create a Release
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ matrix.os }} ${{ github.ref }}
-          body: Release for ${{ matrix.os }} ${{ github.ref }}
-          files: |
-            build/**/r-type_client.exe
-            build/**/r-type_client
-            build/**/r-type_server
-            build/**/r-type_server.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: |
+            build/src/client/Release
+            build/src/client/r-type_client
+            build/**/*.exe

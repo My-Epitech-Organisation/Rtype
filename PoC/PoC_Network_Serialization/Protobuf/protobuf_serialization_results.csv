@@ -1,0 +1,7 @@
+Metric,Protobuf,Binary,JSON
+Position Size (bytes),bytes,8,31
+Entity Size (bytes),bytes,20,95
+GameState 5 Entities (bytes),bytes,105,439
+GameState 10 Entities (bytes),bytes,205,856
+Bandwidth 5 entities @60Hz (Kbps),67.97,49.2,205.8
+Bandwidth 10 entities @60Hz (Kbps),133.59,96.1,401.2

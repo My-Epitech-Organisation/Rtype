@@ -1,0 +1,31 @@
+=== Binary Serialization Performance Benchmark ===
+
+Testing 100000 iterations per configuration
+Target: 60 packets/second (16.67ms per packet)
+
+--- Serialization Only ---
+    Entities       Avg Time    Max Throughput   60Hz?
+------------------------------------------------------------
+           1           0.01 µs         181092495 pkt/s  ✓
+           2           0.01 µs          84018222 pkt/s  ✓
+           5           0.03 µs          33719296 pkt/s  ✓
+          10           0.06 µs          17442835 pkt/s  ✓
+          20           0.13 µs           7971241 pkt/s  ✓
+          50           0.34 µs           2908286 pkt/s  ✓
+         100           0.71 µs           1407239 pkt/s  ✓
+
+--- Roundtrip (Serialize + Deserialize) ---
+    Entities       Avg Time    Max Throughput   60Hz?
+------------------------------------------------------------
+           1           0.02 µs          45652032 pkt/s  ✓
+           2           0.03 µs          34147617 pkt/s  ✓
+           5           0.08 µs          13181724 pkt/s  ✓
+          10           0.13 µs           7512460 pkt/s  ✓
+          20           0.19 µs           5319552 pkt/s  ✓
+          50           0.48 µs           2087934 pkt/s  ✓
+         100           1.11 µs            903986 pkt/s  ✓
+
+Conclusion:
+  ✓ = Can maintain 60 Hz update rate
+  Binary serialization is extremely fast (sub-microsecond)
+  No performance bottleneck even for 100+ entities

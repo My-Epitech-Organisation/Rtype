@@ -1,0 +1,18 @@
+=== Protobuf Size Test ===
+
+Vec2 (position)                 10 bytes
+EntityState                     26 bytes
+GameState x5                   145 bytes
+GameState x10                  285 bytes
+
+=== Bandwidth @ 60 Hz ===
+5 entities:  67.97 Kbps
+10 entities: 133.59 Kbps
+
+=== Size Comparison (bytes) ===
+Packet             Proto    Binary      JSON      +% Bin     -% JSON
+----------------------------------------------------------
+Vec2                   0         8        31      -100.0       100.0
+Entity                26        20        95        30.0        72.6
+5 ent.               145       105       439        38.1        67.0
+10 ent.              285       205       856        39.0        66.7

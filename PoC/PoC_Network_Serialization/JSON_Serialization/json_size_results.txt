@@ -1,0 +1,46 @@
+=== JSON Serialization Size Test ===
+
+--- Single Position ---
+JSON (formatted)                    31 bytes
+JSON (compact)                      31 bytes
+Content: {"r":45.0,"x":100.5,"y":200.75}
+
+--- Single Entity ---
+JSON (compact)                      95 bytes
+Content: {"hp":100,"id":1,"pos":{"r":45.0,"x":100.5,"y":200.75},"team":1,"vel":[5.5,-3.200000047683716]}
+
+--- Game State Packet ---
+5 entities (compact)               439 bytes
+10 entities (compact)              856 bytes
+
+=== Bandwidth Analysis (60 packets/sec) ===
+
+Single position @ 60 packets/sec:
+  Size per packet: 31 bytes
+  Bandwidth: 1860.00 B/s = 14.53 Kbps = 0.01 Mbps
+
+Single entity @ 60 packets/sec:
+  Size per packet: 95 bytes
+  Bandwidth: 5700.00 B/s = 44.53 Kbps = 0.04 Mbps
+
+5 entities packet @ 60 packets/sec:
+  Size per packet: 439 bytes
+  Bandwidth: 26340.00 B/s = 205.78 Kbps = 0.20 Mbps
+
+10 entities packet @ 60 packets/sec:
+  Size per packet: 856 bytes
+  Bandwidth: 51360.00 B/s = 401.25 Kbps = 0.39 Mbps
+
+=== Maximum Entities per Packet ===
+(Target: < 1500 bytes MTU, < 10 Kbps @ 60 pkt/s)
+  Overhead: 18446744073709551522 bytes
+  Max entities (MTU 1500): 16
+  Max entities (10 Kbps): 1
+
+=== Verdict ===
+✗ JSON too large for 60 packets/sec at 10 Kbps
+
+Conclusion:
+  JSON size per entity: ~95 bytes
+  Suitable for low entity counts (< 1 entities)
+  Consider binary serialization for better efficiency

@@ -1,0 +1,9 @@
+=== Protobuf vs JSON ===
+Protobuf bytes (hex): 08 07 12 0a 0d 79 e9 f6 42 15 c5 40 45 44 1a 0a 0d 00 00 b0 40 15 cd cc 4c c0
+Size: 26 bytes
+
+JSON string:
+{"id":7,"pos":{"x":123.456,"y":789.012},"vel":[5.5,-3.2]}
+Size: 57 bytes
+
+✓ Protobuf saves 54.4% vs JSON
