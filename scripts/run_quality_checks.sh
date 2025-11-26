@@ -125,7 +125,7 @@ else
         log_info "Checking for remaining formatting issues..."
         for file in $CPP_FILES; do
             REPLACEMENTS=$(clang-format -style=file:"$CLANG_FORMAT_CONFIG" -output-replacements-xml "$file" 2>/dev/null || true)
-            if echo "$REPLACEMENTS" | grep -q "<replacement "; then
+            if [[ "$REPLACEMENTS" == *"<replacement "* ]]; then
                 CLANG_FORMAT_ERRORS=$((CLANG_FORMAT_ERRORS + 1))
                 FORMAT_FAILED="${FORMAT_FAILED}  ✗ Needs formatting: $file\n"
                 log_warning "Needs formatting: $file"
