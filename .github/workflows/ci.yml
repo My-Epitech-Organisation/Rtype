@@ -103,25 +103,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install linting tools
+      - name: Install linting tools (clang-format 19)
         run: |
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main" | sudo tee /etc/apt/sources.list.d/llvm.list
           sudo apt-get update
-          sudo apt-get install -y clang-format clang-tidy python3
+          sudo apt-get install -y clang-format-19 clang-tidy-19 python3
+          sudo ln -sf /usr/bin/clang-format-19 /usr/bin/clang-format
+          sudo ln -sf /usr/bin/clang-tidy-19 /usr/bin/clang-tidy
+          echo "Installed versions:"
+          clang-format --version
+          clang-tidy --version
 
       - name: Make quality script executable
         run: chmod +x scripts/run_quality_checks.sh
-
-      - name: Debug - List source files
-        run: |
-          echo "=== Checking src directory ==="
-          find src -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) 2>/dev/null | head -20 || echo "No files found in src/"
-          echo ""
-          echo "=== Checking include directory ==="
-          find include -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) 2>/dev/null | head -20 || echo "No files found in include/"
-          echo ""
-          echo "=== Checking config files ==="
-          ls -la config/clang/ 2>/dev/null || echo "No config/clang/ directory"
-          ls -la config/cpplint/ 2>/dev/null || echo "No config/cpplint/ directory"
 
       - name: Run Code Quality Checks
         id: quality-checks
