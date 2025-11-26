@@ -16,8 +16,8 @@ namespace rtype::network {
 
 class Serializer {
    public:
-    static std::vector<uint8_t> serialize(const Packet &packet);
-    static Packet deserialize(const std::vector<uint8_t> &data);
+    static std::vector<uint8_t> serialize(const Packet& packet);
+    static Packet deserialize(const std::vector<uint8_t>& data);
 };
 
 }  // namespace rtype::network
