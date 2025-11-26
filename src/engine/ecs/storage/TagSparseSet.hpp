@@ -44,7 +44,7 @@ namespace ECS {
         template <typename... Args>
         T& emplace(Entity entity, Args&&...) {
             std::lock_guard lock(__sparseSetMutex);
-            if (contains(entity))
+            if (containsUnsafe(entity))
                 return _dummyInstance;
 
             auto idx = entity.index();
@@ -58,7 +58,7 @@ namespace ECS {
 
         void remove(Entity entity) override {
             std::lock_guard lock(__sparseSetMutex);
-            if (!contains(entity)) return;
+            if (!containsUnsafe(entity)) return;
 
             auto idx = entity.index();
             size_t dense_idx = _sparse[idx];
@@ -75,13 +75,17 @@ namespace ECS {
         }
 
         T& get(Entity entity) {
-            if (!contains(entity))
+            std::lock_guard lock(__sparseSetMutex);
+
+            if (!containsUnsafe(entity))
                 throw std::runtime_error("Entity missing tag component in TagSparseSet::get()");
             return _dummyInstance;
         }
 
         const T& get(Entity entity) const {
-            if (!contains(entity))
+            std::lock_guard lock(__sparseSetMutex);
+
+            if (!containsUnsafe(entity))
                 throw std::runtime_error("Entity missing tag component in TagSparseSet::get()");
             return _dummyInstance;
         }
@@ -116,6 +120,17 @@ namespace ECS {
         std::vector<size_t> _sparse;
         mutable std::mutex __sparseSetMutex;
         static inline T _dummyInstance{};
+
+        /**
+         * @brief Internal contains check without locking (caller must hold lock).
+         */
+        bool containsUnsafe(Entity entity) const noexcept {
+            auto idx = entity.index();
+            return idx < _sparse.size() &&
+                   _sparse[idx] != NullIndex &&
+                   _sparse[idx] < _packed.size() &&
+                   _packed[_sparse[idx]] == entity;
+        }
     };
 
 } // namespace ECS
