@@ -139,20 +139,20 @@ IfMacros:
   - KJ_IF_MAYBE
 IncludeBlocks:   Regroup
 IncludeCategories:
-  - Regex:           '^<ext/.*\.h>'
+  - Regex:           '^<[a-z_]+\.h>'
     Priority:        2
     SortPriority:    0
     CaseSensitive:   false
-  - Regex:           '^<.*\.h>'
-    Priority:        1
+  - Regex:           '^<[a-z_]+>'
+    Priority:        3
     SortPriority:    0
     CaseSensitive:   false
-  - Regex:           '^<.*'
-    Priority:        2
+  - Regex:           '^<.*>'
+    Priority:        4
     SortPriority:    0
     CaseSensitive:   false
   - Regex:           '.*'
-    Priority:        3
+    Priority:        5
     SortPriority:    0
     CaseSensitive:   false
 IncludeIsMainRegex: '([-_](test|unittest))?$'

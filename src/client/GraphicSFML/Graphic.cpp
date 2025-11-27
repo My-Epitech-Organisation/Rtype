@@ -4,16 +4,16 @@
 ** File description:
 ** Graphic.cpp
 */
-
 #include "Graphic.hpp"
 
 #include <chrono>
 #include <optional>
 #include <thread>
 
-#include "../assets/r-typesheet42.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
+
+#include "../assets/r-typesheet42.h"
 
 void RTypeClient::Graphic::pollEvents() {
     while (const std::optional event = this->_window.pollEvent()) {
