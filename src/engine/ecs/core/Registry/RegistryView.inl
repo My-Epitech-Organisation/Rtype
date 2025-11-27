@@ -16,22 +16,23 @@
 // ========================================================================
 
     template<typename... Components>
-    View<Components...> Registry::view() {
+    auto Registry::view() -> View<Components...> {
         return View<Components...>(std::ref(*this));
     }
 
     template<typename... Components>
-    View<Components...> Registry::view() const {
+    auto Registry::view() const -> View<Components...> {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         return View<Components...>(std::ref(const_cast<Registry&>(*this)));
     }
 
     template<typename... Components>
-    ParallelView<Components...> Registry::parallelView() {
+    auto Registry::parallelView() -> ParallelView<Components...> {
         return ParallelView<Components...>(std::ref(*this));
     }
 
     template<typename... Components>
-    Group<Components...> Registry::createGroup() {
+    auto Registry::createGroup() -> Group<Components...> {
         return Group<Components...>(std::ref(*this));
     }
 
@@ -39,11 +40,11 @@
     // RELATIONSHIP ACCESSORS
     // ========================================================================
 
-    inline RelationshipManager& Registry::getRelationshipManager() noexcept {
+    inline auto Registry::getRelationshipManager() noexcept -> RelationshipManager& {
         return _relationshipManager;
     }
 
-    inline const RelationshipManager& Registry::getRelationshipManager() const noexcept {
+    inline auto Registry::getRelationshipManager() const noexcept -> const RelationshipManager& {
         return _relationshipManager;
     }
 
@@ -54,8 +55,8 @@
     template<typename... Components>
     View<Components...>::View(std::reference_wrapper<Registry> registry)
         : registry(registry),
-          pools(std::ref(static_cast<ISparseSet&>(registry.get().template getSparseSet<Components>()))...) {
-        _smallestPoolIndex = findSmallestPool(std::index_sequence_for<Components...>{});
+          pools(std::ref(static_cast<ISparseSet&>(registry.get().template getSparseSet<Components>()))...),
+          _smallestPoolIndex(findSmallestPool(std::index_sequence_for<Components...>{})) {
     }
 
     template<typename... Components>
@@ -66,8 +67,10 @@
 
     template<typename... Components>
     template<typename Func, size_t... Is>
-    void View<Components...>::eachImpl(Func&& func, std::index_sequence<Is...>) {
-        if (sizeof...(Components) == 0) return;
+    void View<Components...>::eachImpl(Func&& func, std::index_sequence<Is...> /*unused*/) {
+        if (sizeof...(Components) == 0) {
+            return;
+        }
 
         auto get_pool_at_index = [this](size_t idx) -> std::optional<std::reference_wrapper<const std::vector<Entity>>> {
             std::optional<std::reference_wrapper<const std::vector<Entity>>> result;
@@ -77,18 +80,20 @@
         };
 
         auto entities_opt = get_pool_at_index(_smallestPoolIndex);
-        if (!entities_opt.has_value()) return;
+        if (!entities_opt.has_value()) {
+            return;
+        }
 
         for (auto entity : entities_opt->get()) {
             if ((std::get<Is>(pools).get().contains(entity) && ...)) {
-                func(entity, getComponentData<Components>(entity, std::get<Is>(pools).get())...);
+                std::forward<Func>(func)(entity, getComponentData<Components>(entity, std::get<Is>(pools).get())...);
             }
         }
     }
 
     template<typename... Components>
     template<size_t... Is>
-    size_t View<Components...>::findSmallestPool(std::index_sequence<Is...>) {
+    auto View<Components...>::findSmallestPool(std::index_sequence<Is...> /*unused*/) -> size_t {
         std::array<size_t, sizeof...(Components)> sizes = {
             std::get<Is>(pools).get().getPacked().size()...
         };
@@ -123,9 +128,11 @@
     template<typename Func, size_t... IncIs>
     void ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>>::eachImpl(
         Func&& func,
-        std::index_sequence<IncIs...>
+        std::index_sequence<IncIs...> /*unused*/
     ) {
-        if (sizeof...(Includes) == 0) return;
+        if (sizeof...(Includes) == 0) {
+            return;
+        }
 
         auto get_pool_at_index = [this](size_t idx) -> std::optional<std::reference_wrapper<const std::vector<Entity>>> {
             std::optional<std::reference_wrapper<const std::vector<Entity>>> result;
@@ -135,27 +142,26 @@
         };
 
         auto entities_opt = get_pool_at_index(_smallestPoolIndex);
-        if (!entities_opt.has_value()) return;
+        if (!entities_opt.has_value()) {
+            return;
+        }
 
         for (auto entity : entities_opt->get()) {
             if ((std::get<IncIs>(_includePools).get().contains(entity) && ...)) {
                 if (!is_excluded(entity)) {
-                    func(entity, getComponentData<Includes>(entity, std::get<IncIs>(_includePools).get())...);
+                    std::forward<Func>(func)(entity, getComponentData<Includes>(entity, std::get<IncIs>(_includePools).get())...);
                 }
             }
         }
     }
 
     template<typename... Includes, typename... Excludes>
-    bool ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>>::is_excluded(
+    auto ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>>::is_excluded(
         Entity entity
-    ) const {
-        for (auto& pool : _excludePools) {
-            if (pool.get().contains(entity)) {
-                return true;
-            }
-        }
-        return false;
+    ) const -> bool {
+        return std::ranges::any_of(_excludePools, [&entity](const auto& pool) {
+            return pool.get().contains(entity);
+        });
     }
 
     // ========================================================================
@@ -183,7 +189,9 @@
             (check_pool_size.template operator()<Is>(), ...);
         }(std::index_sequence_for<Components...>{});
 
-        if (!smallest_entities.has_value() || smallest_entities->get().empty()) return;
+        if (!smallest_entities.has_value() || smallest_entities->get().empty()) {
+            return;
+        }
 
         const auto& entities = smallest_entities->get();
 
@@ -193,17 +201,19 @@
         std::vector<std::thread> threads;
         threads.reserve(num_threads);
 
-        for (size_t t = 0; t < num_threads; ++t) {
-            size_t start = t * chunk_size;
-            size_t end = (t == num_threads - 1) ? entities.size() : start + chunk_size;
+        for (size_t thread_idx = 0; thread_idx < num_threads; ++thread_idx) {
+            size_t start = thread_idx * chunk_size;
+            size_t end = (thread_idx == num_threads - 1) ? entities.size() : start + chunk_size;
 
-            if (start >= entities.size()) break;
+            if (start >= entities.size()) {
+                break;
+            }
 
             threads.emplace_back([&, start, end, pools]() {
                 for (size_t i = start; i < end; ++i) {
                     Entity entity = entities[i];
                     if ((std::get<std::reference_wrapper<SparseSet<Components>>>(pools).get().contains(entity) && ...)) {
-                        func(entity, std::get<std::reference_wrapper<SparseSet<Components>>>(pools).get().get(entity)...);
+                        std::forward<Func>(func)(entity, std::get<std::reference_wrapper<SparseSet<Components>>>(pools).get().get(entity)...);
                     }
                 }
             });
@@ -243,7 +253,9 @@
 
         (check_pool_size.template operator()<Components>(), ...);
 
-        if (!smallest_entities.has_value()) return;
+        if (!smallest_entities.has_value()) {
+            return;
+        }
 
         for (auto entity : smallest_entities->get()) {
             if ((_registry.get().template hasComponent<Components>(entity) && ...)) {
@@ -256,7 +268,7 @@
     template<typename Func>
     void Group<Components...>::each(Func&& func) {
         for (auto entity : _entities) {
-            func(entity, _registry.get().template getComponent<Components>(entity)...);
+            std::forward<Func>(func)(entity, _registry.get().template getComponent<Components>(entity)...);
         }
     }
 
@@ -266,24 +278,26 @@
 
     template<typename... Components>
     template<typename T>
-    decltype(auto) View<Components...>::getComponentData(Entity entity, const ISparseSet& pool) {
+    auto View<Components...>::getComponentData(Entity entity, const ISparseSet& pool) -> decltype(auto) {
         if constexpr (std::is_empty_v<T>) {
             // Tags return const T& from TagSparseSet::get()
             return static_cast<const TagSparseSet<T>&>(pool).get(entity);
         } else {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
             return const_cast<SparseSet<T>&>(static_cast<const SparseSet<T>&>(pool)).get(entity);
         }
     }
 
     template<typename... Includes, typename... Excludes>
     template<typename T>
-    decltype(auto) ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>>::getComponentData(
+    auto ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>>::getComponentData(
         Entity entity, const ISparseSet& pool
-    ) {
+    ) -> decltype(auto) {
         if constexpr (std::is_empty_v<T>) {
             // Tags return const T& from TagSparseSet::get()
             return static_cast<const TagSparseSet<T>&>(pool).get(entity);
         } else {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
             return const_cast<SparseSet<T>&>(static_cast<const SparseSet<T>&>(pool)).get(entity);
         }
     }
