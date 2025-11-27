@@ -20,7 +20,7 @@ option(BUILD_EXAMPLES "Build examples" ON)
 option(USE_SFML "Build with SFML graphics backend" ON)
 
 find_package(asio CONFIG REQUIRED)
-find_package(SFML 2 COMPONENTS graphics window system CONFIG REQUIRED)
+find_package(SFML COMPONENTS Graphics Window System CONFIG REQUIRED)
 
 add_subdirectory(src)
 
