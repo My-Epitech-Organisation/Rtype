@@ -5,48 +5,50 @@
 ** Prefab - Entity templates for efficient spawning
 */
 
-#ifndef ECS_CORE_PREFAB_HPP
-    #define ECS_CORE_PREFAB_HPP
-    #include "Entity.hpp"
-    #include <functional>
-    #include <unordered_map>
-    #include <string>
-    #include <memory>
-    #include <shared_mutex>
-    #include <vector>
+#ifndef SRC_ENGINE_ECS_CORE_PREFAB_HPP_
+#define SRC_ENGINE_ECS_CORE_PREFAB_HPP_
+
+#include <functional>
+#include <memory>
+#include <shared_mutex>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include "Entity.hpp"
 
 namespace ECS {
 
-    class Registry;
+class Registry;
 
-    /**
-     * @brief Template for spawning pre-configured entities.
-     *
-     * Prefabs allow you to define entity "blueprints" with predefined component sets.
-     * This is useful for:
-     * - Game object templates (Player, Enemy, Bullet, etc.)
-     * - Level design with reusable entities
-     * - Network entity synchronization
-     * - Save/Load systems
-     *
-     * Example:
-     *   PrefabManager prefabs(registry);
-     *
-     *   // Define prefab
-     *   prefabs.registerPrefab("Player", [](Registry& r, Entity e) {
-     *       r.emplaceComponent<Position>(e, 0.0f, 0.0f);
-     *       r.emplaceComponent<Velocity>(e, 0.0f, 0.0f);
-     *       r.emplaceComponent<Player>(e);
-     *   });
-     *
-     *   // Spawn from prefab
-     *   auto player = prefabs.instantiate("Player");
-     */
-    class PrefabManager {
-    public:
-        using PrefabFunc = std::function<void(Registry&, Entity)>;
+/**
+ * @brief Template for spawning pre-configured entities.
+ *
+ * Prefabs allow you to define entity "blueprints" with predefined component sets.
+ * This is useful for:
+ * - Game object templates (Player, Enemy, Bullet, etc.)
+ * - Level design with reusable entities
+ * - Network entity synchronization
+ * - Save/Load systems
+ *
+ * Example:
+ *   PrefabManager prefabs(registry);
+ *
+ *   // Define prefab
+ *   prefabs.registerPrefab("Player", [](Registry& r, Entity e) {
+ *       r.emplaceComponent<Position>(e, 0.0f, 0.0f);
+ *       r.emplaceComponent<Velocity>(e, 0.0f, 0.0f);
+ *       r.emplaceComponent<Player>(e);
+ *   });
+ *
+ *   // Spawn from prefab
+ *   auto player = prefabs.instantiate("Player");
+ */
+class PrefabManager {
+ public:
+    using PrefabFunc = std::function<void(Registry&, Entity)>;
 
-        explicit PrefabManager(std::reference_wrapper<Registry> reg) : _registry(reg) {}
+    explicit PrefabManager(std::reference_wrapper<Registry> reg) : _registry(reg) {}
 
         /**
          * @brief Registers a new prefab template.
@@ -61,7 +63,7 @@ namespace ECS {
          * @return Newly created entity
          * @throws std::runtime_error if prefab not found
          */
-        Entity instantiate(const std::string& name);
+        auto instantiate(const std::string& name) -> Entity;
 
         /**
          * @brief Spawns entity from prefab and applies additional configuration.
@@ -69,7 +71,8 @@ namespace ECS {
          * @param customizer Additional configuration function
          * @return Newly created entity
          */
-        Entity instantiate(const std::string& name, PrefabFunc customizer);
+        auto instantiate(const std::string& name,
+                         const PrefabFunc& customizer) -> Entity;
 
         /**
          * @brief Spawns multiple entities from same prefab.
@@ -77,12 +80,13 @@ namespace ECS {
          * @param count Number of instances to create
          * @return Vector of created entities
          */
-        std::vector<Entity> instantiateMultiple(const std::string& name, size_t count);
+        auto instantiateMultiple(const std::string& name,
+                                  size_t count) -> std::vector<Entity>;
 
         /**
          * @brief Checks if prefab exists.
          */
-        bool hasPrefab(const std::string& name) const;
+        auto hasPrefab(const std::string& name) const -> bool;
 
         /**
          * @brief Removes prefab definition.
@@ -92,7 +96,7 @@ namespace ECS {
         /**
          * @brief Gets all registered prefab names.
          */
-        std::vector<std::string> getPrefabNames() const;
+        auto getPrefabNames() const -> std::vector<std::string>;
 
         /**
          * @brief Clears all prefab definitions.
@@ -111,9 +115,9 @@ namespace ECS {
     private:
         std::reference_wrapper<Registry> _registry;
         std::unordered_map<std::string, PrefabFunc> _prefabs;
-        mutable std::shared_mutex _prefabMutex;
-    };
+    mutable std::shared_mutex _prefabMutex;
+};
 
-} // namespace ECS
+}  // namespace ECS
 
-#endif // ECS_CORE_PREFAB_HPP
+#endif  // SRC_ENGINE_ECS_CORE_PREFAB_HPP_

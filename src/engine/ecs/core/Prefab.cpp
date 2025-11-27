@@ -6,11 +6,13 @@
 */
 
 #include "Prefab.hpp"
-#include "Registry/Registry.hpp"
-#include <stdexcept>
+
 #include <algorithm>
+#include <stdexcept>
 #include <utility>
 #include <vector>
+
+#include "Registry/Registry.hpp"
 
 namespace ECS {
 
@@ -19,15 +21,15 @@ namespace ECS {
         _prefabs[name] = std::move(func);
     }
 
-    Entity PrefabManager::instantiate(const std::string& name) {
+    auto PrefabManager::instantiate(const std::string& name) -> Entity {
         PrefabFunc func;
         {
             std::shared_lock lock(_prefabMutex);
-            auto it = _prefabs.find(name);
-            if (it == _prefabs.end()) {
+            auto iter = _prefabs.find(name);
+            if (iter == _prefabs.end()) {
                 throw std::runtime_error("Prefab not found: " + name);
             }
-            func = it->second;
+            func = iter->second;
         }
 
         auto entity = _registry.get().spawnEntity();
@@ -35,21 +37,23 @@ namespace ECS {
         return entity;
     }
 
-    Entity PrefabManager::instantiate(const std::string& name, PrefabFunc customizer) {
+    auto PrefabManager::instantiate(const std::string& name,
+                                     const PrefabFunc& customizer) -> Entity {
         auto entity = instantiate(name);
         customizer(_registry.get(), entity);
         return entity;
     }
 
-    std::vector<Entity> PrefabManager::instantiateMultiple(const std::string& name, size_t count) {
+    auto PrefabManager::instantiateMultiple(const std::string& name,
+                                             size_t count) -> std::vector<Entity> {
         PrefabFunc func;
         {
             std::shared_lock lock(_prefabMutex);
-            auto it = _prefabs.find(name);
-            if (it == _prefabs.end()) {
+            auto iter = _prefabs.find(name);
+            if (iter == _prefabs.end()) {
                 throw std::runtime_error("Prefab not found: " + name);
             }
-            func = it->second;
+            func = iter->second;
         }
 
         std::vector<Entity> entities;
@@ -64,7 +68,7 @@ namespace ECS {
         return entities;
     }
 
-    bool PrefabManager::hasPrefab(const std::string& name) const {
+    auto PrefabManager::hasPrefab(const std::string& name) const -> bool {
         std::shared_lock lock(_prefabMutex);
         return _prefabs.find(name) != _prefabs.end();
     }
@@ -74,7 +78,7 @@ namespace ECS {
         _prefabs.erase(name);
     }
 
-    std::vector<std::string> PrefabManager::getPrefabNames() const {
+    auto PrefabManager::getPrefabNames() const -> std::vector<std::string> {
         std::shared_lock lock(_prefabMutex);
         std::vector<std::string> names;
         names.reserve(_prefabs.size());
@@ -96,7 +100,7 @@ namespace ECS {
         if (!_registry.get().isAlive(template_entity)) {
             throw std::runtime_error("Cannot create prefab from dead entity");
         }
-        (void)name; // To avoid unused parameter warning
+        (void)name;  // To avoid unused parameter warning
 
         const auto& component_types = _registry.get().getEntityComponents(template_entity);
         if (component_types.empty()) {
@@ -114,4 +118,4 @@ namespace ECS {
         throw std::runtime_error("createFromEntity is not yet implemented. Use registerPrefab() instead.");
     }
 
-} // namespace ECS
+}  // namespace ECS
