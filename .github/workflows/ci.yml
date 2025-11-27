@@ -149,8 +149,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "💡 **Tip:** Run \`./scripts/run_quality_checks.sh --fix\` locally to auto-fix formatting issues" >> $GITHUB_STEP_SUMMARY
 
-  test:
-    name: "🧪 Unit Tests"
+  deps-linux:
+    name: "📦 Dependencies (Linux)"
     runs-on: ubuntu-latest
     needs: [cache-check, lint]
     steps:
@@ -178,17 +178,145 @@ jobs:
         with:
           vcpkgJsonGlob: 'vcpkg.json'
 
-      - name: Restore vcpkg cache (branch-first, then global fallback)
+      - name: Restore vcpkg cache
         id: cache-restore
         uses: actions/cache/restore@v4
         with:
-          path: |
-            ~/.cache/vcpkg/archives
+          path: ~/.cache/vcpkg/archives
           key: ${{ needs.cache-check.outputs.cache-key-linux }}
           restore-keys: |
             ${{ needs.cache-check.outputs.cache-key-linux-global }}
             ${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-main-
             ${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-
+
+      - name: Configure CMake (install vcpkg packages)
+        run: |
+          cmake --preset ubuntu-latest \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF \
+            -DUSE_SFML=ON
+
+      - name: Upload vcpkg installed packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-installed-linux
+          path: build/ubuntu-latest/vcpkg_installed
+          retention-days: 1
+
+      - name: Save vcpkg cache
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/vcpkg/archives
+          key: ${{ needs.cache-check.outputs.cache-key-linux }}
+
+      - name: Summary
+        run: |
+          echo "### 📦 Dependencies (Linux)" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Cache | ${{ steps.cache-restore.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS (rebuilt)' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifact | \`vcpkg-installed-linux\` |" >> $GITHUB_STEP_SUMMARY
+
+  deps-windows:
+    name: "📦 Dependencies (Windows)"
+    runs-on: windows-latest
+    needs: [cache-check, lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Ninja
+        run: choco install ninja -y
+
+      - name: Setup MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgJsonGlob: 'vcpkg.json'
+
+      - name: Restore vcpkg cache
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/AppData/Local/vcpkg/archives
+            C:/vcpkg/archives
+          key: ${{ needs.cache-check.outputs.cache-key-windows }}
+          restore-keys: |
+            ${{ needs.cache-check.outputs.cache-key-windows-global }}
+            ${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-main-
+            ${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-
+
+      - name: Configure CMake (install vcpkg packages)
+        shell: bash
+        run: |
+          cmake --preset windows-latest \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_TARGET_TRIPLET=x64-windows \
+            -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF \
+            -DUSE_SFML=ON
+
+      - name: Upload vcpkg installed packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-installed-windows
+          path: build/windows-latest/vcpkg_installed
+          retention-days: 1
+
+      - name: Save vcpkg cache
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/AppData/Local/vcpkg/archives
+            C:/vcpkg/archives
+          key: ${{ needs.cache-check.outputs.cache-key-windows }}
+
+      - name: Summary
+        shell: bash
+        run: |
+          echo "### 📦 Dependencies (Windows)" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Cache | ${{ steps.cache-restore.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS (rebuilt)' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifact | \`vcpkg-installed-windows\` |" >> $GITHUB_STEP_SUMMARY
+
+  test:
+    name: "🧪 Unit Tests"
+    runs-on: ubuntu-latest
+    needs: [deps-linux]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ninja-build cmake pkg-config \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
+            libxinerama-dev libxext-dev
+
+      - name: Download vcpkg installed packages
+        uses: actions/download-artifact@v4
+        with:
+          name: vcpkg-installed-linux
+          path: build/ubuntu-latest/vcpkg_installed
+
+      - name: Setup vcpkg (for toolchain file only)
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgJsonGlob: 'vcpkg.json'
 
       - name: Configure CMake
         run: |
@@ -205,27 +333,10 @@ jobs:
           cd build/ubuntu-latest
           ctest --output-on-failure --timeout 120 || true
 
-      - name: Upload vcpkg installed packages (for build job)
-        uses: actions/upload-artifact@v4
-        with:
-          name: vcpkg-installed-linux
-          path: build/ubuntu-latest/vcpkg_installed
-          retention-days: 1
-
-      - name: Save branch cache (feature branches only)
-        if: needs.cache-check.outputs.is-main != 'true' && steps.cache-restore.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            ~/.cache/vcpkg/archives
-          key: ${{ needs.cache-check.outputs.cache-key-linux }}
-
       - name: Test Summary
         if: always()
         run: |
           echo "### 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "**Cache restored:** ${{ steps.cache-restore.outputs.cache-hit == 'true' && '✅ Yes' || '❌ No (rebuilt)' }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Cache key used:** \`${{ steps.cache-restore.outputs.cache-matched-key || 'none' }}\`" >> $GITHUB_STEP_SUMMARY
           if [ -f build/ubuntu-latest/Testing/Temporary/LastTest.log ]; then
             echo '```' >> $GITHUB_STEP_SUMMARY
             tail -50 build/ubuntu-latest/Testing/Temporary/LastTest.log >> $GITHUB_STEP_SUMMARY
@@ -234,22 +345,16 @@ jobs:
 
   build:
     name: "🔨 Build (${{ matrix.os }})"
-    needs: [cache-check, lint, test]
+    needs: [test, deps-linux, deps-windows]
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
-            cache-key: cache-key-linux
-            cache-key-global: cache-key-linux-global
-            cache-path: ~/.cache/vcpkg/archives
+            artifact: vcpkg-installed-linux
             triplet: x64-linux
           - os: windows-latest
-            cache-key: cache-key-windows
-            cache-key-global: cache-key-windows-global
-            cache-path: |
-              ~/AppData/Local/vcpkg/archives
-              C:/vcpkg/archives
+            artifact: vcpkg-installed-windows
             triplet: x64-windows
     runs-on: ${{ matrix.os }}
     steps:
@@ -274,35 +379,16 @@ jobs:
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Setup vcpkg
+      - name: Download vcpkg installed packages
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: build/${{ matrix.os }}/vcpkg_installed
+
+      - name: Setup vcpkg (for toolchain file only)
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgJsonGlob: 'vcpkg.json'
-
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-      - name: Restore vcpkg cache (branch-first, then global fallback)
-        id: cache-restore
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ matrix.cache-path }}
-          key: ${{ needs.cache-check.outputs[matrix.cache-key] }}
-          restore-keys: |
-            ${{ needs.cache-check.outputs[matrix.cache-key-global] }}
-            ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vcpkg-main-
-            ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vcpkg-
-
-      - name: Download vcpkg installed packages from test job (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/download-artifact@v4
-        with:
-          name: vcpkg-installed-linux
-          path: build/ubuntu-latest/vcpkg_installed
 
       - name: Configure CMake
         shell: bash
@@ -315,20 +401,6 @@ jobs:
 
       - name: Build
         run: cmake --build --preset ${{ matrix.os }}
-
-      - name: Save GLOBAL vcpkg cache (main branch only)
-        if: needs.cache-check.outputs.is-main == 'true' && steps.cache-restore.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ matrix.cache-path }}
-          key: ${{ needs.cache-check.outputs[matrix.cache-key] }}
-
-      - name: Save BRANCH vcpkg cache (feature branches only)
-        if: needs.cache-check.outputs.is-main != 'true' && steps.cache-restore.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ matrix.cache-path }}
-          key: ${{ needs.cache-check.outputs[matrix.cache-key] }}
 
       - name: Upload Client Artifact
         uses: actions/upload-artifact@v4
@@ -356,10 +428,8 @@ jobs:
           echo "### 🔨 Build Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Branch | \`${{ needs.cache-check.outputs.branch-name }}\` ${{ needs.cache-check.outputs.is-main == 'true' && '🌍 GLOBAL' || '🌿 feature' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Cache Restored | ${{ steps.cache-restore.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS (rebuilt)' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Cache Key Used | \`${{ steps.cache-restore.outputs.cache-matched-key || 'none (new build)' }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Triplet | \`${{ matrix.triplet }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependencies | ✅ Downloaded from \`${{ matrix.artifact }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Status | ✅ Success |" >> $GITHUB_STEP_SUMMARY
 
   mirror:
@@ -388,17 +458,23 @@ jobs:
   cache-cleanup:
     name: "🧹 Cache Cleanup"
     runs-on: ubuntu-latest
-    needs: [build, cache-check]
+    needs: [build]
     if: github.ref == 'refs/heads/main'
     permissions:
       actions: write
     steps:
       - uses: actions/checkout@v4
 
+      - name: Compute current deps hash
+        id: deps-hash
+        run: |
+          HASH=$(sha256sum vcpkg.json CMakeLists.txt | sha256sum | cut -c1-16)
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+
       - name: Cleanup old caches
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CURRENT_HASH: ${{ needs.cache-check.outputs.deps-hash }}
+          CURRENT_HASH: ${{ steps.deps-hash.outputs.hash }}
         run: |
           echo "### 🧹 Cache Cleanup" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
