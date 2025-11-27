@@ -23,12 +23,11 @@ Welcome to the R-Type Entity Component System (ECS) technical documentation.
 - [Serialization](12_serialization.md) - Save/load state
 
 ### Performance
-- [Benchmarking](13_benchmarking.md) - Performance measurement
-- [Optimization Guide](14_optimization.md) - Best practices
+- [Optimization Guide](13_optimization.md) - Best practices
 
 ### Reference
-- [API Quick Reference](15_api_reference.md)
-- [Examples](16_examples.md)
+- [API Quick Reference](14_api_reference.md)
+- [Examples](15_examples.md)
 
 ## Quick Start
 
