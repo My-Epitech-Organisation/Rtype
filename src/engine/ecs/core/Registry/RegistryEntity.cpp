@@ -20,9 +20,9 @@ namespace ECS {
         _entityComponents.reserve(capacity);
     }
 
-    Entity Registry::spawnEntity() {
+    auto Registry::spawnEntity() -> Entity {
         std::unique_lock lock(_entityMutex);
-        std::uint32_t idx;
+        std::uint32_t idx = 0;
         constexpr int max_recycle_attempts = 5;
         int attempts = 0;
 
@@ -31,7 +31,7 @@ namespace ECS {
             _freeIndices.pop_back();
 
             if (idx < _generations.size() && _generations[idx] < Entity::_MaxGeneration) {
-                return Entity(idx, _generations[idx]);
+                return {idx, _generations[idx]};
             }
 
             _tombstones.push_back(idx);
@@ -42,7 +42,7 @@ namespace ECS {
         _generations.push_back(0);
         _entityComponents.emplace(idx, std::vector<std::type_index>());
 
-        return Entity(idx, 0);
+        return {idx, 0};
     }
 
     void Registry::killEntity(Entity entity) noexcept {
@@ -56,9 +56,9 @@ namespace ECS {
                 return;
             }
 
-            auto it = _entityComponents.find(entity.index());
-            if (it != _entityComponents.end()) {
-                components_to_remove = it->second;
+            auto iter = _entityComponents.find(entity.index());
+            if (iter != _entityComponents.end()) {
+                components_to_remove = iter->second;
             }
 
             if (_generations[entity.index()] >= Entity::_MaxGeneration - 1) {
@@ -77,9 +77,9 @@ namespace ECS {
                 _signalDispatcher.dispatchDestroy(type, entity);
 
                 std::shared_lock pool_lock(_componentPoolMutex);
-                auto it = _componentPools.find(type);
-                if (it != _componentPools.end()) {
-                    it->second->remove(entity);
+                auto iter = _componentPools.find(type);
+                if (iter != _componentPools.end()) {
+                    iter->second->remove(entity);
                 }
             } catch (...) { }
         }
@@ -87,7 +87,7 @@ namespace ECS {
         _relationshipManager.removeEntity(entity);
     }
 
-    bool Registry::isAlive(Entity entity) const noexcept {
+    auto Registry::isAlive(Entity entity) const noexcept -> bool {
         std::shared_lock lock(_entityMutex);
 
         return entity.index() < _generations.size() &&
@@ -98,7 +98,7 @@ namespace ECS {
     // ENTITY MAINTENANCE
     // ========================================================================
 
-    size_t Registry::cleanupTombstones() {
+    auto Registry::cleanupTombstones() -> size_t {
         std::unique_lock lock(_entityMutex);
 
         if (_tombstones.empty()) {
@@ -123,12 +123,13 @@ namespace ECS {
     // DEBUGGING/INTROSPECTION
     // ========================================================================
 
-    const std::vector<std::type_index>& Registry::getEntityComponents(Entity entity) const {
+    auto Registry::getEntityComponents(Entity entity) const
+        -> const std::vector<std::type_index>& {
         static const std::vector<std::type_index> empty_vector;
         std::shared_lock lock(_entityMutex);
 
-        auto it = _entityComponents.find(entity.index());
-        return (it != _entityComponents.end()) ? it->second : empty_vector;
+        auto iter = _entityComponents.find(entity.index());
+        return (iter != _entityComponents.end()) ? iter->second : empty_vector;
     }
 
-} // namespace ECS
+}  // namespace ECS
