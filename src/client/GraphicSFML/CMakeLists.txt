@@ -5,9 +5,9 @@ add_library(rtype_graphic_client_sfml STATIC
 target_include_directories(rtype_graphic_client_sfml PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(rtype_graphic_client_sfml PUBLIC
-    sfml-system
-    sfml-window
-    sfml-graphics
+    SFML::System
+    SFML::Window
+    SFML::Graphics
 )
 
 set_target_properties(rtype_graphic_client_sfml PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED YES)
