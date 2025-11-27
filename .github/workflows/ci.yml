@@ -15,14 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       cache-hit-linux: ${{ steps.cache-check-linux.outputs.cache-hit }}
-      cache-hit-windows: ${{ steps.cache-check-windows.outputs.cache-hit }}
       cache-key-linux: ${{ steps.cache-keys.outputs.linux }}
       cache-key-windows: ${{ steps.cache-keys.outputs.windows }}
-      cache-key-linux-global: ${{ steps.cache-keys.outputs.linux-global }}
-      cache-key-windows-global: ${{ steps.cache-keys.outputs.windows-global }}
       deps-hash: ${{ steps.cache-keys.outputs.hash }}
       branch-name: ${{ steps.cache-keys.outputs.branch }}
-      is-main: ${{ steps.cache-keys.outputs.is-main }}
     steps:
       - uses: actions/checkout@v4
 
@@ -40,59 +36,25 @@ jobs:
           BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-50)
           echo "branch=${BRANCH_SAFE}" >> $GITHUB_OUTPUT
 
-          if [ "$BRANCH" = "main" ]; then
-            echo "is-main=true" >> $GITHUB_OUTPUT
-          else
-            echo "is-main=false" >> $GITHUB_OUTPUT
-          fi
+          echo "linux=${{ env.CACHE_KEY_PREFIX }}-Linux-installed-${HASH}" >> $GITHUB_OUTPUT
+          echo "windows=${{ env.CACHE_KEY_PREFIX }}-Windows-installed-${HASH}" >> $GITHUB_OUTPUT
 
-          echo "linux=${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-${BRANCH_SAFE}-${HASH}" >> $GITHUB_OUTPUT
-          echo "windows=${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-${BRANCH_SAFE}-${HASH}" >> $GITHUB_OUTPUT
-
-          echo "linux-global=${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-main-${HASH}" >> $GITHUB_OUTPUT
-          echo "windows-global=${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-main-${HASH}" >> $GITHUB_OUTPUT
-
-      - name: Check Linux cache (branch-specific first, then global)
+      - name: Check Linux vcpkg_installed cache
         id: cache-check-linux
         uses: actions/cache/restore@v4
         with:
-          path: |
-            ~/.cache/vcpkg/archives
+          path: vcpkg_installed_linux
           key: ${{ steps.cache-keys.outputs.linux }}
-          restore-keys: |
-            ${{ steps.cache-keys.outputs.linux-global }}
-            ${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-main-
-            ${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-
-          lookup-only: true
-
-      - name: Check Windows cache (branch-specific first, then global)
-        id: cache-check-windows
-        uses: actions/cache/restore@v4
-        with:
-          path: C:\vcpkg\archives
-          key: ${{ steps.cache-keys.outputs.windows }}
-          restore-keys: |
-            ${{ steps.cache-keys.outputs.windows-global }}
-            ${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-main-
-            ${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-
           lookup-only: true
 
       - name: Cache status summary
         run: |
           echo "### 📦 Cache Status" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** \`${{ steps.cache-keys.outputs.branch }}\` ${{ steps.cache-keys.outputs.is-main == 'true' && '(GLOBAL)' || '(feature)' }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Dependencies Hash:** \`${{ steps.cache-keys.outputs.hash }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Platform | Branch Cache Key | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|------------------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Linux | \`${{ steps.cache-keys.outputs.linux }}\` | ${{ steps.cache-check-linux.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Windows | \`${{ steps.cache-keys.outputs.windows }}\` | ${{ steps.cache-check-windows.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Fallback Strategy:**" >> $GITHUB_STEP_SUMMARY
-          echo "1. Branch cache: \`...-${{ steps.cache-keys.outputs.branch }}-{hash}\`" >> $GITHUB_STEP_SUMMARY
-          echo "2. Global cache: \`...-main-{hash}\`" >> $GITHUB_STEP_SUMMARY
-          echo "3. Any previous: \`...-vcpkg-\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Hash:** \`${{ steps.cache-keys.outputs.hash }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux | ${{ steps.cache-check-linux.outputs.cache-hit == 'true' && '✅ HIT - skipping deps' || '❌ MISS - will build' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Windows | ⏳ checked on Windows |" >> $GITHUB_STEP_SUMMARY
 
   lint:
     name: "🔍 Code Quality"
@@ -150,13 +112,9 @@ jobs:
     name: "📦 Dependencies (Linux)"
     runs-on: ubuntu-latest
     needs: [cache-check, lint]
-    env:
-      VCPKG_DEFAULT_BINARY_CACHE: ~/.cache/vcpkg/archives
+    if: needs.cache-check.outputs.cache-hit-linux != 'true'
     steps:
       - uses: actions/checkout@v4
-
-      - name: Create vcpkg cache directory
-        run: mkdir -p ~/.cache/vcpkg/archives
 
       - name: Install system dependencies
         run: |
@@ -172,17 +130,6 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgJsonGlob: 'vcpkg.json'
-
-      - name: Restore vcpkg cache
-        id: cache-restore
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/.cache/vcpkg/archives
-          key: ${{ needs.cache-check.outputs.cache-key-linux }}
-          restore-keys: |
-            ${{ needs.cache-check.outputs.cache-key-linux-global }}
-            ${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-main-
-            ${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-
 
       - name: Configure CMake (install vcpkg packages)
         run: |
@@ -191,64 +138,50 @@ jobs:
             -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF \
             -DUSE_SFML=ON
 
-      - name: Upload vcpkg installed packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: vcpkg-installed-linux
-          path: build/ubuntu-latest/vcpkg_installed
-          retention-days: 1
-
-      - name: Save vcpkg cache
-        if: steps.cache-restore.outputs.cache-hit != 'true'
+      - name: Save vcpkg_installed to cache
         uses: actions/cache/save@v4
         with:
-          path: ~/.cache/vcpkg/archives
+          path: build/ubuntu-latest/vcpkg_installed
           key: ${{ needs.cache-check.outputs.cache-key-linux }}
 
       - name: Summary
         run: |
           echo "### 📦 Dependencies (Linux)" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Cache | ${{ steps.cache-restore.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS (rebuilt)' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Artifact | \`vcpkg-installed-linux\` |" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Built and cached vcpkg_installed" >> $GITHUB_STEP_SUMMARY
 
   deps-windows:
     name: "📦 Dependencies (Windows)"
     runs-on: windows-latest
     needs: [cache-check, lint]
-    env:
-      VCPKG_DEFAULT_BINARY_CACHE: C:\vcpkg\archives
+    outputs:
+      cache-hit: ${{ steps.cache-check.outputs.cache-hit }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create vcpkg cache directory
-        run: mkdir -p C:\vcpkg\archives
-        shell: cmd
+      - name: Check Windows cache
+        id: cache-check
+        uses: actions/cache/restore@v4
+        with:
+          path: vcpkg_installed_windows
+          key: ${{ needs.cache-check.outputs.cache-key-windows }}
+          lookup-only: true
 
       - name: Install Ninja
+        if: steps.cache-check.outputs.cache-hit != 'true'
         run: choco install ninja -y
 
       - name: Setup MSVC Developer Command Prompt
+        if: steps.cache-check.outputs.cache-hit != 'true'
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Setup vcpkg
+        if: steps.cache-check.outputs.cache-hit != 'true'
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgJsonGlob: 'vcpkg.json'
 
-      - name: Restore vcpkg cache
-        id: cache-restore
-        uses: actions/cache/restore@v4
-        with:
-          path: C:\vcpkg\archives
-          key: ${{ needs.cache-check.outputs.cache-key-windows }}
-          restore-keys: |
-            ${{ needs.cache-check.outputs.cache-key-windows-global }}
-            ${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-main-
-            ${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-
-
       - name: Configure CMake (install vcpkg packages)
+        if: steps.cache-check.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cmake --preset windows-latest \
@@ -257,33 +190,28 @@ jobs:
             -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF \
             -DUSE_SFML=ON
 
-      - name: Upload vcpkg installed packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: vcpkg-installed-windows
-          path: build/windows-latest/vcpkg_installed
-          retention-days: 1
-
-      - name: Save vcpkg cache
-        if: steps.cache-restore.outputs.cache-hit != 'true'
+      - name: Save vcpkg_installed to cache
+        if: steps.cache-check.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: C:\vcpkg\archives
+          path: build/windows-latest/vcpkg_installed
           key: ${{ needs.cache-check.outputs.cache-key-windows }}
 
       - name: Summary
         shell: bash
         run: |
           echo "### 📦 Dependencies (Windows)" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Cache | ${{ steps.cache-restore.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS (rebuilt)' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Artifact | \`vcpkg-installed-windows\` |" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.cache-check.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Cache HIT - skipped build" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Built and cached vcpkg_installed" >> $GITHUB_STEP_SUMMARY
+          fi
 
   test:
     name: "🧪 Unit Tests"
     runs-on: ubuntu-latest
-    needs: [deps-linux]
+    needs: [cache-check, deps-linux]
+    if: always() && needs.cache-check.result == 'success' && (needs.deps-linux.result == 'success' || needs.deps-linux.result == 'skipped')
     steps:
       - uses: actions/checkout@v4
 
@@ -297,11 +225,12 @@ jobs:
             libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
             libxinerama-dev libxext-dev
 
-      - name: Download vcpkg installed packages
-        uses: actions/download-artifact@v4
+      - name: Restore vcpkg_installed from cache
+        uses: actions/cache/restore@v4
         with:
-          name: vcpkg-installed-linux
           path: build/ubuntu-latest/vcpkg_installed
+          key: ${{ needs.cache-check.outputs.cache-key-linux }}
+          fail-on-cache-miss: true
 
       - name: Setup vcpkg (for toolchain file only)
         uses: lukka/run-vcpkg@v11
@@ -336,16 +265,17 @@ jobs:
   build:
     name: "🔨 Build (${{ matrix.os }})"
     runs-on: ${{ matrix.os }}
-    needs: [test, deps-linux, deps-windows]
+    needs: [cache-check, test, deps-linux, deps-windows]
+    if: always() && needs.test.result == 'success' && (needs.deps-windows.result == 'success' || needs.deps-windows.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
-            artifact: vcpkg-installed-linux
+            cache-key-output: cache-key-linux
             triplet: x64-linux
           - os: windows-latest
-            artifact: vcpkg-installed-windows
+            cache-key-output: cache-key-windows
             triplet: x64-windows
     steps:
       - uses: actions/checkout@v4
@@ -361,7 +291,7 @@ jobs:
             libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
             libxinerama-dev libxext-dev
 
-      - name: Install Ninjas (Windows)
+      - name: Install Ninja (Windows)
         if: matrix.os == 'windows-latest'
         run: choco install ninja -y
 
@@ -369,11 +299,12 @@ jobs:
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Download vcpkg installed packages
-        uses: actions/download-artifact@v4
+      - name: Restore vcpkg_installed from cache
+        uses: actions/cache/restore@v4
         with:
-          name: ${{ matrix.artifact }}
           path: build/${{ matrix.os }}/vcpkg_installed
+          key: ${{ needs.cache-check.outputs[matrix.cache-key-output] }}
+          fail-on-cache-miss: true
 
       - name: Setup vcpkg (for toolchain file only)
         uses: lukka/run-vcpkg@v11
@@ -416,11 +347,7 @@ jobs:
         shell: bash
         run: |
           echo "### 🔨 Build Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Triplet | \`${{ matrix.triplet }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Dependencies | ✅ Downloaded from \`${{ matrix.artifact }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Status | ✅ Success |" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Built using cached dependencies" >> $GITHUB_STEP_SUMMARY
 
   mirror:
     name: "🪞 Push to Epitech Mirror"
@@ -449,63 +376,30 @@ jobs:
     name: "🧹 Cache Cleanup"
     runs-on: ubuntu-latest
     needs: [build]
-    if: github.ref == 'refs/heads/main'
+    if: always() && github.ref == 'refs/heads/main'
     permissions:
       actions: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compute current deps hash
-        id: deps-hash
-        run: |
-          HASH=$(sha256sum vcpkg.json CMakeLists.txt | sha256sum | cut -c1-16)
-          echo "hash=$HASH" >> $GITHUB_OUTPUT
-
       - name: Cleanup old caches
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CURRENT_HASH: ${{ steps.deps-hash.outputs.hash }}
         run: |
           echo "### 🧹 Cache Cleanup" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Current dependencies hash:** \`${CURRENT_HASH}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
 
-          CACHES=$(gh cache list --json id,key,ref,createdAt --limit 100 2>/dev/null || echo "[]")
+          CURRENT_HASH=$(sha256sum vcpkg.json | cut -d' ' -f1)
+          echo "**Current hash:** \`${CURRENT_HASH}\`" >> $GITHUB_STEP_SUMMARY
 
-          if [ "$CACHES" = "[]" ]; then
-            echo "No caches found" >> $GITHUB_STEP_SUMMARY
-            exit 0
-          fi
-
-          echo "| Cache Key | Branch | Action |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|--------|--------|" >> $GITHUB_STEP_SUMMARY
-
-          DELETED=0
-          KEPT=0
-
-          echo "$CACHES" | jq -r '.[] | "\(.id)|\(.key)|\(.ref)"' | while IFS='|' read -r id key ref; do
-            if echo "$key" | grep -q "vcpkg"; then
-              CACHE_HASH=$(echo "$key" | rev | cut -d'-' -f1 | rev)
-
-              if echo "$key" | grep -q "vcpkg-main-" && [ "$CACHE_HASH" = "$CURRENT_HASH" ]; then
-                echo "| \`${key:0:60}...\` | main | ✅ Kept (current global) |" >> $GITHUB_STEP_SUMMARY
-                KEPT=$((KEPT + 1))
-              elif echo "$key" | grep -q "vcpkg-main-"; then
-                echo "Deleting stale global cache: $key"
+          # List and delete old caches with different hashes
+          gh cache list --json id,key --limit 100 | jq -r '.[] | "\(.id)|\(.key)"' | while IFS='|' read -r id key; do
+            if echo "$key" | grep -q "installed-"; then
+              KEY_HASH=$(echo "$key" | sed 's/.*installed-//')
+              if [ "$KEY_HASH" != "$CURRENT_HASH" ]; then
+                echo "Deleting old cache: $key"
                 gh cache delete "$id" 2>/dev/null || true
-                echo "| \`${key:0:60}...\` | main | 🗑️ Deleted (old hash) |" >> $GITHUB_STEP_SUMMARY
-                DELETED=$((DELETED + 1))
-              else
-                echo "| \`${key:0:60}...\` | feature | ⏳ Kept (branch cache) |" >> $GITHUB_STEP_SUMMARY
-                KEPT=$((KEPT + 1))
               fi
             fi
           done
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Summary:** Kept $KEPT caches, deleted $DELETED stale caches" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Current global cache keys:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Linux: \`${{ env.CACHE_KEY_PREFIX }}-Linux-vcpkg-main-${CURRENT_HASH}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Windows: \`${{ env.CACHE_KEY_PREFIX }}-Windows-vcpkg-main-${CURRENT_HASH}\`" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Cleanup complete" >> $GITHUB_STEP_SUMMARY
