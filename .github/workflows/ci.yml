@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate cache keys
+      - name: Generate cache key
         id: cache-keys
         run: |
           HASH=$(sha256sum vcpkg.json 2>/dev/null | cut -d' ' -f1 || echo "no-vcpkg")
