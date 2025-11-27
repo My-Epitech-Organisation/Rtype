@@ -11,8 +11,10 @@
 
 namespace ECS {
 
-    bool RelationshipManager::setParent(Entity child, Entity parent) {
-        if (child == parent) return false;
+    auto RelationshipManager::setParent(Entity child, Entity parent) -> bool {
+        if (child == parent) {
+            return false;
+        }
 
         std::unique_lock lock(_relationshipMutex);
 
@@ -38,10 +40,10 @@ namespace ECS {
     void RelationshipManager::removeParent(Entity child) {
         std::unique_lock lock(_relationshipMutex);
 
-        auto it = _parentMap.find(child.index());
-        if (it != _parentMap.end()) {
-            auto parent = it->second;
-            _parentMap.erase(it);
+        auto iter = _parentMap.find(child.index());
+        if (iter != _parentMap.end()) {
+            auto parent = iter->second;
+            _parentMap.erase(iter);
 
             auto& children = _childrenMap[parent.index()];
             children.erase(child.index());
@@ -51,28 +53,28 @@ namespace ECS {
         }
     }
 
-    std::optional<Entity> RelationshipManager::getParent(Entity child) const {
+    auto RelationshipManager::getParent(Entity child) const -> std::optional<Entity> {
         std::shared_lock lock(_relationshipMutex);
-        auto it = _parentMap.find(child.index());
-        if (it != _parentMap.end()) {
-            return it->second;
+        auto iter = _parentMap.find(child.index());
+        if (iter != _parentMap.end()) {
+            return iter->second;
         }
         return std::nullopt;
     }
 
-    bool RelationshipManager::hasParent(Entity child) const {
+    auto RelationshipManager::hasParent(Entity child) const -> bool {
         std::shared_lock lock(_relationshipMutex);
         return _parentMap.find(child.index()) != _parentMap.end();
     }
 
-    std::vector<Entity> RelationshipManager::getChildren(Entity parent) const {
+    auto RelationshipManager::getChildren(Entity parent) const -> std::vector<Entity> {
         std::shared_lock lock(_relationshipMutex);
         std::vector<Entity> result;
 
-        auto it = _childrenMap.find(parent.index());
-        if (it != _childrenMap.end()) {
-            result.reserve(it->second.size());
-            for (const auto& [child_idx, child_entity] : it->second) {
+        auto iter = _childrenMap.find(parent.index());
+        if (iter != _childrenMap.end()) {
+            result.reserve(iter->second.size());
+            for (const auto& [child_idx, child_entity] : iter->second) {
                 result.push_back(child_entity);
             }
         }
@@ -80,52 +82,60 @@ namespace ECS {
         return result;
     }
 
-    std::vector<Entity> RelationshipManager::getDescendants(Entity parent) const {
+    auto RelationshipManager::getDescendants(Entity parent) const -> std::vector<Entity> {
         std::shared_lock lock(_relationshipMutex);
         std::vector<Entity> result;
         getDescendantsRecursive(parent, &result);
         return result;
     }
 
-    std::vector<Entity> RelationshipManager::getAncestors(Entity child) const {
+    auto RelationshipManager::getAncestors(Entity child) const -> std::vector<Entity> {
         std::shared_lock lock(_relationshipMutex);
         std::vector<Entity> result;
 
         auto current = child;
         while (true) {
-            auto it = _parentMap.find(current.index());
-            if (it == _parentMap.end()) break;
+            auto iter = _parentMap.find(current.index());
+            if (iter == _parentMap.end()) {
+                break;
+            }
 
-            result.push_back(it->second);
-            current = it->second;
+            result.push_back(iter->second);
+            current = iter->second;
         }
 
         return result;
     }
 
-    Entity RelationshipManager::getRoot(Entity entity) const {
+    auto RelationshipManager::getRoot(Entity entity) const -> Entity {
         std::shared_lock lock(_relationshipMutex);
 
         auto current = entity;
         while (true) {
-            auto it = _parentMap.find(current.index());
-            if (it == _parentMap.end()) break;
-            current = it->second;
+            auto iter = _parentMap.find(current.index());
+            if (iter == _parentMap.end()) {
+                break;
+            }
+            current = iter->second;
         }
 
         return current;
     }
 
-    bool RelationshipManager::isAncestor(Entity potential_ancestor, Entity entity) const {
+    auto RelationshipManager::isAncestor(Entity potential_ancestor, Entity entity) const -> bool {
         std::shared_lock lock(_relationshipMutex);
 
         auto current = entity;
         while (true) {
-            auto it = _parentMap.find(current.index());
-            if (it == _parentMap.end()) return false;
+            auto iter = _parentMap.find(current.index());
+            if (iter == _parentMap.end()) {
+                return false;
+            }
 
-            if (it->second == potential_ancestor) return true;
-            current = it->second;
+            if (iter->second == potential_ancestor) {
+                return true;
+            }
+            current = iter->second;
         }
     }
 
@@ -159,49 +169,57 @@ namespace ECS {
         _childrenMap.clear();
     }
 
-    size_t RelationshipManager::childCount(Entity parent) const {
+    auto RelationshipManager::childCount(Entity parent) const -> size_t {
         std::shared_lock lock(_relationshipMutex);
-        auto it = _childrenMap.find(parent.index());
-        return (it != _childrenMap.end()) ? it->second.size() : 0;
+        auto iter = _childrenMap.find(parent.index());
+        return (iter != _childrenMap.end()) ? iter->second.size() : 0;
     }
 
-    size_t RelationshipManager::getDepth(Entity entity) const {
+    auto RelationshipManager::getDepth(Entity entity) const -> size_t {
         std::shared_lock lock(_relationshipMutex);
 
         size_t depth = 0;
         auto current = entity;
 
         while (true) {
-            auto it = _parentMap.find(current.index());
-            if (it == _parentMap.end()) break;
+            auto iter = _parentMap.find(current.index());
+            if (iter == _parentMap.end()) {
+                break;
+            }
             depth++;
-            current = it->second;
+            current = iter->second;
         }
 
         return depth;
     }
 
-    bool RelationshipManager::wouldCreateCycle(Entity child, Entity parent) const {
+    auto RelationshipManager::wouldCreateCycle(Entity child, Entity parent) const -> bool {
         auto current = parent;
         while (true) {
-            if (current == child) return true;
+            if (current == child) {
+                return true;
+            }
 
-            auto it = _parentMap.find(current.index());
-            if (it == _parentMap.end()) break;
-            current = it->second;
+            auto iter = _parentMap.find(current.index());
+            if (iter == _parentMap.end()) {
+                break;
+            }
+            current = iter->second;
         }
 
         return false;
     }
 
     void RelationshipManager::getDescendantsRecursive(Entity parent, std::vector<Entity>* result) const {
-        auto it = _childrenMap.find(parent.index());
-        if (it == _childrenMap.end()) return;
+        auto iter = _childrenMap.find(parent.index());
+        if (iter == _childrenMap.end()) {
+            return;
+        }
 
-        for (const auto& [child_idx, child_entity] : it->second) {
+        for (const auto& [child_idx, child_entity] : iter->second) {
             result->push_back(child_entity);
             getDescendantsRecursive(child_entity, result);
         }
     }
 
-} // namespace ECS
+}  // namespace ECS

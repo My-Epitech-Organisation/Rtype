@@ -5,45 +5,47 @@
 ** Relationship - Entity parent-child relationships
 */
 
-#ifndef ECS_CORE_RELATIONSHIP_HPP
-    #define ECS_CORE_RELATIONSHIP_HPP
-    #include "Entity.hpp"
-    #include <vector>
-    #include <unordered_map>
-    #include <unordered_set>
-    #include <optional>
-    #include <shared_mutex>
+#ifndef SRC_ENGINE_ECS_CORE_RELATIONSHIP_HPP_
+#define SRC_ENGINE_ECS_CORE_RELATIONSHIP_HPP_
+
+#include <optional>
+#include <shared_mutex>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
+#include "Entity.hpp"
 
 namespace ECS {
 
-    /**
-     * @brief Manages hierarchical relationships between entities.
-     *
-     * Features:
-     * - Parent-child relationships (tree structure)
-     * - Automatic cleanup on entity destruction
-     * - Thread-safe operations
-     * - Efficient child iteration
-     *
-     * Use cases:
-     * - Scene graphs (transform hierarchies)
-     * - UI widget trees
-     * - Entity prefab instances
-     * - Networked object ownership
-     *
-     * Example:
-     *   RelationshipManager mgr;
-     *   auto parent = registry.spawnEntity();
-     *   auto child = registry.spawnEntity();
-     *   mgr.setParent(child, parent);
-     *
-     *   for (auto c : mgr.getChildren(parent)) {
-     *       // Process children
-     *   }
-     */
-    class RelationshipManager {
-    public:
-        RelationshipManager() = default;
+/**
+ * @brief Manages hierarchical relationships between entities.
+ *
+ * Features:
+ * - Parent-child relationships (tree structure)
+ * - Automatic cleanup on entity destruction
+ * - Thread-safe operations
+ * - Efficient child iteration
+ *
+ * Use cases:
+ * - Scene graphs (transform hierarchies)
+ * - UI widget trees
+ * - Entity prefab instances
+ * - Networked object ownership
+ *
+ * Example:
+ *   RelationshipManager mgr;
+ *   auto parent = registry.spawnEntity();
+ *   auto child = registry.spawnEntity();
+ *   mgr.setParent(child, parent);
+ *
+ *   for (auto c : mgr.getChildren(parent)) {
+ *       // Process children
+ *   }
+ */
+class RelationshipManager {
+ public:
+    RelationshipManager() = default;
 
         /**
          * @brief Sets parent-child relationship.
@@ -52,7 +54,7 @@ namespace ECS {
          * @param parent Parent entity
          * @return true if successful, false if would create cycle
          */
-        bool setParent(Entity child, Entity parent);
+        auto setParent(Entity child, Entity parent) -> bool;
 
         /**
          * @brief Removes parent relationship (orphans the child).
@@ -63,41 +65,41 @@ namespace ECS {
          * @brief Gets parent of entity if it has one.
          * @return Optional parent entity
          */
-        std::optional<Entity> getParent(Entity child) const;
+        auto getParent(Entity child) const -> std::optional<Entity>;
 
         /**
          * @brief Checks if entity has a parent.
          */
-        bool hasParent(Entity child) const;
+        auto hasParent(Entity child) const -> bool;
 
         /**
          * @brief Gets all direct children of entity.
          * @return Vector of child entities
          */
-        std::vector<Entity> getChildren(Entity parent) const;
+        auto getChildren(Entity parent) const -> std::vector<Entity>;
 
         /**
          * @brief Gets all descendants recursively.
          * @return Vector of all descendant entities (depth-first order)
          */
-        std::vector<Entity> getDescendants(Entity parent) const;
+        auto getDescendants(Entity parent) const -> std::vector<Entity>;
 
         /**
          * @brief Gets all ancestors (parent, grandparent, etc.).
          * @return Vector from immediate parent to root
          */
-        std::vector<Entity> getAncestors(Entity child) const;
+        auto getAncestors(Entity child) const -> std::vector<Entity>;
 
         /**
          * @brief Gets the root entity of the hierarchy.
          * @return Root entity (entity with no parent)
          */
-        Entity getRoot(Entity entity) const;
+        auto getRoot(Entity entity) const -> Entity;
 
         /**
          * @brief Checks if an entity is ancestor of another.
          */
-        bool isAncestor(Entity potential_ancestor, Entity entity) const;
+        auto isAncestor(Entity potential_ancestor, Entity entity) const -> bool;
 
         /**
          * @brief Removes all relationships involving an entity.
@@ -113,22 +115,22 @@ namespace ECS {
         /**
          * @brief Gets number of children an entity has.
          */
-        size_t childCount(Entity parent) const;
+        auto childCount(Entity parent) const -> size_t;
 
         /**
          * @brief Gets depth of entity in hierarchy (0 = root).
          */
-        size_t getDepth(Entity entity) const;
+        auto getDepth(Entity entity) const -> size_t;
 
     private:
         std::unordered_map<std::uint32_t, Entity> _parentMap;
         std::unordered_map<std::uint32_t, std::unordered_map<std::uint32_t, Entity>> _childrenMap;
         mutable std::shared_mutex _relationshipMutex;
 
-        bool wouldCreateCycle(Entity child, Entity parent) const;
-        void getDescendantsRecursive(Entity parent, std::vector<Entity>* result) const;
-    };
+    auto wouldCreateCycle(Entity child, Entity parent) const -> bool;
+    void getDescendantsRecursive(Entity parent, std::vector<Entity>* result) const;
+};
 
-} // namespace ECS
+}  // namespace ECS
 
-#endif // ECS_CORE_RELATIONSHIP_HPP
+#endif  // SRC_ENGINE_ECS_CORE_RELATIONSHIP_HPP_
