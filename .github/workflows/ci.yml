@@ -1,6 +1,7 @@
-name: CI
+name: R-Type Action
 
 on: [push, pull_request]
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -22,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate cache key
+      - name: Generate cache keys
         id: cache-keys
         run: |
           HASH=$(sha256sum vcpkg.json 2>/dev/null | cut -d' ' -f1 || echo "no-vcpkg")
@@ -43,7 +44,7 @@ jobs:
         id: cache-check-linux
         uses: actions/cache/restore@v4
         with:
-          path: vcpkg_installed_linux
+          path: build/ubuntu-latest/vcpkg_installed
           key: ${{ steps.cache-keys.outputs.linux }}
           lookup-only: true
 
@@ -162,7 +163,7 @@ jobs:
         id: cache-check
         uses: actions/cache/restore@v4
         with:
-          path: vcpkg_installed_windows
+          path: build/windows-latest/vcpkg_installed
           key: ${{ needs.cache-check.outputs.cache-key-windows }}
           lookup-only: true
 
