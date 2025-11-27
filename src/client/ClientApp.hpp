@@ -8,7 +8,7 @@
 #ifndef SRC_CLIENT_CLIENTAPP_HPP_
 #define SRC_CLIENT_CLIENTAPP_HPP_
 
-#include "GraphicSDL/Graphic.hpp"
+#include "GraphicSFML/Graphic.hpp"
 
 namespace RTypeClient {
 class ClientApp {

@@ -12,8 +12,8 @@
 #include <thread>
 
 #include "../assets/r-typesheet42.h"
-#include "./SFML/Graphics.hpp"
-#include "SFML/Window/Event.hpp"
+#include <SFML/Graphics.hpp>
+#include <SFML/Window/Event.hpp>
 
 void RTypeClient::Graphic::pollEvents() {
     while (const std::optional event = this->_window.pollEvent()) {

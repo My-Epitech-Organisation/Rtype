@@ -1,9 +1,0 @@
-[submodule "src/client/GraphicSFML/SFML"]
-	path = src/client/GraphicSFML/SFML
-	url = git@github.com:SFML/SFML.git
-[submodule "src/client/GraphicRaylib/raylib"]
-	path = src/client/GraphicRaylib/raylib
-	url = git@github.com:raysan5/raylib.git
-[submodule "src/client/GraphicSDL/SDL"]
-	path = src/client/GraphicSDL/SDL
-	url = git@github.com:libsdl-org/SDL.git

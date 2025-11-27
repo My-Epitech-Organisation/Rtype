@@ -7,6 +7,7 @@
   "builtin-baseline": "da93ad9cabf14d54dd9b460a12a458d359a970ff",
   "dependencies": [
     "sfml",
-    "asio"
+    "asio",
+    "gtest"
   ]
 }

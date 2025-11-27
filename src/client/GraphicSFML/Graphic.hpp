@@ -8,7 +8,7 @@
 #ifndef SRC_CLIENT_GRAPHICSFML_GRAPHIC_HPP_
 #define SRC_CLIENT_GRAPHICSFML_GRAPHIC_HPP_
 
-#include "./SFML/Graphics.hpp"
+#include <SFML/Graphics.hpp>
 
 namespace RTypeClient {
 class Graphic {
