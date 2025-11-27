@@ -8,7 +8,6 @@ concurrency:
 
 env:
   CACHE_KEY_PREFIX: v1
-  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
 
 jobs:
   cache-check:
@@ -70,9 +69,7 @@ jobs:
         id: cache-check-windows
         uses: actions/cache/restore@v4
         with:
-          path: |
-            ~/AppData/Local/vcpkg/archives
-            C:/vcpkg/archives
+          path: C:\vcpkg\archives
           key: ${{ steps.cache-keys.outputs.windows }}
           restore-keys: |
             ${{ steps.cache-keys.outputs.windows-global }}
@@ -153,8 +150,13 @@ jobs:
     name: "📦 Dependencies (Linux)"
     runs-on: ubuntu-latest
     needs: [cache-check, lint]
+    env:
+      VCPKG_DEFAULT_BINARY_CACHE: ~/.cache/vcpkg/archives
     steps:
       - uses: actions/checkout@v4
+
+      - name: Create vcpkg cache directory
+        run: mkdir -p ~/.cache/vcpkg/archives
 
       - name: Install system dependencies
         run: |
@@ -165,13 +167,6 @@ jobs:
             libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
             libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
             libxinerama-dev libxext-dev
-
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
@@ -222,21 +217,20 @@ jobs:
     name: "📦 Dependencies (Windows)"
     runs-on: windows-latest
     needs: [cache-check, lint]
+    env:
+      VCPKG_DEFAULT_BINARY_CACHE: C:\vcpkg\archives
     steps:
       - uses: actions/checkout@v4
+
+      - name: Create vcpkg cache directory
+        run: mkdir -p C:\vcpkg\archives
+        shell: cmd
 
       - name: Install Ninja
         run: choco install ninja -y
 
       - name: Setup MSVC Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
@@ -247,9 +241,7 @@ jobs:
         id: cache-restore
         uses: actions/cache/restore@v4
         with:
-          path: |
-            ~/AppData/Local/vcpkg/archives
-            C:/vcpkg/archives
+          path: C:\vcpkg\archives
           key: ${{ needs.cache-check.outputs.cache-key-windows }}
           restore-keys: |
             ${{ needs.cache-check.outputs.cache-key-windows-global }}
@@ -276,9 +268,7 @@ jobs:
         if: steps.cache-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: |
-            ~/AppData/Local/vcpkg/archives
-            C:/vcpkg/archives
+          path: C:\vcpkg\archives
           key: ${{ needs.cache-check.outputs.cache-key-windows }}
 
       - name: Summary
@@ -343,14 +333,25 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
 
-  build-linux:
-    name: "🔨 Build (Linux)"
-    runs-on: ubuntu-latest
-    needs: [test, deps-linux]
+  build:
+    name: "🔨 Build (${{ matrix.os }})"
+    runs-on: ${{ matrix.os }}
+    needs: [test, deps-linux, deps-windows]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: vcpkg-installed-linux
+            triplet: x64-linux
+          - os: windows-latest
+            artifact: vcpkg-installed-windows
+            triplet: x64-windows
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install system dependencies
+      - name: Install system dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -360,71 +361,19 @@ jobs:
             libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
             libxinerama-dev libxext-dev
 
-      - name: Download vcpkg installed packages
-        uses: actions/download-artifact@v4
-        with:
-          name: vcpkg-installed-linux
-          path: build/ubuntu-latest/vcpkg_installed
-
-      - name: Setup vcpkg (for toolchain file only)
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgJsonGlob: 'vcpkg.json'
-
-      - name: Configure CMake
-        run: |
-          cmake --preset ubuntu-latest \
-            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
-            -DVCPKG_TARGET_TRIPLET=x64-linux \
-            -DBUILD_EXAMPLES=OFF \
-            -DUSE_SFML=ON -DUSE_SDL=OFF -DUSE_RAYLIB=OFF
-
-      - name: Build
-        run: cmake --build --preset ubuntu-latest
-
-      - name: Upload Client Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: r-type_client-ubuntu-latest
-          path: |
-            build/ubuntu-latest/src/client/r-type_client*
-          if-no-files-found: warn
-
-      - name: Upload Server Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: r-type_server-ubuntu-latest
-          path: |
-            build/ubuntu-latest/src/server/r-type_server*
-          if-no-files-found: warn
-
-      - name: Build Summary
-        run: |
-          echo "### 🔨 Build Results (Linux)" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Triplet | \`x64-linux\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Dependencies | ✅ Downloaded from \`vcpkg-installed-linux\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Status | ✅ Success |" >> $GITHUB_STEP_SUMMARY
-
-  build-windows:
-    name: "🔨 Build (Windows)"
-    runs-on: windows-latest
-    needs: [deps-windows]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Ninja
+      - name: Install Ninja (Windows)
+        if: matrix.os == 'windows-latest'
         run: choco install ninja -y
 
       - name: Setup MSVC Developer Command Prompt
+        if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Download vcpkg installed packages
         uses: actions/download-artifact@v4
         with:
-          name: vcpkg-installed-windows
-          path: build/windows-latest/vcpkg_installed
+          name: ${{ matrix.artifact }}
+          path: build/${{ matrix.os }}/vcpkg_installed
 
       - name: Setup vcpkg (for toolchain file only)
         uses: lukka/run-vcpkg@v11
@@ -434,47 +383,49 @@ jobs:
       - name: Configure CMake
         shell: bash
         run: |
-          cmake --preset windows-latest \
+          cmake --preset ${{ matrix.os }} \
             -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
-            -DVCPKG_TARGET_TRIPLET=x64-windows \
+            -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
             -DBUILD_EXAMPLES=OFF \
             -DUSE_SFML=ON -DUSE_SDL=OFF -DUSE_RAYLIB=OFF
 
       - name: Build
-        run: cmake --build --preset windows-latest
+        run: cmake --build --preset ${{ matrix.os }}
 
       - name: Upload Client Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: r-type_client-windows-latest
+          name: r-type_client-${{ matrix.os }}
           path: |
-            build/windows-latest/src/client/Release/*
-            build/windows-latest/src/client/*.exe
+            build/${{ matrix.os }}/src/client/Release/*
+            build/${{ matrix.os }}/src/client/r-type_client*
+            build/${{ matrix.os }}/src/client/*.exe
           if-no-files-found: warn
 
       - name: Upload Server Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: r-type_server-windows-latest
+          name: r-type_server-${{ matrix.os }}
           path: |
-            build/windows-latest/src/server/Release/*
-            build/windows-latest/src/server/*.exe
+            build/${{ matrix.os }}/src/server/Release/*
+            build/${{ matrix.os }}/src/server/r-type_server*
+            build/${{ matrix.os }}/src/server/*.exe
           if-no-files-found: warn
 
       - name: Build Summary
         shell: bash
         run: |
-          echo "### 🔨 Build Results (Windows)" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔨 Build Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Triplet | \`x64-windows\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Dependencies | ✅ Downloaded from \`vcpkg-installed-windows\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Triplet | \`${{ matrix.triplet }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependencies | ✅ Downloaded from \`${{ matrix.artifact }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Status | ✅ Success |" >> $GITHUB_STEP_SUMMARY
 
   mirror:
     name: "🪞 Push to Epitech Mirror"
     runs-on: ubuntu-latest
-    needs: [build-linux, build-windows]
+    needs: [build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
@@ -497,7 +448,7 @@ jobs:
   cache-cleanup:
     name: "🧹 Cache Cleanup"
     runs-on: ubuntu-latest
-    needs: [build-linux, build-windows]
+    needs: [build]
     if: github.ref == 'refs/heads/main'
     permissions:
       actions: write
