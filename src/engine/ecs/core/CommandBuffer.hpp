@@ -95,7 +95,6 @@ class CommandBuffer {
 
 #endif  // SRC_ENGINE_ECS_CORE_COMMANDBUFFER_HPP_
 
-// Template implementations (must be after Registry.hpp is included)
 #ifndef SRC_ENGINE_ECS_CORE_COMMANDBUFFER_IMPL_HPP_
     #define SRC_ENGINE_ECS_CORE_COMMANDBUFFER_IMPL_HPP_
 
