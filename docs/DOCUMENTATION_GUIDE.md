@@ -36,18 +36,8 @@ npm install
 
 From project root:
 ```bash
-make docs-serve
-```
-
-Or directly:
-```bash
-./scripts/serve_docs.sh
-```
-
-Or manually:
-```bash
-cd docs/website
-npm start
+cmake -S . -B build -DBUILD_DOCS=ON
+cmake --build build --target docs-serve
 ```
 
 This opens `http://localhost:3000` with live reload.
@@ -56,39 +46,31 @@ This opens `http://localhost:3000` with live reload.
 
 From project root:
 ```bash
-# Doxygen is generated automatically with make docs
-make docs
-```
-
-Or manually:
-```bash
-cd docs
-doxygen Doxyfile
+cmake -S . -B build -DBUILD_DOCS=ON
+cmake --build build --target docs-doxygen
 ```
 
 #### 3. Generate Complete Documentation
 
 From project root (recommended):
 ```bash
-make docs
+cmake -S . -B build -DBUILD_DOCS=ON
+cmake --build build --target docs
 ```
 
-Or using the script directly:
+This will:
+- Generate Doxygen API documentation
+- Install Docusaurus dependencies
+- Copy Doxygen output to Docusaurus static folder
+
+#### 4. Build Production Documentation
+
 ```bash
-./scripts/generate_docs.sh
+cmake -S . -B build -DBUILD_DOCS=ON
+cmake --build build --target docs-build
 ```
 
-Or from the docs directory:
-```bash
-cd docs
-./generate-docs.sh  # Deprecated wrapper, redirects to new script
-```
-
-Or from the website directory:
-```bash
-cd docs/website
-npm run docs:full
-```
+Output will be in `docs/website/build/`.
 
 ### Writing Documentation
 
