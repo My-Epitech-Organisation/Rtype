@@ -205,6 +205,13 @@ jobs:
           cd build/ubuntu-latest
           ctest --output-on-failure --timeout 120 || true
 
+      - name: Upload vcpkg installed packages (for build job)
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-installed-linux
+          path: build/ubuntu-latest/vcpkg_installed
+          retention-days: 1
+
       - name: Save branch cache (feature branches only)
         if: needs.cache-check.outputs.is-main != 'true' && steps.cache-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
@@ -289,6 +296,13 @@ jobs:
             ${{ needs.cache-check.outputs[matrix.cache-key-global] }}
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vcpkg-main-
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vcpkg-
+
+      - name: Download vcpkg installed packages from test job (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/download-artifact@v4
+        with:
+          name: vcpkg-installed-linux
+          path: build/ubuntu-latest/vcpkg_installed
 
       - name: Configure CMake
         shell: bash
