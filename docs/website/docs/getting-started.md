@@ -58,7 +58,7 @@ Configuration files are located in the `config/` directory:
 - `config/server/` - Server configuration
   - `server.toml` - Network and server settings
   - `gameplay.toml` - Game rules and mechanics
-  
+
 - `config/client/` - Client configuration
   - `video.toml` - Graphics settings
   - `controls.json` - Input mappings

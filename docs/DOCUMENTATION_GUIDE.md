@@ -101,9 +101,9 @@ Add Doxygen comments to C++ headers:
 /**
  * @class MyClass
  * @brief Brief description of the class
- * 
+ *
  * Detailed description with multiple paragraphs if needed.
- * 
+ *
  * Example usage:
  * @code
  * MyClass obj;
@@ -120,7 +120,7 @@ public:
      * @throws std::runtime_error Description of when this is thrown
      */
     int doSomething(int param1, std::string param2);
-    
+
 private:
     int m_member; ///< Brief description of member variable
 };

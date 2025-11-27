@@ -53,11 +53,11 @@ public:
     void update(Registry& registry, float deltaTime) {
         // Get all entities with Position and Velocity
         auto entities = registry.get_entities_with<PositionComponent, VelocityComponent>();
-        
+
         for (auto entity : entities) {
             auto& pos = registry.get_component<PositionComponent>(entity);
             auto& vel = registry.get_component<VelocityComponent>(entity);
-            
+
             // Update position based on velocity
             pos.x += vel.x * deltaTime;
             pos.y += vel.y * deltaTime;

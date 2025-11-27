@@ -102,7 +102,7 @@ Add Doxygen comments to your C++ code:
 ```cpp
 /**
  * @brief Brief description of the class
- * 
+ *
  * Detailed description of what this class does.
  */
 class MyClass {

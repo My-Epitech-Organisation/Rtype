@@ -50,7 +50,7 @@ if(BUILD_DOCS)
         set(DOXYGEN_INPUT_DIR ${CMAKE_SOURCE_DIR})
         set(DOXYGEN_OUTPUT_DIR ${CMAKE_SOURCE_DIR}/docs/doxygen)
         set(DOXYGEN_CONFIG_FILE ${CMAKE_SOURCE_DIR}/docs/Doxyfile)
-        
+
         # Create Doxygen target
         add_custom_target(docs-doxygen
             COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_CONFIG_FILE}
@@ -58,12 +58,12 @@ if(BUILD_DOCS)
             COMMENT "Generating API documentation with Doxygen"
             VERBATIM
         )
-        
+
         message(STATUS "Doxygen found - target 'docs-doxygen' available")
     else()
         message(WARNING "Doxygen not found - API documentation will not be generated")
     endif()
-    
+
     # Find npm for Docusaurus
     find_program(NPM_EXECUTABLE npm)
     if(NPM_EXECUTABLE)
@@ -73,7 +73,7 @@ if(BUILD_DOCS)
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docs/website
             COMMENT "Installing Docusaurus dependencies"
         )
-        
+
         # Docusaurus development server
         add_custom_target(docs-serve
             COMMAND ${NPM_EXECUTABLE} start
@@ -81,7 +81,7 @@ if(BUILD_DOCS)
             COMMENT "Starting Docusaurus development server"
             USES_TERMINAL
         )
-        
+
         # Docusaurus production build
         add_custom_target(docs-build
             COMMAND ${NPM_EXECUTABLE} run build
@@ -89,19 +89,19 @@ if(BUILD_DOCS)
             COMMENT "Building Docusaurus for production"
             DEPENDS docs-install
         )
-        
+
         message(STATUS "npm found - Docusaurus targets available (docs-install, docs-serve, docs-build)")
     else()
         message(WARNING "npm not found - Docusaurus documentation will not be available")
     endif()
-    
+
     # Combined documentation target
     if(DOXYGEN_FOUND AND NPM_EXECUTABLE)
         add_custom_target(docs
             COMMENT "Generating complete documentation (Doxygen + Docusaurus)"
             DEPENDS docs-doxygen docs-install
         )
-        
+
         # Copy Doxygen output to Docusaurus static folder
         add_custom_command(TARGET docs POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -109,7 +109,7 @@ if(BUILD_DOCS)
                     ${CMAKE_SOURCE_DIR}/docs/website/static/api
             COMMENT "Copying Doxygen output to Docusaurus static folder"
         )
-        
+
         message(STATUS "Complete documentation target 'docs' available")
     endif()
 endif()
