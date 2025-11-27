@@ -1,0 +1,21 @@
+# Doxygen generated files
+doxygen/
+
+# Docusaurus generated files
+website/build/
+website/.docusaurus/
+website/node_modules/
+website/.cache-loader/
+
+# npm logs
+website/npm-debug.log*
+website/yarn-debug.log*
+website/yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

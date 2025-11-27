@@ -5,12 +5,19 @@ r-type_client
 # Personal docs
 my_notes(do_not_delete)
 
+# Documentation generated files
+docs/doxygen/
+docs/website/build/
+docs/website/.docusaurus/
+docs/website/node_modules/
+docs/website/static/api/
+docs/website/package-lock.json
+
 # Prerequisites
 *.d
 
 # Compiled Object files
-build
-build-debug
+build*
 *.slo
 *.lo
 *.o
