@@ -72,19 +72,13 @@
             return;
         }
 
-        auto get_pool_at_index = [this](size_t idx) -> std::optional<std::reference_wrapper<const std::vector<Entity>>> {
-            std::optional<std::reference_wrapper<const std::vector<Entity>>> result;
-            size_t current = 0;
-            ((current++ == idx ? (result = std::cref(std::get<Is>(pools).get().getPacked()), true) : false) || ...);
-            return result;
+        std::array<std::reference_wrapper<const std::vector<Entity>>, sizeof...(Components)> allPools = {
+            std::cref(std::get<Is>(pools).get().getPacked())...
         };
 
-        auto entities_opt = get_pool_at_index(_smallestPoolIndex);
-        if (!entities_opt.has_value()) {
-            return;
-        }
+        const auto& entities = allPools[_smallestPoolIndex].get();
 
-        for (auto entity : entities_opt->get()) {
+        for (auto entity : entities) {
             if ((std::get<Is>(pools).get().contains(entity) && ...)) {
                 std::forward<Func>(func)(entity, getComponentData<Components>(entity, std::get<Is>(pools).get())...);
             }
@@ -134,19 +128,13 @@
             return;
         }
 
-        auto get_pool_at_index = [this](size_t idx) -> std::optional<std::reference_wrapper<const std::vector<Entity>>> {
-            std::optional<std::reference_wrapper<const std::vector<Entity>>> result;
-            size_t current = 0;
-            ((current++ == idx ? (result = std::cref(std::get<IncIs>(_includePools).get().getPacked()), true) : false) || ...);
-            return result;
+        std::array<std::reference_wrapper<const std::vector<Entity>>, sizeof...(Includes)> allPools = {
+            std::cref(std::get<IncIs>(_includePools).get().getPacked())...
         };
 
-        auto entities_opt = get_pool_at_index(_smallestPoolIndex);
-        if (!entities_opt.has_value()) {
-            return;
-        }
+        const auto& entities = allPools[_smallestPoolIndex].get();
 
-        for (auto entity : entities_opt->get()) {
+        for (auto entity : entities) {
             if ((std::get<IncIs>(_includePools).get().contains(entity) && ...)) {
                 if (!is_excluded(entity)) {
                     std::forward<Func>(func)(entity, getComponentData<Includes>(entity, std::get<IncIs>(_includePools).get())...);
@@ -279,13 +267,8 @@
     template<typename... Components>
     template<typename T>
     auto View<Components...>::getComponentData(Entity entity, const ISparseSet& pool) -> decltype(auto) {
-        if constexpr (std::is_empty_v<T>) {
-            // Tags return const T& from TagSparseSet::get()
-            return static_cast<const TagSparseSet<T>&>(pool).get(entity);
-        } else {
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-            return const_cast<SparseSet<T>&>(static_cast<const SparseSet<T>&>(pool)).get(entity);
-        }
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        return const_cast<SparseSet<T>&>(static_cast<const SparseSet<T>&>(pool)).get(entity);
     }
 
     template<typename... Includes, typename... Excludes>
@@ -293,13 +276,8 @@
     auto ExcludeView<std::tuple<Includes...>, std::tuple<Excludes...>>::getComponentData(
         Entity entity, const ISparseSet& pool
     ) -> decltype(auto) {
-        if constexpr (std::is_empty_v<T>) {
-            // Tags return const T& from TagSparseSet::get()
-            return static_cast<const TagSparseSet<T>&>(pool).get(entity);
-        } else {
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-            return const_cast<SparseSet<T>&>(static_cast<const SparseSet<T>&>(pool)).get(entity);
-        }
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        return const_cast<SparseSet<T>&>(static_cast<const SparseSet<T>&>(pool)).get(entity);
     }
 
 #endif // ECS_CORE_REGISTRY_VIEW_INL

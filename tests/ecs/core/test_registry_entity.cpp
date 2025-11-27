@@ -183,8 +183,6 @@ TEST_F(RegistryEntityTest, CleanupTombstones_NoTombstones_ReturnsZero) {
 // REMOVE ENTITIES IF TESTS
 // ============================================================================
 
-// Note: Using a non-empty component to mark entities for removal
-// because emplaceComponent returns T& but TagSparseSet returns const T&
 struct MarkerComponent {
     bool marked = true;
 };

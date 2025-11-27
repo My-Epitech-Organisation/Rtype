@@ -62,19 +62,11 @@
             }
         }
 
-        if constexpr (std::is_empty_v<T>) {
-            const T& result = getSparseSet<T>().emplace(entity, std::forward<Args>(args)...);
-            if (is_new_component) {
-                _signalDispatcher.dispatchConstruct(type, entity);
-            }
-            return result;
-        } else {
-            T& result = getSparseSet<T>().emplace(entity, std::forward<Args>(args)...);
-            if (is_new_component) {
-                _signalDispatcher.dispatchConstruct(type, entity);
-            }
-            return result;
+        T& result = getSparseSet<T>().emplace(entity, std::forward<Args>(args)...);
+        if (is_new_component) {
+            _signalDispatcher.dispatchConstruct(type, entity);
         }
+        return result;
     }
 
     template <typename T, typename... Args>
@@ -150,11 +142,7 @@
         if (!hasComponent<T>(entity)) {
             throw std::runtime_error("Entity does not have requested component");
         }
-        if constexpr (std::is_empty_v<T>) {
-            return getSparseSet<T>().get(entity);  // Returns const T&
-        } else {
-            return getSparseSet<T>().get(entity);  // Returns T&
-        }
+        return getSparseSet<T>().get(entity);
     }
 
     template <typename T>
@@ -235,11 +223,7 @@
             std::shared_lock lock(_componentPoolMutex);
             auto iter = _componentPools.find(type);
             if (iter != _componentPools.end()) {
-                if constexpr (std::is_empty_v<T>) {
-                    return static_cast<TagSparseSet<T>&>(*iter->second);
-                } else {
-                    return static_cast<SparseSet<T>&>(*iter->second);
-                }
+                return static_cast<SparseSet<T>&>(*iter->second);
             }
         }
 
@@ -248,19 +232,11 @@
 
             auto iter = _componentPools.find(type);
             if (iter == _componentPools.end()) {
-                if constexpr (std::is_empty_v<T>) {
-                    _componentPools[type] = std::make_unique<TagSparseSet<T>>();
-                } else {
-                    _componentPools[type] = std::make_unique<SparseSet<T>>();
-                }
+                _componentPools[type] = std::make_unique<SparseSet<T>>();
                 iter = _componentPools.find(type);
             }
 
-            if constexpr (std::is_empty_v<T>) {
-                return static_cast<TagSparseSet<T>&>(*iter->second);
-            } else {
-                return static_cast<SparseSet<T>&>(*iter->second);
-            }
+            return static_cast<SparseSet<T>&>(*iter->second);
         }
     }
 
@@ -288,11 +264,7 @@
             throw std::runtime_error("Component pool does not exist");
         }
 
-        if constexpr (std::is_empty_v<T>) {
-            return std::cref(static_cast<const TagSparseSet<T>&>(*iter->second));
-        } else {
-            return std::cref(static_cast<const SparseSet<T>&>(*iter->second));
-        }
+        return std::cref(static_cast<const SparseSet<T>&>(*iter->second));
     }
 
 #endif // ECS_CORE_REGISTRY_COMPONENT_INL

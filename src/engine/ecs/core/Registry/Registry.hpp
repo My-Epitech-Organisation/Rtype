@@ -24,7 +24,6 @@
 #include "../../signal/SignalDispatcher.hpp"
 #include "../../storage/ISparseSet.hpp"
 #include "../../storage/SparseSet.hpp"
-#include "../../storage/TagSparseSet.hpp"
 #include "../../traits/ComponentTraits.hpp"
 #include "../../view/ExcludeView.hpp"
 #include "../../view/Group.hpp"
