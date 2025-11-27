@@ -3,16 +3,26 @@
 # ============================================================================
 
 # Source files (explicitly listed for proper CMake dependency tracking)
-# set(ECS_SOURCES --- IGNORE For Now ---
-# )
+set(ECS_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/Registry/RegistryEntity.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/Relationship.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/CommandBuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/Prefab.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/signal/SignalDispatcher.cpp
+)
 
 # Header files (explicitly listed for IDE integration)
 set(ECS_HEADERS
+    # Core
     ${CMAKE_CURRENT_SOURCE_DIR}/core/Entity.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/storage/ISparseSet.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/storage/SparseSet.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/storage/TagSparseSet.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/traits/ComponentTraits.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/Relationship.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/CommandBuffer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/Prefab.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/Registry/Registry.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/Registry/RegistryComponent.inl
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/Registry/RegistrySingleton.inl
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/Registry/RegistryView.inl
+    ${CMAKE_CURRENT_SOURCE_DIR}/signal/SignalDispatcher.hpp
 )
 
 # Header-only library (no .cpp files yet or all are commented)

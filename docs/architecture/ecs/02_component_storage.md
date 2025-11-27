@@ -2,10 +2,9 @@
 
 ## Overview
 
-Components are stored using the **Sparse Set** data structure, which provides O(1) operations while maintaining cache-friendly iteration. The R-Type ECS uses two specialized implementations:
+Components are stored using the **Sparse Set** data structure, which provides O(1) operations while maintaining cache-friendly iteration.
 
-- **SparseSet<T>**: For regular components with data
-- **TagSparseSet<T>**: For zero-size marker components (tags)
+- **SparseSet<T>**: For all components (with or without data)
 
 ## Sparse Set Architecture
 
@@ -110,36 +109,18 @@ registry.view<Position>().each([](Entity e, Position& pos) {
 registry.removeComponent<Position>(entity);
 ```
 
-## TagSparseSet<T>
+## Tag Components
 
-For empty components (markers/flags). Only stores entity IDs, no component data.
-
-### Requirements
-
-```cpp
-// Tag components must be empty types
-struct Player {};
-struct Enemy {};
-struct Dead {};
-
-static_assert(std::is_empty_v<Player>); // ✅ Valid tag
-```
-
-### Memory Efficiency
-
-```cpp
-struct Health { int hp; }; // sizeof(Health) = 4 bytes
-struct Dead {};            // sizeof(Dead) = 1 byte
-
-// 10,000 entities with Health: 10,000 * 4 = 40 KB
-// 10,000 entities with Dead tag:
-//   - Regular SparseSet: 10,000 * 1 = 10 KB
-//   - TagSparseSet: 0 KB (only entity IDs stored)
-```
+Empty components (markers/flags) can be used for tagging entities.
 
 ### Usage
 
 ```cpp
+// Tag components are empty types
+struct Player {};
+struct Enemy {};
+struct Dead {};
+
 // Tags are used identically to regular components
 Entity entity = registry.spawnEntity();
 registry.emplaceComponent<Player>(entity); // No data needed
@@ -306,9 +287,6 @@ struct ComponentTraits {
     static constexpr bool isTrivial = std::is_trivially_copyable_v<T>;
     static constexpr bool isTrivialDestructible = std::is_trivially_destructible_v<T>;
 };
-
-// Automatically uses TagSparseSet for empty types
-// Automatically optimizes trivial types
 ```
 
 ## Best Practices
