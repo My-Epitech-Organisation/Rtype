@@ -160,10 +160,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            ninja-build cmake \
-            libx11-dev libxrandr-dev libxcursor-dev \
-            libudev-dev libgl1-mesa-dev \
-            libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev
+            ninja-build cmake pkg-config \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
+            libxinerama-dev libxext-dev
 
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v7
@@ -252,10 +253,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            ninja-build \
-            libx11-dev libxrandr-dev libxcursor-dev \
-            libudev-dev libgl1-mesa-dev \
-            libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev
+            ninja-build cmake pkg-config \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
+            libxinerama-dev libxext-dev
 
       - name: Install Ninja (Windows)
         if: matrix.os == 'windows-latest'
