@@ -10,13 +10,13 @@
 
 namespace ECS {
 
-    Entity CommandBuffer::spawnEntityDeferred() {
+    auto CommandBuffer::spawnEntityDeferred() -> Entity {
         std::lock_guard lock(_commandsMutex);
 
         std::uint32_t placeholder_id = _nextPlaceholderId++;
         Entity placeholder(placeholder_id, 0);
 
-        _commands.push_back([this, placeholder_id]() {
+        _commands.emplace_back([this, placeholder_id]() {
             Entity real_entity = _registry.get().spawnEntity();
             _placeholdertoReal[placeholder_id] = real_entity;
         });
@@ -26,11 +26,11 @@ namespace ECS {
 
     void CommandBuffer::destroyEntityDeferred(Entity entity) {
         std::lock_guard lock(_commandsMutex);
-        _commands.push_back([this, entity]() {
+        _commands.emplace_back([this, entity]() {
             Entity target_entity = entity;
-            auto it = _placeholdertoReal.find(entity.id);
-            if (it != _placeholdertoReal.end()) {
-                target_entity = it->second;
+            auto iter = _placeholdertoReal.find(entity.id);
+            if (iter != _placeholdertoReal.end()) {
+                target_entity = iter->second;
             }
 
             _registry.get().killEntity(target_entity);
@@ -50,7 +50,7 @@ namespace ECS {
         _nextPlaceholderId = 0;
     }
 
-    size_t CommandBuffer::pendingCount() const {
+    auto CommandBuffer::pendingCount() const -> size_t {
         std::lock_guard lock(_commandsMutex);
         return _commands.size();
     }
@@ -62,4 +62,4 @@ namespace ECS {
         _nextPlaceholderId = 0;
     }
 
-} // namespace ECS
+}  // namespace ECS
