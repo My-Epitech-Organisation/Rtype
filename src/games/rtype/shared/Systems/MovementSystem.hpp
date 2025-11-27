@@ -11,6 +11,8 @@
 
 namespace rtype::games::rtype::shared {
 
-TransformComponent updateMovement(TransformComponent transform, const VelocityComponent& velocity, float deltaTime);
+TransformComponent updateMovement(TransformComponent transform,
+                                  const VelocityComponent& velocity,
+                                  float deltaTime);
 
 }  // namespace rtype::games::rtype::shared
