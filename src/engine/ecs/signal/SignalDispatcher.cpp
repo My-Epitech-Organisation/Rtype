@@ -23,9 +23,9 @@ namespace ECS {
 
     void SignalDispatcher::dispatchConstruct(std::type_index type, Entity entity) {
         std::shared_lock lock(callbacks_mutex);
-        auto it = _constructCallbacks.find(type);
-        if (it != _constructCallbacks.end()) {
-            std::vector<Callback> callbacks_copy = it->second;
+        auto iter = _constructCallbacks.find(type);
+        if (iter != _constructCallbacks.end()) {
+            std::vector<Callback> callbacks_copy = iter->second;
             lock.unlock();
 
             for (auto& callback : callbacks_copy) {
@@ -36,9 +36,9 @@ namespace ECS {
 
     void SignalDispatcher::dispatchDestroy(std::type_index type, Entity entity) {
         std::shared_lock lock(callbacks_mutex);
-        auto it = _destroyCallbacks.find(type);
-        if (it != _destroyCallbacks.end()) {
-            std::vector<Callback> callbacks_copy = it->second;
+        auto iter = _destroyCallbacks.find(type);
+        if (iter != _destroyCallbacks.end()) {
+            std::vector<Callback> callbacks_copy = iter->second;
             lock.unlock();
 
             for (auto& callback : callbacks_copy) {
@@ -59,4 +59,4 @@ namespace ECS {
         _destroyCallbacks.clear();
     }
 
-} // namespace ECS
+}  // namespace ECS
