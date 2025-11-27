@@ -16,19 +16,19 @@
 // ========================================================================
 
     template<typename T, typename... Args>
-    T& Registry::setSingleton(Args&&... args) {
-        std::type_index type = std::type_index(typeid(T));
+    auto Registry::setSingleton(Args&&... args) -> T& {
+        auto type = std::type_index(typeid(T));
         _singletons[type] = std::make_any<T>(std::forward<Args>(args)...);
         return std::any_cast<T&>(_singletons[type]);
     }
 
     template<typename T>
-    T& Registry::getSingleton() {
+    auto Registry::getSingleton() -> T& {
         return std::any_cast<T&>(_singletons.at(std::type_index(typeid(T))));
     }
 
     template<typename T>
-    bool Registry::hasSingleton() const noexcept {
+    auto Registry::hasSingleton() const noexcept -> bool {
         return _singletons.find(std::type_index(typeid(T))) != _singletons.end();
     }
 
