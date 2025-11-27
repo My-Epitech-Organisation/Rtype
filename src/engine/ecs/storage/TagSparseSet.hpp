@@ -52,112 +52,112 @@ class TagSparseSet : public ISparseSet {
                _packed[_sparse[idx]] == entity;
     }
 
-        /**
-         * @brief Adds tag to entity (idempotent).
-         * @return Const reference to dummy instance (tags have no data)
-         * @note Args are intentionally ignored - tags have no data to construct
-         */
-        template <typename... Args>
-        auto emplace(Entity entity, [[maybe_unused]] Args... /*unused*/) -> const T& {
-            std::lock_guard lock(_sparseSetMutex);
-            if (containsUnsafe(entity)) {
-                return _dummyInstance;
-            }
-
-            auto idx = entity.index();
-            if (idx >= _sparse.size()) {
-                _sparse.resize(idx + 1, NullIndex);
-            }
-
-            _sparse[idx] = _packed.size();
-            _packed.push_back(entity);
+    /**
+     * @brief Adds tag to entity (idempotent).
+     * @return Const reference to dummy instance (tags have no data)
+     * @note Args are intentionally ignored - tags have no data to construct
+     */
+    template <typename... Args>
+    auto emplace(Entity entity, [[maybe_unused]] Args... /*unused*/) -> const T& {
+        std::lock_guard lock(_sparseSetMutex);
+        if (containsUnsafe(entity)) {
             return _dummyInstance;
         }
 
-        void remove(Entity entity) override {
-            std::lock_guard lock(_sparseSetMutex);
-            if (!containsUnsafe(entity)) {
-                return;
-            }
-
-            auto idx = entity.index();
-            size_t dense_idx = _sparse[idx];
-            size_t last_idx = _packed.size() - 1;
-
-            if (dense_idx != last_idx) {
-                Entity last_entity = _packed[last_idx];
-                std::swap(_packed[dense_idx], _packed[last_idx]);
-                _sparse[last_entity.index()] = dense_idx;
-            }
-
-            _packed.pop_back();
-            _sparse[idx] = NullIndex;
+        auto idx = entity.index();
+        if (idx >= _sparse.size()) {
+            _sparse.resize(idx + 1, NullIndex);
         }
 
-        auto get(Entity entity) -> const T& {
-            std::lock_guard lock(_sparseSetMutex);
+        _sparse[idx] = _packed.size();
+        _packed.push_back(entity);
+        return _dummyInstance;
+    }
 
-            if (!containsUnsafe(entity)) {
-                throw std::runtime_error("Entity missing tag component in TagSparseSet::get()");
-            }
-            return _dummyInstance;
+    void remove(Entity entity) override {
+        std::lock_guard lock(_sparseSetMutex);
+        if (!containsUnsafe(entity)) {
+            return;
         }
 
-        auto get(Entity entity) const -> const T& {
-            std::lock_guard lock(_sparseSetMutex);
+        auto idx = entity.index();
+        size_t dense_idx = _sparse[idx];
+        size_t last_idx = _packed.size() - 1;
 
-            if (!containsUnsafe(entity)) {
-                throw std::runtime_error("Entity missing tag component in TagSparseSet::get()");
-            }
-            return _dummyInstance;
+        if (dense_idx != last_idx) {
+            Entity last_entity = _packed[last_idx];
+            std::swap(_packed[dense_idx], _packed[last_idx]);
+            _sparse[last_entity.index()] = dense_idx;
         }
 
-        void clear() noexcept override {
-            std::lock_guard lock(_sparseSetMutex);
+        _packed.pop_back();
+        _sparse[idx] = NullIndex;
+    }
 
-            _packed.clear();
-            _sparse.clear();
+    auto get(Entity entity) -> const T& {
+        std::lock_guard lock(_sparseSetMutex);
+
+        if (!containsUnsafe(entity)) {
+            throw std::runtime_error("Entity missing tag component in TagSparseSet::get()");
         }
+        return _dummyInstance;
+    }
 
-        auto size() const noexcept -> size_t override {
-            std::lock_guard lock(_sparseSetMutex);
+    auto get(Entity entity) const -> const T& {
+        std::lock_guard lock(_sparseSetMutex);
 
-            return _packed.size();
+        if (!containsUnsafe(entity)) {
+            throw std::runtime_error("Entity missing tag component in TagSparseSet::get()");
         }
+        return _dummyInstance;
+    }
 
-        /**
-         * @brief Direct access to internal entity array.
-         * @warning NOT THREAD-SAFE: Returns reference to internal data.
-         *          The lock is released after returning, so the reference
-         *          can be invalidated by concurrent modifications.
-         *          External synchronization is required during access.
-         *          Typically safe when systems run sequentially in the game loop.
-         */
-        auto getPacked() const noexcept -> const std::vector<Entity>& override {
-            return _packed;
-        }
+    void clear() noexcept override {
+        std::lock_guard lock(_sparseSetMutex);
 
-        /**
-         * @brief Pre-allocates memory for expected number of entities.
-         * @param capacity Number of entities to reserve space for
-         * @note Thread-safe. Not part of ISparseSet interface (type-specific optimization).
-         */
-        void reserve(size_t capacity) {
-            std::lock_guard lock(_sparseSetMutex);
+        _packed.clear();
+        _sparse.clear();
+    }
 
-            _packed.reserve(capacity);
-            _sparse.reserve(capacity);
-        }
+    auto size() const noexcept -> size_t override {
+        std::lock_guard lock(_sparseSetMutex);
 
-        /**
-         * @brief Releases unused memory.
-         */
-        void shrinkToFit() override {
-            std::lock_guard lock(_sparseSetMutex);
+        return _packed.size();
+    }
 
-            _packed.shrink_to_fit();
-            _sparse.shrink_to_fit();
-        }
+    /**
+     * @brief Direct access to internal entity array.
+     * @warning NOT THREAD-SAFE: Returns reference to internal data.
+     *          The lock is released after returning, so the reference
+     *          can be invalidated by concurrent modifications.
+     *          External synchronization is required during access.
+     *          Typically safe when systems run sequentially in the game loop.
+     */
+    auto getPacked() const noexcept -> const std::vector<Entity>& override {
+        return _packed;
+    }
+
+    /**
+     * @brief Pre-allocates memory for expected number of entities.
+     * @param capacity Number of entities to reserve space for
+     * @note Thread-safe. Not part of ISparseSet interface (type-specific optimization).
+     */
+    void reserve(size_t capacity) {
+        std::lock_guard lock(_sparseSetMutex);
+
+        _packed.reserve(capacity);
+        _sparse.reserve(capacity);
+    }
+
+    /**
+     * @brief Releases unused memory.
+     */
+    void shrinkToFit() override {
+        std::lock_guard lock(_sparseSetMutex);
+
+        _packed.shrink_to_fit();
+        _sparse.shrink_to_fit();
+    }
 
  private:
     static constexpr size_t NullIndex = std::numeric_limits<size_t>::max();

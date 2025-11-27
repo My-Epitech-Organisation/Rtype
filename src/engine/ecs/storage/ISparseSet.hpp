@@ -25,7 +25,6 @@ class ISparseSet {
     ISparseSet() = default;
     virtual ~ISparseSet() = default;
 
-    //  Rule of five: prevent copying and moving of interface
     ISparseSet(const ISparseSet&) = delete;
     auto operator=(const ISparseSet&) -> ISparseSet& = delete;
     ISparseSet(ISparseSet&&) = delete;
