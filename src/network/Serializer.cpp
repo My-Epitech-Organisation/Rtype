@@ -7,17 +7,19 @@
 
 #include "Serializer.hpp"
 
+#include <vector>
+
 namespace rtype::network {
 
-std::vector<uint8_t> Serializer::serialize(const Packet &packet) {
+std::vector<uint8_t> Serializer::serialize(const Packet& packet) {
     std::vector<uint8_t> result;
     result.push_back(static_cast<uint8_t>(packet.type()));
-    const auto &data = packet.data();
+    const auto& data = packet.data();
     result.insert(result.end(), data.begin(), data.end());
     return result;
 }
 
-Packet Serializer::deserialize(const std::vector<uint8_t> &data) {
+Packet Serializer::deserialize(const std::vector<uint8_t>& data) {
     if (data.empty()) {
         return Packet();
     }

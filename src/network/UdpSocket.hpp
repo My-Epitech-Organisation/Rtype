@@ -18,10 +18,10 @@ class UdpSocket {
     ~UdpSocket();
 
     bool bind(uint16_t port);
-    bool connect(const std::string &host, uint16_t port);
+    bool connect(const std::string& host, uint16_t port);
 
-    int send(const void *data, size_t size);
-    int receive(void *buffer, size_t maxSize);
+    int send(const void* data, size_t size);
+    int receive(void* buffer, size_t maxSize);
 
     void close();
 

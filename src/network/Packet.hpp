@@ -26,10 +26,10 @@ class Packet {
     explicit Packet(PacketType type);
 
     PacketType type() const { return type_; }
-    const std::vector<uint8_t> &data() const { return data_; }
+    const std::vector<uint8_t>& data() const { return data_; }
 
     void setType(PacketType type) { type_ = type; }
-    void setData(const std::vector<uint8_t> &data) { data_ = data; }
+    void setData(const std::vector<uint8_t>& data) { data_ = data; }
 
    private:
     PacketType type_;

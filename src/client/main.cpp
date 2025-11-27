@@ -5,10 +5,10 @@
 ** main.cpp
 */
 #include <iostream>
+
 #include "ClientApp.hpp"
 
-int main()
-{
+int main() {
     RTypeClient::ClientApp client;
     client.run();
     return 0;

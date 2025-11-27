@@ -19,8 +19,8 @@ class Entity {
     EntityId id() const { return id_; }
     bool valid() const { return id_ != 0; }
 
-    bool operator==(const Entity &other) const { return id_ == other.id_; }
-    bool operator!=(const Entity &other) const { return id_ != other.id_; }
+    bool operator==(const Entity& other) const { return id_ == other.id_; }
+    bool operator!=(const Entity& other) const { return id_ != other.id_; }
 
    private:
     EntityId id_;

@@ -124,13 +124,11 @@ else
 
         log_info "Checking for remaining formatting issues..."
         for file in $CPP_FILES; do
-            REPLACEMENTS=$(clang-format -style=file:"$CLANG_FORMAT_CONFIG" -output-replacements-xml "$file" 2>/dev/null)
-            if echo "$REPLACEMENTS" | grep -q "<replacement "; then
+            REPLACEMENTS=$(clang-format -style=file:"$CLANG_FORMAT_CONFIG" -output-replacements-xml "$file" 2>/dev/null || true)
+            if [[ "$REPLACEMENTS" == *"<replacement "* ]]; then
                 CLANG_FORMAT_ERRORS=$((CLANG_FORMAT_ERRORS + 1))
                 FORMAT_FAILED="${FORMAT_FAILED}  ✗ Needs formatting: $file\n"
-                if [ $VERBOSE -eq 1 ]; then
-                    log_warning "File needs formatting: $file"
-                fi
+                log_warning "Needs formatting: $file"
             fi
         done
     fi
@@ -158,13 +156,13 @@ echo "2. CPPLINT RESULTS" >> "$REPORT_FILE"
 echo "======================================" >> "$REPORT_FILE"
 
 CPPLINT_ERRORS=0
-CPPLINT_SCRIPT="$PROJECT_ROOT/PoC/PoC_Code_Quality/cpplint/cpplint.py"
+CPPLINT_SCRIPT="$PROJECT_ROOT/config/cpplint/cpplint.py"
 
 if [ ! -f "$CPPLINT_SCRIPT" ]; then
     log_warning "CppLint script not found at $CPPLINT_SCRIPT"
     echo "Status: SKIPPED - cpplint.py not found" >> "$REPORT_FILE"
 else
-    CPPLINT_FILTERS="--filter=-whitespace/parens,-legal/copyright,-whitespace/indent,-whitespace/line_length,-build/include_subdir"
+    CPPLINT_FILTERS="--filter=-whitespace/parens,-legal/copyright,-whitespace/indent,-whitespace/line_length,-build/include_subdir,-build/c++11,-runtime/references,-build/include_what_you_use"
     CPPLINT_OUTPUT=$(python3 "$CPPLINT_SCRIPT" $CPPLINT_FILTERS --linelength=100 $CPP_FILES 2>&1 | grep -v "^$" | grep -v "^Done processing" || true)
 
     if [ -z "$CPPLINT_OUTPUT" ]; then

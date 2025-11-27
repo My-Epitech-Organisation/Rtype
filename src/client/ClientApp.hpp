@@ -5,12 +5,16 @@
 ** ClientApp
 */
 
-#include "GraphicSDL/Graphic.hpp"
+#ifndef SRC_CLIENT_CLIENTAPP_HPP_
+#define SRC_CLIENT_CLIENTAPP_HPP_
 
-namespace RTypeClient
-{
+#include "GraphicSFML/Graphic.hpp"
+
+namespace RTypeClient {
 class ClientApp {
-    public:
-        void run();
-    };
-}
+   public:
+    void run();
+};
+}  // namespace RTypeClient
+
+#endif  // SRC_CLIENT_CLIENTAPP_HPP_

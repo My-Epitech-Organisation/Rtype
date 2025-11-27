@@ -5,29 +5,29 @@
 ** Graphic.hpp
 */
 
-#ifndef R_TYPE_GRAPHIC_HPP
-#define R_TYPE_GRAPHIC_HPP
+#ifndef SRC_CLIENT_GRAPHICSFML_GRAPHIC_HPP_
+#define SRC_CLIENT_GRAPHICSFML_GRAPHIC_HPP_
 
-#include "./SFML/Graphics.hpp"
+#include <SFML/Graphics.hpp>
 
 namespace RTypeClient {
-    class Graphic {
-    private:
-        sf::Texture _vesselTexture;
-        sf::Sprite _vessel;
-        sf::RenderWindow _window;
-        bool _appRunning = true;
+class Graphic {
+   private:
+    sf::Texture _vesselTexture;
+    sf::Sprite _vessel;
+    sf::RenderWindow _window;
+    bool _appRunning = true;
 
-    public:
-        void pollEvents();
+   public:
+    void pollEvents();
 
-        void display();
+    void display();
 
-        void loop();
+    void loop();
 
-        Graphic();
-        ~Graphic();
-    };
-}
+    Graphic();
+    ~Graphic();
+};
+}  // namespace RTypeClient
 
-#endif //R_TYPE_GRAPHIC_HPP
+#endif  // SRC_CLIENT_GRAPHICSFML_GRAPHIC_HPP_

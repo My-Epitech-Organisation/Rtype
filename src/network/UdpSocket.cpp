@@ -7,6 +7,8 @@
 
 #include "UdpSocket.hpp"
 
+#include <string>
+
 namespace rtype::network {
 
 UdpSocket::UdpSocket() : socket_(-1) {}
@@ -19,21 +21,21 @@ bool UdpSocket::bind(uint16_t port) {
     return false;
 }
 
-bool UdpSocket::connect(const std::string &host, uint16_t port) {
+bool UdpSocket::connect(const std::string& host, uint16_t port) {
     // Placeholder
     (void)host;
     (void)port;
     return false;
 }
 
-int UdpSocket::send(const void *data, size_t size) {
+int UdpSocket::send(const void* data, size_t size) {
     // Placeholder
     (void)data;
     (void)size;
     return -1;
 }
 
-int UdpSocket::receive(void *buffer, size_t maxSize) {
+int UdpSocket::receive(void* buffer, size_t maxSize) {
     // Placeholder
     (void)buffer;
     (void)maxSize;

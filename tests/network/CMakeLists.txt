@@ -7,3 +7,12 @@ target_link_libraries(test_serialization PRIVATE
 
 include(GoogleTest)
 gtest_discover_tests(test_serialization)
+
+add_executable(test_packet test_packet.cpp)
+
+target_link_libraries(test_packet PRIVATE
+    rtype_network
+    GTest::gtest_main
+)
+
+gtest_discover_tests(test_packet)
