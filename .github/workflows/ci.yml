@@ -251,7 +251,7 @@ jobs:
       - name: Run tests
         run: |
           cd build/ubuntu-latest
-          ctest --output-on-failure --timeout 120 || true
+          ctest --output-on-failure --timeout 120
 
       - name: Test Summary
         if: always()
@@ -319,7 +319,7 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
             -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
             -DBUILD_EXAMPLES=OFF \
-            -DUSE_SFML=ON -DUSE_SDL=OFF -DUSE_RAYLIB=OFF
+            -DUSE_SFML=ON
 
       - name: Build
         run: cmake --build --preset ${{ matrix.os }}
