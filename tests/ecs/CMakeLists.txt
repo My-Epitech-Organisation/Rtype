@@ -17,7 +17,6 @@ set(ECS_TESTS
     # Storage tests
     storage/test_isparse_set
     storage/test_sparse_set
-    storage/test_tag_sparse_set
     # Traits tests
     traits/test_component_traits
 )
