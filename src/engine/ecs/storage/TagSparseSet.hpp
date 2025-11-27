@@ -5,64 +5,69 @@
 ** TagSparseSet
 */
 
-#ifndef ECS_STORAGE_TAG_SPARSE_SET_HPP
-    #define ECS_STORAGE_TAG_SPARSE_SET_HPP
-    #include "ISparseSet.hpp"
-    #include "../traits/ComponentTraits.hpp"
-    #include <vector>
-    #include <limits>
-    #include <stdexcept>
-    #include <mutex>
-    #include <utility>
+#ifndef SRC_ENGINE_ECS_STORAGE_TAGSPARSESET_HPP_
+#define SRC_ENGINE_ECS_STORAGE_TAGSPARSESET_HPP_
+
+#include <limits>
+#include <mutex>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+#include "ISparseSet.hpp"
+#include "../traits/ComponentTraits.hpp"
 
 namespace ECS {
 
-    /**
-     * @brief Memory-efficient storage for empty components (tags).
-     *
-     * Tags are marker components without data (e.g., "Player", "Enemy").
-     * This specialized container stores only entity IDs, eliminating wasted memory.
-     *
-     * Thread Safety:
-     * - Mutating operations (emplace, remove, clear, reserve, shrinkToFit) are thread-safe.
-     * - Read operations (contains, get, size) are thread-safe.
-     * - Direct access (getPacked) is NOT thread-safe and requires external synchronization.
-     * - Typically safe when ECS systems run sequentially in the game loop.
-     *
-     * Implementation Note:
-     * - _dummyInstance is shared across all TagSparseSet<T> instances (static inline const).
-     *   This is safe because empty types have no mutable state.
-     *
-     * @tparam T Must be an empty type (sizeof(T) == 1, no members) and satisfy Component concept
-     */
-    template <Component T>
-    class TagSparseSet : public ISparseSet {
-        static_assert(std::is_empty_v<T>, "TagSparseSet requires empty type");
+/**
+ * @brief Memory-efficient storage for empty components (tags).
+ *
+ * Tags are marker components without data (e.g., "Player", "Enemy").
+ * This specialized container stores only entity IDs, eliminating wasted memory.
+ *
+ * Thread Safety:
+ * - Mutating operations (emplace, remove, clear, reserve, shrinkToFit) are thread-safe.
+ * - Read operations (contains, get, size) are thread-safe.
+ * - Direct access (getPacked) is NOT thread-safe and requires external synchronization.
+ * - Typically safe when ECS systems run sequentially in the game loop.
+ *
+ * Implementation Note:
+ * - _dummyInstance is shared across all TagSparseSet<T> instances (static inline const).
+ *   This is safe because empty types have no mutable state.
+ *
+ * @tparam T Must be an empty type (sizeof(T) == 1, no members) and satisfy Component concept
+ */
+template <Component T>
+class TagSparseSet : public ISparseSet {
+    static_assert(std::is_empty_v<T>, "TagSparseSet requires empty type");
 
-    public:
-        bool contains(Entity entity) const noexcept override {
-            std::lock_guard lock(_sparseSetMutex);
+ public:
+    auto contains(Entity entity) const noexcept -> bool override {
+        std::lock_guard lock(_sparseSetMutex);
 
-            auto idx = entity.index();
-            return idx < _sparse.size() &&
-                   _sparse[idx] != NullIndex &&
-                   _sparse[idx] < _packed.size() &&
-                   _packed[_sparse[idx]] == entity;
-        }
+        auto idx = entity.index();
+        return idx < _sparse.size() &&
+               _sparse[idx] != NullIndex &&
+               _sparse[idx] < _packed.size() &&
+               _packed[_sparse[idx]] == entity;
+    }
 
         /**
          * @brief Adds tag to entity (idempotent).
          * @return Const reference to dummy instance (tags have no data)
+         * @note Args are intentionally ignored - tags have no data to construct
          */
         template <typename... Args>
-        const T& emplace(Entity entity, Args&&...) {
+        auto emplace(Entity entity, [[maybe_unused]] Args... /*unused*/) -> const T& {
             std::lock_guard lock(_sparseSetMutex);
-            if (containsUnsafe(entity))
+            if (containsUnsafe(entity)) {
                 return _dummyInstance;
+            }
 
             auto idx = entity.index();
-            if (idx >= _sparse.size())
+            if (idx >= _sparse.size()) {
                 _sparse.resize(idx + 1, NullIndex);
+            }
 
             _sparse[idx] = _packed.size();
             _packed.push_back(entity);
@@ -71,7 +76,9 @@ namespace ECS {
 
         void remove(Entity entity) override {
             std::lock_guard lock(_sparseSetMutex);
-            if (!containsUnsafe(entity)) return;
+            if (!containsUnsafe(entity)) {
+                return;
+            }
 
             auto idx = entity.index();
             size_t dense_idx = _sparse[idx];
@@ -87,19 +94,21 @@ namespace ECS {
             _sparse[idx] = NullIndex;
         }
 
-        const T& get(Entity entity) {
+        auto get(Entity entity) -> const T& {
             std::lock_guard lock(_sparseSetMutex);
 
-            if (!containsUnsafe(entity))
+            if (!containsUnsafe(entity)) {
                 throw std::runtime_error("Entity missing tag component in TagSparseSet::get()");
+            }
             return _dummyInstance;
         }
 
-        const T& get(Entity entity) const {
+        auto get(Entity entity) const -> const T& {
             std::lock_guard lock(_sparseSetMutex);
 
-            if (!containsUnsafe(entity))
+            if (!containsUnsafe(entity)) {
                 throw std::runtime_error("Entity missing tag component in TagSparseSet::get()");
+            }
             return _dummyInstance;
         }
 
@@ -110,7 +119,7 @@ namespace ECS {
             _sparse.clear();
         }
 
-        size_t size() const noexcept override {
+        auto size() const noexcept -> size_t override {
             std::lock_guard lock(_sparseSetMutex);
 
             return _packed.size();
@@ -124,7 +133,7 @@ namespace ECS {
          *          External synchronization is required during access.
          *          Typically safe when systems run sequentially in the game loop.
          */
-        const std::vector<Entity>& getPacked() const noexcept override {
+        auto getPacked() const noexcept -> const std::vector<Entity>& override {
             return _packed;
         }
 
@@ -150,25 +159,25 @@ namespace ECS {
             _sparse.shrink_to_fit();
         }
 
-    private:
-        static constexpr size_t NullIndex = std::numeric_limits<size_t>::max();
-        std::vector<Entity> _packed;
-        std::vector<size_t> _sparse;
-        mutable std::mutex _sparseSetMutex;
-        static inline const T _dummyInstance{};
+ private:
+    static constexpr size_t NullIndex = std::numeric_limits<size_t>::max();
+    std::vector<Entity> _packed;
+    std::vector<size_t> _sparse;
+    mutable std::mutex _sparseSetMutex;
+    static inline const T _dummyInstance{};
 
-        /**
-         * @brief Internal contains check without locking (caller must hold lock).
-         */
-        bool containsUnsafe(Entity entity) const noexcept {
-            auto idx = entity.index();
-            return idx < _sparse.size() &&
-                   _sparse[idx] != NullIndex &&
-                   _sparse[idx] < _packed.size() &&
-                   _packed[_sparse[idx]] == entity;
-        }
-    };
+    /**
+     * @brief Internal contains check without locking (caller must hold lock).
+     */
+    auto containsUnsafe(Entity entity) const noexcept -> bool {
+        auto idx = entity.index();
+        return idx < _sparse.size() &&
+               _sparse[idx] != NullIndex &&
+               _sparse[idx] < _packed.size() &&
+               _packed[_sparse[idx]] == entity;
+    }
+};
 
-} // namespace ECS
+}  // namespace ECS
 
-#endif // ECS_STORAGE_TAG_SPARSE_SET_HPP
+#endif  // SRC_ENGINE_ECS_STORAGE_TAGSPARSESET_HPP_
