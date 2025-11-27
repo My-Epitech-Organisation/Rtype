@@ -5,59 +5,61 @@
 ** Registry - Main interface
 */
 
-#ifndef ECS_CORE_REGISTRY_REGISTRY_HPP
-    #define ECS_CORE_REGISTRY_REGISTRY_HPP
-    #include "../Entity.hpp"
-    #include "../../storage/ISparseSet.hpp"
-    #include "../../storage/SparseSet.hpp"
-    #include "../../storage/TagSparseSet.hpp"
-    #include "../../traits/ComponentTraits.hpp"
-    #include "../../signal/SignalDispatcher.hpp"
-    #include "../../view/View.hpp"
-    #include "../../view/ParallelView.hpp"
-    #include "../../view/Group.hpp"
-    #include "../../view/ExcludeView.hpp"
-    #include "../Relationship.hpp"
-    #include <unordered_map>
-    #include <typeindex>
-    #include <memory>
-    #include <vector>
-    #include <any>
-    #include <optional>
-    #include <functional>
-    #include <algorithm>
-    #include <mutex>
-    #include <shared_mutex>
-    #include <atomic>
+#ifndef SRC_ENGINE_ECS_CORE_REGISTRY_REGISTRY_HPP_
+#define SRC_ENGINE_ECS_CORE_REGISTRY_REGISTRY_HPP_
+
+#include <algorithm>
+#include <any>
+#include <atomic>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <shared_mutex>
+#include <typeindex>
+#include <unordered_map>
+#include <vector>
+
+#include "../Entity.hpp"
+#include "../../signal/SignalDispatcher.hpp"
+#include "../../storage/ISparseSet.hpp"
+#include "../../storage/SparseSet.hpp"
+#include "../../storage/TagSparseSet.hpp"
+#include "../../traits/ComponentTraits.hpp"
+#include "../../view/ExcludeView.hpp"
+#include "../../view/Group.hpp"
+#include "../../view/ParallelView.hpp"
+#include "../../view/View.hpp"
+#include "../Relationship.hpp"
 
 namespace ECS {
 
+/**
+ * @brief Central ECS coordinator managing entities, components, and systems.
+ *
+ * Responsibilities:
+ * - Entity lifecycle (creation, destruction, validation)
+ * - Component storage and access
+ * - View/query creation for system iteration
+ * - Signal/observer pattern support
+ * - Global singleton resource management
+ *
+ * Thread Safety:
+ * - parallelView() is safe for reading/modifying DIFFERENT components
+ * - DO NOT add/remove entities or components during parallel iteration
+ * - DO NOT modify shared state without synchronization in callbacks
+ */
+class Registry {
+ public:
+    Registry() = default;
+
+    // ========================================================================
+    // ENTITY MANAGEMENT
+    // ========================================================================
+
     /**
-     * @brief Central ECS coordinator managing entities, components, and systems.
-     *
-     * Responsibilities:
-     * - Entity lifecycle (creation, destruction, validation)
-     * - Component storage and access
-     * - View/query creation for system iteration
-     * - Signal/observer pattern support
-     * - Global singleton resource management
-     *
-     * Thread Safety:
-     * - parallelView() is safe for reading/modifying DIFFERENT components
-     * - DO NOT add/remove entities or components during parallel iteration
-     * - DO NOT modify shared state without synchronization in callbacks
-     */
-    class Registry {
-    public:
-        Registry() = default;
-
-        // ========================================================================
-        // ENTITY MANAGEMENT
-        // ========================================================================
-
-        /**
-         * @brief Pre-allocates memory for entities to reduce allocations.
-         * @param capacity Expected number of entities
+     * @brief Pre-allocates memory for entities to reduce allocations.
+     * @param capacity Expected number of entities
          */
         void reserveEntities(size_t capacity);
 
@@ -65,7 +67,7 @@ namespace ECS {
          * @brief Creates a new entity with a unique ID.
          * @return New entity handle
          */
-        Entity spawnEntity();
+        auto spawnEntity() -> Entity;
 
         /**
          * @brief Destroys an entity and all its components.
@@ -78,14 +80,14 @@ namespace ECS {
          * @param entity Entity to check
          * @return true if entity exists and generation matches
          */
-        [[nodiscard]] bool isAlive(Entity entity) const noexcept;
+        [[nodiscard]] auto isAlive(Entity entity) const noexcept -> bool;
 
         /**
          * @brief Recycles tombstone entities by resetting their generations.
          * Call this periodically to reclaim entity slots. Thread-safe.
          * @return Number of tombstones recycled
          */
-        size_t cleanupTombstones();
+        auto cleanupTombstones() -> size_t;
 
         /**
          * @brief Removes all entities matching a predicate.
@@ -93,7 +95,7 @@ namespace ECS {
          * @return Number of entities removed
          */
         template<typename Func>
-        size_t removeEntitiesIf(Func&& predicate);
+        auto removeEntitiesIf(Func&& predicate) -> size_t;
 
         // ========================================================================
         // COMPONENT MANAGEMENT
@@ -129,7 +131,7 @@ namespace ECS {
          * @return Reference to component (const for tags, mutable for data components)
          */
         template <typename T, typename... Args>
-        decltype(auto) emplaceComponent(Entity entity, Args&&... args);
+        auto emplaceComponent(Entity entity, Args&&... args) -> decltype(auto);
 
         /**
          * @brief Gets component if exists, otherwise creates it (lazy initialization).
@@ -140,7 +142,7 @@ namespace ECS {
          * @return Reference to component (const for tags, mutable for data components)
          */
         template <typename T, typename... Args>
-        decltype(auto) getOrEmplace(Entity entity, Args&&... args);
+        auto getOrEmplace(Entity entity, Args&&... args) -> decltype(auto);
 
         /**
          * @brief Removes component from entity.
@@ -166,7 +168,7 @@ namespace ECS {
          * @return true if entity has component
          */
         template <typename T>
-        [[nodiscard]] bool hasComponent(Entity entity) const noexcept;
+        [[nodiscard]] auto hasComponent(Entity entity) const noexcept -> bool;
 
         /**
          * @brief Returns the number of entities with a specific component.
@@ -174,7 +176,7 @@ namespace ECS {
          * @return Count of entities having component T
          */
         template <typename T>
-        [[nodiscard]] size_t countComponents() const noexcept;
+        [[nodiscard]] auto countComponents() const noexcept -> size_t;
 
         /**
          * @brief Retrieves component reference.
@@ -184,7 +186,7 @@ namespace ECS {
          * @throws std::runtime_error if entity dead or component missing
          */
         template <typename T>
-        decltype(auto) getComponent(Entity entity);
+        auto getComponent(Entity entity) -> decltype(auto);
 
         /**
          * @brief Retrieves const component reference.
@@ -194,7 +196,7 @@ namespace ECS {
          * @throws std::runtime_error if entity dead or component missing
          */
         template <typename T>
-        const T& getComponent(Entity entity) const;
+        auto getComponent(Entity entity) const -> const T&;
 
         /**
          * @brief Modifies component via callback function.
@@ -236,7 +238,7 @@ namespace ECS {
          * @return View object for iteration
          */
         template<typename... Components>
-        View<Components...> view();
+        auto view() -> View<Components...>;
 
         /**
          * @brief Creates a const view for read-only iteration.
@@ -244,7 +246,7 @@ namespace ECS {
          * @return Const view object
          */
         template<typename... Components>
-        View<Components...> view() const;
+        auto view() const -> View<Components...>;
 
         /**
          * @brief Creates a parallel view for multi-threaded iteration.
@@ -252,7 +254,7 @@ namespace ECS {
          * @return ParallelView object for parallel processing
          */
         template<typename... Components>
-        ParallelView<Components...> parallelView();
+        auto parallelView() -> ParallelView<Components...>;
 
         /**
          * @brief Creates a group for cached entity sets.
@@ -260,7 +262,7 @@ namespace ECS {
          * @return Group object with pre-filtered entities
          */
         template<typename... Components>
-        Group<Components...> createGroup();
+        auto createGroup() -> Group<Components...>;
 
         // ========================================================================
         // SINGLETON RESOURCES
@@ -273,7 +275,7 @@ namespace ECS {
          * @return Reference to singleton
          */
         template<typename T, typename... Args>
-        T& setSingleton(Args&&... args);
+        auto setSingleton(Args&&... args) -> T&;
 
         /**
          * @brief Retrieves singleton resource.
@@ -282,7 +284,7 @@ namespace ECS {
          * @throws std::out_of_range if singleton doesn't exist
          */
         template<typename T>
-        T& getSingleton();
+        auto getSingleton() -> T&;
 
         /**
          * @brief Checks if singleton exists.
@@ -290,7 +292,7 @@ namespace ECS {
          * @return true if singleton is registered
          */
         template<typename T>
-        [[nodiscard]] bool hasSingleton() const noexcept;
+        [[nodiscard]] auto hasSingleton() const noexcept -> bool;
 
         /**
          * @brief Removes singleton resource.
@@ -307,13 +309,13 @@ namespace ECS {
          * @brief Gets the relationship manager for entity hierarchies.
          * @return Reference to relationship manager
          */
-        RelationshipManager& getRelationshipManager() noexcept;
+        auto getRelationshipManager() noexcept -> RelationshipManager&;
 
         /**
          * @brief Gets the relationship manager (const version).
          * @return Const reference to relationship manager
          */
-        const RelationshipManager& getRelationshipManager() const noexcept;
+        auto getRelationshipManager() const noexcept -> const RelationshipManager&;
 
         // ========================================================================
         // DEBUGGING/INTROSPECTION
@@ -324,7 +326,8 @@ namespace ECS {
          * @param entity Target entity
          * @return Vector of type indices for entity's components
          */
-        const std::vector<std::type_index>& getEntityComponents(Entity entity) const;
+        [[nodiscard]] auto getEntityComponents(Entity entity) const
+            -> const std::vector<std::type_index>&;
 
     private:
         // ========================================================================
@@ -361,7 +364,7 @@ namespace ECS {
          * @return Reference to _sparse set
          */
         template <typename T>
-        auto& getSparseSet();
+        auto getSparseSet() -> auto&;
 
         /**
          * @brief Gets const _sparse set reference (returns std::nullopt if not found).
@@ -369,7 +372,8 @@ namespace ECS {
          * @return Optional reference to _sparse set or std::nullopt
          */
         template <typename T>
-        std::optional<std::reference_wrapper<const ISparseSet>> getSparseSetConst() const noexcept;
+        auto getSparseSetConst() const noexcept
+            -> std::optional<std::reference_wrapper<const ISparseSet>>;
 
         /**
          * @brief Gets typed const _sparse set (throws if not found).
@@ -390,6 +394,6 @@ namespace ECS {
     #include "RegistrySingleton.inl"
     #include "RegistryView.inl"
 
-} // namespace ECS
+}  // namespace ECS
 
-#endif // ECS_CORE_REGISTRY_REGISTRY_HPP
+#endif  // SRC_ENGINE_ECS_CORE_REGISTRY_REGISTRY_HPP_
