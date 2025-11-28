@@ -13,6 +13,8 @@ docs/website/node_modules/
 docs/website/static/api/
 docs/website/package-lock.json
 
+PoC
+
 # Prerequisites
 *.d
 
