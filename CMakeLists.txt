@@ -19,7 +19,23 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Options
 option(BUILD_TESTS "Build tests" ON)
+option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 option(BUILD_DOCS "Build documentation (Doxygen + Docusaurus)" OFF)
+
+# Coverage configuration
+if(ENABLE_COVERAGE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        message(STATUS "Code coverage enabled")
+        set(COVERAGE_COMPILE_FLAGS "--coverage -fprofile-arcs -ftest-coverage")
+        set(COVERAGE_LINK_FLAGS "--coverage")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COVERAGE_COMPILE_FLAGS}")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${COVERAGE_COMPILE_FLAGS}")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${COVERAGE_LINK_FLAGS}")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${COVERAGE_LINK_FLAGS}")
+    else()
+        message(WARNING "Code coverage is only supported with GCC or Clang")
+    endif()
+endif()
 
 # Add source directory
 add_subdirectory(src)

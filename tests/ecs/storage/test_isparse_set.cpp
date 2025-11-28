@@ -11,7 +11,6 @@
 #include "../../../src/engine/ecs/core/Entity.hpp"
 #include "../../../src/engine/ecs/storage/ISparseSet.hpp"
 #include "../../../src/engine/ecs/storage/SparseSet.hpp"
-#include "../../../src/engine/ecs/storage/TagSparseSet.hpp"
 
 using namespace ECS;
 
@@ -25,7 +24,11 @@ struct TestComponent {
     TestComponent(int v) : value(v) {}
 };
 
-struct EmptyTag {};
+struct AnotherComponent {
+    float x;
+    AnotherComponent() : x(0.0f) {}
+    AnotherComponent(float val) : x(val) {}
+};
 
 // ============================================================================
 // ISPARSE SET INTERFACE TESTS
@@ -34,16 +37,16 @@ struct EmptyTag {};
 class ISparseSetTest : public ::testing::Test {
 protected:
     std::unique_ptr<ISparseSet> sparse_set;
-    std::unique_ptr<ISparseSet> tag_set;
+    std::unique_ptr<ISparseSet> another_set;
 
     void SetUp() override {
         sparse_set = std::make_unique<SparseSet<TestComponent>>();
-        tag_set = std::make_unique<TagSparseSet<EmptyTag>>();
+        another_set = std::make_unique<SparseSet<AnotherComponent>>();
     }
 
     void TearDown() override {
         sparse_set.reset();
-        tag_set.reset();
+        another_set.reset();
     }
 
     // Helper to cast back to concrete type for emplacing
@@ -51,8 +54,8 @@ protected:
         return static_cast<SparseSet<TestComponent>&>(*sparse_set);
     }
 
-    TagSparseSet<EmptyTag>& getTagSet() {
-        return static_cast<TagSparseSet<EmptyTag>&>(*tag_set);
+    SparseSet<AnotherComponent>& getAnotherSet() {
+        return static_cast<SparseSet<AnotherComponent>&>(*another_set);
     }
 };
 
@@ -64,17 +67,17 @@ TEST_F(ISparseSetTest, Contains_EmptySet) {
     Entity entity(0, 0);
 
     EXPECT_FALSE(sparse_set->contains(entity));
-    EXPECT_FALSE(tag_set->contains(entity));
+    EXPECT_FALSE(another_set->contains(entity));
 }
 
 TEST_F(ISparseSetTest, Contains_ExistingEntity) {
     Entity entity(0, 0);
 
     getSparseSet().emplace(entity, 42);
-    getTagSet().emplace(entity);
+    getAnotherSet().emplace(entity, 3.14f);
 
     EXPECT_TRUE(sparse_set->contains(entity));
-    EXPECT_TRUE(tag_set->contains(entity));
+    EXPECT_TRUE(another_set->contains(entity));
 }
 
 TEST_F(ISparseSetTest, Contains_NonExistingEntity) {
@@ -82,10 +85,10 @@ TEST_F(ISparseSetTest, Contains_NonExistingEntity) {
     Entity e2(1, 0);
 
     getSparseSet().emplace(e1, 42);
-    getTagSet().emplace(e1);
+    getAnotherSet().emplace(e1, 3.14f);
 
     EXPECT_FALSE(sparse_set->contains(e2));
-    EXPECT_FALSE(tag_set->contains(e2));
+    EXPECT_FALSE(another_set->contains(e2));
 }
 
 TEST_F(ISparseSetTest, Contains_DifferentGeneration) {
@@ -93,12 +96,12 @@ TEST_F(ISparseSetTest, Contains_DifferentGeneration) {
     Entity e_v2(5, 1);  // Same index, different generation
 
     getSparseSet().emplace(e_v1, 42);
-    getTagSet().emplace(e_v1);
+    getAnotherSet().emplace(e_v1, 3.14f);
 
     EXPECT_TRUE(sparse_set->contains(e_v1));
     EXPECT_FALSE(sparse_set->contains(e_v2));
-    EXPECT_TRUE(tag_set->contains(e_v1));
-    EXPECT_FALSE(tag_set->contains(e_v2));
+    EXPECT_TRUE(another_set->contains(e_v1));
+    EXPECT_FALSE(another_set->contains(e_v2));
 }
 
 // ============================================================================
@@ -109,13 +112,13 @@ TEST_F(ISparseSetTest, Remove_ExistingEntity) {
     Entity entity(0, 0);
 
     getSparseSet().emplace(entity, 42);
-    getTagSet().emplace(entity);
+    getAnotherSet().emplace(entity, 3.14f);
 
     sparse_set->remove(entity);
-    tag_set->remove(entity);
+    another_set->remove(entity);
 
     EXPECT_FALSE(sparse_set->contains(entity));
-    EXPECT_FALSE(tag_set->contains(entity));
+    EXPECT_FALSE(another_set->contains(entity));
 }
 
 TEST_F(ISparseSetTest, Remove_NonExistingEntity) {
@@ -123,7 +126,7 @@ TEST_F(ISparseSetTest, Remove_NonExistingEntity) {
 
     // Should not throw
     EXPECT_NO_THROW(sparse_set->remove(entity));
-    EXPECT_NO_THROW(tag_set->remove(entity));
+    EXPECT_NO_THROW(another_set->remove(entity));
 }
 
 TEST_F(ISparseSetTest, Remove_MaintainsOtherEntities) {
@@ -135,20 +138,20 @@ TEST_F(ISparseSetTest, Remove_MaintainsOtherEntities) {
     getSparseSet().emplace(e2, 2);
     getSparseSet().emplace(e3, 3);
 
-    getTagSet().emplace(e1);
-    getTagSet().emplace(e2);
-    getTagSet().emplace(e3);
+    getAnotherSet().emplace(e1, 1.0f);
+    getAnotherSet().emplace(e2, 2.0f);
+    getAnotherSet().emplace(e3, 3.0f);
 
     sparse_set->remove(e2);
-    tag_set->remove(e2);
+    another_set->remove(e2);
 
     EXPECT_TRUE(sparse_set->contains(e1));
     EXPECT_FALSE(sparse_set->contains(e2));
     EXPECT_TRUE(sparse_set->contains(e3));
 
-    EXPECT_TRUE(tag_set->contains(e1));
-    EXPECT_FALSE(tag_set->contains(e2));
-    EXPECT_TRUE(tag_set->contains(e3));
+    EXPECT_TRUE(another_set->contains(e1));
+    EXPECT_FALSE(another_set->contains(e2));
+    EXPECT_TRUE(another_set->contains(e3));
 }
 
 // ============================================================================
@@ -164,29 +167,29 @@ TEST_F(ISparseSetTest, Clear_RemovesAllEntities) {
     getSparseSet().emplace(e2, 2);
     getSparseSet().emplace(e3, 3);
 
-    getTagSet().emplace(e1);
-    getTagSet().emplace(e2);
-    getTagSet().emplace(e3);
+    getAnotherSet().emplace(e1, 1.0f);
+    getAnotherSet().emplace(e2, 2.0f);
+    getAnotherSet().emplace(e3, 3.0f);
 
     sparse_set->clear();
-    tag_set->clear();
+    another_set->clear();
 
     EXPECT_EQ(sparse_set->size(), 0);
     EXPECT_FALSE(sparse_set->contains(e1));
     EXPECT_FALSE(sparse_set->contains(e2));
     EXPECT_FALSE(sparse_set->contains(e3));
 
-    EXPECT_EQ(tag_set->size(), 0);
-    EXPECT_FALSE(tag_set->contains(e1));
-    EXPECT_FALSE(tag_set->contains(e2));
-    EXPECT_FALSE(tag_set->contains(e3));
+    EXPECT_EQ(another_set->size(), 0);
+    EXPECT_FALSE(another_set->contains(e1));
+    EXPECT_FALSE(another_set->contains(e2));
+    EXPECT_FALSE(another_set->contains(e3));
 }
 
 TEST_F(ISparseSetTest, Clear_EmptySet) {
     EXPECT_NO_THROW(sparse_set->clear());
-    EXPECT_NO_THROW(tag_set->clear());
+    EXPECT_NO_THROW(another_set->clear());
     EXPECT_EQ(sparse_set->size(), 0);
-    EXPECT_EQ(tag_set->size(), 0);
+    EXPECT_EQ(another_set->size(), 0);
 }
 
 // ============================================================================
@@ -195,7 +198,7 @@ TEST_F(ISparseSetTest, Clear_EmptySet) {
 
 TEST_F(ISparseSetTest, Size_EmptySet) {
     EXPECT_EQ(sparse_set->size(), 0);
-    EXPECT_EQ(tag_set->size(), 0);
+    EXPECT_EQ(another_set->size(), 0);
 }
 
 TEST_F(ISparseSetTest, Size_AfterEmplace) {
@@ -208,11 +211,11 @@ TEST_F(ISparseSetTest, Size_AfterEmplace) {
     getSparseSet().emplace(e2, 2);
     EXPECT_EQ(sparse_set->size(), 2);
 
-    getTagSet().emplace(e1);
-    EXPECT_EQ(tag_set->size(), 1);
+    getAnotherSet().emplace(e1, 1.0f);
+    EXPECT_EQ(another_set->size(), 1);
 
-    getTagSet().emplace(e2);
-    EXPECT_EQ(tag_set->size(), 2);
+    getAnotherSet().emplace(e2, 2.0f);
+    EXPECT_EQ(another_set->size(), 2);
 }
 
 TEST_F(ISparseSetTest, Size_AfterRemove) {
@@ -221,14 +224,14 @@ TEST_F(ISparseSetTest, Size_AfterRemove) {
 
     getSparseSet().emplace(e1, 1);
     getSparseSet().emplace(e2, 2);
-    getTagSet().emplace(e1);
-    getTagSet().emplace(e2);
+    getAnotherSet().emplace(e1, 1.0f);
+    getAnotherSet().emplace(e2, 2.0f);
 
     sparse_set->remove(e1);
-    tag_set->remove(e1);
+    another_set->remove(e1);
 
     EXPECT_EQ(sparse_set->size(), 1);
-    EXPECT_EQ(tag_set->size(), 1);
+    EXPECT_EQ(another_set->size(), 1);
 }
 
 TEST_F(ISparseSetTest, Size_AfterClear) {
@@ -237,14 +240,14 @@ TEST_F(ISparseSetTest, Size_AfterClear) {
 
     getSparseSet().emplace(e1, 1);
     getSparseSet().emplace(e2, 2);
-    getTagSet().emplace(e1);
-    getTagSet().emplace(e2);
+    getAnotherSet().emplace(e1, 1.0f);
+    getAnotherSet().emplace(e2, 2.0f);
 
     sparse_set->clear();
-    tag_set->clear();
+    another_set->clear();
 
     EXPECT_EQ(sparse_set->size(), 0);
-    EXPECT_EQ(tag_set->size(), 0);
+    EXPECT_EQ(another_set->size(), 0);
 }
 
 // ============================================================================
@@ -254,19 +257,19 @@ TEST_F(ISparseSetTest, Size_AfterClear) {
 TEST_F(ISparseSetTest, ShrinkToFit_NoError) {
     Entity e1(0, 0);
     getSparseSet().emplace(e1, 1);
-    getTagSet().emplace(e1);
+    getAnotherSet().emplace(e1, 1.0f);
 
     EXPECT_NO_THROW(sparse_set->shrinkToFit());
-    EXPECT_NO_THROW(tag_set->shrinkToFit());
+    EXPECT_NO_THROW(another_set->shrinkToFit());
 
     // Data should still be intact
     EXPECT_TRUE(sparse_set->contains(e1));
-    EXPECT_TRUE(tag_set->contains(e1));
+    EXPECT_TRUE(another_set->contains(e1));
 }
 
 TEST_F(ISparseSetTest, ShrinkToFit_EmptySet) {
     EXPECT_NO_THROW(sparse_set->shrinkToFit());
-    EXPECT_NO_THROW(tag_set->shrinkToFit());
+    EXPECT_NO_THROW(another_set->shrinkToFit());
 }
 
 // ============================================================================
@@ -275,10 +278,10 @@ TEST_F(ISparseSetTest, ShrinkToFit_EmptySet) {
 
 TEST_F(ISparseSetTest, GetPacked_EmptySet) {
     const auto& packed_sparse = sparse_set->getPacked();
-    const auto& packed_tag = tag_set->getPacked();
+    const auto& packed_another = another_set->getPacked();
 
     EXPECT_TRUE(packed_sparse.empty());
-    EXPECT_TRUE(packed_tag.empty());
+    EXPECT_TRUE(packed_another.empty());
 }
 
 TEST_F(ISparseSetTest, GetPacked_ContainsAllEntities) {
@@ -290,15 +293,15 @@ TEST_F(ISparseSetTest, GetPacked_ContainsAllEntities) {
     getSparseSet().emplace(e2, 2);
     getSparseSet().emplace(e3, 3);
 
-    getTagSet().emplace(e1);
-    getTagSet().emplace(e2);
-    getTagSet().emplace(e3);
+    getAnotherSet().emplace(e1, 1.0f);
+    getAnotherSet().emplace(e2, 2.0f);
+    getAnotherSet().emplace(e3, 3.0f);
 
     const auto& packed_sparse = sparse_set->getPacked();
-    const auto& packed_tag = tag_set->getPacked();
+    const auto& packed_another = another_set->getPacked();
 
     EXPECT_EQ(packed_sparse.size(), 3);
-    EXPECT_EQ(packed_tag.size(), 3);
+    EXPECT_EQ(packed_another.size(), 3);
 
     // Check all entities are present
     auto contains_entity = [](const std::vector<Entity>& vec, Entity e) {
@@ -309,9 +312,9 @@ TEST_F(ISparseSetTest, GetPacked_ContainsAllEntities) {
     EXPECT_TRUE(contains_entity(packed_sparse, e2));
     EXPECT_TRUE(contains_entity(packed_sparse, e3));
 
-    EXPECT_TRUE(contains_entity(packed_tag, e1));
-    EXPECT_TRUE(contains_entity(packed_tag, e2));
-    EXPECT_TRUE(contains_entity(packed_tag, e3));
+    EXPECT_TRUE(contains_entity(packed_another, e1));
+    EXPECT_TRUE(contains_entity(packed_another, e2));
+    EXPECT_TRUE(contains_entity(packed_another, e3));
 }
 
 TEST_F(ISparseSetTest, GetPacked_UpdatesAfterRemove) {
@@ -321,17 +324,17 @@ TEST_F(ISparseSetTest, GetPacked_UpdatesAfterRemove) {
     getSparseSet().emplace(e1, 1);
     getSparseSet().emplace(e2, 2);
 
-    getTagSet().emplace(e1);
-    getTagSet().emplace(e2);
+    getAnotherSet().emplace(e1, 1.0f);
+    getAnotherSet().emplace(e2, 2.0f);
 
     sparse_set->remove(e1);
-    tag_set->remove(e1);
+    another_set->remove(e1);
 
     const auto& packed_sparse = sparse_set->getPacked();
-    const auto& packed_tag = tag_set->getPacked();
+    const auto& packed_another = another_set->getPacked();
 
     EXPECT_EQ(packed_sparse.size(), 1);
-    EXPECT_EQ(packed_tag.size(), 1);
+    EXPECT_EQ(packed_another.size(), 1);
 }
 
 // ============================================================================
@@ -342,13 +345,13 @@ TEST_F(ISparseSetTest, Polymorphism_DifferentConcreteTypes) {
     std::vector<std::unique_ptr<ISparseSet>> pools;
 
     pools.push_back(std::make_unique<SparseSet<TestComponent>>());
-    pools.push_back(std::make_unique<TagSparseSet<EmptyTag>>());
+    pools.push_back(std::make_unique<SparseSet<AnotherComponent>>());
 
     Entity entity(0, 0);
 
     // Emplace using concrete types
     static_cast<SparseSet<TestComponent>&>(*pools[0]).emplace(entity, 42);
-    static_cast<TagSparseSet<EmptyTag>&>(*pools[1]).emplace(entity);
+    static_cast<SparseSet<AnotherComponent>&>(*pools[1]).emplace(entity, 3.14f);
 
     // Use interface methods
     for (auto& pool : pools) {
@@ -367,15 +370,15 @@ TEST_F(ISparseSetTest, Polymorphism_HeterogeneousContainer) {
     std::vector<ISparseSet*> pools;
 
     SparseSet<TestComponent> component_pool;
-    TagSparseSet<EmptyTag> tag_pool;
+    SparseSet<AnotherComponent> another_pool;
 
     pools.push_back(&component_pool);
-    pools.push_back(&tag_pool);
+    pools.push_back(&another_pool);
 
     Entity entity(5, 0);
 
     component_pool.emplace(entity, 100);
-    tag_pool.emplace(entity);
+    another_pool.emplace(entity, 3.14f);
 
     // All pools contain the entity
     for (auto* pool : pools) {
@@ -411,11 +414,11 @@ TEST_F(ISparseSetTest, VirtualDestructor_SafeDeletion) {
     EXPECT_NO_THROW(delete base_ptr);
 }
 
-TEST_F(ISparseSetTest, VirtualDestructor_TagSet) {
-    ISparseSet* base_ptr = new TagSparseSet<EmptyTag>();
+TEST_F(ISparseSetTest, VirtualDestructor_AnotherSet) {
+    ISparseSet* base_ptr = new SparseSet<AnotherComponent>();
 
     Entity entity(0, 0);
-    static_cast<TagSparseSet<EmptyTag>*>(base_ptr)->emplace(entity);
+    static_cast<SparseSet<AnotherComponent>*>(base_ptr)->emplace(entity, 3.14f);
 
     EXPECT_TRUE(base_ptr->contains(entity));
 
