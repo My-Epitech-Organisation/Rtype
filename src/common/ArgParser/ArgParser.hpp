@@ -231,7 +231,6 @@ private:
             }
             maxWidth = std::max(maxWidth, width);
         }
-
         for (const auto& opt : _options) {
             std::ostringstream optStr;
             optStr << "  " << opt.shortOpt << ", " << opt.longOpt;
