@@ -2,12 +2,16 @@ name: 📚 R-Type documentation
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'docs/**'
       - 'src/**'
       - 'include/**'
       - '.github/workflows/docs.yml'
   pull_request:
+    branches:
+      - main
     paths:
       - 'docs/**'
       - 'src/**'
