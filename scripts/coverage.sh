@@ -60,11 +60,13 @@ rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-cmake -DENABLE_COVERAGE=ON \
-      -DCMAKE_BUILD_TYPE=Debug \
-      -DCMAKE_CXX_COMPILER=g++ \
-      -DCMAKE_C_COMPILER=gcc \
-      "$PROJECT_ROOT"
+CMAKE_ARGS="-DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF"
+
+if [[ -n "$VCPKG_ROOT" ]]; then
+    CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DUSE_SFML=ON"
+fi
+
+cmake $CMAKE_ARGS "$PROJECT_ROOT"
 
 echo ""
 echo ">>> Building project..."
