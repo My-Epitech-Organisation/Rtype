@@ -10,3 +10,16 @@ target_include_directories(test_argparser PRIVATE
 
 include(GoogleTest)
 gtest_discover_tests(test_argparser)
+
+add_executable(test_logger test_logger.cpp)
+
+target_link_libraries(test_logger PRIVATE
+    GTest::gtest_main
+    rtype_common
+)
+
+target_include_directories(test_logger PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_logger)
