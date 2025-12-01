@@ -9,6 +9,12 @@
 #define R_TYPE_SCENEMANAGER_HPP
 
 #include <iostream>
+#include <map>
+#include <memory>
+
+#include "AssetManager/AssetManager.hpp"
+#include "ecs/ECS.hpp"
+#include "Scenes/IScene.hpp"
 
 class SceneManager {
 public:
@@ -20,12 +26,17 @@ public:
     };
 
 private:
+    std::map<Scene, std::unique_ptr<IScene>> _sceneList;
     Scene _currentScene = MAIN_MENU;
 
 public:
 
     [[nodiscard]] Scene getCurrentScene() const { return _currentScene; }
-    void setCurrentScene(Scene scene) { _currentScene = scene; }
+    void setCurrentScene(Scene scene);
+
+    void pollEvents(const sf::Event &e);
+    void update();
+    void draw(sf::RenderWindow &window);
 
     bool operator==(const Scene &data) const {
         if (data == this->_currentScene)
@@ -33,13 +44,9 @@ public:
         return false;
     }
 
-    void pollEventsScene();
-    void updateScene();
-    void renderScene();
-
     friend std::ostream &operator<<(std::ostream &os, const SceneManager &sceneManager);
 
-    SceneManager() = default;
+    SceneManager(const std::shared_ptr<ECS::Registry> &ecs, const std::shared_ptr<AssetManager> &texture);
     ~SceneManager() = default;
 };
 
