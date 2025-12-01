@@ -224,7 +224,8 @@ jobs:
             libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
             libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
             libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
-            libxinerama-dev libxext-dev
+            libxinerama-dev libxext-dev \
+            lcov jq
 
       - name: Restore vcpkg_installed from cache
         uses: actions/cache/restore@v4
@@ -253,14 +254,35 @@ jobs:
           cd build/ubuntu-latest
           ctest --output-on-failure --timeout 120
 
+      - name: Run Coverage Analysis
+        run: |
+          chmod +x scripts/coverage.sh
+          ./scripts/coverage.sh --html
+
+      - name: Upload Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/html/
+          if-no-files-found: warn
+
       - name: Test Summary
         if: always()
         run: |
-          echo "### 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "### 🧪 Test Results & Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Unit Tests" >> $GITHUB_STEP_SUMMARY
           if [ -f build/ubuntu-latest/Testing/Temporary/LastTest.log ]; then
             echo '```' >> $GITHUB_STEP_SUMMARY
             tail -50 build/ubuntu-latest/Testing/Temporary/LastTest.log >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "**Coverage thresholds:** Lines ≥80%, Functions ≥80%, Branches ≥55%" >> $GITHUB_STEP_SUMMARY
+          if [ -d coverage/html ]; then
+            echo "**HTML Report:** [View Coverage Report](coverage/html/index.html)" >> $GITHUB_STEP_SUMMARY
           fi
 
   build:

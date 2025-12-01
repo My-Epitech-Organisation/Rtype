@@ -56,3 +56,5 @@ build*
 
 # debug information files
 *.dwo
+coverage
+doxygen
