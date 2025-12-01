@@ -56,17 +56,22 @@ if ! dpkg -s libstdc++-14-dev &> /dev/null 2>&1; then
 fi
 
 echo ">>> Configuring build with coverage..."
-rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
+if [[ -d "$BUILD_DIR" && -f "$BUILD_DIR/CMakeCache.txt" ]]; then
+    echo ">>> Using cached build directory..."
+    cd "$BUILD_DIR"
+else
+    rm -rf "$BUILD_DIR"
+    mkdir -p "$BUILD_DIR"
+    cd "$BUILD_DIR"
 
-CMAKE_ARGS="-DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF"
+    CMAKE_ARGS="-DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF"
 
-if [[ -n "$VCPKG_ROOT" ]]; then
-    CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DUSE_SFML=ON"
+    if [[ -n "$VCPKG_ROOT" ]]; then
+        CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DUSE_SFML=ON"
+    fi
+
+    cmake $CMAKE_ARGS "$PROJECT_ROOT"
 fi
-
-cmake $CMAKE_ARGS "$PROJECT_ROOT"
 
 echo ""
 echo ">>> Building project..."
@@ -126,8 +131,8 @@ if $GENERATE_HTML; then
     COVERAGE_OUTPUT=$(lcov --summary "$COVERAGE_DIR/coverage.info" $LCOV_OPTS 2>/dev/null)
     echo "$COVERAGE_OUTPUT"
 
-    LINES_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "lines.......:" | sed -E 's/.*lines\.\.\.\.\.\.\.\.: ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
-    FUNCTIONS_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "functions...:" | sed -E 's/.*functions\.\.\.: ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
+    LINES_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "lines......:" | sed -E 's/.*lines\.\.\.\.\.\.\.: ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
+    FUNCTIONS_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "functions..:" | sed -E 's/.*functions\.\.: ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
     BRANCHES_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "branches....:" | sed -E 's/.*branches\.\.\.\.: ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
 
     if [[ -z "$LINES_COVERAGE" || -z "$FUNCTIONS_COVERAGE" || -z "$BRANCHES_COVERAGE" ]]; then
