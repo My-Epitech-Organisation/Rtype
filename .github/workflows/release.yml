@@ -89,8 +89,39 @@ jobs:
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
           echo "tag_suffix=$TAG_SUFFIX" >> $GITHUB_OUTPUT
-          echo "Next version: $NEW_VERSION (prerelease: $PRERELEASE, tag: $TAG_SUFFIX)"
+      - name: Download build artifacts
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: ci.yml
+          branch: ${{ github.ref_name }}
+          name: |
+            r-type_client-ubuntu-latest
+            r-type_client-windows-latest
+            r-type_server-ubuntu-latest
+            r-type_server-windows-latest
+          path: ./artifacts
 
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+
+          if [ -d "artifacts/r-type_client-ubuntu-latest" ]; then
+            cp artifacts/r-type_client-ubuntu-latest/r-type_client release-assets/rtype_client || true
+          fi
+
+          if [ -d "artifacts/r-type_client-windows-latest" ]; then
+            cp artifacts/r-type_client-windows-latest/r-type_client.exe release-assets/rtype_client.exe || true
+          fi
+
+          if [ -d "artifacts/r-type_server-ubuntu-latest" ]; then
+            cp artifacts/r-type_server-ubuntu-latest/r-type_server release-assets/rtype_server || true
+          fi
+
+          if [ -d "artifacts/r-type_server-windows-latest" ]; then
+            cp artifacts/r-type_server-windows-latest/r-type_server.exe release-assets/rtype_server.exe || true
+          fi
+
+          echo "Release assets prepared:"
       - name: Create release
         uses: actions/create-release@v1
         env:
@@ -106,7 +137,25 @@ jobs:
 
             This ${{ steps.version.outputs.prerelease == 'true' && 'pre-release' || 'release' }} was automatically generated.
 
+            ### Assets
+            - **rtype_client**: Linux executable
+            - **rtype_client.exe**: Windows executable
+            - **rtype_server**: Linux executable
+            - **rtype_server.exe**: Windows executable
+
             ### Changes
             - Compare changes: https://github.com/${{ github.repository }}/compare/${{ steps.latest_release.outputs.latest_tag }}...${{ steps.version.outputs.new_version }}
           draft: false
           prerelease: ${{ steps.version.outputs.prerelease }}
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.new_version }}
+          files: |
+            release-assets/rtype_client
+            release-assets/rtype_client.exe
+            release-assets/rtype_server
+            release-assets/rtype_server.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
