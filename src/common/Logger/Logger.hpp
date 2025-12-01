@@ -38,142 +38,144 @@ namespace rtype {
  * @note For unit testing, use Logger::setInstance() to inject a mock logger
  */
 class Logger {
-public:
-  /**
-   * @brief Get the singleton instance
-   * @return Reference to the logger instance
-   */
-  static Logger &instance() {
-    if (_customInstance.has_value()) {
-      return _customInstance->get();
+   public:
+    /**
+     * @brief Get the singleton instance
+     * @return Reference to the logger instance
+     */
+    static Logger& instance() {
+        if (_customInstance.has_value()) {
+            return _customInstance->get();
+        }
+        static Logger logger;
+        return logger;
     }
-    static Logger logger;
-    return logger;
-  }
 
-  /**
-   * @brief Set a custom logger instance (useful for testing)
-   * @param logger Reference to custom logger instance
-   */
-  static void setInstance(Logger &logger) {
-    _customInstance = std::ref(logger);
-  }
+    /**
+     * @brief Set a custom logger instance (useful for testing)
+     * @param logger Reference to custom logger instance
+     */
+    static void setInstance(Logger& logger) {
+        _customInstance = std::ref(logger);
+    }
 
-  /**
-   * @brief Reset to default singleton instance
-   */
-  static void resetInstance() { _customInstance.reset(); }
+    /**
+     * @brief Reset to default singleton instance
+     */
+    static void resetInstance() { _customInstance.reset(); }
 
-  Logger() = default;
-  virtual ~Logger() = default;
+    Logger() = default;
+    virtual ~Logger() = default;
 
-  Logger(const Logger &) = delete;
-  Logger &operator=(const Logger &) = delete;
-  Logger(Logger &&) = delete;
-  Logger &operator=(Logger &&) = delete;
+    Logger(const Logger&) = delete;
+    Logger& operator=(const Logger&) = delete;
+    Logger(Logger&&) = delete;
+    Logger& operator=(Logger&&) = delete;
 
-  /**
-   * @brief Set the minimum log level
-   * @param level Minimum level to log (messages below this level are ignored)
-   */
-  void setLogLevel(LogLevel level) noexcept {
-    std::lock_guard<std::mutex> lock(_mutex);
-    _logLevel = level;
-  }
+    /**
+     * @brief Set the minimum log level
+     * @param level Minimum level to log (messages below this level are ignored)
+     */
+    void setLogLevel(LogLevel level) noexcept {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _logLevel = level;
+    }
 
-  /**
-   * @brief Get the current log level
-   * @return Current minimum log level
-   */
-  [[nodiscard]] LogLevel getLogLevel() const noexcept { return _logLevel; }
+    /**
+     * @brief Get the current log level
+     * @return Current minimum log level
+     */
+    [[nodiscard]] LogLevel getLogLevel() const noexcept { return _logLevel; }
 
-  /**
-   * @brief Enable file logging
-   * @param filepath Path to the log file
-   * @param append If true, append to existing file; otherwise overwrite
-   * @return true if file was opened successfully
-   */
-  bool setLogFile(const std::filesystem::path &filepath, bool append = true) {
-    std::lock_guard<std::mutex> lock(_mutex);
-    return _fileWriter.open(filepath, append);
-  }
+    /**
+     * @brief Enable file logging
+     * @param filepath Path to the log file
+     * @param append If true, append to existing file; otherwise overwrite
+     * @return true if file was opened successfully
+     */
+    bool setLogFile(const std::filesystem::path& filepath, bool append = true) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _fileWriter.open(filepath, append);
+    }
 
-  /**
-   * @brief Close the log file
-   */
-  void closeFile() {
-    std::lock_guard<std::mutex> lock(_mutex);
-    _fileWriter.close();
-  }
+    /**
+     * @brief Close the log file
+     */
+    void closeFile() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _fileWriter.close();
+    }
 
-  /**
-   * @brief Check if file logging is enabled
-   * @return true if logging to file
-   */
-  [[nodiscard]] bool isFileLoggingEnabled() const noexcept {
-    return _fileWriter.isOpen();
-  }
+    /**
+     * @brief Check if file logging is enabled
+     * @return true if logging to file
+     */
+    [[nodiscard]] bool isFileLoggingEnabled() const noexcept {
+        return _fileWriter.isOpen();
+    }
 
-  /**
-   * @brief Log a debug message
-   * @param msg The message to log
-   */
-  virtual void debug(const std::string &msg) {
+    /**
+     * @brief Log a debug message
+     * @param msg The message to log
+     */
+    virtual void debug(const std::string& msg) {
 #ifndef NDEBUG
-    log(LogLevel::Debug, msg);
+        log(LogLevel::Debug, msg);
 #else
-    (void)msg;
+        (void)msg;
 #endif
-  }
-
-  /**
-   * @brief Log an info message
-   * @param msg The message to log
-   */
-  virtual void info(const std::string &msg) { log(LogLevel::Info, msg); }
-
-  /**
-   * @brief Log a warning message
-   * @param msg The message to log
-   */
-  virtual void warning(const std::string &msg) { log(LogLevel::Warning, msg); }
-
-  /**
-   * @brief Log an error message
-   * @param msg The message to log
-   */
-  virtual void error(const std::string &msg) { log(LogLevel::Error, msg); }
-
-protected:
-  mutable std::mutex _mutex;
-  LogLevel _logLevel{LogLevel::Debug};
-
-private:
-  static inline std::optional<std::reference_wrapper<Logger>> _customInstance{
-      std::nullopt};
-  FileWriter _fileWriter;
-
-  /**
-   * @brief Internal logging function with level check and mutex protection
-   * @param level Log level for this message
-   * @param msg Message to log
-   */
-  void log(LogLevel level, const std::string &msg) {
-    if (level < _logLevel) {
-      return;
     }
 
-    std::lock_guard<std::mutex> lock(_mutex);
+    /**
+     * @brief Log an info message
+     * @param msg The message to log
+     */
+    virtual void info(const std::string& msg) { log(LogLevel::Info, msg); }
 
-    const std::string formattedMsg =
-        std::format("[{}] [{}] {}", Timestamp::now(), toString(level), msg);
+    /**
+     * @brief Log a warning message
+     * @param msg The message to log
+     */
+    virtual void warning(const std::string& msg) {
+        log(LogLevel::Warning, msg);
+    }
 
-    std::ostream &consoleStream =
-        (level >= LogLevel::Warning) ? std::cerr : std::cout;
-    consoleStream << formattedMsg << '\n';
+    /**
+     * @brief Log an error message
+     * @param msg The message to log
+     */
+    virtual void error(const std::string& msg) { log(LogLevel::Error, msg); }
 
-    _fileWriter.write(formattedMsg);
-  }
+   protected:
+    mutable std::mutex _mutex;
+    LogLevel _logLevel{LogLevel::Debug};
+
+   private:
+    static inline std::optional<std::reference_wrapper<Logger>> _customInstance{
+        std::nullopt};
+    FileWriter _fileWriter;
+
+    /**
+     * @brief Internal logging function with level check and mutex protection
+     * @param level Log level for this message
+     * @param msg Message to log
+     */
+    void log(LogLevel level, const std::string& msg) {
+        if (level < _logLevel) {
+            return;
+        }
+
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        const std::string formattedMsg =
+            std::format("[{}] [{}] {}", Timestamp::now(), toString(level), msg);
+
+        std::ostream& consoleStream =
+            (level >= LogLevel::Warning) ? std::cerr : std::cout;
+        consoleStream << formattedMsg << '\n';
+
+        _fileWriter.write(formattedMsg);
+    }
 };
 
 }  // namespace rtype

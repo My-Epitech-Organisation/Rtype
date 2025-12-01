@@ -30,34 +30,35 @@ namespace rtype {
  * @return The parsed value, or std::nullopt on failure
  */
 template <typename T>
-[[nodiscard]] std::optional<T>
-parseNumber(std::string_view str, std::string_view name,
-            T minVal = std::numeric_limits<T>::min(),
-            T maxVal = std::numeric_limits<T>::max()) noexcept {
-  try {
-    const std::string input(str);
-    std::size_t pos = 0;
-    const int64_t value = std::stoll(input, &pos);
+[[nodiscard]] std::optional<T> parseNumber(
+    std::string_view str, std::string_view name,
+    T minVal = std::numeric_limits<T>::min(),
+    T maxVal = std::numeric_limits<T>::max()) noexcept {
+    try {
+        const std::string input(str);
+        std::size_t pos = 0;
+        const int64_t value = std::stoll(input, &pos);
 
-    if (pos != input.size()) {
-      LOG_ERROR(
-          std::format("Invalid {}: '{}' is not a valid number", name, str));
-      return std::nullopt;
+        if (pos != input.size()) {
+            LOG_ERROR(std::format("Invalid {}: '{}' is not a valid number",
+                                  name, str));
+            return std::nullopt;
+        }
+        if (value < static_cast<int64_t>(minVal) ||
+            value > static_cast<int64_t>(maxVal)) {
+            LOG_ERROR(std::format("Invalid {}: must be between {} and {}", name,
+                                  minVal, maxVal));
+            return std::nullopt;
+        }
+        return static_cast<T>(value);
+    } catch (const std::invalid_argument&) {
+        LOG_ERROR(
+            std::format("Invalid {}: '{}' is not a valid number", name, str));
+        return std::nullopt;
+    } catch (const std::out_of_range&) {
+        LOG_ERROR(std::format("Invalid {}: value out of range", name));
+        return std::nullopt;
     }
-    if (value < static_cast<int64_t>(minVal) ||
-        value > static_cast<int64_t>(maxVal)) {
-      LOG_ERROR(std::format("Invalid {}: must be between {} and {}", name,
-                            minVal, maxVal));
-      return std::nullopt;
-    }
-    return static_cast<T>(value);
-  } catch (const std::invalid_argument &) {
-    LOG_ERROR(std::format("Invalid {}: '{}' is not a valid number", name, str));
-    return std::nullopt;
-  } catch (const std::out_of_range &) {
-    LOG_ERROR(std::format("Invalid {}: value out of range", name));
-    return std::nullopt;
-  }
 }
 
 }  // namespace rtype

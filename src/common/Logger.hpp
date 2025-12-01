@@ -8,10 +8,10 @@
 #ifndef SRC_COMMON_LOGGER_HPP_
 #define SRC_COMMON_LOGGER_HPP_
 
-#include "Logger/LogLevel.hpp"
-#include "Logger/Timestamp.hpp"
 #include "Logger/FileWriter.hpp"
+#include "Logger/LogLevel.hpp"
 #include "Logger/Logger.hpp"
 #include "Logger/Macros.hpp"
+#include "Logger/Timestamp.hpp"
 
 #endif  // SRC_COMMON_LOGGER_HPP_

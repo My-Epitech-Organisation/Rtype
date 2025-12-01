@@ -42,8 +42,7 @@ struct Endpoint {
         : address(std::move(addr)), port(p) {}
 
     /// @brief Construct from string_view (avoids temporary string creation)
-    Endpoint(std::string_view addr, uint16_t p)
-        : address(addr), port(p) {}
+    Endpoint(std::string_view addr, uint16_t p) : address(addr), port(p) {}
 
     /// @brief Copy constructor
     Endpoint(const Endpoint&) = default;
@@ -90,13 +89,13 @@ struct Endpoint {
      * @return true if this endpoint is less than other
      */
     [[nodiscard]] bool operator<(const Endpoint& other) const noexcept {
-        if (address != other.address)
-            return address < other.address;
+        if (address != other.address) return address < other.address;
         return port < other.port;
     }
 
     /**
-     * @brief Convert endpoint to string representation using std::format (C++20)
+     * @brief Convert endpoint to string representation using std::format
+     * (C++20)
      * @return String in format "address:port"
      */
     [[nodiscard]] std::string toString() const {
@@ -112,11 +111,13 @@ struct Endpoint {
  * Uses a hash combine algorithm similar to boost::hash_combine for better
  * distribution and fewer collisions.
  */
-template<>
+template <>
 struct std::hash<rtype::Endpoint> {
-    [[nodiscard]] std::size_t operator()(const rtype::Endpoint& endpoint) const noexcept {
+    [[nodiscard]] std::size_t operator()(
+        const rtype::Endpoint& endpoint) const noexcept {
         std::size_t seed = std::hash<std::string>{}(endpoint.address);
-        seed ^= std::hash<uint16_t>{}(endpoint.port) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= std::hash<uint16_t>{}(endpoint.port) + 0x9e3779b9 +
+                (seed << 6) + (seed >> 2);
         return seed;
     }
 };
@@ -127,34 +128,34 @@ namespace rtype {
  * @brief Client connection state
  */
 enum class ClientState {
-    Connecting,     ///< Client is in the process of connecting
-    Connected,      ///< Client is fully connected and active
-    Disconnecting   ///< Client is being disconnected
+    Connecting,    ///< Client is in the process of connecting
+    Connected,     ///< Client is fully connected and active
+    Disconnecting  ///< Client is being disconnected
 };
 
 /**
  * @brief Reason for client disconnection
  */
 enum class DisconnectReason {
-    Disconnected,   ///< Client disconnected gracefully
-    Timeout,        ///< Client timed out (no activity)
-    Kicked,         ///< Client was kicked by server
-    Error           ///< Network error occurred
+    Disconnected,  ///< Client disconnected gracefully
+    Timeout,       ///< Client timed out (no activity)
+    Kicked,        ///< Client was kicked by server
+    Error          ///< Network error occurred
 };
 
 /**
  * @brief String representations of DisconnectReason values
  */
 inline constexpr std::array<std::string_view, 4> DisconnectReasonStrings = {
-    "disconnected", "timeout", "kicked", "error"
-};
+    "disconnected", "timeout", "kicked", "error"};
 
 /**
  * @brief Convert DisconnectReason to string representation
  * @param reason The disconnect reason
  * @return String view of the reason, or "unknown" if out of range
  */
-[[nodiscard]] inline constexpr std::string_view toString(DisconnectReason reason) noexcept {
+[[nodiscard]] inline constexpr std::string_view toString(
+    DisconnectReason reason) noexcept {
     const auto index = static_cast<std::size_t>(reason);
     if (index >= DisconnectReasonStrings.size()) {
         return "unknown";
@@ -166,15 +167,15 @@ inline constexpr std::array<std::string_view, 4> DisconnectReasonStrings = {
  * @brief String representations of ClientState values
  */
 inline constexpr std::array<std::string_view, 3> ClientStateStrings = {
-    "connecting", "connected", "disconnecting"
-};
+    "connecting", "connected", "disconnecting"};
 
 /**
  * @brief Convert ClientState to string representation
  * @param state The client state
  * @return String view of the state, or "unknown" if out of range
  */
-[[nodiscard]] inline constexpr std::string_view toString(ClientState state) noexcept {
+[[nodiscard]] inline constexpr std::string_view toString(
+    ClientState state) noexcept {
     const auto index = static_cast<std::size_t>(state);
     if (index >= ClientStateStrings.size()) {
         return "unknown";

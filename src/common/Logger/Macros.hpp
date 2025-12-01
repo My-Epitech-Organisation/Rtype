@@ -15,8 +15,8 @@
 /**
  * @brief Helper macro to convert stream expressions to string
  */
-#define LOG_TO_STRING(msg)                                                     \
-  (static_cast<std::ostringstream &&>(std::ostringstream() << msg)).str()
+#define LOG_TO_STRING(msg) \
+    (static_cast<std::ostringstream&&>(std::ostringstream() << msg)).str()
 
 /**
  * @brief Debug logging macro - only prints in debug builds
