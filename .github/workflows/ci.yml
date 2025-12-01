@@ -286,9 +286,6 @@ jobs:
           cd build/ubuntu-latest
           ctest --output-on-failure --timeout 120
 
-      - name: Prepare coverage vcpkg cache
-        run: cp -r build/ubuntu-latest/vcpkg_installed build-coverage/ 2>/dev/null || true
-
       - name: Cache coverage build
         uses: actions/cache@v4
         with:
