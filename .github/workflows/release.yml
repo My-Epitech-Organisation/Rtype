@@ -1,5 +1,11 @@
 name: 🚀 R-Type Release
 
+# This workflow handles releases for R-Type with semantic versioning (vXX.XX.XX)
+# - Manual releases: workflow_dispatch (major version bump)
+# - Main branch: automatic pre-releases (minor version bump)
+# - Dev branch: automatic pre-releases (patch version bump)
+# - Other branches: test releases (patch version bump with test- prefix)
+
 on:
   push:
     branches:
@@ -71,8 +77,12 @@ jobs:
             PRERELEASE=true
             TAG_SUFFIX="dev"
           else
-            echo "Unknown branch/event combination"
-            exit 1
+            # Test release on other branches - increment patch for testing
+            NEW_MAJOR=$MAJOR
+            NEW_MINOR=$MINOR
+            NEW_PATCH=$((PATCH + 1))
+            PRERELEASE=true
+            TAG_SUFFIX="test-${BRANCH}"
           fi
 
           NEW_VERSION="v$NEW_MAJOR.$NEW_MINOR.$NEW_PATCH"
