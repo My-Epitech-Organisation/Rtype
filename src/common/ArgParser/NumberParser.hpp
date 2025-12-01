@@ -15,6 +15,8 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 
 #include "../Logger/Macros.hpp"
 
@@ -28,6 +30,11 @@ namespace rtype {
  * @param minVal Minimum valid value
  * @param maxVal Maximum valid value
  * @return The parsed value, or std::nullopt on failure
+ *
+ * @note Uses std::stoull for unsigned types and std::stoll for signed types
+ *       to properly handle the full range of each integer type.
+ * @note Uses std::in_range for safe comparisons across different integer types,
+ *       properly handling signed/unsigned mismatches and preventing overflow.
  */
 template <typename T>
 [[nodiscard]] std::optional<T> parseNumber(
@@ -37,20 +44,44 @@ template <typename T>
     try {
         const std::string input(str);
         std::size_t pos = 0;
-        const int64_t value = std::stoll(input, &pos);
 
-        if (pos != input.size()) {
-            LOG_ERROR(std::format("Invalid {}: '{}' is not a valid number",
-                                  name, str));
-            return std::nullopt;
+        if constexpr (std::is_unsigned_v<T>) {
+            if (!input.empty() && input[0] == '-') {
+                LOG_ERROR(std::format(
+                    "Invalid {}: '{}' is negative but unsigned type expected",
+                    name, str));
+                return std::nullopt;
+            }
+            const uint64_t value = std::stoull(input, &pos);
+
+            if (pos != input.size()) {
+                LOG_ERROR(std::format("Invalid {}: '{}' is not a valid number",
+                                      name, str));
+                return std::nullopt;
+            }
+            if (!std::in_range<T>(value) || value < minVal || value > maxVal) {
+                LOG_ERROR(std::format("Invalid {}: must be between {} and {}",
+                                      name, minVal, maxVal));
+                return std::nullopt;
+            }
+            return static_cast<T>(value);
+        } else {
+            const int64_t value = std::stoll(input, &pos);
+
+            if (pos != input.size()) {
+                LOG_ERROR(std::format("Invalid {}: '{}' is not a valid number",
+                                      name, str));
+                return std::nullopt;
+            }
+            if (!std::in_range<T>(value) ||
+                value < static_cast<int64_t>(minVal) ||
+                value > static_cast<int64_t>(maxVal)) {
+                LOG_ERROR(std::format("Invalid {}: must be between {} and {}",
+                                      name, minVal, maxVal));
+                return std::nullopt;
+            }
+            return static_cast<T>(value);
         }
-        if (value < static_cast<int64_t>(minVal) ||
-            value > static_cast<int64_t>(maxVal)) {
-            LOG_ERROR(std::format("Invalid {}: must be between {} and {}", name,
-                                  minVal, maxVal));
-            return std::nullopt;
-        }
-        return static_cast<T>(value);
     } catch (const std::invalid_argument&) {
         LOG_ERROR(
             std::format("Invalid {}: '{}' is not a valid number", name, str));
