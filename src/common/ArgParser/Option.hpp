@@ -5,10 +5,10 @@
 ** Option - Option and positional argument definitions
 */
 
-#ifndef RTYPE_COMMON_ARGPARSER_OPTION_HPP
-    #define RTYPE_COMMON_ARGPARSER_OPTION_HPP
+#ifndef SRC_COMMON_ARGPARSER_OPTION_HPP_
+#define SRC_COMMON_ARGPARSER_OPTION_HPP_
 
-    #include <string>
+#include <string>
 
 namespace rtype {
 
@@ -32,6 +32,6 @@ struct PositionalArg {
     bool required = true;       ///< Whether this argument is required
 };
 
-} // namespace rtype
+}  // namespace rtype
 
-#endif // RTYPE_COMMON_ARGPARSER_OPTION_HPP
+#endif  // SRC_COMMON_ARGPARSER_OPTION_HPP_
