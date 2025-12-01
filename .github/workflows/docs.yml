@@ -61,12 +61,30 @@ jobs:
           key: ${{ steps.cache-keys.outputs.node }}
           lookup-only: true
 
+      - name: Check Doxygen cache
+        id: doxygen-cache-check
+        uses: actions/cache/restore@v4
+        with:
+          path: docs/doxygen
+          key: ${{ steps.cache-keys.outputs.doxygen }}
+          lookup-only: true
+
+      - name: Check Docusaurus cache
+        id: docusaurus-cache-check
+        uses: actions/cache/restore@v4
+        with:
+          path: docs/website/build
+          key: ${{ steps.cache-keys.outputs.docusaurus }}
+          lookup-only: true
+
       - name: Cache status summary
         run: |
           echo "### 📚 Documentation Cache Status" >> $GITHUB_STEP_SUMMARY
           echo "| Cache | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Node modules | ${{ steps.node-cache.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Doxygen API docs | ${{ steps.doxygen-cache-check.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docusaurus site | ${{ steps.docusaurus-cache-check.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS' }} |" >> $GITHUB_STEP_SUMMARY
 
   build-docs:
     name: "📖 Build Documentation"
