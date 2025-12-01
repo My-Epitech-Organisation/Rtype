@@ -5,7 +5,7 @@ A modern C++20 recreation of the classic R-Type game using an Entity Component S
 ## Features
 
 - 🎮 Classic R-Type gameplay mechanics
-- 🌐 Client-server multiplayer architecture (UDP with Asio)
+- 🌐 Client-server multiplayer architecture
 - ⚡ High-performance ECS engine
 - 📚 Comprehensive documentation (Doxygen + Docusaurus)
 - 🧪 Unit tests with Google Test
@@ -115,7 +115,7 @@ Rtype/
 │   ├── client/       # Client application
 │   ├── server/       # Server application
 │   ├── engine/       # ECS game engine
-│   ├── network/      # Network library (Asio UDP)
+│   ├── network/      # Network library
 │   └── games/        # Game-specific code
 ├── include/          # Public headers (interfaces)
 ├── external/         # External dependencies
