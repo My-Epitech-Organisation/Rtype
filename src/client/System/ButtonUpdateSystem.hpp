@@ -5,16 +5,16 @@
 ** UpdateSystem.hpp
 */
 
-#ifndef R_TYPE_UPDATESYSTEM_HPP
-#define R_TYPE_UPDATESYSTEM_HPP
+#ifndef SRC_CLIENT_SYSTEM_BUTTONUPDATESYSTEM_HPP_
+#define SRC_CLIENT_SYSTEM_BUTTONUPDATESYSTEM_HPP_
 #include <SFML/Graphics/RenderWindow.hpp>
+
 #include "ecs/core/Registry/Registry.hpp"
 
-
 class ButtonUpdateSystem {
-public:
-    static void update(const std::shared_ptr<ECS::Registry> &registry, sf::RenderWindow &window);
+   public:
+    static void update(const std::shared_ptr<ECS::Registry>& registry,
+                       sf::RenderWindow& window);
 };
 
-
-#endif //R_TYPE_UPDATESYSTEM_HPP
+#endif  // SRC_CLIENT_SYSTEM_BUTTONUPDATESYSTEM_HPP_

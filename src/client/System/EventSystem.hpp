@@ -5,16 +5,18 @@
 ** EventSystem.hpp
 */
 
-#ifndef R_TYPE_EVENTSYSTEM_HPP
-#define R_TYPE_EVENTSYSTEM_HPP
+#ifndef SRC_CLIENT_SYSTEM_EVENTSYSTEM_HPP_
+#define SRC_CLIENT_SYSTEM_EVENTSYSTEM_HPP_
 #include <memory>
+
 #include <SFML/Window/Event.hpp>
+
 #include "ecs/ECS.hpp"
 
 class EventSystem {
-public:
-    static void processEvents(const std::shared_ptr<ECS::Registry> &registry, const sf::Event &e);
+   public:
+    static void processEvents(const std::shared_ptr<ECS::Registry>& registry,
+                              const sf::Event& e);
 };
 
-
-#endif //R_TYPE_EVENTSYSTEM_HPP
+#endif  // SRC_CLIENT_SYSTEM_EVENTSYSTEM_HPP_

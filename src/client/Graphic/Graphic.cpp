@@ -6,14 +6,15 @@
 */
 
 #include "Graphic.hpp"
+
 #include <iostream>
 #include <optional>
 #include <utility>
 
 #include "AssetManager/AssetManager.hpp"
+#include "System/ButtonUpdateSystem.hpp"
 #include "System/EventSystem.hpp"
 #include "System/RenderSystem.hpp"
-#include "System/ButtonUpdateSystem.hpp"
 
 void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event>& event) {
     if (!event) {
@@ -31,8 +32,7 @@ void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event>& event) {
 
 void Graphic::_pollEvents() {
     while (const std::optional event = this->_window.pollEvent()) {
-        if (!event)
-            return;
+        if (!event) return;
         if (event->is<sf::Event::Closed>()) {
             this->_window.close();
         }
@@ -46,7 +46,8 @@ void Graphic::_pollEvents() {
 
 void Graphic::_update() {
     ButtonUpdateSystem::update(this->_registry, this->_window);
-    this->_sceneManager->update(); }
+    this->_sceneManager->update();
+}
 
 void Graphic::_display() {
     this->_window.clear();
@@ -63,12 +64,13 @@ void Graphic::loop() {
     }
 }
 
-Graphic::Graphic(const std::shared_ptr<ECS::Registry> &registry) :
-    _registry(std::move(registry)),
-    _keybinds(),
-    _window(sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025")
-{
+Graphic::Graphic(const std::shared_ptr<ECS::Registry>& registry)
+    : _registry(std::move(registry)),
+      _keybinds(),
+      _window(sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}),
+              "R-Type - Epitech 2025") {
     this->_assetsManager = std::make_shared<AssetManager>();
-    this->_sceneManager = std::make_unique<SceneManager>(registry, this->_assetsManager, this->_window);
+    this->_sceneManager = std::make_unique<SceneManager>(
+        registry, this->_assetsManager, this->_window);
     this->_mainClock.start();
 }

@@ -5,35 +5,32 @@
 ** EntityFactory.hpp
 */
 
-#ifndef R_TYPE_ENTITYFACTORY_HPP
-#define R_TYPE_ENTITYFACTORY_HPP
+#ifndef SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_
+#define SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_
 #include <SFML/System/Vector2.hpp>
-#include "ecs/ECS.hpp"
-#include "Components/Graphic/TextComponent.hpp"
+
 #include "Components/Common/PositionComponent.hpp"
 #include "Components/Graphic/ButtonComponent.hpp"
 #include "Components/Graphic/RectangleComponent.hpp"
+#include "Components/Graphic/TextComponent.hpp"
 #include "Components/Graphic/UserEventComponent.hpp"
-
+#include "ecs/ECS.hpp"
 
 namespace EntityFactory {
-    template <typename... Args>
-    static ECS::Entity createButton(
-        ECS::Registry& registry,
-        const Text &text,
-        const Position &position,
-        const Rectangle &rectangle,
-        std::function<void(Args...)> onClick
-        ) {
-            auto entity = registry.spawnEntity();
-            registry.emplaceComponent<Text>(entity, text);
-            registry.emplaceComponent<Position>(entity, position);
-            registry.emplaceComponent<Rectangle>(entity, rectangle);
-            registry.emplaceComponent<Button<Args...>>(entity, onClick);
-            registry.emplaceComponent<UserEvent>(entity);
-            registry.emplaceComponent<ButtonTag>(entity);
-            return entity;
-        };
-};
+template <typename... Args>
+static ECS::Entity createButton(ECS::Registry& registry, const Text& text,
+                                const Position& position,
+                                const Rectangle& rectangle,
+                                std::function<void(Args...)> onClick) {
+    auto entity = registry.spawnEntity();
+    registry.emplaceComponent<Text>(entity, text);
+    registry.emplaceComponent<Position>(entity, position);
+    registry.emplaceComponent<Rectangle>(entity, rectangle);
+    registry.emplaceComponent<Button<Args...>>(entity, onClick);
+    registry.emplaceComponent<UserEvent>(entity);
+    registry.emplaceComponent<ButtonTag>(entity);
+    return entity;
+}
+};  // namespace EntityFactory
 
-#endif //R_TYPE_ENTITYFACTORY_HPP
+#endif  // SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_

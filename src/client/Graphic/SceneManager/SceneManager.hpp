@@ -5,19 +5,19 @@
 ** SceneManager.hpp
 */
 
-#ifndef R_TYPE_SCENEMANAGER_HPP
-#define R_TYPE_SCENEMANAGER_HPP
+#ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENEMANAGER_HPP_
+#define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENEMANAGER_HPP_
 
 #include <iostream>
 #include <map>
 #include <memory>
 
 #include "AssetManager/AssetManager.hpp"
-#include "ecs/ECS.hpp"
 #include "Scenes/IScene.hpp"
+#include "ecs/ECS.hpp"
 
 class SceneManager {
-public:
+   public:
     enum Scene {
         MAIN_MENU,
         IN_GAME,
@@ -28,41 +28,36 @@ public:
         NONE,
     };
 
-private:
+   private:
     Scene _currentScene = NONE;
 
     std::map<Scene, std::function<std::unique_ptr<IScene>()>> _sceneList;
     std::unique_ptr<IScene> _activeScene;
 
+    std::function<void(const Scene&)> _switchToScene =
+        std::function<void(const Scene&)>(
+            [this](const Scene& scene) { this->setCurrentScene(scene); });
 
-    std::function<void(const Scene &)> _switchToScene = std::function<void(const Scene &)>([this](const Scene &scene) {
-        this->setCurrentScene(scene);
-    });
-
-public:
-
+   public:
     [[nodiscard]] Scene getCurrentScene() const { return _currentScene; }
     void setCurrentScene(Scene scene);
 
-    void pollEvents(const sf::Event &e);
+    void pollEvents(const sf::Event& e);
     void update();
-    void draw(sf::RenderWindow &window);
+    void draw(sf::RenderWindow& window);
 
-    bool operator==(const Scene &data) const {
-        if (data == this->_currentScene)
-            return true;
+    bool operator==(const Scene& data) const {
+        if (data == this->_currentScene) return true;
         return false;
     }
 
-    friend std::ostream &operator<<(std::ostream &os, const SceneManager &sceneManager);
+    friend std::ostream& operator<<(std::ostream& os,
+                                    const SceneManager& sceneManager);
 
-    SceneManager(
-        const std::shared_ptr<ECS::Registry> &ecs,
-        const std::shared_ptr<AssetManager> &assetManager,
-        sf::RenderWindow &window
-    );
+    SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
+                 const std::shared_ptr<AssetManager>& assetManager,
+                 sf::RenderWindow& window);
     ~SceneManager() = default;
 };
 
-
-#endif //R_TYPE_SCENEMANAGER_HPP
+#endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENEMANAGER_HPP_

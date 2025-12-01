@@ -5,21 +5,21 @@
 ** SceneException.hpp
 */
 
-#ifndef R_TYPE_SCENEEXCEPTION_HPP
-#define R_TYPE_SCENEEXCEPTION_HPP
+#ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENEEXCEPTION_HPP_
+#define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENEEXCEPTION_HPP_
 #include <exception>
 
 class SceneNotFound final : std::exception {
-public:
-    [[nodiscard]] const char *what() const noexcept override {
+   public:
+    [[nodiscard]] const char* what() const noexcept override {
         return "Scene not found";
     }
 };
 
 class SceneNotInitialized final : std::exception {
-public:
-    [[nodiscard]] const char *what() const noexcept override {
+   public:
+    [[nodiscard]] const char* what() const noexcept override {
         return "Scene not initialized";
     }
 };
-#endif //R_TYPE_SCENEEXCEPTION_HPP
+#endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENEEXCEPTION_HPP_

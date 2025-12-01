@@ -9,10 +9,11 @@
 #define SRC_CLIENT_GRAPHIC_GRAPHIC_HPP_
 
 #include <SFML/Graphics.hpp>
-#include "ecs/ECS.hpp"
-#include "KeyboardActions.hpp"
+
 #include "AssetManager/AssetManager.hpp"
+#include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
+#include "ecs/ECS.hpp"
 
 class Graphic {
    private:
@@ -36,7 +37,7 @@ class Graphic {
    public:
     void loop();
 
-    explicit Graphic(const std::shared_ptr<ECS::Registry> &registry);
+    explicit Graphic(const std::shared_ptr<ECS::Registry>& registry);
     ~Graphic() = default;
 
     Graphic(const Graphic&) = delete;

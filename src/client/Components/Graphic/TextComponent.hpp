@@ -5,11 +5,11 @@
 ** TextComponent.hpp
 */
 
-#ifndef R_TYPE_TEXT_HPP
-#define R_TYPE_TEXT_HPP
-
+#ifndef SRC_CLIENT_COMPONENTS_GRAPHIC_TEXTCOMPONENT_HPP_
+#define SRC_CLIENT_COMPONENTS_GRAPHIC_TEXTCOMPONENT_HPP_
 
 #include <string>
+
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
@@ -21,14 +21,14 @@ struct Text {
     sf::Color color;
     unsigned int size;
 
-    Text(
-        const sf::Font &font,
-        const sf::Color &color,
-        unsigned int size = 30,
-        const std::string &textContent = ""
-    ) : font(font), text(font, textContent), textContent(textContent), color(color), size(size) {}
-    Text(const Text &other) = default;
+    Text(const sf::Font& font, const sf::Color& color, unsigned int size = 30,
+         const std::string& textContent = "")
+        : font(font),
+          text(font, textContent),
+          textContent(textContent),
+          color(color),
+          size(size) {}
+    Text(const Text& other) = default;
 };
 
-
-#endif //R_TYPE_TEXT_HPP
+#endif  // SRC_CLIENT_COMPONENTS_GRAPHIC_TEXTCOMPONENT_HPP_

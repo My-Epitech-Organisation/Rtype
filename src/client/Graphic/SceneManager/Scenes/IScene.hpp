@@ -5,18 +5,18 @@
 ** IScene.hpp
 */
 
-#ifndef R_TYPE_ISCENE_HPP
-#define R_TYPE_ISCENE_HPP
-#include <SFML/Window/Event.hpp>
+#ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_ISCENE_HPP_
+#define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_ISCENE_HPP_
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window/Event.hpp>
 
 class IScene {
-public:
-    virtual void pollEvents(const sf::Event &e) = 0;
+   public:
+    virtual void pollEvents(const sf::Event& e) = 0;
     virtual void update() = 0;
-    virtual void render(sf::RenderWindow &window) = 0;
+    virtual void render(sf::RenderWindow& window) = 0;
 
     virtual ~IScene() = default;
 };
 
-#endif //R_TYPE_ISCENE_HPP
+#endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_ISCENE_HPP_

@@ -7,11 +7,12 @@
 
 #include "FontManager.hpp"
 
-void FontManager::load(const std::string &id, const std::string &filePath)  {
+void FontManager::load(const std::string& id, const std::string& filePath) {
     auto font = std::make_unique<sf::Font>();
 
     if (!font->openFromFile(filePath)) {
-        std::cerr << "Erreur: Impossible de charger la police: " << filePath << std::endl;
+        std::cerr << "Erreur: Impossible de charger la police: " << filePath
+                  << std::endl;
         throw std::runtime_error("Erreur de chargement de police: " + filePath);
     }
 
@@ -19,11 +20,13 @@ void FontManager::load(const std::string &id, const std::string &filePath)  {
     std::cout << "Police chargée et stockée sous l'ID: " << id << std::endl;
 }
 
-void FontManager::load(const std::string &id, unsigned char *fileData, unsigned int fileDataSize)  {
+void FontManager::load(const std::string& id, unsigned char* fileData,
+                       unsigned int fileDataSize) {
     auto font = std::make_unique<sf::Font>();
 
     if (!font->openFromMemory(fileData, fileDataSize)) {
-        std::cerr << "Erreur: Impossible de charger la police: " << id << std::endl;
+        std::cerr << "Erreur: Impossible de charger la police: " << id
+                  << std::endl;
         throw std::runtime_error("Erreur de chargement de police: " + id);
     }
 
@@ -31,7 +34,7 @@ void FontManager::load(const std::string &id, unsigned char *fileData, unsigned 
     std::cout << "Police chargée et stockée sous l'ID: " << id << std::endl;
 }
 
-sf::Font &FontManager::get(const std::string &id) {
+sf::Font& FontManager::get(const std::string& id) {
     auto it = this->_assets.find(id);
 
     if (it == this->_assets.end()) {

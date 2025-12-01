@@ -5,16 +5,17 @@
 ** RenderSystem.hpp
 */
 
-#ifndef R_TYPE_RENDERSYSTEM_HPP
-#define R_TYPE_RENDERSYSTEM_HPP
+#ifndef SRC_CLIENT_SYSTEM_RENDERSYSTEM_HPP_
+#define SRC_CLIENT_SYSTEM_RENDERSYSTEM_HPP_
 
 #include <SFML/Graphics/RenderWindow.hpp>
+
 #include "ecs/ECS.hpp"
 
 class RenderSystem {
-public:
-    static void draw(const std::shared_ptr<ECS::Registry> &registry, sf::RenderWindow &window);
+   public:
+    static void draw(const std::shared_ptr<ECS::Registry>& registry,
+                     sf::RenderWindow& window);
 };
 
-
-#endif //R_TYPE_RENDERSYSTEM_HPP
+#endif  // SRC_CLIENT_SYSTEM_RENDERSYSTEM_HPP_

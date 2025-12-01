@@ -5,15 +5,16 @@
 ** ButtonComponent.hpp
 */
 
-#ifndef R_TYPE_BUTTONCOMPONENT_HPP
-#define R_TYPE_BUTTONCOMPONENT_HPP
+#ifndef SRC_CLIENT_COMPONENTS_GRAPHIC_BUTTONCOMPONENT_HPP_
+#define SRC_CLIENT_COMPONENTS_GRAPHIC_BUTTONCOMPONENT_HPP_
 
 #include <functional>
 
-template<typename ... Args>
+template <typename... Args>
 struct Button {
     std::function<void(Args...)> callback;
-    explicit Button(std::function<void(Args...)> callback) : callback(callback) {};
+    explicit Button(std::function<void(Args...)> callback)
+        : callback(callback) {}
 };
 
-#endif //R_TYPE_BUTTONCOMPONENT_HPP
+#endif  // SRC_CLIENT_COMPONENTS_GRAPHIC_BUTTONCOMPONENT_HPP_

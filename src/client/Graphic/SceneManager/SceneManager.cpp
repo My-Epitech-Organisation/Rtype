@@ -6,21 +6,21 @@
 */
 
 #include "SceneManager.hpp"
-#include "SceneException.hpp"
+
 #include "../../GameAction.hpp"
+#include "SceneException.hpp"
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
 
 void SceneManager::setCurrentScene(const Scene scene) {
     if (!this->_sceneList.contains(scene)) {
         throw SceneNotFound();
     }
-    if (this->_currentScene == scene)
-        return;
+    if (this->_currentScene == scene) return;
     this->_currentScene = scene;
     this->_activeScene = this->_sceneList[this->_currentScene]();
 }
 
-void SceneManager::pollEvents(const sf::Event &e) {
+void SceneManager::pollEvents(const sf::Event& e) {
     if (!this->_sceneList.contains(this->_currentScene)) {
         throw SceneNotFound();
     }
@@ -40,7 +40,7 @@ void SceneManager::update() {
     this->_activeScene->update();
 }
 
-void SceneManager::draw(sf::RenderWindow &window) {
+void SceneManager::draw(sf::RenderWindow& window) {
     if (!this->_sceneList.contains(this->_currentScene)) {
         throw SceneNotFound();
     }
@@ -50,7 +50,7 @@ void SceneManager::draw(sf::RenderWindow &window) {
     this->_activeScene->render(window);
 }
 
-std::ostream & operator<<(std::ostream &os, const SceneManager &sceneManager) {
+std::ostream& operator<<(std::ostream& os, const SceneManager& sceneManager) {
     os << "Current Scene: ";
     switch (sceneManager.getCurrentScene()) {
         case SceneManager::MAIN_MENU:
@@ -75,16 +75,13 @@ std::ostream & operator<<(std::ostream &os, const SceneManager &sceneManager) {
     return os;
 }
 
-SceneManager::SceneManager(
-    const std::shared_ptr<ECS::Registry> &ecs,
-    const std::shared_ptr<AssetManager> &texture,
-    sf::RenderWindow &window
-) {
-    this->_sceneList.emplace(
-        MAIN_MENU,
-        [ecs, texture, &window, this]() {
-            return std::make_unique<MainMenuScene>(ecs, texture, this->_switchToScene, window); // CRÉATION 2 (La lambda)
-        }
-    );
+SceneManager::SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
+                           const std::shared_ptr<AssetManager>& texture,
+                           sf::RenderWindow& window) {
+    this->_sceneList.emplace(MAIN_MENU, [ecs, texture, &window, this]() {
+        return std::make_unique<MainMenuScene>(
+            ecs, texture, this->_switchToScene,
+            window);  // CRÉATION 2 (La lambda)
+    });
     this->setCurrentScene(MAIN_MENU);
 }
