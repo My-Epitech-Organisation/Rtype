@@ -38,8 +38,7 @@ struct Endpoint {
     Endpoint() = default;
 
     /// @brief Construct from address and port
-    Endpoint(std::string addr, uint16_t p) noexcept
-        : address(std::move(addr)), port(p) {}
+    Endpoint(std::string addr, uint16_t p) : address(std::move(addr)), port(p) {}
 
     /// @brief Construct from string_view (avoids temporary string creation)
     Endpoint(std::string_view addr, uint16_t p) : address(addr), port(p) {}
