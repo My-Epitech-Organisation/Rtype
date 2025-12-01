@@ -18,16 +18,14 @@ void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event> &event) {
         } else if (this->_sceneManager == SceneManager::PAUSE_MENU) {
             this->_sceneManager.setCurrentScene(SceneManager::IN_GAME);
         }
-        std::cout << this->_sceneManager << std::endl;
     }
 }
 
-void Graphic::_poolEvents() {
+void Graphic::_pollEvents() {
     while (const std::optional event = this->_window.pollEvent()) {
         if (event->is<sf::Event::Closed>())
             this->_window.close();
         if (event->is<sf::Event::KeyReleased>()) {
-            std::cout << "Key Released: " << static_cast<int>(event->getIf<sf::Event::KeyReleased>()->code) << std::endl;
             this->_handleKeyReleasedEvent(event);
         }
     }
@@ -45,7 +43,7 @@ void Graphic::_display() {
 
 void Graphic::loop() {
     while (this->_window.isOpen()) {
-        this->_poolEvents();
+        this->_pollEvents();
         this->_update();
         this->_display();
     }

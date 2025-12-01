@@ -25,7 +25,7 @@ private:
 
     void _handleKeyReleasedEvent(const std::optional<sf::Event> &event);
 
-    void _poolEvents();
+    void _pollEvents();
     void _update();
     void _display();
 public:
