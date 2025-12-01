@@ -5,12 +5,12 @@
 ** ArgParser - Main include file for argument parsing utilities
 */
 
-#ifndef RTYPE_COMMON_ARGPARSER_HPP
-    #define RTYPE_COMMON_ARGPARSER_HPP
+#ifndef SRC_COMMON_ARGPARSER_HPP_
+#define SRC_COMMON_ARGPARSER_HPP_
 
-    #include "ArgParser/ParseResult.hpp"
-    #include "ArgParser/Option.hpp"
-    #include "ArgParser/NumberParser.hpp"
-    #include "ArgParser/ArgParser.hpp"
+#include "ArgParser/ParseResult.hpp"
+#include "ArgParser/Option.hpp"
+#include "ArgParser/NumberParser.hpp"
+#include "ArgParser/ArgParser.hpp"
 
-#endif // RTYPE_COMMON_ARGPARSER_HPP
+#endif  // SRC_COMMON_ARGPARSER_HPP_
