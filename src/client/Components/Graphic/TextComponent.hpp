@@ -8,20 +8,26 @@
 #ifndef R_TYPE_TEXT_HPP
 #define R_TYPE_TEXT_HPP
 
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Texture.hpp>
-#include <utility>
+
+#include <string>
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/Graphics/Font.hpp>
+#include <SFML/Graphics/Text.hpp>
 
 struct Text {
-    std::string fontId;
+    sf::Font font;
+    sf::Text text;
+    std::string textContent;
+    sf::Color color;
+    unsigned int size;
 
-    sf::IntRect textureRect;
     Text(
-        const std::string &textureId,
-        const sf::IntRect &rect
-    ) : textureId(textureId) {
-        this->textureRect = rect;
-    }
+        const sf::Font &font,
+        const sf::Color &color,
+        unsigned int size = 30,
+        const std::string &textContent = ""
+    ) : font(font), text(font, textContent), textContent(textContent), color(color), size(size) {}
+    Text(const Text &other) = default;
 };
 
 
