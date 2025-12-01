@@ -1,0 +1,8 @@
+{
+  "label": "Game Design",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "Game mechanics, entity roles, and player experience design for R-Type."
+  }
+}
