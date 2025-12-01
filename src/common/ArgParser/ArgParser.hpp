@@ -5,23 +5,24 @@
 ** ArgParser - Main argument parser class
 */
 
-#ifndef RTYPE_COMMON_ARGPARSER_ARGPARSER_HPP
-    #define RTYPE_COMMON_ARGPARSER_ARGPARSER_HPP
+#ifndef SRC_COMMON_ARGPARSER_ARGPARSER_HPP_
+#define SRC_COMMON_ARGPARSER_ARGPARSER_HPP_
 
-    #include "../Logger/Macros.hpp"
-    #include "Option.hpp"
-    #include "ParseResult.hpp"
-    #include <algorithm>
-    #include <format>
-    #include <functional>
-    #include <iomanip>
-    #include <iostream>
-    #include <memory>
-    #include <sstream>
-    #include <string>
-    #include <string_view>
-    #include <unordered_map>
-    #include <vector>
+#include <algorithm>
+#include <format>
+#include <functional>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
+
+#include "../Logger/Macros.hpp"
+#include "Option.hpp"
+#include "ParseResult.hpp"
 
 namespace rtype {
 
@@ -52,8 +53,7 @@ public:
      * @return Reference to this parser for chaining
      */
     ArgParser& flag(std::string_view shortOpt, std::string_view longOpt,
-                    std::string_view description, std::function<ParseResult()> handler)
-    {
+                    std::string_view description, std::function<ParseResult()> handler) {
         if (isDuplicate(shortOpt, longOpt)) {
             LOG_WARNING(std::format("Duplicate option: {}/{}", shortOpt, longOpt));
             return *this;
@@ -77,8 +77,7 @@ public:
      */
     ArgParser& option(std::string_view shortOpt, std::string_view longOpt,
                       std::string_view argName, std::string_view description,
-                      std::function<ParseResult(std::string_view)> handler)
-    {
+                      std::function<ParseResult(std::string_view)> handler) {
         if (isDuplicate(shortOpt, longOpt)) {
             LOG_WARNING(std::format("Duplicate option: {}/{}", shortOpt, longOpt));
             return *this;
@@ -101,8 +100,7 @@ public:
      */
     ArgParser& positional(std::string_view name, std::string_view description,
                           std::function<ParseResult(std::string_view)> handler,
-                          bool required = true)
-    {
+                          bool required = true) {
         _positionalArgs.push_back({std::string(name), std::string(description), required});
         _positionalHandlers.push_back(
             std::make_shared<std::function<ParseResult(std::string_view)>>(std::move(handler)));
@@ -116,22 +114,21 @@ public:
      *         ParseResult::Exit for early exit (e.g., --help),
      *         ParseResult::Error on error
      */
-    [[nodiscard]] ParseResult parse(const std::vector<std::string_view>& args) const
-    {
+    [[nodiscard]] ParseResult parse(const std::vector<std::string_view>& args) const {
         std::vector<std::string_view> positionalValues;
-        auto it = args.begin();
+        auto iter = args.begin();
 
-        while (it != args.end()) {
-            const std::string key(*it);
+        while (iter != args.end()) {
+            const std::string key(*iter);
             if (!key.empty() && key[0] == '-') {
-                ParseResult result = parseOption(key, it, args.end());
+                ParseResult result = parseOption(key, iter, args.end());
                 if (result != ParseResult::Success) {
                     return result;
                 }
             } else {
-                positionalValues.push_back(*it);
+                positionalValues.push_back(*iter);
             }
-            it++;
+            iter++;
         }
         return processPositionalArgs(positionalValues);
     }
@@ -141,8 +138,7 @@ public:
      * @param name Program name to display
      * @return Reference to this parser for chaining
      */
-    ArgParser& programName(std::string_view name)
-    {
+    ArgParser& programName(std::string_view name) {
         _programName = name;
         return *this;
     }
@@ -150,8 +146,7 @@ public:
     /**
      * @brief Print usage message with properly aligned options
      */
-    void printUsage() const
-    {
+    void printUsage() const {
         printUsageLine();
         printOptions();
         printPositionalArgs();
@@ -163,19 +158,18 @@ private:
      * @brief Parse a single option
      */
     [[nodiscard]] ParseResult parseOption(const std::string& key,
-        std::vector<std::string_view>::const_iterator& it,
-        std::vector<std::string_view>::const_iterator end) const
-    {
+        std::vector<std::string_view>::const_iterator& iter,
+        std::vector<std::string_view>::const_iterator end) const {
         if (auto handlerIt = _flagHandlers.find(key); handlerIt != _flagHandlers.end()) {
             return (*handlerIt->second)();
         }
         if (auto handlerIt = _valueHandlers.find(key); handlerIt != _valueHandlers.end()) {
-            it++;
-            if (it == end) {
+            iter++;
+            if (iter == end) {
                 LOG_ERROR(std::format("Option {} requires an argument", key));
                 return ParseResult::Error;
             }
-            return (*handlerIt->second)(*it);
+            return (*handlerIt->second)(*iter);
         }
         LOG_ERROR(std::format("Unknown option: {}", key));
         printUsage();
@@ -186,8 +180,7 @@ private:
      * @brief Process positional arguments
      */
     [[nodiscard]] ParseResult processPositionalArgs(
-        const std::vector<std::string_view>& positionalValues) const
-    {
+        const std::vector<std::string_view>& positionalValues) const {
         for (std::size_t i = 0; i < _positionalArgs.size(); ++i) {
             if (i < positionalValues.size()) {
                 ParseResult result = (*_positionalHandlers[i])(positionalValues[i]);
@@ -210,8 +203,7 @@ private:
     /**
      * @brief Print the usage line
      */
-    void printUsageLine() const
-    {
+    void printUsageLine() const {
         std::cout << "Usage: " << _programName << " [options]";
         for (const auto& posArg : _positionalArgs) {
             if (posArg.required) {
@@ -226,8 +218,7 @@ private:
     /**
      * @brief Print options section
      */
-    void printOptions() const
-    {
+    void printOptions() const {
         if (_options.empty()) {
             return;
         }
@@ -255,8 +246,7 @@ private:
     /**
      * @brief Print positional arguments section
      */
-    void printPositionalArgs() const
-    {
+    void printPositionalArgs() const {
         if (_positionalArgs.empty()) {
             return;
         }
@@ -281,8 +271,7 @@ private:
      * @param longOpt Long option to check
      * @return true if either option already exists
      */
-    [[nodiscard]] bool isDuplicate(std::string_view shortOpt, std::string_view longOpt) const
-    {
+    [[nodiscard]] bool isDuplicate(std::string_view shortOpt, std::string_view longOpt) const {
         const std::string shortKey(shortOpt);
         const std::string longKey(longOpt);
         return _flagHandlers.contains(shortKey) || _flagHandlers.contains(longKey) ||
@@ -297,6 +286,6 @@ private:
     std::vector<std::shared_ptr<std::function<ParseResult(std::string_view)>>> _positionalHandlers;
 };
 
-} // namespace rtype
+}  // namespace rtype
 
-#endif // RTYPE_COMMON_ARGPARSER_ARGPARSER_HPP
+#endif  // SRC_COMMON_ARGPARSER_ARGPARSER_HPP_
