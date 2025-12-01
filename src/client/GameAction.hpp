@@ -2,11 +2,11 @@
 ** EPITECH PROJECT, 2025
 ** r-type
 ** File description:
-** GamingAction.hpp
+** GameAction.hpp
 */
 
-#ifndef R_TYPE_GAMINGACTION_HPP
-#define R_TYPE_GAMINGACTION_HPP
+#ifndef R_TYPE_GAMEACTION_HPP
+#define R_TYPE_GAMEACTION_HPP
 
 enum class GameAction {
     MOVE_UP,
@@ -18,4 +18,4 @@ enum class GameAction {
     NONE
 };
 
-#endif //R_TYPE_GAMINGACTION_HPP
+#endif //R_TYPE_GAMEACTION_HPP

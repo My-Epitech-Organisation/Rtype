@@ -8,8 +8,6 @@
 #ifndef R_TYPE_CLIENTAPP_HPP
 #define R_TYPE_CLIENTAPP_HPP
 
-#include <iostream>
-
 #include "Graphic/Graphic.hpp"
 
 class ClientApp {

@@ -1,7 +1,10 @@
 add_subdirectory(Graphic)
 
-add_executable(r-type_client main.cpp ClientApp.cpp
-        GamingAction.hpp)
+add_executable(r-type_client
+        main.cpp
+        ClientApp.cpp
+        GameAction.hpp
+)
 
 target_compile_features(r-type_client PRIVATE cxx_std_20)
 

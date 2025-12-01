@@ -11,7 +11,8 @@
 #include "Graphic.hpp"
 
 void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event> &event) {
-    if (event->getIf<sf::Event::KeyReleased>()->code == this->_keybinds.getKeyBinding(GameAction::PAUSE)) {
+    const auto &key = event->getIf<sf::Event::KeyReleased>();
+    if (key && key->code == this->_keybinds.getKeyBinding(GameAction::PAUSE)) {
         if (this->_sceneManager == SceneManager::IN_GAME) {
             this->_sceneManager.setCurrentScene(SceneManager::PAUSE_MENU);
         } else if (this->_sceneManager == SceneManager::PAUSE_MENU) {

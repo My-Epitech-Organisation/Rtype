@@ -4,7 +4,7 @@
 ** File description:
 ** keyboardInput.cpp
 */
-
+#include <optional>
 #include "KeyboardActions.hpp"
 
 KeyboardActions::KeyboardActions() {
@@ -16,15 +16,17 @@ KeyboardActions::KeyboardActions() {
     this->_keyBindings.emplace(GameAction::PAUSE, sf::Keyboard::Key::Escape);
 }
 
-sf::Keyboard::Key KeyboardActions::getKeyBinding(const GameAction &action)  {
+std::optional<sf::Keyboard::Key> KeyboardActions::getKeyBinding(const GameAction &action)  {
+    if (!this->_keyBindings.contains(action))
+        return {};
     return this->_keyBindings[action];
 }
 
-GameAction KeyboardActions::getKeyBinding(const sf::Keyboard::Key &key)  {
+std::optional<GameAction> KeyboardActions::getKeyBinding(const sf::Keyboard::Key &key)  {
     for (const auto &[fst, snd] : this->_keyBindings)
         if (snd == key)
             return fst;
-    return GameAction::NONE;
+    return {};
 }
 
 void KeyboardActions::setKeyBinding(const GameAction &action, const sf::Keyboard::Key &key)  {
