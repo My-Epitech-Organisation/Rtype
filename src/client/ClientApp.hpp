@@ -1,3 +1,13 @@
+/*
+** EPITECH PROJECT, 2025
+** r-type
+** File description:
+** ClientApp.hpp
+*/
+
+#ifndef R_TYPE_CLIENTAPP_HPP
+#define R_TYPE_CLIENTAPP_HPP
+
 #include <iostream>
 
 #include "Graphic/Graphic.hpp"
@@ -10,3 +20,5 @@ public:
     explicit ClientApp(const std::shared_ptr<ECS::Registry>& registry);
     ~ClientApp() = default;
 };
+
+#endif
