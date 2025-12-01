@@ -1,0 +1,200 @@
+name: 📚 R-Type documentation
+
+on:
+  push:
+    paths:
+      - 'docs/**'
+      - 'src/**'
+      - 'include/**'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'src/**'
+      - 'include/**'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CACHE_KEY_PREFIX: docs-v1
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  cache-check:
+    name: "🔍 Docs Cache Check"
+    runs-on: ubuntu-latest
+    outputs:
+      node-cache-hit: ${{ steps.node-cache.outputs.cache-hit }}
+      cache-key-node: ${{ steps.cache-keys.outputs.node }}
+      cache-key-doxygen: ${{ steps.cache-keys.outputs.doxygen }}
+      docs-hash: ${{ steps.cache-keys.outputs.hash }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate cache keys
+        id: cache-keys
+        run: |
+          NODE_HASH=$(sha256sum docs/website/package-lock.json 2>/dev/null | cut -d' ' -f1 || echo "no-lock")
+          echo "node=${CACHE_KEY_PREFIX}-node-${NODE_HASH}" >> $GITHUB_OUTPUT
+
+          DOXYGEN_HASH=$(find src include -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) -exec sha256sum {} \; 2>/dev/null | sha256sum | cut -d' ' -f1 || echo "no-src")
+          echo "doxygen=${CACHE_KEY_PREFIX}-doxygen-${DOXYGEN_HASH}" >> $GITHUB_OUTPUT
+          echo "hash=${DOXYGEN_HASH}" >> $GITHUB_OUTPUT
+
+      - name: Check node_modules cache
+        id: node-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: docs/website/node_modules
+          key: ${{ steps.cache-keys.outputs.node }}
+          lookup-only: true
+
+      - name: Cache status summary
+        run: |
+          echo "### 📚 Documentation Cache Status" >> $GITHUB_STEP_SUMMARY
+          echo "| Cache | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Node modules | ${{ steps.node-cache.outputs.cache-hit == 'true' && '✅ HIT' || '❌ MISS' }} |" >> $GITHUB_STEP_SUMMARY
+
+  build-docs:
+    name: "📖 Build Documentation"
+    runs-on: ubuntu-latest
+    needs: [cache-check]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Restore node_modules from cache
+        if: needs.cache-check.outputs.node-cache-hit == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: docs/website/node_modules
+          key: ${{ needs.cache-check.outputs.cache-key-node }}
+
+      - name: Install npm dependencies
+        if: needs.cache-check.outputs.node-cache-hit != 'true'
+        working-directory: docs/website
+        run: npm ci
+
+      - name: Save node_modules to cache
+        if: needs.cache-check.outputs.node-cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: docs/website/node_modules
+          key: ${{ needs.cache-check.outputs.cache-key-node }}
+
+      - name: Install Doxygen and Graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+
+      - name: Restore Doxygen cache
+        id: doxygen-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: docs/doxygen
+          key: ${{ needs.cache-check.outputs.cache-key-doxygen }}
+
+      - name: Generate Doxygen documentation
+        if: steps.doxygen-cache.outputs.cache-hit != 'true'
+        working-directory: docs
+        run: doxygen Doxyfile
+
+      - name: Save Doxygen to cache
+        if: steps.doxygen-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: docs/doxygen
+          key: ${{ needs.cache-check.outputs.cache-key-doxygen }}
+
+      - name: Copy API docs to Docusaurus
+        working-directory: docs/website
+        run: |
+          mkdir -p static/api
+          cp -r ../doxygen/html/* static/api/ 2>/dev/null || echo "No Doxygen HTML found, skipping API copy"
+
+      - name: Build Docusaurus site
+        working-directory: docs/website
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/website/build
+
+      - name: Build Summary
+        run: |
+          echo "### 📚 Documentation Build" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Documentation built successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Components:**" >> $GITHUB_STEP_SUMMARY
+          echo "- 📖 Docusaurus site" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔬 Doxygen API reference" >> $GITHUB_STEP_SUMMARY
+
+  deploy:
+    name: "🚀 Deploy to GitHub Pages"
+    runs-on: ubuntu-latest
+    needs: [build-docs]
+    if: github.event_name == 'push'
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Deployment Summary
+        run: |
+          echo "### 🚀 Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Documentation deployed to GitHub Pages" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+
+  cache-cleanup:
+    name: "🧹 Docs Cache Cleanup"
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    if: always() && github.event_name == 'push'
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cleanup old documentation caches
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "### 🧹 Documentation Cache Cleanup" >> $GITHUB_STEP_SUMMARY
+
+          NODE_HASH=$(sha256sum docs/website/package-lock.json 2>/dev/null | cut -d' ' -f1 || echo "no-lock")
+          DOXYGEN_HASH=$(find src include -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) -exec sha256sum {} \; 2>/dev/null | sha256sum | cut -d' ' -f1 || echo "no-src")
+
+          echo "**Current node hash:** \`${NODE_HASH}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Current doxygen hash:** \`${DOXYGEN_HASH}\`" >> $GITHUB_STEP_SUMMARY
+
+          gh cache list --json id,key --limit 100 | jq -r '.[] | "\(.id)|\(.key)"' | while IFS='|' read -r id key; do
+            if echo "$key" | grep -q "^docs-v1-"; then
+              if echo "$key" | grep -q "node-" && ! echo "$key" | grep -q "${NODE_HASH}"; then
+                echo "Deleting old node cache: $key"
+                gh cache delete "$id" 2>/dev/null || true
+              elif echo "$key" | grep -q "doxygen-" && ! echo "$key" | grep -q "${DOXYGEN_HASH}"; then
+                echo "Deleting old doxygen cache: $key"
+                gh cache delete "$id" 2>/dev/null || true
+              fi
+            fi
+          done
+
+          echo "✅ Cleanup complete" >> $GITHUB_STEP_SUMMARY
