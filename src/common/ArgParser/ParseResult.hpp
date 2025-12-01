@@ -14,11 +14,11 @@ namespace rtype {
  * @brief Result of argument parsing
  */
 enum class ParseResult {
-  Success, ///< Parsing succeeded, continue execution
-  Exit,    ///< Parsing succeeded but should exit (e.g., --help)
-  Error    ///< Parsing failed due to an error
+  Success,  ///< Parsing succeeded, continue execution
+  Exit,     ///< Parsing succeeded but should exit (e.g., --help)
+  Error     ///< Parsing failed due to an error
 };
 
-} // namespace rtype
+}  // namespace rtype
 
-#endif // SRC_COMMON_ARGPARSER_PARSERESULT_HPP_
+#endif  // SRC_COMMON_ARGPARSER_PARSERESULT_HPP_

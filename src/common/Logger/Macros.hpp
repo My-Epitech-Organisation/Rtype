@@ -63,4 +63,4 @@
  */
 #define LOG_ERROR(msg) rtype::Logger::instance().error(LOG_TO_STRING(msg))
 
-#endif // SRC_COMMON_LOGGER_MACROS_HPP_
+#endif  // SRC_COMMON_LOGGER_MACROS_HPP_

@@ -13,4 +13,4 @@
 #include "ArgParser/Option.hpp"
 #include "ArgParser/ParseResult.hpp"
 
-#endif // SRC_COMMON_ARGPARSER_HPP_
+#endif  // SRC_COMMON_ARGPARSER_HPP_

@@ -312,6 +312,6 @@ private:
       _positionalHandlers;
 };
 
-} // namespace rtype
+}  // namespace rtype
 
-#endif // SRC_COMMON_ARGPARSER_ARGPARSER_HPP_
+#endif  // SRC_COMMON_ARGPARSER_ARGPARSER_HPP_

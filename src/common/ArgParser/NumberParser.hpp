@@ -60,6 +60,6 @@ parseNumber(std::string_view str, std::string_view name,
   }
 }
 
-} // namespace rtype
+}  // namespace rtype
 
-#endif // SRC_COMMON_ARGPARSER_NUMBERPARSER_HPP_
+#endif  // SRC_COMMON_ARGPARSER_NUMBERPARSER_HPP_

@@ -93,6 +93,6 @@ private:
   std::filesystem::path _filePath;
 };
 
-} // namespace rtype
+}  // namespace rtype
 
-#endif // SRC_COMMON_LOGGER_FILEWRITER_HPP_
+#endif  // SRC_COMMON_LOGGER_FILEWRITER_HPP_

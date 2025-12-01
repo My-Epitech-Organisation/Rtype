@@ -16,11 +16,11 @@ namespace rtype {
  * @brief Log level enumeration for configurable logging
  */
 enum class LogLevel {
-  Debug = 0,   ///< Verbose debugging information
-  Info = 1,    ///< Informational messages
-  Warning = 2, ///< Warning messages
-  Error = 3,   ///< Error messages
-  None = 4     ///< Disable all logging
+  Debug = 0,    ///< Verbose debugging information
+  Info = 1,     ///< Informational messages
+  Warning = 2,  ///< Warning messages
+  Error = 3,    ///< Error messages
+  None = 4      ///< Disable all logging
 };
 
 /**
@@ -45,6 +45,6 @@ toString(LogLevel level) noexcept {
   return "UNKNOWN";
 }
 
-} // namespace rtype
+}  // namespace rtype
 
-#endif // SRC_COMMON_LOGGER_LOGLEVEL_HPP_
+#endif  // SRC_COMMON_LOGGER_LOGLEVEL_HPP_

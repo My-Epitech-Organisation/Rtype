@@ -47,6 +47,6 @@ public:
   }
 };
 
-} // namespace rtype
+}  // namespace rtype
 
-#endif // SRC_COMMON_LOGGER_TIMESTAMP_HPP_
+#endif  // SRC_COMMON_LOGGER_TIMESTAMP_HPP_
