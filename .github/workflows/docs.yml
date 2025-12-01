@@ -86,7 +86,12 @@ jobs:
       - name: Install npm dependencies
         if: needs.cache-check.outputs.node-cache-hit != 'true'
         working-directory: docs/website
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Save node_modules to cache
         if: needs.cache-check.outputs.node-cache-hit != 'true'
