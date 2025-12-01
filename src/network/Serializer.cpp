@@ -30,4 +30,4 @@ Packet Serializer::deserialize(const std::vector<uint8_t>& data) {
     return packet;
 }
 
-} // namespace rtype::network
+}  // namespace rtype::network

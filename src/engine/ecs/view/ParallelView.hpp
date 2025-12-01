@@ -32,23 +32,24 @@ class Registry;
  * - Unsafe: Shared mutable state in callback without synchronization
  *
  * Example:
- *   registry.parallelView<Position, Velocity>().each([](Entity e, Position& p, Velocity& v) {
- *       p.x += v.dx; // Each thread processes different entities
+ *   registry.parallelView<Position, Velocity>().each([](Entity e, Position& p,
+ * Velocity& v) { p.x += v.dx; // Each thread processes different entities
  *   });
  */
-template<typename... Components>
+template <typename... Components>
 class ParallelView {
- public:
-    explicit ParallelView(std::reference_wrapper<Registry> reg) : _registry(reg) {}
+   public:
+    explicit ParallelView(std::reference_wrapper<Registry> reg)
+        : _registry(reg) {}
 
     /**
      * @brief Applies function to entities across multiple threads.
      * @param func Thread-safe callable with signature (Entity, Components&...)
      */
-    template<typename Func>
+    template <typename Func>
     void each(Func&& func);
 
- private:
+   private:
     std::reference_wrapper<Registry> _registry;
 };
 

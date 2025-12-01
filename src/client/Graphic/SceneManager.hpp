@@ -5,43 +5,41 @@
 ** SceneManager.hpp
 */
 
-#ifndef R_TYPE_SCENEMANAGER_HPP
-#define R_TYPE_SCENEMANAGER_HPP
+#ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_HPP_
+#define SRC_CLIENT_GRAPHIC_SCENEMANAGER_HPP_
 
+#include <cstdint>
 #include <iostream>
 
 class SceneManager {
-public:
-    enum Scene {
-        MAIN_MENU,
-        IN_GAME,
-        PAUSE_MENU,
-        GAME_OVER
-    };
+   public:
+    enum Scene : std::uint8_t { MAIN_MENU, IN_GAME, PAUSE_MENU, GAME_OVER };
 
-private:
+   private:
     Scene _currentScene = MAIN_MENU;
 
-public:
-
-    [[nodiscard]] Scene getCurrentScene() const { return _currentScene; }
+   public:
+    auto getCurrentScene() const -> Scene { return _currentScene; }
     void setCurrentScene(Scene scene) { _currentScene = scene; }
 
-    bool operator==(const Scene &data) const {
-        if (data == this->_currentScene)
-            return true;
-        return false;
+    auto operator==(const Scene& data) const -> bool {
+        return data == this->_currentScene;
     }
 
     void pollEventsScene();
     void updateScene();
     void renderScene();
 
-    friend std::ostream &operator<<(std::ostream &os, const SceneManager &sceneManager);
+    friend auto operator<<(std::ostream& stream,
+                           const SceneManager& sceneManager) -> std::ostream&;
 
     SceneManager() = default;
     ~SceneManager() = default;
+
+    SceneManager(const SceneManager&) = delete;
+    SceneManager& operator=(const SceneManager&) = delete;
+    SceneManager(SceneManager&&) = delete;
+    SceneManager& operator=(SceneManager&&) = delete;
 };
 
-
-#endif //R_TYPE_SCENEMANAGER_HPP
+#endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_HPP_

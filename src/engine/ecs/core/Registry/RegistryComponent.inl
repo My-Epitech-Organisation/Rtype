@@ -54,7 +54,7 @@
             }
 
             auto& components = _entityComponents[entity.index()];
-            auto iter = std::find(components.begin(), components.end(), type);
+            auto iter = std::ranges::find(components, type);
             is_new_component = (iter == components.end());
 
             if (is_new_component) {
@@ -88,10 +88,8 @@
         {
             std::unique_lock lock(_entityMutex);
             auto& components = _entityComponents[entity.index()];
-            components.erase(
-                std::remove(components.begin(), components.end(), type),
-                components.end()
-            );
+            auto [first, last] = std::ranges::remove(components, type);
+            components.erase(first, last);
         }
     }
 
@@ -108,10 +106,8 @@
             {
                 std::unique_lock lock(_entityMutex);
                 auto& components = _entityComponents[entity.index()];
-                components.erase(
-                    std::remove(components.begin(), components.end(), type),
-                    components.end()
-                );
+                auto [first, last] = std::ranges::remove(components, type);
+                components.erase(first, last);
             }
         }
 

@@ -11,9 +11,7 @@ namespace rtype::network {
 
 UdpSocket::UdpSocket() : socket_(-1) {}
 
-UdpSocket::~UdpSocket() {
-    close();
-}
+UdpSocket::~UdpSocket() { close(); }
 
 bool UdpSocket::bind(uint16_t port) {
     // Placeholder - would create and bind actual socket
@@ -42,8 +40,6 @@ int UdpSocket::receive(void* buffer, size_t maxSize) {
     return -1;
 }
 
-void UdpSocket::close() {
-    socket_ = -1;
-}
+void UdpSocket::close() { socket_ = -1; }
 
-} // namespace rtype::network
+}  // namespace rtype::network

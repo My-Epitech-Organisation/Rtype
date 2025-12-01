@@ -5,27 +5,35 @@
 ** keyboardActions.hpp
 */
 
-#ifndef R_TYPE_KEYBOARDACTION_HPP
-#define R_TYPE_KEYBOARDACTION_HPP
+#ifndef SRC_CLIENT_GRAPHIC_KEYBOARDACTIONS_HPP_
+#define SRC_CLIENT_GRAPHIC_KEYBOARDACTIONS_HPP_
 
 #include <map>
 #include <optional>
+
 #include <SFML/Window/Keyboard.hpp>
-#include "GameAction.hpp"
+
+#include "../GameAction.hpp"
 
 class KeyboardActions {
-private:
+   private:
     std::map<GameAction, sf::Keyboard::Key> _keyBindings;
 
-public:
-    void setKeyBinding(const GameAction &action, const sf::Keyboard::Key &key);
+   public:
+    void setKeyBinding(const GameAction& action, const sf::Keyboard::Key& key);
 
-    std::optional<GameAction> getKeyBinding(const sf::Keyboard::Key &key);
-    std::optional<sf::Keyboard::Key> getKeyBinding(const GameAction &action);
+    auto getKeyBinding(const sf::Keyboard::Key& key)
+        -> std::optional<GameAction>;
+    auto getKeyBinding(const GameAction& action)
+        -> std::optional<sf::Keyboard::Key>;
 
     KeyboardActions();
     ~KeyboardActions() = default;
+
+    KeyboardActions(const KeyboardActions&) = delete;
+    KeyboardActions& operator=(const KeyboardActions&) = delete;
+    KeyboardActions(KeyboardActions&&) = delete;
+    KeyboardActions& operator=(KeyboardActions&&) = delete;
 };
 
-
-#endif //R_TYPE_KEYBOARDACTION_HPP
+#endif  // SRC_CLIENT_GRAPHIC_KEYBOARDACTIONS_HPP_

@@ -7,13 +7,13 @@
 
 #pragma once
 
-#include <string>
 #include <cstdint>
+#include <string>
 
 namespace rtype::network {
 
 class UdpSocket {
-public:
+   public:
     UdpSocket();
     ~UdpSocket();
 
@@ -25,8 +25,8 @@ public:
 
     void close();
 
-private:
+   private:
     int socket_;
 };
 
-} // namespace rtype::network
+}  // namespace rtype::network
