@@ -106,7 +106,7 @@ if $GENERATE_HTML; then
     echo ""
     echo ">>> Checking coverage requirements..."
 
-    COVERAGE_CONFIG="coverage_config.json"
+    COVERAGE_CONFIG="$SCRIPT_DIR/coverage_config.json"
     if [[ ! -f "$COVERAGE_CONFIG" ]]; then
         echo "Error: Coverage config file not found: $COVERAGE_CONFIG"
         exit 1

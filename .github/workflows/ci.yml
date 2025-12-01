@@ -254,6 +254,9 @@ jobs:
           cd build/ubuntu-latest
           ctest --output-on-failure --timeout 120
 
+      - name: Prepare coverage vcpkg cache
+        run: cp -r build/ubuntu-latest/vcpkg_installed build-coverage/ 2>/dev/null || true
+
       - name: Run Coverage Analysis
         run: |
           chmod +x scripts/coverage.sh
