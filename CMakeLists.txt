@@ -70,7 +70,7 @@ if(BUILD_DOCS)
         # Create Doxygen target
         add_custom_target(docs-doxygen
             COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_CONFIG_FILE}
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docs
             COMMENT "Generating API documentation with Doxygen"
             VERBATIM
         )

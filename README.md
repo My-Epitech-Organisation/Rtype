@@ -18,6 +18,7 @@ A modern C++20 recreation of the classic R-Type game using an Entity Component S
 - **Git**
 
 **Optional (for documentation):**
+
 - **Doxygen** (for API docs)
 - **Node.js** v20+ (for web docs)
 
@@ -74,12 +75,13 @@ cmake --build build --target docs-serve
 ### View Documentation
 
 After building with `BUILD_DOCS=ON`:
+
 - **Web docs**: http://localhost:3000 (when running `docs-serve`)
 - **API reference**: `docs/doxygen/html/index.html`
 
 ## Project Structure
 
-```
+```text
 Rtype/
 ├── src/              # Source code
 │   ├── client/       # Client application
