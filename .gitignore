@@ -58,3 +58,4 @@ build*
 *.dwo
 coverage
 doxygen
+.vscode

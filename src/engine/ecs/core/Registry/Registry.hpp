@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <any>
+#include <array>
 #include <atomic>
 #include <functional>
 #include <memory>
