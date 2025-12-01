@@ -25,6 +25,15 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Check branch for manual release
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ github.ref_name }}" != "main" ]; then
+            echo "❌ Manual releases can only be triggered from the main branch"
+            echo "Current branch: ${{ github.ref_name }}"
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -163,5 +172,3 @@ jobs:
             release-assets/rtype_client.exe
             release-assets/rtype_server
             release-assets/rtype_server.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
