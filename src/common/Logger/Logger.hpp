@@ -161,12 +161,11 @@ class Logger {
      * @param msg Message to log
      */
     void log(LogLevel level, const std::string& msg) {
+        std::lock_guard<std::mutex> lock(_mutex);
+
         if (level < _logLevel) {
             return;
         }
-
-        std::lock_guard<std::mutex> lock(_mutex);
-
         const std::string formattedMsg =
             std::format("[{}] [{}] {}", Timestamp::now(), toString(level), msg);
 
