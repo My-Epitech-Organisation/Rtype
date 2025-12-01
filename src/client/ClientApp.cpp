@@ -10,4 +10,5 @@
 ClientApp::ClientApp(const std::shared_ptr<ECS::Registry> &registry)
     : _graphic(registry)
 {
+    this->_graphic.loop();
 }

@@ -54,5 +54,4 @@ Graphic::Graphic(std::shared_ptr<ECS::Registry> registry) :
     _window(sf::VideoMode({800, 600}), "R-Type - Epitech 2025")
 {
     this->_mainClock.start();
-    this->loop();
 }
