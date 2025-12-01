@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# R-Type Documentation
+# R-Type Documentation test
 
 Welcome to the R-Type game engine documentation!
 
