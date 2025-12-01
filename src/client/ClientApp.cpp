@@ -1,7 +1,14 @@
-#include <iostream>
+/*
+** EPITECH PROJECT, 2025
+** r-type
+** File description:
+** ClientApp.cpp
+*/
 
-// Minimal client app loop placeholder
-class ClientApp {
-public:
-    void run() { std::cout << "ClientApp run\n"; }
-};
+#include "ClientApp.hpp"
+
+ClientApp::ClientApp(const std::shared_ptr<ECS::Registry> &registry)
+    : _graphic(registry)
+{
+    this->_graphic.loop();
+}
