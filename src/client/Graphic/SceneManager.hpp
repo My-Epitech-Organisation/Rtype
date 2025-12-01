@@ -8,6 +8,7 @@
 #ifndef R_TYPE_SCENEMANAGER_HPP
 #define R_TYPE_SCENEMANAGER_HPP
 
+#include <iostream>
 
 class SceneManager {
 public:
@@ -35,6 +36,8 @@ public:
     void pollEventsScene();
     void updateScene();
     void renderScene();
+
+    friend std::ostream &operator<<(std::ostream &os, const SceneManager &sceneManager);
 
     SceneManager() = default;
     ~SceneManager() = default;
