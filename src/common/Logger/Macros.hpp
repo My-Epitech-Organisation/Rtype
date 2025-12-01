@@ -15,8 +15,8 @@
 /**
  * @brief Helper macro to convert stream expressions to string
  */
-#define LOG_TO_STRING(msg) \
-    (static_cast<std::ostringstream&&>(std::ostringstream() << msg)).str()
+#define LOG_TO_STRING(msg)                                                     \
+  (static_cast<std::ostringstream &&>(std::ostringstream() << msg)).str()
 
 /**
  * @brief Debug logging macro - only prints in debug builds
@@ -28,9 +28,9 @@
  * @param msg The message to log (supports << chaining)
  */
 #ifdef NDEBUG
-    #define LOG_DEBUG(msg) ((void)0)
+#define LOG_DEBUG(msg) ((void)0)
 #else
-    #define LOG_DEBUG(msg) rtype::Logger::instance().debug(LOG_TO_STRING(msg))
+#define LOG_DEBUG(msg) rtype::Logger::instance().debug(LOG_TO_STRING(msg))
 #endif
 
 /**
@@ -63,4 +63,4 @@
  */
 #define LOG_ERROR(msg) rtype::Logger::instance().error(LOG_TO_STRING(msg))
 
-#endif  // SRC_COMMON_LOGGER_MACROS_HPP_
+#endif // SRC_COMMON_LOGGER_MACROS_HPP_

@@ -176,6 +176,6 @@ private:
   }
 };
 
-}  // namespace rtype
+} // namespace rtype
 
-#endif  // SRC_COMMON_LOGGER_LOGGER_HPP_
+#endif // SRC_COMMON_LOGGER_LOGGER_HPP_
