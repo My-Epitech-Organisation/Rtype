@@ -11,6 +11,38 @@ env:
   CACHE_KEY_PREFIX: v1
 
 jobs:
+  cancel-if-mirror:
+    name: Cancel if repository is the mirror
+    runs-on: ubuntu-latest
+    outputs:
+      should_cancel: ${{ steps.check-repo-url.outputs.should_cancel }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: check-repo-url
+        name: Check repository URL
+        run: |
+          REPO_URL=$(git config --get remote.origin.url)
+
+          extract_repo_path() {
+            local url=$1
+            url=${url#https://github.com/}
+            url=${url#git@github.com:}
+            url=${url%.git}
+            echo "$url"
+          }
+
+          MIRROR_PATH=$REPO_PATH
+          CURRENT_REPO_PATH=$(extract_repo_path "$REPO_URL")
+
+          if [ "$CURRENT_REPO_PATH" = "$MIRROR_PATH" ]; then
+            echo "Repository path matches the mirror path. Skipping further jobs."
+            echo "should_cancel=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Repository path does not match the mirror path. Proceeding with other jobs."
+            echo "should_cancel=false" >> "$GITHUB_OUTPUT"
+          fi
   cache-check:
     name: "🔍 Cache Check"
     runs-on: ubuntu-latest
