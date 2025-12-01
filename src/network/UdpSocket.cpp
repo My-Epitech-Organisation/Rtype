@@ -7,6 +7,9 @@
 
 #include "UdpSocket.hpp"
 
+// Asio standalone (non-Boost) - validation include
+#include <asio.hpp>
+
 namespace rtype::network {
 
 UdpSocket::UdpSocket() : socket_(-1) {}
