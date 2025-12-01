@@ -1,4 +1,16 @@
+find_package(SFML
+        COMPONENTS
+        Network
+        Graphics
+        Window
+        Audio
+        System
+        CONFIG
+        REQUIRED
+)
+
 add_subdirectory(Graphic)
+add_subdirectory(Components)
 
 add_executable(r-type_client
         main.cpp
@@ -14,4 +26,9 @@ target_link_libraries(r-type_client PUBLIC
     rtype_game_shared
     rtype_game_client
     rtype-graphic-SFML
+)
+
+target_include_directories(rtype-graphic-main-menu-scene
+        PUBLIC
+        ./
 )

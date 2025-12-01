@@ -10,13 +10,15 @@
 
 #include <SFML/Graphics.hpp>
 #include "KeyboardActions.hpp"
-#include "SceneManager.hpp"
+#include "AssetManager/AssetManager.hpp"
+#include "SceneManager/SceneManager.hpp"
 #include "ecs/ECS.hpp"
 
 class Graphic {
 private:
     std::shared_ptr<ECS::Registry> _registry;
-    SceneManager _sceneManager;
+    std::shared_ptr<AssetManager> _assetsManager;
+    std::unique_ptr<SceneManager> _sceneManager;
     KeyboardActions _keybinds;
 
     sf::RenderWindow _window;
@@ -31,7 +33,7 @@ private:
 public:
     void loop();
 
-    explicit Graphic(std::shared_ptr<ECS::Registry> registry);
+    explicit Graphic(const std::shared_ptr<ECS::Registry> &registry);
     ~Graphic() = default;
 };
 
