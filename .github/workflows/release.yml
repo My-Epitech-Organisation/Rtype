@@ -89,16 +89,36 @@ jobs:
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
           echo "tag_suffix=$TAG_SUFFIX" >> $GITHUB_OUTPUT
-      - name: Download build artifacts
+      - name: Download Linux client artifact
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: ci.yml
           branch: ${{ github.ref_name }}
-          name: |
-            r-type_client-ubuntu-latest
-            r-type_client-windows-latest
-            r-type_server-ubuntu-latest
-            r-type_server-windows-latest
+          name: r-type_client-ubuntu-latest
+          path: ./artifacts
+
+      - name: Download Windows client artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: ci.yml
+          branch: ${{ github.ref_name }}
+          name: r-type_client-windows-latest
+          path: ./artifacts
+
+      - name: Download Linux server artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: ci.yml
+          branch: ${{ github.ref_name }}
+          name: r-type_server-ubuntu-latest
+          path: ./artifacts
+
+      - name: Download Windows server artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: ci.yml
+          branch: ${{ github.ref_name }}
+          name: r-type_server-windows-latest
           path: ./artifacts
 
       - name: Prepare release assets
