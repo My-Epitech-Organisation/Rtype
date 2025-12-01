@@ -35,6 +35,7 @@ jobs:
       node-cache-hit: ${{ steps.node-cache.outputs.cache-hit }}
       cache-key-node: ${{ steps.cache-keys.outputs.node }}
       cache-key-doxygen: ${{ steps.cache-keys.outputs.doxygen }}
+      cache-key-docusaurus: ${{ steps.cache-keys.outputs.docusaurus }}
       docs-hash: ${{ steps.cache-keys.outputs.hash }}
     steps:
       - uses: actions/checkout@v4
@@ -45,9 +46,12 @@ jobs:
           NODE_HASH=$(sha256sum docs/website/package-lock.json 2>/dev/null | cut -d' ' -f1 || echo "no-lock")
           echo "node=${CACHE_KEY_PREFIX}-node-${NODE_HASH}" >> $GITHUB_OUTPUT
 
-          DOXYGEN_HASH=$(find src include -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) -exec sha256sum {} \; 2>/dev/null | sha256sum | cut -d' ' -f1 || echo "no-src")
+          DOXYGEN_HASH=$(find src include docs -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "Doxyfile" \) -exec sha256sum {} \; 2>/dev/null | sha256sum | cut -d' ' -f1 || echo "no-src")
           echo "doxygen=${CACHE_KEY_PREFIX}-doxygen-${DOXYGEN_HASH}" >> $GITHUB_OUTPUT
           echo "hash=${DOXYGEN_HASH}" >> $GITHUB_OUTPUT
+
+          DOCUSAURUS_HASH=$(find docs/website -type f \( -name "*.md" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.json" \) -exec sha256sum {} \; 2>/dev/null | sha256sum | cut -d' ' -f1 || echo "no-docs")
+          echo "docusaurus=${CACHE_KEY_PREFIX}-docusaurus-${DOCUSAURUS_HASH}" >> $GITHUB_OUTPUT
 
       - name: Check node_modules cache
         id: node-cache
@@ -130,9 +134,24 @@ jobs:
           mkdir -p static/api
           cp -r ../doxygen/html/* static/api/ 2>/dev/null || echo "No Doxygen HTML found, skipping API copy"
 
+      - name: Restore Docusaurus build cache
+        id: docusaurus-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: docs/website/build
+          key: ${{ needs.cache-check.outputs.cache-key-docusaurus }}
+
       - name: Build Docusaurus site
+        if: steps.docusaurus-cache.outputs.cache-hit != 'true'
         working-directory: docs/website
         run: npm run build
+
+      - name: Save Docusaurus build cache
+        if: steps.docusaurus-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: docs/website/build
+          key: ${{ needs.cache-check.outputs.cache-key-docusaurus }}
 
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
@@ -185,10 +204,12 @@ jobs:
           echo "### 🧹 Documentation Cache Cleanup" >> $GITHUB_STEP_SUMMARY
 
           NODE_HASH=$(sha256sum docs/website/package-lock.json 2>/dev/null | cut -d' ' -f1 || echo "no-lock")
-          DOXYGEN_HASH=$(find src include -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) -exec sha256sum {} \; 2>/dev/null | sha256sum | cut -d' ' -f1 || echo "no-src")
+          DOXYGEN_HASH=$(find src include docs -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "Doxyfile" \) -exec sha256sum {} \; 2>/dev/null | sha256sum | cut -d' ' -f1 || echo "no-src")
+          DOCUSAURUS_HASH=$(find docs/website -type f \( -name "*.md" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.json" \) -exec sha256sum {} \; 2>/dev/null | sha256sum | cut -d' ' -f1 || echo "no-docs")
 
           echo "**Current node hash:** \`${NODE_HASH}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Current doxygen hash:** \`${DOXYGEN_HASH}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Current docusaurus hash:** \`${DOCUSAURUS_HASH}\`" >> $GITHUB_STEP_SUMMARY
 
           gh cache list --json id,key --limit 100 | jq -r '.[] | "\(.id)|\(.key)"' | while IFS='|' read -r id key; do
             if echo "$key" | grep -q "^docs-v1-"; then
@@ -197,6 +218,9 @@ jobs:
                 gh cache delete "$id" 2>/dev/null || true
               elif echo "$key" | grep -q "doxygen-" && ! echo "$key" | grep -q "${DOXYGEN_HASH}"; then
                 echo "Deleting old doxygen cache: $key"
+                gh cache delete "$id" 2>/dev/null || true
+              elif echo "$key" | grep -q "docusaurus-" && ! echo "$key" | grep -q "${DOCUSAURUS_HASH}"; then
+                echo "Deleting old docusaurus cache: $key"
                 gh cache delete "$id" 2>/dev/null || true
               fi
             fi
