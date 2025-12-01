@@ -5,8 +5,8 @@
 ** ParseResult - Argument parsing result enumeration
 */
 
-#ifndef RTYPE_COMMON_ARGPARSER_PARSERESULT_HPP
-    #define RTYPE_COMMON_ARGPARSER_PARSERESULT_HPP
+#ifndef SRC_COMMON_ARGPARSER_PARSERESULT_HPP_
+#define SRC_COMMON_ARGPARSER_PARSERESULT_HPP_
 
 namespace rtype {
 
@@ -19,6 +19,6 @@ enum class ParseResult {
     Error       ///< Parsing failed due to an error
 };
 
-} // namespace rtype
+}  // namespace rtype
 
-#endif // RTYPE_COMMON_ARGPARSER_PARSERESULT_HPP
+#endif  // SRC_COMMON_ARGPARSER_PARSERESULT_HPP_
