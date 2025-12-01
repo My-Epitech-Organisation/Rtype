@@ -11,6 +11,9 @@
 #include "Graphic.hpp"
 
 #include "AssetManager/AssetManager.hpp"
+#include "System/EventSystem.hpp"
+#include "System/RenderSystem.hpp"
+#include "System/ButtonUpdateSystem.hpp"
 
 void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event> &event) {
     if (!event)
@@ -34,16 +37,19 @@ void Graphic::_pollEvents() {
         if (event->is<sf::Event::KeyReleased>()) {
             this->_handleKeyReleasedEvent(event);
         }
+        EventSystem::processEvents(this->_registry, *event);
         this->_sceneManager->pollEvents(*event);
     }
 }
 
 void Graphic::_update() {
+    ButtonUpdateSystem::update(this->_registry, this->_window);
     this->_sceneManager->update();
 }
 
 void Graphic::_display() {
     this->_window.clear();
+    RenderSystem::draw(this->_registry, this->_window);
     this->_sceneManager->draw(this->_window);
     this->_window.display();
 }
@@ -61,6 +67,6 @@ Graphic::Graphic(const std::shared_ptr<ECS::Registry> &registry) :
     _window(sf::VideoMode({1920, 1080}), "R-Type - Epitech 2025")
 {
     this->_assetsManager = std::make_shared<AssetManager>();
-    this->_sceneManager = std::make_unique<SceneManager>(registry, this->_assetsManager);
+    this->_sceneManager = std::make_unique<SceneManager>(registry, this->_assetsManager, this->_window);
     this->_mainClock.start();
 }

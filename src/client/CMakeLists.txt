@@ -11,6 +11,7 @@ find_package(SFML
 
 add_subdirectory(Graphic)
 add_subdirectory(Components)
+add_subdirectory(System)
 
 add_executable(r-type_client
         main.cpp
@@ -31,4 +32,10 @@ target_link_libraries(r-type_client PUBLIC
 target_include_directories(rtype-graphic-main-menu-scene
         PUBLIC
         ./
+)
+
+target_link_libraries(rtype-graphic-SFML
+    PRIVATE
+    rtype_engine
+    rtype-client-system
 )

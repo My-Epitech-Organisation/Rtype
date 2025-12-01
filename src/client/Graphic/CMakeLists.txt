@@ -1,5 +1,6 @@
 add_subdirectory(SceneManager)
 add_subdirectory(AssetManager)
+add_subdirectory(EntityFactory)
 
 add_library(rtype-graphic-SFML
     STATIC
@@ -10,14 +11,15 @@ add_library(rtype-graphic-SFML
 )
 
 target_link_libraries(rtype-graphic-SFML
-        PUBLIC
-        SFML::Network
-        SFML::Graphics
-        SFML::Window
-        SFML::Audio
-        SFML::System
-        rtype_engine
-        rtype-graphic-scene-manager
+    PUBLIC
+    SFML::Network
+    SFML::Graphics
+    SFML::Window
+    SFML::Audio
+    SFML::System
+    rtype_engine
+    rtype-graphic-scene-manager
+    rtype-client-system
 )
 
 target_include_directories(rtype-graphic-SFML

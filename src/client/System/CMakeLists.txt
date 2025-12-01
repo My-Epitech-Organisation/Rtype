@@ -1,0 +1,21 @@
+add_library(rtype-client-system
+    STATIC
+    RenderSystem.cpp
+    RenderSystem.hpp
+    EventSystem.cpp
+    EventSystem.hpp
+    ButtonUpdateSystem.cpp
+    ButtonUpdateSystem.hpp
+)
+
+target_link_libraries(rtype-client-system
+    PUBLIC
+    SFML::Network
+    SFML::Graphics
+    SFML::Window
+    SFML::Audio
+    SFML::System
+    rtype_engine
+    rtype-graphic-scene-manager
+    rtype-graphic-components
+)

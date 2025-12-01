@@ -22,12 +22,22 @@ public:
         MAIN_MENU,
         IN_GAME,
         PAUSE_MENU,
-        GAME_OVER
+        GAME_OVER,
+        SETTINGS_MENU,
+        QUIT,
+        NONE,
     };
 
 private:
-    std::map<Scene, std::unique_ptr<IScene>> _sceneList;
-    Scene _currentScene = MAIN_MENU;
+    Scene _currentScene = NONE;
+
+    std::map<Scene, std::function<std::unique_ptr<IScene>()>> _sceneList;
+    std::unique_ptr<IScene> _activeScene;
+
+
+    std::function<void(const Scene &)> _switchToScene = std::function<void(const Scene &)>([this](const Scene &scene) {
+        this->setCurrentScene(scene);
+    });
 
 public:
 
@@ -46,7 +56,11 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, const SceneManager &sceneManager);
 
-    SceneManager(const std::shared_ptr<ECS::Registry> &ecs, const std::shared_ptr<AssetManager> &texture);
+    SceneManager(
+        const std::shared_ptr<ECS::Registry> &ecs,
+        const std::shared_ptr<AssetManager> &assetManager,
+        sf::RenderWindow &window
+    );
     ~SceneManager() = default;
 };
 

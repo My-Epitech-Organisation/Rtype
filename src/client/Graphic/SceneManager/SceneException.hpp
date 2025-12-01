@@ -10,8 +10,16 @@
 #include <exception>
 
 class SceneNotFound final : std::exception {
+public:
     [[nodiscard]] const char *what() const noexcept override {
         return "Scene not found";
+    }
+};
+
+class SceneNotInitialized final : std::exception {
+public:
+    [[nodiscard]] const char *what() const noexcept override {
+        return "Scene not initialized";
     }
 };
 #endif //R_TYPE_SCENEEXCEPTION_HPP

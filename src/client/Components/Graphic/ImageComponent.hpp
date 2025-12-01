@@ -13,14 +13,17 @@
 #include <utility>
 
 struct Image {
-    std::string textureId;
+    sf::Texture textureId;
     sf::IntRect textureRect;
+    sf::Sprite sprite;
+
     Image(
-        const std::string &textureId,
+        const sf::Texture &texture,
         const sf::IntRect &rect
-    ) : textureId(textureId) {
+    ) : textureId(texture), sprite(texture) {
         this->textureRect = rect;
     }
+    Image(const Image &other) = default;
 };
 
 

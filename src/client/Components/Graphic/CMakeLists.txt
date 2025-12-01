@@ -3,6 +3,9 @@ add_library(rtype-graphic-components
     ImageComponent.hpp
     RectangleComponent.hpp
     TextComponent.hpp
+    ButtonComponent.hpp
+    UserEventComponent.hpp
+        TagComponent.hpp
 )
 
 target_link_libraries(rtype-graphic-scene-manager

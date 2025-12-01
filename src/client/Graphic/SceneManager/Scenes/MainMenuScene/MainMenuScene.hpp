@@ -9,16 +9,21 @@
 #define R_TYPE_MAINMENUSCENE_HPP
 
 #include "../AScene.hpp"
+#include "SceneManager/SceneManager.hpp"
 
 class MainMenuScene : public AScene {
 private:
-    ECS::Entity _background;
+    std::vector<ECS::Entity> _listEntity;
 public:
     void update() override;
     void render(sf::RenderWindow &window) override;
     void pollEvents(const sf::Event &e) override;
 
-    MainMenuScene(const std::shared_ptr<ECS::Registry> &ecs, const std::shared_ptr<AssetManager> &textureManager);
+    MainMenuScene(
+        const std::shared_ptr<ECS::Registry> &ecs,
+        const std::shared_ptr<AssetManager> &textureManager,
+        std::function<void(const SceneManager::Scene &)> switchToScene,
+        sf::RenderWindow &window);
     ~MainMenuScene() override;
 };
 
