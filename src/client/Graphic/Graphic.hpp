@@ -9,7 +9,7 @@
 #define R_TYPE_GRAPHIC_HPP
 
 #include <SFML/Graphics.hpp>
-
+#include "KeyboardActions.hpp"
 #include "SceneManager.hpp"
 #include "ecs/ECS.hpp"
 
@@ -17,6 +17,7 @@ class Graphic {
 private:
     std::shared_ptr<ECS::Registry> _registry;
     SceneManager _sceneManager;
+    KeyboardActions _keybinds;
 
     sf::RenderWindow _window;
     sf::Clock _mainClock;

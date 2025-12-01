@@ -4,6 +4,8 @@ add_library(rtype-graphic-SFML
     Graphic.hpp
     SceneManager.cpp
     SceneManager.hpp
+    KeyboardActions.cpp
+    KeyboardActions.hpp
 )
 find_package(SFML
         COMPONENTS
@@ -29,4 +31,5 @@ target_link_libraries(rtype-graphic-SFML
 target_include_directories(rtype-graphic-SFML
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ../
 )
