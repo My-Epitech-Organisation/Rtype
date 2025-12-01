@@ -5,10 +5,12 @@
 ** GameAction.hpp
 */
 
-#ifndef R_TYPE_GAMEACTION_HPP
-#define R_TYPE_GAMEACTION_HPP
+#ifndef SRC_CLIENT_GAMEACTION_HPP_
+#define SRC_CLIENT_GAMEACTION_HPP_
 
-enum class GameAction {
+#include <cstdint>
+
+enum class GameAction : std::uint8_t {
     MOVE_UP,
     MOVE_DOWN,
     MOVE_LEFT,
@@ -18,4 +20,4 @@ enum class GameAction {
     NONE
 };
 
-#endif //R_TYPE_GAMEACTION_HPP
+#endif  // SRC_CLIENT_GAMEACTION_HPP_

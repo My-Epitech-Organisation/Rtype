@@ -1,5 +1,5 @@
 // Minimal server app loop placeholder
 class ServerApp {
-public:
+   public:
     void run() {}
 };

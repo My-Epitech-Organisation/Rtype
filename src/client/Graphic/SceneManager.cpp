@@ -7,33 +7,31 @@
 
 #include "SceneManager.hpp"
 
-void SceneManager::pollEventsScene() {
-}
+void SceneManager::pollEventsScene() {}
 
-void SceneManager::updateScene() {
-}
+void SceneManager::updateScene() {}
 
-void SceneManager::renderScene() {
-}
+void SceneManager::renderScene() {}
 
-std::ostream & operator<<(std::ostream &os, const SceneManager &sceneManager) {
-    os << "Current Scene: ";
+auto operator<<(std::ostream& stream, const SceneManager& sceneManager)
+    -> std::ostream& {
+    stream << "Current Scene: ";
     switch (sceneManager.getCurrentScene()) {
         case SceneManager::MAIN_MENU:
-            os << "MAIN_MENU";
+            stream << "MAIN_MENU";
             break;
         case SceneManager::IN_GAME:
-            os << "IN_GAME";
+            stream << "IN_GAME";
             break;
         case SceneManager::PAUSE_MENU:
-            os << "PAUSE_MENU";
+            stream << "PAUSE_MENU";
             break;
         case SceneManager::GAME_OVER:
-            os << "GAME_OVER";
+            stream << "GAME_OVER";
             break;
         default:
-            os << "UNKNOWN_SCENE";
+            stream << "UNKNOWN_SCENE";
             break;
     }
-    return os;
+    return stream;
 }

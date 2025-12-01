@@ -23,7 +23,8 @@ namespace ECS {
  * - [31:20] Generation (12 bits) - Version counter
  *
  * Generational indices prevent ABA problems where entity IDs are recycled.
- * When an entity is destroyed, its generation increments, invalidating old handles.
+ * When an entity is destroyed, its generation increments, invalidating old
+ * handles.
  */
 struct Entity {
     std::uint32_t id = _NullID;
@@ -33,12 +34,14 @@ struct Entity {
     static constexpr std::uint32_t _GenerationBits = 12;
     static constexpr std::uint32_t _GenerationMask = (1 << _GenerationBits) - 1;
     static constexpr std::uint32_t _MaxGeneration = _GenerationMask;
-    static constexpr std::uint32_t _NullID = std::numeric_limits<std::uint32_t>::max();
+    static constexpr std::uint32_t _NullID =
+        std::numeric_limits<std::uint32_t>::max();
 
     constexpr Entity() = default;
     constexpr explicit Entity(std::uint32_t raw) : id(raw) {}
     constexpr Entity(std::uint32_t index, std::uint32_t generation)
-        : id((index & _IndexMask) | ((generation & _GenerationMask) << _IndexBits)) {}
+        : id((index & _IndexMask) |
+             ((generation & _GenerationMask) << _IndexBits)) {}
 
     [[nodiscard]] constexpr auto index() const noexcept -> std::uint32_t {
         return id & _IndexMask;
@@ -59,7 +62,7 @@ struct Entity {
 }  // namespace ECS
 
 namespace std {
-template<>
+template <>
 struct hash<ECS::Entity> {
     auto operator()(const ECS::Entity& entity) const noexcept -> std::size_t {
         return hash<std::uint32_t>{}(entity.id);

@@ -5,15 +5,17 @@
 ** Graphic.cpp
 */
 
-#include <optional>
-#include <utility>
-#include <iostream>
 #include "Graphic.hpp"
 
-void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event> &event) {
-    if (!event)
+#include <iostream>
+#include <optional>
+#include <utility>
+
+void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event>& event) {
+    if (!event) {
         return;
-    const auto &key = event->getIf<sf::Event::KeyReleased>();
+    }
+    const auto& key = event->getIf<sf::Event::KeyReleased>();
     if (key && key->code == this->_keybinds.getKeyBinding(GameAction::PAUSE)) {
         if (this->_sceneManager == SceneManager::IN_GAME) {
             this->_sceneManager.setCurrentScene(SceneManager::PAUSE_MENU);
@@ -25,17 +27,16 @@ void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event> &event) {
 
 void Graphic::_pollEvents() {
     while (const std::optional event = this->_window.pollEvent()) {
-        if (event->is<sf::Event::Closed>())
+        if (event->is<sf::Event::Closed>()) {
             this->_window.close();
+        }
         if (event->is<sf::Event::KeyReleased>()) {
             this->_handleKeyReleasedEvent(event);
         }
     }
 }
 
-void Graphic::_update() {
-    this->_sceneManager.updateScene();
-}
+void Graphic::_update() { this->_sceneManager.updateScene(); }
 
 void Graphic::_display() {
     this->_window.clear();
@@ -51,9 +52,11 @@ void Graphic::loop() {
     }
 }
 
-Graphic::Graphic(std::shared_ptr<ECS::Registry> registry) :
-    _registry(std::move(registry)),
-    _window(sf::VideoMode({800, 600}), "R-Type - Epitech 2025")
-{
+Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
+    : _registry(std::move(registry)),
+      _sceneManager(),
+      _keybinds(),
+      _window(sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}),
+              "R-Type - Epitech 2025") {
     this->_mainClock.start();
 }

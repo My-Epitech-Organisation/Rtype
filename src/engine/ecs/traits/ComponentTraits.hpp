@@ -20,11 +20,12 @@ namespace ECS {
  * - Trivially copyable components use fast memory operations
  * - Trivially destructible components skip destructor calls
  */
-template<typename T>
+template <typename T>
 struct ComponentTraits {
     static constexpr bool isEmpty = std::is_empty_v<T>;
     static constexpr bool isTrivial = std::is_trivially_copyable_v<T>;
-    static constexpr bool isTrivialDestructible = std::is_trivially_destructible_v<T>;
+    static constexpr bool isTrivialDestructible =
+        std::is_trivially_destructible_v<T>;
 };
 
 /**
@@ -32,7 +33,7 @@ struct ComponentTraits {
  *
  * Components must be move-constructible for efficient storage operations.
  */
-template<typename T>
+template <typename T>
 concept Component = std::is_move_constructible_v<T>;
 
 }  // namespace ECS
