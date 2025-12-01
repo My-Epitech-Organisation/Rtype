@@ -161,36 +161,14 @@ jobs:
           echo ""
           echo "Release assets prepared:"
           ls -la release-assets/ || echo "No assets found"
-      - name: Create release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.version.outputs.new_version }}
-          release_name: R-Type ${{ steps.version.outputs.new_version }} (${{ steps.version.outputs.tag_suffix }})
-          body: |
-            ## R-Type ${{ steps.version.outputs.new_version }}
 
-            **Branch:** ${{ github.ref_name }}
-            **Tag:** ${{ steps.version.outputs.tag_suffix }}
-
-            This ${{ steps.version.outputs.prerelease == 'true' && 'pre-release' || 'release' }} was automatically generated.
-
-            ### Assets
-            - **rtype_client**: Linux executable
-            - **rtype_client.exe**: Windows executable
-            - **rtype_server**: Linux executable
-            - **rtype_server.exe**: Windows executable
-
-            ### Changes
-            - Compare changes: https://github.com/${{ github.repository }}/compare/${{ steps.latest_release.outputs.latest_tag }}...${{ steps.version.outputs.new_version }}
-          draft: false
-          prerelease: ${{ steps.version.outputs.prerelease }}
-
-      - name: Upload release assets
+      - name: Create release with auto-generated notes
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.new_version }}
+          name: R-Type ${{ steps.version.outputs.new_version }} (${{ steps.version.outputs.tag_suffix }})
+          generate_release_notes: true
+          prerelease: ${{ steps.version.outputs.prerelease }}
           files: |
             release-assets/rtype_client
             release-assets/rtype_client.exe
