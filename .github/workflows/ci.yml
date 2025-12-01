@@ -1,22 +1,406 @@
-name: CI
+name: R-Type Action
 
 on: [push, pull_request]
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CACHE_KEY_PREFIX: v1
+
 jobs:
-  build:
+  cache-check:
+    name: "🔍 Cache Check"
     runs-on: ubuntu-latest
+    outputs:
+      cache-hit-linux: ${{ steps.cache-check-linux.outputs.cache-hit }}
+      cache-key-linux: ${{ steps.cache-keys.outputs.linux }}
+      cache-key-windows: ${{ steps.cache-keys.outputs.windows }}
+      deps-hash: ${{ steps.cache-keys.outputs.hash }}
+      branch-name: ${{ steps.cache-keys.outputs.branch }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Generate cache keys
+        id: cache-keys
+        run: |
+          HASH=$(sha256sum vcpkg.json 2>/dev/null | cut -d' ' -f1 || echo "no-vcpkg")
+          echo "hash=${HASH}" >> $GITHUB_OUTPUT
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH="${{ github.head_ref }}"
+          else
+            BRANCH="${{ github.ref_name }}"
+          fi
+          BRANCH_SAFE=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-50)
+          echo "branch=${BRANCH_SAFE}" >> $GITHUB_OUTPUT
+
+          echo "linux=${{ env.CACHE_KEY_PREFIX }}-Linux-installed-${HASH}" >> $GITHUB_OUTPUT
+          echo "windows=${{ env.CACHE_KEY_PREFIX }}-Windows-installed-${HASH}" >> $GITHUB_OUTPUT
+
+      - name: Check Linux vcpkg_installed cache
+        id: cache-check-linux
+        uses: actions/cache/restore@v4
+        with:
+          path: build/ubuntu-latest/vcpkg_installed
+          key: ${{ steps.cache-keys.outputs.linux }}
+          lookup-only: true
+
+      - name: Cache status summary
+        run: |
+          echo "### 📦 Cache Status" >> $GITHUB_STEP_SUMMARY
+          echo "**Hash:** \`${{ steps.cache-keys.outputs.hash }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux | ${{ steps.cache-check-linux.outputs.cache-hit == 'true' && '✅ HIT - skipping deps' || '❌ MISS - will build' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Windows | ⏳ checked on Windows |" >> $GITHUB_STEP_SUMMARY
+
+  lint:
+    name: "🔍 Code Quality"
+    runs-on: ubuntu-latest
+    needs: [cache-check]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install linting tools (clang-format 19)
+        run: |
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main" | sudo tee /etc/apt/sources.list.d/llvm.list
+          sudo apt-get update
+          sudo apt-get install -y clang-format-19 clang-tidy-19 python3
+          sudo ln -sf /usr/bin/clang-format-19 /usr/bin/clang-format
+          sudo ln -sf /usr/bin/clang-tidy-19 /usr/bin/clang-tidy
+          echo "Installed versions:"
+          clang-format --version
+          clang-tidy --version
+
+      - name: Make quality script executable
+        run: chmod +x scripts/run_quality_checks.sh
+
+      - name: Run Code Quality Checks
+        id: quality-checks
+        run: |
+          ./scripts/run_quality_checks.sh --verbose
+
+      - name: Upload Quality Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality-report
+          path: /tmp/rtype_quality_report.txt
+          if-no-files-found: warn
+
+      - name: Lint Summary
+        if: always()
+        run: |
+          echo "### 🔍 Code Quality Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Script:** \`scripts/run_quality_checks.sh\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ steps.quality-checks.outcome == 'success' && '✅ All checks passed' || '❌ Issues found - pipeline blocked' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f /tmp/rtype_quality_report.txt ]; then
+            echo "#### Detailed Report" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat /tmp/rtype_quality_report.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "💡 **Tip:** Run \`./scripts/run_quality_checks.sh --fix\` locally to auto-fix formatting issues" >> $GITHUB_STEP_SUMMARY
+
+  deps-linux:
+    name: "📦 Dependencies (Linux)"
+    runs-on: ubuntu-latest
+    needs: [cache-check, lint]
+    if: needs.cache-check.outputs.cache-hit-linux != 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ninja-build cmake pkg-config \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
+            libxinerama-dev libxext-dev
+
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgJsonGlob: 'vcpkg.json'
-      - name: Install dependencies
+
+      - name: Configure CMake (install vcpkg packages)
         run: |
-          sudo apt-get install libx11-dev libxi-dev libxrandr-dev libxcursor-dev libxi-dev libudev-dev libgl1-mesa-dev
-      - name: Configure
+          cmake --preset ubuntu-latest \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF \
+            -DUSE_SFML=ON
+
+      - name: Save vcpkg_installed to cache
+        uses: actions/cache/save@v4
+        with:
+          path: build/ubuntu-latest/vcpkg_installed
+          key: ${{ needs.cache-check.outputs.cache-key-linux }}
+
+      - name: Summary
         run: |
-          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake
+          echo "### 📦 Dependencies (Linux)" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Built and cached vcpkg_installed" >> $GITHUB_STEP_SUMMARY
+
+  deps-windows:
+    name: "📦 Dependencies (Windows)"
+    runs-on: windows-latest
+    needs: [cache-check, lint]
+    outputs:
+      cache-hit: ${{ steps.cache-check.outputs.cache-hit }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Windows cache
+        id: cache-check
+        uses: actions/cache/restore@v4
+        with:
+          path: build/windows-latest/vcpkg_installed
+          key: ${{ needs.cache-check.outputs.cache-key-windows }}
+          lookup-only: true
+
+      - name: Install Ninja
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        run: choco install ninja -y
+
+      - name: Setup MSVC Developer Command Prompt
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup vcpkg
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgJsonGlob: 'vcpkg.json'
+
+      - name: Configure CMake (install vcpkg packages)
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cmake --preset windows-latest \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_TARGET_TRIPLET=x64-windows \
+            -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF \
+            -DUSE_SFML=ON
+
+      - name: Save vcpkg_installed to cache
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: build/windows-latest/vcpkg_installed
+          key: ${{ needs.cache-check.outputs.cache-key-windows }}
+
+      - name: Summary
+        shell: bash
+        run: |
+          echo "### 📦 Dependencies (Windows)" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.cache-check.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Cache HIT - skipped build" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Built and cached vcpkg_installed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  test:
+    name: "🧪 Unit Tests"
+    runs-on: ubuntu-latest
+    needs: [cache-check, deps-linux]
+    if: always() && needs.cache-check.result == 'success' && (needs.deps-linux.result == 'success' || needs.deps-linux.result == 'skipped')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ninja-build cmake pkg-config \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
+            libxinerama-dev libxext-dev
+
+      - name: Restore vcpkg_installed from cache
+        uses: actions/cache/restore@v4
+        with:
+          path: build/ubuntu-latest/vcpkg_installed
+          key: ${{ needs.cache-check.outputs.cache-key-linux }}
+          fail-on-cache-miss: true
+
+      - name: Setup vcpkg (for toolchain file only)
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgJsonGlob: 'vcpkg.json'
+
+      - name: Configure CMake
+        run: |
+          cmake --preset ubuntu-latest \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF \
+            -DUSE_SFML=ON
+
+      - name: Build tests
+        run: cmake --build --preset ubuntu-latest --target all
+
+      - name: Run tests
+        run: |
+          cd build/ubuntu-latest
+          ctest --output-on-failure --timeout 120
+
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "### 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          if [ -f build/ubuntu-latest/Testing/Temporary/LastTest.log ]; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -50 build/ubuntu-latest/Testing/Temporary/LastTest.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+  build:
+    name: "🔨 Build (${{ matrix.os }})"
+    runs-on: ${{ matrix.os }}
+    needs: [cache-check, test, deps-linux, deps-windows]
+    if: always() && needs.test.result == 'success' && (needs.deps-windows.result == 'success' || needs.deps-windows.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cache-key-output: cache-key-linux
+            triplet: x64-linux
+          - os: windows-latest
+            cache-key-output: cache-key-windows
+            triplet: x64-windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ninja-build cmake pkg-config \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
+            libxinerama-dev libxext-dev
+
+      - name: Install Ninja (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install ninja -y
+
+      - name: Setup MSVC Developer Command Prompt
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Restore vcpkg_installed from cache
+        uses: actions/cache/restore@v4
+        with:
+          path: build/${{ matrix.os }}/vcpkg_installed
+          key: ${{ needs.cache-check.outputs[matrix.cache-key-output] }}
+          fail-on-cache-miss: true
+
+      - name: Setup vcpkg (for toolchain file only)
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgJsonGlob: 'vcpkg.json'
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          cmake --preset ${{ matrix.os }} \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
+            -DBUILD_EXAMPLES=OFF \
+            -DUSE_SFML=ON
+
       - name: Build
+        run: cmake --build --preset ${{ matrix.os }}
+
+      - name: Upload Client Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: r-type_client-${{ matrix.os }}
+          path: |
+            build/${{ matrix.os }}/src/client/Release/*
+            build/${{ matrix.os }}/src/client/r-type_client*
+            build/${{ matrix.os }}/src/client/*.exe
+          if-no-files-found: warn
+
+      - name: Upload Server Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: r-type_server-${{ matrix.os }}
+          path: |
+            build/${{ matrix.os }}/src/server/Release/*
+            build/${{ matrix.os }}/src/server/r-type_server*
+            build/${{ matrix.os }}/src/server/*.exe
+          if-no-files-found: warn
+
+      - name: Build Summary
+        shell: bash
         run: |
-          cd build && cmake --build . -- -j
+          echo "### 🔨 Build Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Built using cached dependencies" >> $GITHUB_STEP_SUMMARY
+
+  mirror:
+    name: "🪞 Push to Epitech Mirror"
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate SSH key
+        run: |
+          if [ -z "${{ secrets.GIT_SSH_PRIVATE_KEY }}" ]; then
+            echo "::warning::GIT_SSH_PRIVATE_KEY secret is not configured, skipping mirror"
+            exit 0
+          fi
+
+      - name: Push to Epitech mirror
+        uses: pixta-dev/repository-mirroring-action@v1.1.1
+        with:
+          target_repo_url: git@github.com:EpitechPGE3-2025/G-CPP-500-NAN-5-2-rtype-3.git
+          ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
+
+  cache-cleanup:
+    name: "🧹 Cache Cleanup"
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: always() && github.ref == 'refs/heads/main'
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cleanup old caches
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "### 🧹 Cache Cleanup" >> $GITHUB_STEP_SUMMARY
+
+          CURRENT_HASH=$(sha256sum vcpkg.json | cut -d' ' -f1)
+          echo "**Current hash:** \`${CURRENT_HASH}\`" >> $GITHUB_STEP_SUMMARY
+
+          # List and delete old caches with different hashes
+          gh cache list --json id,key --limit 100 | jq -r '.[] | "\(.id)|\(.key)"' | while IFS='|' read -r id key; do
+            if echo "$key" | grep -q "installed-"; then
+              KEY_HASH=$(echo "$key" | sed 's/.*installed-//')
+              if [ "$KEY_HASH" != "$CURRENT_HASH" ]; then
+                echo "Deleting old cache: $key"
+                gh cache delete "$id" 2>/dev/null || true
+              fi
+            fi
+          done
+
+          echo "✅ Cleanup complete" >> $GITHUB_STEP_SUMMARY
