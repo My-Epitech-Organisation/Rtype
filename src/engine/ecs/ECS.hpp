@@ -22,7 +22,6 @@
 #include "core/Registry/Registry.hpp"
 #include "core/CommandBuffer.hpp"
 #include "system/SystemScheduler.hpp"
-#include "utils/Benchmark.hpp"
 #include "serialization/Serialization.hpp"
 
 /**
