@@ -35,14 +35,15 @@ class Registry;
  * Example:
  *   SystemScheduler scheduler(registry);
  *   scheduler.addSystem("physics", physics_system);
- *   scheduler.addSystem("render", render_system, {"physics"}); // runs after physics
- *   scheduler.run(); // Execute all systems in order
+ *   scheduler.addSystem("render", render_system, {"physics"}); // runs after
+ * physics scheduler.run(); // Execute all systems in order
  */
 class SystemScheduler {
- public:
+   public:
     using SystemFunc = std::function<void(Registry&)>;
 
-    explicit SystemScheduler(std::reference_wrapper<Registry> reg) : registry(reg) {}
+    explicit SystemScheduler(std::reference_wrapper<Registry> reg)
+        : registry(reg) {}
 
     /**
      * @brief Registers a system with optional dependencies.
@@ -51,7 +52,7 @@ class SystemScheduler {
      * @param dependencies List of system names that must run before this one
      */
     void addSystem(const std::string& name, const SystemFunc& func,
-                    const std::vector<std::string>& dependencies = {});
+                   const std::vector<std::string>& dependencies = {});
 
     /**
      * @brief Removes a system by name.
@@ -89,7 +90,7 @@ class SystemScheduler {
      */
     auto isSystemEnabled(const std::string& name) const -> bool;
 
- private:
+   private:
     struct SystemNode {
         std::string name;
         SystemFunc func;

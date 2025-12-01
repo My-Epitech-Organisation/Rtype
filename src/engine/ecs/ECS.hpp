@@ -8,21 +8,21 @@
 #ifndef SRC_ENGINE_ECS_ECS_HPP_
 #define SRC_ENGINE_ECS_ECS_HPP_
 
+#include "core/CommandBuffer.hpp"
 #include "core/Entity.hpp"
-#include "storage/ISparseSet.hpp"
-#include "storage/SparseSet.hpp"
-#include "traits/ComponentTraits.hpp"
-#include "signal/SignalDispatcher.hpp"
-#include "view/View.hpp"
-#include "view/ParallelView.hpp"
-#include "view/Group.hpp"
-#include "view/ExcludeView.hpp"
-#include "core/Relationship.hpp"
 #include "core/Prefab.hpp"
 #include "core/Registry/Registry.hpp"
-#include "core/CommandBuffer.hpp"
-#include "system/SystemScheduler.hpp"
+#include "core/Relationship.hpp"
 #include "serialization/Serialization.hpp"
+#include "signal/SignalDispatcher.hpp"
+#include "storage/ISparseSet.hpp"
+#include "storage/SparseSet.hpp"
+#include "system/SystemScheduler.hpp"
+#include "traits/ComponentTraits.hpp"
+#include "view/ExcludeView.hpp"
+#include "view/Group.hpp"
+#include "view/ParallelView.hpp"
+#include "view/View.hpp"
 
 /**
  * @namespace ECS

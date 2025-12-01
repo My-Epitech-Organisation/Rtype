@@ -39,7 +39,7 @@ namespace ECS {
  * Use cases: physics initialization, resource cleanup, debugging, logging.
  */
 class SignalDispatcher {
- public:
+   public:
     using Callback = std::function<void(Entity)>;
 
     void registerConstruct(std::type_index type, Callback callback);
@@ -58,9 +58,11 @@ class SignalDispatcher {
      */
     void clearAllCallbacks();
 
- private:
-    std::unordered_map<std::type_index, std::vector<Callback>> _constructCallbacks;
-    std::unordered_map<std::type_index, std::vector<Callback>> _destroyCallbacks;
+   private:
+    std::unordered_map<std::type_index, std::vector<Callback>>
+        _constructCallbacks;
+    std::unordered_map<std::type_index, std::vector<Callback>>
+        _destroyCallbacks;
     mutable std::shared_mutex callbacks_mutex;
 };
 

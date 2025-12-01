@@ -9,12 +9,12 @@
 
 namespace rtype::engine::core {
 
-Time::Time() : deltaTime_(0.0), totalTime_(0.0), lastFrameTime_(0.0) {}
+Time::Time() = default;
 
 void Time::update() {
     // Minimal placeholder - would normally use actual timing
-    deltaTime_ = 0.016; // ~60 FPS
+    deltaTime_ = TARGET_DELTA_TIME;  // ~60 FPS
     totalTime_ += deltaTime_;
 }
 
-} // namespace rtype::engine::core
+}  // namespace rtype::engine::core

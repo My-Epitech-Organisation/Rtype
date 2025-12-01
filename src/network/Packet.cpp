@@ -13,4 +13,4 @@ Packet::Packet() : type_(PacketType::Unknown) {}
 
 Packet::Packet(PacketType type) : type_(type) {}
 
-} // namespace rtype::network
+}  // namespace rtype::network

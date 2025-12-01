@@ -55,9 +55,9 @@ MainMenuScene::MainMenuScene(
         Rectangle({400, 75}, sf::Color::Blue, sf::Color::Red),
         std::function<void()>([switchToScene]() {
             try {
-                switchToScene(SceneManager::MAIN_MENU);
+                switchToScene(SceneManager::IN_GAME);
             } catch (SceneNotFound &e) {
-                std::cerr << "Error switching to Settings Menu: " << e.what() << std::endl;
+                std::cerr << "Error switching to Game Menu: " << e.what() << std::endl;
             }
         })
     ));

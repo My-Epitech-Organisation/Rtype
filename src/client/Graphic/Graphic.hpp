@@ -5,17 +5,17 @@
 ** Graphic.hpp
 */
 
-#ifndef R_TYPE_GRAPHIC_HPP
-#define R_TYPE_GRAPHIC_HPP
+#ifndef SRC_CLIENT_GRAPHIC_GRAPHIC_HPP_
+#define SRC_CLIENT_GRAPHIC_GRAPHIC_HPP_
 
 #include <SFML/Graphics.hpp>
+#include "ecs/ECS.hpp"
 #include "KeyboardActions.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "SceneManager/SceneManager.hpp"
-#include "ecs/ECS.hpp"
 
 class Graphic {
-private:
+   private:
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<AssetManager> _assetsManager;
     std::unique_ptr<SceneManager> _sceneManager;
@@ -24,19 +24,25 @@ private:
     sf::RenderWindow _window;
     sf::Clock _mainClock;
 
+    static constexpr int WINDOW_WIDTH = 1920;
+    static constexpr int WINDOW_HEIGHT = 1080;
 
-    void _handleKeyReleasedEvent(const std::optional<sf::Event> &event);
+    void _handleKeyReleasedEvent(const std::optional<sf::Event>& event);
 
     void _pollEvents();
     void _update();
     void _display();
-public:
+
+   public:
     void loop();
 
     explicit Graphic(const std::shared_ptr<ECS::Registry> &registry);
     ~Graphic() = default;
+
+    Graphic(const Graphic&) = delete;
+    Graphic& operator=(const Graphic&) = delete;
+    Graphic(Graphic&&) = delete;
+    Graphic& operator=(Graphic&&) = delete;
 };
 
-
-
-#endif //R_TYPE_GRAPHIC_HPP
+#endif  // SRC_CLIENT_GRAPHIC_GRAPHIC_HPP_

@@ -20,8 +20,9 @@ class Registry;
 /**
  * @brief Cached entity collection for repeated filtered queries.
  *
- * Unlike views which filter on-the-fly, groups maintain a pre-filtered entity list.
- * This provides O(1) iteration at the cost of requiring manual updates after structural changes.
+ * Unlike views which filter on-the-fly, groups maintain a pre-filtered entity
+ * list. This provides O(1) iteration at the cost of requiring manual updates
+ * after structural changes.
  *
  * Use when:
  * - Same query runs frequently
@@ -36,9 +37,9 @@ class Registry;
  *   registry.emplaceComponent<Velocity>(new_entity);
  *   group.rebuild(); // Update after structural change
  */
-template<typename... Components>
+template <typename... Components>
 class Group {
- public:
+   public:
     explicit Group(std::reference_wrapper<Registry> reg);
 
     /**
@@ -51,17 +52,24 @@ class Group {
      * @brief Applies function to each entity in the cached group.
      * @param func Callable with signature (Entity, Components&...)
      */
-    template<typename Func>
+    template <typename Func>
     void each(Func&& func);
 
-    [[nodiscard]] auto getEntities() const noexcept -> const std::vector<Entity>& { return _entities; }
-    [[nodiscard]] auto size() const noexcept -> size_t { return _entities.size(); }
-    [[nodiscard]] auto empty() const noexcept -> bool { return _entities.empty(); }
+    [[nodiscard]] auto getEntities() const noexcept
+        -> const std::vector<Entity>& {
+        return _entities;
+    }
+    [[nodiscard]] auto size() const noexcept -> size_t {
+        return _entities.size();
+    }
+    [[nodiscard]] auto empty() const noexcept -> bool {
+        return _entities.empty();
+    }
 
     auto begin() const noexcept { return _entities.begin(); }
     auto end() const noexcept { return _entities.end(); }
 
- private:
+   private:
     std::reference_wrapper<Registry> _registry;
     std::vector<Entity> _entities;
 };

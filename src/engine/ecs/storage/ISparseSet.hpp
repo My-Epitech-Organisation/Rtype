@@ -17,11 +17,12 @@ namespace ECS {
 /**
  * @brief Type-erased interface for component storage containers.
  *
- * Enables heterogeneous storage of different component types in a single collection.
- * All concrete SparseSet implementations must provide these operations.
+ * Enables heterogeneous storage of different component types in a single
+ * collection. All concrete SparseSet implementations must provide these
+ * operations.
  */
 class ISparseSet {
- public:
+   public:
     ISparseSet() = default;
     virtual ~ISparseSet() = default;
 
@@ -41,7 +42,8 @@ class ISparseSet {
      * @param entity Target entity
      * @return true if component exists
      */
-    [[nodiscard]] virtual auto contains(Entity entity) const noexcept -> bool = 0;
+    [[nodiscard]] virtual auto contains(Entity entity) const noexcept
+        -> bool = 0;
 
     /**
      * @brief Removes all components from storage.
@@ -63,7 +65,8 @@ class ISparseSet {
      * @brief Returns the packed entity array for iteration.
      * @return Reference to the packed entity vector
      */
-    [[nodiscard]] virtual auto getPacked() const noexcept -> const std::vector<Entity>& = 0;
+    [[nodiscard]] virtual auto getPacked() const noexcept
+        -> const std::vector<Entity>& = 0;
 };
 
 }  // namespace ECS

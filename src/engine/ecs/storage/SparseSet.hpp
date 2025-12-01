@@ -16,8 +16,8 @@
 #include <utility>
 #include <vector>
 
-#include "ISparseSet.hpp"
 #include "../traits/ComponentTraits.hpp"
+#include "ISparseSet.hpp"
 
 namespace ECS {
 
@@ -36,27 +36,27 @@ namespace ECS {
  * - Iterate: O(n) linear scan (optimal cache utilization)
  *
  * Thread Safety:
- * - Mutating operations (emplace, remove, clear, reserve, shrinkToFit) are thread-safe.
+ * - Mutating operations (emplace, remove, clear, reserve, shrinkToFit) are
+ * thread-safe.
  * - Read operations (contains, get, size) are thread-safe.
- * - Iteration (begin/end) and direct access (getPacked/getDense) are NOT thread-safe.
- *   These require external synchronization if concurrent modifications may occur.
+ * - Iteration (begin/end) and direct access (getPacked/getDense) are NOT
+ * thread-safe. These require external synchronization if concurrent
+ * modifications may occur.
  * - Typically safe when ECS systems run sequentially in the game loop.
  *
  * @tparam T Component type (must satisfy Component concept: move-constructible)
  */
 template <Component T>
 class SparseSet : public ISparseSet {
- public:
+   public:
     SparseSet() = default;
 
     auto contains(Entity entity) const noexcept -> bool override {
         std::lock_guard lock(_sparseSetMutex);
 
         auto idx = entity.index();
-        return idx < _sparse.size() &&
-               _sparse[idx] != NullIndex &&
-               _sparse[idx] < _packed.size() &&
-               _packed[_sparse[idx]] == entity;
+        return idx < _sparse.size() && _sparse[idx] != NullIndex &&
+               _sparse[idx] < _packed.size() && _packed[_sparse[idx]] == entity;
     }
 
     /**
@@ -116,7 +116,8 @@ class SparseSet : public ISparseSet {
         std::lock_guard lock(_sparseSetMutex);
 
         if (!containsUnsafe(entity)) {
-            throw std::runtime_error("Entity missing component in SparseSet::get()");
+            throw std::runtime_error(
+                "Entity missing component in SparseSet::get()");
         }
         return _dense[_sparse[entity.index()]];
     }
@@ -125,7 +126,8 @@ class SparseSet : public ISparseSet {
         std::lock_guard lock(_sparseSetMutex);
 
         if (!containsUnsafe(entity)) {
-            throw std::runtime_error("Entity missing component in SparseSet::get()");
+            throw std::runtime_error(
+                "Entity missing component in SparseSet::get()");
         }
         return _dense[_sparse[entity.index()]];
     }
@@ -153,8 +155,12 @@ class SparseSet : public ISparseSet {
      */
     auto begin() noexcept -> std::vector<T>::iterator { return _dense.begin(); }
     auto end() noexcept -> std::vector<T>::iterator { return _dense.end(); }
-    auto begin() const noexcept -> std::vector<T>::const_iterator { return _dense.begin(); }
-    auto end() const noexcept -> std::vector<T>::const_iterator { return _dense.end(); }
+    auto begin() const noexcept -> std::vector<T>::const_iterator {
+        return _dense.begin();
+    }
+    auto end() const noexcept -> std::vector<T>::const_iterator {
+        return _dense.end();
+    }
 
     /**
      * @brief Direct access to internal arrays.
@@ -168,14 +174,13 @@ class SparseSet : public ISparseSet {
         return _packed;
     }
 
-    auto getDense() const noexcept -> const std::vector<T>& {
-        return _dense;
-    }
+    auto getDense() const noexcept -> const std::vector<T>& { return _dense; }
 
     /**
      * @brief Pre-allocates memory for expected number of entities.
      * @param capacity Number of entities to reserve space for
-     * @note Thread-safe. Not part of ISparseSet interface (type-specific optimization).
+     * @note Thread-safe. Not part of ISparseSet interface (type-specific
+     * optimization).
      */
     void reserve(size_t capacity) {
         std::lock_guard lock(_sparseSetMutex);
@@ -197,7 +202,7 @@ class SparseSet : public ISparseSet {
         _sparse.shrink_to_fit();
     }
 
- private:
+   private:
     static constexpr size_t NullIndex = std::numeric_limits<size_t>::max();
     std::vector<T> _dense;
     std::vector<Entity> _packed;
@@ -209,10 +214,8 @@ class SparseSet : public ISparseSet {
      */
     auto containsUnsafe(Entity entity) const noexcept -> bool {
         auto idx = entity.index();
-        return idx < _sparse.size() &&
-               _sparse[idx] != NullIndex &&
-               _sparse[idx] < _packed.size() &&
-               _packed[_sparse[idx]] == entity;
+        return idx < _sparse.size() && _sparse[idx] != NullIndex &&
+               _sparse[idx] < _packed.size() && _packed[_sparse[idx]] == entity;
     }
 };
 
