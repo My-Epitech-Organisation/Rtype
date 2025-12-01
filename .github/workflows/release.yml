@@ -125,23 +125,42 @@ jobs:
         run: |
           mkdir -p release-assets
 
-          if [ -d "artifacts/r-type_client-ubuntu-latest" ]; then
-            cp artifacts/r-type_client-ubuntu-latest/r-type_client release-assets/rtype_client || true
+          LINUX_CLIENT=$(find artifacts -name "r-type_client" -type f 2>/dev/null | head -1)
+          if [ -n "$LINUX_CLIENT" ]; then
+            cp "$LINUX_CLIENT" release-assets/rtype_client
+            echo "✅ Found Linux client: $LINUX_CLIENT"
+          else
+            echo "❌ Linux client not found"
+            find artifacts -type f | head -10 || echo "No files found in artifacts"
           fi
 
-          if [ -d "artifacts/r-type_client-windows-latest" ]; then
-            cp artifacts/r-type_client-windows-latest/r-type_client.exe release-assets/rtype_client.exe || true
+          WINDOWS_CLIENT=$(find artifacts -name "*.exe" -type f | grep -i client | head -1)
+          if [ -n "$WINDOWS_CLIENT" ]; then
+            cp "$WINDOWS_CLIENT" release-assets/rtype_client.exe
+            echo "✅ Found Windows client: $WINDOWS_CLIENT"
+          else
+            echo "❌ Windows client not found"
           fi
 
-          if [ -d "artifacts/r-type_server-ubuntu-latest" ]; then
-            cp artifacts/r-type_server-ubuntu-latest/r-type_server release-assets/rtype_server || true
+          LINUX_SERVER=$(find artifacts -name "r-type_server" -type f 2>/dev/null | head -1)
+          if [ -n "$LINUX_SERVER" ]; then
+            cp "$LINUX_SERVER" release-assets/rtype_server
+            echo "✅ Found Linux server: $LINUX_SERVER"
+          else
+            echo "❌ Linux server not found"
           fi
 
-          if [ -d "artifacts/r-type_server-windows-latest" ]; then
-            cp artifacts/r-type_server-windows-latest/r-type_server.exe release-assets/rtype_server.exe || true
+          WINDOWS_SERVER=$(find artifacts -name "*.exe" -type f | grep -i server | head -1)
+          if [ -n "$WINDOWS_SERVER" ]; then
+            cp "$WINDOWS_SERVER" release-assets/rtype_server.exe
+            echo "✅ Found Windows server: $WINDOWS_SERVER"
+          else
+            echo "❌ Windows server not found"
           fi
 
+          echo ""
           echo "Release assets prepared:"
+          ls -la release-assets/ || echo "No assets found"
       - name: Create release
         uses: actions/create-release@v1
         env:
