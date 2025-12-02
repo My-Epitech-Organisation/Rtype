@@ -8,7 +8,6 @@
 #include "ClientManager.hpp"
 
 #include <algorithm>
-#include <cassert>
 #include <limits>
 
 namespace rtype::server {
