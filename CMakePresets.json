@@ -61,6 +61,12 @@
         "CMAKE_BUILD_TYPE": "Release",
         "VCPKG_TARGET_TRIPLET": "x64-linux"
       }
+    },
+    {
+      "name": "ubuntu-latest",
+      "displayName": "Ubuntu Latest (CI)",
+      "description": "Alias for linux-release used by GitHub Actions CI",
+      "inherits": "linux-release"
     }
   ],
   "buildPresets": [
@@ -79,6 +85,10 @@
     {
       "name": "windows-release",
       "configurePreset": "windows-release"
+    },
+    {
+      "name": "ubuntu-latest",
+      "configurePreset": "ubuntu-latest"
     }
   ]
 }
