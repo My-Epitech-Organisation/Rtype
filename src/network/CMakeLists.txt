@@ -19,3 +19,8 @@ target_link_libraries(rtype_network PUBLIC
     rtype_engine
     asio::asio
 )
+
+# Windows-specific: link Winsock2 for byte order functions (htons, htonl, etc.)
+if(WIN32)
+    target_link_libraries(rtype_network PUBLIC ws2_32)
+endif()
