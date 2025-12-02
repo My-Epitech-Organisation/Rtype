@@ -7,8 +7,9 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
-#include <string>
+#include <string_view>
 #include <system_error>
 #include <variant>
 
@@ -78,51 +79,37 @@ enum class NetworkError : std::uint8_t {
 /**
  * @brief Convert NetworkError to human-readable string
  */
-[[nodiscard]] inline std::string toString(NetworkError error) noexcept {
-    switch (error) {
-        case NetworkError::None:
-            return "Success";
-        case NetworkError::NotConnected:
-            return "Not connected";
-        case NetworkError::ConnectionRefused:
-            return "Connection refused";
-        case NetworkError::Timeout:
-            return "Operation timed out";
-        case NetworkError::HostNotFound:
-            return "Host not found";
-        case NetworkError::NetworkUnreachable:
-            return "Network unreachable";
-        case NetworkError::AddressInUse:
-            return "Address already in use";
-        case NetworkError::InvalidMagic:
-            return "Invalid magic byte";
-        case NetworkError::UnknownOpcode:
-            return "Unknown opcode";
-        case NetworkError::PacketTooLarge:
-            return "Packet too large";
-        case NetworkError::PacketTooSmall:
-            return "Packet too small";
-        case NetworkError::MalformedPacket:
-            return "Malformed packet";
-        case NetworkError::InvalidSequence:
-            return "Invalid sequence ID";
-        case NetworkError::InvalidUserId:
-            return "Invalid user ID";
-        case NetworkError::Cancelled:
-            return "Operation cancelled";
-        case NetworkError::WouldBlock:
-            return "Would block";
-        case NetworkError::BufferFull:
-            return "Buffer full";
-        case NetworkError::InternalError:
-            return "Internal error";
-        case NetworkError::MaxRetriesExceeded:
-            return "Max retries exceeded";
-        case NetworkError::AckTimeout:
-            return "ACK timeout";
-        default:
-            return "Unknown error";
+[[nodiscard]] constexpr std::string_view toString(NetworkError error) noexcept {
+    constexpr std::array<std::pair<NetworkError, std::string_view>, 22>
+        kErrorMessages = {{
+            {NetworkError::None, "Success"},
+            {NetworkError::NotConnected, "Not connected"},
+            {NetworkError::ConnectionRefused, "Connection refused"},
+            {NetworkError::Timeout, "Operation timed out"},
+            {NetworkError::HostNotFound, "Host not found"},
+            {NetworkError::NetworkUnreachable, "Network unreachable"},
+            {NetworkError::AddressInUse, "Address already in use"},
+            {NetworkError::InvalidMagic, "Invalid magic byte"},
+            {NetworkError::UnknownOpcode, "Unknown opcode"},
+            {NetworkError::PacketTooLarge, "Packet too large"},
+            {NetworkError::PacketTooSmall, "Packet too small"},
+            {NetworkError::MalformedPacket, "Malformed packet"},
+            {NetworkError::InvalidSequence, "Invalid sequence ID"},
+            {NetworkError::InvalidUserId, "Invalid user ID"},
+            {NetworkError::Cancelled, "Operation cancelled"},
+            {NetworkError::WouldBlock, "Would block"},
+            {NetworkError::BufferFull, "Buffer full"},
+            {NetworkError::InternalError, "Internal error"},
+            {NetworkError::MaxRetriesExceeded, "Max retries exceeded"},
+            {NetworkError::AckTimeout, "ACK timeout"},
+        }};
+
+    for (const auto& [code, message] : kErrorMessages) {
+        if (code == error) {
+            return message;
+        }
     }
+    return "Unknown error";
 }
 
 // ============================================================================
