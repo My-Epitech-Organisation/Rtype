@@ -8,7 +8,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CACHE_KEY_PREFIX: v1
+  CACHE_KEY_PREFIX: v2
 
 jobs:
   cancel-if-mirror:
