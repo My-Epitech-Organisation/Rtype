@@ -42,7 +42,7 @@ void Graphic::_pollEvents() {
         if (event->is<sf::Event::KeyReleased>()) {
             this->_handleKeyReleasedEvent(event);
         }
-        EventSystem::processEvents(this->_registry, *event);
+        EventSystem::processEvents(this->_registry, *event, this->_window);
         this->_sceneManager->pollEvents(*event);
     }
 }

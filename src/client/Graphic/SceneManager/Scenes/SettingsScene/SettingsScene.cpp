@@ -9,6 +9,31 @@
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "Components/Graphic/TextComponent.hpp"
+#include "Components/Graphic/TagComponent.hpp"
+
+static void createSection(std::shared_ptr<ECS::Registry> registry, std::shared_ptr<AssetManager> assets, 
+                   std::vector<ECS::Entity>& entities, const std::string& title, float x, float y, float width, float height) {
+    // Background
+    auto bg = registry->spawnEntity();
+    registry->emplaceComponent<Position>(bg, x, y);
+    registry->emplaceComponent<Rectangle>(bg, std::pair<float, float>{width, height}, sf::Color(0, 0, 0, 150), sf::Color(0, 0, 0, 150));
+    
+    // Add outline manually since Rectangle constructor doesn't take it
+    if (registry->hasComponent<Rectangle>(bg)) {
+        auto& rect = registry->getComponent<Rectangle>(bg);
+        rect.outlineThickness = 2.0f;
+        rect.outlineColor = sf::Color::White;
+    }
+    
+    entities.push_back(bg);
+
+    // Title
+    auto titleEnt = registry->spawnEntity();
+    registry->emplaceComponent<Position>(titleEnt, x + 20, y + 10);
+    registry->emplaceComponent<Text>(titleEnt, assets->fontManager->get("title_font"), sf::Color::White, 30, title);
+    registry->emplaceComponent<StaticTextTag>(titleEnt);
+    entities.push_back(titleEnt);
+}
 
 static std::string keyToString(sf::Keyboard::Key key) {
     switch (key) {
@@ -129,49 +154,21 @@ static std::string actionToString(GameAction action) {
     }
 }
 
-void SettingsScene::update() {
-}
-
-void SettingsScene::render(sf::RenderWindow &window) {
-}
-
-void SettingsScene::pollEvents(const sf::Event &e) {
-    if (_actionToRebind.has_value()) {
-        if (const auto* keyEvent = e.getIf<sf::Event::KeyPressed>()) {
-             sf::Keyboard::Key key = keyEvent->code;
-             
-             // Update binding
-             _keybinds.setKeyBinding(*_actionToRebind, key);
-             
-             // Update button text
-             std::string keyName = keyToString(key);
-             std::string text = actionToString(*_actionToRebind) + ": " + keyName;
-             
-             ECS::Entity entity = _actionButtons[*_actionToRebind];
-             if (_registry->hasComponent<Text>(entity)) {
-                 auto& textComp = _registry->getComponent<Text>(entity);
-                 textComp.textContent = text;
-                 textComp.text.setString(text);
-             }
-             
-             _actionToRebind = std::nullopt;
-        }
-    }
-}
-
-SettingsScene::SettingsScene(const std::shared_ptr<ECS::Registry> &ecs,
-    const std::shared_ptr<AssetManager> &textureManager, std::function<void(const SceneManager::Scene &)> switchToScene,
-    sf::RenderWindow &window, KeyboardActions& keybinds) 
-    : AScene(ecs, textureManager), _keybinds(keybinds)
-{
-    this->_listEntity = (EntityFactory::createBackground(this->_registry, this->_assetsManager, "Settings"));
-    
+void SettingsScene::_initKeybindSection() {
     std::vector<GameAction> actions = {
         GameAction::MOVE_UP, GameAction::MOVE_DOWN, GameAction::MOVE_LEFT,
         GameAction::MOVE_RIGHT, GameAction::SHOOT, GameAction::PAUSE
     };
 
-    float y = 200;
+    float sectionX = 50;
+    float sectionY = 225;
+    float sectionW = 600;
+    float sectionH = 600;
+    createSection(this->_registry, this->_assetsManager, this->_listEntity, "Keyboard Assignment", sectionX, sectionY, sectionW, sectionH);
+
+    float y = sectionY + 100;
+    float x = sectionX + 50;
+
     for (auto action : actions) {
         auto keyOpt = _keybinds.getKeyBinding(action);
         std::string keyName = keyOpt ? keyToString(*keyOpt) : "None";
@@ -180,19 +177,18 @@ SettingsScene::SettingsScene(const std::shared_ptr<ECS::Registry> &ecs,
         auto btn = EntityFactory::createButton(
             *this->_registry,
             Text(this->_assetsManager->fontManager->get("title_font"),
-                 sf::Color::White, 24, textStr),
-            Position(100, y),
+                sf::Color::White, 24, textStr),
+            Position(x, y),
             Rectangle({500, 50}, sf::Color::Blue, sf::Color::Red),
             std::function<void()>([this, action]() {
                 if (this->_actionToRebind.has_value()) return;
                 this->_actionToRebind = action;
-                
                 ECS::Entity entity = this->_actionButtons[action];
                 if (this->_registry->hasComponent<Text>(entity)) {
-                     auto& textComp = this->_registry->getComponent<Text>(entity);
-                     std::string waitText = actionToString(action) + ": Press any key...";
-                     textComp.textContent = waitText;
-                     textComp.text.setString(waitText);
+                    auto& textComp = this->_registry->getComponent<Text>(entity);
+                    std::string waitText = actionToString(action) + ": Press any key...";
+                    textComp.textContent = waitText;
+                    textComp.text.setString(waitText);
                 }
             })
         );
@@ -200,22 +196,82 @@ SettingsScene::SettingsScene(const std::shared_ptr<ECS::Registry> &ecs,
         this->_listEntity.push_back(btn);
         y += 80;
     }
+}
+
+void SettingsScene::_initAudioSection() {
+    float sectionX = 665;
+    float sectionY = 225;
+    float sectionW = 500;
+    float sectionH = 200;
+
+    createSection(this->_registry, this->_assetsManager, this->_listEntity, "Audio", sectionX, sectionY, sectionW, sectionH);
+}
+
+void SettingsScene::_initWindowSection() {
+    float sectionX = 665;
+    float sectionY = 440;
+    float sectionW = 500;
+    float sectionH = 385;
+
+    createSection(this->_registry, this->_assetsManager, this->_listEntity, "Window", sectionX, sectionY, sectionW, sectionH);
+}
+
+void SettingsScene::update() {
+}
+
+void SettingsScene::render(sf::RenderWindow &window) {
+}
+
+void SettingsScene::pollEvents(const sf::Event &e) {
+    if (this->_actionToRebind.has_value()) {
+        if (const auto* keyEvent = e.getIf<sf::Event::KeyPressed>()) {
+            sf::Keyboard::Key key = keyEvent->code;
+
+            this->_keybinds.setKeyBinding(*this->_actionToRebind, key);
+
+            std::string keyName = keyToString(key);
+            std::string text = actionToString(*this->_actionToRebind) + ": " + keyName;
+
+            ECS::Entity entity = _actionButtons[*this->_actionToRebind];
+            if (this->_registry->hasComponent<Text>(entity)) {
+                auto& textComp = this->_registry->getComponent<Text>(entity);
+                textComp.textContent = text;
+                textComp.text.setString(text);
+            }
+
+            this->_actionToRebind = std::nullopt;
+        }
+    }
+}
+
+SettingsScene::SettingsScene(const std::shared_ptr<ECS::Registry> &ecs,
+    const std::shared_ptr<AssetManager> &textureManager, std::function<void(const SceneManager::Scene &)> switchToScene,
+    sf::RenderWindow &window, KeyboardActions& keybinds)
+    : AScene(ecs, textureManager), _keybinds(keybinds)
+{
+    this->_listEntity = (EntityFactory::createBackground(this->_registry, this->_assetsManager, "Settings"));
+
+    this->_initKeybindSection();
+    this->_initAudioSection();
+    this->_initWindowSection();
 
     this->_listEntity.push_back(EntityFactory::createButton(
         *this->_registry,
         Text(this->_assetsManager->fontManager->get("title_font"),
-             sf::Color::White, 36, "Back"),
-        Position(100, y + 50),
+            sf::Color::White, 36, "Back"),
+        Position(100, 900),
         Rectangle({400, 75}, sf::Color::Blue, sf::Color::Red),
         std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
                 std::cerr << "Error switching to Main Menu: " << e.what()
-                          << std::endl;
+                        << std::endl;
             }
     })));
 }
+
+
 
 SettingsScene::~SettingsScene() {
     for (auto& entity : this->_listEntity) {

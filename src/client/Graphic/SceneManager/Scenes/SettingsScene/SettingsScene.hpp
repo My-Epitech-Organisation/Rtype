@@ -23,6 +23,10 @@ private:
     std::optional<GameAction> _actionToRebind;
     std::map<GameAction, ECS::Entity> _actionButtons;
 
+    void _initKeybindSection();
+    void _initAudioSection();
+    void _initWindowSection();
+
 public:
     void update() override;
     void render(sf::RenderWindow& window) override;

@@ -35,16 +35,24 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
             }
             window.draw(img.sprite);
         });
-    registry->view<Text, Position, StaticTextTag>().each(
-        [&window](auto _, auto& textData, auto& pos, auto __) {
-            textData.text.setPosition(
-                {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-            textData.text.setCharacterSize(textData.size);
-            textData.text.setFillColor(textData.color);
-            textData.text.setString(textData.textContent);
 
-            window.draw(textData.text);
+    // Draw Standalone Rectangles (Backgrounds/Panels) - BEFORE Buttons and Text
+    registry->view<Rectangle, Position>().each(
+        [&window, &registry](auto entt, auto& rectData, auto& pos) {
+            // Skip if it's a Button (handled later)
+            if (registry->hasComponent<ButtonTag>(entt)) return;
+
+            rectData.rectangle.setPosition(
+                {static_cast<float>(pos.x), static_cast<float>(pos.y)});
+            rectData.rectangle.setSize(
+                sf::Vector2f(rectData.size.first, rectData.size.second));
+            rectData.rectangle.setOutlineThickness(rectData.outlineThickness);
+            rectData.rectangle.setOutlineColor(rectData.outlineColor);
+            rectData.rectangle.setFillColor(rectData.currentColor);
+
+            window.draw(rectData.rectangle);
         });
+
     registry->view<Rectangle, Text, Position, ButtonTag>().each(
         [&window](auto _, auto& rectData, auto& textData, auto& pos, auto __) {
             rectData.rectangle.setPosition(
@@ -75,6 +83,18 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
             textData.text.setString(textData.textContent);
 
             window.draw(rectData.rectangle);
+            window.draw(textData.text);
+        });
+
+    // Draw Static Text LAST (on top of everything)
+    registry->view<Text, Position, StaticTextTag>().each(
+        [&window](auto _, auto& textData, auto& pos, auto __) {
+            textData.text.setPosition(
+                {static_cast<float>(pos.x), static_cast<float>(pos.y)});
+            textData.text.setCharacterSize(textData.size);
+            textData.text.setFillColor(textData.color);
+            textData.text.setString(textData.textContent);
+
             window.draw(textData.text);
         });
 }

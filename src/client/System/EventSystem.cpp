@@ -14,14 +14,14 @@
 #include "Graphic/UserEventComponent.hpp"
 
 void EventSystem::processEvents(const std::shared_ptr<ECS::Registry>& registry,
-                                const sf::Event& e) {
-    registry->view<Rectangle, UserEvent>().each([e](auto _, auto rect,
+                                const sf::Event& e, sf::RenderWindow& window) {
+    registry->view<Rectangle, UserEvent>().each([e, &window](auto _, auto rect,
                                                     auto& actionType) {
         if (e.is<sf::Event::MouseMoved>()) {
             sf::Vector2i mousePos = e.getIf<sf::Event::MouseMoved>()->position;
+            sf::Vector2f worldPos = window.mapPixelToCoords(mousePos);
             sf::FloatRect rectBounds = rect.rectangle.getGlobalBounds();
-            if (rectBounds.contains({static_cast<float>(mousePos.x),
-                                     static_cast<float>(mousePos.y)})) {
+            if (rectBounds.contains(worldPos)) {
                 actionType.isHovered = true;
             } else {
                 actionType.isHovered = false;
@@ -32,9 +32,9 @@ void EventSystem::processEvents(const std::shared_ptr<ECS::Registry>& registry,
                 sf::Mouse::Button::Left) {
                 sf::Vector2i mousePos =
                     e.getIf<sf::Event::MouseButtonPressed>()->position;
+                sf::Vector2f worldPos = window.mapPixelToCoords(mousePos);
                 sf::FloatRect rectBounds = rect.rectangle.getGlobalBounds();
-                if (rectBounds.contains({static_cast<float>(mousePos.x),
-                                         static_cast<float>(mousePos.y)})) {
+                if (rectBounds.contains(worldPos)) {
                     actionType.isClicked = true;
                 }
             }
@@ -44,9 +44,9 @@ void EventSystem::processEvents(const std::shared_ptr<ECS::Registry>& registry,
                 sf::Mouse::Button::Left) {
                 sf::Vector2i mousePos =
                     e.getIf<sf::Event::MouseButtonReleased>()->position;
+                sf::Vector2f worldPos = window.mapPixelToCoords(mousePos);
                 sf::FloatRect rectBounds = rect.rectangle.getGlobalBounds();
-                if (rectBounds.contains({static_cast<float>(mousePos.x),
-                                         static_cast<float>(mousePos.y)})) {
+                if (rectBounds.contains(worldPos)) {
                     actionType.isClicked = false;
                 }
             }
