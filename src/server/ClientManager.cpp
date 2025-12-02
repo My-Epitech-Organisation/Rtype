@@ -219,7 +219,7 @@ void ClientManager::checkClientTimeouts(uint32_t timeoutSeconds) noexcept {
     for (const auto& [id, client] : _clients) {
         const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
             now - client.lastActivityTime);
-        if (elapsed.count() >= static_cast<long>(timeoutSeconds)) {
+        if (elapsed.count() >= static_cast<int64_t>(timeoutSeconds)) {
             _timeoutBuffer.emplace_back(id, client.endpoint);
         }
     }
