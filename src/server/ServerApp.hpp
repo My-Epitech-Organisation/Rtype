@@ -57,6 +57,31 @@ class ServerApp {
    public:
     static constexpr uint32_t DEFAULT_CLIENT_TIMEOUT_SECONDS = 10;
 
+    /// @brief Maximum physics/logic updates per frame to prevent spiral of death
+    /// @details When the game loop falls behind (e.g., due to a lag spike),
+    /// limiting updates per frame prevents spending too long catching up,
+    /// which would cause further frame drops and create a feedback loop.
+    static constexpr uint32_t MAX_UPDATES_PER_FRAME = 5;
+
+    /// @brief Maximum frame time in milliseconds before clamping
+    /// @details Prevents spiral of death during severe lag spikes. If a frame
+    /// takes longer than this, we clamp it to avoid accumulating too much
+    /// time in the accumulator, which would cause excessive catch-up updates.
+    /// 250ms allows ~4 FPS minimum before time clamping kicks in.
+    static constexpr uint32_t MAX_FRAME_TIME_MS = 250;
+
+    /// @brief Percentage of calculated sleep time to actually sleep
+    /// @details We sleep for only 95% of the remaining frame time to account
+    /// for OS scheduler granularity and potential timing inaccuracies.
+    /// This prevents oversleeping past the target frame time.
+    static constexpr uint32_t SLEEP_TIME_SAFETY_PERCENT = 95;
+
+    /// @brief Minimum sleep threshold in microseconds
+    /// @details Below this threshold, busy-waiting is more accurate than
+    /// sleeping. Sleep syscalls have overhead and OS scheduler granularity
+    /// (typically 1-15ms on most systems) makes very short sleeps unreliable.
+    static constexpr uint32_t MIN_SLEEP_THRESHOLD_US = 100;
+
     /**
      * @brief Construct a new ServerApp
      * @param port Port to listen on
