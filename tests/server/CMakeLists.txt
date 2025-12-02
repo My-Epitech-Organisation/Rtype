@@ -1,0 +1,3 @@
+add_executable(test_safe_queue SafeQueue_test.cpp)
+target_link_libraries(test_safe_queue gtest_main)
+add_test(NAME SafeQueueTest COMMAND test_safe_queue)
