@@ -9,6 +9,7 @@
 
 #include <asio.hpp>
 #include <memory>
+#include <optional>
 #include <thread>
 #include <atomic>
 
@@ -48,6 +49,8 @@ namespace rtype::network {
  */
 class IoContext {
    public:
+    using WorkGuard = asio::executor_work_guard<asio::io_context::executor_type>;
+
     /**
      * @brief Construct a new IoContext
      */
@@ -65,9 +68,9 @@ class IoContext {
     IoContext(const IoContext&) = delete;
     IoContext& operator=(const IoContext&) = delete;
 
-    // Movable
-    IoContext(IoContext&&) = default;
-    IoContext& operator=(IoContext&&) = default;
+    // Non-movable (due to work guard complexity)
+    IoContext(IoContext&&) = delete;
+    IoContext& operator=(IoContext&&) = delete;
 
     // ========================================================================
     // Access to underlying context
@@ -172,7 +175,7 @@ class IoContext {
      */
     void restart() {
         context_->restart();
-        workGuard_ = asio::make_work_guard(*context_);
+        workGuard_.emplace(asio::make_work_guard(*context_));
     }
 
     // ========================================================================
@@ -220,7 +223,7 @@ class IoContext {
 
    private:
     std::unique_ptr<asio::io_context> context_;
-    asio::executor_work_guard<asio::io_context::executor_type> workGuard_;
+    std::optional<WorkGuard> workGuard_;
     std::thread backgroundThread_;
 };
 
