@@ -11,6 +11,7 @@
 #include <atomic>
 #include <csignal>
 #include <exception>
+#include <memory>
 #include <format>
 #include <iostream>
 
@@ -22,13 +23,15 @@
  */
 class ServerSignals {
    public:
-    static std::atomic<bool>& shutdown() noexcept {
-        static std::atomic<bool> flag{false};
+    static std::shared_ptr<std::atomic<bool>> shutdown() noexcept {
+        static std::shared_ptr<std::atomic<bool>> flag =
+            std::make_shared<std::atomic<bool>>(false);
         return flag;
     }
 
-    static std::atomic<bool>& reloadConfig() noexcept {
-        static std::atomic<bool> flag{false};
+    static std::shared_ptr<std::atomic<bool>> reloadConfig() noexcept {
+        static std::shared_ptr<std::atomic<bool>> flag =
+            std::make_shared<std::atomic<bool>>(false);
         return flag;
     }
 

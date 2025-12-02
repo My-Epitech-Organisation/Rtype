@@ -458,7 +458,7 @@ jobs:
     name: "🧹 Cache Cleanup"
     runs-on: ubuntu-latest
     needs: [build]
-    if: always() && github.ref == 'refs/heads/main'
+    if: always()
     permissions:
       actions: write
     steps:

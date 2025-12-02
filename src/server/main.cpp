@@ -25,13 +25,13 @@
 static void signalHandler(int signal) {
     if (signal == SIGINT || signal == SIGTERM) {
         std::cout << "\n[Main] Received shutdown signal" << std::endl;
-        ServerSignals::shutdown() = true;
+        ServerSignals::shutdown()->store(true);
     }
 #ifndef _WIN32
     if (signal == SIGHUP) {
         std::cout << "\n[Main] Received SIGHUP - config reload requested"
                   << std::endl;
-        ServerSignals::reloadConfig() = true;
+        ServerSignals::reloadConfig()->store(true);
     }
 #endif
 }
@@ -158,10 +158,8 @@ int main(int argc, char** argv) {
         setupSignalHandlers();
         return runServer(
             *config,
-            std::shared_ptr<std::atomic<bool>>(&ServerSignals::shutdown(),
-                                               [](std::atomic<bool>*) {}),
-            std::shared_ptr<std::atomic<bool>>(&ServerSignals::reloadConfig(),
-                                               [](std::atomic<bool>*) {}));
+            ServerSignals::shutdown(),
+            ServerSignals::reloadConfig());
     } catch (const std::exception& e) {
         std::cerr << "[Main] Fatal error: " << e.what() << std::endl;
         return 1;

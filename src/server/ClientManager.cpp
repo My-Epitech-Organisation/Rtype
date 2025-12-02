@@ -9,6 +9,9 @@
 
 #include <algorithm>
 #include <limits>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace rtype::server {
 
@@ -31,6 +34,7 @@ ClientId ClientManager::handleNewConnection(const Endpoint& endpoint) {
                            std::chrono::steady_clock::now().time_since_epoch())
                            .count();
 
+    //! Potential flaw: Rate limit resets per second, allowing alternating clients to bypass or blocking valid connections.
     updateRateLimitWindow(nowMs);
     if (isRateLimitExceeded(endpoint)) {
         return INVALID_CLIENT_ID;
@@ -54,13 +58,13 @@ ClientId ClientManager::handleNewConnection(const Endpoint& endpoint) {
 }
 
 void ClientManager::updateRateLimitWindow(int64_t nowMs) noexcept {
-    const auto resetTimeMs =
-        _rateLimitResetTimeMs.load(std::memory_order_relaxed);
-
+    auto resetTimeMs = _rateLimitResetTimeMs.load(std::memory_order_relaxed);
     if (nowMs >= resetTimeMs) {
-        _rateLimitResetTimeMs.store(nowMs + RATE_LIMIT_WINDOW_MS,
-                                    std::memory_order_relaxed);
-        _connectionsThisSecond.store(0, std::memory_order_relaxed);
+        int64_t newResetTime = nowMs + RATE_LIMIT_WINDOW_MS;
+        if (_rateLimitResetTimeMs.compare_exchange_strong(
+                resetTimeMs, newResetTime, std::memory_order_relaxed)) {
+            _connectionsThisSecond.store(0, std::memory_order_relaxed);
+        }
     }
 }
 

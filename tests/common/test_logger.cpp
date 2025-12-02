@@ -48,7 +48,7 @@ void safeRemoveFile(const std::filesystem::path& filePath) {
 
 // Helper function to generate unique test file names
 std::filesystem::path getUniqueTestFile(const std::string& baseName) {
-    static int counter = 0;
+    static std::atomic<int> counter{0};
     auto timestamp = std::chrono::system_clock::now().time_since_epoch().count();
     return std::filesystem::temp_directory_path() /
            std::format("{}_{}_{}.log", baseName, timestamp, ++counter);

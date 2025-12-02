@@ -12,6 +12,7 @@ target_compile_features(test_client_manager PRIVATE cxx_std_20)
 
 target_link_libraries(test_client_manager PRIVATE
     GTest::gtest_main
+    rtype_common
 )
 
 include(GoogleTest)

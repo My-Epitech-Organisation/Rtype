@@ -201,6 +201,10 @@ void ServerApp::processIncomingData() noexcept {
         auto clientId = _clientManager.findClientByEndpoint(endpoint);
         if (clientId == ClientManager::INVALID_CLIENT_ID) {
             clientId = _clientManager.handleNewConnection(endpoint);
+            if (clientId == ClientManager::INVALID_CLIENT_ID) {
+                // TODO(Anyone): Handle Invalid client id correctly
+                continue;
+            }
         }
 
         _clientManager.updateClientActivity(clientId);

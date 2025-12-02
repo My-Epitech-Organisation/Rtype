@@ -10,6 +10,7 @@
 #include <mutex>
 #include <optional>
 #include <queue>
+#include <utility>
 
 template <typename T>
 class SafeQueue {
@@ -17,6 +18,11 @@ class SafeQueue {
     void push(const T& item) {
         std::lock_guard<std::mutex> lock(mutex_);
         queue_.push(item);
+    }
+
+    void push(T&& item) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        queue_.push(std::move(item));
     }
 
     std::optional<T> pop() {
@@ -29,12 +35,12 @@ class SafeQueue {
         return item;
     }
 
-    size_t size() {
+    size_t size() const {
         std::lock_guard<std::mutex> lock(mutex_);
         return queue_.size();
     }
 
    private:
     std::queue<T> queue_;
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
 };

@@ -2,7 +2,7 @@
 #include <thread>
 #include <vector>
 #include <algorithm>
-#include "../../src/common/SafeQueue/SafeQueue.hpp"
+#include "common/SafeQueue/SafeQueue.hpp"
 
 TEST(SafeQueueTest, PushAndPop) {
     SafeQueue<int> queue;
