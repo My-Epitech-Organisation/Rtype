@@ -45,7 +45,9 @@ class IoContext {
     IoContext& operator=(IoContext&&) = delete;
 
     [[nodiscard]] asio::io_context& get() noexcept { return *context_; }
-    [[nodiscard]] const asio::io_context& get() const noexcept { return *context_; }
+    [[nodiscard]] const asio::io_context& get() const noexcept {
+        return *context_;
+    }
     operator asio::io_context&() noexcept { return *context_; }
 
     std::size_t run() { return context_->run(); }
