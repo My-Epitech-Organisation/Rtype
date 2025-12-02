@@ -119,11 +119,7 @@ class Logger {
      * @param msg The message to log
      */
     virtual void debug(const std::string& msg) {
-#ifndef NDEBUG
         log(LogLevel::Debug, msg);
-#else
-        (void)msg;
-#endif
     }
 
     /**

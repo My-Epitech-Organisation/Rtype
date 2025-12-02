@@ -29,19 +29,14 @@
 /**
  * @brief Debug logging macro - only prints in debug builds
  *
- * This macro is disabled when NDEBUG is defined (Release builds).
  * Use for verbose debugging information that shouldn't appear in production.
  * Thread-safe with timestamp.
  *
  * @param ... The message to log (supports << chaining and expressions with
  * commas)
  */
-#ifdef NDEBUG
-#define LOG_DEBUG(...) ((void)0)
-#else
 #define LOG_DEBUG(...) \
     rtype::Logger::instance().debug(LOG_TO_STRING(__VA_ARGS__))
-#endif
 
 /**
  * @brief Info logging macro - always prints to stdout
