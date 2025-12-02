@@ -9,6 +9,7 @@ add_library(rtype-graphic-components
         PrallaxComponent.hpp
         VelocityComponent.hpp
         TextureRectComponent.hpp
+        BoxingComponent.hpp
 )
 
 target_link_libraries(rtype-graphic-scene-manager

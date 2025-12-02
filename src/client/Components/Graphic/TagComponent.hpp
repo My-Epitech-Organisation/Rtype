@@ -10,5 +10,6 @@
 
 struct StaticTextTag {};
 struct ButtonTag {};
+struct RepeatingTag {};
 
 #endif  // SRC_CLIENT_COMPONENTS_GRAPHIC_TAGCOMPONENT_HPP_

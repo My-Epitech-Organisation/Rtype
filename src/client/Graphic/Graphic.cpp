@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "AssetManager/AssetManager.hpp"
+#include "System/BoxingSystem.hpp"
 #include "System/ButtonUpdateSystem.hpp"
 #include "System/EventSystem.hpp"
 #include "System/MovementSystem.hpp"
@@ -63,6 +64,7 @@ void Graphic::_update() {
 void Graphic::_display() {
     this->_window.clear();
     RenderSystem::draw(this->_registry, this->_window);
+    BoxingSystem::update(this->_registry, this->_window);
     this->_sceneManager->draw(this->_window);
     this->_window.display();
 }

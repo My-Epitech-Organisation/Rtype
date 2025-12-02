@@ -24,8 +24,13 @@
 #include "Graphic/VelocityComponent.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "assets/Audiowide_Regular.h"
-#include "assets/bgMenu.h"
+#include "assets/bgMainMenu.h"
 #include "assets/playerVessel.h"
+#include "assets/planet1.h"
+#include "assets/planet2.h"
+#include "assets/planet3.h"
+#include "assets/astroVessel.h"
+#include "Graphic/BoxingComponent.hpp"
 
 void MainMenuScene::update() {}
 
@@ -43,19 +48,60 @@ MainMenuScene::MainMenuScene(
                                             Audiowide_Regular_ttf_len);
     this->_assetsManager->textureManager->load("bg_menu", bgMainMenu_png,
                                                bgMainMenu_png_len);
+    this->_assetsManager->textureManager->load("bg_planet_1", planet1_png,
+                                           planet1_png_len);
+    this->_assetsManager->textureManager->load("bg_planet_2", planet2_png,
+        planet2_png_len);
+    this->_assetsManager->textureManager->load("bg_planet_3", planet3_png,
+    planet3_png_len);
     this->_assetsManager->textureManager->load(
         "player_vessel", playerVessel_gif, playerVessel_gif_len);
+    this->_assetsManager->textureManager->load(
+        "astro_vessel", astroVessel_png, astroVessel_png_len);
+
     this->_assetsManager->textureManager->get("bg_menu").setRepeated(true);
+    this->_assetsManager->textureManager->get("bg_planet_1").setRepeated(true);
+    this->_assetsManager->textureManager->get("bg_planet_2").setRepeated(true);
+    this->_assetsManager->textureManager->get("bg_planet_3").setRepeated(true);
 
     auto background = this->_registry->spawnEntity();
     this->_registry->emplaceComponent<Image>(
         background, this->_assetsManager->textureManager->get("bg_menu"));
     this->_registry->emplaceComponent<Position>(background, 0, 0);
-    this->_registry->emplaceComponent<Parallax>(background, 0.8, true);
+    this->_registry->emplaceComponent<Parallax>(background, 0.2, true);
+
+    auto planet1 = this->_registry->spawnEntity();
+    this->_registry->emplaceComponent<Image>(
+        planet1, this->_assetsManager->textureManager->get("bg_planet_1"));
+    this->_registry->emplaceComponent<Position>(planet1, 0, 0);
+    this->_registry->emplaceComponent<Parallax>(planet1, 0.5, true);
+
+    auto planet2 = this->_registry->spawnEntity();
+    this->_registry->emplaceComponent<Image>(
+        planet2, this->_assetsManager->textureManager->get("bg_planet_2"));
+    this->_registry->emplaceComponent<Position>(planet2, 0, 0);
+    this->_registry->emplaceComponent<Parallax>(planet2, 0.4, true);
+
+    auto planet3 = this->_registry->spawnEntity();
+    this->_registry->emplaceComponent<Image>(
+        planet3, this->_assetsManager->textureManager->get("bg_planet_3"));
+    this->_registry->emplaceComponent<Position>(planet3, 0, 0);
+    this->_registry->emplaceComponent<Parallax>(planet3, 0.4, true);
 
     auto seed = static_cast<unsigned int>(time(nullptr));
 
-    for (int i = 0; i < 15; i++) {
+    auto astroneerVessel = this->_registry->spawnEntity();
+    this->_registry->emplaceComponent<Image>(
+        astroneerVessel,
+        this->_assetsManager->textureManager->get("astro_vessel"));
+    this->_registry->emplaceComponent<Position>(
+        astroneerVessel, 1900, 1060);
+    this->_registry->emplaceComponent<Size>(astroneerVessel, 0.3, 0.3);
+    this->_registry->emplaceComponent<Velocity>(
+        astroneerVessel, -135.f, -75.f);
+    this->_listEntity.push_back(astroneerVessel);
+
+    for (int i = 0; i < 7; i++) {
         auto fakePlayer = this->_registry->spawnEntity();
         this->_registry->emplaceComponent<Image>(
             fakePlayer,
@@ -79,6 +125,9 @@ MainMenuScene::MainMenuScene(
     this->_registry->emplaceComponent<Position>(appTitle, 50, 50);
     this->_registry->emplaceComponent<StaticTextTag>(appTitle);
 
+    this->_listEntity.push_back(planet1);
+    this->_listEntity.push_back(planet2);
+    this->_listEntity.push_back(planet3);
     this->_listEntity.push_back(background);
     this->_listEntity.push_back(appTitle);
     this->_listEntity.push_back(EntityFactory::createButton(

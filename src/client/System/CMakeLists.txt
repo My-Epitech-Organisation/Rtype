@@ -10,6 +10,8 @@ add_library(rtype-client-system
     ParallaxScrolling.hpp
     MovementSystem.cpp
     MovementSystem.hpp
+        BoxingSystem.cpp
+        BoxingSystem.hpp
 )
 
 target_link_libraries(rtype-client-system
