@@ -66,8 +66,8 @@ ServerApp::LoopTiming ServerApp::createLoopTiming() const noexcept {
     const auto fixedDeltaTime =
         duration<double>(1.0 / static_cast<double>(_tickRate));
     return {.fixedDeltaNs = duration_cast<nanoseconds>(fixedDeltaTime),
-            .maxFrameTime = duration_cast<nanoseconds>(
-                milliseconds(MAX_FRAME_TIME_MS)),
+            .maxFrameTime =
+                duration_cast<nanoseconds>(milliseconds(MAX_FRAME_TIME_MS)),
             .maxUpdatesPerFrame = MAX_UPDATES_PER_FRAME};
 }
 

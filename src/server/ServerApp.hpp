@@ -57,7 +57,8 @@ class ServerApp {
    public:
     static constexpr uint32_t DEFAULT_CLIENT_TIMEOUT_SECONDS = 10;
 
-    /// @brief Maximum physics/logic updates per frame to prevent spiral of death
+    /// @brief Maximum physics/logic updates per frame to prevent spiral of
+    /// death
     /// @details When the game loop falls behind (e.g., due to a lag spike),
     /// limiting updates per frame prevents spending too long catching up,
     /// which would cause further frame drops and create a feedback loop.
