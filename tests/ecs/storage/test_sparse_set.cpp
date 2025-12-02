@@ -482,3 +482,153 @@ TEST_F(SparseSetTest, ISparseSet_GetPacked) {
 
     EXPECT_EQ(packed.size(), 2);
 }
+
+// ============================================================================
+// ADDITIONAL COVERAGE TESTS
+// ============================================================================
+
+TEST_F(SparseSetTest, Emplace_WithDefaultValues) {
+    Entity entity(0, 0);
+    positions.emplace(entity);  // Using default constructor
+
+    EXPECT_TRUE(positions.contains(entity));
+    EXPECT_EQ(positions.get(entity).x, 0.0f);
+    EXPECT_EQ(positions.get(entity).y, 0.0f);
+}
+
+TEST_F(SparseSetTest, Contains_NullEntity) {
+    Entity null_entity;  // Null entity
+    EXPECT_FALSE(positions.contains(null_entity));
+}
+
+TEST_F(SparseSetTest, Remove_NullEntity_NoError) {
+    Entity null_entity;
+    EXPECT_NO_THROW(positions.remove(null_entity));
+}
+
+TEST_F(SparseSetTest, Get_AfterUpdate) {
+    Entity entity(0, 0);
+    positions.emplace(entity, 1.0f, 2.0f);
+
+    auto& pos = positions.get(entity);
+    pos.x = 100.0f;
+    pos.y = 200.0f;
+
+    EXPECT_EQ(positions.get(entity).x, 100.0f);
+    EXPECT_EQ(positions.get(entity).y, 200.0f);
+}
+
+TEST_F(SparseSetTest, Size_AfterMultipleOperations) {
+    Entity e1(0, 0);
+    Entity e2(1, 0);
+    Entity e3(2, 0);
+
+    EXPECT_EQ(positions.size(), 0);
+
+    positions.emplace(e1, 1.0f, 0.0f);
+    EXPECT_EQ(positions.size(), 1);
+
+    positions.emplace(e2, 2.0f, 0.0f);
+    EXPECT_EQ(positions.size(), 2);
+
+    positions.emplace(e3, 3.0f, 0.0f);
+    EXPECT_EQ(positions.size(), 3);
+
+    positions.remove(e2);
+    EXPECT_EQ(positions.size(), 2);
+
+    positions.remove(e1);
+    EXPECT_EQ(positions.size(), 1);
+
+    positions.remove(e3);
+    EXPECT_EQ(positions.size(), 0);
+}
+
+TEST_F(SparseSetTest, Iteration_EmptySet) {
+    int count = 0;
+    for ([[maybe_unused]] const auto& pos : positions) {
+        count++;
+    }
+    EXPECT_EQ(count, 0);
+}
+
+TEST_F(SparseSetTest, GetPacked_Empty) {
+    const auto& packed = positions.getPacked();
+    EXPECT_TRUE(packed.empty());
+}
+
+TEST_F(SparseSetTest, Iteration_SingleElement) {
+    Entity entity(0, 0);
+    positions.emplace(entity, 42.0f, 0.0f);
+
+    int count = 0;
+    for (const auto& pos : positions) {
+        EXPECT_EQ(pos.x, 42.0f);
+        count++;
+    }
+    EXPECT_EQ(count, 1);
+}
+
+TEST_F(SparseSetTest, SwapAndPop_Order) {
+    // Test that swap-and-pop maintains correct component-entity associations
+    Entity e1(0, 0);
+    Entity e2(1, 0);
+    Entity e3(2, 0);
+
+    positions.emplace(e1, 1.0f, 10.0f);
+    positions.emplace(e2, 2.0f, 20.0f);
+    positions.emplace(e3, 3.0f, 30.0f);
+
+    // Remove middle element - should swap with last
+    positions.remove(e2);
+
+    // e1 and e3 should still have correct values
+    EXPECT_TRUE(positions.contains(e1));
+    EXPECT_TRUE(positions.contains(e3));
+    EXPECT_EQ(positions.get(e1).x, 1.0f);
+    EXPECT_EQ(positions.get(e3).x, 3.0f);
+}
+
+TEST_F(SparseSetTest, HighGeneration_Entities) {
+    Entity e_gen0(0, 0);
+    Entity e_gen100(0, 100);
+    Entity e_gen4095(0, 4095);  // Max generation
+
+    positions.emplace(e_gen0, 1.0f, 0.0f);
+    EXPECT_TRUE(positions.contains(e_gen0));
+    EXPECT_FALSE(positions.contains(e_gen100));
+
+    positions.remove(e_gen0);
+    positions.emplace(e_gen100, 2.0f, 0.0f);
+    EXPECT_TRUE(positions.contains(e_gen100));
+
+    positions.remove(e_gen100);
+    positions.emplace(e_gen4095, 3.0f, 0.0f);
+    EXPECT_TRUE(positions.contains(e_gen4095));
+}
+
+TEST_F(SparseSetTest, NonTrivialComponent_LongString) {
+    Entity entity(0, 0);
+    std::string longName(1000, 'a');  // 1000 character string
+
+    names.emplace(entity, longName);
+
+    EXPECT_EQ(names.get(entity).value, longName);
+}
+
+TEST_F(SparseSetTest, Reserve_ThenClear) {
+    positions.reserve(1000);
+
+    for (std::uint32_t i = 0; i < 100; ++i) {
+        Entity entity(i, 0);
+        positions.emplace(entity, static_cast<float>(i), 0.0f);
+    }
+
+    positions.clear();
+    EXPECT_EQ(positions.size(), 0);
+
+    // Should still be able to add after clear
+    Entity entity(0, 0);
+    positions.emplace(entity, 1.0f, 2.0f);
+    EXPECT_TRUE(positions.contains(entity));
+}
