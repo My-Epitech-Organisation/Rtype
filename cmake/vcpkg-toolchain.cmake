@@ -1,21 +1,21 @@
 # vcpkg-toolchain.cmake
-# Détecte automatiquement vcpkg avec fallback
+# Automatically detects vcpkg with fallback
 #
-# Priorité :
-#   1. VCPKG_ROOT (variable d'environnement - vcpkg personnel du dev)
-#   2. external/vcpkg (submodule Git - solution par défaut)
+# Priority:
+#   1. VCPKG_ROOT (environment variable - developer's personal vcpkg)
+#   2. external/vcpkg (Git submodule - project default)
 #
-# Usage dans CMakePresets.json:
+# Usage in CMakePresets.json:
 #   "toolchainFile": "${sourceDir}/cmake/vcpkg-toolchain.cmake"
 
-# Option 1: Variable d'environnement VCPKG_ROOT (vcpkg personnel)
+# Option 1: VCPKG_ROOT environment variable (personal vcpkg)
 if(DEFINED ENV{VCPKG_ROOT} AND EXISTS "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
     message(STATUS "[vcpkg] Using personal vcpkg from VCPKG_ROOT: $ENV{VCPKG_ROOT}")
     include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
     return()
 endif()
 
-# Option 2: Submodule Git (external/vcpkg)
+# Option 2: Git submodule (external/vcpkg)
 set(VCPKG_SUBMODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../external/vcpkg")
 if(EXISTS "${VCPKG_SUBMODULE_PATH}/scripts/buildsystems/vcpkg.cmake")
     message(STATUS "[vcpkg] Using submodule vcpkg from: ${VCPKG_SUBMODULE_PATH}")
@@ -23,7 +23,7 @@ if(EXISTS "${VCPKG_SUBMODULE_PATH}/scripts/buildsystems/vcpkg.cmake")
     return()
 endif()
 
-# Aucune option trouvée - erreur explicite
+# No option found - explicit error
 message(FATAL_ERROR 
     "[vcpkg] vcpkg not found!\n"
     "Please use one of these options:\n"
