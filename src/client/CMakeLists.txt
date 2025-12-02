@@ -40,9 +40,8 @@ target_link_libraries(rtype-graphic-SFML
     rtype-client-system
 )
 
-add_custom_command(TARGET r-type_client PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
+execute_process(
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
         ${CMAKE_SOURCE_DIR}/assets
-        $<TARGET_FILE_DIR:r-type_client>/../../assets
-        COMMENT "Copying assets to output directory"
+        ${CMAKE_BINARY_DIR}/assets
 )
