@@ -8,11 +8,13 @@
 #include "ServerApp.hpp"
 
 #include <algorithm>
+#include <memory>
+#include <vector>
 
 namespace rtype::server {
 
 ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
-                     std::atomic<bool>& shutdownFlag,
+                     std::shared_ptr<std::atomic<bool>> shutdownFlag,
                      uint32_t clientTimeoutSeconds, bool verbose)
     : _port(port),
       _tickRate(tickRate),
@@ -32,13 +34,14 @@ bool ServerApp::run() {
     logStartupInfo();
 
     const auto timing = createLoopTiming();
-    LoopState state{.previousTime = std::chrono::steady_clock::now()};
+    auto state = std::make_shared<LoopState>();
+    state->previousTime = std::chrono::steady_clock::now();
 
-    while (!_shutdownFlag.load(std::memory_order_acquire)) {
+    while (!_shutdownFlag->load(std::memory_order_acquire)) {
         const auto frameStartTime = std::chrono::steady_clock::now();
 
         const auto frameTime = calculateFrameTime(state, timing);
-        state.accumulator += frameTime;
+        state->accumulator += frameTime;
 
         processIncomingData();
         performFixedUpdates(state, timing);
@@ -72,7 +75,7 @@ ServerApp::LoopTiming ServerApp::createLoopTiming() const noexcept {
 }
 
 std::chrono::nanoseconds ServerApp::calculateFrameTime(
-    LoopState& state, const LoopTiming& timing) noexcept {
+    std::shared_ptr<LoopState> state, const LoopTiming& timing) noexcept {
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
     using std::chrono::nanoseconds;
@@ -80,8 +83,8 @@ std::chrono::nanoseconds ServerApp::calculateFrameTime(
 
     const auto currentTime = steady_clock::now();
     auto frameTime =
-        duration_cast<nanoseconds>(currentTime - state.previousTime);
-    state.previousTime = currentTime;
+        duration_cast<nanoseconds>(currentTime - state->previousTime);
+    state->previousTime = currentTime;
 
     if (frameTime > timing.maxFrameTime) {
         _metrics->tickOverruns.fetch_add(1, std::memory_order_relaxed);
@@ -95,26 +98,26 @@ std::chrono::nanoseconds ServerApp::calculateFrameTime(
     return frameTime;
 }
 
-void ServerApp::performFixedUpdates(LoopState& state,
+void ServerApp::performFixedUpdates(std::shared_ptr<LoopState> state,
                                     const LoopTiming& timing) noexcept {
     uint32_t updateCount = 0;
 
-    while (state.accumulator >= timing.fixedDeltaNs &&
+    while (state->accumulator >= timing.fixedDeltaNs &&
            updateCount < timing.maxUpdatesPerFrame) {
         _clientManager.checkClientTimeouts(_clientTimeoutSeconds);
         update();
-        state.accumulator -= timing.fixedDeltaNs;
+        state->accumulator -= timing.fixedDeltaNs;
         ++updateCount;
     }
 
     if (updateCount >= timing.maxUpdatesPerFrame &&
-        state.accumulator >= timing.fixedDeltaNs) {
+        state->accumulator >= timing.fixedDeltaNs) {
         LOG_DEBUG("[Server] Dropping "
-                  << (state.accumulator / timing.fixedDeltaNs)
+                  << (state->accumulator / timing.fixedDeltaNs)
                   << " ticks to catch up (overruns: "
                   << _metrics->tickOverruns.load(std::memory_order_relaxed)
                   << ")");
-        state.accumulator = state.accumulator % timing.fixedDeltaNs;
+        state->accumulator = state->accumulator % timing.fixedDeltaNs;
     }
 }
 
@@ -143,11 +146,11 @@ void ServerApp::sleepUntilNextFrame(
 }
 
 void ServerApp::stop() noexcept {
-    _shutdownFlag.store(true, std::memory_order_release);
+    _shutdownFlag->store(true, std::memory_order_release);
 }
 
 bool ServerApp::isRunning() const noexcept {
-    return !_shutdownFlag.load(std::memory_order_acquire);
+    return !_shutdownFlag->load(std::memory_order_acquire);
 }
 
 size_t ServerApp::getConnectedClientCount() const noexcept {
@@ -165,6 +168,12 @@ std::optional<Client> ServerApp::getClientInfo(ClientId clientId) const {
 bool ServerApp::initialize() {
     // TODO(Clem): Initialize network socket when rtype_network is fully
     // implemented Example: _socket.bind(_port);
+
+    if (!startNetworkThread()) {
+        LOG_ERROR("[Server] Failed to start network thread");
+        return false;
+    }
+
     LOG_DEBUG(
         "[Server] Initialized (network stub - waiting for rtype_network "
         "implementation)");
@@ -176,33 +185,33 @@ void ServerApp::shutdown() noexcept {
         LOG_DEBUG("[Server] Shutdown already performed, skipping");
         return;
     }
+
+    stopNetworkThread();
     _clientManager.clearAllClients();
+
     // TODO(Clem): Close network socket
     // _socket.close();
     LOG_DEBUG("[Server] Shutdown complete");
 }
 
 void ServerApp::processIncomingData() noexcept {
-    // TODO(Clem): Implement when rtype_network is ready
-    // This is a stub that simulates receiving data
-    //
-    // Pseudocode:
-    // while (_socket.hasData()) {
-    //     Endpoint sender;
-    //     auto data = _socket.receive(sender);
-    //
-    //     // Check if this is a new client (O(1) lookup now!)
-    //     auto clientId = _clientManager.findClientByEndpoint(sender);
-    //     if (clientId == ClientManager::INVALID_CLIENT_ID) {
-    //         clientId = _clientManager.handleNewConnection(sender);
-    //     }
-    //
-    //     // Update last activity time
-    //     _clientManager.updateClientActivity(clientId);
-    //
-    //     // Process the packet
-    //     processPacket(clientId, data);
-    // }
+    while (auto packetOpt = _incomingPackets.pop()) {
+        auto& [endpoint, packet] = *packetOpt;
+
+        auto clientId = _clientManager.findClientByEndpoint(endpoint);
+        if (clientId == ClientManager::INVALID_CLIENT_ID) {
+            clientId = _clientManager.handleNewConnection(endpoint);
+            if (clientId == ClientManager::INVALID_CLIENT_ID) {
+                // TODO(Anyone): Log rejection reason and update metrics when
+                // client connection is rejected
+                continue;
+            }
+        }
+
+        _clientManager.updateClientActivity(clientId);
+
+        processPacket(clientId, packet);
+    }
 }
 
 void ServerApp::update() noexcept {
@@ -213,6 +222,58 @@ void ServerApp::update() noexcept {
 void ServerApp::broadcastGameState() noexcept {
     // TODO(Clem): Send game state to all connected clients
     // This will serialize entity states and send them via the network
+}
+
+void ServerApp::processPacket(ClientId clientId,
+                              const rtype::network::Packet& packet) noexcept {
+    // TODO(Clem): Implement packet processing logic
+    // This will handle different packet types (player input, etc.)
+    LOG_DEBUG("[Server] Processing packet from client "
+              << clientId << " of type " << static_cast<int>(packet.type()));
+}
+
+bool ServerApp::startNetworkThread() {
+    try {
+        _networkThreadRunning.store(true, std::memory_order_release);
+        _networkThread = std::thread(&ServerApp::networkThreadFunction, this);
+        LOG_DEBUG("[Server] Network thread started");
+        return true;
+    } catch (const std::exception& e) {
+        LOG_ERROR("[Server] Failed to start network thread: " << e.what());
+        _networkThreadRunning.store(false, std::memory_order_release);
+        return false;
+    }
+}
+
+void ServerApp::stopNetworkThread() noexcept {
+    if (_networkThreadRunning.load(std::memory_order_acquire)) {
+        _networkThreadRunning.store(false, std::memory_order_release);
+        if (_networkThread.joinable()) {
+            _networkThread.join();
+        }
+        LOG_DEBUG("[Server] Network thread stopped");
+    }
+}
+
+void ServerApp::networkThreadFunction() noexcept {
+    LOG_DEBUG("[Server] Network thread running");
+
+    while (_networkThreadRunning.load(std::memory_order_acquire)) {
+        // TODO(Clem): Implement actual network receiving when rtype_network is
+        // ready For now, this is a stub that simulates receiving packets
+        //
+        // Pseudocode:
+        // if (_socket.hasData()) {
+        //     Endpoint sender;
+        //     std::vector<uint8_t> rawData = _socket.receive(sender);
+        //     rtype::network::Packet packet = deserializePacket(rawData);
+        //     _incomingPackets.push({sender, packet});
+        // }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    LOG_DEBUG("[Server] Network thread exiting");
 }
 
 }  // namespace rtype::server
