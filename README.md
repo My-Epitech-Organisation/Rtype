@@ -9,11 +9,12 @@ A modern C++20 recreation of the classic R-Type game using an Entity Component S
 - ⚡ High-performance ECS engine
 - 📚 Comprehensive documentation (Doxygen + Docusaurus)
 - 🧪 Unit tests with Google Test
-- 🔧 Cross-platform support (Linux, macOS, Windows)
+- 🔧 Cross-platform support (Linux, Windows)
 
 ## Prerequisites
 
-- **CMake** 3.15+
+- **CMake** 3.19+
+- **Ninja** (build system)
 - **C++20 compiler** (GCC 11+, Clang 14+, or MSVC 2022)
 - **Git**
 
@@ -23,20 +24,40 @@ A modern C++20 recreation of the classic R-Type game using an Entity Component S
 
 ## Quick Start
 
-### Build
+### 1. Clone the repository
 
 ```bash
-# Clone the repository
-git clone https://github.com/My-Epitech-Organisation/Rtype.git
+git clone --recursive https://github.com/My-Epitech-Organisation/Rtype.git
 cd Rtype
+```
 
-# Configure and build
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+> **Note:** The `--recursive` flag is required to fetch the vcpkg submodule.
+
+### 2. Setup vcpkg (first time only)
+
+```bash
+./scripts/setup-vcpkg.sh
+```
+
+This script initializes vcpkg and bootstraps it automatically.
+
+**Alternative:** If you have your own vcpkg installation, set the `VCPKG_ROOT` environment variable:
+```bash
+export VCPKG_ROOT=/path/to/your/vcpkg
+```
+
+### 3. Configure and Build
+
+```bash
+# Configure (vcpkg installs dependencies automatically)
+cmake --preset linux-debug    # Linux
+cmake --preset windows-debug  # Windows
+
+# Build
 cmake --build build
 
 # Run tests
-cd build
-ctest --output-on-failure
+ctest --test-dir build --output-on-failure
 ```
 
 ### Run
@@ -49,13 +70,22 @@ ctest --output-on-failure
 ./scripts/run_client.sh
 ```
 
+## CMake Presets
+
+| Preset | Description |
+|--------|-------------|
+| `linux-debug` | Linux Debug build |
+| `linux-release` | Linux Release build |
+| `windows-debug` | Windows Debug build (MSVC) |
+| `windows-release` | Windows Release build (MSVC) |
+
 ## Documentation
 
 ### Generate Documentation
 
 ```bash
 # Configure with documentation enabled
-cmake -S . -B build -DBUILD_DOCS=ON
+cmake --preset linux-debug -DBUILD_DOCS=ON
 
 # Generate all documentation (Doxygen + Docusaurus)
 cmake --build build --target docs
@@ -85,39 +115,53 @@ Rtype/
 │   ├── client/       # Client application
 │   ├── server/       # Server application
 │   ├── engine/       # ECS game engine
+│   ├── network/      # Network library
 │   └── games/        # Game-specific code
-├── include/          # Public headers
+├── include/          # Public headers (interfaces)
+├── external/         # External dependencies
+│   └── vcpkg/        # vcpkg submodule
 ├── tests/            # Unit tests
 ├── docs/             # Documentation
 │   ├── website/      # Docusaurus site
 │   └── Doxyfile      # Doxygen configuration
 ├── config/           # Configuration files
-└── scripts/          # Build and run scripts
+├── scripts/          # Build and run scripts
+├── cmake/            # CMake modules
+└── vcpkg.json        # vcpkg manifest (dependencies)
 ```
+
+## Dependencies
+
+Managed automatically by vcpkg:
+
+| Package | Version | Description |
+|---------|---------|-------------|
+| asio | 1.32.0 | Async I/O (networking) |
+| sfml | 3.0.2 | Graphics, Audio, Window |
+| + others | - | See `vcpkg.json` |
 
 ## Development
 
 ### Build Options
 
 ```bash
-# Debug build with tests
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
+# Debug build with tests (recommended)
+cmake --preset linux-debug
 cmake --build build
 
-# Release build without tests
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
+# Release build
+cmake --preset linux-release
 cmake --build build
 
 # With documentation
-cmake -S . -B build -DBUILD_DOCS=ON
+cmake --preset linux-debug -DBUILD_DOCS=ON
 cmake --build build --target docs
 ```
 
 ### Running Tests
 
 ```bash
-cd build
-ctest --output-on-failure
+ctest --test-dir build --output-on-failure
 ```
 
 ## Contributing
@@ -130,4 +174,4 @@ See [LICENSE](LICENSE) for details.
 
 ## Team
 
-Epitech Project - 2024/2025
+Epitech Project - 2025/2026

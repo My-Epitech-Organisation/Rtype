@@ -201,7 +201,8 @@ echo "======================================" >> "$REPORT_FILE"
 CLANG_TIDY_ERRORS=0
 CLANG_TIDY_CONFIG="$PROJECT_ROOT/config/clang/.clang-tidy"
 
-TIDY_FILES=$(find "$PROJECT_ROOT/src" -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) 2>/dev/null)
+# Only analyze .cpp files (headers are analyzed via includes)
+TIDY_FILES=$(find "$PROJECT_ROOT/src" -type f -name "*.cpp" 2>/dev/null)
 
 if [ ! -f "$CLANG_TIDY_CONFIG" ]; then
     log_warning "Clang-Tidy config not found"

@@ -7,6 +7,10 @@
 
 #include "UdpSocket.hpp"
 
+#include <asio.hpp>
+
+#include "core/Core.hpp"
+
 namespace rtype::network {
 
 UdpSocket::UdpSocket() : socket_(-1) {}
