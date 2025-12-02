@@ -2,6 +2,7 @@ add_library(rtype_network STATIC
     UdpSocket.cpp
     Packet.cpp
     Serializer.cpp
+    transport/AsioUdpSocket.cpp
 )
 
 # Find Asio (standalone, non-Boost)
