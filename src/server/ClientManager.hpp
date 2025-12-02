@@ -231,9 +231,10 @@ class ClientManager {
      */
     void assertLockHeld() const noexcept;
 
-    size_t _maxPlayers;                    ///< Maximum concurrent players
-    std::weak_ptr<ServerMetrics> _metrics; ///< Weak reference to server metrics
-    bool _verbose;                         ///< Enable verbose debug output
+    size_t _maxPlayers;  ///< Maximum concurrent players
+    std::weak_ptr<ServerMetrics>
+        _metrics;   ///< Weak reference to server metrics
+    bool _verbose;  ///< Enable verbose debug output
 
     std::unordered_map<ClientId, Client> _clients;
     std::unordered_map<Endpoint, ClientId> _endpointToClient;

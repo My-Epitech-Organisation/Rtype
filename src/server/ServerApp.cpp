@@ -19,6 +19,7 @@ ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
       _clientTimeoutSeconds(clientTimeoutSeconds),
       _verbose(verbose),
       _shutdownFlag(shutdownFlag),
+      _metrics(std::make_shared<ServerMetrics>()),
       _clientManager(maxPlayers, _metrics, verbose) {}
 
 ServerApp::~ServerApp() { shutdown(); }
@@ -82,7 +83,7 @@ std::chrono::nanoseconds ServerApp::calculateFrameTime(
     state.previousTime = currentTime;
 
     if (frameTime > timing.maxFrameTime) {
-        _metrics.tickOverruns.fetch_add(1, std::memory_order_relaxed);
+        _metrics->tickOverruns.fetch_add(1, std::memory_order_relaxed);
         LOG_DEBUG("[Server] Frame time exceeded max ("
                   << duration_cast<milliseconds>(frameTime).count()
                   << "ms), clamping to "
@@ -110,7 +111,7 @@ void ServerApp::performFixedUpdates(LoopState& state,
         LOG_DEBUG("[Server] Dropping "
                   << (state.accumulator / timing.fixedDeltaNs)
                   << " ticks to catch up (overruns: "
-                  << _metrics.tickOverruns.load(std::memory_order_relaxed)
+                  << _metrics->tickOverruns.load(std::memory_order_relaxed)
                   << ")");
         state.accumulator = state.accumulator % timing.fixedDeltaNs;
     }
