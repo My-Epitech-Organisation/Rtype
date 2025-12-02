@@ -5,6 +5,8 @@
 ** Server main entry point
 */
 
+#include "main.hpp"
+
 #include <atomic>
 #include <csignal>
 #include <exception>
@@ -13,37 +15,6 @@
 
 #include "../common/ArgParser.hpp"
 #include "ServerApp.hpp"
-
-/**
- * @brief Encapsulates server signal flags for thread-safe access
- *
- * This class provides a singleton-like access to signal flags used
- * by the signal handler to communicate with the main server loop.
- */
-class ServerSignals {
-   public:
-    static std::atomic<bool>& shutdown() noexcept {
-        static std::atomic<bool> flag{false};
-        return flag;
-    }
-
-    static std::atomic<bool>& reloadConfig() noexcept {
-        static std::atomic<bool> flag{false};
-        return flag;
-    }
-
-    ServerSignals() = delete;
-};
-
-/**
- * @brief Server configuration structure
- */
-struct ServerConfig {
-    uint16_t port = 4242;
-    size_t maxPlayers = 8;
-    uint32_t tickRate = 60;
-    bool verbose = false;
-};
 
 /**
  * @brief Signal handler for graceful shutdown and config reload

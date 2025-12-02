@@ -66,8 +66,9 @@ ServerApp::LoopTiming ServerApp::createLoopTiming() const noexcept {
     const auto fixedDeltaTime =
         duration<double>(1.0 / static_cast<double>(_tickRate));
     return {.fixedDeltaNs = duration_cast<nanoseconds>(fixedDeltaTime),
-            .maxFrameTime = duration_cast<nanoseconds>(milliseconds(250)),
-            .maxUpdatesPerFrame = 5};
+            .maxFrameTime =
+                duration_cast<nanoseconds>(milliseconds(MAX_FRAME_TIME_MS)),
+            .maxUpdatesPerFrame = MAX_UPDATES_PER_FRAME};
 }
 
 std::chrono::nanoseconds ServerApp::calculateFrameTime(
@@ -130,8 +131,9 @@ void ServerApp::sleepUntilNextFrame(
     if (sleepTime <= nanoseconds{0}) {
         return;
     }
-    const auto safeSleepTime = duration_cast<nanoseconds>(sleepTime * 95 / 100);
-    if (safeSleepTime > microseconds(100)) {
+    const auto safeSleepTime =
+        duration_cast<nanoseconds>(sleepTime * SLEEP_TIME_SAFETY_PERCENT / 100);
+    if (safeSleepTime > microseconds(MIN_SLEEP_THRESHOLD_US)) {
         std::this_thread::sleep_for(safeSleepTime);
     }
     const auto targetTime = frameStartTime + timing.fixedDeltaNs;

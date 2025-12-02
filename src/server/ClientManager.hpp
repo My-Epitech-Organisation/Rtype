@@ -50,6 +50,11 @@ class ClientManager {
     /// @brief Rate limiting: max new connections per second
     static constexpr uint32_t MAX_CONNECTIONS_PER_SECOND = 10;
 
+    /// @brief Rate limit window duration in milliseconds
+    /// @details The time window over which connection rate limiting is applied.
+    /// After this window expires, the connection counter resets.
+    static constexpr int64_t RATE_LIMIT_WINDOW_MS = 1000;
+
     /**
      * @brief Construct a new ClientManager
      * @param maxPlayers Maximum number of concurrent players
@@ -224,12 +229,6 @@ class ClientManager {
      * @pre Caller must hold lock on _clientsMutex (debug only)
      */
     void printConnectedClients() const noexcept;
-
-    /**
-     * @brief Assert that the mutex is currently locked (debug only)
-     * @note This is a best-effort check for documentation/debugging purposes
-     */
-    void assertLockHeld() const noexcept;
 
     size_t _maxPlayers;  ///< Maximum concurrent players
     std::weak_ptr<ServerMetrics>

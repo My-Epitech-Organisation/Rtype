@@ -45,7 +45,7 @@ class ClientManagerTest : public ::testing::Test {
         metrics->totalConnections.store(0);
     }
 
-    std::shared_ptr<ServerMetrics> metrics;;
+    std::shared_ptr<ServerMetrics> metrics;
 };
 
 // ============================================================================
