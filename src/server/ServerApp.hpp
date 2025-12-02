@@ -90,8 +90,8 @@ class ServerApp {
      * @param port Port to listen on
      * @param maxPlayers Maximum number of concurrent players
      * @param tickRate Server tick rate in Hz
-     * @param shutdownFlag Shared pointer to external shutdown flag (set by signal
-     * handler)
+     * @param shutdownFlag Shared pointer to external shutdown flag (set by
+     * signal handler)
      * @param clientTimeoutSeconds Client timeout in seconds (default: 10)
      * @param verbose Enable verbose debug output (default: false)
      */
@@ -280,11 +280,12 @@ class ServerApp {
      */
     void broadcastGameState() noexcept;
 
-    uint16_t _port;                    ///< Server port
-    uint32_t _tickRate;                ///< Server tick rate in Hz
-    uint32_t _clientTimeoutSeconds;    ///< Client timeout in seconds
-    bool _verbose;                     ///< Enable verbose debug output
-    std::shared_ptr<std::atomic<bool>> _shutdownFlag;  ///< External shutdown flag shared pointer
+    uint16_t _port;                  ///< Server port
+    uint32_t _tickRate;              ///< Server tick rate in Hz
+    uint32_t _clientTimeoutSeconds;  ///< Client timeout in seconds
+    bool _verbose;                   ///< Enable verbose debug output
+    std::shared_ptr<std::atomic<bool>>
+        _shutdownFlag;  ///< External shutdown flag shared pointer
     std::atomic<bool> _hasShutdown{false};  ///< Guard against double shutdown
 
     std::shared_ptr<ServerMetrics> _metrics;  ///< Server performance metrics

@@ -25,6 +25,27 @@
 
 using namespace rtype;
 
+// Helper function to safely remove files with Windows-specific handling
+void safeRemoveFile(const std::filesystem::path& filePath) {
+#ifdef _WIN32
+    // On Windows, file handles may not be immediately released after closing
+    // Retry removal with small delays
+    for (int attempt = 0; attempt < 10; ++attempt) {
+        std::error_code ec;
+        std::filesystem::remove(filePath, ec);
+        if (!ec) {
+            return; // Successfully removed
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    // If we get here, removal failed after retries - this will throw
+    std::filesystem::remove(filePath);
+#else
+    // On other platforms, remove immediately
+    std::filesystem::remove(filePath);
+#endif
+}
+
 // Helper function to generate unique test file names
 std::filesystem::path getUniqueTestFile(const std::string& baseName) {
     static int counter = 0;
@@ -157,7 +178,7 @@ class FileWriterTest : public ::testing::Test {
         std::filesystem::remove(testFilePath);
     }
 
-    void TearDown() override { std::filesystem::remove(testFilePath); }
+    void TearDown() override { safeRemoveFile(testFilePath); }
 
     std::string readFileContents() {
         std::ifstream file(testFilePath);
@@ -264,7 +285,7 @@ TEST_F(FileWriterTest, GetFilePathEmptyWhenNotOpen) {
 TEST_F(FileWriterTest, OpenClosesExistingFileFirst) {
     auto secondPath =
         std::filesystem::temp_directory_path() / "test_filewriter2.log";
-    std::filesystem::remove(secondPath);
+    safeRemoveFile(secondPath);
 
     FileWriter writer;
     writer.open(testFilePath);
@@ -273,7 +294,7 @@ TEST_F(FileWriterTest, OpenClosesExistingFileFirst) {
     writer.write("Second file");
     writer.close();
 
-    std::filesystem::remove(secondPath);
+    safeRemoveFile(secondPath);
     EXPECT_TRUE(std::filesystem::exists(testFilePath));
 }
 
@@ -327,7 +348,7 @@ class LoggerTest : public ::testing::Test {
 
     void TearDown() override {
         logger.closeFile();
-        std::filesystem::remove(testFilePath);
+        safeRemoveFile(testFilePath);
     }
 
     std::string readFileContents() {
@@ -610,7 +631,7 @@ class LoggerIntegrationTest : public ::testing::Test {
 
     void TearDown() override {
         Logger::resetInstance();
-        std::filesystem::remove(testFilePath);
+        safeRemoveFile(testFilePath);
     }
 
     std::string readFileContents() {
@@ -679,7 +700,7 @@ TEST(LoggerEdgeCaseTest, DebugWritesToFile) {
 
     EXPECT_TRUE(contents.find("[DEBUG]") != std::string::npos);
     EXPECT_TRUE(contents.find("Test debug message") != std::string::npos);
-    std::filesystem::remove(testFilePath);
+    safeRemoveFile(testFilePath);
 }
 
 TEST(LoggerEdgeCaseTest, LogLevelFilteringWarning) {
@@ -699,7 +720,7 @@ TEST(LoggerEdgeCaseTest, LogLevelFilteringWarning) {
 
     EXPECT_TRUE(contents.find("This warning should not appear") == std::string::npos);
 
-    std::filesystem::remove(testFilePath);
+    safeRemoveFile(testFilePath);
 }
 
 TEST(LoggerEdgeCaseTest, ErrorGoesToStderr) {
@@ -765,7 +786,7 @@ TEST(LoggerEdgeCaseTest, SetLogFileWithAppendFalse) {
     EXPECT_TRUE(contents.find("Initial content") == std::string::npos);
     EXPECT_TRUE(contents.find("New content") != std::string::npos);
 
-    std::filesystem::remove(testFilePath);
+    safeRemoveFile(testFilePath);
 }
 
 TEST(LoggerEdgeCaseTest, MultipleSetLogFileCalls) {
@@ -794,8 +815,8 @@ TEST(LoggerEdgeCaseTest, MultipleSetLogFileCalls) {
     EXPECT_TRUE(buffer1.str().find("First file message") != std::string::npos);
     EXPECT_TRUE(buffer2.str().find("Second file message") != std::string::npos);
 
-    std::filesystem::remove(firstFile);
-    std::filesystem::remove(secondFile);
+    safeRemoveFile(firstFile);
+    safeRemoveFile(secondFile);
 }
 
 // ============================================================================
@@ -819,7 +840,7 @@ TEST(FileWriterEdgeCaseTest, DestructorClosesFile) {
     buffer << file.rdbuf();
     EXPECT_TRUE(buffer.str().find("Test message") != std::string::npos);
 
-    std::filesystem::remove(testFilePath);
+    safeRemoveFile(testFilePath);
 }
 
 TEST(FileWriterEdgeCaseTest, DoubleCloseSafe) {
@@ -833,7 +854,7 @@ TEST(FileWriterEdgeCaseTest, DoubleCloseSafe) {
 
     EXPECT_FALSE(writer.isOpen());
 
-    std::filesystem::remove(testFilePath);
+    safeRemoveFile(testFilePath);
 }
 
 TEST(FileWriterEdgeCaseTest, WriteAfterClose) {
@@ -853,7 +874,7 @@ TEST(FileWriterEdgeCaseTest, WriteAfterClose) {
     EXPECT_TRUE(buffer.str().find("Before close") != std::string::npos);
     EXPECT_TRUE(buffer.str().find("After close") == std::string::npos);
 
-    std::filesystem::remove(testFilePath);
+    safeRemoveFile(testFilePath);
 }
 
 // ============================================================================

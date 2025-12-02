@@ -10,10 +10,10 @@
 #include <atomic>
 #include <csignal>
 #include <exception>
-#include <vector>
-#include <memory>
 #include <format>
 #include <iostream>
+#include <memory>
+#include <vector>
 
 #include "../common/ArgParser.hpp"
 #include "ServerApp.hpp"
@@ -53,8 +53,9 @@ static void setupSignalHandlers() {
  * @param config The server configuration to populate
  * @return Shared pointer to the configured parser
  */
-static std::shared_ptr<rtype::ArgParser> configureParser(std::shared_ptr<rtype::ArgParser> parser,
-                                                         std::shared_ptr<ServerConfig> config) {
+static std::shared_ptr<rtype::ArgParser> configureParser(
+    std::shared_ptr<rtype::ArgParser> parser,
+    std::shared_ptr<ServerConfig> config) {
     (*parser)
         .flag("-h", "--help", "Show this help message",
               [parser]() {
@@ -155,9 +156,12 @@ int main(int argc, char** argv) {
         }
         printBanner(*config);
         setupSignalHandlers();
-        return runServer(*config,
-                         std::shared_ptr<std::atomic<bool>>(&ServerSignals::shutdown(), [](std::atomic<bool>*){}),
-                         std::shared_ptr<std::atomic<bool>>(&ServerSignals::reloadConfig(), [](std::atomic<bool>*){}));
+        return runServer(
+            *config,
+            std::shared_ptr<std::atomic<bool>>(&ServerSignals::shutdown(),
+                                               [](std::atomic<bool>*) {}),
+            std::shared_ptr<std::atomic<bool>>(&ServerSignals::reloadConfig(),
+                                               [](std::atomic<bool>*) {}));
     } catch (const std::exception& e) {
         std::cerr << "[Main] Fatal error: " << e.what() << std::endl;
         return 1;
