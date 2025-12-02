@@ -23,3 +23,15 @@ target_include_directories(test_logger PRIVATE
 )
 
 gtest_discover_tests(test_logger)
+
+add_executable(test_safe_queue SafeQueue_test.cpp)
+
+target_link_libraries(test_safe_queue PRIVATE
+    GTest::gtest_main
+)
+
+target_include_directories(test_safe_queue PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_safe_queue)

@@ -1,6 +1,3 @@
-add_executable(test_safe_queue SafeQueue_test.cpp)
-target_link_libraries(test_safe_queue gtest_main)
-add_test(NAME SafeQueueTest COMMAND test_safe_queue)
 add_executable(test_client_manager test_ClientManager.cpp
     ${CMAKE_SOURCE_DIR}/src/server/ClientManager.cpp
 )
