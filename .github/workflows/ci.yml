@@ -145,7 +145,7 @@ jobs:
   deps-linux:
     name: "📦 Dependencies (Linux)"
     runs-on: ubuntu-latest
-    needs: [cache-check, lint]
+    needs: [cache-check]
     if: needs.cache-check.outputs.cache-hit-linux != 'true'
     steps:
       - uses: actions/checkout@v4
@@ -183,7 +183,7 @@ jobs:
   deps-windows:
     name: "📦 Dependencies (Windows)"
     runs-on: windows-latest
-    needs: [cache-check, lint]
+    needs: [cache-check]
     outputs:
       cache-hit: ${{ steps.cache-check.outputs.cache-hit }}
     steps:
