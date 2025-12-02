@@ -70,8 +70,8 @@ static constexpr std::uint32_t kUnassignedUserId = 0x00000000;
  * ```
  */
 struct Endpoint {
-    std::string address;   ///< IP address (IPv4 or IPv6 string)
-    std::uint16_t port;    ///< Port number
+    std::string address;  ///< IP address (IPv4 or IPv6 string)
+    std::uint16_t port;   ///< Port number
 
     Endpoint() = default;
 
@@ -112,14 +112,14 @@ struct Endpoint {
  * @brief Packet reliability flags as per RFC RTGP v1.1.0
  */
 namespace Flags {
-    /// No special flags (unreliable packet)
-    static constexpr std::uint8_t kNone = 0x00;
+/// No special flags (unreliable packet)
+static constexpr std::uint8_t kNone = 0x00;
 
-    /// Sender requests acknowledgement (RUDP)
-    static constexpr std::uint8_t kReliable = 0x01;
+/// Sender requests acknowledgement (RUDP)
+static constexpr std::uint8_t kReliable = 0x01;
 
-    /// Ack ID field is valid (acknowledging a previous packet)
-    static constexpr std::uint8_t kIsAck = 0x02;
+/// Ack ID field is valid (acknowledging a previous packet)
+static constexpr std::uint8_t kIsAck = 0x02;
 }  // namespace Flags
 
 }  // namespace rtype::network

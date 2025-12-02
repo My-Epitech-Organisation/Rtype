@@ -7,13 +7,14 @@
 
 #pragma once
 
-#include <asio.hpp>
 #include <memory>
 #include <mutex>
 
+#include <asio.hpp>
+
 #include "IAsyncSocket.hpp"
-#include "core/Types.hpp"
 #include "core/Error.hpp"
+#include "core/Types.hpp"
 
 namespace rtype::network {
 
@@ -76,12 +77,10 @@ class AsioUdpSocket : public IAsyncSocket {
 
     [[nodiscard]] std::uint16_t localPort() const noexcept override;
 
-    void asyncSendTo(const Buffer& data,
-                     const Endpoint& dest,
+    void asyncSendTo(const Buffer& data, const Endpoint& dest,
                      SendCallback handler) override;
 
-    void asyncReceiveFrom(Buffer& buffer,
-                          Endpoint& sender,
+    void asyncReceiveFrom(Buffer& buffer, Endpoint& sender,
                           ReceiveCallback handler) override;
 
     void cancel() override;

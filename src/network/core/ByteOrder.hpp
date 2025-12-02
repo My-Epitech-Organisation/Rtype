@@ -13,10 +13,10 @@
 
 // Platform detection for byte order intrinsics
 #if defined(_WIN32) || defined(_WIN64)
-    #include <winsock2.h>
-    #pragma comment(lib, "ws2_32.lib")
+#include <winsock2.h>
+#pragma comment(lib, "ws2_32.lib")
 #else
-    #include <arpa/inet.h>
+#include <arpa/inet.h>
 #endif
 
 namespace rtype::network {
@@ -39,10 +39,8 @@ namespace ByteOrder {
 /// Check if type is a supported numeric type
 template <typename T>
 constexpr bool is_network_numeric_v =
-    std::is_same_v<T, std::uint16_t> ||
-    std::is_same_v<T, std::int16_t> ||
-    std::is_same_v<T, std::uint32_t> ||
-    std::is_same_v<T, std::int32_t> ||
+    std::is_same_v<T, std::uint16_t> || std::is_same_v<T, std::int16_t> ||
+    std::is_same_v<T, std::uint32_t> || std::is_same_v<T, std::int32_t> ||
     std::is_same_v<T, float>;
 
 // ============================================================================

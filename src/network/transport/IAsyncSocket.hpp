@@ -11,8 +11,8 @@
 #include <functional>
 #include <memory>
 
-#include "core/Types.hpp"
 #include "core/Error.hpp"
+#include "core/Types.hpp"
 
 namespace rtype::network {
 
@@ -154,7 +154,8 @@ class IAsyncSocket {
      * The operation completes immediately (non-blocking). The callback is
      * invoked when the data has been handed to the OS for transmission.
      *
-     * @param data Buffer containing data to send (must remain valid until callback)
+     * @param data Buffer containing data to send (must remain valid until
+     * callback)
      * @param dest Destination endpoint (IP + port)
      * @param handler Callback invoked on completion
      *
@@ -163,8 +164,7 @@ class IAsyncSocket {
      *
      * @pre isOpen() == true
      */
-    virtual void asyncSendTo(const Buffer& data,
-                             const Endpoint& dest,
+    virtual void asyncSendTo(const Buffer& data, const Endpoint& dest,
                              SendCallback handler) = 0;
 
     /**
@@ -173,7 +173,8 @@ class IAsyncSocket {
      * The operation completes when a datagram is received. The callback is
      * invoked with the number of bytes received.
      *
-     * @param buffer Buffer to store received data (must remain valid until callback)
+     * @param buffer Buffer to store received data (must remain valid until
+     * callback)
      * @param sender [out] Populated with sender's endpoint on success
      * @param handler Callback invoked on completion
      *
@@ -183,8 +184,7 @@ class IAsyncSocket {
      * @pre isOpen() == true
      * @pre bind() has been called (for servers)
      */
-    virtual void asyncReceiveFrom(Buffer& buffer,
-                                  Endpoint& sender,
+    virtual void asyncReceiveFrom(Buffer& buffer, Endpoint& sender,
                                   ReceiveCallback handler) = 0;
 
     // ========================================================================

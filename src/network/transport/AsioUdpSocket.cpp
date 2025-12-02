@@ -18,9 +18,7 @@ namespace rtype::network {
 AsioUdpSocket::AsioUdpSocket(asio::io_context& ioContext)
     : socket_(ioContext, asio::ip::udp::v4()) {}
 
-AsioUdpSocket::~AsioUdpSocket() {
-    close();
-}
+AsioUdpSocket::~AsioUdpSocket() { close(); }
 
 // ============================================================================
 // Socket Configuration
@@ -83,9 +81,8 @@ std::uint16_t AsioUdpSocket::localPort() const noexcept {
 // Asynchronous Operations
 // ============================================================================
 
-void AsioUdpSocket::asyncSendTo(const Buffer& data,
-                                 const Endpoint& dest,
-                                 SendCallback handler) {
+void AsioUdpSocket::asyncSendTo(const Buffer& data, const Endpoint& dest,
+                                SendCallback handler) {
     if (!handler) {
         return;
     }
@@ -114,10 +111,9 @@ void AsioUdpSocket::asyncSendTo(const Buffer& data,
     auto sharedBuffer = std::make_shared<Buffer>(data);
 
     socket_.async_send_to(
-        asio::buffer(*sharedBuffer),
-        asioEndpoint,
-        [handler = std::move(handler), sharedBuffer](
-            const asio::error_code& ec, std::size_t bytesSent) {
+        asio::buffer(*sharedBuffer), asioEndpoint,
+        [handler = std::move(handler), sharedBuffer](const asio::error_code& ec,
+                                                     std::size_t bytesSent) {
             if (ec) {
                 handler(Err<std::size_t>(fromAsioError(ec)));
             } else {
@@ -126,9 +122,8 @@ void AsioUdpSocket::asyncSendTo(const Buffer& data,
         });
 }
 
-void AsioUdpSocket::asyncReceiveFrom(Buffer& buffer,
-                                      Endpoint& sender,
-                                      ReceiveCallback handler) {
+void AsioUdpSocket::asyncReceiveFrom(Buffer& buffer, Endpoint& sender,
+                                     ReceiveCallback handler) {
     if (!handler) {
         return;
     }
@@ -139,8 +134,7 @@ void AsioUdpSocket::asyncReceiveFrom(Buffer& buffer,
     }
 
     socket_.async_receive_from(
-        asio::buffer(buffer),
-        remoteEndpoint_,
+        asio::buffer(buffer), remoteEndpoint_,
         [this, &buffer, &sender, handler = std::move(handler)](
             const asio::error_code& ec, std::size_t bytesReceived) {
             if (ec) {

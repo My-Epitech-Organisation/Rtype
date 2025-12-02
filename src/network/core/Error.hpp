@@ -80,27 +80,48 @@ enum class NetworkError : std::uint8_t {
  */
 [[nodiscard]] inline std::string toString(NetworkError error) noexcept {
     switch (error) {
-        case NetworkError::None: return "Success";
-        case NetworkError::NotConnected: return "Not connected";
-        case NetworkError::ConnectionRefused: return "Connection refused";
-        case NetworkError::Timeout: return "Operation timed out";
-        case NetworkError::HostNotFound: return "Host not found";
-        case NetworkError::NetworkUnreachable: return "Network unreachable";
-        case NetworkError::AddressInUse: return "Address already in use";
-        case NetworkError::InvalidMagic: return "Invalid magic byte";
-        case NetworkError::UnknownOpcode: return "Unknown opcode";
-        case NetworkError::PacketTooLarge: return "Packet too large";
-        case NetworkError::PacketTooSmall: return "Packet too small";
-        case NetworkError::MalformedPacket: return "Malformed packet";
-        case NetworkError::InvalidSequence: return "Invalid sequence ID";
-        case NetworkError::InvalidUserId: return "Invalid user ID";
-        case NetworkError::Cancelled: return "Operation cancelled";
-        case NetworkError::WouldBlock: return "Would block";
-        case NetworkError::BufferFull: return "Buffer full";
-        case NetworkError::InternalError: return "Internal error";
-        case NetworkError::MaxRetriesExceeded: return "Max retries exceeded";
-        case NetworkError::AckTimeout: return "ACK timeout";
-        default: return "Unknown error";
+        case NetworkError::None:
+            return "Success";
+        case NetworkError::NotConnected:
+            return "Not connected";
+        case NetworkError::ConnectionRefused:
+            return "Connection refused";
+        case NetworkError::Timeout:
+            return "Operation timed out";
+        case NetworkError::HostNotFound:
+            return "Host not found";
+        case NetworkError::NetworkUnreachable:
+            return "Network unreachable";
+        case NetworkError::AddressInUse:
+            return "Address already in use";
+        case NetworkError::InvalidMagic:
+            return "Invalid magic byte";
+        case NetworkError::UnknownOpcode:
+            return "Unknown opcode";
+        case NetworkError::PacketTooLarge:
+            return "Packet too large";
+        case NetworkError::PacketTooSmall:
+            return "Packet too small";
+        case NetworkError::MalformedPacket:
+            return "Malformed packet";
+        case NetworkError::InvalidSequence:
+            return "Invalid sequence ID";
+        case NetworkError::InvalidUserId:
+            return "Invalid user ID";
+        case NetworkError::Cancelled:
+            return "Operation cancelled";
+        case NetworkError::WouldBlock:
+            return "Would block";
+        case NetworkError::BufferFull:
+            return "Buffer full";
+        case NetworkError::InternalError:
+            return "Internal error";
+        case NetworkError::MaxRetriesExceeded:
+            return "Max retries exceeded";
+        case NetworkError::AckTimeout:
+            return "ACK timeout";
+        default:
+            return "Unknown error";
     }
 }
 
@@ -139,14 +160,10 @@ class Result {
     // --- Constructors ---
 
     /// Construct success result
-    static Result ok(T value) {
-        return Result(std::move(value));
-    }
+    static Result ok(T value) { return Result(std::move(value)); }
 
     /// Construct error result
-    static Result err(E error) {
-        return Result(error);
-    }
+    static Result err(E error) { return Result(error); }
 
     /// Construct success result (implicit conversion)
     Result(T value) : data_(std::move(value)) {}  // NOLINT: implicit
@@ -169,9 +186,7 @@ class Result {
     }
 
     /// Bool conversion (true if success)
-    explicit operator bool() const noexcept {
-        return isOk();
-    }
+    explicit operator bool() const noexcept { return isOk(); }
 
     // --- Value Access ---
 
@@ -179,25 +194,17 @@ class Result {
      * @brief Get success value (undefined behavior if error)
      * @pre isOk() == true
      */
-    [[nodiscard]] T& value() & {
-        return std::get<T>(data_);
-    }
+    [[nodiscard]] T& value() & { return std::get<T>(data_); }
 
-    [[nodiscard]] const T& value() const& {
-        return std::get<T>(data_);
-    }
+    [[nodiscard]] const T& value() const& { return std::get<T>(data_); }
 
-    [[nodiscard]] T&& value() && {
-        return std::get<T>(std::move(data_));
-    }
+    [[nodiscard]] T&& value() && { return std::get<T>(std::move(data_)); }
 
     /**
      * @brief Get error value (undefined behavior if success)
      * @pre isErr() == true
      */
-    [[nodiscard]] E error() const noexcept {
-        return std::get<E>(data_);
-    }
+    [[nodiscard]] E error() const noexcept { return std::get<E>(data_); }
 
     /**
      * @brief Get value or default if error
@@ -275,14 +282,10 @@ template <typename E>
 class Result<void, E> {
    public:
     /// Construct success result
-    static Result ok() {
-        return Result(true);
-    }
+    static Result ok() { return Result(true); }
 
     /// Construct error result
-    static Result err(E error) {
-        return Result(error);
-    }
+    static Result err(E error) { return Result(error); }
 
     // Success constructor
     Result() : data_(true) {}
@@ -298,13 +301,9 @@ class Result<void, E> {
         return std::holds_alternative<E>(data_);
     }
 
-    explicit operator bool() const noexcept {
-        return isOk();
-    }
+    explicit operator bool() const noexcept { return isOk(); }
 
-    [[nodiscard]] E error() const noexcept {
-        return std::get<E>(data_);
-    }
+    [[nodiscard]] E error() const noexcept { return std::get<E>(data_); }
 
    private:
     explicit Result(bool) : data_(true) {}
@@ -323,9 +322,7 @@ template <typename T>
 }
 
 /// Create void success result
-[[nodiscard]] inline Result<void> Ok() {
-    return Result<void>::ok();
-}
+[[nodiscard]] inline Result<void> Ok() { return Result<void>::ok(); }
 
 /// Create error result
 template <typename T = void>

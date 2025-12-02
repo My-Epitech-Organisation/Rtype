@@ -7,11 +7,12 @@
 
 #pragma once
 
-#include <asio.hpp>
+#include <atomic>
 #include <memory>
 #include <optional>
 #include <thread>
-#include <atomic>
+
+#include <asio.hpp>
 
 namespace rtype::network {
 
@@ -49,20 +50,20 @@ namespace rtype::network {
  */
 class IoContext {
    public:
-    using WorkGuard = asio::executor_work_guard<asio::io_context::executor_type>;
+    using WorkGuard =
+        asio::executor_work_guard<asio::io_context::executor_type>;
 
     /**
      * @brief Construct a new IoContext
      */
-    IoContext() : context_(std::make_unique<asio::io_context>()),
-                  workGuard_(asio::make_work_guard(*context_)) {}
+    IoContext()
+        : context_(std::make_unique<asio::io_context>()),
+          workGuard_(asio::make_work_guard(*context_)) {}
 
     /**
      * @brief Destructor - stops context and joins background thread if running
      */
-    ~IoContext() {
-        stop();
-    }
+    ~IoContext() { stop(); }
 
     // Non-copyable
     IoContext(const IoContext&) = delete;
@@ -81,9 +82,7 @@ class IoContext {
      *
      * Use this to create sockets and other Asio objects.
      */
-    [[nodiscard]] asio::io_context& get() noexcept {
-        return *context_;
-    }
+    [[nodiscard]] asio::io_context& get() noexcept { return *context_; }
 
     [[nodiscard]] const asio::io_context& get() const noexcept {
         return *context_;
@@ -92,9 +91,7 @@ class IoContext {
     /**
      * @brief Implicit conversion to asio::io_context&
      */
-    operator asio::io_context&() noexcept {
-        return *context_;
-    }
+    operator asio::io_context&() noexcept { return *context_; }
 
     // ========================================================================
     // Execution Control
@@ -108,9 +105,7 @@ class IoContext {
      *
      * @return Number of handlers executed
      */
-    std::size_t run() {
-        return context_->run();
-    }
+    std::size_t run() { return context_->run(); }
 
     /**
      * @brief Run one handler if available (blocking)
@@ -119,9 +114,7 @@ class IoContext {
      *
      * @return 1 if handler executed, 0 otherwise
      */
-    std::size_t runOne() {
-        return context_->run_one();
-    }
+    std::size_t runOne() { return context_->run_one(); }
 
     /**
      * @brief Poll for ready handlers (non-blocking)
@@ -131,9 +124,7 @@ class IoContext {
      *
      * @return Number of handlers executed
      */
-    std::size_t poll() {
-        return context_->poll();
-    }
+    std::size_t poll() { return context_->poll(); }
 
     /**
      * @brief Poll for one ready handler (non-blocking)
@@ -142,9 +133,7 @@ class IoContext {
      *
      * @return 1 if handler executed, 0 otherwise
      */
-    std::size_t pollOne() {
-        return context_->poll_one();
-    }
+    std::size_t pollOne() { return context_->poll_one(); }
 
     /**
      * @brief Stop the io_context
@@ -164,9 +153,7 @@ class IoContext {
     /**
      * @brief Check if the io_context has been stopped
      */
-    [[nodiscard]] bool stopped() const noexcept {
-        return context_->stopped();
-    }
+    [[nodiscard]] bool stopped() const noexcept { return context_->stopped(); }
 
     /**
      * @brief Restart the io_context after stop
@@ -195,9 +182,7 @@ class IoContext {
             return;  // Already running
         }
 
-        backgroundThread_ = std::thread([this]() {
-            context_->run();
-        });
+        backgroundThread_ = std::thread([this]() { context_->run(); });
     }
 
     /**
@@ -217,9 +202,7 @@ class IoContext {
      * Allows the io_context to stop when no work remains.
      * Useful for graceful shutdown.
      */
-    void releaseWorkGuard() {
-        workGuard_.reset();
-    }
+    void releaseWorkGuard() { workGuard_.reset(); }
 
    private:
     std::unique_ptr<asio::io_context> context_;

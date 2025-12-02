@@ -32,6 +32,6 @@
  * ```
  */
 
-#include "core/Types.hpp"
 #include "core/ByteOrder.hpp"
 #include "core/Error.hpp"
+#include "core/Types.hpp"
