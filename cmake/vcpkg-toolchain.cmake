@@ -24,7 +24,7 @@ if(EXISTS "${VCPKG_SUBMODULE_PATH}/scripts/buildsystems/vcpkg.cmake")
 endif()
 
 # No option found - explicit error
-message(FATAL_ERROR 
+message(FATAL_ERROR
     "[vcpkg] vcpkg not found!\n"
     "Please use one of these options:\n"
     "  1. Set VCPKG_ROOT environment variable to your vcpkg installation\n"
