@@ -19,6 +19,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Options
 option(BUILD_TESTS "Build tests" ON)
+option(BUILD_GRAPHICAL_TESTS "Build graphical tests" ON)
 option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 option(BUILD_DOCS "Build documentation (Doxygen + Docusaurus)" OFF)
 
