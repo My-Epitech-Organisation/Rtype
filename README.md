@@ -174,4 +174,4 @@ See [LICENSE](LICENSE) for details.
 
 ## Team
 
-Epitech Project - 2024/2025
+Epitech Project - 2025/2026
