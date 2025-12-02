@@ -60,3 +60,83 @@ TEST(SafeQueueTest, ConcurrentPushPop) {
         EXPECT_EQ(consumed[i], i);
     }
 }
+
+TEST(SafeQueueTest, SizeReturnsCorrectCount) {
+    SafeQueue<int> queue;
+    EXPECT_EQ(queue.size(), 0);
+    queue.push(1);
+    EXPECT_EQ(queue.size(), 1);
+    queue.push(2);
+    EXPECT_EQ(queue.size(), 2);
+    queue.pop();
+    EXPECT_EQ(queue.size(), 1);
+    queue.pop();
+    EXPECT_EQ(queue.size(), 0);
+    queue.pop();  // Should not change size when empty
+    EXPECT_EQ(queue.size(), 0);
+}
+
+TEST(SafeQueueTest, SizeIsConcurrentlySafe) {
+    SafeQueue<int> queue;
+    std::atomic<int> operationsCompleted{0};
+    const int numThreads = 5;
+    const int operationsPerThread = 50;
+
+    auto worker = [&queue, &operationsCompleted]() {
+        for (int i = 0; i < 50; ++i) {
+            queue.push(i);
+            queue.size();  // Test concurrent size calls
+            queue.pop();
+        }
+        operationsCompleted++;
+    };
+
+    std::vector<std::thread> threads;
+    for (int i = 0; i < numThreads; ++i) {
+        threads.emplace_back(worker);
+    }
+
+    for (auto& t : threads) t.join();
+
+    EXPECT_EQ(operationsCompleted, numThreads);
+    EXPECT_EQ(queue.size(), 0);  // Should be empty after all operations
+}
+
+TEST(SafeQueueTest, MovePushPreservesObject) {
+    SafeQueue<std::string> queue;
+
+    std::string original = "Hello, World!";
+    std::string movedFrom = original;
+
+    queue.push(std::move(movedFrom));
+
+    EXPECT_TRUE(movedFrom.empty());  // Should be moved from
+
+    auto result = queue.pop();
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, original);  // Should contain the original content
+}
+
+TEST(SafeQueueTest, ComplexTypeHandling) {
+    struct ComplexType {
+        int id;
+        std::string name;
+        std::vector<int> data;
+
+        bool operator==(const ComplexType& other) const {
+            return id == other.id && name == other.name && data == other.data;
+        }
+    };
+
+    SafeQueue<ComplexType> queue;
+
+    ComplexType original{42, "test", {1, 2, 3}};
+    queue.push(original);
+
+    EXPECT_EQ(queue.size(), 1);
+
+    auto result = queue.pop();
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, original);
+    EXPECT_EQ(queue.size(), 0);
+}

@@ -30,7 +30,7 @@ class SafeQueue {
         if (_queue.empty()) {
             return std::nullopt;
         }
-        T item = _queue.front();
+        T item = std::move(_queue.front());
         _queue.pop();
         return item;
     }

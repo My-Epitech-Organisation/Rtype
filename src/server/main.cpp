@@ -77,7 +77,7 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
                 })
         .option(
             "-m", "--max-players", "n", "Maximum players (1-256, default: 4)",
-            [&config](std::string_view val) {
+            [config](std::string_view val) {
                 auto v = rtype::parseNumber<size_t>(val, "max-players", 1, 256);
                 if (!v.has_value()) return rtype::ParseResult::Error;
                 config->maxPlayers = v.value();
@@ -156,10 +156,8 @@ int main(int argc, char** argv) {
         }
         printBanner(*config);
         setupSignalHandlers();
-        return runServer(
-            *config,
-            ServerSignals::shutdown(),
-            ServerSignals::reloadConfig());
+        return runServer(*config, ServerSignals::shutdown(),
+                         ServerSignals::reloadConfig());
     } catch (const std::exception& e) {
         std::cerr << "[Main] Fatal error: " << e.what() << std::endl;
         return 1;

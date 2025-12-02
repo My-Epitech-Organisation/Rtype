@@ -11,9 +11,9 @@
 #include <atomic>
 #include <csignal>
 #include <exception>
-#include <memory>
 #include <format>
 #include <iostream>
+#include <memory>
 
 /**
  * @brief Encapsulates server signal flags for thread-safe access

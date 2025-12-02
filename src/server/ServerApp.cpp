@@ -202,7 +202,8 @@ void ServerApp::processIncomingData() noexcept {
         if (clientId == ClientManager::INVALID_CLIENT_ID) {
             clientId = _clientManager.handleNewConnection(endpoint);
             if (clientId == ClientManager::INVALID_CLIENT_ID) {
-                // TODO(Anyone): Handle Invalid client id correctly
+                // TODO(Anyone): Log rejection reason and update metrics when
+                // client connection is rejected
                 continue;
             }
         }

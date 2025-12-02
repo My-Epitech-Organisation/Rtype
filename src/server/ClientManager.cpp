@@ -34,7 +34,6 @@ ClientId ClientManager::handleNewConnection(const Endpoint& endpoint) {
                            std::chrono::steady_clock::now().time_since_epoch())
                            .count();
 
-    //! Potential flaw: Rate limit resets per second, allowing alternating clients to bypass or blocking valid connections.
     updateRateLimitWindow(nowMs);
     if (isRateLimitExceeded(endpoint)) {
         return INVALID_CLIENT_ID;
