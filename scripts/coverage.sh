@@ -153,8 +153,13 @@ if $GENERATE_HTML; then
     lcov --remove "$COVERAGE_DIR/coverage.info" \
         '/usr/*' \
         '*/build-coverage/_deps/*' \
+        '*/build/_deps/*' \
+        '*/external/*' \
         '*/tests/*' \
         '*/googletest/*' \
+        '*/asio/*' \
+        '*/boost/*' \
+        '*/vcpkg_installed/*' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS
 
@@ -257,8 +262,13 @@ else
     lcov --remove "$COVERAGE_DIR/coverage.info" \
         '/usr/*' \
         '*/build-coverage/_deps/*' \
+        '*/build/_deps/*' \
+        '*/external/*' \
         '*/tests/*' \
         '*/googletest/*' \
+        '*/asio/*' \
+        '*/boost/*' \
+        '*/vcpkg_installed/*' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS
 
