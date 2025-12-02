@@ -64,8 +64,7 @@ void ClientManager::updateRateLimitWindow(int64_t nowMs) noexcept {
     }
 }
 
-bool ClientManager::isRateLimitExceeded(
-    const Endpoint& endpoint) noexcept {
+bool ClientManager::isRateLimitExceeded(const Endpoint& endpoint) noexcept {
     assertLockHeld();
     const auto connectionsThisSecond =
         _connectionsThisSecond.load(std::memory_order_relaxed);
@@ -113,7 +112,7 @@ ClientId ClientManager::generateNextClientId() noexcept {
 }
 
 void ClientManager::registerClient(ClientId clientId,
-                                          const Endpoint& endpoint) noexcept {
+                                   const Endpoint& endpoint) noexcept {
     assertLockHeld();
 
     _connectionsThisSecond.fetch_add(1, std::memory_order_relaxed);
@@ -139,8 +138,8 @@ void ClientManager::handleClientDisconnect(ClientId clientId,
     handleClientDisconnect(clientId, reason);
 }
 
-void ClientManager::handleClientDisconnect(
-    ClientId clientId, DisconnectReason reason) noexcept {
+void ClientManager::handleClientDisconnect(ClientId clientId,
+                                           DisconnectReason reason) noexcept {
     assertLockHeld();
 
     const auto it = _clients.find(clientId);
@@ -155,8 +154,8 @@ void ClientManager::handleClientDisconnect(
     printConnectedClients();
 }
 
-void ClientManager::removeClientFromMaps(
-    ClientId clientId, const Endpoint& endpoint) noexcept {
+void ClientManager::removeClientFromMaps(ClientId clientId,
+                                         const Endpoint& endpoint) noexcept {
     assertLockHeld();
 
     _clients.erase(clientId);
@@ -237,8 +236,7 @@ void ClientManager::clearAllClients() noexcept {
     _endpointToClient.clear();
 }
 
-void ClientManager::notifyClientConnected(
-    ClientId newClientId) noexcept {
+void ClientManager::notifyClientConnected(ClientId newClientId) noexcept {
     assertLockHeld();
 
     // TODO(Clem): Send notification packet to all other clients
@@ -251,8 +249,8 @@ void ClientManager::notifyClientConnected(
               << newClientId);
 }
 
-void ClientManager::notifyClientDisconnected(
-    ClientId clientId, DisconnectReason reason) noexcept {
+void ClientManager::notifyClientDisconnected(ClientId clientId,
+                                             DisconnectReason reason) noexcept {
     assertLockHeld();
 
     // TODO(Clem): Send notification packet to all remaining clients

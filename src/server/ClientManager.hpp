@@ -144,8 +144,7 @@ class ClientManager {
      * @return true if rate limit exceeded, false otherwise
      * @pre Caller must hold unique lock on _clientsMutex
      */
-    [[nodiscard]] bool isRateLimitExceeded(
-        const Endpoint& endpoint) noexcept;
+    [[nodiscard]] bool isRateLimitExceeded(const Endpoint& endpoint) noexcept;
 
     /**
      * @brief Check if server is at capacity
@@ -167,8 +166,7 @@ class ClientManager {
      * @param endpoint The client's network endpoint
      * @pre Caller must hold unique lock on _clientsMutex
      */
-    void registerClient(ClientId clientId,
-                               const Endpoint& endpoint) noexcept;
+    void registerClient(ClientId clientId, const Endpoint& endpoint) noexcept;
 
     /**
      * @brief Handle client disconnection (INTERNAL - caller must hold unique
@@ -178,7 +176,7 @@ class ClientManager {
      * @pre Caller must hold unique lock on _clientsMutex
      */
     void handleClientDisconnect(ClientId clientId,
-                                       DisconnectReason reason) noexcept;
+                                DisconnectReason reason) noexcept;
 
     /**
      * @brief Remove client from both maps (INTERNAL - caller must hold unique
@@ -188,7 +186,7 @@ class ClientManager {
      * @pre Caller must hold unique lock on _clientsMutex
      */
     void removeClientFromMaps(ClientId clientId,
-                                     const Endpoint& endpoint) noexcept;
+                              const Endpoint& endpoint) noexcept;
 
     /**
      * @brief Find a client ID by their network endpoint (INTERNAL - caller must
@@ -216,7 +214,7 @@ class ClientManager {
      * @pre Caller must hold lock on _clientsMutex
      */
     void notifyClientDisconnected(ClientId clientId,
-                                         DisconnectReason reason) noexcept;
+                                  DisconnectReason reason) noexcept;
 
     /**
      * @brief Print the list of connected clients to console (INTERNAL - caller
