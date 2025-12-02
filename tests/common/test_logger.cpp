@@ -693,10 +693,13 @@ TEST(LoggerEdgeCaseTest, DebugWritesToFile) {
     logger.closeFile();
     std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Ensure file is flushed
 
-    std::ifstream file(testFilePath);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    const std::string contents = buffer.str();
+    std::string contents;
+    {
+        std::ifstream file(testFilePath);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        contents = buffer.str();
+    }  // Close file handle before removal
 
     EXPECT_TRUE(contents.find("[DEBUG]") != std::string::npos);
     EXPECT_TRUE(contents.find("Test debug message") != std::string::npos);
@@ -713,10 +716,13 @@ TEST(LoggerEdgeCaseTest, LogLevelFilteringWarning) {
     logger.closeFile();
     std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Ensure file is flushed
 
-    std::ifstream file(testFilePath);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    const std::string contents = buffer.str();
+    std::string contents;
+    {
+        std::ifstream file(testFilePath);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        contents = buffer.str();
+    }  // Close file handle before removal
 
     EXPECT_TRUE(contents.find("This warning should not appear") == std::string::npos);
 
@@ -778,10 +784,13 @@ TEST(LoggerEdgeCaseTest, SetLogFileWithAppendFalse) {
     logger.closeFile();
     std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Ensure file is flushed
 
-    std::ifstream file(testFilePath);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    const std::string contents = buffer.str();
+    std::string contents;
+    {
+        std::ifstream file(testFilePath);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        contents = buffer.str();
+    }  // Close file handle before removal
 
     EXPECT_TRUE(contents.find("Initial content") == std::string::npos);
     EXPECT_TRUE(contents.find("New content") != std::string::npos);
@@ -804,16 +813,22 @@ TEST(LoggerEdgeCaseTest, MultipleSetLogFileCalls) {
     logger.closeFile();
     std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Ensure files are flushed
 
-    std::ifstream file1(firstFile);
-    std::stringstream buffer1;
-    buffer1 << file1.rdbuf();
+    std::string contents1, contents2;
+    {
+        std::ifstream file1(firstFile);
+        std::stringstream buffer1;
+        buffer1 << file1.rdbuf();
+        contents1 = buffer1.str();
+    }  // Close file1 handle
+    {
+        std::ifstream file2(secondFile);
+        std::stringstream buffer2;
+        buffer2 << file2.rdbuf();
+        contents2 = buffer2.str();
+    }  // Close file2 handle
 
-    std::ifstream file2(secondFile);
-    std::stringstream buffer2;
-    buffer2 << file2.rdbuf();
-
-    EXPECT_TRUE(buffer1.str().find("First file message") != std::string::npos);
-    EXPECT_TRUE(buffer2.str().find("Second file message") != std::string::npos);
+    EXPECT_TRUE(contents1.find("First file message") != std::string::npos);
+    EXPECT_TRUE(contents2.find("Second file message") != std::string::npos);
 
     safeRemoveFile(firstFile);
     safeRemoveFile(secondFile);
@@ -835,10 +850,14 @@ TEST(FileWriterEdgeCaseTest, DestructorClosesFile) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Ensure file is flushed
 
     // File should exist and contain the message
-    std::ifstream file(testFilePath);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    EXPECT_TRUE(buffer.str().find("Test message") != std::string::npos);
+    std::string contents;
+    {
+        std::ifstream file(testFilePath);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        contents = buffer.str();
+    }  // Close file handle before removal
+    EXPECT_TRUE(contents.find("Test message") != std::string::npos);
 
     safeRemoveFile(testFilePath);
 }
@@ -867,12 +886,16 @@ TEST(FileWriterEdgeCaseTest, WriteAfterClose) {
     writer.write("After close");  // Should do nothing
     std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Ensure file is flushed
 
-    std::ifstream file(testFilePath);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
+    std::string contents;
+    {
+        std::ifstream file(testFilePath);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        contents = buffer.str();
+    }  // Close file handle before removal
 
-    EXPECT_TRUE(buffer.str().find("Before close") != std::string::npos);
-    EXPECT_TRUE(buffer.str().find("After close") == std::string::npos);
+    EXPECT_TRUE(contents.find("Before close") != std::string::npos);
+    EXPECT_TRUE(contents.find("After close") == std::string::npos);
 
     safeRemoveFile(testFilePath);
 }
