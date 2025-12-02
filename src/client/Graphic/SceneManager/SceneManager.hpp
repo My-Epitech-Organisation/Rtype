@@ -15,6 +15,7 @@
 #include "AssetManager/AssetManager.hpp"
 #include "Scenes/IScene.hpp"
 #include "ecs/ECS.hpp"
+#include "../KeyboardActions.hpp"
 
 class SceneManager {
    public:
@@ -38,6 +39,8 @@ class SceneManager {
         std::function<void(const Scene&)>(
             [this](const Scene& scene) { this->setCurrentScene(scene); });
 
+    KeyboardActions& _keybinds;
+
    public:
     [[nodiscard]] Scene getCurrentScene() const { return _currentScene; }
     void setCurrentScene(Scene scene);
@@ -56,7 +59,7 @@ class SceneManager {
 
     SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
                  const std::shared_ptr<AssetManager>& assetManager,
-                 sf::RenderWindow& window);
+                 sf::RenderWindow& window, KeyboardActions& keybinds);
     ~SceneManager() = default;
 };
 

@@ -78,7 +78,8 @@ std::ostream& operator<<(std::ostream& os, const SceneManager& sceneManager) {
 
 SceneManager::SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
                            const std::shared_ptr<AssetManager>& texture,
-                           sf::RenderWindow& window) {
+                           sf::RenderWindow& window, KeyboardActions& keybinds)
+    : _keybinds(keybinds) {
     this->_sceneList.emplace(MAIN_MENU, [ecs, texture, &window, this]() {
         return std::make_unique<MainMenuScene>(
             ecs, texture, this->_switchToScene,
@@ -87,7 +88,7 @@ SceneManager::SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
     this->_sceneList.emplace(SETTINGS_MENU, [ecs, texture, &window, this]() {
         return std::make_unique<SettingsScene>(
             ecs, texture, this->_switchToScene,
-            window);
+            window, this->_keybinds);
     });
     this->setCurrentScene(MAIN_MENU);
 }

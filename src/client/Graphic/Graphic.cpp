@@ -86,6 +86,6 @@ Graphic::Graphic(const std::shared_ptr<ECS::Registry>& registry)
     this->_window.setView(this->_view);
     this->_assetsManager = std::make_shared<AssetManager>();
     this->_sceneManager = std::make_unique<SceneManager>(
-        registry, this->_assetsManager, this->_window);
+        registry, this->_assetsManager, this->_window, this->_keybinds);
     this->_mainClock.start();
 }

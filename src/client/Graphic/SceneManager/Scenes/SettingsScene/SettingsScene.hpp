@@ -11,10 +11,17 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include "../AScene.hpp"
 #include "SceneManager/SceneManager.hpp"
+#include "Graphic/KeyboardActions.hpp"
+#include "GameAction.hpp"
+#include <map>
+#include <optional>
 
 class SettingsScene : public AScene {
 private:
     std::vector<ECS::Entity> _listEntity;
+    KeyboardActions& _keybinds;
+    std::optional<GameAction> _actionToRebind;
+    std::map<GameAction, ECS::Entity> _actionButtons;
 
 public:
     void update() override;
@@ -24,7 +31,8 @@ public:
     SettingsScene(const std::shared_ptr<ECS::Registry>& ecs,
                   const std::shared_ptr<AssetManager>& textureManager,
                   std::function<void(const SceneManager::Scene&)> switchToScene,
-                  sf::RenderWindow& window);
+                  sf::RenderWindow& window,
+                  KeyboardActions& keybinds);
     ~SettingsScene() override;
 };
 
