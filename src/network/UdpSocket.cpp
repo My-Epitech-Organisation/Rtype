@@ -7,8 +7,11 @@
 
 #include "UdpSocket.hpp"
 
-// Asio standalone (non-Boost) - validation include
+// Asio standalone (non-Boost)
 #include <asio.hpp>
+
+// Core network types
+#include "core/Core.hpp"
 
 namespace rtype::network {
 
