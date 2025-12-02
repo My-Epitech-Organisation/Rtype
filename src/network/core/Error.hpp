@@ -306,7 +306,7 @@ class Result<void, E> {
     [[nodiscard]] E error() const noexcept { return std::get<E>(data_); }
 
    private:
-    explicit Result(bool) : data_(true) {}
+    explicit Result(bool success) : data_(success) {}
 
     std::variant<bool, E> data_;
 };
