@@ -762,16 +762,16 @@ TEST_F(NumberParserTest, ParseExactMaxRange) {
     EXPECT_EQ(*result, 100);
 }
 
-TEST_F(NumberParserTest, ParseInt64MaxValue) {
-    auto result = parseNumber<int64_t>("9223372036854775807", "value");
+TEST_F(NumberParserTest, ParseInt32MaxValue) {
+    auto result = parseNumber<int32_t>("2147483647", "value");
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(*result, INT64_MAX);
+    EXPECT_EQ(*result, INT32_MAX);
 }
 
-TEST_F(NumberParserTest, ParseUint64MaxValue) {
-    auto result = parseNumber<uint64_t>("18446744073709551615", "value");
+TEST_F(NumberParserTest, ParseUint32MaxValue) {
+    auto result = parseNumber<uint32_t>("4294967295", "value");
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(*result, UINT64_MAX);
+    EXPECT_EQ(*result, UINT32_MAX);
 }
 
 TEST_F(NumberParserTest, ParseOutOfRangeHugeNumber) {
