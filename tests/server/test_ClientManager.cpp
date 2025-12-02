@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <limits>
+#include <memory>
 #include <thread>
 #include <vector>
 
@@ -32,17 +33,19 @@ Endpoint makeEndpoint(const std::string& addr, uint16_t port) {
 class ClientManagerTest : public ::testing::Test {
    protected:
     void SetUp() override {
+        // Create shared metrics
+        metrics = std::make_shared<ServerMetrics>();
         // Reset metrics counters
-        metrics.packetsReceived.store(0);
-        metrics.packetsSent.store(0);
-        metrics.bytesReceived.store(0);
-        metrics.bytesSent.store(0);
-        metrics.tickOverruns.store(0);
-        metrics.connectionsRejected.store(0);
-        metrics.totalConnections.store(0);
+        metrics->packetsReceived.store(0);
+        metrics->packetsSent.store(0);
+        metrics->bytesReceived.store(0);
+        metrics->bytesSent.store(0);
+        metrics->tickOverruns.store(0);
+        metrics->connectionsRejected.store(0);
+        metrics->totalConnections.store(0);
     }
 
-    ServerMetrics metrics;
+    std::shared_ptr<ServerMetrics> metrics;;
 };
 
 // ============================================================================
@@ -75,7 +78,7 @@ TEST_F(ClientManagerTest, HandleNewConnection_Success) {
 
     EXPECT_NE(clientId, ClientManager::INVALID_CLIENT_ID);
     EXPECT_EQ(manager.getConnectedClientCount(), 1);
-    EXPECT_EQ(metrics.totalConnections.load(), 1);
+    EXPECT_EQ(metrics->totalConnections.load(), 1);
 }
 
 TEST_F(ClientManagerTest, HandleNewConnection_MultipleClients) {
@@ -117,7 +120,7 @@ TEST_F(ClientManagerTest, HandleNewConnection_ServerFull) {
     EXPECT_NE(id2, ClientManager::INVALID_CLIENT_ID);
     EXPECT_EQ(id3, ClientManager::INVALID_CLIENT_ID);
     EXPECT_EQ(manager.getConnectedClientCount(), 2);
-    EXPECT_GE(metrics.connectionsRejected.load(), 1);
+    EXPECT_GE(metrics->connectionsRejected.load(), 1);
 }
 
 TEST_F(ClientManagerTest, HandleNewConnection_RateLimitExceeded) {
@@ -139,7 +142,7 @@ TEST_F(ClientManagerTest, HandleNewConnection_RateLimitExceeded) {
         }
     }
     EXPECT_GE(rejectedCount, 1);
-    EXPECT_GE(metrics.connectionsRejected.load(), 1);
+    EXPECT_GE(metrics->connectionsRejected.load(), 1);
 }
 
 TEST_F(ClientManagerTest, HandleNewConnection_RateLimitResetsAfterWindow) {
@@ -523,21 +526,21 @@ TEST_F(ClientManagerTest, Metrics_TotalConnectionsIncremented) {
     ClientManager manager(4, metrics);
 
     manager.handleNewConnection(makeEndpoint("192.168.1.1", 12345));
-    EXPECT_EQ(metrics.totalConnections.load(), 1);
+    EXPECT_EQ(metrics->totalConnections.load(), 1);
 
     manager.handleNewConnection(makeEndpoint("192.168.1.2", 12346));
-    EXPECT_EQ(metrics.totalConnections.load(), 2);
+    EXPECT_EQ(metrics->totalConnections.load(), 2);
 }
 
 TEST_F(ClientManagerTest, Metrics_ConnectionsRejectedOnServerFull) {
     ClientManager manager(1, metrics);
 
     manager.handleNewConnection(makeEndpoint("192.168.1.1", 12345));
-    uint64_t beforeRejected = metrics.connectionsRejected.load();
+    uint64_t beforeRejected = metrics->connectionsRejected.load();
 
     manager.handleNewConnection(makeEndpoint("192.168.1.2", 12346));
 
-    EXPECT_GT(metrics.connectionsRejected.load(), beforeRejected);
+    EXPECT_GT(metrics->connectionsRejected.load(), beforeRejected);
 }
 
 // ============================================================================
@@ -719,7 +722,7 @@ TEST_F(ClientManagerTest, Stress_RepeatedConnectionDisconnection) {
     }
 
     EXPECT_EQ(manager.getConnectedClientCount(), 0);
-    EXPECT_EQ(metrics.totalConnections.load(), 10);
+    EXPECT_EQ(metrics->totalConnections.load(), 10);
 }
 
 // ============================================================================
@@ -755,5 +758,5 @@ TEST_F(ClientManagerTest, RateLimitWindow_NotExceededWithinLimit) {
         EXPECT_NE(id, ClientManager::INVALID_CLIENT_ID);
     }
 
-    EXPECT_EQ(metrics.connectionsRejected.load(), 0);
+    EXPECT_EQ(metrics->connectionsRejected.load(), 0);
 }
