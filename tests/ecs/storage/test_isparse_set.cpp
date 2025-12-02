@@ -424,3 +424,102 @@ TEST_F(ISparseSetTest, VirtualDestructor_AnotherSet) {
 
     EXPECT_NO_THROW(delete base_ptr);
 }
+
+// ============================================================================
+// ADDITIONAL COVERAGE TESTS
+// ============================================================================
+
+TEST_F(ISparseSetTest, ShrinkToFit_AfterManyRemovals) {
+    Entity entities[100];
+    for (int i = 0; i < 100; ++i) {
+        entities[i] = Entity(i, 0);
+        getSparseSet().emplace(entities[i], i);
+    }
+
+    // Remove most entities
+    for (int i = 10; i < 100; ++i) {
+        sparse_set->remove(entities[i]);
+    }
+
+    EXPECT_NO_THROW(sparse_set->shrinkToFit());
+    EXPECT_EQ(sparse_set->size(), 10);
+}
+
+TEST_F(ISparseSetTest, GetPacked_ConstAccess) {
+    Entity e1(0, 0);
+    Entity e2(1, 0);
+
+    getSparseSet().emplace(e1, 1);
+    getSparseSet().emplace(e2, 2);
+
+    const ISparseSet* const_ptr = sparse_set.get();
+    const auto& packed = const_ptr->getPacked();
+
+    EXPECT_EQ(packed.size(), 2);
+}
+
+TEST_F(ISparseSetTest, Contains_AfterClear) {
+    Entity entity(0, 0);
+    getSparseSet().emplace(entity, 42);
+
+    sparse_set->clear();
+
+    EXPECT_FALSE(sparse_set->contains(entity));
+}
+
+TEST_F(ISparseSetTest, Size_MaxEntities) {
+    // Test with a reasonable number of entities
+    const int COUNT = 1000;
+    for (int i = 0; i < COUNT; ++i) {
+        Entity entity(i, 0);
+        getSparseSet().emplace(entity, i);
+    }
+
+    EXPECT_EQ(sparse_set->size(), COUNT);
+}
+
+TEST_F(ISparseSetTest, Remove_FirstElement) {
+    Entity e1(0, 0);
+    Entity e2(1, 0);
+    Entity e3(2, 0);
+
+    getSparseSet().emplace(e1, 1);
+    getSparseSet().emplace(e2, 2);
+    getSparseSet().emplace(e3, 3);
+
+    sparse_set->remove(e1);
+
+    EXPECT_FALSE(sparse_set->contains(e1));
+    EXPECT_TRUE(sparse_set->contains(e2));
+    EXPECT_TRUE(sparse_set->contains(e3));
+    EXPECT_EQ(sparse_set->size(), 2);
+}
+
+TEST_F(ISparseSetTest, Remove_LastElement) {
+    Entity e1(0, 0);
+    Entity e2(1, 0);
+    Entity e3(2, 0);
+
+    getSparseSet().emplace(e1, 1);
+    getSparseSet().emplace(e2, 2);
+    getSparseSet().emplace(e3, 3);
+
+    sparse_set->remove(e3);
+
+    EXPECT_TRUE(sparse_set->contains(e1));
+    EXPECT_TRUE(sparse_set->contains(e2));
+    EXPECT_FALSE(sparse_set->contains(e3));
+    EXPECT_EQ(sparse_set->size(), 2);
+}
+
+TEST_F(ISparseSetTest, Clear_MultipleTimes) {
+    Entity entity(0, 0);
+
+    for (int i = 0; i < 5; ++i) {
+        getSparseSet().emplace(entity, i);
+        EXPECT_EQ(sparse_set->size(), 1);
+
+        sparse_set->clear();
+        EXPECT_EQ(sparse_set->size(), 0);
+    }
+}

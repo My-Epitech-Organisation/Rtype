@@ -303,3 +303,123 @@ TEST_F(EntityTest, EdgeCase_Assignment) {
     EXPECT_EQ(e1.index(), 200);
     EXPECT_EQ(e1.generation(), 10);
 }
+
+// ============================================================================
+// ADDITIONAL COVERAGE TESTS
+// ============================================================================
+
+TEST_F(EntityTest, RawIdConstructor_WithNullId) {
+    Entity entity(Entity::_NullID);
+    EXPECT_TRUE(entity.isNull());
+    EXPECT_EQ(entity.id, Entity::_NullID);
+}
+
+TEST_F(EntityTest, IndexGeneration_BothZero_IsValid) {
+    Entity entity(0, 0);
+    EXPECT_FALSE(entity.isNull());
+    EXPECT_EQ(entity.index(), 0);
+    EXPECT_EQ(entity.generation(), 0);
+}
+
+TEST_F(EntityTest, IsTombstone_WithNonZeroIndex) {
+    Entity entity(42, Entity::_MaxGeneration);
+    EXPECT_TRUE(entity.isTombstone());
+    EXPECT_EQ(entity.index(), 42);
+}
+
+TEST_F(EntityTest, ThreeWayComparison_Equal) {
+    Entity e1(10, 5);
+    Entity e2(10, 5);
+    EXPECT_TRUE((e1 <=> e2) == 0);
+}
+
+TEST_F(EntityTest, ThreeWayComparison_GreaterThan) {
+    Entity e1(10, 0);
+    Entity e2(5, 0);
+    EXPECT_TRUE(e1 > e2);
+    EXPECT_FALSE(e1 < e2);
+}
+
+TEST_F(EntityTest, Hash_NullEntity) {
+    Entity null_entity;
+    std::hash<Entity> hasher;
+    std::size_t hash = hasher(null_entity);
+    EXPECT_EQ(hash, std::hash<uint32_t>{}(Entity::_NullID));
+}
+
+TEST_F(EntityTest, Hash_ZeroEntity) {
+    Entity zero_entity(0, 0);
+    std::hash<Entity> hasher;
+    std::size_t hash = hasher(zero_entity);
+    EXPECT_EQ(hash, std::hash<uint32_t>{}(0));
+}
+
+TEST_F(EntityTest, Equality_NullEntities) {
+    Entity e1;
+    Entity e2;
+    EXPECT_EQ(e1, e2);
+}
+
+TEST_F(EntityTest, Inequality_NullVsValid) {
+    Entity null_entity;
+    Entity valid_entity(0, 0);
+    EXPECT_NE(null_entity, valid_entity);
+}
+
+TEST_F(EntityTest, Hash_CollisionResistance) {
+    // Test that different entities have different hashes
+    std::unordered_set<std::size_t> hashes;
+    std::hash<Entity> hasher;
+
+    for (uint32_t i = 0; i < 100; ++i) {
+        Entity e(i, 0);
+        hashes.insert(hasher(e));
+    }
+
+    // All hashes should be unique for sequential entities
+    EXPECT_EQ(hashes.size(), 100);
+}
+
+TEST_F(EntityTest, MoveConstruction) {
+    Entity original(123, 45);
+    Entity moved(std::move(original));
+
+    EXPECT_EQ(moved.index(), 123);
+    EXPECT_EQ(moved.generation(), 45);
+}
+
+TEST_F(EntityTest, MoveAssignment) {
+    Entity e1(100, 5);
+    Entity e2(200, 10);
+
+    e1 = std::move(e2);
+
+    EXPECT_EQ(e1.index(), 200);
+    EXPECT_EQ(e1.generation(), 10);
+}
+
+TEST_F(EntityTest, Constexpr_IsTombstoneCheck) {
+    constexpr Entity tombstone(0, Entity::_MaxGeneration);
+    static_assert(tombstone.isTombstone(), "Should be tombstone");
+
+    constexpr Entity normal(0, 0);
+    static_assert(!normal.isTombstone(), "Should not be tombstone");
+}
+
+TEST_F(EntityTest, BitLayout_PackingVerification) {
+    // Verify that index and generation are packed correctly
+    Entity e(0b11111111111111111111, 0b111111111111);  // Max index, max generation
+
+    EXPECT_EQ(e.index(), Entity::_IndexMask);
+    EXPECT_EQ(e.generation(), Entity::_GenerationMask);
+}
+
+TEST_F(EntityTest, BitLayout_SpecificValues) {
+    Entity e(1234567, 2048);
+
+    uint32_t expectedIndex = 1234567 & Entity::_IndexMask;
+    uint32_t expectedGen = 2048 & Entity::_GenerationMask;
+
+    EXPECT_EQ(e.index(), expectedIndex);
+    EXPECT_EQ(e.generation(), expectedGen);
+}

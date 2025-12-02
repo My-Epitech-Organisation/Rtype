@@ -1,0 +1,37 @@
+add_executable(test_argparser test_argparser.cpp)
+
+target_link_libraries(test_argparser PRIVATE
+    GTest::gtest_main
+)
+
+target_include_directories(test_argparser PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+include(GoogleTest)
+gtest_discover_tests(test_argparser)
+
+add_executable(test_logger test_logger.cpp)
+
+target_link_libraries(test_logger PRIVATE
+    GTest::gtest_main
+    rtype_common
+)
+
+target_include_directories(test_logger PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_logger)
+
+add_executable(test_safe_queue SafeQueue_test.cpp)
+
+target_link_libraries(test_safe_queue PRIVATE
+    GTest::gtest_main
+)
+
+target_include_directories(test_safe_queue PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_safe_queue)

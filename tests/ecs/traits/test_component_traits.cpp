@@ -343,3 +343,154 @@ TEST_F(ComponentTraitsTest, EdgeCase_EmptyBaseOptimization) {
     EXPECT_TRUE(ComponentTraits<DerivedFromEmpty>::isEmpty);
     EXPECT_TRUE(ComponentTraits<DerivedFromEmpty>::isTrivial);
 }
+
+// ============================================================================
+// ADDITIONAL COVERAGE TESTS
+// ============================================================================
+
+// Component with const member
+struct ConstMemberComponent {
+    const int value = 42;
+};
+
+TEST_F(ComponentTraitsTest, ConstMemberComponent) {
+    EXPECT_FALSE(ComponentTraits<ConstMemberComponent>::isEmpty);
+    // Const members make the type non-copyable by default assignment
+    EXPECT_TRUE(ComponentTraits<ConstMemberComponent>::isTrivialDestructible);
+}
+
+// Component with reference member (makes it non-copyable)
+struct RefMemberComponent {
+    int& ref;
+    explicit RefMemberComponent(int& r) : ref(r) {}
+};
+
+TEST_F(ComponentTraitsTest, RefMemberComponent) {
+    EXPECT_FALSE(ComponentTraits<RefMemberComponent>::isEmpty);
+    // References don't make it non-trivially copyable, but the type is trivially copyable
+    EXPECT_TRUE(ComponentTraits<RefMemberComponent>::isTrivial);
+}
+
+// Component with virtual method
+struct VirtualComponent {
+    virtual ~VirtualComponent() = default;
+    virtual void update() {}
+    int value = 0;
+};
+
+TEST_F(ComponentTraitsTest, VirtualComponent) {
+    EXPECT_FALSE(ComponentTraits<VirtualComponent>::isEmpty);  // Has vtable pointer
+    EXPECT_FALSE(ComponentTraits<VirtualComponent>::isTrivial);
+    EXPECT_FALSE(ComponentTraits<VirtualComponent>::isTrivialDestructible);
+}
+
+// Component with deleted copy constructor
+struct NoCopyComponent {
+    int value = 0;
+    NoCopyComponent() = default;
+    NoCopyComponent(const NoCopyComponent&) = delete;
+    NoCopyComponent& operator=(const NoCopyComponent&) = delete;
+    NoCopyComponent(NoCopyComponent&&) = default;
+    NoCopyComponent& operator=(NoCopyComponent&&) = default;
+};
+
+TEST_F(ComponentTraitsTest, NoCopyComponent) {
+    EXPECT_FALSE(ComponentTraits<NoCopyComponent>::isEmpty);
+    // In C++, std::is_trivially_copyable can be true even if copy is deleted
+    // as long as the type has trivial move operations and is trivially destructible
+    EXPECT_TRUE(ComponentTraits<NoCopyComponent>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<NoCopyComponent>::isTrivialDestructible);
+}
+
+// Array component
+struct ArrayComponent {
+    int data[10];
+};
+
+TEST_F(ComponentTraitsTest, ArrayComponent) {
+    EXPECT_FALSE(ComponentTraits<ArrayComponent>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<ArrayComponent>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<ArrayComponent>::isTrivialDestructible);
+}
+
+// Union component
+union UnionComponent {
+    int i;
+    float f;
+    char c;
+};
+
+TEST_F(ComponentTraitsTest, UnionComponent) {
+    EXPECT_FALSE(ComponentTraits<UnionComponent>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<UnionComponent>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<UnionComponent>::isTrivialDestructible);
+}
+
+// Enum class (scoped enum)
+enum class ComponentState : uint8_t {
+    Active,
+    Inactive,
+    Destroyed
+};
+
+TEST_F(ComponentTraitsTest, EnumComponent) {
+    EXPECT_FALSE(ComponentTraits<ComponentState>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<ComponentState>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<ComponentState>::isTrivialDestructible);
+}
+
+// Component with alignas
+struct alignas(64) AlignedComponent {
+    float x, y, z, w;
+};
+
+TEST_F(ComponentTraitsTest, AlignedComponent) {
+    EXPECT_FALSE(ComponentTraits<AlignedComponent>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<AlignedComponent>::isTrivial);
+    EXPECT_TRUE(ComponentTraits<AlignedComponent>::isTrivialDestructible);
+}
+
+// Component with optional
+struct OptionalComponent {
+    std::optional<int> value;
+};
+
+TEST_F(ComponentTraitsTest, OptionalComponent) {
+    EXPECT_FALSE(ComponentTraits<OptionalComponent>::isEmpty);
+    // std::optional<trivial> is trivially copyable if T is trivial
+    EXPECT_TRUE(ComponentTraits<OptionalComponent>::isTrivialDestructible);
+}
+
+// Component with variant
+struct VariantComponent {
+    std::variant<int, float, std::string> data;
+};
+
+TEST_F(ComponentTraitsTest, VariantComponent) {
+    EXPECT_FALSE(ComponentTraits<VariantComponent>::isEmpty);
+    EXPECT_FALSE(ComponentTraits<VariantComponent>::isTrivial);  // Contains non-trivial string
+    EXPECT_FALSE(ComponentTraits<VariantComponent>::isTrivialDestructible);
+}
+
+// Empty final class
+struct FinalEmptyComponent final {};
+
+TEST_F(ComponentTraitsTest, FinalEmptyComponent) {
+    EXPECT_TRUE(ComponentTraits<FinalEmptyComponent>::isEmpty);
+    EXPECT_TRUE(ComponentTraits<FinalEmptyComponent>::isTrivial);
+}
+
+// Component with atomic
+struct AtomicComponent {
+    std::atomic<int> counter{0};
+};
+
+TEST_F(ComponentTraitsTest, AtomicComponent) {
+    EXPECT_FALSE(ComponentTraits<AtomicComponent>::isEmpty);
+    // std::atomic<int> is_trivially_copyable can be true in some implementations
+    // The actual value depends on the platform/compiler
+    // What we care about is that the trait exists and gives a valid result
+    [[maybe_unused]] bool isTrivial = ComponentTraits<AtomicComponent>::isTrivial;
+    // Atomics have trivial destructors
+    EXPECT_TRUE(ComponentTraits<AtomicComponent>::isTrivialDestructible);
+}

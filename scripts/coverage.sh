@@ -144,9 +144,9 @@ if $GENERATE_HTML; then
         exit 1
     fi
 
-    LINES_OK=$(echo "$LINES_COVERAGE >= $LINES_THRESHOLD" | awk '{if ($1) print "true"; else print "false"}')
-    FUNCTIONS_OK=$(echo "$FUNCTIONS_COVERAGE >= $FUNCTIONS_THRESHOLD" | awk '{if ($1) print "true"; else print "false"}')
-    BRANCHES_OK=$(echo "$BRANCHES_COVERAGE >= $BRANCHES_THRESHOLD" | awk '{if ($1) print "true"; else print "false"}')
+    LINES_OK=$(awk "BEGIN {if ($LINES_COVERAGE >= $LINES_THRESHOLD) print \"true\"; else print \"false\"}")
+    FUNCTIONS_OK=$(awk "BEGIN {if ($FUNCTIONS_COVERAGE >= $FUNCTIONS_THRESHOLD) print \"true\"; else print \"false\"}")
+    BRANCHES_OK=$(awk "BEGIN {if ($BRANCHES_COVERAGE >= $BRANCHES_THRESHOLD) print \"true\"; else print \"false\"}")
 
     echo ""
     echo "Global line coverage: ${LINES_COVERAGE}%"
