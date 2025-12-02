@@ -76,8 +76,8 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
                     return rtype::ParseResult::Success;
                 })
         .option(
-            "-m", "--max-players", "n", "Maximum players (1-256, default: 8)",
-            [config](std::string_view val) {
+            "-m", "--max-players", "n", "Maximum players (1-256, default: 4)",
+            [&config](std::string_view val) {
                 auto v = rtype::parseNumber<size_t>(val, "max-players", 1, 256);
                 if (!v.has_value()) return rtype::ParseResult::Error;
                 config->maxPlayers = v.value();

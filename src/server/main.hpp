@@ -40,7 +40,7 @@ class ServerSignals {
  */
 struct ServerConfig {
     uint16_t port = 4242;
-    size_t maxPlayers = 8;
+    size_t maxPlayers = 4;
     uint32_t tickRate = 60;
     bool verbose = false;
 };
