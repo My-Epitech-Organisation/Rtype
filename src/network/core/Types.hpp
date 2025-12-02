@@ -14,10 +14,6 @@
 
 namespace rtype::network {
 
-// ============================================================================
-// Buffer Types
-// ============================================================================
-
 /**
  * @brief Dynamic buffer for network data
  *
@@ -61,8 +57,8 @@ static constexpr std::uint32_t kUnassignedUserId = 0x00000000;
  * @brief Network endpoint (IP address + port)
  */
 struct Endpoint {
-    std::string address;  ///< IP address (IPv4 or IPv6 string)
-    std::uint16_t port;   ///< Port number
+    std::string address;
+    std::uint16_t port;
 
     Endpoint() = default;
 

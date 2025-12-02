@@ -54,11 +54,6 @@ class AsioUdpSocket : public IAsyncSocket {
 
     void close() override;
 
-    /// Get underlying Asio socket (for advanced use)
-    [[nodiscard]] asio::ip::udp::socket& nativeSocket() noexcept {
-        return socket_;
-    }
-
    private:
     static NetworkError fromAsioError(const asio::error_code& ec) noexcept;
     static Endpoint fromAsioEndpoint(const asio::ip::udp::endpoint& ep);

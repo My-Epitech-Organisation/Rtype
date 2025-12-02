@@ -68,21 +68,4 @@ class IAsyncSocket {
     IAsyncSocket() = default;
 };
 
-/**
- * @brief Create an async UDP socket
- *
- * @param ioContext Reference to the I/O context for async operations
- * @return Unique pointer to the socket, or nullptr on failure
- *
- * @note The ioContext must outlive the socket
- *
- * @example
- * ```cpp
- * asio::io_context ioContext;
- * auto socket = createAsyncSocket(ioContext);
- * ```
- */
-// Forward declared - implementation in AsioUdpSocket.cpp
-// std::unique_ptr<IAsyncSocket> createAsyncSocket(asio::io_context& ioContext);
-
 }  // namespace rtype::network
