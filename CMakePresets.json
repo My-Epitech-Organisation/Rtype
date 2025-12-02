@@ -6,10 +6,19 @@
   },
   "configurePresets": [
     {
+      "name": "vcpkg-base",
+      "hidden": true,
+      "toolchainFile": "${sourceDir}/cmake/vcpkg-toolchain.cmake",
+      "cacheVariables": {
+        "VCPKG_MANIFEST_MODE": "ON"
+      }
+    },
+    {
       "name": "base",
       "hidden": true,
+      "inherits": "vcpkg-base",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/${presetName}"
+      "binaryDir": "${sourceDir}/build"
     },
     {
       "name": "windows-debug",
@@ -19,55 +28,57 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER": "cl",
-        "CMAKE_CXX_COMPILER": "cl"
+        "CMAKE_CXX_COMPILER": "cl",
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
       }
     },
     {
-      "name": "windows-latest",
+      "name": "windows-release",
       "displayName": "Windows Release",
       "description": "Build Release pour Windows avec MSVC (cl.exe)",
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "cl",
-        "CMAKE_CXX_COMPILER": "cl"
+        "CMAKE_CXX_COMPILER": "cl",
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
       }
     },
     {
-      "name": "ubuntu-debug",
+      "name": "linux-debug",
       "displayName": "Linux Debug",
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_COMPILER": "g++"
+        "VCPKG_TARGET_TRIPLET": "x64-linux"
       }
     },
     {
-      "name": "ubuntu-latest",
+      "name": "linux-release",
       "displayName": "Linux Release",
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_COMPILER": "g++"
+        "VCPKG_TARGET_TRIPLET": "x64-linux"
       }
     }
   ],
   "buildPresets": [
     {
-      "name": "ubuntu-debug",
-      "configurePreset": "ubuntu-debug"
+      "name": "linux-debug",
+      "configurePreset": "linux-debug"
     },
     {
-      "name": "ubuntu-latest",
-      "configurePreset": "ubuntu-latest"
+      "name": "linux-release",
+      "configurePreset": "linux-release"
     },
     {
       "name": "windows-debug",
       "configurePreset": "windows-debug"
     },
     {
-      "name": "windows-latest",
-      "configurePreset": "windows-latest"
+      "name": "windows-release",
+      "configurePreset": "windows-release"
     }
   ]
 }

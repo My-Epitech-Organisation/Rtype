@@ -32,46 +32,101 @@ done
 echo "=== R-Type Coverage Report ==="
 echo ""
 
+# Detect package manager
+detect_package_manager() {
+    if command -v apt-get &> /dev/null; then
+        echo "apt"
+    elif command -v dnf &> /dev/null; then
+        echo "dnf"
+    elif command -v yum &> /dev/null; then
+        echo "yum"
+    else
+        echo "unknown"
+    fi
+}
+
+install_package() {
+    local pkg_apt="$1"
+    local pkg_dnf="$2"
+    local pm=$(detect_package_manager)
+    
+    case $pm in
+        apt)
+            sudo apt-get update && sudo apt-get install -y "$pkg_apt"
+            ;;
+        dnf)
+            sudo dnf install -y "$pkg_dnf"
+            ;;
+        yum)
+            sudo yum install -y "$pkg_dnf"
+            ;;
+        *)
+            echo "Warning: Unknown package manager, please install $pkg_apt manually"
+            ;;
+    esac
+}
+
 if $GENERATE_HTML; then
     if ! command -v lcov &> /dev/null; then
         echo "Error: lcov is required for HTML reports"
-        echo "Install with: sudo apt-get install lcov"
+        echo "Install with: sudo apt-get install lcov (Ubuntu) or sudo dnf install lcov (Fedora)"
         exit 1
     fi
     if ! command -v genhtml &> /dev/null; then
         echo "Error: genhtml is required for HTML reports"
-        echo "Install with: sudo apt-get install lcov"
+        echo "Install with: sudo apt-get install lcov (Ubuntu) or sudo dnf install lcov (Fedora)"
         exit 1
     fi
 fi
 
 if ! command -v jq &> /dev/null; then
     echo ">>> Installing jq for JSON parsing..."
-    sudo apt-get update && sudo apt-get install -y jq
-fi
-
-if ! dpkg -s libstdc++-14-dev &> /dev/null 2>&1; then
-    echo ">>> Installing libstdc++ development files..."
-    sudo apt-get update && sudo apt-get install -y libstdc++-14-dev
+    install_package "jq" "jq"
 fi
 
 echo ">>> Configuring build with coverage..."
-if [[ -d "$BUILD_DIR" && -f "$BUILD_DIR/CMakeCache.txt" ]]; then
+
+# Check if build directory exists and is valid (has CMakeCache.txt and build.ninja)
+if [[ -d "$BUILD_DIR" && -f "$BUILD_DIR/CMakeCache.txt" && -f "$BUILD_DIR/build.ninja" ]]; then
     echo ">>> Using cached build directory..."
     cd "$BUILD_DIR"
 else
+    # Clean up any partial build
     rm -rf "$BUILD_DIR"
     mkdir -p "$BUILD_DIR"
     cd "$BUILD_DIR"
 
-    CMAKE_ARGS="-DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF"
+    CMAKE_ARGS="-G Ninja -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF"
 
-    if [[ -d "$PROJECT_ROOT/build/ubuntu-latest/vcpkg_installed" ]]; then
-        echo ">>> Using cached vcpkg installation from test build..."
-        CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_PREFIX_PATH=$PROJECT_ROOT/build/ubuntu-latest/vcpkg_installed/x64-linux -DUSE_SFML=ON"
+    # Try to find vcpkg installation in order of preference:
+    # 1. Cached vcpkg_installed from CI build
+    # 2. Submodule in external/vcpkg
+    # 3. VCPKG_ROOT environment variable
+    if [[ -d "$PROJECT_ROOT/build/vcpkg_installed" ]]; then
+        echo ">>> Using cached vcpkg installation from build..."
+        CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_PREFIX_PATH=$PROJECT_ROOT/build/vcpkg_installed/x64-linux -DUSE_SFML=ON"
+    elif [[ -d "$PROJECT_ROOT/external/vcpkg" ]]; then
+        echo ">>> Using vcpkg submodule..."
+        # Ensure submodule is initialized
+        if [[ ! -f "$PROJECT_ROOT/external/vcpkg/bootstrap-vcpkg.sh" ]]; then
+            echo ">>> Initializing vcpkg submodule..."
+            git -C "$PROJECT_ROOT" submodule update --init external/vcpkg
+        fi
+        # Bootstrap vcpkg if needed
+        if [[ ! -f "$PROJECT_ROOT/external/vcpkg/vcpkg" ]]; then
+            echo ">>> Bootstrapping vcpkg..."
+            "$PROJECT_ROOT/external/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+        fi
+        CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=$PROJECT_ROOT/external/vcpkg/scripts/buildsystems/vcpkg.cmake -DUSE_SFML=ON"
     elif [[ -n "$VCPKG_ROOT" ]]; then
-        echo ">>> Cache not found "
+        echo ">>> Using VCPKG_ROOT: $VCPKG_ROOT"
         CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DUSE_SFML=ON"
+    else
+        echo "Error: Could not find vcpkg installation"
+        echo "Please either:"
+        echo "  1. Run 'git submodule update --init external/vcpkg'"
+        echo "  2. Set VCPKG_ROOT environment variable"
+        exit 1
     fi
 
     cmake $CMAKE_ARGS "$PROJECT_ROOT"
@@ -79,7 +134,7 @@ fi
 
 echo ""
 echo ">>> Building project..."
-make -j$(nproc)
+ninja
 
 echo ""
 echo ">>> Running tests..."
@@ -98,8 +153,13 @@ if $GENERATE_HTML; then
     lcov --remove "$COVERAGE_DIR/coverage.info" \
         '/usr/*' \
         '*/build-coverage/_deps/*' \
+        '*/build/_deps/*' \
+        '*/external/*' \
         '*/tests/*' \
         '*/googletest/*' \
+        '*/asio/*' \
+        '*/boost/*' \
+        '*/vcpkg_installed/*' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS
 
@@ -190,13 +250,42 @@ if $GENERATE_HTML; then
         fi
     fi
 else
+    # Generate coverage summary using lcov (text mode)
+    mkdir -p "$COVERAGE_DIR"
+
+    LCOV_OPTS="--rc branch_coverage=1 --ignore-errors mismatch,gcov,inconsistent,negative,unused"
+
+    echo ">>> Capturing coverage data..."
+    lcov --capture --directory . --output-file "$COVERAGE_DIR/coverage.info" $LCOV_OPTS
+
+    echo ">>> Filtering coverage data..."
+    lcov --remove "$COVERAGE_DIR/coverage.info" \
+        '/usr/*' \
+        '*/build-coverage/_deps/*' \
+        '*/build/_deps/*' \
+        '*/external/*' \
+        '*/tests/*' \
+        '*/googletest/*' \
+        '*/asio/*' \
+        '*/boost/*' \
+        '*/vcpkg_installed/*' \
+        --output-file "$COVERAGE_DIR/coverage.info" \
+        $LCOV_OPTS
+
     echo ""
     echo "=== Coverage Summary ==="
-    echo "For detailed HTML report, run: $0 --html"
+    lcov --summary "$COVERAGE_DIR/coverage.info" $LCOV_OPTS 2>&1
     echo ""
-
-    find . -name "*.gcda" -exec gcov {} \; 2>/dev/null | grep -E "^File|^Lines" | head -40
+    echo "For detailed HTML report, run: $0 --html"
 fi
 
+echo ""
+echo "=== Coverage Results ==="
+if $GENERATE_HTML; then
+    echo "HTML report: $COVERAGE_DIR/html/index.html"
+else
+    echo "Coverage info: $COVERAGE_DIR/coverage.info"
+    echo "Tip: Run with --html for a detailed HTML report"
+fi
 echo ""
 echo "Done!"
