@@ -77,7 +77,7 @@ jobs:
         id: cache-check-linux
         uses: actions/cache/restore@v4
         with:
-          path: build/ubuntu-latest/vcpkg_installed
+          path: build/vcpkg_installed
           key: ${{ steps.cache-keys.outputs.linux }}
           lookup-only: true
 
@@ -160,22 +160,19 @@ jobs:
             libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
             libxinerama-dev libxext-dev
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgJsonGlob: 'vcpkg.json'
+      - name: Init vcpkg submodule
+        run: git submodule update --init external/vcpkg
 
       - name: Configure CMake (install vcpkg packages)
         run: |
-          cmake --preset ubuntu-latest \
-            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+          cmake --preset linux-release \
             -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF \
             -DUSE_SFML=ON
 
       - name: Save vcpkg_installed to cache
         uses: actions/cache/save@v4
         with:
-          path: build/ubuntu-latest/vcpkg_installed
+          path: build/vcpkg_installed
           key: ${{ needs.cache-check.outputs.cache-key-linux }}
 
       - name: Summary
@@ -196,7 +193,7 @@ jobs:
         id: cache-check
         uses: actions/cache/restore@v4
         with:
-          path: build/windows-latest/vcpkg_installed
+          path: build/vcpkg_installed
           key: ${{ needs.cache-check.outputs.cache-key-windows }}
           lookup-only: true
 
@@ -208,19 +205,15 @@ jobs:
         if: steps.cache-check.outputs.cache-hit != 'true'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Setup vcpkg
+      - name: Init vcpkg submodule
         if: steps.cache-check.outputs.cache-hit != 'true'
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgJsonGlob: 'vcpkg.json'
+        run: git submodule update --init external/vcpkg
 
       - name: Configure CMake (install vcpkg packages)
         if: steps.cache-check.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          cmake --preset windows-latest \
-            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
-            -DVCPKG_TARGET_TRIPLET=x64-windows \
+          cmake --preset windows-release \
             -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF \
             -DUSE_SFML=ON
 
@@ -228,7 +221,7 @@ jobs:
         if: steps.cache-check.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: build/windows-latest/vcpkg_installed
+          path: build/vcpkg_installed
           key: ${{ needs.cache-check.outputs.cache-key-windows }}
 
       - name: Summary
@@ -263,28 +256,25 @@ jobs:
       - name: Restore vcpkg_installed from cache
         uses: actions/cache/restore@v4
         with:
-          path: build/ubuntu-latest/vcpkg_installed
+          path: build/vcpkg_installed
           key: ${{ needs.cache-check.outputs.cache-key-linux }}
           fail-on-cache-miss: true
 
-      - name: Setup vcpkg (for toolchain file only)
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgJsonGlob: 'vcpkg.json'
+      - name: Init vcpkg submodule
+        run: git submodule update --init external/vcpkg
 
       - name: Configure CMake
         run: |
-          cmake --preset ubuntu-latest \
-            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+          cmake --preset linux-release \
             -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF \
             -DUSE_SFML=ON
 
       - name: Build tests
-        run: cmake --build --preset ubuntu-latest --target all
+        run: cmake --build --preset linux-release --target all
 
       - name: Run tests
         run: |
-          cd build/ubuntu-latest
+          cd build
           ctest --output-on-failure --timeout 120
 
       - name: Cache coverage build
@@ -312,9 +302,9 @@ jobs:
           echo "### 🧪 Test Results & Coverage" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### Unit Tests" >> $GITHUB_STEP_SUMMARY
-          if [ -f build/ubuntu-latest/Testing/Temporary/LastTest.log ]; then
+          if [ -f build/Testing/Temporary/LastTest.log ]; then
             echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -50 build/ubuntu-latest/Testing/Temporary/LastTest.log >> $GITHUB_STEP_SUMMARY
+            tail -50 build/Testing/Temporary/LastTest.log >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -334,9 +324,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            preset: linux-release
             cache-key-output: cache-key-linux
             triplet: x64-linux
           - os: windows-latest
+            preset: windows-release
             cache-key-output: cache-key-windows
             triplet: x64-windows
     steps:
@@ -364,35 +356,31 @@ jobs:
       - name: Restore vcpkg_installed from cache
         uses: actions/cache/restore@v4
         with:
-          path: build/${{ matrix.os }}/vcpkg_installed
+          path: build/vcpkg_installed
           key: ${{ needs.cache-check.outputs[matrix.cache-key-output] }}
           fail-on-cache-miss: true
 
-      - name: Setup vcpkg (for toolchain file only)
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgJsonGlob: 'vcpkg.json'
+      - name: Init vcpkg submodule
+        run: git submodule update --init external/vcpkg
 
       - name: Configure CMake
         shell: bash
         run: |
-          cmake --preset ${{ matrix.os }} \
-            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
-            -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
+          cmake --preset ${{ matrix.preset }} \
             -DBUILD_EXAMPLES=OFF \
             -DUSE_SFML=ON
 
       - name: Build
-        run: cmake --build --preset ${{ matrix.os }}
+        run: cmake --build --preset ${{ matrix.preset }}
 
       - name: Upload Client Artifact
         uses: actions/upload-artifact@v4
         with:
           name: r-type_client-${{ matrix.os }}
           path: |
-            build/${{ matrix.os }}/src/client/Release/*
-            build/${{ matrix.os }}/src/client/r-type_client*
-            build/${{ matrix.os }}/src/client/*.exe
+            build/src/client/Release/*
+            build/src/client/r-type_client*
+            build/src/client/*.exe
           if-no-files-found: warn
 
       - name: Upload Server Artifact
@@ -400,9 +388,9 @@ jobs:
         with:
           name: r-type_server-${{ matrix.os }}
           path: |
-            build/${{ matrix.os }}/src/server/Release/*
-            build/${{ matrix.os }}/src/server/r-type_server*
-            build/${{ matrix.os }}/src/server/*.exe
+            build/src/server/Release/*
+            build/src/server/r-type_server*
+            build/src/server/*.exe
           if-no-files-found: warn
 
       - name: Build Summary
