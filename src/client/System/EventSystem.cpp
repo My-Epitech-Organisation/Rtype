@@ -16,7 +16,7 @@
 void EventSystem::processEvents(const std::shared_ptr<ECS::Registry>& registry,
                                 const sf::Event& e, sf::RenderWindow& window) {
     registry->view<Rectangle, UserEvent>().each([e, &window](auto _, auto rect,
-                                                    auto& actionType) {
+                                                             auto& actionType) {
         if (e.is<sf::Event::MouseMoved>()) {
             sf::Vector2i mousePos = e.getIf<sf::Event::MouseMoved>()->position;
             sf::Vector2f worldPos = window.mapPixelToCoords(mousePos);

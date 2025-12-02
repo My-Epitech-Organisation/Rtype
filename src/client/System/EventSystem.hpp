@@ -9,8 +9,8 @@
 #define SRC_CLIENT_SYSTEM_EVENTSYSTEM_HPP_
 #include <memory>
 
-#include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window/Event.hpp>
 
 #include "ecs/ECS.hpp"
 

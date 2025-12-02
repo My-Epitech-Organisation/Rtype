@@ -25,7 +25,6 @@
 #include "Graphic/VelocityComponent.hpp"
 #include "SceneManager/SceneException.hpp"
 
-
 void MainMenuScene::update() {}
 
 void MainMenuScene::render(sf::RenderWindow& window) {}
@@ -37,11 +36,11 @@ MainMenuScene::MainMenuScene(
     const std::shared_ptr<AssetManager>& assetsManager,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     sf::RenderWindow& window)
-    : AScene(ecs, assetsManager)
-{
+    : AScene(ecs, assetsManager) {
     auto seed = static_cast<unsigned int>(time(nullptr));
 
-    this->_listEntity = (EntityFactory::createBackground(this->_registry, this->_assetsManager, "R-TYPE"));
+    this->_listEntity = (EntityFactory::createBackground(
+        this->_registry, this->_assetsManager, "R-TYPE"));
     auto astroneerVessel = this->_registry->spawnEntity();
     this->_registry->emplaceComponent<Image>(
         astroneerVessel,

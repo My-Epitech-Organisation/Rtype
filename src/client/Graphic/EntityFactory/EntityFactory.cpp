@@ -5,7 +5,6 @@
 ** EntityFactory.hpp
 */
 
-
 #include "EntityFactory.hpp"
 
 #include "Components/Common/PositionComponent.hpp"
@@ -14,8 +13,9 @@
 #include "Graphic/PrallaxComponent.hpp"
 
 std::vector<ECS::Entity> EntityFactory::createBackground(
-    const std::shared_ptr<ECS::Registry>& registry, const std::shared_ptr<AssetManager> &assetManager,  const std::string &PageName
-) {
+    const std::shared_ptr<ECS::Registry>& registry,
+    const std::shared_ptr<AssetManager>& assetManager,
+    const std::string& PageName) {
     auto background = registry->spawnEntity();
     registry->emplaceComponent<Image>(
         background, assetManager->textureManager->get("bg_menu"));
@@ -41,10 +41,10 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     registry->emplaceComponent<Parallax>(planet3, 0.4, true);
 
     auto appTitle = registry->spawnEntity();
-     registry->emplaceComponent<Text>(
+    registry->emplaceComponent<Text>(
         appTitle, assetManager->fontManager->get("title_font"),
         sf::Color::White, 72, PageName);
-     registry->emplaceComponent<Position>(appTitle, 50, 50);
-     registry->emplaceComponent<StaticTextTag>(appTitle);
+    registry->emplaceComponent<Position>(appTitle, 50, 50);
+    registry->emplaceComponent<StaticTextTag>(appTitle);
     return {planet1, planet2, planet3, background, appTitle};
 }

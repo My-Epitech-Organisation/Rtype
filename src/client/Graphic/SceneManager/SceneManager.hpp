@@ -12,10 +12,10 @@
 #include <map>
 #include <memory>
 
+#include "../KeyboardActions.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "Scenes/IScene.hpp"
 #include "ecs/ECS.hpp"
-#include "../KeyboardActions.hpp"
 
 class SceneManager {
    public:

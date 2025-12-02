@@ -5,19 +5,21 @@
 ** SettingsScene.hpp
 */
 
-#ifndef R_TYPE_SETTINGSSCENE_HPP
-#define R_TYPE_SETTINGSSCENE_HPP
-#include <vector>
-#include <SFML/Graphics/RenderWindow.hpp>
-#include "../AScene.hpp"
-#include "SceneManager/SceneManager.hpp"
-#include "Graphic/KeyboardActions.hpp"
-#include "GameAction.hpp"
+#ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENE_HPP_
+#define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENE_HPP_
 #include <map>
 #include <optional>
+#include <vector>
+
+#include <SFML/Graphics/RenderWindow.hpp>
+
+#include "../AScene.hpp"
+#include "GameAction.hpp"
+#include "Graphic/KeyboardActions.hpp"
+#include "SceneManager/SceneManager.hpp"
 
 class SettingsScene : public AScene {
-private:
+   private:
     std::vector<ECS::Entity> _listEntity;
     KeyboardActions& _keybinds;
     std::optional<GameAction> _actionToRebind;
@@ -27,7 +29,7 @@ private:
     void _initAudioSection();
     void _initWindowSection();
 
-public:
+   public:
     void update() override;
     void render(sf::RenderWindow& window) override;
     void pollEvents(const sf::Event& e) override;
@@ -35,10 +37,8 @@ public:
     SettingsScene(const std::shared_ptr<ECS::Registry>& ecs,
                   const std::shared_ptr<AssetManager>& textureManager,
                   std::function<void(const SceneManager::Scene&)> switchToScene,
-                  sf::RenderWindow& window,
-                  KeyboardActions& keybinds);
+                  sf::RenderWindow& window, KeyboardActions& keybinds);
     ~SettingsScene() override;
 };
 
-
-#endif //R_TYPE_SETTINGSSCENE_HPP
+#endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENE_HPP_

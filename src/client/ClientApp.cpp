@@ -8,9 +8,6 @@
 #include "ClientApp.hpp"
 
 ClientApp::ClientApp(const std::shared_ptr<ECS::Registry>& registry)
-    : _graphic(registry) {
-}
+    : _graphic(registry) {}
 
-void ClientApp::run() {
-    this->_graphic.loop();
-}
+void ClientApp::run() { this->_graphic.loop(); }
