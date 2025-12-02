@@ -7,10 +7,9 @@
 
 #include "MainMenuScene.hpp"
 
+#include <time.h>
 
 #include <functional>
-
-#include <time.h>
 
 #include <SFML/Graphics/Text.hpp>
 
