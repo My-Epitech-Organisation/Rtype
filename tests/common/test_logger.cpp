@@ -10,6 +10,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <random>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -23,6 +24,16 @@
 #include "common/Logger/Timestamp.hpp"
 
 using namespace rtype;
+
+// Helper function to generate unique test file names
+std::filesystem::path getUniqueTestFile(const std::string& baseName) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_int_distribution<> dis(0, 999999);
+    auto timestamp = std::chrono::system_clock::now().time_since_epoch().count();
+    return std::filesystem::temp_directory_path() /
+           std::format("{}_{}_{}.log", baseName, timestamp, dis(gen));
+}
 
 // ============================================================================
 // LogLevel Tests
@@ -655,8 +666,7 @@ TEST_F(LoggerIntegrationTest, AllLogLevelsFormatCorrectly) {
 
 TEST(LoggerEdgeCaseTest, DebugWritesToFile) {
     Logger logger;
-    auto testFilePath = std::filesystem::temp_directory_path() / "test_debug.log";
-    std::filesystem::remove(testFilePath);
+    auto testFilePath = getUniqueTestFile("test_debug_writes");
 
     logger.setLogFile(testFilePath);
     logger.setLogLevel(LogLevel::Debug);
@@ -675,8 +685,7 @@ TEST(LoggerEdgeCaseTest, DebugWritesToFile) {
 
 TEST(LoggerEdgeCaseTest, LogLevelFilteringWarning) {
     Logger logger;
-    auto testFilePath = std::filesystem::temp_directory_path() / "test_warning_filter.log";
-    std::filesystem::remove(testFilePath);
+    auto testFilePath = getUniqueTestFile("test_warning_filter");
 
     logger.setLogFile(testFilePath);
     logger.setLogLevel(LogLevel::Error);
@@ -733,7 +742,7 @@ TEST(LoggerEdgeCaseTest, InfoGoesToStdout) {
 }
 
 TEST(LoggerEdgeCaseTest, SetLogFileWithAppendFalse) {
-    auto testFilePath = std::filesystem::temp_directory_path() / "test_no_append.log";
+    auto testFilePath = getUniqueTestFile("test_no_append");
 
     // Create initial content
     {
@@ -759,10 +768,8 @@ TEST(LoggerEdgeCaseTest, SetLogFileWithAppendFalse) {
 }
 
 TEST(LoggerEdgeCaseTest, MultipleSetLogFileCalls) {
-    auto firstFile = std::filesystem::temp_directory_path() / "test_first.log";
-    auto secondFile = std::filesystem::temp_directory_path() / "test_second.log";
-    std::filesystem::remove(firstFile);
-    std::filesystem::remove(secondFile);
+    auto firstFile = getUniqueTestFile("test_first");
+    auto secondFile = getUniqueTestFile("test_second");
 
     Logger logger;
     logger.setLogLevel(LogLevel::Info);
@@ -794,8 +801,7 @@ TEST(LoggerEdgeCaseTest, MultipleSetLogFileCalls) {
 // ============================================================================
 
 TEST(FileWriterEdgeCaseTest, DestructorClosesFile) {
-    auto testFilePath = std::filesystem::temp_directory_path() / "test_destructor.log";
-    std::filesystem::remove(testFilePath);
+    auto testFilePath = getUniqueTestFile("test_destructor");
 
     {
         FileWriter writer;
@@ -828,8 +834,7 @@ TEST(FileWriterEdgeCaseTest, DoubleCloseSafe) {
 }
 
 TEST(FileWriterEdgeCaseTest, WriteAfterClose) {
-    auto testFilePath = std::filesystem::temp_directory_path() / "test_write_after_close.log";
-    std::filesystem::remove(testFilePath);
+    auto testFilePath = getUniqueTestFile("test_write_after_close");
 
     FileWriter writer;
     writer.open(testFilePath);
