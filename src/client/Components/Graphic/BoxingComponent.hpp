@@ -24,4 +24,4 @@ struct BoxingComponent {
     }
 };
 
-#endif //R_TYPE_BOXINGCOMPONENT_HPP
+#endif  // R_TYPE_BOXINGCOMPONENT_HPP

@@ -5,17 +5,17 @@
 ** BoxingSystem.cpp
 */
 
-#include <memory>
 #include "BoxingSystem.hpp"
+
+#include <memory>
 
 #include "Graphic/BoxingComponent.hpp"
 #include "Graphic/ImageComponent.hpp"
 
-void BoxingSystem::update(const std::shared_ptr<ECS::Registry> &registry,
-                          sf::RenderWindow &window)
-{
+void BoxingSystem::update(const std::shared_ptr<ECS::Registry>& registry,
+                          sf::RenderWindow& window) {
     registry->view<Image, BoxingComponent>().each(
-        [&window](ECS::Entity _, const Image &img, BoxingComponent &box) {
+        [&window](ECS::Entity _, const Image& img, BoxingComponent& box) {
             sf::FloatRect bounds = img.sprite.getGlobalBounds();
 
             box.box.setSize({bounds.size.x, bounds.size.y});
@@ -26,5 +26,5 @@ void BoxingSystem::update(const std::shared_ptr<ECS::Registry> &registry,
             box.box.setOutlineThickness(1.f);
 
             window.draw(box.box);
-    });
+        });
 }

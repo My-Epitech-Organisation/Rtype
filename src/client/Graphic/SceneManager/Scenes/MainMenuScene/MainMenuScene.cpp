@@ -7,6 +7,7 @@
 
 #include "MainMenuScene.hpp"
 
+
 #include <functional>
 
 #include <time.h>
@@ -18,19 +19,19 @@
 #include "Components/Graphic/TagComponent.hpp"
 #include "Components/Graphic/TextComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
+#include "Graphic/BoxingComponent.hpp"
 #include "Graphic/PrallaxComponent.hpp"
 #include "Graphic/SizeComponent.hpp"
 #include "Graphic/TextureRectComponent.hpp"
 #include "Graphic/VelocityComponent.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "assets/Audiowide_Regular.h"
+#include "assets/astroVessel.h"
 #include "assets/bgMainMenu.h"
-#include "assets/playerVessel.h"
 #include "assets/planet1.h"
 #include "assets/planet2.h"
 #include "assets/planet3.h"
-#include "assets/astroVessel.h"
-#include "Graphic/BoxingComponent.hpp"
+#include "assets/playerVessel.h"
 
 void MainMenuScene::update() {}
 
@@ -49,15 +50,15 @@ MainMenuScene::MainMenuScene(
     this->_assetsManager->textureManager->load("bg_menu", bgMainMenu_png,
                                                bgMainMenu_png_len);
     this->_assetsManager->textureManager->load("bg_planet_1", planet1_png,
-                                           planet1_png_len);
+                                               planet1_png_len);
     this->_assetsManager->textureManager->load("bg_planet_2", planet2_png,
-        planet2_png_len);
+                                               planet2_png_len);
     this->_assetsManager->textureManager->load("bg_planet_3", planet3_png,
-    planet3_png_len);
+                                               planet3_png_len);
     this->_assetsManager->textureManager->load(
         "player_vessel", playerVessel_gif, playerVessel_gif_len);
-    this->_assetsManager->textureManager->load(
-        "astro_vessel", astroVessel_png, astroVessel_png_len);
+    this->_assetsManager->textureManager->load("astro_vessel", astroVessel_png,
+                                               astroVessel_png_len);
 
     this->_assetsManager->textureManager->get("bg_menu").setRepeated(true);
     this->_assetsManager->textureManager->get("bg_planet_1").setRepeated(true);
@@ -94,11 +95,9 @@ MainMenuScene::MainMenuScene(
     this->_registry->emplaceComponent<Image>(
         astroneerVessel,
         this->_assetsManager->textureManager->get("astro_vessel"));
-    this->_registry->emplaceComponent<Position>(
-        astroneerVessel, 1900, 1060);
+    this->_registry->emplaceComponent<Position>(astroneerVessel, 1900, 1060);
     this->_registry->emplaceComponent<Size>(astroneerVessel, 0.3, 0.3);
-    this->_registry->emplaceComponent<Velocity>(
-        astroneerVessel, -135.f, -75.f);
+    this->_registry->emplaceComponent<Velocity>(astroneerVessel, -135.f, -75.f);
     this->_listEntity.push_back(astroneerVessel);
 
     for (int i = 0; i < 7; i++) {
