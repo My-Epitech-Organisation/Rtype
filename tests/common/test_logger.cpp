@@ -27,12 +27,10 @@ using namespace rtype;
 
 // Helper function to generate unique test file names
 std::filesystem::path getUniqueTestFile(const std::string& baseName) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<> dis(0, 999999);
+    static int counter = 0;
     auto timestamp = std::chrono::system_clock::now().time_since_epoch().count();
     return std::filesystem::temp_directory_path() /
-           std::format("{}_{}_{}.log", baseName, timestamp, dis(gen));
+           std::format("{}_{}_{}.log", baseName, timestamp, ++counter);
 }
 
 // ============================================================================
@@ -672,6 +670,7 @@ TEST(LoggerEdgeCaseTest, DebugWritesToFile) {
     logger.setLogLevel(LogLevel::Debug);
     logger.debug("Test debug message");
     logger.closeFile();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Ensure file is flushed
 
     std::ifstream file(testFilePath);
     std::stringstream buffer;
@@ -691,6 +690,7 @@ TEST(LoggerEdgeCaseTest, LogLevelFilteringWarning) {
     logger.setLogLevel(LogLevel::Error);
     logger.warning("This warning should not appear");
     logger.closeFile();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Ensure file is flushed
 
     std::ifstream file(testFilePath);
     std::stringstream buffer;
@@ -755,6 +755,7 @@ TEST(LoggerEdgeCaseTest, SetLogFileWithAppendFalse) {
     logger.setLogLevel(LogLevel::Info);
     logger.info("New content");
     logger.closeFile();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Ensure file is flushed
 
     std::ifstream file(testFilePath);
     std::stringstream buffer;
@@ -780,6 +781,7 @@ TEST(LoggerEdgeCaseTest, MultipleSetLogFileCalls) {
     logger.setLogFile(secondFile);
     logger.info("Second file message");
     logger.closeFile();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Ensure files are flushed
 
     std::ifstream file1(firstFile);
     std::stringstream buffer1;
@@ -809,6 +811,7 @@ TEST(FileWriterEdgeCaseTest, DestructorClosesFile) {
         writer.write("Test message");
         // Destructor should close the file
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Ensure file is flushed
 
     // File should exist and contain the message
     std::ifstream file(testFilePath);
@@ -841,6 +844,7 @@ TEST(FileWriterEdgeCaseTest, WriteAfterClose) {
     writer.write("Before close");
     writer.close();
     writer.write("After close");  // Should do nothing
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Ensure file is flushed
 
     std::ifstream file(testFilePath);
     std::stringstream buffer;

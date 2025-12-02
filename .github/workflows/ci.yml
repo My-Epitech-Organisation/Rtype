@@ -310,13 +310,6 @@ jobs:
           cd build/${{ matrix.os }}
           ctest --output-on-failure --timeout 120
 
-      - name: Cache coverage build (Linux only)
-        if: matrix.coverage
-        uses: actions/cache@v4
-        with:
-          path: build-coverage
-          key: coverage-build-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'vcpkg.json', 'scripts/coverage.sh') }}
-
       - name: Run Coverage Analysis (Linux only)
         if: matrix.coverage
         run: |

@@ -82,7 +82,7 @@ echo ">>> Building project..."
 make -j$(nproc)
 
 echo ""
-echo ">>> Running tests...."
+echo ">>> Running tests..."
 ctest --output-on-failure
 
 echo ""
