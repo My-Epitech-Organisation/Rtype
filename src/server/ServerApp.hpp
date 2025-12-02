@@ -132,7 +132,7 @@ class ServerApp {
      * @return Reference to current metrics
      */
     [[nodiscard]] const ServerMetrics& getMetrics() const noexcept {
-        return _metrics;
+        return *_metrics;
     }
 
     /**
@@ -235,8 +235,8 @@ class ServerApp {
     std::atomic<bool>& _shutdownFlag;  ///< External shutdown flag reference
     std::atomic<bool> _hasShutdown{false};  ///< Guard against double shutdown
 
-    ServerMetrics _metrics;        ///< Server performance metrics
-    ClientManager _clientManager;  ///< Client connection manager
+    std::shared_ptr<ServerMetrics> _metrics;  ///< Server performance metrics
+    ClientManager _clientManager;             ///< Client connection manager
 
     // TODO(Clem): Add network socket when rtype_network is fully implemented
     // std::unique_ptr<network::INetworkSocket> _socket;

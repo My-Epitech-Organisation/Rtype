@@ -9,6 +9,7 @@
 #define SRC_SERVER_CLIENTMANAGER_HPP_
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <shared_mutex>
 #include <unordered_map>
@@ -52,10 +53,11 @@ class ClientManager {
     /**
      * @brief Construct a new ClientManager
      * @param maxPlayers Maximum number of concurrent players
-     * @param metrics Reference to server metrics for updating counters
+     * @param metrics Shared pointer to server metrics for updating counters
      * @param verbose Enable verbose debug output (default: false)
      */
-    explicit ClientManager(size_t maxPlayers, ServerMetrics& metrics,
+    explicit ClientManager(size_t maxPlayers,
+                           std::shared_ptr<ServerMetrics> metrics,
                            bool verbose = false);
 
     ~ClientManager() = default;
@@ -175,8 +177,8 @@ class ClientManager {
      * @param reason Reason for disconnection
      * @pre Caller must hold unique lock on _clientsMutex
      */
-    void handleClientDisconnect(ClientId clientId,
-                                DisconnectReason reason) noexcept;
+    void handleClientDisconnectInternal(ClientId clientId,
+                                        DisconnectReason reason) noexcept;
 
     /**
      * @brief Remove client from both maps (INTERNAL - caller must hold unique
@@ -195,7 +197,7 @@ class ClientManager {
      * @return Client ID, or INVALID_CLIENT_ID if not found
      * @pre Caller must hold lock on _clientsMutex
      */
-    [[nodiscard]] ClientId findClientByEndpoint(
+    [[nodiscard]] ClientId findClientByEndpointInternal(
         const Endpoint& endpoint) const noexcept;
 
     /**
@@ -229,9 +231,10 @@ class ClientManager {
      */
     void assertLockHeld() const noexcept;
 
-    size_t _maxPlayers;       ///< Maximum concurrent players
-    ServerMetrics& _metrics;  ///< Reference to server metrics
-    bool _verbose;            ///< Enable verbose debug output
+    size_t _maxPlayers;  ///< Maximum concurrent players
+    std::weak_ptr<ServerMetrics>
+        _metrics;   ///< Weak reference to server metrics
+    bool _verbose;  ///< Enable verbose debug output
 
     std::unordered_map<ClientId, Client> _clients;
     std::unordered_map<Endpoint, ClientId> _endpointToClient;

@@ -30,7 +30,7 @@ struct Client {
     Endpoint endpoint;  ///< Network endpoint (IP:port)
     std::chrono::steady_clock::time_point
         lastActivityTime;  ///< Last time we received data from this client
-    ClientState state{ClientState::Connecting};  ///< Current connection state
+    ClientState state{ClientState::Connected};  ///< Current connection state
 };
 
 }  // namespace rtype::server

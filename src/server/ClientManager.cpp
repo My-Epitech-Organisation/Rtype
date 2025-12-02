@@ -13,10 +13,11 @@
 
 namespace rtype::server {
 
-ClientManager::ClientManager(size_t maxPlayers, ServerMetrics& metrics,
+ClientManager::ClientManager(size_t maxPlayers,
+                             std::shared_ptr<ServerMetrics> metrics,
                              bool verbose)
     : _maxPlayers(maxPlayers),
-      _metrics(metrics),
+      _metrics(std::move(metrics)),
       _verbose(verbose),
       _rateLimitResetTimeMs(
           std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -35,7 +36,7 @@ ClientId ClientManager::handleNewConnection(const Endpoint& endpoint) {
     if (isRateLimitExceeded(endpoint)) {
         return INVALID_CLIENT_ID;
     }
-    if (const auto existingId = findClientByEndpoint(endpoint);
+    if (const auto existingId = findClientByEndpointInternal(endpoint);
         existingId != INVALID_CLIENT_ID) {
         LOG_WARNING(
             "[Server] Connection attempt from already connected endpoint: "
@@ -72,7 +73,10 @@ bool ClientManager::isRateLimitExceeded(const Endpoint& endpoint) noexcept {
     if (connectionsThisSecond >= MAX_CONNECTIONS_PER_SECOND) {
         LOG_WARNING("[Server] Rate limit exceeded, rejecting connection from "
                     << endpoint.toString());
-        _metrics.connectionsRejected.fetch_add(1, std::memory_order_relaxed);
+        if (auto metrics = _metrics.lock()) {
+            metrics->connectionsRejected.fetch_add(1,
+                                                   std::memory_order_relaxed);
+        }
         return true;
     }
     return false;
@@ -84,7 +88,10 @@ bool ClientManager::isServerFull() const noexcept {
     if (_clients.size() >= _maxPlayers) {
         LOG_INFO("[Server] Connection rejected: server full ("
                  << _maxPlayers << "/" << _maxPlayers << " players)");
-        _metrics.connectionsRejected.fetch_add(1, std::memory_order_relaxed);
+        if (auto metrics = _metrics.lock()) {
+            metrics->connectionsRejected.fetch_add(1,
+                                                   std::memory_order_relaxed);
+        }
         // TODO(Clem): Send rejection packet to client
         return true;
     }
@@ -100,8 +107,10 @@ ClientId ClientManager::generateNextClientId() noexcept {
         if (currentId == std::numeric_limits<ClientId>::max()) {
             LOG_ERROR(
                 "[Server] Client ID overflow! Cannot accept new connections.");
-            _metrics.connectionsRejected.fetch_add(1,
-                                                   std::memory_order_relaxed);
+            if (auto metrics = _metrics.lock()) {
+                metrics->connectionsRejected.fetch_add(
+                    1, std::memory_order_relaxed);
+            }
             return INVALID_CLIENT_ID;
         }
         newId = currentId + 1;
@@ -124,7 +133,9 @@ void ClientManager::registerClient(ClientId clientId,
 
     _clients.emplace(clientId, newClient);
     _endpointToClient.emplace(endpoint, clientId);
-    _metrics.totalConnections.fetch_add(1, std::memory_order_relaxed);
+    if (auto metrics = _metrics.lock()) {
+        metrics->totalConnections.fetch_add(1, std::memory_order_relaxed);
+    }
 
     LOG_INFO("[Server] New client connected: ID=" << clientId << " from "
                                                   << endpoint.toString());
@@ -135,11 +146,11 @@ void ClientManager::registerClient(ClientId clientId,
 void ClientManager::handleClientDisconnect(ClientId clientId,
                                            DisconnectReason reason) noexcept {
     std::unique_lock lock(_clientsMutex);
-    handleClientDisconnect(clientId, reason);
+    handleClientDisconnectInternal(clientId, reason);
 }
 
-void ClientManager::handleClientDisconnect(ClientId clientId,
-                                           DisconnectReason reason) noexcept {
+void ClientManager::handleClientDisconnectInternal(
+    ClientId clientId, DisconnectReason reason) noexcept {
     assertLockHeld();
 
     const auto it = _clients.find(clientId);
@@ -173,10 +184,10 @@ void ClientManager::updateClientActivity(ClientId clientId) noexcept {
 ClientId ClientManager::findClientByEndpoint(
     const Endpoint& endpoint) const noexcept {
     std::shared_lock lock(_clientsMutex);
-    return findClientByEndpoint(endpoint);
+    return findClientByEndpointInternal(endpoint);
 }
 
-ClientId ClientManager::findClientByEndpoint(
+ClientId ClientManager::findClientByEndpointInternal(
     const Endpoint& endpoint) const noexcept {
     if (const auto it = _endpointToClient.find(endpoint);
         it != _endpointToClient.end()) {
@@ -223,7 +234,7 @@ void ClientManager::checkClientTimeouts(uint32_t timeoutSeconds) noexcept {
         }
     }
     for (const auto& [id, endpoint] : _timeoutBuffer) {
-        handleClientDisconnect(id, DisconnectReason::Timeout);
+        handleClientDisconnectInternal(id, DisconnectReason::Timeout);
     }
 }
 
