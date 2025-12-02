@@ -668,13 +668,8 @@ TEST(LoggerEdgeCaseTest, DebugWritesToFile) {
     buffer << file.rdbuf();
     const std::string contents = buffer.str();
 
-#ifndef NDEBUG
     EXPECT_TRUE(contents.find("[DEBUG]") != std::string::npos);
     EXPECT_TRUE(contents.find("Test debug message") != std::string::npos);
-#else
-    EXPECT_TRUE(contents.empty());  // Debug is no-op in release
-#endif
-
     std::filesystem::remove(testFilePath);
 }
 
