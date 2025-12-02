@@ -10,8 +10,8 @@
 
 struct Velocity {
    public:
-    float x;
-    float y;
+    float x = 0.0f;
+    float y = 0.0f;
     Velocity(const float& x, const float& y) : x(x), y(y) {}
     Velocity() = default;
 };

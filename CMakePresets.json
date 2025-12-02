@@ -39,7 +39,8 @@
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_COMPILER": "g++"
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_TOOLCHAIN_FILE": "/home/roussierenoa/.vcpkg-clion/vcpkg/scripts/buildsystems/vcpkg.cmake"
       }
     },
     {

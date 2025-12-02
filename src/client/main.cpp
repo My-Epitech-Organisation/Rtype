@@ -8,5 +8,6 @@ auto main(int argc, char** argv) -> int {
     (void)argv;
     auto registry = std::make_shared<ECS::Registry>();
     ClientApp client(registry);
+    client.run();
     return 0;
 }

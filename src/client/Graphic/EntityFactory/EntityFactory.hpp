@@ -14,6 +14,7 @@
 #include "Components/Graphic/RectangleComponent.hpp"
 #include "Components/Graphic/TextComponent.hpp"
 #include "Components/Graphic/UserEventComponent.hpp"
+#include "Components/Graphic/TagComponent.hpp"
 #include "ecs/ECS.hpp"
 
 namespace EntityFactory {

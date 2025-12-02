@@ -18,6 +18,8 @@ class ClientApp {
     explicit ClientApp(const std::shared_ptr<ECS::Registry>& registry);
     ~ClientApp() = default;
 
+    void run();
+
     ClientApp(const ClientApp&) = delete;
     ClientApp& operator=(const ClientApp&) = delete;
     ClientApp(ClientApp&&) = delete;
