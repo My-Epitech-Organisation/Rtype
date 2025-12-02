@@ -1,0 +1,174 @@
+name: 🚀 R-Type Release
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Type of release'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check branch for manual release
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ github.ref_name }}" != "main" ]; then
+            echo "❌ Manual releases can only be triggered from the main branch"
+            echo "Current branch: ${{ github.ref_name }}"
+            exit 1
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest release
+        id: latest_release
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest release: $LATEST_TAG"
+
+      - name: Calculate next version
+        id: version
+        run: |
+          LATEST_TAG="${{ steps.latest_release.outputs.latest_tag }}"
+          BRANCH="${{ github.ref_name }}"
+          EVENT_NAME="${{ github.event_name }}"
+
+          VERSION="${LATEST_TAG#v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          echo "Current version: $MAJOR.$MINOR.$PATCH"
+          echo "Branch: $BRANCH"
+          echo "Event: $EVENT_NAME"
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            NEW_MAJOR=$((MAJOR + 1))
+            NEW_MINOR=0
+            NEW_PATCH=0
+            PRERELEASE=false
+            TAG_SUFFIX="release - main"
+          elif [ "$BRANCH" = "main" ]; then
+            NEW_MAJOR=$MAJOR
+            NEW_MINOR=$((MINOR + 1))
+            NEW_PATCH=0
+            PRERELEASE=true
+            TAG_SUFFIX="main"
+          elif [ "$BRANCH" = "dev" ]; then
+            NEW_MAJOR=$MAJOR
+            NEW_MINOR=$MINOR
+            NEW_PATCH=$((PATCH + 1))
+            PRERELEASE=true
+            TAG_SUFFIX="dev"
+          else
+            echo "Unsupported branch for release: $BRANCH"
+            exit 1
+          fi
+
+          NEW_VERSION="v$NEW_MAJOR.$NEW_MINOR.$NEW_PATCH"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
+          echo "tag_suffix=$TAG_SUFFIX" >> $GITHUB_OUTPUT
+      - name: Download Linux client artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: ci.yml
+          branch: ${{ github.ref_name }}
+          name: r-type_client-ubuntu-latest
+          path: ./artifacts
+
+      - name: Download Windows client artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: ci.yml
+          branch: ${{ github.ref_name }}
+          name: r-type_client-windows-latest
+          path: ./artifacts
+
+      - name: Download Linux server artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: ci.yml
+          branch: ${{ github.ref_name }}
+          name: r-type_server-ubuntu-latest
+          path: ./artifacts
+
+      - name: Download Windows server artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: ci.yml
+          branch: ${{ github.ref_name }}
+          name: r-type_server-windows-latest
+          path: ./artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+
+          LINUX_CLIENT=$(find artifacts -name "r-type_client" -type f 2>/dev/null | head -1)
+          if [ -n "$LINUX_CLIENT" ]; then
+            cp "$LINUX_CLIENT" release-assets/rtype_client
+            echo "✅ Found Linux client: $LINUX_CLIENT"
+          else
+            echo "❌ Linux client not found"
+            find artifacts -type f | head -10 || echo "No files found in artifacts"
+          fi
+
+          WINDOWS_CLIENT=$(find artifacts -name "*.exe" -type f | grep -i client | head -1)
+          if [ -n "$WINDOWS_CLIENT" ]; then
+            cp "$WINDOWS_CLIENT" release-assets/rtype_client.exe
+            echo "✅ Found Windows client: $WINDOWS_CLIENT"
+          else
+            echo "❌ Windows client not found"
+          fi
+
+          LINUX_SERVER=$(find artifacts -name "r-type_server" -type f 2>/dev/null | head -1)
+          if [ -n "$LINUX_SERVER" ]; then
+            cp "$LINUX_SERVER" release-assets/rtype_server
+            echo "✅ Found Linux server: $LINUX_SERVER"
+          else
+            echo "❌ Linux server not found"
+          fi
+
+          WINDOWS_SERVER=$(find artifacts -name "*.exe" -type f | grep -i server | head -1)
+          if [ -n "$WINDOWS_SERVER" ]; then
+            cp "$WINDOWS_SERVER" release-assets/rtype_server.exe
+            echo "✅ Found Windows server: $WINDOWS_SERVER"
+          else
+            echo "❌ Windows server not found"
+          fi
+
+          echo ""
+          echo "Release assets prepared:"
+          ls -la release-assets/ || echo "No assets found"
+
+      - name: Create release with auto-generated notes
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.new_version }}
+          name: R-Type ${{ steps.version.outputs.new_version }} (${{ steps.version.outputs.tag_suffix }})
+          generate_release_notes: true
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          files: |
+            release-assets/rtype_client
+            release-assets/rtype_client.exe
+            release-assets/rtype_server
+            release-assets/rtype_server.exe
