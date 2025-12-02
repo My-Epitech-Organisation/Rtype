@@ -60,7 +60,10 @@ void ServerApp::logStartupInfo() const noexcept {
 }
 
 ServerApp::LoopTiming ServerApp::createLoopTiming() const noexcept {
-    using namespace std::chrono;
+    using std::chrono::duration;
+    using std::chrono::duration_cast;
+    using std::chrono::milliseconds;
+    using std::chrono::nanoseconds;
     const auto fixedDeltaTime =
         duration<double>(1.0 / static_cast<double>(_tickRate));
     return {.fixedDeltaNs = duration_cast<nanoseconds>(fixedDeltaTime),
@@ -70,7 +73,10 @@ ServerApp::LoopTiming ServerApp::createLoopTiming() const noexcept {
 
 std::chrono::nanoseconds ServerApp::calculateFrameTime(
     LoopState& state, const LoopTiming& timing) noexcept {
-    using namespace std::chrono;
+    using std::chrono::duration_cast;
+    using std::chrono::milliseconds;
+    using std::chrono::nanoseconds;
+    using std::chrono::steady_clock;
 
     const auto currentTime = steady_clock::now();
     auto frameTime =
@@ -115,7 +121,10 @@ void ServerApp::performFixedUpdates(LoopState& state,
 void ServerApp::sleepUntilNextFrame(
     std::chrono::steady_clock::time_point frameStartTime,
     const LoopTiming& timing) noexcept {
-    using namespace std::chrono;
+    using std::chrono::duration_cast;
+    using std::chrono::microseconds;
+    using std::chrono::nanoseconds;
+    using std::chrono::steady_clock;
     const auto elapsed = steady_clock::now() - frameStartTime;
     const auto sleepTime = timing.fixedDeltaNs - elapsed;
 
