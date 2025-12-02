@@ -6,6 +6,9 @@ add_library(rtype-graphic-components
     ButtonComponent.hpp
     UserEventComponent.hpp
         TagComponent.hpp
+        PrallaxComponent.hpp
+        VelocityComponent.hpp
+        TextureRectComponent.hpp
 )
 
 target_link_libraries(rtype-graphic-scene-manager

@@ -129,3 +129,8 @@ if(BUILD_DOCS)
         message(STATUS "Complete documentation target 'docs' available")
     endif()
 endif()
+
+target_include_directories(rtype-graphic-main-menu-scene
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)

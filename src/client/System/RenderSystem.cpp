@@ -13,15 +13,26 @@
 #include "Components/Graphic/RectangleComponent.hpp"
 #include "Components/Graphic/TagComponent.hpp"
 #include "Components/Graphic/TextComponent.hpp"
+#include "Graphic/SizeComponent.hpp"
+#include "Graphic/TextureRectComponent.hpp"
 #include "ecs/ECS.hpp"
 
 void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
                         sf::RenderWindow& window) {
     registry->view<Image, Position>().each(
-        [&window](auto _, auto& img, auto& pos) {
+        [&window, &registry](auto entt, auto& img, auto& pos) {
             img.sprite.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-
+            try {
+                auto& size = registry->getComponent<Size>(entt);
+                img.sprite.setScale(sf::Vector2f({size.x, size.y}));
+            } catch (...) {
+            }
+            try {
+                auto& texture = registry->getComponent<TextureRect>(entt);
+                img.sprite.setTextureRect(texture.rect);
+            } catch (...) {
+            }
             window.draw(img.sprite);
         });
     registry->view<Text, Position, StaticTextTag>().each(

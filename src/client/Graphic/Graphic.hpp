@@ -23,6 +23,7 @@ class Graphic {
     KeyboardActions _keybinds;
 
     sf::RenderWindow _window;
+    sf::View _view;
     sf::Clock _mainClock;
 
     static constexpr int WINDOW_WIDTH = 1920;

@@ -193,49 +193,49 @@ echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  CLANG-TIDY - Static Analysis${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-#log_info "Running Clang-Tidy on source files..."
-#echo "" >> "$REPORT_FILE"
-#echo "3. CLANG-TIDY RESULTS" >> "$REPORT_FILE"
-#echo "======================================" >> "$REPORT_FILE"
-#
-#CLANG_TIDY_ERRORS=0
-#CLANG_TIDY_CONFIG="$PROJECT_ROOT/config/clang/.clang-tidy"
-#
-#TIDY_FILES=$(find "$PROJECT_ROOT/src" -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) 2>/dev/null)
-#
-#if [ ! -f "$CLANG_TIDY_CONFIG" ]; then
-#    log_warning "Clang-Tidy config not found"
-#    echo "Status: SKIPPED - .clang-tidy config not found" >> "$REPORT_FILE"
-#else
-#    if [ -z "$TIDY_FILES" ]; then
-#        log_warning "No source files found to analyze"
-#        echo "Status: SKIPPED - No source files found" >> "$REPORT_FILE"
-#    else
-#        TIDY_OUTPUT=$(clang-tidy --config-file="$CLANG_TIDY_CONFIG" $TIDY_FILES -- -std=c++20 -Iinclude 2>&1 | grep "warning:" | head -50 || true)
-#
-#        if [ -z "$TIDY_OUTPUT" ]; then
-#            CLANG_TIDY_ERRORS=0
-#        else
-#            CLANG_TIDY_ERRORS=$(echo "$TIDY_OUTPUT" | wc -l)
-#        fi
-#
-#        if [ $CLANG_TIDY_ERRORS -eq 0 ]; then
-#            log_success "Clang-Tidy: No warnings found ✓"
-#            echo "Status: PASS - No analysis warnings" >> "$REPORT_FILE"
-#        else
-#            log_warning "Clang-Tidy: Found $CLANG_TIDY_ERRORS warning(s)"
-#            echo "Status: WARNINGS - Found $CLANG_TIDY_ERRORS issue(s)" >> "$REPORT_FILE"
-#            echo "" >> "$REPORT_FILE"
-#            echo "Warnings:" >> "$REPORT_FILE"
-#            echo "$TIDY_OUTPUT" >> "$REPORT_FILE"
-#
-#            if [ $VERBOSE -eq 1 ]; then
-#                echo "Clang-Tidy Warnings:"
-#                echo "$TIDY_OUTPUT"
-#            fi
-#        fi
-#    fi
-#fi
+log_info "Running Clang-Tidy on source files..."
+echo "" >> "$REPORT_FILE"
+echo "3. CLANG-TIDY RESULTS" >> "$REPORT_FILE"
+echo "======================================" >> "$REPORT_FILE"
+
+CLANG_TIDY_ERRORS=0
+CLANG_TIDY_CONFIG="$PROJECT_ROOT/config/clang/.clang-tidy"
+
+TIDY_FILES=$(find "$PROJECT_ROOT/src" -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" \) 2>/dev/null)
+
+if [ ! -f "$CLANG_TIDY_CONFIG" ]; then
+    log_warning "Clang-Tidy config not found"
+    echo "Status: SKIPPED - .clang-tidy config not found" >> "$REPORT_FILE"
+else
+    if [ -z "$TIDY_FILES" ]; then
+        log_warning "No source files found to analyze"
+        echo "Status: SKIPPED - No source files found" >> "$REPORT_FILE"
+    else
+        TIDY_OUTPUT=$(clang-tidy --config-file="$CLANG_TIDY_CONFIG" $TIDY_FILES -- -std=c++20 -Iinclude 2>&1 | grep "warning:" | head -50 || true)
+
+        if [ -z "$TIDY_OUTPUT" ]; then
+            CLANG_TIDY_ERRORS=0
+        else
+            CLANG_TIDY_ERRORS=$(echo "$TIDY_OUTPUT" | wc -l)
+        fi
+
+        if [ $CLANG_TIDY_ERRORS -eq 0 ]; then
+            log_success "Clang-Tidy: No warnings found ✓"
+            echo "Status: PASS - No analysis warnings" >> "$REPORT_FILE"
+        else
+            log_warning "Clang-Tidy: Found $CLANG_TIDY_ERRORS warning(s)"
+            echo "Status: WARNINGS - Found $CLANG_TIDY_ERRORS issue(s)" >> "$REPORT_FILE"
+            echo "" >> "$REPORT_FILE"
+            echo "Warnings:" >> "$REPORT_FILE"
+            echo "$TIDY_OUTPUT" >> "$REPORT_FILE"
+
+            if [ $VERBOSE -eq 1 ]; then
+                echo "Clang-Tidy Warnings:"
+                echo "$TIDY_OUTPUT"
+            fi
+        fi
+    fi
+fi
 
 echo ""
 echo ""

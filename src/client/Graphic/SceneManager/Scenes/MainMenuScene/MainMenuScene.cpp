@@ -9,6 +9,8 @@
 
 #include <functional>
 
+#include <time.h>
+
 #include <SFML/Graphics/Text.hpp>
 
 #include "Components/Common/PositionComponent.hpp"
@@ -16,9 +18,14 @@
 #include "Components/Graphic/TagComponent.hpp"
 #include "Components/Graphic/TextComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
+#include "Graphic/PrallaxComponent.hpp"
+#include "Graphic/SizeComponent.hpp"
+#include "Graphic/TextureRectComponent.hpp"
+#include "Graphic/VelocityComponent.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "assets/Audiowide_Regular.h"
 #include "assets/bgMenu.h"
+#include "assets/playerVessel.h"
 
 void MainMenuScene::update() {}
 
@@ -36,12 +43,34 @@ MainMenuScene::MainMenuScene(
                                             Audiowide_Regular_ttf_len);
     this->_assetsManager->textureManager->load("bg_menu", bgMainMenu_png,
                                                bgMainMenu_png_len);
+    this->_assetsManager->textureManager->load(
+        "player_vessel", playerVessel_gif, playerVessel_gif_len);
+    this->_assetsManager->textureManager->get("bg_menu").setRepeated(true);
 
     auto background = this->_registry->spawnEntity();
     this->_registry->emplaceComponent<Image>(
-        background, this->_assetsManager->textureManager->get("bg_menu"),
-        sf::IntRect{{0, 0}, {0, 0}});
+        background, this->_assetsManager->textureManager->get("bg_menu"));
     this->_registry->emplaceComponent<Position>(background, 0, 0);
+    this->_registry->emplaceComponent<Parallax>(background, 0.8, true);
+
+    auto seed = static_cast<unsigned int>(time(nullptr));
+
+    for (int i = 0; i < 15; i++) {
+        auto fakePlayer = this->_registry->spawnEntity();
+        this->_registry->emplaceComponent<Image>(
+            fakePlayer,
+            this->_assetsManager->textureManager->get("player_vessel"));
+        this->_registry->emplaceComponent<TextureRect>(
+            fakePlayer, std::pair<int, int>({0, 0}),
+            std::pair<int, int>({33, 17}));
+        this->_registry->emplaceComponent<Position>(
+            fakePlayer, (-10 * (rand_r(&seed) % 150) + 50),
+            72 * (rand_r(&seed) % 15));
+        this->_registry->emplaceComponent<Size>(fakePlayer, 2.2, 2.2);
+        this->_registry->emplaceComponent<Velocity>(
+            fakePlayer, (rand_r(&seed) % 150) + 75, 0.f);
+        this->_listEntity.push_back(fakePlayer);
+    }
 
     auto appTitle = this->_registry->spawnEntity();
     this->_registry->emplaceComponent<Text>(

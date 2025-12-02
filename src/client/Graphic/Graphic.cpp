@@ -14,6 +14,8 @@
 #include "AssetManager/AssetManager.hpp"
 #include "System/ButtonUpdateSystem.hpp"
 #include "System/EventSystem.hpp"
+#include "System/MovementSystem.hpp"
+#include "System/ParallaxScrolling.hpp"
 #include "System/RenderSystem.hpp"
 
 void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event>& event) {
@@ -46,6 +48,15 @@ void Graphic::_pollEvents() {
 
 void Graphic::_update() {
     ButtonUpdateSystem::update(this->_registry, this->_window);
+    float dt = this->_mainClock.getElapsedTime().asSeconds();
+    this->_mainClock.restart();
+    float scrollSpeed = 30.f;
+    sf::Vector2f center = this->_view.getCenter();
+    float newX = center.x + (scrollSpeed * dt);
+    this->_view.setCenter({newX, center.y});
+
+    ParallaxScrolling::update(this->_registry, this->_view);
+    MovementSystem::update(this->_registry, dt);
     this->_sceneManager->update();
 }
 
@@ -68,7 +79,9 @@ Graphic::Graphic(const std::shared_ptr<ECS::Registry>& registry)
     : _registry(std::move(registry)),
       _keybinds(),
       _window(sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}),
-              "R-Type - Epitech 2025") {
+              "R-Type - Epitech 2025"),
+      _view(sf::FloatRect({0, 0}, {1920, 1080})) {
+    this->_window.setView(this->_view);
     this->_assetsManager = std::make_shared<AssetManager>();
     this->_sceneManager = std::make_unique<SceneManager>(
         registry, this->_assetsManager, this->_window);

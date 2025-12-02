@@ -6,6 +6,10 @@ add_library(rtype-client-system
     EventSystem.hpp
     ButtonUpdateSystem.cpp
     ButtonUpdateSystem.hpp
+    ParallaxScrolling.cpp
+    ParallaxScrolling.hpp
+    MovementSystem.cpp
+    MovementSystem.hpp
 )
 
 target_link_libraries(rtype-client-system

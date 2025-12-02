@@ -15,13 +15,10 @@
 
 struct Image {
     sf::Texture textureId;
-    sf::IntRect textureRect;
     sf::Sprite sprite;
 
-    Image(const sf::Texture& texture, const sf::IntRect& rect)
-        : textureId(texture), sprite(texture) {
-        this->textureRect = rect;
-    }
+    explicit Image(const sf::Texture& texture)
+        : textureId(texture), sprite(texture) {}
     Image(const Image& other) = default;
 };
 
