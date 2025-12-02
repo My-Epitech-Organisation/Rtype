@@ -9,7 +9,6 @@
 
 #include <array>
 #include <cstdint>
-#include <string>
 #include <vector>
 
 namespace rtype::network {
@@ -49,47 +48,7 @@ static constexpr std::uint32_t kServerUserId = 0xFFFFFFFF;
 /// Unassigned client User ID (RFC Section 4.2)
 static constexpr std::uint32_t kUnassignedUserId = 0x00000000;
 
-// ============================================================================
-// Endpoint
-// ============================================================================
-
-/**
- * @brief Network endpoint (IP address + port)
- */
-struct Endpoint {
-    std::string address;
-    std::uint16_t port;
-
-    Endpoint() = default;
-
-    Endpoint(std::string addr, std::uint16_t p)
-        : address(std::move(addr)), port(p) {}
-
-    /**
-     * @brief Check if endpoint is valid (non-empty address and non-zero port)
-     */
-    [[nodiscard]] bool isValid() const noexcept {
-        return !address.empty() && port != 0;
-    }
-
-    /**
-     * @brief Equality comparison
-     */
-    bool operator==(const Endpoint& other) const noexcept {
-        return address == other.address && port == other.port;
-    }
-
-    bool operator!=(const Endpoint& other) const noexcept {
-        return !(*this == other);
-    }
-
-    /**
-     * @brief String representation for logging
-     */
-    [[nodiscard]] std::string toString() const {
-        return address + ":" + std::to_string(port);
-    }
-};
+using Endpoint = rtype::Endpoint;
 
 // ============================================================================
 // Reliability Flags (RFC Section 4.3)

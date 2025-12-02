@@ -65,6 +65,10 @@ struct Endpoint {
 
     ~Endpoint() = default;
 
+    [[nodiscard]] bool isValid() const noexcept {
+        return !address.empty() && port != 0;
+    }
+
     /**
      * @brief Compare two endpoints for equality
      * @param other The endpoint to compare with
