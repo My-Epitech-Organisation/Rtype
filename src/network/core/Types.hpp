@@ -59,15 +59,6 @@ static constexpr std::uint32_t kUnassignedUserId = 0x00000000;
 
 /**
  * @brief Network endpoint (IP address + port)
- *
- * Represents a remote peer's address for UDP communication.
- * Supports both IPv4 and IPv6 addresses as strings.
- *
- * @example
- * ```cpp
- * Endpoint server{"127.0.0.1", 4242};
- * Endpoint client{"192.168.1.100", 5000};
- * ```
  */
 struct Endpoint {
     std::string address;  ///< IP address (IPv4 or IPv6 string)

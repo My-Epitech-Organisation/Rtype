@@ -54,54 +54,12 @@ using ConnectCallback = std::function<void(Result<void>)>;
 /**
  * @brief Abstract interface for asynchronous UDP socket operations
  *
- * This interface provides a clean abstraction over async I/O implementations
- * (e.g., Asio, libuv, raw epoll/IOCP). It enables:
+ * Abstraction over async I/O (Asio, libuv, etc.) enabling non-blocking I/O,
+ * portability, and testability with mock sockets.
  *
- * - **Non-blocking I/O**: Game loop never waits on network operations
- * - **Portability**: Swap implementations without changing game code
- * - **Testability**: Mock sockets for unit testing
- *
- * ## Thread Safety
- *
- * Implementations should be thread-safe for the following patterns:
- * - Calling async operations from any thread
- * - Callbacks may be invoked from a dedicated I/O thread
- *
- * ## Ownership
- *
- * The caller must ensure that:
- * - Buffers passed to async operations remain valid until callback
- * - The socket instance outlives all pending operations
- *
- * @example Server usage
- * ```cpp
- * auto socket = createAsyncSocket(ioContext);
- * socket->bind(4242);
- *
- * Buffer recvBuffer(1400);
- * Endpoint sender;
- *
- * socket->asyncReceiveFrom(recvBuffer, sender, [&](Result<size_t> result) {
- *     if (result.isOk()) {
- *         processPacket(recvBuffer, result.value(), sender);
- *         // Queue next receive...
- *     }
- * });
- * ```
- *
- * @example Client usage
- * ```cpp
- * auto socket = createAsyncSocket(ioContext);
- *
- * Endpoint server{"127.0.0.1", 4242};
- * Buffer packet = buildConnectPacket();
- *
- * socket->asyncSendTo(packet, server, [](Result<size_t> result) {
- *     if (result.isErr()) {
- *         handleError(result.error());
- *     }
- * });
- * ```
+ * Thread-safe for async ops from any thread. Callbacks may run from I/O thread.
+ * Caller must ensure buffers remain valid until callback and socket outlives
+ * pending operations.
  */
 class IAsyncSocket {
    public:

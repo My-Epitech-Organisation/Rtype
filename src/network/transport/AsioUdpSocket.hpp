@@ -21,37 +21,8 @@ namespace rtype::network {
 /**
  * @brief Asio-based implementation of IAsyncSocket
  *
- * Provides non-blocking UDP socket operations using Asio standalone.
- * Thread-safe for concurrent async operations.
- *
- * ## Features
- *
- * - Non-blocking async send/receive
- * - Cross-platform (Windows/Linux/macOS)
- * - Thread-safe with internal mutex
- * - Automatic endpoint conversion (Asio <-> rtype::network)
- *
- * ## Example
- *
- * ```cpp
- * IoContext ctx;
- * AsioUdpSocket socket(ctx);
- *
- * if (auto result = socket.bind(4242); result.isErr()) {
- *     // Handle error
- * }
- *
- * Buffer recvBuffer(kMaxPacketSize);
- * Endpoint sender;
- *
- * socket.asyncReceiveFrom(recvBuffer, sender, [](Result<size_t> result) {
- *     if (result.isOk()) {
- *         std::cout << "Received " << result.value() << " bytes\n";
- *     }
- * });
- *
- * ctx.poll();  // Process async operations
- * ```
+ * Non-blocking UDP socket using Asio standalone.
+ * Thread-safe with internal mutex, cross-platform.
  */
 class AsioUdpSocket : public IAsyncSocket {
    public:

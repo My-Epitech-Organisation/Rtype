@@ -19,34 +19,8 @@ namespace rtype::network {
 /**
  * @brief RAII wrapper for asio::io_context
  *
- * Provides a clean interface for managing the Asio I/O context lifecycle.
- * The io_context is the core of Asio's async I/O - it dispatches handlers
- * and manages async operations.
- *
- * ## Usage Patterns
- *
- * ### Single-threaded (Game Loop Integration)
- * ```cpp
- * IoContext ctx;
- * auto socket = createAsyncSocket(ctx);
- *
- * // In game loop:
- * while (running) {
- *     ctx.poll();        // Process ready handlers (non-blocking)
- *     updateGame();
- *     render();
- * }
- * ```
- *
- * ### Dedicated Network Thread
- * ```cpp
- * IoContext ctx;
- * ctx.runInBackground();  // Spawns thread running io_context
- *
- * // ... use sockets from any thread ...
- *
- * ctx.stop();  // Stops background thread
- * ```
+ * Manages Asio I/O context lifecycle. Use poll() for game loop integration
+ * or runInBackground() for dedicated network thread.
  */
 class IoContext {
    public:

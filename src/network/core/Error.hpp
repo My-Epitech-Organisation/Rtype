@@ -119,27 +119,11 @@ enum class NetworkError : std::uint8_t {
 /**
  * @brief Result type for operations that can fail
  *
- * A lightweight alternative to exceptions for error handling in performance-
- * critical network code. Based on the Result/Either monad pattern.
+ * Lightweight exception-free error handling. Use isOk()/isErr() to check state,
+ * value()/error() for access, map()/andThen() for functional composition.
  *
  * @tparam T The success value type
  * @tparam E The error type (defaults to NetworkError)
- *
- * @example
- * ```cpp
- * Result<size_t> sendResult = socket.send(data);
- *
- * if (sendResult.isOk()) {
- *     std::cout << "Sent " << sendResult.value() << " bytes\n";
- * } else {
- *     std::cerr << "Error: " << toString(sendResult.error()) << "\n";
- * }
- *
- * // Or using map/andThen for functional style:
- * sendResult.map([](size_t bytes) {
- *     std::cout << "Sent " << bytes << " bytes\n";
- * });
- * ```
  */
 template <typename T, typename E = NetworkError>
 class Result {
@@ -256,14 +240,6 @@ class Result {
  * @brief Specialization for void success type
  *
  * Used when an operation can fail but has no return value on success.
- *
- * @example
- * ```cpp
- * Result<void> connectResult = client.connect(server);
- * if (!connectResult) {
- *     std::cerr << "Connection failed: " << toString(connectResult.error());
- * }
- * ```
  */
 template <typename E>
 class Result<void, E> {
