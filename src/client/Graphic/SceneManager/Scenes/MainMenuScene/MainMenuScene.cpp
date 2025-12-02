@@ -24,13 +24,7 @@
 #include "Graphic/TextureRectComponent.hpp"
 #include "Graphic/VelocityComponent.hpp"
 #include "SceneManager/SceneException.hpp"
-#include "assets/Audiowide_Regular.h"
-#include "assets/astroVessel.h"
-#include "assets/bgMainMenu.h"
-#include "assets/planet1.h"
-#include "assets/planet2.h"
-#include "assets/planet3.h"
-#include "assets/playerVessel.h"
+
 
 void MainMenuScene::update() {}
 
@@ -43,53 +37,11 @@ MainMenuScene::MainMenuScene(
     const std::shared_ptr<AssetManager>& assetsManager,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     sf::RenderWindow& window)
-    : AScene(ecs, assetsManager) {
-    this->_assetsManager->fontManager->load("title_font", Audiowide_Regular_ttf,
-                                            Audiowide_Regular_ttf_len);
-    this->_assetsManager->textureManager->load("bg_menu", bgMainMenu_png,
-                                               bgMainMenu_png_len);
-    this->_assetsManager->textureManager->load("bg_planet_1", planet1_png,
-                                               planet1_png_len);
-    this->_assetsManager->textureManager->load("bg_planet_2", planet2_png,
-                                               planet2_png_len);
-    this->_assetsManager->textureManager->load("bg_planet_3", planet3_png,
-                                               planet3_png_len);
-    this->_assetsManager->textureManager->load(
-        "player_vessel", playerVessel_gif, playerVessel_gif_len);
-    this->_assetsManager->textureManager->load("astro_vessel", astroVessel_png,
-                                               astroVessel_png_len);
-
-    this->_assetsManager->textureManager->get("bg_menu").setRepeated(true);
-    this->_assetsManager->textureManager->get("bg_planet_1").setRepeated(true);
-    this->_assetsManager->textureManager->get("bg_planet_2").setRepeated(true);
-    this->_assetsManager->textureManager->get("bg_planet_3").setRepeated(true);
-
-    auto background = this->_registry->spawnEntity();
-    this->_registry->emplaceComponent<Image>(
-        background, this->_assetsManager->textureManager->get("bg_menu"));
-    this->_registry->emplaceComponent<Position>(background, 0, 0);
-    this->_registry->emplaceComponent<Parallax>(background, 0.2, true);
-
-    auto planet1 = this->_registry->spawnEntity();
-    this->_registry->emplaceComponent<Image>(
-        planet1, this->_assetsManager->textureManager->get("bg_planet_1"));
-    this->_registry->emplaceComponent<Position>(planet1, 0, 0);
-    this->_registry->emplaceComponent<Parallax>(planet1, 0.5, true);
-
-    auto planet2 = this->_registry->spawnEntity();
-    this->_registry->emplaceComponent<Image>(
-        planet2, this->_assetsManager->textureManager->get("bg_planet_2"));
-    this->_registry->emplaceComponent<Position>(planet2, 0, 0);
-    this->_registry->emplaceComponent<Parallax>(planet2, 0.4, true);
-
-    auto planet3 = this->_registry->spawnEntity();
-    this->_registry->emplaceComponent<Image>(
-        planet3, this->_assetsManager->textureManager->get("bg_planet_3"));
-    this->_registry->emplaceComponent<Position>(planet3, 0, 0);
-    this->_registry->emplaceComponent<Parallax>(planet3, 0.4, true);
-
+    : AScene(ecs, assetsManager)
+{
     auto seed = static_cast<unsigned int>(time(nullptr));
 
+    this->_listEntity = (EntityFactory::createBackground(this->_registry, this->_assetsManager, "R-TYPE"));
     auto astroneerVessel = this->_registry->spawnEntity();
     this->_registry->emplaceComponent<Image>(
         astroneerVessel,
@@ -115,19 +67,6 @@ MainMenuScene::MainMenuScene(
             fakePlayer, (rand_r(&seed) % 150) + 75, 0.f);
         this->_listEntity.push_back(fakePlayer);
     }
-
-    auto appTitle = this->_registry->spawnEntity();
-    this->_registry->emplaceComponent<Text>(
-        appTitle, this->_assetsManager->fontManager->get("title_font"),
-        sf::Color::White, 72, "R-TYPE");
-    this->_registry->emplaceComponent<Position>(appTitle, 50, 50);
-    this->_registry->emplaceComponent<StaticTextTag>(appTitle);
-
-    this->_listEntity.push_back(planet1);
-    this->_listEntity.push_back(planet2);
-    this->_listEntity.push_back(planet3);
-    this->_listEntity.push_back(background);
-    this->_listEntity.push_back(appTitle);
     this->_listEntity.push_back(EntityFactory::createButton(
         *this->_registry,
         Text(this->_assetsManager->fontManager->get("title_font"),

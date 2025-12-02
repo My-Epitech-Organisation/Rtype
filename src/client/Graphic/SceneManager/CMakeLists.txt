@@ -15,4 +15,5 @@ target_link_libraries(rtype-graphic-scene-manager
     SFML::System
     rtype_engine
     rtype-graphic-main-menu-scene
+    rtype-graphic-settings-scene
 )

@@ -1,7 +1,7 @@
 add_library(rtype-graphic-entity-factory
     STATIC
-    EntityFactory.tpp
     EntityFactory.hpp
+    EntityFactory.cpp
 )
 
 target_link_libraries(rtype-graphic-entity-factory

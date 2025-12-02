@@ -15,7 +15,7 @@ class AssetManager {
     std::shared_ptr<TextureManager> textureManager =
         std::make_shared<TextureManager>();
     std::shared_ptr<FontManager> fontManager = std::make_shared<FontManager>();
-    AssetManager() = default;
+    AssetManager();
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_ASSETMANAGER_HPP_

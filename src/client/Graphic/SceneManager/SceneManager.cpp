@@ -10,6 +10,7 @@
 #include "../../GameAction.hpp"
 #include "SceneException.hpp"
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
+#include "Scenes/SettingsScene/SettingsScene.hpp"
 
 void SceneManager::setCurrentScene(const Scene scene) {
     if (!this->_sceneList.contains(scene)) {
@@ -81,7 +82,12 @@ SceneManager::SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
     this->_sceneList.emplace(MAIN_MENU, [ecs, texture, &window, this]() {
         return std::make_unique<MainMenuScene>(
             ecs, texture, this->_switchToScene,
-            window);  // CRÉATION 2 (La lambda)
+            window);
+    });
+    this->_sceneList.emplace(SETTINGS_MENU, [ecs, texture, &window, this]() {
+        return std::make_unique<SettingsScene>(
+            ecs, texture, this->_switchToScene,
+            window);
     });
     this->setCurrentScene(MAIN_MENU);
 }
