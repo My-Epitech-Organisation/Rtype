@@ -55,18 +55,17 @@ ClientId ClientManager::handleNewConnection(const Endpoint& endpoint) {
 }
 
 void ClientManager::updateRateLimitWindow(int64_t nowMs) noexcept {
-    assertLockHeld();
     const auto resetTimeMs =
         _rateLimitResetTimeMs.load(std::memory_order_relaxed);
 
     if (nowMs >= resetTimeMs) {
-        _rateLimitResetTimeMs.store(nowMs + 1000, std::memory_order_relaxed);
+        _rateLimitResetTimeMs.store(nowMs + RATE_LIMIT_WINDOW_MS,
+                                    std::memory_order_relaxed);
         _connectionsThisSecond.store(0, std::memory_order_relaxed);
     }
 }
 
 bool ClientManager::isRateLimitExceeded(const Endpoint& endpoint) noexcept {
-    assertLockHeld();
     const auto connectionsThisSecond =
         _connectionsThisSecond.load(std::memory_order_relaxed);
 
@@ -83,8 +82,6 @@ bool ClientManager::isRateLimitExceeded(const Endpoint& endpoint) noexcept {
 }
 
 bool ClientManager::isServerFull() const noexcept {
-    assertLockHeld();
-
     if (_clients.size() >= _maxPlayers) {
         LOG_INFO("[Server] Connection rejected: server full ("
                  << _maxPlayers << "/" << _maxPlayers << " players)");
@@ -99,8 +96,6 @@ bool ClientManager::isServerFull() const noexcept {
 }
 
 ClientId ClientManager::generateNextClientId() noexcept {
-    assertLockHeld();
-
     ClientId newId;
     ClientId currentId = _nextClientId.load(std::memory_order_relaxed);
     do {
@@ -122,8 +117,6 @@ ClientId ClientManager::generateNextClientId() noexcept {
 
 void ClientManager::registerClient(ClientId clientId,
                                    const Endpoint& endpoint) noexcept {
-    assertLockHeld();
-
     _connectionsThisSecond.fetch_add(1, std::memory_order_relaxed);
 
     Client newClient{.id = clientId,
@@ -151,8 +144,6 @@ void ClientManager::handleClientDisconnect(ClientId clientId,
 
 void ClientManager::handleClientDisconnectInternal(
     ClientId clientId, DisconnectReason reason) noexcept {
-    assertLockHeld();
-
     const auto it = _clients.find(clientId);
     if (it == _clients.end()) {
         return;
@@ -167,8 +158,6 @@ void ClientManager::handleClientDisconnectInternal(
 
 void ClientManager::removeClientFromMaps(ClientId clientId,
                                          const Endpoint& endpoint) noexcept {
-    assertLockHeld();
-
     _clients.erase(clientId);
     _endpointToClient.erase(endpoint);
 }
@@ -248,8 +237,6 @@ void ClientManager::clearAllClients() noexcept {
 }
 
 void ClientManager::notifyClientConnected(ClientId newClientId) noexcept {
-    assertLockHeld();
-
     // TODO(Clem): Send notification packet to all other clients
     // Pseudocode:
     // Packet packet(PacketType::PlayerJoin);
@@ -262,8 +249,6 @@ void ClientManager::notifyClientConnected(ClientId newClientId) noexcept {
 
 void ClientManager::notifyClientDisconnected(ClientId clientId,
                                              DisconnectReason reason) noexcept {
-    assertLockHeld();
-
     // TODO(Clem): Send notification packet to all remaining clients
     // This is critical for game state consistency when a client crashes
     //
@@ -277,8 +262,6 @@ void ClientManager::notifyClientDisconnected(ClientId clientId,
 }
 
 void ClientManager::printConnectedClients() const noexcept {
-    assertLockHeld();
-
     if (!_verbose) {
         return;
     }
@@ -300,16 +283,6 @@ void ClientManager::printConnectedClients() const noexcept {
     LOG_DEBUG("[Server] ==============================");
     LOG_DEBUG("[Server] Total: " << _clients.size() << "/" << _maxPlayers
                                  << " players");
-}
-
-void ClientManager::assertLockHeld() const noexcept {
-    if (!_verbose) {
-        return;
-    }
-    if (_clientsMutex.try_lock()) {
-        _clientsMutex.unlock();
-        assert(false && "assertLockHeld: mutex was NOT locked by caller!");
-    }
 }
 
 }  // namespace rtype::server
