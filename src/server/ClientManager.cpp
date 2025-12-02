@@ -297,13 +297,6 @@ void ClientManager::assertLockHeld() const noexcept {
     if (!_verbose) {
         return;
     }
-    // Best-effort assertion: try to acquire a UNIQUE lock.
-    // If we can acquire it, it means the caller didn't hold any lock (which is
-    // a bug). Note: We use try_lock() (unique) instead of try_lock_shared()
-    // because:
-    // - If caller holds unique lock: try_lock() will fail (correct)
-    // - If caller holds shared lock: try_lock() will fail (correct)
-    // - If caller holds no lock: try_lock() will succeed (bug detected!)
     if (_clientsMutex.try_lock()) {
         _clientsMutex.unlock();
         assert(false && "assertLockHeld: mutex was NOT locked by caller!");
