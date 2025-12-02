@@ -128,8 +128,9 @@ void AsioUdpSocket::asyncReceiveFrom(Buffer& buffer, Endpoint& sender,
         return;
     }
 
-    // Ensure buffer has capacity
-    if (buffer.empty()) {
+    // Ensure buffer has sufficient capacity for max UDP packet
+    // This handles both empty buffers and reused buffers that were shrunk
+    if (buffer.size() < kMaxPacketSize) {
         buffer.resize(kMaxPacketSize);
     }
 
@@ -140,11 +141,10 @@ void AsioUdpSocket::asyncReceiveFrom(Buffer& buffer, Endpoint& sender,
             if (ec) {
                 handler(Err<std::size_t>(fromAsioError(ec)));
             } else {
-                // Shrink buffer to actual received size (never grow to avoid
-                // reallocation)
-                if (bytesReceived < buffer.size()) {
-                    buffer.resize(bytesReceived);
-                }
+                // Resize buffer to actual received size
+                // Note: resize() preserves capacity, so no reallocation occurs
+                // Caller can reuse buffer; we'll resize to kMaxPacketSize above
+                buffer.resize(bytesReceived);
 
                 // Populate sender endpoint
                 sender = fromAsioEndpoint(remoteEndpoint_);
