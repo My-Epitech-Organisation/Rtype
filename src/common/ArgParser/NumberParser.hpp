@@ -52,7 +52,7 @@ template <typename T>
                     name, str));
                 return std::nullopt;
             }
-            const uint64_t value = std::stoull(input, &pos);
+            const uint32_t value = std::stoull(input, &pos);
 
             if (pos != input.size()) {
                 LOG_ERROR(std::format("Invalid {}: '{}' is not a valid number",
@@ -66,7 +66,7 @@ template <typename T>
             }
             return static_cast<T>(value);
         } else {
-            const int64_t value = std::stoll(input, &pos);
+            const int32_t value = std::stoll(input, &pos);
 
             if (pos != input.size()) {
                 LOG_ERROR(std::format("Invalid {}: '{}' is not a valid number",
@@ -74,8 +74,8 @@ template <typename T>
                 return std::nullopt;
             }
             if (!std::in_range<T>(value) ||
-                value < static_cast<int64_t>(minVal) ||
-                value > static_cast<int64_t>(maxVal)) {
+                value < static_cast<int32_t>(minVal) ||
+                value > static_cast<int32_t>(maxVal)) {
                 LOG_ERROR(std::format("Invalid {}: must be between {} and {}",
                                       name, minVal, maxVal));
                 return std::nullopt;
