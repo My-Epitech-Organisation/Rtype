@@ -16,40 +16,9 @@
 
 namespace rtype::network {
 
-// ============================================================================
-// Callback Types
-// ============================================================================
-
-/**
- * @brief Callback invoked when an async send operation completes
- *
- * @param result Success: number of bytes sent, Error: NetworkError code
- *
- * @note The callback may be invoked from a different thread than the caller.
- *       Ensure proper synchronization if accessing shared state.
- */
 using SendCallback = std::function<void(Result<std::size_t>)>;
-
-/**
- * @brief Callback invoked when an async receive operation completes
- *
- * @param result Success: number of bytes received, Error: NetworkError code
- *
- * @note On success, the buffer passed to asyncReceiveFrom() contains the
- *       received data, and the sender endpoint is populated.
- */
 using ReceiveCallback = std::function<void(Result<std::size_t>)>;
-
-/**
- * @brief Callback invoked when a connection/bind operation completes
- *
- * @param result Success: void, Error: NetworkError code
- */
 using ConnectCallback = std::function<void(Result<void>)>;
-
-// ============================================================================
-// IAsyncSocket Interface
-// ============================================================================
 
 /**
  * @brief Abstract interface for asynchronous UDP socket operations
@@ -73,101 +42,25 @@ class IAsyncSocket {
     IAsyncSocket(IAsyncSocket&&) = default;
     IAsyncSocket& operator=(IAsyncSocket&&) = default;
 
-    // ========================================================================
-    // Socket Configuration
-    // ========================================================================
-
-    /**
-     * @brief Bind the socket to a local port (server mode)
-     *
-     * After binding, the socket can receive datagrams on the specified port.
-     * For clients, binding is optional (OS assigns ephemeral port).
-     *
-     * @param port Local port number to bind to (0 for ephemeral)
-     * @return Success or error (e.g., AddressInUse)
-     *
-     * @note Must be called before asyncReceiveFrom() for servers
-     */
+    /// Bind the socket to a local port (0 for ephemeral)
     virtual Result<void> bind(std::uint16_t port) = 0;
 
-    /**
-     * @brief Check if the socket is open and ready for operations
-     */
     [[nodiscard]] virtual bool isOpen() const noexcept = 0;
 
-    /**
-     * @brief Get the local port the socket is bound to
-     *
-     * @return Port number, or 0 if not bound
-     */
     [[nodiscard]] virtual std::uint16_t localPort() const noexcept = 0;
 
-    // ========================================================================
-    // Asynchronous Operations
-    // ========================================================================
-
-    /**
-     * @brief Asynchronously send data to a remote endpoint
-     *
-     * The operation completes immediately (non-blocking). The callback is
-     * invoked when the data has been handed to the OS for transmission.
-     *
-     * @param data Buffer containing data to send (must remain valid until
-     * callback)
-     * @param dest Destination endpoint (IP + port)
-     * @param handler Callback invoked on completion
-     *
-     * @note UDP is unreliable - successful send does not guarantee delivery
-     * @note For reliability, use the RUDP layer built on top of this
-     *
-     * @pre isOpen() == true
-     */
+    /// Async send to endpoint. Buffer must remain valid until callback.
     virtual void asyncSendTo(const Buffer& data, const Endpoint& dest,
                              SendCallback handler) = 0;
 
-    /**
-     * @brief Asynchronously receive data from any remote endpoint
-     *
-     * The operation completes when a datagram is received. The callback is
-     * invoked with the number of bytes received.
-     *
-     * @param buffer Buffer to store received data (must remain valid until
-     * callback)
-     * @param sender [out] Populated with sender's endpoint on success
-     * @param handler Callback invoked on completion
-     *
-     * @note Only one receive operation should be pending at a time
-     * @note Buffer should be at least kMaxPacketSize bytes for UDP
-     *
-     * @pre isOpen() == true
-     * @pre bind() has been called (for servers)
-     */
+    /// Async receive. Buffer/sender must remain valid until callback.
     virtual void asyncReceiveFrom(Buffer& buffer, Endpoint& sender,
                                   ReceiveCallback handler) = 0;
 
-    // ========================================================================
-    // Lifecycle Management
-    // ========================================================================
-
-    /**
-     * @brief Cancel all pending asynchronous operations
-     *
-     * All pending callbacks will be invoked with NetworkError::Cancelled.
-     * The socket remains open and can be used for new operations.
-     *
-     * @note Thread-safe: can be called from any thread
-     */
+    /// Cancel pending operations (callbacks get NetworkError::Cancelled)
     virtual void cancel() = 0;
 
-    /**
-     * @brief Close the socket and release all resources
-     *
-     * All pending operations are cancelled. After closing, the socket
-     * cannot be used for any operations.
-     *
-     * @note Thread-safe: can be called from any thread
-     * @note Calling close() on an already-closed socket is safe (no-op)
-     */
+    /// Close socket and release resources
     virtual void close() = 0;
 
    protected:
@@ -175,12 +68,8 @@ class IAsyncSocket {
     IAsyncSocket() = default;
 };
 
-// ============================================================================
-// Factory Function (Forward Declaration)
-// ============================================================================
-
 /**
- * @brief Create an async UDP socket using the default implementation (Asio)
+ * @brief Create an async UDP socket
  *
  * @param ioContext Reference to the I/O context for async operations
  * @return Unique pointer to the socket, or nullptr on failure

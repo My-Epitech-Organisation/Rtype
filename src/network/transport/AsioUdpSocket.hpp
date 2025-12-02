@@ -38,10 +38,6 @@ class AsioUdpSocket : public IAsyncSocket {
      */
     ~AsioUdpSocket() override;
 
-    // ========================================================================
-    // IAsyncSocket Implementation
-    // ========================================================================
-
     Result<void> bind(std::uint16_t port) override;
 
     [[nodiscard]] bool isOpen() const noexcept override;
@@ -58,58 +54,21 @@ class AsioUdpSocket : public IAsyncSocket {
 
     void close() override;
 
-    // ========================================================================
-    // Additional Methods
-    // ========================================================================
-
-    /**
-     * @brief Get the underlying Asio socket (for advanced use)
-     *
-     * @warning Use with caution - bypasses abstraction
-     */
+    /// Get underlying Asio socket (for advanced use)
     [[nodiscard]] asio::ip::udp::socket& nativeSocket() noexcept {
         return socket_;
     }
 
    private:
-    // --- Helper Methods ---
-
-    /**
-     * @brief Convert NetworkError to Asio error_code
-     */
     static NetworkError fromAsioError(const asio::error_code& ec) noexcept;
-
-    /**
-     * @brief Convert Asio endpoint to our Endpoint type
-     */
     static Endpoint fromAsioEndpoint(const asio::ip::udp::endpoint& ep);
-
-    /**
-     * @brief Convert our Endpoint to Asio endpoint
-     */
     static asio::ip::udp::endpoint toAsioEndpoint(const Endpoint& ep);
 
-    // --- Member Variables ---
-
     asio::ip::udp::socket socket_;
-
-    /// Mutex for thread-safe operations
     mutable std::mutex mutex_;
-
-    /// Temporary endpoint for receive operations
     asio::ip::udp::endpoint remoteEndpoint_;
 };
 
-// ============================================================================
-// Factory Function
-// ============================================================================
-
-/**
- * @brief Create an async UDP socket
- *
- * @param ioContext Reference to the I/O context
- * @return Unique pointer to the socket
- */
 [[nodiscard]] inline std::unique_ptr<IAsyncSocket> createAsyncSocket(
     asio::io_context& ioContext) {
     return std::make_unique<AsioUdpSocket>(ioContext);

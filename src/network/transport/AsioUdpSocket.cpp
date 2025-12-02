@@ -11,42 +11,30 @@
 
 namespace rtype::network {
 
-// ============================================================================
-// Constructor / Destructor
-// ============================================================================
-
 AsioUdpSocket::AsioUdpSocket(asio::io_context& ioContext)
     : socket_(ioContext, asio::ip::udp::v4()) {}
 
 AsioUdpSocket::~AsioUdpSocket() { close(); }
-
-// ============================================================================
-// Socket Configuration
-// ============================================================================
 
 Result<void> AsioUdpSocket::bind(std::uint16_t port) {
     std::lock_guard<std::mutex> lock(mutex_);
 
     asio::error_code ec;
 
-    // Close existing socket if open
     if (socket_.is_open()) {
         socket_.close(ec);
     }
 
-    // Open new socket
     socket_.open(asio::ip::udp::v4(), ec);
     if (ec) {
         return Err(fromAsioError(ec));
     }
 
-    // Set socket options
     socket_.set_option(asio::socket_base::reuse_address(true), ec);
     if (ec) {
         return Err(fromAsioError(ec));
     }
 
-    // Bind to port
     asio::ip::udp::endpoint localEndpoint(asio::ip::udp::v4(), port);
     socket_.bind(localEndpoint, ec);
     if (ec) {
@@ -77,26 +65,19 @@ std::uint16_t AsioUdpSocket::localPort() const noexcept {
     return endpoint.port();
 }
 
-// ============================================================================
-// Asynchronous Operations
-// ============================================================================
-
 void AsioUdpSocket::asyncSendTo(const Buffer& data, const Endpoint& dest,
                                 SendCallback handler) {
     if (!handler) {
         return;
     }
 
-    // Validate destination
     if (!dest.isValid()) {
-        // Post callback to io_context to maintain async semantics
         asio::post(socket_.get_executor(), [handler = std::move(handler)]() {
             handler(Err<std::size_t>(NetworkError::NotConnected));
         });
         return;
     }
 
-    // Convert endpoint
     asio::ip::udp::endpoint asioEndpoint;
     try {
         asioEndpoint = toAsioEndpoint(dest);
@@ -107,7 +88,6 @@ void AsioUdpSocket::asyncSendTo(const Buffer& data, const Endpoint& dest,
         return;
     }
 
-    // Create shared buffer to ensure lifetime during async operation
     auto sharedBuffer = std::make_shared<Buffer>(data);
 
     socket_.async_send_to(
@@ -128,8 +108,6 @@ void AsioUdpSocket::asyncReceiveFrom(Buffer& buffer, Endpoint& sender,
         return;
     }
 
-    // Ensure buffer has sufficient capacity for max UDP packet
-    // This handles both empty buffers and reused buffers that were shrunk
     if (buffer.size() < kMaxPacketSize) {
         buffer.resize(kMaxPacketSize);
     }
@@ -141,22 +119,12 @@ void AsioUdpSocket::asyncReceiveFrom(Buffer& buffer, Endpoint& sender,
             if (ec) {
                 handler(Err<std::size_t>(fromAsioError(ec)));
             } else {
-                // Resize buffer to actual received size
-                // Note: resize() preserves capacity, so no reallocation occurs
-                // Caller can reuse buffer; we'll resize to kMaxPacketSize above
                 buffer.resize(bytesReceived);
-
-                // Populate sender endpoint
                 sender = fromAsioEndpoint(remoteEndpoint_);
-
                 handler(Ok(bytesReceived));
             }
         });
 }
-
-// ============================================================================
-// Lifecycle Management
-// ============================================================================
 
 void AsioUdpSocket::cancel() {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -164,7 +132,6 @@ void AsioUdpSocket::cancel() {
     if (socket_.is_open()) {
         asio::error_code ec;
         socket_.cancel(ec);
-        // Ignore errors - socket may be in invalid state
     }
 }
 
@@ -175,20 +142,14 @@ void AsioUdpSocket::close() {
         asio::error_code ec;
         socket_.shutdown(asio::socket_base::shutdown_both, ec);
         socket_.close(ec);
-        // Ignore errors - socket may be in invalid state
     }
 }
-
-// ============================================================================
-// Helper Methods
-// ============================================================================
 
 NetworkError AsioUdpSocket::fromAsioError(const asio::error_code& ec) noexcept {
     if (!ec) {
         return NetworkError::None;
     }
 
-    // Map common Asio errors to NetworkError
     if (ec == asio::error::operation_aborted) {
         return NetworkError::Cancelled;
     }
@@ -218,7 +179,6 @@ NetworkError AsioUdpSocket::fromAsioError(const asio::error_code& ec) noexcept {
         return NetworkError::PacketTooLarge;
     }
 
-    // Default to internal error for unmapped errors
     return NetworkError::InternalError;
 }
 
