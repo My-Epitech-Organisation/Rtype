@@ -235,14 +235,29 @@ jobs:
           fi
 
   test:
-    name: "🧪 Unit Tests"
-    runs-on: ubuntu-latest
-    needs: [cache-check, deps-linux]
-    if: always() && needs.cache-check.result == 'success' && (needs.deps-linux.result == 'success' || needs.deps-linux.result == 'skipped')
+    name: "🧪 Unit Tests (${{ matrix.os }})"
+    runs-on: ${{ matrix.os }}
+    needs: [cache-check, deps-linux, deps-windows]
+    if: always() && needs.cache-check.result == 'success' && ((needs.deps-linux.result == 'success' || needs.deps-linux.result == 'skipped') || (needs.deps-windows.result == 'success' || needs.deps-windows.result == 'skipped'))
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            preset: linux-release
+            cache-key-output: cache-key-linux
+            triplet: x64-linux
+            coverage: true
+          - os: windows-latest
+            preset: windows-release
+            cache-key-output: cache-key-windows
+            triplet: x64-windows
+            coverage: false
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install system dependencies
+      - name: Install system dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -253,43 +268,47 @@ jobs:
             libxinerama-dev libxext-dev \
             lcov jq
 
+      - name: Install Ninja (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install ninja -y
+
+      - name: Setup MSVC Developer Command Prompt
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Restore vcpkg_installed from cache
         uses: actions/cache/restore@v4
         with:
           path: build/vcpkg_installed
-          key: ${{ needs.cache-check.outputs.cache-key-linux }}
+          key: ${{ needs.cache-check.outputs[matrix.cache-key-output] }}
           fail-on-cache-miss: true
 
       - name: Init vcpkg submodule
         run: git submodule update --init external/vcpkg
 
       - name: Configure CMake
+        shell: bash
         run: |
-          cmake --preset linux-release \
+          cmake --preset ${{ matrix.preset }} \
             -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF \
             -DUSE_SFML=ON
 
       - name: Build tests
-        run: cmake --build --preset linux-release --target all
+        run: cmake --build --preset ${{ matrix.preset }} --target all
 
       - name: Run tests
         run: |
           cd build
           ctest --output-on-failure --timeout 120
 
-      - name: Cache coverage build
-        uses: actions/cache@v4
-        with:
-          path: build-coverage
-          key: coverage-build-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'vcpkg.json', 'scripts/coverage.sh') }}
-
-      - name: Run Coverage Analysis
+      - name: Run Coverage Analysis (Linux only)
+        if: matrix.coverage
         run: |
           chmod +x scripts/coverage.sh
           ./scripts/coverage.sh --html
 
-      - name: Upload Coverage Report
-        if: always()
+      - name: Upload Coverage Report (Linux only)
+        if: matrix.coverage && always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
@@ -298,20 +317,22 @@ jobs:
 
       - name: Test Summary
         if: always()
+        shell: bash
         run: |
-          echo "### 🧪 Test Results & Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "### 🧪 Test Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### Unit Tests" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ matrix.coverage }}" == "true" ]; then
+            echo "#### Coverage Report" >> $GITHUB_STEP_SUMMARY
+            echo "**Coverage thresholds:** Lines ≥80%, Functions ≥80%, Branches ≥55%" >> $GITHUB_STEP_SUMMARY
+            if [ -d coverage/html ]; then
+              echo "**HTML Report:** [View Coverage Report](coverage/html/index.html)" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
           if [ -f build/Testing/Temporary/LastTest.log ]; then
+            echo "#### Test Log" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             tail -50 build/Testing/Temporary/LastTest.log >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### Coverage Report" >> $GITHUB_STEP_SUMMARY
-          echo "**Coverage thresholds:** Lines ≥80%, Functions ≥80%, Branches ≥55%" >> $GITHUB_STEP_SUMMARY
-          if [ -d coverage/html ]; then
-            echo "**HTML Report:** [View Coverage Report](coverage/html/index.html)" >> $GITHUB_STEP_SUMMARY
           fi
 
   build:
@@ -426,7 +447,7 @@ jobs:
     name: "🧹 Cache Cleanup"
     runs-on: ubuntu-latest
     needs: [build]
-    if: always() && github.ref == 'refs/heads/main'
+    if: always()
     permissions:
       actions: write
     steps:
