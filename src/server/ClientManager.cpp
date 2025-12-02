@@ -13,10 +13,11 @@
 
 namespace rtype::server {
 
-ClientManager::ClientManager(size_t maxPlayers, ServerMetrics& metrics,
+ClientManager::ClientManager(size_t maxPlayers,
+                             std::shared_ptr<ServerMetrics> metrics,
                              bool verbose)
     : _maxPlayers(maxPlayers),
-      _metrics(metrics),
+      _metrics(std::move(metrics)),
       _verbose(verbose),
       _rateLimitResetTimeMs(
           std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -72,7 +73,10 @@ bool ClientManager::isRateLimitExceeded(const Endpoint& endpoint) noexcept {
     if (connectionsThisSecond >= MAX_CONNECTIONS_PER_SECOND) {
         LOG_WARNING("[Server] Rate limit exceeded, rejecting connection from "
                     << endpoint.toString());
-        _metrics.connectionsRejected.fetch_add(1, std::memory_order_relaxed);
+        if (auto metrics = _metrics.lock()) {
+            metrics->connectionsRejected.fetch_add(1,
+                                                   std::memory_order_relaxed);
+        }
         return true;
     }
     return false;
@@ -84,7 +88,10 @@ bool ClientManager::isServerFull() const noexcept {
     if (_clients.size() >= _maxPlayers) {
         LOG_INFO("[Server] Connection rejected: server full ("
                  << _maxPlayers << "/" << _maxPlayers << " players)");
-        _metrics.connectionsRejected.fetch_add(1, std::memory_order_relaxed);
+        if (auto metrics = _metrics.lock()) {
+            metrics->connectionsRejected.fetch_add(1,
+                                                   std::memory_order_relaxed);
+        }
         // TODO(Clem): Send rejection packet to client
         return true;
     }
@@ -100,8 +107,10 @@ ClientId ClientManager::generateNextClientId() noexcept {
         if (currentId == std::numeric_limits<ClientId>::max()) {
             LOG_ERROR(
                 "[Server] Client ID overflow! Cannot accept new connections.");
-            _metrics.connectionsRejected.fetch_add(1,
-                                                   std::memory_order_relaxed);
+            if (auto metrics = _metrics.lock()) {
+                metrics->connectionsRejected.fetch_add(
+                    1, std::memory_order_relaxed);
+            }
             return INVALID_CLIENT_ID;
         }
         newId = currentId + 1;
@@ -124,7 +133,9 @@ void ClientManager::registerClient(ClientId clientId,
 
     _clients.emplace(clientId, newClient);
     _endpointToClient.emplace(endpoint, clientId);
-    _metrics.totalConnections.fetch_add(1, std::memory_order_relaxed);
+    if (auto metrics = _metrics.lock()) {
+        metrics->totalConnections.fetch_add(1, std::memory_order_relaxed);
+    }
 
     LOG_INFO("[Server] New client connected: ID=" << clientId << " from "
                                                   << endpoint.toString());

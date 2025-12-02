@@ -9,6 +9,7 @@
 #define SRC_SERVER_CLIENTMANAGER_HPP_
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <shared_mutex>
 #include <unordered_map>
@@ -52,10 +53,11 @@ class ClientManager {
     /**
      * @brief Construct a new ClientManager
      * @param maxPlayers Maximum number of concurrent players
-     * @param metrics Reference to server metrics for updating counters
+     * @param metrics Shared pointer to server metrics for updating counters
      * @param verbose Enable verbose debug output (default: false)
      */
-    explicit ClientManager(size_t maxPlayers, ServerMetrics& metrics,
+    explicit ClientManager(size_t maxPlayers,
+                           std::shared_ptr<ServerMetrics> metrics,
                            bool verbose = false);
 
     ~ClientManager() = default;
@@ -229,9 +231,9 @@ class ClientManager {
      */
     void assertLockHeld() const noexcept;
 
-    size_t _maxPlayers;       ///< Maximum concurrent players
-    ServerMetrics& _metrics;  ///< Reference to server metrics
-    bool _verbose;            ///< Enable verbose debug output
+    size_t _maxPlayers;                    ///< Maximum concurrent players
+    std::weak_ptr<ServerMetrics> _metrics; ///< Weak reference to server metrics
+    bool _verbose;                         ///< Enable verbose debug output
 
     std::unordered_map<ClientId, Client> _clients;
     std::unordered_map<Endpoint, ClientId> _endpointToClient;
