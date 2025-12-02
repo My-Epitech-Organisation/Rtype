@@ -67,6 +67,12 @@
       "displayName": "Ubuntu Latest (CI)",
       "description": "Alias for linux-release used by GitHub Actions CI",
       "inherits": "linux-release"
+    },
+    {
+      "name": "windows-latest",
+      "displayName": "Windows Latest (CI)",
+      "description": "Alias for windows-release used by GitHub Actions CI",
+      "inherits": "windows-release"
     }
   ],
   "buildPresets": [
@@ -89,6 +95,10 @@
     {
       "name": "ubuntu-latest",
       "configurePreset": "ubuntu-latest"
+    },
+    {
+      "name": "windows-latest",
+      "configurePreset": "windows-latest"
     }
   ]
 }
