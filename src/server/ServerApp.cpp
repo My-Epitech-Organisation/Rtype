@@ -135,7 +135,7 @@ void ServerApp::sleepUntilNextFrame(
     }
     const auto targetTime = frameStartTime + timing.fixedDeltaNs;
     while (steady_clock::now() < targetTime) {
-        // Busy wait for remaining time
+        std::this_thread::yield();
     }
 }
 

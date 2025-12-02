@@ -165,7 +165,7 @@ static int runServer(const ServerConfig& config,
     return 0;
 }
 
-int main(int argc, const char** argv) {
+int main(int argc, char** argv) {
     try {
         ServerConfig config;
         std::vector<std::string_view> args(argv + 1, argv + argc);

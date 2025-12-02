@@ -35,7 +35,7 @@ ClientId ClientManager::handleNewConnection(const Endpoint& endpoint) {
     if (isRateLimitExceeded(endpoint)) {
         return INVALID_CLIENT_ID;
     }
-    if (const auto existingId = findClientByEndpoint(endpoint);
+    if (const auto existingId = findClientByEndpointInternal(endpoint);
         existingId != INVALID_CLIENT_ID) {
         LOG_WARNING(
             "[Server] Connection attempt from already connected endpoint: "
@@ -135,11 +135,11 @@ void ClientManager::registerClient(ClientId clientId,
 void ClientManager::handleClientDisconnect(ClientId clientId,
                                            DisconnectReason reason) noexcept {
     std::unique_lock lock(_clientsMutex);
-    handleClientDisconnect(clientId, reason);
+    handleClientDisconnectInternal(clientId, reason);
 }
 
-void ClientManager::handleClientDisconnect(ClientId clientId,
-                                           DisconnectReason reason) noexcept {
+void ClientManager::handleClientDisconnectInternal(
+    ClientId clientId, DisconnectReason reason) noexcept {
     assertLockHeld();
 
     const auto it = _clients.find(clientId);
@@ -173,10 +173,10 @@ void ClientManager::updateClientActivity(ClientId clientId) noexcept {
 ClientId ClientManager::findClientByEndpoint(
     const Endpoint& endpoint) const noexcept {
     std::shared_lock lock(_clientsMutex);
-    return findClientByEndpoint(endpoint);
+    return findClientByEndpointInternal(endpoint);
 }
 
-ClientId ClientManager::findClientByEndpoint(
+ClientId ClientManager::findClientByEndpointInternal(
     const Endpoint& endpoint) const noexcept {
     if (const auto it = _endpointToClient.find(endpoint);
         it != _endpointToClient.end()) {
@@ -223,7 +223,7 @@ void ClientManager::checkClientTimeouts(uint32_t timeoutSeconds) noexcept {
         }
     }
     for (const auto& [id, endpoint] : _timeoutBuffer) {
-        handleClientDisconnect(id, DisconnectReason::Timeout);
+        handleClientDisconnectInternal(id, DisconnectReason::Timeout);
     }
 }
 

@@ -175,8 +175,8 @@ class ClientManager {
      * @param reason Reason for disconnection
      * @pre Caller must hold unique lock on _clientsMutex
      */
-    void handleClientDisconnect(ClientId clientId,
-                                DisconnectReason reason) noexcept;
+    void handleClientDisconnectInternal(ClientId clientId,
+                                        DisconnectReason reason) noexcept;
 
     /**
      * @brief Remove client from both maps (INTERNAL - caller must hold unique
@@ -195,7 +195,7 @@ class ClientManager {
      * @return Client ID, or INVALID_CLIENT_ID if not found
      * @pre Caller must hold lock on _clientsMutex
      */
-    [[nodiscard]] ClientId findClientByEndpoint(
+    [[nodiscard]] ClientId findClientByEndpointInternal(
         const Endpoint& endpoint) const noexcept;
 
     /**
