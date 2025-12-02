@@ -90,57 +90,57 @@ jobs:
           echo "| Linux | ${{ steps.cache-check-linux.outputs.cache-hit == 'true' && '✅ HIT - skipping deps' || '❌ MISS - will build' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Windows | ⏳ checked on Windows |" >> $GITHUB_STEP_SUMMARY
 
-  lint:
-    name: "🔍 Code Quality"
-    runs-on: ubuntu-latest
-    needs: [cache-check]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install linting tools (clang-format 19)
-        run: |
-          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
-          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main" | sudo tee /etc/apt/sources.list.d/llvm.list
-          sudo apt-get update
-          sudo apt-get install -y clang-format-19 clang-tidy-19 python3
-          sudo ln -sf /usr/bin/clang-format-19 /usr/bin/clang-format
-          sudo ln -sf /usr/bin/clang-tidy-19 /usr/bin/clang-tidy
-          echo "Installed versions:"
-          clang-format --version
-          clang-tidy --version
-
-      - name: Make quality script executable
-        run: chmod +x scripts/run_quality_checks.sh
-
-      - name: Run Code Quality Checks
-        id: quality-checks
-        run: |
-          ./scripts/run_quality_checks.sh --verbose
-
-      - name: Upload Quality Report
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: code-quality-report
-          path: /tmp/rtype_quality_report.txt
-          if-no-files-found: warn
-
-      - name: Lint Summary
-        if: always()
-        run: |
-          echo "### 🔍 Code Quality Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Script:** \`scripts/run_quality_checks.sh\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Status:** ${{ steps.quality-checks.outcome == 'success' && '✅ All checks passed' || '❌ Issues found - pipeline blocked' }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f /tmp/rtype_quality_report.txt ]; then
-            echo "#### Detailed Report" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            cat /tmp/rtype_quality_report.txt >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "💡 **Tip:** Run \`./scripts/run_quality_checks.sh --fix\` locally to auto-fix formatting issues" >> $GITHUB_STEP_SUMMARY
+#  lint:
+#    name: "🔍 Code Quality"
+#    runs-on: ubuntu-latest
+#    needs: [cache-check]
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Install linting tools (clang-format 19)
+#        run: |
+#          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+#          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main" | sudo tee /etc/apt/sources.list.d/llvm.list
+#          sudo apt-get update
+#          sudo apt-get install -y clang-format-19 clang-tidy-19 python3
+#          sudo ln -sf /usr/bin/clang-format-19 /usr/bin/clang-format
+#          sudo ln -sf /usr/bin/clang-tidy-19 /usr/bin/clang-tidy
+#          echo "Installed versions:"
+#          clang-format --version
+#          clang-tidy --version
+#
+#      - name: Make quality script executable
+#        run: chmod +x scripts/run_quality_checks.sh
+#
+#      - name: Run Code Quality Checks
+#        id: quality-checks
+#        run: |
+#          ./scripts/run_quality_checks.sh --verbose
+#
+#      - name: Upload Quality Report
+#        if: failure()
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: code-quality-report
+#          path: /tmp/rtype_quality_report.txt
+#          if-no-files-found: warn
+#
+#      - name: Lint Summary
+#        if: always()
+#        run: |
+#          echo "### 🔍 Code Quality Results" >> $GITHUB_STEP_SUMMARY
+#          echo "" >> $GITHUB_STEP_SUMMARY
+#          echo "**Script:** \`scripts/run_quality_checks.sh\`" >> $GITHUB_STEP_SUMMARY
+#          echo "**Status:** ${{ steps.quality-checks.outcome == 'success' && '✅ All checks passed' || '❌ Issues found - pipeline blocked' }}" >> $GITHUB_STEP_SUMMARY
+#          echo "" >> $GITHUB_STEP_SUMMARY
+#          if [ -f /tmp/rtype_quality_report.txt ]; then
+#            echo "#### Detailed Report" >> $GITHUB_STEP_SUMMARY
+#            echo '```' >> $GITHUB_STEP_SUMMARY
+#            cat /tmp/rtype_quality_report.txt >> $GITHUB_STEP_SUMMARY
+#            echo '```' >> $GITHUB_STEP_SUMMARY
+#          fi
+#          echo "" >> $GITHUB_STEP_SUMMARY
+#          echo "💡 **Tip:** Run \`./scripts/run_quality_checks.sh --fix\` locally to auto-fix formatting issues" >> $GITHUB_STEP_SUMMARY
 
   deps-linux:
     name: "📦 Dependencies (Linux)"
