@@ -149,6 +149,8 @@ jobs:
     if: needs.cache-check.outputs.cache-hit-linux != 'true'
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Install system dependencies
         run: |
@@ -159,9 +161,6 @@ jobs:
             libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
             libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
             libxinerama-dev libxext-dev
-
-      - name: Init vcpkg submodule
-        run: git submodule update --init external/vcpkg
 
       - name: Configure CMake (install vcpkg packages)
         run: |
@@ -188,6 +187,8 @@ jobs:
       cache-hit: ${{ steps.cache-check.outputs.cache-hit }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Check Windows cache
         id: cache-check
@@ -204,10 +205,6 @@ jobs:
       - name: Setup MSVC Developer Command Prompt
         if: steps.cache-check.outputs.cache-hit != 'true'
         uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Init vcpkg submodule
-        if: steps.cache-check.outputs.cache-hit != 'true'
-        run: git submodule update --init external/vcpkg
 
       - name: Configure CMake (install vcpkg packages)
         if: steps.cache-check.outputs.cache-hit != 'true'
@@ -255,6 +252,8 @@ jobs:
             coverage: false
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Install system dependencies (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -282,9 +281,6 @@ jobs:
           path: build/vcpkg_installed
           key: ${{ needs.cache-check.outputs[matrix.cache-key-output] }}
           fail-on-cache-miss: true
-
-      - name: Init vcpkg submodule
-        run: git submodule update --init external/vcpkg
 
       - name: Configure CMake
         shell: bash
@@ -354,6 +350,8 @@ jobs:
             triplet: x64-windows
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Install system dependencies (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -380,9 +378,6 @@ jobs:
           path: build/vcpkg_installed
           key: ${{ needs.cache-check.outputs[matrix.cache-key-output] }}
           fail-on-cache-miss: true
-
-      - name: Init vcpkg submodule
-        run: git submodule update --init external/vcpkg
 
       - name: Configure CMake
         shell: bash
