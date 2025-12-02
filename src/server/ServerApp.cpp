@@ -21,9 +21,7 @@ ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
       _shutdownFlag(shutdownFlag),
       _clientManager(maxPlayers, _metrics, verbose) {}
 
-ServerApp::~ServerApp() {
-    shutdown();
-}
+ServerApp::~ServerApp() { shutdown(); }
 
 bool ServerApp::run() {
     if (!initialize()) {

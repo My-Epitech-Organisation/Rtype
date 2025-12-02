@@ -31,29 +31,29 @@ ClientId ClientManager::handleNewConnection(const Endpoint& endpoint) {
                            std::chrono::steady_clock::now().time_since_epoch())
                            .count();
 
-    updateRateLimitWindow_Locked(nowMs);
-    if (isRateLimitExceeded_Locked(endpoint)) {
+    updateRateLimitWindow(nowMs);
+    if (isRateLimitExceeded(endpoint)) {
         return INVALID_CLIENT_ID;
     }
-    if (const auto existingId = findClientByEndpoint_Locked(endpoint);
+    if (const auto existingId = findClientByEndpoint(endpoint);
         existingId != INVALID_CLIENT_ID) {
         LOG_WARNING(
             "[Server] Connection attempt from already connected endpoint: "
             << endpoint.toString());
         return existingId;
     }
-    if (isServerFull_Locked()) {
+    if (isServerFull()) {
         return INVALID_CLIENT_ID;
     }
-    const ClientId assignedId = generateNextClientId_Locked();
+    const ClientId assignedId = generateNextClientId();
     if (assignedId == INVALID_CLIENT_ID) {
         return INVALID_CLIENT_ID;
     }
-    registerClient_Locked(assignedId, endpoint);
+    registerClient(assignedId, endpoint);
     return assignedId;
 }
 
-void ClientManager::updateRateLimitWindow_Locked(int64_t nowMs) noexcept {
+void ClientManager::updateRateLimitWindow(int64_t nowMs) noexcept {
     assertLockHeld();
     const auto resetTimeMs =
         _rateLimitResetTimeMs.load(std::memory_order_relaxed);
@@ -64,7 +64,7 @@ void ClientManager::updateRateLimitWindow_Locked(int64_t nowMs) noexcept {
     }
 }
 
-bool ClientManager::isRateLimitExceeded_Locked(
+bool ClientManager::isRateLimitExceeded(
     const Endpoint& endpoint) noexcept {
     assertLockHeld();
     const auto connectionsThisSecond =
@@ -79,7 +79,7 @@ bool ClientManager::isRateLimitExceeded_Locked(
     return false;
 }
 
-bool ClientManager::isServerFull_Locked() const noexcept {
+bool ClientManager::isServerFull() const noexcept {
     assertLockHeld();
 
     if (_clients.size() >= _maxPlayers) {
@@ -92,7 +92,7 @@ bool ClientManager::isServerFull_Locked() const noexcept {
     return false;
 }
 
-ClientId ClientManager::generateNextClientId_Locked() noexcept {
+ClientId ClientManager::generateNextClientId() noexcept {
     assertLockHeld();
 
     ClientId newId;
@@ -112,7 +112,7 @@ ClientId ClientManager::generateNextClientId_Locked() noexcept {
     return currentId;
 }
 
-void ClientManager::registerClient_Locked(ClientId clientId,
+void ClientManager::registerClient(ClientId clientId,
                                           const Endpoint& endpoint) noexcept {
     assertLockHeld();
 
@@ -129,17 +129,17 @@ void ClientManager::registerClient_Locked(ClientId clientId,
 
     LOG_INFO("[Server] New client connected: ID=" << clientId << " from "
                                                   << endpoint.toString());
-    printConnectedClients_Locked();
-    notifyClientConnected_Locked(clientId);
+    printConnectedClients();
+    notifyClientConnected(clientId);
 }
 
 void ClientManager::handleClientDisconnect(ClientId clientId,
                                            DisconnectReason reason) noexcept {
     std::unique_lock lock(_clientsMutex);
-    handleClientDisconnect_Locked(clientId, reason);
+    handleClientDisconnect(clientId, reason);
 }
 
-void ClientManager::handleClientDisconnect_Locked(
+void ClientManager::handleClientDisconnect(
     ClientId clientId, DisconnectReason reason) noexcept {
     assertLockHeld();
 
@@ -150,12 +150,12 @@ void ClientManager::handleClientDisconnect_Locked(
     const Endpoint endpoint = it->second.endpoint;
     LOG_INFO("[Server] Client " << clientId << " disconnected ("
                                 << toString(reason) << ")");
-    removeClientFromMaps_Locked(clientId, endpoint);
-    notifyClientDisconnected_Locked(clientId, reason);
-    printConnectedClients_Locked();
+    removeClientFromMaps(clientId, endpoint);
+    notifyClientDisconnected(clientId, reason);
+    printConnectedClients();
 }
 
-void ClientManager::removeClientFromMaps_Locked(
+void ClientManager::removeClientFromMaps(
     ClientId clientId, const Endpoint& endpoint) noexcept {
     assertLockHeld();
 
@@ -174,10 +174,10 @@ void ClientManager::updateClientActivity(ClientId clientId) noexcept {
 ClientId ClientManager::findClientByEndpoint(
     const Endpoint& endpoint) const noexcept {
     std::shared_lock lock(_clientsMutex);
-    return findClientByEndpoint_Locked(endpoint);
+    return findClientByEndpoint(endpoint);
 }
 
-ClientId ClientManager::findClientByEndpoint_Locked(
+ClientId ClientManager::findClientByEndpoint(
     const Endpoint& endpoint) const noexcept {
     if (const auto it = _endpointToClient.find(endpoint);
         it != _endpointToClient.end()) {
@@ -224,7 +224,7 @@ void ClientManager::checkClientTimeouts(uint32_t timeoutSeconds) noexcept {
         }
     }
     for (const auto& [id, endpoint] : _timeoutBuffer) {
-        handleClientDisconnect_Locked(id, DisconnectReason::Timeout);
+        handleClientDisconnect(id, DisconnectReason::Timeout);
     }
 }
 
@@ -237,7 +237,7 @@ void ClientManager::clearAllClients() noexcept {
     _endpointToClient.clear();
 }
 
-void ClientManager::notifyClientConnected_Locked(
+void ClientManager::notifyClientConnected(
     ClientId newClientId) noexcept {
     assertLockHeld();
 
@@ -251,7 +251,7 @@ void ClientManager::notifyClientConnected_Locked(
               << newClientId);
 }
 
-void ClientManager::notifyClientDisconnected_Locked(
+void ClientManager::notifyClientDisconnected(
     ClientId clientId, DisconnectReason reason) noexcept {
     assertLockHeld();
 
@@ -267,7 +267,7 @@ void ClientManager::notifyClientDisconnected_Locked(
               << clientId << " leaving (" << toString(reason) << ")");
 }
 
-void ClientManager::printConnectedClients_Locked() const noexcept {
+void ClientManager::printConnectedClients() const noexcept {
     assertLockHeld();
 
     if (!_verbose) {

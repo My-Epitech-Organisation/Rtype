@@ -136,7 +136,7 @@ class ClientManager {
      * @param nowMs Current time in milliseconds
      * @pre Caller must hold unique lock on _clientsMutex
      */
-    void updateRateLimitWindow_Locked(int64_t nowMs) noexcept;
+    void updateRateLimitWindow(int64_t nowMs) noexcept;
 
     /**
      * @brief Check if rate limit is exceeded
@@ -144,7 +144,7 @@ class ClientManager {
      * @return true if rate limit exceeded, false otherwise
      * @pre Caller must hold unique lock on _clientsMutex
      */
-    [[nodiscard]] bool isRateLimitExceeded_Locked(
+    [[nodiscard]] bool isRateLimitExceeded(
         const Endpoint& endpoint) noexcept;
 
     /**
@@ -152,14 +152,14 @@ class ClientManager {
      * @return true if server is full, false otherwise
      * @pre Caller must hold unique lock on _clientsMutex
      */
-    [[nodiscard]] bool isServerFull_Locked() const noexcept;
+    [[nodiscard]] bool isServerFull() const noexcept;
 
     /**
      * @brief Generate the next available client ID
      * @return New client ID, or INVALID_CLIENT_ID if overflow
      * @pre Caller must hold unique lock on _clientsMutex
      */
-    [[nodiscard]] ClientId generateNextClientId_Locked() noexcept;
+    [[nodiscard]] ClientId generateNextClientId() noexcept;
 
     /**
      * @brief Register a new client in the internal maps
@@ -167,7 +167,7 @@ class ClientManager {
      * @param endpoint The client's network endpoint
      * @pre Caller must hold unique lock on _clientsMutex
      */
-    void registerClient_Locked(ClientId clientId,
+    void registerClient(ClientId clientId,
                                const Endpoint& endpoint) noexcept;
 
     /**
@@ -177,7 +177,7 @@ class ClientManager {
      * @param reason Reason for disconnection
      * @pre Caller must hold unique lock on _clientsMutex
      */
-    void handleClientDisconnect_Locked(ClientId clientId,
+    void handleClientDisconnect(ClientId clientId,
                                        DisconnectReason reason) noexcept;
 
     /**
@@ -187,7 +187,7 @@ class ClientManager {
      * @param endpoint Client endpoint to remove
      * @pre Caller must hold unique lock on _clientsMutex
      */
-    void removeClientFromMaps_Locked(ClientId clientId,
+    void removeClientFromMaps(ClientId clientId,
                                      const Endpoint& endpoint) noexcept;
 
     /**
@@ -197,7 +197,7 @@ class ClientManager {
      * @return Client ID, or INVALID_CLIENT_ID if not found
      * @pre Caller must hold lock on _clientsMutex
      */
-    [[nodiscard]] ClientId findClientByEndpoint_Locked(
+    [[nodiscard]] ClientId findClientByEndpoint(
         const Endpoint& endpoint) const noexcept;
 
     /**
@@ -206,7 +206,7 @@ class ClientManager {
      * @param newClientId ID of the newly connected client
      * @pre Caller must hold lock on _clientsMutex
      */
-    void notifyClientConnected_Locked(ClientId newClientId) noexcept;
+    void notifyClientConnected(ClientId newClientId) noexcept;
 
     /**
      * @brief Notify all remaining clients that a client disconnected (INTERNAL
@@ -215,7 +215,7 @@ class ClientManager {
      * @param reason Reason for disconnection
      * @pre Caller must hold lock on _clientsMutex
      */
-    void notifyClientDisconnected_Locked(ClientId clientId,
+    void notifyClientDisconnected(ClientId clientId,
                                          DisconnectReason reason) noexcept;
 
     /**
@@ -223,7 +223,7 @@ class ClientManager {
      * must hold lock)
      * @pre Caller must hold lock on _clientsMutex (debug only)
      */
-    void printConnectedClients_Locked() const noexcept;
+    void printConnectedClients() const noexcept;
 
     /**
      * @brief Assert that the mutex is currently locked (debug only)

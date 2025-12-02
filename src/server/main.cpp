@@ -54,13 +54,13 @@ static void signalHandler(int signal) {
         std::cout << "\n[Main] Received shutdown signal" << std::endl;
         ServerSignals::shutdown() = true;
     }
-    #ifndef _WIN32
+#ifndef _WIN32
     if (signal == SIGHUP) {
         std::cout << "\n[Main] Received SIGHUP - config reload requested"
                   << std::endl;
         ServerSignals::reloadConfig() = true;
     }
-    #endif
+#endif
 }
 
 /**
