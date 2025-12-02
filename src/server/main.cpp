@@ -10,6 +10,8 @@
 #include <atomic>
 #include <csignal>
 #include <exception>
+#include <vector>
+#include <memory>
 #include <format>
 #include <iostream>
 
@@ -49,44 +51,44 @@ static void setupSignalHandlers() {
  * @brief Configure the argument parser with server options
  * @param parser The argument parser to configure
  * @param config The server configuration to populate
- * @return Reference to the configured parser
+ * @return Shared pointer to the configured parser
  */
-static rtype::ArgParser& configureParser(rtype::ArgParser& parser,
-                                         ServerConfig& config) {
-    parser
+static std::shared_ptr<rtype::ArgParser> configureParser(std::shared_ptr<rtype::ArgParser> parser,
+                                                         std::shared_ptr<ServerConfig> config) {
+    (*parser)
         .flag("-h", "--help", "Show this help message",
-              [&parser]() {
-                  parser.printUsage();
+              [parser]() {
+                  parser->printUsage();
                   return rtype::ParseResult::Exit;
               })
         .flag("-v", "--verbose", "Enable verbose debug output",
-              [&config]() {
-                  config.verbose = true;
+              [config]() {
+                  config->verbose = true;
                   return rtype::ParseResult::Success;
               })
         .option("-p", "--port", "port", "Server port (1-65535, default: 4242)",
-                [&config](std::string_view val) {
+                [config](std::string_view val) {
                     auto v =
                         rtype::parseNumber<uint16_t>(val, "port", 1, 65535);
                     if (!v.has_value()) return rtype::ParseResult::Error;
-                    config.port = v.value();
+                    config->port = v.value();
                     return rtype::ParseResult::Success;
                 })
         .option(
             "-m", "--max-players", "n", "Maximum players (1-256, default: 8)",
-            [&config](std::string_view val) {
+            [config](std::string_view val) {
                 auto v = rtype::parseNumber<size_t>(val, "max-players", 1, 256);
                 if (!v.has_value()) return rtype::ParseResult::Error;
-                config.maxPlayers = v.value();
+                config->maxPlayers = v.value();
                 return rtype::ParseResult::Success;
             })
         .option("-t", "--tick-rate", "hz",
                 "Tick rate in Hz (1-1000, default: 60)",
-                [&config](std::string_view val) {
+                [config](std::string_view val) {
                     auto v =
                         rtype::parseNumber<uint32_t>(val, "tick-rate", 1, 1000);
                     if (!v.has_value()) return rtype::ParseResult::Error;
-                    config.tickRate = v.value();
+                    config->tickRate = v.value();
                     return rtype::ParseResult::Success;
                 });
     return parser;
@@ -111,13 +113,13 @@ static void printBanner(const ServerConfig& config) {
 /**
  * @brief Run the server with the given configuration
  * @param config The server configuration
- * @param shutdownFlag Reference to the shutdown flag
- * @param reloadConfigFlag Reference to the reload config flag
+ * @param shutdownFlag Shared pointer to the shutdown flag
+ * @param reloadConfigFlag Shared pointer to the reload config flag
  * @return Exit code (0 for success, 1 for failure)
  */
 static int runServer(const ServerConfig& config,
-                     std::atomic<bool>& shutdownFlag,
-                     std::atomic<bool>& reloadConfigFlag) {
+                     std::shared_ptr<std::atomic<bool>> shutdownFlag,
+                     std::shared_ptr<std::atomic<bool>> reloadConfigFlag) {
     rtype::server::ServerApp server(
         config.port, config.maxPlayers, config.tickRate, shutdownFlag,
         rtype::server::ServerApp::DEFAULT_CLIENT_TIMEOUT_SECONDS,
@@ -138,23 +140,24 @@ static int runServer(const ServerConfig& config,
 
 int main(int argc, char** argv) {
     try {
-        ServerConfig config;
+        auto config = std::make_shared<ServerConfig>();
         std::vector<std::string_view> args(argv + 1, argv + argc);
-        rtype::ArgParser parser;
+        auto parser = std::make_shared<rtype::ArgParser>();
 
-        parser.programName(argv[0]);
+        parser->programName(argv[0]);
         configureParser(parser, config);
-        rtype::ParseResult parseResult = parser.parse(args);
+        rtype::ParseResult parseResult = parser->parse(args);
         if (parseResult == rtype::ParseResult::Error) {
             return 1;
         }
         if (parseResult == rtype::ParseResult::Exit) {
             return 0;
         }
-        printBanner(config);
+        printBanner(*config);
         setupSignalHandlers();
-        return runServer(config, ServerSignals::shutdown(),
-                         ServerSignals::reloadConfig());
+        return runServer(*config,
+                         std::shared_ptr<std::atomic<bool>>(&ServerSignals::shutdown(), [](std::atomic<bool>*){}),
+                         std::shared_ptr<std::atomic<bool>>(&ServerSignals::reloadConfig(), [](std::atomic<bool>*){}));
     } catch (const std::exception& e) {
         std::cerr << "[Main] Fatal error: " << e.what() << std::endl;
         return 1;

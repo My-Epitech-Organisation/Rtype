@@ -17,7 +17,9 @@
 #include <vector>
 
 #include "../common/Logger.hpp"
+#include "../common/SafeQueue/SafeQueue.hpp"
 #include "../common/Types.hpp"
+#include "../network/Packet.hpp"
 #include "Client.hpp"
 #include "ClientManager.hpp"
 #include "ServerMetrics.hpp"
@@ -57,30 +59,30 @@ class ServerApp {
    public:
     static constexpr uint32_t DEFAULT_CLIENT_TIMEOUT_SECONDS = 10;
 
-    /// @brief Maximum physics/logic updates per frame to prevent spiral of
-    /// death
-    /// @details When the game loop falls behind (e.g., due to a lag spike),
-    /// limiting updates per frame prevents spending too long catching up,
-    /// which would cause further frame drops and create a feedback loop.
+    // @brief Maximum physics/logic updates per frame to prevent spiral of
+    // death
+    // @details When the game loop falls behind (e.g., due to a lag spike),
+    // limiting updates per frame prevents spending too long catching up,
+    // which would cause further frame drops and create a feedback loop.
     static constexpr uint32_t MAX_UPDATES_PER_FRAME = 5;
 
-    /// @brief Maximum frame time in milliseconds before clamping
-    /// @details Prevents spiral of death during severe lag spikes. If a frame
-    /// takes longer than this, we clamp it to avoid accumulating too much
-    /// time in the accumulator, which would cause excessive catch-up updates.
-    /// 250ms allows ~4 FPS minimum before time clamping kicks in.
+    // @brief Maximum frame time in milliseconds before clamping
+    // @details Prevents spiral of death during severe lag spikes. If a frame
+    // takes longer than this, we clamp it to avoid accumulating too much
+    // time in the accumulator, which would cause excessive catch-up updates.
+    // 250ms allows ~4 FPS minimum before time clamping kicks in.
     static constexpr uint32_t MAX_FRAME_TIME_MS = 250;
 
-    /// @brief Percentage of calculated sleep time to actually sleep
-    /// @details We sleep for only 95% of the remaining frame time to account
-    /// for OS scheduler granularity and potential timing inaccuracies.
-    /// This prevents oversleeping past the target frame time.
+    // @brief Percentage of calculated sleep time to actually sleep
+    // @details We sleep for only 95% of the remaining frame time to account
+    // for OS scheduler granularity and potential timing inaccuracies.
+    // This prevents oversleeping past the target frame time.
     static constexpr uint32_t SLEEP_TIME_SAFETY_PERCENT = 95;
 
-    /// @brief Minimum sleep threshold in microseconds
-    /// @details Below this threshold, busy-waiting is more accurate than
-    /// sleeping. Sleep syscalls have overhead and OS scheduler granularity
-    /// (typically 1-15ms on most systems) makes very short sleeps unreliable.
+    // @brief Minimum sleep threshold in microseconds
+    // @details Below this threshold, busy-waiting is more accurate than
+    // sleeping. Sleep syscalls have overhead and OS scheduler granularity
+    // (typically 1-15ms on most systems) makes very short sleeps unreliable.
     static constexpr uint32_t MIN_SLEEP_THRESHOLD_US = 100;
 
     /**
@@ -88,14 +90,14 @@ class ServerApp {
      * @param port Port to listen on
      * @param maxPlayers Maximum number of concurrent players
      * @param tickRate Server tick rate in Hz
-     * @param shutdownFlag Reference to external shutdown flag (set by signal
+     * @param shutdownFlag Shared pointer to external shutdown flag (set by signal
      * handler)
      * @param clientTimeoutSeconds Client timeout in seconds (default: 10)
      * @param verbose Enable verbose debug output (default: false)
      */
     explicit ServerApp(
         uint16_t port, size_t maxPlayers, uint32_t tickRate,
-        std::atomic<bool>& shutdownFlag,
+        std::shared_ptr<std::atomic<bool>> shutdownFlag,
         uint32_t clientTimeoutSeconds = DEFAULT_CLIENT_TIMEOUT_SECONDS,
         bool verbose = false);
 
@@ -178,14 +180,14 @@ class ServerApp {
     }
 
    private:
-    /// @brief Configuration for the main loop timing
+    // @brief Configuration for the main loop timing
     struct LoopTiming {
         std::chrono::nanoseconds fixedDeltaNs;
         std::chrono::nanoseconds maxFrameTime;
         uint32_t maxUpdatesPerFrame;
     };
 
-    /// @brief State for the main loop
+    // @brief State for the main loop
     struct LoopState {
         std::chrono::steady_clock::time_point previousTime;
         std::chrono::nanoseconds accumulator{0};
@@ -220,14 +222,14 @@ class ServerApp {
      * @return Clamped frame time in nanoseconds
      */
     [[nodiscard]] std::chrono::nanoseconds calculateFrameTime(
-        LoopState& state, const LoopTiming& timing) noexcept;
+        std::shared_ptr<LoopState> state, const LoopTiming& timing) noexcept;
 
     /**
      * @brief Perform fixed timestep updates
      * @param state Current loop state (accumulator will be updated)
      * @param timing Loop timing configuration
      */
-    void performFixedUpdates(LoopState& state,
+    void performFixedUpdates(std::shared_ptr<LoopState> state,
                              const LoopTiming& timing) noexcept;
 
     /**
@@ -245,6 +247,30 @@ class ServerApp {
     void processIncomingData() noexcept;
 
     /**
+     * @brief Process a single packet from a client
+     * @param clientId The client that sent the packet
+     * @param packet The packet data
+     */
+    void processPacket(ClientId clientId,
+                       const rtype::network::Packet& packet) noexcept;
+
+    /**
+     * @brief Start the network thread for receiving packets
+     * @return true if network thread started successfully
+     */
+    [[nodiscard]] bool startNetworkThread();
+
+    /**
+     * @brief Stop the network thread
+     */
+    void stopNetworkThread() noexcept;
+
+    /**
+     * @brief Network thread function that receives packets and pushes to queue
+     */
+    void networkThreadFunction() noexcept;
+
+    /**
      * @brief Update game state (ECS tick)
      */
     void update() noexcept;
@@ -258,14 +284,21 @@ class ServerApp {
     uint32_t _tickRate;                ///< Server tick rate in Hz
     uint32_t _clientTimeoutSeconds;    ///< Client timeout in seconds
     bool _verbose;                     ///< Enable verbose debug output
-    std::atomic<bool>& _shutdownFlag;  ///< External shutdown flag reference
+    std::shared_ptr<std::atomic<bool>> _shutdownFlag;  ///< External shutdown flag shared pointer
     std::atomic<bool> _hasShutdown{false};  ///< Guard against double shutdown
 
     std::shared_ptr<ServerMetrics> _metrics;  ///< Server performance metrics
     ClientManager _clientManager;             ///< Client connection manager
 
+    // Network thread and packet queue for producer-consumer pattern
+    SafeQueue<std::pair<Endpoint, rtype::network::Packet>>
+        _incomingPackets;        ///< Thread-safe queue for incoming packets
+    std::thread _networkThread;  ///< Network I/O thread
+    std::atomic<bool> _networkThreadRunning{
+        false};  ///< Flag to control network thread
+
     // TODO(Clem): Add network socket when rtype_network is fully implemented
-    // std::unique_ptr<network::INetworkSocket> _socket;
+    // std::unique_ptr<network::UdpSocket> _socket;
 };
 
 }  // namespace rtype::server
