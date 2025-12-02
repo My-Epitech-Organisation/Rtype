@@ -140,8 +140,10 @@ void AsioUdpSocket::asyncReceiveFrom(Buffer& buffer, Endpoint& sender,
             if (ec) {
                 handler(Err<std::size_t>(fromAsioError(ec)));
             } else {
-                // Resize buffer to actual received size
-                buffer.resize(bytesReceived);
+                // Shrink buffer to actual received size (never grow to avoid reallocation)
+                if (bytesReceived < buffer.size()) {
+                    buffer.resize(bytesReceived);
+                }
 
                 // Populate sender endpoint
                 sender = fromAsioEndpoint(remoteEndpoint_);
