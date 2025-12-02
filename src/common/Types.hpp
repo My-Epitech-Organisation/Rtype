@@ -41,9 +41,6 @@ struct Endpoint {
     Endpoint(std::string addr, uint16_t p)
         : address(std::move(addr)), port(p) {}
 
-    /// @brief Construct from string_view (avoids temporary string creation)
-    Endpoint(std::string_view addr, uint16_t p) : address(addr), port(p) {}
-
     /// @brief Copy constructor
     Endpoint(const Endpoint&) = default;
 

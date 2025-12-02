@@ -11,6 +11,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "../../common/Types.hpp"
+
 namespace rtype::network {
 
 /**
