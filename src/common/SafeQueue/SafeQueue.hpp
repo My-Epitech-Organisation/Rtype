@@ -16,31 +16,31 @@ template <typename T>
 class SafeQueue {
    public:
     void push(const T& item) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        queue_.push(item);
+        std::lock_guard<std::mutex> lock(_mutex);
+        _queue.push(item);
     }
 
     void push(T&& item) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        queue_.push(std::move(item));
+        std::lock_guard<std::mutex> lock(_mutex);
+        _queue.push(std::move(item));
     }
 
     std::optional<T> pop() {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (queue_.empty()) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (_queue.empty()) {
             return std::nullopt;
         }
-        T item = queue_.front();
-        queue_.pop();
+        T item = _queue.front();
+        _queue.pop();
         return item;
     }
 
     size_t size() const {
-        std::lock_guard<std::mutex> lock(mutex_);
-        return queue_.size();
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _queue.size();
     }
 
    private:
-    std::queue<T> queue_;
-    mutable std::mutex mutex_;
+    std::queue<T> _queue;
+    mutable std::mutex _mutex;
 };
