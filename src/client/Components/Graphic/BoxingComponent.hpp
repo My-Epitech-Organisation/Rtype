@@ -5,8 +5,8 @@
 ** BoxingComponent.hpp
 */
 
-#ifndef R_TYPE_BOXINGCOMPONENT_HPP
-#define R_TYPE_BOXINGCOMPONENT_HPP
+#ifndef SRC_CLIENT_COMPONENTS_GRAPHIC_BOXINGCOMPONENT_HPP_
+#define SRC_CLIENT_COMPONENTS_GRAPHIC_BOXINGCOMPONENT_HPP_
 #include <SFML/Graphics/RectangleShape.hpp>
 
 struct BoxingComponent {
@@ -24,4 +24,4 @@ struct BoxingComponent {
     }
 };
 
-#endif  // R_TYPE_BOXINGCOMPONENT_HPP
+#endif  // SRC_CLIENT_COMPONENTS_GRAPHIC_BOXINGCOMPONENT_HPP_
