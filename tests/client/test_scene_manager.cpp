@@ -16,6 +16,7 @@ class SceneManagerTest : public ::testing::Test {
 protected:
     std::shared_ptr<ECS::Registry> registry;
     std::shared_ptr<AssetManager> assetManager;
+    KeyboardActions keyboardActions;
     sf::RenderWindow window;
 
     void SetUp() override {
@@ -30,22 +31,22 @@ protected:
 };
 
 TEST_F(SceneManagerTest, Constructor_InitializesWithMainMenuScene) {
-    SceneManager manager(registry, assetManager, window);
+    SceneManager manager(registry, assetManager, window, keyboardActions);
     EXPECT_EQ(manager.getCurrentScene(), SceneManager::Scene::MAIN_MENU);
 }
 
 TEST_F(SceneManagerTest, SetCurrentScene_ChangesScene) {
-    SceneManager manager(registry, assetManager, window);
+    SceneManager manager(registry, assetManager, window, keyboardActions);
     manager.setCurrentScene(SceneManager::Scene::MAIN_MENU);
     EXPECT_EQ(manager.getCurrentScene(), SceneManager::Scene::MAIN_MENU);
 }
 
 TEST_F(SceneManagerTest, Update_DoesNotThrow) {
-    SceneManager manager(registry, assetManager, window);
+    SceneManager manager(registry, assetManager, window, keyboardActions);
     EXPECT_NO_THROW(manager.update());
 }
 
 TEST_F(SceneManagerTest, Draw_DoesNotThrow) {
-    SceneManager manager(registry, assetManager, window);
+    SceneManager manager(registry, assetManager, window, keyboardActions);
     EXPECT_NO_THROW(manager.draw(window));
 }
