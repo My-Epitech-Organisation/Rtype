@@ -516,3 +516,296 @@ TEST(ArgParserEdgeCaseTest, FlagStopsParsingOnError) {
     EXPECT_EQ(result, ParseResult::Error);
     EXPECT_FALSE(secondFlagCalled);
 }
+
+// ============================================================================
+// Additional Coverage Tests - Duplicate Options
+// ============================================================================
+
+TEST(ArgParserDuplicateTest, DuplicateFlagIsIgnored) {
+    ArgParser parser;
+    int callCount = 0;
+
+    parser.flag("-a", "--alpha", "First flag", [&callCount]() {
+        callCount++;
+        return ParseResult::Success;
+    });
+    // This duplicate should be ignored with a warning
+    parser.flag("-a", "--alpha", "Duplicate flag", [&callCount]() {
+        callCount += 10;
+        return ParseResult::Success;
+    });
+
+    std::vector<std::string_view> args = {"-a"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Success);
+    EXPECT_EQ(callCount, 1);  // Only first handler called
+}
+
+TEST(ArgParserDuplicateTest, DuplicateOptionIsIgnored) {
+    ArgParser parser;
+    std::string capturedValue;
+
+    parser.option("-p", "--port", "port", "First option", [&capturedValue](std::string_view val) {
+        capturedValue = "first:" + std::string(val);
+        return ParseResult::Success;
+    });
+    // This duplicate should be ignored
+    parser.option("-p", "--port", "port", "Duplicate option", [&capturedValue](std::string_view val) {
+        capturedValue = "second:" + std::string(val);
+        return ParseResult::Success;
+    });
+
+    std::vector<std::string_view> args = {"-p", "4242"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Success);
+    EXPECT_EQ(capturedValue, "first:4242");
+}
+
+TEST(ArgParserDuplicateTest, DuplicateShortOptionConflictsWithLong) {
+    ArgParser parser;
+    int callCount = 0;
+
+    parser.flag("-a", "--alpha", "First flag", [&callCount]() {
+        callCount++;
+        return ParseResult::Success;
+    });
+    // Different short but same long option - should be ignored
+    parser.flag("-b", "--alpha", "Same long option", [&callCount]() {
+        callCount += 10;
+        return ParseResult::Success;
+    });
+
+    std::vector<std::string_view> args = {"--alpha"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Success);
+    EXPECT_EQ(callCount, 1);
+}
+
+TEST(ArgParserDuplicateTest, DuplicateLongOptionConflictsWithShort) {
+    ArgParser parser;
+    int callCount = 0;
+
+    parser.flag("-a", "--alpha", "First flag", [&callCount]() {
+        callCount++;
+        return ParseResult::Success;
+    });
+    // Same short but different long option - should be ignored
+    parser.flag("-a", "--beta", "Same short option", [&callCount]() {
+        callCount += 10;
+        return ParseResult::Success;
+    });
+
+    std::vector<std::string_view> args = {"-a"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Success);
+    EXPECT_EQ(callCount, 1);
+}
+
+// ============================================================================
+// Additional Coverage Tests - Extra Positional Args
+// ============================================================================
+
+TEST(ArgParserExtraArgsTest, ExtraPositionalArgsAreIgnored) {
+    ArgParser parser;
+    std::string capturedInput;
+
+    parser.positional("input", "Input file", [&capturedInput](std::string_view value) {
+        capturedInput = std::string(value);
+        return ParseResult::Success;
+    });
+
+    // More args than expected
+    std::vector<std::string_view> args = {"input.txt", "extra1.txt", "extra2.txt"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Success);
+    EXPECT_EQ(capturedInput, "input.txt");
+}
+
+TEST(ArgParserExtraArgsTest, NoExtraArgsWarningWithNoPositionals) {
+    ArgParser parser;
+
+    parser.flag("-v", "--verbose", "Verbose mode", []() {
+        return ParseResult::Success;
+    });
+
+    // Extra args but no positional defined
+    std::vector<std::string_view> args = {"extra_arg"};
+    ParseResult result = parser.parse(args);
+
+    // Should succeed since no positional is required
+    EXPECT_EQ(result, ParseResult::Success);
+}
+
+// ============================================================================
+// Additional Coverage Tests - PrintUsage
+// ============================================================================
+
+TEST(ArgParserPrintUsageTest, PrintUsageWithOptionsAndPositionals) {
+    ArgParser parser;
+    parser.programName("test-program");
+
+    parser.flag("-h", "--help", "Show help", []() {
+        return ParseResult::Exit;
+    });
+    parser.option("-p", "--port", "port", "Server port", [](std::string_view) {
+        return ParseResult::Success;
+    });
+    parser.positional("config", "Configuration file", [](std::string_view) {
+        return ParseResult::Success;
+    });
+    parser.positional("output", "Output file", [](std::string_view) {
+        return ParseResult::Success;
+    }, false);  // optional
+
+    testing::internal::CaptureStdout();
+    parser.printUsage();
+    std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_NE(output.find("test-program"), std::string::npos);
+    EXPECT_NE(output.find("-h"), std::string::npos);
+    EXPECT_NE(output.find("--help"), std::string::npos);
+    EXPECT_NE(output.find("-p"), std::string::npos);
+    EXPECT_NE(output.find("--port"), std::string::npos);
+    EXPECT_NE(output.find("<port>"), std::string::npos);
+    EXPECT_NE(output.find("config"), std::string::npos);
+    EXPECT_NE(output.find("output"), std::string::npos);
+    EXPECT_NE(output.find("(optional)"), std::string::npos);
+}
+
+TEST(ArgParserPrintUsageTest, PrintUsageWithNoOptions) {
+    ArgParser parser;
+    parser.programName("minimal");
+
+    testing::internal::CaptureStdout();
+    parser.printUsage();
+    std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_NE(output.find("minimal"), std::string::npos);
+    EXPECT_EQ(output.find("Options:"), std::string::npos);  // No options section
+}
+
+TEST(ArgParserPrintUsageTest, PrintUsageWithNoPositionals) {
+    ArgParser parser;
+    parser.programName("flags-only");
+    parser.flag("-v", "--version", "Show version", []() {
+        return ParseResult::Exit;
+    });
+
+    testing::internal::CaptureStdout();
+    parser.printUsage();
+    std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_NE(output.find("Options:"), std::string::npos);
+    EXPECT_EQ(output.find("Arguments:"), std::string::npos);  // No arguments section
+}
+
+// ============================================================================
+// Additional Coverage Tests - NumberParser Edge Cases
+// ============================================================================
+
+TEST_F(NumberParserTest, ParseSignedOverflow) {
+    // Int8 max is 127
+    auto result = parseNumber<int8_t>("128", "value");
+    EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(NumberParserTest, ParseSignedUnderflow) {
+    // Int8 min is -128
+    auto result = parseNumber<int8_t>("-129", "value");
+    EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(NumberParserTest, ParseNegativeAsUnsignedFails) {
+    auto result = parseNumber<uint32_t>("-1", "value");
+    EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(NumberParserTest, ParseLeadingWhitespace) {
+    auto result = parseNumber<int>("  42", "value");
+    // Depends on implementation - might accept leading whitespace
+    if (result.has_value()) {
+        EXPECT_EQ(*result, 42);
+    }
+}
+
+TEST_F(NumberParserTest, ParseTrailingWhitespace) {
+    auto result = parseNumber<int>("42  ", "value");
+    // Should fail because of trailing characters
+    EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(NumberParserTest, ParseFloat) {
+    auto result = parseNumber<int>("42.5", "value");
+    EXPECT_FALSE(result.has_value());  // Not a valid integer
+}
+
+TEST_F(NumberParserTest, ParseHexadecimal) {
+    auto result = parseNumber<int>("0x10", "value");
+    // stoull/stoll with base 10 should fail on hex
+    EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(NumberParserTest, ParseExactMinRange) {
+    auto result = parseNumber<int>("10", "value", 10, 100);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, 10);
+}
+
+TEST_F(NumberParserTest, ParseExactMaxRange) {
+    auto result = parseNumber<int>("100", "value", 10, 100);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, 100);
+}
+
+TEST_F(NumberParserTest, ParseInt64MaxValue) {
+    auto result = parseNumber<int64_t>("9223372036854775807", "value");
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, INT64_MAX);
+}
+
+TEST_F(NumberParserTest, ParseUint64MaxValue) {
+    auto result = parseNumber<uint64_t>("18446744073709551615", "value");
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, UINT64_MAX);
+}
+
+TEST_F(NumberParserTest, ParseOutOfRangeHugeNumber) {
+    // A number too large even for uint64_t
+    auto result = parseNumber<uint64_t>("99999999999999999999999", "value");
+    EXPECT_FALSE(result.has_value());
+}
+
+// ============================================================================
+// Additional Coverage Tests - Option Handler Returns Exit
+// ============================================================================
+
+TEST(ArgParserOptionExitTest, OptionHandlerReturnsExit) {
+    ArgParser parser;
+
+    parser.option("-c", "--config", "file", "Config file", [](std::string_view) {
+        return ParseResult::Exit;
+    });
+
+    std::vector<std::string_view> args = {"-c", "config.toml"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Exit);
+}
+
+TEST(ArgParserOptionExitTest, PositionalHandlerReturnsExit) {
+    ArgParser parser;
+
+    parser.positional("file", "Input file", [](std::string_view) {
+        return ParseResult::Exit;
+    });
+
+    std::vector<std::string_view> args = {"input.txt"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Exit);
+}

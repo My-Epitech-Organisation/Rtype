@@ -648,3 +648,261 @@ TEST_F(LoggerIntegrationTest, AllLogLevelsFormatCorrectly) {
     EXPECT_TRUE(std::regex_search(contents, warningPattern));
     EXPECT_TRUE(std::regex_search(contents, errorPattern));
 }
+
+// ============================================================================
+// Additional Coverage Tests - Logger Edge Cases
+// ============================================================================
+
+TEST(LoggerEdgeCaseTest, DebugWritesToFile) {
+    Logger logger;
+    auto testFilePath = std::filesystem::temp_directory_path() / "test_debug.log";
+    std::filesystem::remove(testFilePath);
+
+    logger.setLogFile(testFilePath);
+    logger.setLogLevel(LogLevel::Debug);
+    logger.debug("Test debug message");
+    logger.closeFile();
+
+    std::ifstream file(testFilePath);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    const std::string contents = buffer.str();
+
+#ifndef NDEBUG
+    EXPECT_TRUE(contents.find("[DEBUG]") != std::string::npos);
+    EXPECT_TRUE(contents.find("Test debug message") != std::string::npos);
+#else
+    EXPECT_TRUE(contents.empty());  // Debug is no-op in release
+#endif
+
+    std::filesystem::remove(testFilePath);
+}
+
+TEST(LoggerEdgeCaseTest, LogLevelFilteringWarning) {
+    Logger logger;
+    auto testFilePath = std::filesystem::temp_directory_path() / "test_warning_filter.log";
+    std::filesystem::remove(testFilePath);
+
+    logger.setLogFile(testFilePath);
+    logger.setLogLevel(LogLevel::Error);
+    logger.warning("This warning should not appear");
+    logger.closeFile();
+
+    std::ifstream file(testFilePath);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    const std::string contents = buffer.str();
+
+    EXPECT_TRUE(contents.find("This warning should not appear") == std::string::npos);
+
+    std::filesystem::remove(testFilePath);
+}
+
+TEST(LoggerEdgeCaseTest, ErrorGoesToStderr) {
+    Logger logger;
+    logger.setLogLevel(LogLevel::Debug);
+
+    // Capture stderr
+    testing::internal::CaptureStderr();
+    logger.error("Error to stderr");
+    std::string errOutput = testing::internal::GetCapturedStderr();
+
+    EXPECT_TRUE(errOutput.find("Error to stderr") != std::string::npos);
+    EXPECT_TRUE(errOutput.find("[ERROR]") != std::string::npos);
+}
+
+TEST(LoggerEdgeCaseTest, WarningGoesToStderr) {
+    Logger logger;
+    logger.setLogLevel(LogLevel::Debug);
+
+    // Capture stderr
+    testing::internal::CaptureStderr();
+    logger.warning("Warning to stderr");
+    std::string errOutput = testing::internal::GetCapturedStderr();
+
+    EXPECT_TRUE(errOutput.find("Warning to stderr") != std::string::npos);
+    EXPECT_TRUE(errOutput.find("[WARNING]") != std::string::npos);
+}
+
+TEST(LoggerEdgeCaseTest, InfoGoesToStdout) {
+    Logger logger;
+    logger.setLogLevel(LogLevel::Debug);
+
+    // Capture stdout
+    testing::internal::CaptureStdout();
+    logger.info("Info to stdout");
+    std::string stdOutput = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(stdOutput.find("Info to stdout") != std::string::npos);
+    EXPECT_TRUE(stdOutput.find("[INFO]") != std::string::npos);
+}
+
+TEST(LoggerEdgeCaseTest, SetLogFileWithAppendFalse) {
+    auto testFilePath = std::filesystem::temp_directory_path() / "test_no_append.log";
+
+    // Create initial content
+    {
+        std::ofstream file(testFilePath);
+        file << "Initial content\n";
+    }
+
+    Logger logger;
+    logger.setLogFile(testFilePath, false);  // append = false
+    logger.setLogLevel(LogLevel::Info);
+    logger.info("New content");
+    logger.closeFile();
+
+    std::ifstream file(testFilePath);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    const std::string contents = buffer.str();
+
+    EXPECT_TRUE(contents.find("Initial content") == std::string::npos);
+    EXPECT_TRUE(contents.find("New content") != std::string::npos);
+
+    std::filesystem::remove(testFilePath);
+}
+
+TEST(LoggerEdgeCaseTest, MultipleSetLogFileCalls) {
+    auto firstFile = std::filesystem::temp_directory_path() / "test_first.log";
+    auto secondFile = std::filesystem::temp_directory_path() / "test_second.log";
+    std::filesystem::remove(firstFile);
+    std::filesystem::remove(secondFile);
+
+    Logger logger;
+    logger.setLogLevel(LogLevel::Info);
+
+    logger.setLogFile(firstFile);
+    logger.info("First file message");
+
+    logger.setLogFile(secondFile);
+    logger.info("Second file message");
+    logger.closeFile();
+
+    std::ifstream file1(firstFile);
+    std::stringstream buffer1;
+    buffer1 << file1.rdbuf();
+
+    std::ifstream file2(secondFile);
+    std::stringstream buffer2;
+    buffer2 << file2.rdbuf();
+
+    EXPECT_TRUE(buffer1.str().find("First file message") != std::string::npos);
+    EXPECT_TRUE(buffer2.str().find("Second file message") != std::string::npos);
+
+    std::filesystem::remove(firstFile);
+    std::filesystem::remove(secondFile);
+}
+
+// ============================================================================
+// Additional Coverage Tests - FileWriter Edge Cases
+// ============================================================================
+
+TEST(FileWriterEdgeCaseTest, DestructorClosesFile) {
+    auto testFilePath = std::filesystem::temp_directory_path() / "test_destructor.log";
+    std::filesystem::remove(testFilePath);
+
+    {
+        FileWriter writer;
+        writer.open(testFilePath);
+        writer.write("Test message");
+        // Destructor should close the file
+    }
+
+    // File should exist and contain the message
+    std::ifstream file(testFilePath);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    EXPECT_TRUE(buffer.str().find("Test message") != std::string::npos);
+
+    std::filesystem::remove(testFilePath);
+}
+
+TEST(FileWriterEdgeCaseTest, DoubleCloseSafe) {
+    auto testFilePath = std::filesystem::temp_directory_path() / "test_double_close.log";
+    std::filesystem::remove(testFilePath);
+
+    FileWriter writer;
+    writer.open(testFilePath);
+    writer.close();
+    writer.close();  // Should not crash
+
+    EXPECT_FALSE(writer.isOpen());
+
+    std::filesystem::remove(testFilePath);
+}
+
+TEST(FileWriterEdgeCaseTest, WriteAfterClose) {
+    auto testFilePath = std::filesystem::temp_directory_path() / "test_write_after_close.log";
+    std::filesystem::remove(testFilePath);
+
+    FileWriter writer;
+    writer.open(testFilePath);
+    writer.write("Before close");
+    writer.close();
+    writer.write("After close");  // Should do nothing
+
+    std::ifstream file(testFilePath);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+
+    EXPECT_TRUE(buffer.str().find("Before close") != std::string::npos);
+    EXPECT_TRUE(buffer.str().find("After close") == std::string::npos);
+
+    std::filesystem::remove(testFilePath);
+}
+
+// ============================================================================
+// Additional Coverage Tests - LogLevel Edge Cases
+// ============================================================================
+
+TEST(LogLevelEdgeCaseTest, ToStringUnknownLevel) {
+    // Cast an invalid value to test default case
+    LogLevel unknownLevel = static_cast<LogLevel>(999);
+    std::string_view result = toString(unknownLevel);
+    // Should return something reasonable (implementation-dependent)
+    EXPECT_FALSE(result.empty());
+}
+
+TEST(LogLevelEdgeCaseTest, AllLevelComparisons) {
+    EXPECT_TRUE(LogLevel::Debug < LogLevel::Info);
+    EXPECT_TRUE(LogLevel::Info < LogLevel::Warning);
+    EXPECT_TRUE(LogLevel::Warning < LogLevel::Error);
+    EXPECT_TRUE(LogLevel::Error < LogLevel::None);
+
+    EXPECT_FALSE(LogLevel::Info < LogLevel::Debug);
+    EXPECT_FALSE(LogLevel::Warning < LogLevel::Info);
+    EXPECT_FALSE(LogLevel::Error < LogLevel::Warning);
+    EXPECT_FALSE(LogLevel::None < LogLevel::Error);
+}
+
+// ============================================================================
+// Additional Coverage Tests - Macros
+// ============================================================================
+
+TEST_F(LogMacrosTest, LogDebugMacroWithComplexExpression) {
+#ifndef NDEBUG
+    int x = 5;
+    int y = 10;
+    LOG_DEBUG("Calculation: " << x << " + " << y << " = " << (x + y));
+    ASSERT_EQ(mockLogger.loggedMessages.size(), 1);
+    EXPECT_EQ(mockLogger.loggedMessages[0].second, "Calculation: 5 + 10 = 15");
+#endif
+}
+
+TEST_F(LogMacrosTest, MultipleMacrosInSequence) {
+    LOG_INFO("First");
+    LOG_WARNING("Second");
+    LOG_ERROR("Third");
+
+    ASSERT_EQ(mockLogger.loggedMessages.size(), 3);
+    EXPECT_EQ(mockLogger.loggedMessages[0].second, "First");
+    EXPECT_EQ(mockLogger.loggedMessages[1].second, "Second");
+    EXPECT_EQ(mockLogger.loggedMessages[2].second, "Third");
+}
+
+TEST_F(LogMacrosTest, LogEmptyMessage) {
+    LOG_INFO("");
+    ASSERT_EQ(mockLogger.loggedMessages.size(), 1);
+    EXPECT_EQ(mockLogger.loggedMessages[0].second, "");
+}
