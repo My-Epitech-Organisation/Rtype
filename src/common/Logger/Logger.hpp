@@ -118,9 +118,7 @@ class Logger {
      * @brief Log a debug message
      * @param msg The message to log
      */
-    virtual void debug(const std::string& msg) {
-        log(LogLevel::Debug, msg);
-    }
+    virtual void debug(const std::string& msg) { log(LogLevel::Debug, msg); }
 
     /**
      * @brief Log an info message
