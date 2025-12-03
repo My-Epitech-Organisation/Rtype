@@ -98,4 +98,3 @@ target_include_directories(test_components PRIVATE
 )
 
 gtest_discover_tests(test_components)
-
