@@ -17,8 +17,8 @@ namespace rtype::games::rtype::shared {
  * by the MovementSystem to update positions.
  */
 struct VelocityComponent {
-    float vx = 0.0F;  ///< Velocity on X axis (pixels/second)
-    float vy = 0.0F;  ///< Velocity on Y axis (pixels/second)
+    float vx = 0.0F;  // Velocity on X axis (pixels/second)
+    float vy = 0.0F;  // Velocity on Y axis (pixels/second)
 };
 
 }  // namespace rtype::games::rtype::shared
