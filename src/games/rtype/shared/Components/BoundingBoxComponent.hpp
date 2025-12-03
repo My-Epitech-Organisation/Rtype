@@ -17,20 +17,8 @@ namespace rtype::games::rtype::shared {
  * The box is centered on the entity's transform position.
  */
 struct BoundingBoxComponent {
-    float width = 32.0F;   ///< Box width in pixels
-    float height = 32.0F;  ///< Box height in pixels
-
-    /**
-     * @brief Get half-width for centered collision checks
-     * @return Half of the width
-     */
-    [[nodiscard]] float halfWidth() const noexcept { return width * 0.5F; }
-
-    /**
-     * @brief Get half-height for centered collision checks
-     * @return Half of the height
-     */
-    [[nodiscard]] float halfHeight() const noexcept { return height * 0.5F; }
+    float width = 32.0F;   // Box width in pixels
+    float height = 32.0F;  // Box height in pixels
 };
 
 }  // namespace rtype::games::rtype::shared
