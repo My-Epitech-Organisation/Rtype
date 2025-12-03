@@ -175,35 +175,43 @@ jobs:
 
       - name: Prepare release assets
         run: |
-          mkdir -p release-assets
+          mkdir -p release-packages
 
+          # Package Linux client
           if [ -d "artifacts/linux-client" ]; then
-            mkdir -p release-assets/linux-client
-            cp -r artifacts/linux-client/* release-assets/linux-client/
-            echo "✅ Prepared Linux client"
+            cd artifacts/linux-client
+            zip -r ../../release-packages/r-type_client-linux.zip .
+            cd ../..
+            echo "✅ Packaged Linux client"
           fi
 
+          # Package Windows client
           if [ -d "artifacts/windows-client" ]; then
-            mkdir -p release-assets/windows-client
-            cp -r artifacts/windows-client/* release-assets/windows-client/
-            echo "✅ Prepared Windows client"
+            cd artifacts/windows-client
+            zip -r ../../release-packages/r-type_client-windows.zip .
+            cd ../..
+            echo "✅ Packaged Windows client"
           fi
 
+          # Package Linux server
           if [ -d "artifacts/linux-server" ]; then
-            mkdir -p release-assets/linux-server
-            cp -r artifacts/linux-server/* release-assets/linux-server/
-            echo "✅ Prepared Linux server"
+            cd artifacts/linux-server
+            zip -r ../../release-packages/r-type_server-linux.zip .
+            cd ../..
+            echo "✅ Packaged Linux server"
           fi
 
+          # Package Windows server
           if [ -d "artifacts/windows-server" ]; then
-            mkdir -p release-assets/windows-server
-            cp -r artifacts/windows-server/* release-assets/windows-server/
-            echo "✅ Prepared Windows server"
+            cd artifacts/windows-server
+            zip -r ../../release-packages/r-type_server-windows.zip .
+            cd ../..
+            echo "✅ Packaged Windows server"
           fi
 
           echo ""
-          echo "Release assets prepared:"
-          find release-assets -type f
+          echo "Release packages created:"
+          ls -lh release-packages/
 
       - name: Check for new commits since last release
         id: check_commits
@@ -242,7 +250,4 @@ jobs:
           generate_release_notes: true
           prerelease: ${{ steps.version.outputs.prerelease }}
           files: |
-            release-assets/linux-client/*
-            release-assets/windows-client/*
-            release-assets/linux-server/*
-            release-assets/windows-server/*
+            release-packages/*.zip
