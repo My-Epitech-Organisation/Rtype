@@ -96,10 +96,10 @@ class AGameEngine : public IGameEngine {
      */
     void setEntityCount(std::size_t count) noexcept { _entityCount = count; }
 
-    EventCallback _eventCallback;             ///< Callback for game events
-    std::vector<GameEvent> _pendingEvents;    ///< Queue of pending events
-    std::size_t _entityCount = 0;             ///< Number of active entities
-    bool _isRunning = false;                  ///< Engine running state
+    EventCallback _eventCallback;           ///< Callback for game events
+    std::vector<GameEvent> _pendingEvents;  ///< Queue of pending events
+    std::size_t _entityCount = 0;           ///< Number of active entities
+    bool _isRunning = false;                ///< Engine running state
 };
 
 }  // namespace rtype::engine
