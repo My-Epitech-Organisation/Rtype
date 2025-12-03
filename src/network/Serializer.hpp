@@ -14,7 +14,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "Packet.hpp"  // Legacy support - TODO: remove after full migration
+#include "Packet.hpp"
 #include "core/ByteOrder.hpp"
 #include "protocol/ByteOrderSpec.hpp"
 #include "protocol/Header.hpp"
@@ -289,14 +289,9 @@ class Serializer {
         return result;
     }
 
-    // ========================================================================
-    // RFC RTGP v1.1.0 - High-Level Serialization API
-    // ========================================================================
-
     /**
      * @brief Serialize an RFC type directly to network byte order
      *
-     * This is the recommended API for serializing protocol types.
      * Combines serialize + toNetworkByteOrder in one call.
      *
      * @tparam T RFC protocol type (Header or Payload struct)
@@ -318,7 +313,6 @@ class Serializer {
     /**
      * @brief Deserialize an RFC type from network byte order
      *
-     * This is the recommended API for deserializing protocol types.
      * Combines fromNetworkByteOrder + deserialize in one call.
      *
      * @tparam T RFC protocol type (Header or Payload struct)
