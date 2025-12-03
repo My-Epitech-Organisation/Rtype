@@ -240,6 +240,30 @@ jobs:
             echo "skip=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          LATEST_TAG="${{ steps.latest_release.outputs.latest_tag }}"
+          NEW_VERSION="${{ steps.version.outputs.new_version }}"
+
+          # Generate changelog between tags
+          if git rev-parse --verify "$LATEST_TAG" >/dev/null 2>&1; then
+            echo "Generating changelog from $LATEST_TAG to HEAD"
+            CHANGELOG=$(git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges | head -20)
+          else
+            echo "First release, generating full changelog"
+            CHANGELOG=$(git log HEAD --pretty=format:"- %s (%h)" --no-merges | head -20)
+          fi
+
+          # Save to file to handle multiline
+          cat > release_notes.md << 'EOF'
+          ## Changes in this release
+
+          EOF
+          echo "$CHANGELOG" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...${NEW_VERSION}" >> release_notes.md
+
       - name: Create release with auto-generated notes
         if: steps.check_commits.outputs.skip != 'true'
         uses: softprops/action-gh-release@v2
@@ -247,7 +271,7 @@ jobs:
           tag_name: ${{ steps.version.outputs.new_version }}
           name: R-Type ${{ steps.version.outputs.new_version }} (${{ steps.version.outputs.tag_suffix }})
           target_commitish: ${{ github.sha }}
-          generate_release_notes: true
+          body_path: release_notes.md
           prerelease: ${{ steps.version.outputs.prerelease }}
           files: |
             release-packages/*.zip
