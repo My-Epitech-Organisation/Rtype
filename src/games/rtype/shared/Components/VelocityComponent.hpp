@@ -9,7 +9,6 @@
 #define SRC_GAMES_RTYPE_SHARED_COMPONENTS_VELOCITYCOMPONENT_HPP_
 
 struct Velocity {
-   public:
     float x = 0.0f;
     float y = 0.0f;
 };
