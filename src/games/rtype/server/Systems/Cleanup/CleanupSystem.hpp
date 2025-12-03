@@ -10,7 +10,7 @@
 #include <functional>
 
 #include "../../../../../engine/ISystem.hpp"
-#include "IGameEngine.hpp"
+#include "../../../../../engine/IGameEngine.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -29,7 +29,7 @@ struct CleanupConfig {
  * @class CleanupSystem
  * @brief Server-only system that marks out-of-bounds entities for destruction
  */
-class CleanupSystem : public shared::ISystem {
+class CleanupSystem : public ::rtype::engine::ISystem {
    public:
     using EventEmitter = std::function<void(const engine::GameEvent&)>;
 
