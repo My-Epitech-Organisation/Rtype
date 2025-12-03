@@ -7,11 +7,11 @@
 
 #include "BehaviorRegistry.hpp"
 
-#include "ChaseBehavior.hpp"
-#include "MoveLeftBehavior.hpp"
-#include "PatrolBehavior.hpp"
-#include "SineWaveBehavior.hpp"
-#include "StationaryBehavior.hpp"
+#include "Chase/ChaseBehavior.hpp"
+#include "MoveLeft/MoveLeftBehavior.hpp"
+#include "Patrol/PatrolBehavior.hpp"
+#include "SineWave/SineWaveBehavior.hpp"
+#include "Stationary/StationaryBehavior.hpp"
 
 namespace rtype::games::rtype::shared {
 
