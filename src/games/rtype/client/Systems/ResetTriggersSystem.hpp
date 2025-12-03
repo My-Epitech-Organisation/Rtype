@@ -5,8 +5,8 @@
 ** ResetTriggersSystem.hpp
 */
 
-#ifndef SRC_CLIENT_SYSTEM_RESETTRIGGERSSYSTEM_HPP_
-#define SRC_CLIENT_SYSTEM_RESETTRIGGERSSYSTEM_HPP_
+#ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_RESETTRIGGERSSYSTEM_HPP_
+#define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_RESETTRIGGERSSYSTEM_HPP_
 
 #include <memory>
 
@@ -19,4 +19,4 @@ class ResetTriggersSystem {
     static void update(const std::shared_ptr<ECS::Registry>& registry);
 };
 
-#endif  // SRC_CLIENT_SYSTEM_RESETTRIGGERSSYSTEM_HPP_
+#endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_RESETTRIGGERSSYSTEM_HPP_

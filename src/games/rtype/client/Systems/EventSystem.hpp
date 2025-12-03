@@ -5,8 +5,8 @@
 ** EventSystem.hpp
 */
 
-#ifndef SRC_CLIENT_SYSTEM_EVENTSYSTEM_HPP_
-#define SRC_CLIENT_SYSTEM_EVENTSYSTEM_HPP_
+#ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_EVENTSYSTEM_HPP_
+#define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_EVENTSYSTEM_HPP_
 #include <memory>
 
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -33,4 +33,4 @@ class EventSystem {
                               UserEvent& actionType, const Rectangle& rect);
 };
 
-#endif  // SRC_CLIENT_SYSTEM_EVENTSYSTEM_HPP_
+#endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_EVENTSYSTEM_HPP_

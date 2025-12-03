@@ -14,8 +14,8 @@
 #include <SFML/System/Vector2.hpp>
 
 #include "AssetManager/AssetManager.hpp"
-#include "Components/PositionComponent.hpp"
 #include "Components/ButtonComponent.hpp"
+#include "Components/PositionComponent.hpp"
 #include "Components/RectangleComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"

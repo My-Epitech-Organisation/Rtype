@@ -6,6 +6,7 @@
 */
 
 #include "ResetTriggersSystem.hpp"
+
 #include "../Components/UserEventComponent.hpp"
 
 void ResetTriggersSystem::update(

@@ -5,8 +5,8 @@
 ** ParallaxComponent.hpp
 */
 
-#ifndef SRC_CLIENT_COMPONENTS_GRAPHIC_PARALLAXCOMPONENT_HPP_
-#define SRC_CLIENT_COMPONENTS_GRAPHIC_PARALLAXCOMPONENT_HPP_
+#ifndef SRC_GAMES_RTYPE_CLIENT_COMPONENTS_PARALLAXCOMPONENT_HPP_
+#define SRC_GAMES_RTYPE_CLIENT_COMPONENTS_PARALLAXCOMPONENT_HPP_
 struct Parallax {
     float scrollFactor = 0;
     bool isRepeating = true;
@@ -16,4 +16,4 @@ struct Parallax {
         : scrollFactor(scrollFactor), isRepeating(isRepeating) {}
 };
 
-#endif  // SRC_CLIENT_COMPONENTS_GRAPHIC_PARALLAXCOMPONENT_HPP_
+#endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_PARALLAXCOMPONENT_HPP_

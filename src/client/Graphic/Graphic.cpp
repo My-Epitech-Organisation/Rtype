@@ -11,7 +11,6 @@
 #include <optional>
 #include <utility>
 
-#include "AssetManager/AssetManager.hpp"
 #include "../../games/rtype/client/Systems/BoxingSystem.hpp"
 #include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
 #include "../../games/rtype/client/Systems/EventSystem.hpp"
@@ -19,6 +18,7 @@
 #include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
+#include "AssetManager/AssetManager.hpp"
 
 void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event>& event) {
     if (!event) {

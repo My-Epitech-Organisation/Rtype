@@ -5,8 +5,8 @@
 ** MovementSystem.hpp
 */
 
-#ifndef SRC_CLIENT_SYSTEM_MOVEMENTSYSTEM_HPP_
-#define SRC_CLIENT_SYSTEM_MOVEMENTSYSTEM_HPP_
+#ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_MOVEMENTSYSTEM_HPP_
+#define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_MOVEMENTSYSTEM_HPP_
 #include <memory>
 
 #include "ecs/ECS.hpp"
@@ -17,4 +17,4 @@ class MovementSystem {
                        float dt);
 };
 
-#endif  // SRC_CLIENT_SYSTEM_MOVEMENTSYSTEM_HPP_
+#endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_MOVEMENTSYSTEM_HPP_

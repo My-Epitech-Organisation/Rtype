@@ -5,8 +5,8 @@
 ** RenderSystem.hpp
 */
 
-#ifndef SRC_CLIENT_SYSTEM_RENDERSYSTEM_HPP_
-#define SRC_CLIENT_SYSTEM_RENDERSYSTEM_HPP_
+#ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_RENDERSYSTEM_HPP_
+#define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_RENDERSYSTEM_HPP_
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
@@ -18,4 +18,4 @@ class RenderSystem {
                      const std::shared_ptr<sf::RenderWindow>& window);
 };
 
-#endif  // SRC_CLIENT_SYSTEM_RENDERSYSTEM_HPP_
+#endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_RENDERSYSTEM_HPP_

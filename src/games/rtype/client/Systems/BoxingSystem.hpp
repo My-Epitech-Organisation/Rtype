@@ -5,8 +5,8 @@
 ** BoxingSystem.hpp
 */
 
-#ifndef SRC_CLIENT_SYSTEM_BOXINGSYSTEM_HPP_
-#define SRC_CLIENT_SYSTEM_BOXINGSYSTEM_HPP_
+#ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BOXINGSYSTEM_HPP_
+#define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BOXINGSYSTEM_HPP_
 
 #include <memory>
 
@@ -20,4 +20,4 @@ class BoxingSystem {
                      const std::shared_ptr<sf::RenderWindow>& window);
 };
 
-#endif  // SRC_CLIENT_SYSTEM_BOXINGSYSTEM_HPP_
+#endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BOXINGSYSTEM_HPP_

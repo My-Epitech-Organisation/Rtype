@@ -5,8 +5,8 @@
 ** UpdateSystem.hpp
 */
 
-#ifndef SRC_CLIENT_SYSTEM_BUTTONUPDATESYSTEM_HPP_
-#define SRC_CLIENT_SYSTEM_BUTTONUPDATESYSTEM_HPP_
+#ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BUTTONUPDATESYSTEM_HPP_
+#define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BUTTONUPDATESYSTEM_HPP_
 #include <SFML/Graphics/RenderWindow.hpp>
 
 #include "ecs/core/Registry/Registry.hpp"
@@ -17,4 +17,4 @@ class ButtonUpdateSystem {
                        const std::shared_ptr<sf::RenderWindow>& window);
 };
 
-#endif  // SRC_CLIENT_SYSTEM_BUTTONUPDATESYSTEM_HPP_
+#endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BUTTONUPDATESYSTEM_HPP_

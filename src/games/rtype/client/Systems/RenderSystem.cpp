@@ -7,14 +7,14 @@
 
 #include "RenderSystem.hpp"
 
-#include "Components/PositionComponent.hpp"
 #include "../Components/ButtonComponent.hpp"
 #include "../Components/ImageComponent.hpp"
 #include "../Components/RectangleComponent.hpp"
+#include "../Components/SizeComponent.hpp"
 #include "../Components/TagComponent.hpp"
 #include "../Components/TextComponent.hpp"
-#include "../Components/SizeComponent.hpp"
 #include "../Components/TextureRectComponent.hpp"
+#include "Components/PositionComponent.hpp"
 #include "ecs/ECS.hpp"
 
 void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
