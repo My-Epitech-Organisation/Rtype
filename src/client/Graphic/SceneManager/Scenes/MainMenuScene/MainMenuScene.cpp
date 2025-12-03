@@ -43,7 +43,7 @@ void MainMenuScene::_createFakePlayer() {
     std::uniform_int_distribution<> distrib150(1, 150);
     std::uniform_int_distribution<> distrib15(1, 15);
 
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < nbr_vessels; i++) {
         auto fakePlayer = this->_registry->spawnEntity();
         this->_registry->emplaceComponent<Image>(
             fakePlayer,

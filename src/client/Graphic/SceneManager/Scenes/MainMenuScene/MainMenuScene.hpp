@@ -8,6 +8,8 @@
 #ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_MAINMENUSCENE_MAINMENUSCENE_HPP_
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_MAINMENUSCENE_MAINMENUSCENE_HPP_
 
+static constexpr int nbr_vessels = 7;
+
 #include "../AScene.hpp"
 #include "SceneManager/SceneManager.hpp"
 
