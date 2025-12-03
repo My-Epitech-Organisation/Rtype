@@ -246,23 +246,40 @@ jobs:
           LATEST_TAG="${{ steps.latest_release.outputs.latest_tag }}"
           NEW_VERSION="${{ steps.version.outputs.new_version }}"
 
-          # Generate changelog between tags
-          if git rev-parse --verify "$LATEST_TAG" >/dev/null 2>&1; then
-            echo "Generating changelog from $LATEST_TAG to HEAD"
-            CHANGELOG=$(git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges | head -20)
-          else
-            echo "First release, generating full changelog"
-            CHANGELOG=$(git log HEAD --pretty=format:"- %s (%h)" --no-merges | head -20)
-          fi
-
-          # Save to file to handle multiline
           cat > release_notes.md << 'EOF'
-          ## Changes in this release
+          ## What's Changed
 
           EOF
-          echo "$CHANGELOG" >> release_notes.md
+
+          if git rev-parse --verify "$LATEST_TAG" >/dev/null 2>&1; then
+            echo "Generating changelog from $LATEST_TAG to HEAD"
+
+            git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h) - @%an" --reverse >> release_notes.md
+
+            echo "" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...${NEW_VERSION}" >> release_notes.md
+          else
+            echo "First release, generating full changelog"
+            git log HEAD --pretty=format:"- %s (%h) - @%an" --reverse >> release_notes.md
+            echo "" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/commits/${NEW_VERSION}" >> release_notes.md
+          fi
+
           echo "" >> release_notes.md
-          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...${NEW_VERSION}" >> release_notes.md
+          echo "## Contributors" >> release_notes.md
+          echo "" >> release_notes.md
+
+          if git rev-parse --verify "$LATEST_TAG" >/dev/null 2>&1; then
+            git log ${LATEST_TAG}..HEAD --format='%an' | sort -u | while read name; do
+              echo "- @${name}" >> release_notes.md
+            done
+          else
+            git log HEAD --format='%an' | sort -u | while read name; do
+              echo "- @${name}" >> release_notes.md
+            done
+          fi
 
       - name: Create release with auto-generated notes
         if: steps.check_commits.outputs.skip != 'true'
