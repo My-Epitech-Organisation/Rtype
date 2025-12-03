@@ -85,8 +85,8 @@ TEST(ComponentsTest, HealthComponentDefault) {
 TEST(ComponentsTest, BoundingBoxComponentDefault) {
     BoundingBoxComponent bbox;
 
-    EXPECT_FLOAT_EQ(bbox.width, 0.0F);
-    EXPECT_FLOAT_EQ(bbox.height, 0.0F);
+    EXPECT_FLOAT_EQ(bbox.width, 32.0F);
+    EXPECT_FLOAT_EQ(bbox.height, 32.0F);
 }
 
 // =============================================================================
