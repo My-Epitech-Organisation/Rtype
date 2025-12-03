@@ -124,7 +124,7 @@ void SettingsScene::render(const std::shared_ptr<sf::RenderWindow>& window) {}
 
 void SettingsScene::pollEvents(const sf::Event& e) {
     if (this->_actionToRebind.has_value()) {
-        if (const auto* keyEvent = e.getIf<sf::Event::KeyPressed>()) {
+        if (const auto& keyEvent = e.getIf<sf::Event::KeyPressed>()) {
             sf::Keyboard::Key key = keyEvent->code;
 
             this->_keybinds->setKeyBinding(*this->_actionToRebind, key);
@@ -134,7 +134,7 @@ void SettingsScene::pollEvents(const sf::Event& e) {
                 SettingsSceneUtils::actionToString(*this->_actionToRebind) +
                 ": " + keyName;
 
-            ECS::Entity entity = _actionButtons[*this->_actionToRebind];
+            ECS::Entity entity = this->_actionButtons[*this->_actionToRebind];
             if (this->_registry->hasComponent<Text>(entity)) {
                 auto& textComp = this->_registry->getComponent<Text>(entity);
                 textComp.textContent = text;
