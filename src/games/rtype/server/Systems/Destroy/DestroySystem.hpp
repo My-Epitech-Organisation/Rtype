@@ -10,7 +10,7 @@
 #include <functional>
 
 #include "../../../../../engine/ISystem.hpp"
-#include "IGameEngine.hpp"
+#include "../../../../../engine/IGameEngine.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -20,7 +20,7 @@ namespace rtype::games::rtype::server {
  *
  * Emits destruction events for network synchronization.
  */
-class DestroySystem : public shared::ISystem {
+class DestroySystem : public ::rtype::engine::ISystem {
    public:
     using EventEmitter = std::function<void(const engine::GameEvent&)>;
     using EnemyCountUpdater = std::function<void()>;
