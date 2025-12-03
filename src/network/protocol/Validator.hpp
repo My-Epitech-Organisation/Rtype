@@ -24,10 +24,6 @@ namespace rtype::network {
  */
 namespace Validator {
 
-// ============================================================================
-// Magic Byte Validation (RFC Section 6.1)
-// ============================================================================
-
 /**
  * @brief Validate the magic byte
  * @param magic The magic byte from the packet
@@ -39,10 +35,6 @@ namespace Validator {
     }
     return Result<void>::err(NetworkError::InvalidMagic);
 }
-
-// ============================================================================
-// OpCode Validation (RFC Section 6.2)
-// ============================================================================
 
 /**
  * @brief Validate and convert a raw byte to OpCode
@@ -56,10 +48,6 @@ namespace Validator {
     }
     return Result<OpCode>::err(NetworkError::UnknownOpcode);
 }
-
-// ============================================================================
-// Header Validation
-// ============================================================================
 
 /**
  * @brief Validate a complete header structure
@@ -78,17 +66,13 @@ namespace Validator {
         return Result<void>::err(NetworkError::UnknownOpcode);
     }
 
-    // Check reserved bytes (RFC requires them to be 0)
+    // Check reserved bytes
     if (!header.hasValidReserved()) {
         return Result<void>::err(NetworkError::MalformedPacket);
     }
 
     return Result<void>::ok();
 }
-
-// ============================================================================
-// Packet Size Validation
-// ============================================================================
 
 /**
  * @brief Validate packet size against minimum requirements
@@ -114,16 +98,13 @@ namespace Validator {
  */
 [[nodiscard]] inline Result<void> validatePayloadSize(
     OpCode opcode, std::size_t payloadSize) noexcept {
-    // Variable-length payloads have their own validation
     if (hasVariablePayload(opcode)) {
-        // R_GET_USERS: at least 1 byte for count
         if (opcode == OpCode::R_GET_USERS && payloadSize < 1) {
             return Result<void>::err(NetworkError::PacketTooSmall);
         }
         return Result<void>::ok();
     }
 
-    // Fixed-size payloads must match exactly
     std::size_t expected = getPayloadSize(opcode);
     if (payloadSize != expected) {
         return Result<void>::err(NetworkError::MalformedPacket);
@@ -131,10 +112,6 @@ namespace Validator {
 
     return Result<void>::ok();
 }
-
-// ============================================================================
-// User ID Validation (RFC Section 6.3)
-// ============================================================================
 
 /**
  * @brief Validate User ID for client-originated packets
@@ -144,25 +121,20 @@ namespace Validator {
  */
 [[nodiscard]] inline Result<void> validateClientUserId(std::uint32_t userId,
                                                        OpCode opcode) noexcept {
-    // C_CONNECT is special: allows unassigned ID
     if (opcode == OpCode::C_CONNECT) {
         if (userId == kUnassignedUserId) {
             return Result<void>::ok();
         }
-        // Still allow valid client IDs for reconnection
     }
 
-    // Clients cannot claim to be the server
     if (userId == kServerUserId) {
         return Result<void>::err(NetworkError::InvalidUserId);
     }
 
-    // After connection, must be a valid assigned ID
     if (userId >= kMinClientUserId && userId <= kMaxClientUserId) {
         return Result<void>::ok();
     }
 
-    // Unassigned ID only valid during handshake
     if (userId == kUnassignedUserId) {
         return Result<void>::err(NetworkError::InvalidUserId);
     }
@@ -183,10 +155,6 @@ namespace Validator {
     return Result<void>::err(NetworkError::InvalidUserId);
 }
 
-// ============================================================================
-// Full Packet Validation
-// ============================================================================
-
 /**
  * @brief Perform complete validation of a received packet
  * @param data Pointer to the raw packet data
@@ -197,29 +165,24 @@ namespace Validator {
 [[nodiscard]] inline Result<void> validatePacket(const std::uint8_t* data,
                                                  std::size_t size,
                                                  bool isFromServer) noexcept {
-    // Size check
     auto sizeResult = validatePacketSize(size);
     if (sizeResult.isErr()) {
         return sizeResult;
     }
 
-    // Cast to header (safe due to size check)
     const auto* header = reinterpret_cast<const Header*>(data);
 
-    // Header validation
     auto headerResult = validateHeader(*header);
     if (headerResult.isErr()) {
         return headerResult;
     }
 
-    // Payload size validation
     std::size_t payloadSize = size - kHeaderSize;
     auto payloadResult = validatePayloadSize(header->getOpCode(), payloadSize);
     if (payloadResult.isErr()) {
         return payloadResult;
     }
 
-    // User ID validation
     if (isFromServer) {
         auto userResult = validateServerUserId(header->userId);
         if (userResult.isErr()) {
