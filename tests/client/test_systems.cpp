@@ -11,9 +11,9 @@
 #include <ecs/ECS.hpp>
 #include "../../src/games/rtype/client/Systems/MovementSystem.hpp"
 #include "../../src/games/rtype/client/Systems/RenderSystem.hpp"
-#include "../src/client/Components/Common/PositionComponent.hpp"
-#include "../src/client/Components/Graphic/VelocityComponent.hpp"
-#include "../src/client/Components/Graphic/ImageComponent.hpp"
+#include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/client/Components/VelocityComponent.hpp"
+#include "games/rtype/client/Components/ImageComponent.hpp"
 
 class SystemsTest : public ::testing::Test {
 protected:

@@ -6,23 +6,19 @@
 */
 
 #include <gtest/gtest.h>
-#include "../src/client/Components/Common/PositionComponent.hpp"
-#include "../src/client/Components/Graphic/VelocityComponent.hpp"
+#include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/VelocityComponent.hpp"
 
 TEST(PositionComponentTest, DefaultConstructor_SetsZero) {
     Position pos(0.0f, 0.0f);
     EXPECT_EQ(pos.x, 0.0f);
     EXPECT_EQ(pos.y, 0.0f);
-    EXPECT_EQ(pos.initialX, 0.0f);
-    EXPECT_EQ(pos.initialY, 0.0f);
 }
 
 TEST(PositionComponentTest, ParameterizedConstructor_SetsValues) {
     Position pos(10.0f, 20.0f);
     EXPECT_EQ(pos.x, 10.0f);
     EXPECT_EQ(pos.y, 20.0f);
-    EXPECT_EQ(pos.initialX, 10.0f);
-    EXPECT_EQ(pos.initialY, 20.0f);
 }
 
 TEST(VelocityComponentTest, DefaultConstructor_SetsZero) {
