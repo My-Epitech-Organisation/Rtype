@@ -19,6 +19,7 @@ class AScene : public IScene {
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<AssetManager> _assetsManager;
     const std::shared_ptr<sf::RenderWindow>& _window;
+    std::vector<ECS::Entity> _listEntity;
 
    public:
     void pollEvents(const sf::Event& e) override = 0;
@@ -29,6 +30,9 @@ class AScene : public IScene {
                     const std::shared_ptr<AssetManager>& assetsManager,
                     const std::shared_ptr<sf::RenderWindow>& window)
         : _registry(registry), _assetsManager(assetsManager), _window(window) {}
+    ~AScene() override { for (auto &entities : this->_listEntity) {
+        this->_registry->killEntity(entities);
+    }};
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_ASCENE_HPP_

@@ -116,9 +116,3 @@ MainMenuScene::MainMenuScene(
 
             ));
 }
-
-MainMenuScene::~MainMenuScene() {
-    for (auto& entity : this->_listEntity) {
-        this->_registry->killEntity(entity);
-    }
-}

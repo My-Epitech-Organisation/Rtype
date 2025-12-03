@@ -21,7 +21,6 @@
 
 class SettingsScene : public AScene {
    private:
-    std::vector<ECS::Entity> _listEntity;
     const std::shared_ptr<KeyboardActions>& _keybinds;
     std::optional<GameAction> _actionToRebind;
     std::map<GameAction, ECS::Entity> _actionButtons;
@@ -40,7 +39,6 @@ class SettingsScene : public AScene {
                   const std::shared_ptr<sf::RenderWindow>& window,
                   std::function<void(const SceneManager::Scene&)> switchToScene,
                   const std::shared_ptr<KeyboardActions>& keybinds);
-    ~SettingsScene() override;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENE_HPP_

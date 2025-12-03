@@ -175,9 +175,3 @@ SettingsScene::SettingsScene(
             }
         })));
 }
-
-SettingsScene::~SettingsScene() {
-    for (auto& entity : this->_listEntity) {
-        this->_registry->killEntity(entity);
-    }
-}
