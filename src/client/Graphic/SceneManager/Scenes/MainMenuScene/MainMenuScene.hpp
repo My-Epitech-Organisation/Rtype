@@ -15,7 +15,6 @@ static constexpr int nbr_vessels = 7;
 
 class MainMenuScene : public AScene {
    private:
-
     void _createAstroneerVessel();
     void _createFakePlayer();
 

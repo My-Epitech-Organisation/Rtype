@@ -12,35 +12,6 @@
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneManager/SceneException.hpp"
 
-static std::vector<ECS::Entity> createSection(
-    std::shared_ptr<ECS::Registry> registry,
-    std::shared_ptr<AssetManager> assets, const std::string& title, float x,
-    float y, float width, float height) {
-    std::vector<ECS::Entity> entities;
-    auto bg = registry->spawnEntity();
-    registry->emplaceComponent<Position>(bg, x, y);
-    registry->emplaceComponent<Rectangle>(
-        bg, std::pair<float, float>{width, height}, sf::Color(0, 0, 0, 150),
-        sf::Color(0, 0, 0, 150));
-
-    if (registry->hasComponent<Rectangle>(bg)) {
-        auto& rect = registry->getComponent<Rectangle>(bg);
-        rect.outlineThickness = 2.0f;
-        rect.outlineColor = sf::Color::White;
-    }
-
-    entities.push_back(bg);
-
-    auto titleEnt = registry->spawnEntity();
-    registry->emplaceComponent<Position>(titleEnt, x + 20, y + 10);
-    registry->emplaceComponent<Text>(titleEnt,
-                                     assets->fontManager->get("title_font"),
-                                     sf::Color::White, 30, title);
-    registry->emplaceComponent<StaticTextTag>(titleEnt);
-    entities.push_back(titleEnt);
-    return entities;
-}
-
 void SettingsScene::_initKeybindSection() {
     std::vector<GameAction> actions = {
         GameAction::MOVE_UP,    GameAction::MOVE_DOWN, GameAction::MOVE_LEFT,
@@ -50,7 +21,7 @@ void SettingsScene::_initKeybindSection() {
     float sectionY = 225;
     float sectionW = 600;
     float sectionH = 600;
-    std::vector<ECS::Entity> sectionEntities = createSection(
+    std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Keyboard Assignment", sectionX,
         sectionY, sectionW, sectionH);
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
@@ -98,9 +69,9 @@ void SettingsScene::_initAudioSection() {
     float sectionW = 500;
     float sectionH = 200;
 
-    std::vector<ECS::Entity> sectionEntities =
-        createSection(this->_registry, this->_assetsManager, "Audio", sectionX,
-                      sectionY, sectionW, sectionH);
+    std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
+        this->_registry, this->_assetsManager, "Audio", sectionX, sectionY,
+        sectionW, sectionH);
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 }
@@ -111,9 +82,9 @@ void SettingsScene::_initWindowSection() {
     float sectionW = 500;
     float sectionH = 385;
 
-    std::vector<ECS::Entity> sectionEntities =
-        createSection(this->_registry, this->_assetsManager, "Window", sectionX,
-                      sectionY, sectionW, sectionH);
+    std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
+        this->_registry, this->_assetsManager, "Window", sectionX, sectionY,
+        sectionW, sectionH);
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 }

@@ -30,9 +30,11 @@ class AScene : public IScene {
                     const std::shared_ptr<AssetManager>& assetsManager,
                     const std::shared_ptr<sf::RenderWindow>& window)
         : _registry(registry), _assetsManager(assetsManager), _window(window) {}
-    ~AScene() override { for (auto &entities : this->_listEntity) {
-        this->_registry->killEntity(entities);
-    }};
+    ~AScene() override {
+        for (auto& entities : this->_listEntity) {
+            this->_registry->killEntity(entities);
+        }
+    };
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_ASCENE_HPP_
