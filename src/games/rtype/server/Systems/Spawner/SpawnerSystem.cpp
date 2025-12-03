@@ -21,6 +21,8 @@ using shared::HealthComponent;
 using shared::NetworkIdComponent;
 using shared::TransformComponent;
 using shared::VelocityComponent;
+constexpr float BYDOS_SLAVE_SIZE = 32.0F;
+constexpr int BYDOS_SLAVE_HEALTH = 10;
 
 SpawnerSystem::SpawnerSystem(EventEmitter emitter, SpawnerConfig config)
     : _emitEvent(std::move(emitter)),
@@ -51,17 +53,12 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
         enemy, -_config.bydosSlaveSpeed, 0.0F);
     registry.emplaceComponent<AIComponent>(enemy, AIBehavior::MoveLeft,
                                            _config.bydosSlaveSpeed);
-    constexpr int BYDOS_SLAVE_HEALTH = 10;
     registry.emplaceComponent<HealthComponent>(enemy, BYDOS_SLAVE_HEALTH,
                                                BYDOS_SLAVE_HEALTH);
-
-    constexpr float BYDOS_SLAVE_SIZE = 32.0F;
     registry.emplaceComponent<BoundingBoxComponent>(enemy, BYDOS_SLAVE_SIZE,
                                                     BYDOS_SLAVE_SIZE);
-
     uint32_t networkId = _nextNetworkId++;
     registry.emplaceComponent<NetworkIdComponent>(enemy, networkId);
-
     registry.emplaceComponent<EnemyTag>(enemy);
     registry.emplaceComponent<BydosSlaveTag>(enemy);
 
