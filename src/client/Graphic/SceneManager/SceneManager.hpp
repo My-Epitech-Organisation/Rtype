@@ -55,9 +55,6 @@ class SceneManager {
         return false;
     }
 
-    friend std::ostream& operator<<(std::ostream& os,
-                                    const SceneManager& sceneManager);
-
     SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
                  const std::shared_ptr<AssetManager>& assetManager,
                  const std::shared_ptr<sf::RenderWindow> &window,

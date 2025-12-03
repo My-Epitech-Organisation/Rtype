@@ -51,31 +51,6 @@ void SceneManager::draw() {
     this->_activeScene->render(this->_window);
 }
 
-std::ostream& operator<<(std::ostream& os, const SceneManager& sceneManager) {
-    os << "Current Scene: ";
-    switch (sceneManager.getCurrentScene()) {
-        case SceneManager::MAIN_MENU:
-            os << "MAIN_MENU";
-            break;
-        case SceneManager::IN_GAME:
-            os << "IN_GAME";
-            break;
-        case SceneManager::PAUSE_MENU:
-            os << "PAUSE_MENU";
-            break;
-        case SceneManager::GAME_OVER:
-            os << "GAME_OVER";
-            break;
-        case SceneManager::SETTINGS_MENU:
-            os << "SETTINGS_MENU";
-            break;
-        default:
-            os << "UNKNOWN_SCENE";
-            break;
-    }
-    return os;
-}
-
 SceneManager::SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
                            const std::shared_ptr<AssetManager>& texture,
                            const std::shared_ptr<sf::RenderWindow> &window,
