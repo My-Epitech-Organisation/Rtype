@@ -40,6 +40,8 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     registry->emplaceComponent<Position>(planet3, 0, 0);
     registry->emplaceComponent<Parallax>(planet3, 0.4, true);
 
+    if (PageName.empty())
+        return {planet1, planet2, planet3, background};
     auto appTitle = registry->spawnEntity();
     registry->emplaceComponent<Text>(
         appTitle, assetManager->fontManager->get("title_font"),

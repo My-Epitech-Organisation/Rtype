@@ -37,6 +37,7 @@ static ECS::Entity createButton(ECS::Registry& registry, const Text& text,
     registry.emplaceComponent<ButtonTag>(entity);
     return entity;
 }
+
 std::vector<ECS::Entity> createBackground(
     const std::shared_ptr<ECS::Registry>& registry,
     const std::shared_ptr<AssetManager>& assetManager,
