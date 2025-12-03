@@ -36,16 +36,4 @@ class MovementSystem : public ISystem {
     }
 };
 
-/**
- * @brief Standalone function to update a single entity's movement
- * @param transform Transform component to update
- * @param velocity Velocity component to read from
- * @param deltaTime Time elapsed since last update
- *
- * Useful for cases where you need to update a single entity
- * without going through the full system.
- */
-void updateMovement(TransformComponent& transform,
-                    const VelocityComponent& velocity, float deltaTime);
-
 }  // namespace rtype::games::rtype::shared
