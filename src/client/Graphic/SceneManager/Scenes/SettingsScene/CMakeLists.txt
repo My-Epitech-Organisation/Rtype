@@ -2,6 +2,8 @@ add_library(rtype-graphic-settings-scene
     STATIC
     SettingsScene.cpp
     SettingsScene.hpp
+    SettingsSceneUtils.cpp
+    SettingsSceneUtils.hpp
 )
 
 target_link_libraries(rtype-graphic-settings-scene

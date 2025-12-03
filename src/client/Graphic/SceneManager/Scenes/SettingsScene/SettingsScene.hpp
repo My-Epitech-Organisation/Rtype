@@ -17,6 +17,7 @@
 #include "GameAction.hpp"
 #include "Graphic/KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
+#include "SettingsSceneUtils.hpp"
 
 class SettingsScene : public AScene {
    private:
