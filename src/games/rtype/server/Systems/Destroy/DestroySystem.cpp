@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "../../../shared/Components.hpp"
+#include "../../../../../common/Logger.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -32,12 +33,13 @@ void DestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {
     });
 
     for (ECS::Entity entity : toDestroy) {
-        uint32_t networkId = 0;
+        NetworkIdComponent netIdComp{};
+        bool hasNetworkId = false;
         bool isEnemy = false;
 
         if (registry.hasComponent<NetworkIdComponent>(entity)) {
-            networkId =
-                registry.getComponent<NetworkIdComponent>(entity).networkId;
+            netIdComp = registry.getComponent<NetworkIdComponent>(entity);
+            hasNetworkId = true;
         }
         if (registry.hasComponent<EnemyTag>(entity)) {
             isEnemy = true;
@@ -45,14 +47,18 @@ void DestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {
         if (isEnemy) {
             _decrementEnemyCount();
         }
-        if (networkId != 0) {
+        if (hasNetworkId && netIdComp.isValid()) {
             engine::GameEvent event{};
             event.type = engine::GameEventType::EntityDestroyed;
-            event.entityNetworkId = networkId;
+            event.entityNetworkId = netIdComp.networkId;
             event.entityType = isEnemy
                                    ? static_cast<uint8_t>(EntityType::Enemy)
                                    : static_cast<uint8_t>(EntityType::Player);
             _emitEvent(event);
+        } else {
+            ::rtype::Logger::instance().warning(
+                "DestroySystem: Entity destroyed without valid NetworkId - "
+                "clients will not be notified");
         }
         registry.killEntity(entity);
     }
