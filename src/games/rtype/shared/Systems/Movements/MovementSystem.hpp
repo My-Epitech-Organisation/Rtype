@@ -7,9 +7,9 @@
 
 #pragma once
 
+#include "../../../engine/ISystem.hpp"
 #include "../../Components/TransformComponent.hpp"
 #include "../../Components/VelocityComponent.hpp"
-#include "../../../engine/ISystem.hpp"
 
 namespace rtype::games::rtype::shared {
 
