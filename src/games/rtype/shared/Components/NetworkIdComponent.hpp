@@ -15,7 +15,8 @@ namespace rtype::games::rtype::shared {
 /**
  * @brief Sentinel value indicating an uninitialized network ID
  */
-inline constexpr uint32_t INVALID_NETWORK_ID = std::numeric_limits<uint32_t>::max();
+inline constexpr uint32_t INVALID_NETWORK_ID =
+    std::numeric_limits<uint32_t>::max();
 
 /**
  * @struct NetworkIdComponent
