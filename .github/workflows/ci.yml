@@ -393,23 +393,27 @@ jobs:
       - name: Build
         run: cmake --build --preset ${{ matrix.preset }} --target all
 
-      - name: Copy DLLs (Windows only)
+      - name: Prepare Windows dist (exe + DLLs only)
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          echo "Copying DLLs for Windows..."
-          ls -la build/vcpkg_installed/x64-windows/bin/*.dll || echo "No DLLs found"
-          cp build/vcpkg_installed/x64-windows/bin/*.dll build/src/client/ 2>/dev/null || echo "No DLLs copied to client"
-          cp build/vcpkg_installed/x64-windows/bin/*.dll build/src/server/ 2>/dev/null || echo "No DLLs copied to server"
-          echo "Client folder contents:"
-          ls -la build/src/client/
+          set -e
+          mkdir -p build/dist/client build/dist/server
+          echo "Staging Windows client + DLLs"
+          cp -v build/src/client/*.exe build/dist/client/ 2>/dev/null || echo "No client exe found yet"
+          cp -v build/vcpkg_installed/x64-windows/bin/*.dll build/dist/client/ 2>/dev/null || echo "No DLLs found for client"
+          echo "Client dist contents:" && ls -la build/dist/client/ || true
+          echo "Staging Windows server + DLLs"
+          cp -v build/src/server/*.exe build/dist/server/ 2>/dev/null || echo "No server exe found yet"
+          cp -v build/vcpkg_installed/x64-windows/bin/*.dll build/dist/server/ 2>/dev/null || echo "No DLLs found for server"
+          echo "Server dist contents:" && ls -la build/dist/server/ || true
 
       - name: Upload Client Artifact (Windows)
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
           name: r-type_client-${{ matrix.os }}
-          path: build/src/client/
+          path: build/dist/client/
           if-no-files-found: warn
 
       - name: Upload Server Artifact (Windows)
@@ -417,7 +421,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: r-type_server-${{ matrix.os }}
-          path: build/src/server/
+          path: build/dist/server/
           if-no-files-found: warn
 
       - name: Upload Client Artifact (Linux)
