@@ -24,6 +24,7 @@
 #include "Graphic/TextureRectComponent.hpp"
 #include "Graphic/VelocityComponent.hpp"
 #include "SceneManager/SceneException.hpp"
+#include <random>
 
 void MainMenuScene::update() {}
 
@@ -37,6 +38,10 @@ MainMenuScene::MainMenuScene(
     std::function<void(const SceneManager::Scene&)> switchToScene,
     sf::RenderWindow& window)
     : AScene(ecs, assetsManager) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib150(1, 150);
+    std::uniform_int_distribution<> distrib15(1, 15);
     auto seed = static_cast<unsigned int>(time(nullptr));
 
     this->_listEntity = (EntityFactory::createBackground(
@@ -59,11 +64,11 @@ MainMenuScene::MainMenuScene(
             fakePlayer, std::pair<int, int>({0, 0}),
             std::pair<int, int>({33, 17}));
         this->_registry->emplaceComponent<Position>(
-            fakePlayer, (-10 * (rand_r(&seed) % 150) + 50),
-            72 * (rand_r(&seed) % 15));
+            fakePlayer, (-10 * (distrib150(gen) + 50)),
+            72 * (distrib15(gen) % 15));
         this->_registry->emplaceComponent<Size>(fakePlayer, 2.2, 2.2);
         this->_registry->emplaceComponent<Velocity>(
-            fakePlayer, (rand_r(&seed) % 150) + 75, 0.f);
+            fakePlayer, (distrib150(gen) % 150) + 75, 0.f);
         this->_listEntity.push_back(fakePlayer);
     }
     this->_listEntity.push_back(EntityFactory::createButton(
