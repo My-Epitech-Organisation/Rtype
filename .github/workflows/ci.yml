@@ -393,6 +393,15 @@ jobs:
       - name: Build
         run: cmake --build --preset ${{ matrix.preset }}
 
+      - name: Copy DLLs (Windows only)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          echo "Available DLLs in vcpkg:"
+          ls -la build/${{ matrix.os }}/vcpkg_installed/x64-windows/bin/*.dll || echo "No DLLs found"
+          cp build/${{ matrix.os }}/vcpkg_installed/x64-windows/bin/sfml-*-3.dll build/src/client/Release/ 2>/dev/null || echo "SFML DLLs not found"
+          cp build/${{ matrix.os }}/vcpkg_installed/x64-windows/bin/*.dll build/src/client/Release/ 2>/dev/null || echo "No additional DLLs copied"
+
       - name: Upload Client Artifact
         uses: actions/upload-artifact@v4
         with:
