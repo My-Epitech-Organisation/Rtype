@@ -67,7 +67,7 @@ SceneManager::SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
     });
     this->_sceneList.emplace(IN_GAME, [ecs, texture, &window, this]() {
         return std::make_unique<GameScene>(
-            ecs, texture, window, this->_switchToScene);
+            ecs, texture, window, this->_keybinds, this->_switchToScene);
     });
     this->setCurrentScene(MAIN_MENU);
 }
