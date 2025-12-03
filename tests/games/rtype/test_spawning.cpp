@@ -58,7 +58,8 @@ TEST(ComponentsTest, VelocityComponentSetValues) {
 TEST(ComponentsTest, NetworkIdComponentDefault) {
     NetworkIdComponent netId;
 
-    EXPECT_EQ(netId.networkId, 0u);
+    EXPECT_EQ(netId.networkId, INVALID_NETWORK_ID);
+    EXPECT_FALSE(netId.isValid());
 }
 
 TEST(ComponentsTest, NetworkIdComponentSetValue) {
@@ -66,6 +67,7 @@ TEST(ComponentsTest, NetworkIdComponentSetValue) {
     netId.networkId = 42;
 
     EXPECT_EQ(netId.networkId, 42u);
+    EXPECT_TRUE(netId.isValid());
 }
 
 TEST(ComponentsTest, AIComponentDefault) {
@@ -278,7 +280,7 @@ TEST_F(GameEngineTest, CleanupSystemDestroysEntitiesOutOfBounds) {
     engine->initialize();
 
     // Spawn enemies and let them move off screen
-    // At 100 speed, it takes ~9 seconds to cross 900 pixels
+    // At 100 speed, enemies need ~21 seconds to cross from spawn (1970) to cleanup (-100)
     for (int i = 0; i < 600; ++i) {  // 10 seconds at 60 FPS
         engine->update(1.0f / 60.0f);
     }
@@ -286,44 +288,61 @@ TEST_F(GameEngineTest, CleanupSystemDestroysEntitiesOutOfBounds) {
     // Store count after initial spawning
     size_t countAfterSpawning = engine->getEntityCount();
 
+    // Skip if no enemies spawned
+    if (countAfterSpawning == 0) {
+        GTEST_SKIP() << "No enemies spawned, skipping cleanup test";
+    }
+
+    // Track destroy events to verify cleanup is working
+    std::vector<rtype::engine::GameEvent> destroyEvents;
+    engine->setEventCallback([&destroyEvents](const rtype::engine::GameEvent& event) {
+        if (event.type == rtype::engine::GameEventType::EntityDestroyed) {
+            destroyEvents.push_back(event);
+        }
+    });
+
     // Run more updates to let enemies move off screen
-    for (int i = 0; i < 600; ++i) {  // Another 10 seconds
+    // Need ~21 seconds total, already ran 10, so run 15 more to be safe
+    for (int i = 0; i < 900; ++i) {  // 15 seconds at 60 FPS
         engine->update(1.0f / 60.0f);
     }
 
-    // Some enemies should have been destroyed (moved off screen)
-    // New ones may have spawned, but the total should be managed
+    // Verify that some enemies were destroyed (cleanup system is working)
+    EXPECT_FALSE(destroyEvents.empty()) << "Expected some enemies to be destroyed after moving off screen";
+
+    // Total count should still respect max enemies limit
     EXPECT_LE(engine->getEntityCount(), GameConfig::MAX_ENEMIES);
-    (void)countAfterSpawning;  // May be used in future assertions
 }
 
 TEST_F(GameEngineTest, CleanupSystemEmitsDestroyEvents) {
     engine->initialize();
 
-    std::vector<rtype::engine::GameEvent> receivedEvents;
-    engine->setEventCallback([&receivedEvents](const rtype::engine::GameEvent& event) {
-        receivedEvents.push_back(event);
+    std::vector<rtype::engine::GameEvent> spawnEvents;
+    std::vector<rtype::engine::GameEvent> destroyEvents;
+    engine->setEventCallback([&spawnEvents, &destroyEvents](const rtype::engine::GameEvent& event) {
+        if (event.type == rtype::engine::GameEventType::EntitySpawned) {
+            spawnEvents.push_back(event);
+        } else if (event.type == rtype::engine::GameEventType::EntityDestroyed) {
+            destroyEvents.push_back(event);
+        }
     });
 
-    // Run enough updates for enemies to spawn and move off screen
-    for (int i = 0; i < 1200; ++i) {  // 20 seconds at 60 FPS
+    // Enemies spawn at x = SCREEN_WIDTH + SPAWN_MARGIN (1970) and need to reach
+    // CLEANUP_LEFT (-100). At speed 100, this takes ~20.7 seconds.
+    // We simulate 25 seconds to ensure enemies have time to be destroyed.
+    for (int i = 0; i < 1500; ++i) {  // 25 seconds at 60 FPS
         engine->update(1.0f / 60.0f);
     }
 
-    // Check for destroy events
-    bool hasDestroyEvent = false;
-    for (const auto& event : receivedEvents) {
-        if (event.type == rtype::engine::GameEventType::EntityDestroyed) {
-            hasDestroyEvent = true;
-            break;
-        }
+    // Skip test if no enemies were spawned
+    if (spawnEvents.empty()) {
+        GTEST_SKIP() << "No enemies spawned, skipping destroy events test";
     }
 
-    // Destroy events should have been emitted if enemies left the screen
-    // This test may not always trigger destroy events depending on spawn timing
-    // So we just verify the system runs without crashing
-    EXPECT_TRUE(true);
-    (void)hasDestroyEvent;
+    // If enemies were spawned, some should have been destroyed by now
+    EXPECT_FALSE(destroyEvents.empty())
+        << "Expected destroy events after enemies moved off screen. "
+        << "Spawned: " << spawnEvents.size() << " enemies";
 }
 
 // =============================================================================
