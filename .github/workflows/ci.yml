@@ -401,25 +401,39 @@ jobs:
           ls -la build/vcpkg_installed/x64-windows/bin/*.dll || echo "No DLLs found"
           cp build/vcpkg_installed/x64-windows/bin/*.dll build/src/client/Release/ 2>/dev/null || echo "No DLLs copied to client"
           cp build/vcpkg_installed/x64-windows/bin/*.dll build/src/server/Release/ 2>/dev/null || echo "No DLLs copied to server"
+          echo "Client Release folder contents:"
+          ls -la build/src/client/Release/
 
-      - name: Upload Client Artifact
+      - name: Upload Client Artifact (Windows)
+        if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
           name: r-type_client-${{ matrix.os }}
-          path: |
-            build/src/client/Release/*
-            build/src/client/r-type_client*
-            build/src/client/*.exe
+          path: build/src/client/Release/
           if-no-files-found: warn
 
-      - name: Upload Server Artifact
+      - name: Upload Server Artifact (Windows)
+        if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
           name: r-type_server-${{ matrix.os }}
-          path: |
-            build/src/server/Release/*
-            build/src/server/r-type_server*
-            build/src/server/*.exe
+          path: build/src/server/Release/
+          if-no-files-found: warn
+
+      - name: Upload Client Artifact (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: r-type_client-${{ matrix.os }}
+          path: build/src/client/r-type_client
+          if-no-files-found: warn
+
+      - name: Upload Server Artifact (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: r-type_server-${{ matrix.os }}
+          path: build/src/server/r-type_server
           if-no-files-found: warn
 
       - name: Build Summary
