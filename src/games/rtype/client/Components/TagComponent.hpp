@@ -11,5 +11,9 @@
 struct StaticTextTag {};
 struct ButtonTag {};
 struct RepeatingTag {};
+struct PlayerTag {};
+struct ControllableTag {};
+struct PauseMenuTag {};
+struct BackgroundTag {};
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_TAGCOMPONENT_HPP_

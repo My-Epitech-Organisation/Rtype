@@ -10,11 +10,13 @@ find_package(SFML
 )
 
 add_subdirectory(Components)
+add_subdirectory(Drawable)
 add_subdirectory(Systems)
 
 add_library(rtype_game_client STATIC
     $<TARGET_OBJECTS:rtype_game_client_systems>
     $<TARGET_OBJECTS:rtype_game_client_components>
+    $<TARGET_OBJECTS:rtype_game_client_drawables>
 )
 
 target_include_directories(rtype_game_client PUBLIC
@@ -32,4 +34,5 @@ target_link_libraries(rtype_game_client PUBLIC
 
 target_link_libraries(rtype_game_client PRIVATE
     rtype_game_client_components
+    rtype_game_client_drawables
 )

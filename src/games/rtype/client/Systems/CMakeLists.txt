@@ -26,6 +26,7 @@ target_link_libraries(rtype_game_client_systems
     rtype-graphic-scene-manager
     rtype_game_shared
     rtype_game_client_components
+    rtype_game_client_drawables
 )
 
 target_include_directories(rtype_game_client_systems PUBLIC
