@@ -129,6 +129,44 @@ jobs:
           name: r-type_server-windows-latest
           path: ./artifacts
 
+      - name: Validate downloaded artifacts
+        run: |
+          echo "🔍 Validating downloaded artifacts..."
+
+          MISSING=0
+
+          # Check for Linux client executable
+          if [ ! -f "artifacts/r-type_client" ] && [ ! -d "artifacts/r-type_client-ubuntu-latest" ]; then
+            echo "❌ Missing Linux client artifact (expected: artifacts/r-type_client or artifacts/r-type_client-ubuntu-latest/)"
+            MISSING=1
+          fi
+
+          # Check for Windows client directory
+          if [ ! -d "artifacts/r-type_client-windows-latest" ]; then
+            echo "❌ Missing Windows client artifact (expected: artifacts/r-type_client-windows-latest/)"
+            MISSING=1
+          fi
+
+          # Check for Linux server executable
+          if [ ! -f "artifacts/r-type_server" ] && [ ! -d "artifacts/r-type_server-ubuntu-latest" ]; then
+            echo "❌ Missing Linux server artifact (expected: artifacts/r-type_server or artifacts/r-type_server-ubuntu-latest/)"
+            MISSING=1
+          fi
+
+          # Check for Windows server directory
+          if [ ! -d "artifacts/r-type_server-windows-latest" ]; then
+            echo "❌ Missing Windows server artifact (expected: artifacts/r-type_server-windows-latest/)"
+            MISSING=1
+          fi
+
+          if [ "$MISSING" -ne 0 ]; then
+            echo "❌ One or more required artifacts are missing. This likely means the CI workflow failed to build or upload artifacts."
+            echo "Please check the CI workflow run for this branch to ensure all builds completed successfully."
+            exit 1
+          fi
+
+          echo "✅ All required artifacts are present"
+
       - name: Extract and prepare release assets
         run: |
           mkdir -p release-assets
@@ -166,10 +204,16 @@ jobs:
           echo "Current HEAD: $(git rev-parse HEAD)"
           echo "Current branch: $BRANCH"
           echo "Latest tag: $LATEST_TAG"
-          echo "Latest tag commit: $(git rev-parse $LATEST_TAG 2>/dev/null || echo 'tag not found')"
 
-          NEW_COMMITS=$(git rev-list "${LATEST_TAG}"..HEAD --count 2>/dev/null || echo "0")
-          echo "New commits since ${LATEST_TAG}: ${NEW_COMMITS}"
+          if git rev-parse --verify "$LATEST_TAG" >/dev/null 2>&1; then
+            echo "Latest tag commit: $(git rev-parse $LATEST_TAG)"
+            NEW_COMMITS=$(git rev-list "${LATEST_TAG}"..HEAD --count)
+            echo "New commits since ${LATEST_TAG}: ${NEW_COMMITS}"
+          else
+            echo "Latest tag not found (likely v0.0.0 default), counting all commits"
+            NEW_COMMITS=$(git rev-list HEAD --count)
+            echo "Total commits in repository: ${NEW_COMMITS}"
+          fi
 
           if [ "${NEW_COMMITS}" -gt 0 ]; then
             echo "skip=false" >> $GITHUB_OUTPUT

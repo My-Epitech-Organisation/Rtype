@@ -397,15 +397,30 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          set -e
           mkdir -p build/dist/client build/dist/server
           echo "Staging Windows client + DLLs"
-          cp -v build/src/client/*.exe build/dist/client/ 2>/dev/null || echo "No client exe found yet"
-          cp -v build/vcpkg_installed/x64-windows/bin/*.dll build/dist/client/ 2>/dev/null || echo "No DLLs found for client"
+          if ! ls build/src/client/*.exe >/dev/null 2>&1; then
+            echo "Error: No client executable found"
+            exit 1
+          fi
+          cp -v build/src/client/*.exe build/dist/client/
+          if ! ls build/vcpkg_installed/x64-windows/bin/*.dll >/dev/null 2>&1; then
+            echo "Error: No DLLs found for client"
+            exit 1
+          fi
+          cp -v build/vcpkg_installed/x64-windows/bin/*.dll build/dist/client/
           echo "Client dist contents:" && ls -la build/dist/client/ || true
           echo "Staging Windows server + DLLs"
-          cp -v build/src/server/*.exe build/dist/server/ 2>/dev/null || echo "No server exe found yet"
-          cp -v build/vcpkg_installed/x64-windows/bin/*.dll build/dist/server/ 2>/dev/null || echo "No DLLs found for server"
+          if ! ls build/src/server/*.exe >/dev/null 2>&1; then
+            echo "Error: No server executable found"
+            exit 1
+          fi
+          cp -v build/src/server/*.exe build/dist/server/
+          if ! ls build/vcpkg_installed/x64-windows/bin/*.dll >/dev/null 2>&1; then
+            echo "Error: No DLLs found for server"
+            exit 1
+          fi
+          cp -v build/vcpkg_installed/x64-windows/bin/*.dll build/dist/server/
           echo "Server dist contents:" && ls -la build/dist/server/ || true
 
       - name: Upload Client Artifact (Windows)
