@@ -21,7 +21,8 @@ using shared::NetworkIdComponent;
 
 DestroySystem::DestroySystem(EventEmitter emitter,
                              EnemyCountUpdater enemyCountDecrementer)
-    : _emitEvent(std::move(emitter)),
+    : ASystem("DestroySystem"),
+      _emitEvent(std::move(emitter)),
       _decrementEnemyCount(std::move(enemyCountDecrementer)) {}
 
 void DestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {

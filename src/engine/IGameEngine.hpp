@@ -38,7 +38,7 @@ struct GameEvent {
 };
 
 /**
- * @brief Abstract interface for the game engine
+ * @brief Pure interface for the game engine
  *
  * This interface allows the server to interact with the game engine
  * without being coupled to its implementation. The game engine is
@@ -48,6 +48,9 @@ struct GameEvent {
  * - Complete decoupling from network/server implementation
  * - Event-based communication for state changes
  * - Deterministic update with fixed delta time
+ *
+ * @note Concrete game engines should inherit from AGameEngine rather
+ * than this interface directly.
  *
  * Example usage:
  * @code

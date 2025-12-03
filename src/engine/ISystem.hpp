@@ -15,13 +15,16 @@ namespace rtype::engine {
 
 /**
  * @class ISystem
- * @brief Abstract base class for all game systems
+ * @brief Pure interface for all game systems
  *
  * Systems are responsible for updating entities based on their components.
  * Each system should have a single responsibility (Single Responsibility
  * Principle).
  *
  * Systems can be shared between client and server, or specific to one side.
+ *
+ * @note Concrete systems should inherit from ASystem rather than this
+ * interface directly.
  */
 class ISystem {
    public:
@@ -50,19 +53,16 @@ class ISystem {
      * @brief Check if system is enabled
      * @return true if system should be updated
      */
-    [[nodiscard]] bool isEnabled() const noexcept { return _enabled; }
+    [[nodiscard]] virtual bool isEnabled() const noexcept = 0;
 
     /**
      * @brief Enable or disable the system
      * @param enabled New enabled state
      */
-    void setEnabled(bool enabled) noexcept { _enabled = enabled; }
+    virtual void setEnabled(bool enabled) noexcept = 0;
 
    protected:
     ISystem() = default;
-
-   private:
-    bool _enabled = true;  ///< Whether system is active
 };
 
 }  // namespace rtype::engine

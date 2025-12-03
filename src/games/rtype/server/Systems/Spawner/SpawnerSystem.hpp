@@ -10,8 +10,8 @@
 #include <functional>
 #include <random>
 
-#include "../../../../../engine/IGameEngine.hpp"
-#include "../../../../../engine/ISystem.hpp"
+#include "../../../../../engine/AGameEngine.hpp"
+#include "../../../../../engine/ASystem.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -36,7 +36,7 @@ struct SpawnerConfig {
  * This is a server-specific system - clients receive spawn events
  * through the network, they don't spawn enemies themselves.
  */
-class SpawnerSystem : public ::rtype::engine::ISystem {
+class SpawnerSystem : public ::rtype::engine::ASystem {
    public:
     using EventEmitter = std::function<void(const engine::GameEvent&)>;
 
@@ -48,10 +48,6 @@ class SpawnerSystem : public ::rtype::engine::ISystem {
     SpawnerSystem(EventEmitter emitter, SpawnerConfig config);
 
     void update(ECS::Registry& registry, float deltaTime) override;
-
-    [[nodiscard]] const std::string getName() const noexcept override {
-        return "SpawnerSystem";
-    }
 
     /**
      * @brief Get the current enemy count (read-only)

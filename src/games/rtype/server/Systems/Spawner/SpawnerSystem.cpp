@@ -25,7 +25,8 @@ constexpr float BYDOS_SLAVE_SIZE = 32.0F;
 constexpr int BYDOS_SLAVE_HEALTH = 10;
 
 SpawnerSystem::SpawnerSystem(EventEmitter emitter, SpawnerConfig config)
-    : _emitEvent(std::move(emitter)),
+    : ASystem("SpawnerSystem"),
+      _emitEvent(std::move(emitter)),
       _config(config),
       _rng(getRandomSeed()),
       _spawnTimeDist(config.minSpawnInterval, config.maxSpawnInterval),
