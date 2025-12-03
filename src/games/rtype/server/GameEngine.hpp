@@ -22,7 +22,7 @@ namespace rtype::games::rtype::server {
  * @brief Game configuration constants
  *
  * These define the game world boundaries and spawn parameters.
- * Can be externalized to configuration files in the future.
+ * @attention Will be externalized to configuration files in the future.
  */
 struct GameConfig {
     // Screen boundaries
