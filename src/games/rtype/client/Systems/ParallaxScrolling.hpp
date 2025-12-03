@@ -17,7 +17,7 @@
 class ParallaxScrolling {
    public:
     static void update(const std::shared_ptr<ECS::Registry>& registry,
-                       sf::View view);
+                       const sf::View& view);
 };
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_PARALLAXSCROLLING_HPP_

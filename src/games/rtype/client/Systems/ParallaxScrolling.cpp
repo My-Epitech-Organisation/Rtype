@@ -11,17 +11,20 @@
 #include "../Components/ParallaxComponent.hpp"
 
 void ParallaxScrolling::update(const std::shared_ptr<ECS::Registry>& registry,
-                               sf::View view) {
+                               const sf::View& view) {
     registry->view<Parallax, Image>().each(
         [&view](auto _, auto& parallax, auto& spriteData) {
             float effectiveOffset = view.getCenter().x * parallax.scrollFactor;
+            int intOffset = static_cast<int>(effectiveOffset);
+            float remainder = effectiveOffset - intOffset;
 
             spriteData.sprite.setPosition(
-                {view.getCenter().x - view.getSize().x / 2.f, 0.f});
+                {view.getCenter().x - view.getSize().x / 2.f - remainder,
+                 view.getCenter().y - view.getSize().y / 2.f});
 
             sf::IntRect newRect(
-                {static_cast<int>(effectiveOffset), 0},
-                {static_cast<int>(view.getSize().x),
+                {intOffset, 0},
+                {static_cast<int>(view.getSize().x) + 1,
                  static_cast<int>(spriteData.sprite.getTexture().getSize().y)});
 
             spriteData.sprite.setTextureRect(newRect);

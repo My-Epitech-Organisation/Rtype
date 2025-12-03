@@ -17,28 +17,32 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     const std::shared_ptr<AssetManager>& assetManager,
     const std::string& PageName) {
     auto background = registry->spawnEntity();
-    registry->emplaceComponent<Image>(
-        background, assetManager->textureManager->get("bg_menu"));
+    auto& bgTexture = assetManager->textureManager->get("bg_menu");
+    bgTexture.setRepeated(true);
+    registry->emplaceComponent<Image>(background, bgTexture);
     registry->emplaceComponent<Position>(background, 0, 0);
     registry->emplaceComponent<Parallax>(background, 0.2, true);
 
     auto planet1 = registry->spawnEntity();
-    registry->emplaceComponent<Image>(
-        planet1, assetManager->textureManager->get("bg_planet_1"));
+    auto& planet1Texture = assetManager->textureManager->get("bg_planet_1");
+    planet1Texture.setRepeated(true);
+    registry->emplaceComponent<Image>(planet1, planet1Texture);
     registry->emplaceComponent<Position>(planet1, 0, 0);
-    registry->emplaceComponent<Parallax>(planet1, 0.5, true);
+    registry->emplaceComponent<Parallax>(planet1, 0.7, true);
 
     auto planet2 = registry->spawnEntity();
-    registry->emplaceComponent<Image>(
-        planet2, assetManager->textureManager->get("bg_planet_2"));
+    auto& planet2Texture = assetManager->textureManager->get("bg_planet_2");
+    planet2Texture.setRepeated(true);
+    registry->emplaceComponent<Image>(planet2, planet2Texture);
     registry->emplaceComponent<Position>(planet2, 0, 0);
     registry->emplaceComponent<Parallax>(planet2, 0.4, true);
 
     auto planet3 = registry->spawnEntity();
-    registry->emplaceComponent<Image>(
-        planet3, assetManager->textureManager->get("bg_planet_3"));
+    auto& planet3Texture = assetManager->textureManager->get("bg_planet_3");
+    planet3Texture.setRepeated(true);
+    registry->emplaceComponent<Image>(planet3, planet3Texture);
     registry->emplaceComponent<Position>(planet3, 0, 0);
-    registry->emplaceComponent<Parallax>(planet3, 0.4, true);
+    registry->emplaceComponent<Parallax>(planet3, 0.2, true);
 
     if (PageName.empty()) return {planet1, planet2, planet3, background};
     auto appTitle = registry->spawnEntity();
