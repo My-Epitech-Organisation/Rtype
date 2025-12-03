@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 #include <vector>
+#include <string>
 
 #include "../../src/network/Packet.hpp"
 #include "../../src/network/Serializer.hpp"
@@ -16,7 +17,7 @@ using namespace rtype::network;
 // TestData struct with explicit packing to ensure no padding for reliable serialization testing
 #pragma pack(1)
 struct TestData {
-    int x;
+    int32_t x;
     float y;
 };
 #pragma pack()
@@ -29,6 +30,7 @@ enum class AIBehavior : uint8_t {
     Stationary
 };
 
+#pragma pack(1)
 struct AIComponent {
     AIBehavior behavior = AIBehavior::MoveLeft;
     float speed = 100.0F;
@@ -36,6 +38,7 @@ struct AIComponent {
     float targetX = 0.0F;
     float targetY = 0.0F;
 };
+#pragma pack()
 
 TEST(SerializationTest, SerializeDeserializePacket) {
     Packet packet(PacketType::PlayerInput);
@@ -118,7 +121,7 @@ TEST(SerializationTest, SerializeDeserializeStringWithSpecialChars) {
 }
 
 TEST(SerializationTest, DeserializeStringInvalidBuffer) {
-    std::vector<uint8_t> invalidBuffer = {1, 2, 3};  // Too small for size_t
+    std::vector<uint8_t> invalidBuffer = {1, 2, 3};  // Too small for uint32_t
     EXPECT_THROW(Serializer::deserializeString(invalidBuffer), std::runtime_error);
 }
 
@@ -154,9 +157,11 @@ TEST(SerializationTest, SerializeDeserializeAIComponentDefault) {
 }
 
 TEST(SerializationTest, SerializeDeserializeMultipleFloats) {
+    #pragma pack(1)
     struct FloatArray {
         float values[5];
     };
+    #pragma pack()
 
     FloatArray arr;
     arr.values[0] = 1.1f;
@@ -174,12 +179,14 @@ TEST(SerializationTest, SerializeDeserializeMultipleFloats) {
 }
 
 TEST(SerializationTest, SerializeDeserializeMixedTypes) {
+    #pragma pack(1)
     struct MixedData {
         int id;
         float health;
         bool alive;
         char name[16];
     };
+    #pragma pack()
 
     MixedData data;
     data.id = 42;
@@ -231,25 +238,29 @@ TEST(SerializationTest, NetworkByteOrderPrimitiveRoundTrip) {
 
     // Serialize → ByteOrder → "Send"
     auto bytes = Serializer::serialize(original);
-    Serializer::toNetworkByteOrder<uint32_t>(bytes);
+    bytes = Serializer::toNetworkByteOrder<uint32_t>(bytes);
 
     // "Receive" → ByteOrder → Deserialize
-    Serializer::fromNetworkByteOrder<uint32_t>(bytes);
+    bytes = Serializer::fromNetworkByteOrder<uint32_t>(bytes);
     auto restored = Serializer::deserialize<uint32_t>(bytes);
 
     EXPECT_EQ(restored, original);
 }
 
 TEST(SerializationTest, NetworkByteOrderStructRoundTrip) {
-    // Test struct with network byte order conversion
+    // Test struct byte order conversion round-trip on a single machine
+    // Note: This validates that the generic struct conversion algorithm works correctly.
+    // The conversion treats all 4-byte fields as uint32_t and all 2-byte fields as uint16_t.
+    // This test passes on same-endian machines but does NOT validate true cross-platform compatibility.
+    // True cross-platform testing would require testing between different endianness systems.
     TestData original{42, 3.14f};
 
     // Serialize → ByteOrder → "Send"
     auto bytes = Serializer::serialize(original);
-    Serializer::toNetworkByteOrder<TestData>(bytes);
+    bytes = Serializer::toNetworkByteOrder<TestData>(bytes);
 
     // "Receive" → ByteOrder → Deserialize
-    Serializer::fromNetworkByteOrder<TestData>(bytes);
+    bytes = Serializer::fromNetworkByteOrder<TestData>(bytes);
     auto restored = Serializer::deserialize<TestData>(bytes);
 
     EXPECT_EQ(restored.x, original.x);
@@ -257,7 +268,12 @@ TEST(SerializationTest, NetworkByteOrderStructRoundTrip) {
 }
 
 TEST(SerializationTest, NetworkByteOrderAIComponentRoundTrip) {
-    // Test AIComponent struct with network byte order
+    // Test AIComponent struct byte order conversion round-trip on a single machine
+    // Note: This validates that the generic struct conversion algorithm works correctly for AIComponent.
+    // The conversion treats all 4-byte fields as uint32_t and all 2-byte fields as uint16_t.
+    // AIComponent is properly packed with #pragma pack(1) for reliable serialization.
+    // This test passes on same-endian machines but does NOT validate true cross-platform compatibility.
+    // True cross-platform testing would require testing between different endianness systems.
     AIComponent original;
     original.behavior = AIBehavior::Patrol;
     original.speed = 250.5f;
@@ -267,10 +283,10 @@ TEST(SerializationTest, NetworkByteOrderAIComponentRoundTrip) {
 
     // Serialize → ByteOrder → "Send"
     auto bytes = Serializer::serialize(original);
-    Serializer::toNetworkByteOrder<AIComponent>(bytes);
+    bytes = Serializer::toNetworkByteOrder<AIComponent>(bytes);
 
     // "Receive" → ByteOrder → Deserialize
-    Serializer::fromNetworkByteOrder<AIComponent>(bytes);
+    bytes = Serializer::fromNetworkByteOrder<AIComponent>(bytes);
     auto restored = Serializer::deserialize<AIComponent>(bytes);
 
     EXPECT_EQ(restored.behavior, original.behavior);
@@ -281,7 +297,10 @@ TEST(SerializationTest, NetworkByteOrderAIComponentRoundTrip) {
 }
 
 TEST(SerializationTest, NetworkByteOrderComplexStruct) {
-    // Test struct with multiple field types
+    // Test struct with multiple field types and byte order conversion
+    // Note: This test validates the generic struct conversion functions but runs on a single machine.
+    // The conversion treats all 4-byte fields as uint32_t and all 2-byte fields as uint16_t.
+    // True cross-platform validation would require testing between different endianness systems.
     #pragma pack(1)
     struct ComplexData {
         uint32_t id;
@@ -295,10 +314,10 @@ TEST(SerializationTest, NetworkByteOrderComplexStruct) {
 
     // Serialize → ByteOrder → "Send"
     auto bytes = Serializer::serialize(original);
-    Serializer::toNetworkByteOrder<ComplexData>(bytes);
+    bytes = Serializer::toNetworkByteOrder<ComplexData>(bytes);
 
     // "Receive" → ByteOrder → Deserialize
-    Serializer::fromNetworkByteOrder<ComplexData>(bytes);
+    bytes = Serializer::fromNetworkByteOrder<ComplexData>(bytes);
     auto restored = Serializer::deserialize<ComplexData>(bytes);
 
     EXPECT_EQ(restored.id, original.id);
@@ -333,9 +352,9 @@ TEST(SerializationTest, MultipleStructsInSequence) {
     auto bytes3 = Serializer::serialize(data3);
 
     // Convert to network order
-    Serializer::toNetworkByteOrder<TestData>(bytes1);
-    Serializer::toNetworkByteOrder<TestData>(bytes2);
-    Serializer::toNetworkByteOrder<TestData>(bytes3);
+    bytes1 = Serializer::toNetworkByteOrder<TestData>(bytes1);
+    bytes2 = Serializer::toNetworkByteOrder<TestData>(bytes2);
+    bytes3 = Serializer::toNetworkByteOrder<TestData>(bytes3);
 
     // Combine into single buffer
     allBytes.insert(allBytes.end(), bytes1.begin(), bytes1.end());
@@ -352,9 +371,9 @@ TEST(SerializationTest, MultipleStructsInSequence) {
     offset += structSize;
     std::vector<uint8_t> recv3(allBytes.begin() + offset, allBytes.begin() + offset + structSize);
 
-    Serializer::fromNetworkByteOrder<TestData>(recv1);
-    Serializer::fromNetworkByteOrder<TestData>(recv2);
-    Serializer::fromNetworkByteOrder<TestData>(recv3);
+    recv1 = Serializer::fromNetworkByteOrder<TestData>(recv1);
+    recv2 = Serializer::fromNetworkByteOrder<TestData>(recv2);
+    recv3 = Serializer::fromNetworkByteOrder<TestData>(recv3);
 
     auto restored1 = Serializer::deserialize<TestData>(recv1);
     auto restored2 = Serializer::deserialize<TestData>(recv2);
@@ -397,8 +416,8 @@ TEST(SerializationTest, NetworkByteOrderConsistency) {
 
     // Convert to network and back multiple times
     for (int i = 0; i < 10; ++i) {
-        Serializer::toNetworkByteOrder<uint32_t>(bytes);
-        Serializer::fromNetworkByteOrder<uint32_t>(bytes);
+        bytes = Serializer::toNetworkByteOrder<uint32_t>(bytes);
+        bytes = Serializer::fromNetworkByteOrder<uint32_t>(bytes);
     }
 
     auto restored = Serializer::deserialize<uint32_t>(bytes);
@@ -410,8 +429,8 @@ TEST(SerializationTest, ZeroValuedStruct) {
     TestData zero{0, 0.0f};
 
     auto bytes = Serializer::serialize(zero);
-    Serializer::toNetworkByteOrder<TestData>(bytes);
-    Serializer::fromNetworkByteOrder<TestData>(bytes);
+    bytes = Serializer::toNetworkByteOrder<TestData>(bytes);
+    bytes = Serializer::fromNetworkByteOrder<TestData>(bytes);
     auto restored = Serializer::deserialize<TestData>(bytes);
 
     EXPECT_EQ(restored.x, 0);
@@ -423,8 +442,8 @@ TEST(SerializationTest, NegativeValuesStruct) {
     TestData negative{-42, -3.14f};
 
     auto bytes = Serializer::serialize(negative);
-    Serializer::toNetworkByteOrder<TestData>(bytes);
-    Serializer::fromNetworkByteOrder<TestData>(bytes);
+    bytes = Serializer::toNetworkByteOrder<TestData>(bytes);
+    bytes = Serializer::fromNetworkByteOrder<TestData>(bytes);
     auto restored = Serializer::deserialize<TestData>(bytes);
 
     EXPECT_EQ(restored.x, -42);
@@ -450,8 +469,8 @@ TEST(SerializationTest, MaxValuedStruct) {
     };
 
     auto bytes = Serializer::serialize(extreme);
-    Serializer::toNetworkByteOrder<ExtremValues>(bytes);
-    Serializer::fromNetworkByteOrder<ExtremValues>(bytes);
+    bytes = Serializer::toNetworkByteOrder<ExtremValues>(bytes);
+    bytes = Serializer::fromNetworkByteOrder<ExtremValues>(bytes);
     auto restored = Serializer::deserialize<ExtremValues>(bytes);
 
     EXPECT_EQ(restored.maxUint, UINT32_MAX);
@@ -465,7 +484,9 @@ TEST(SerializationTest, MaxValuedStruct) {
 // ============================================================================
 
 TEST(SerializationTest, CrossPlatformPlayerDataWorkflow) {
-    // Simulate complete cross-platform workflow with PlayerData struct
+    // Test the complete serialization workflow with byte order conversion
+    // Note: This test validates the conversion functions but runs on a single machine.
+    // True cross-platform testing would require testing between different endianness systems.
     #pragma pack(1)
     struct PlayerData {
         uint32_t playerId;
@@ -478,7 +499,7 @@ TEST(SerializationTest, CrossPlatformPlayerDataWorkflow) {
     };
     #pragma pack()
 
-    // CLIENT SIDE (e.g., Windows little-endian)
+    // CLIENT SIDE - Prepare data for network transmission
     PlayerData clientPlayer{
         12345,          // playerId
         100.5f,         // posX
@@ -494,33 +515,36 @@ TEST(SerializationTest, CrossPlatformPlayerDataWorkflow) {
     EXPECT_EQ(clientBytes.size(), sizeof(PlayerData));
 
     // Step 2: Client converts to network byte order before sending
-    Serializer::toNetworkByteOrder<PlayerData>(clientBytes);
+    clientBytes = Serializer::toNetworkByteOrder<PlayerData>(clientBytes);
 
-    // Step 3: Simulate network transmission (bytes are now in big-endian)
+    // Step 3: Simulate network transmission (data is now in network byte order)
     std::vector<uint8_t> networkBytes = clientBytes;
 
-    // SERVER SIDE (e.g., Linux little-endian or any other platform)
-    // Step 4: Server receives network bytes
-    std::vector<uint8_t> serverBytes = networkBytes;
+    // RECEIVER SIDE - Process received network data
+    // Step 4: Receiver gets network bytes
+    std::vector<uint8_t> receiverBytes = networkBytes;
 
-    // Step 5: Server converts from network byte order to native
-    Serializer::fromNetworkByteOrder<PlayerData>(serverBytes);
+    // Step 5: Receiver converts from network byte order to native
+    receiverBytes = Serializer::fromNetworkByteOrder<PlayerData>(receiverBytes);
 
-    // Step 6: Server deserializes to struct
-    auto serverPlayer = Serializer::deserialize<PlayerData>(serverBytes);
+    // Step 6: Receiver deserializes to struct
+    auto receiverPlayer = Serializer::deserialize<PlayerData>(receiverBytes);
 
-    // Verify all fields match exactly
-    EXPECT_EQ(serverPlayer.playerId, 12345u);
-    EXPECT_FLOAT_EQ(serverPlayer.posX, 100.5f);
-    EXPECT_FLOAT_EQ(serverPlayer.posY, 250.75f);
-    EXPECT_FLOAT_EQ(serverPlayer.velocityX, 5.5f);
-    EXPECT_FLOAT_EQ(serverPlayer.velocityY, -3.25f);
-    EXPECT_EQ(serverPlayer.health, 100);
-    EXPECT_EQ(serverPlayer.team, 1);
+    // Verify all fields match exactly (validates conversion functions work correctly)
+    EXPECT_EQ(receiverPlayer.playerId, 12345u);
+    EXPECT_FLOAT_EQ(receiverPlayer.posX, 100.5f);
+    EXPECT_FLOAT_EQ(receiverPlayer.posY, 250.75f);
+    EXPECT_FLOAT_EQ(receiverPlayer.velocityX, 5.5f);
+    EXPECT_FLOAT_EQ(receiverPlayer.velocityY, -3.25f);
+    EXPECT_EQ(receiverPlayer.health, 100);
+    EXPECT_EQ(receiverPlayer.team, 1);
 }
 
 TEST(SerializationTest, CrossPlatformGameStateWorkflow) {
-    // Simulate game state synchronization across platforms
+    // Test game state serialization workflow with struct byte order conversion
+    // Note: This test validates that struct byte order conversion works correctly on a single machine.
+    // The conversion treats all 4-byte fields as uint32_t and all 2-byte fields as uint16_t.
+    // True cross-platform testing would require testing between different endianness systems.
     #pragma pack(1)
     struct GameState {
         uint32_t frameNumber;
@@ -532,7 +556,7 @@ TEST(SerializationTest, CrossPlatformGameStateWorkflow) {
     };
     #pragma pack()
 
-    // Game server creates game state
+    // Create game state data
     GameState serverState{
         1000,           // frameNumber
         45.67f,         // gameTime (seconds)
@@ -542,19 +566,19 @@ TEST(SerializationTest, CrossPlatformGameStateWorkflow) {
         0               // isPaused (false)
     };
 
-    // Server workflow: Serialize → Network Order → Send
+    // Serialize → Network Order → Simulate Send
     auto serverBytes = Serializer::serialize(serverState);
-    Serializer::toNetworkByteOrder<GameState>(serverBytes);
+    serverBytes = Serializer::toNetworkByteOrder<GameState>(serverBytes);
 
     // Simulate network transmission
     std::vector<uint8_t> networkPacket = serverBytes;
 
-    // Client workflow: Receive → Network Order → Deserialize
+    // Receive → Network Order → Deserialize
     auto clientBytes = networkPacket;
-    Serializer::fromNetworkByteOrder<GameState>(clientBytes);
+    clientBytes = Serializer::fromNetworkByteOrder<GameState>(clientBytes);
     auto clientState = Serializer::deserialize<GameState>(clientBytes);
 
-    // Verify perfect match
+    // Verify perfect match (validates conversion functions work correctly)
     EXPECT_EQ(clientState.frameNumber, 1000u);
     EXPECT_FLOAT_EQ(clientState.gameTime, 45.67f);
     EXPECT_EQ(clientState.playerCount, 4);
@@ -564,7 +588,10 @@ TEST(SerializationTest, CrossPlatformGameStateWorkflow) {
 }
 
 TEST(SerializationTest, CrossPlatformEntityUpdateWorkflow) {
-    // Simulate entity update in networked game
+    // Test entity update serialization workflow with struct byte order conversion
+    // Note: This test validates that struct byte order conversion works correctly on a single machine.
+    // The conversion treats all 4-byte fields as uint32_t and all 2-byte fields as uint16_t.
+    // True cross-platform testing would require testing between different endianness systems.
     #pragma pack(1)
     struct EntityUpdate {
         uint32_t entityId;
@@ -585,16 +612,16 @@ TEST(SerializationTest, CrossPlatformEntityUpdateWorkflow) {
 
     // Host A: Serialize and prepare for network
     auto hostABytes = Serializer::serialize(original);
-    Serializer::toNetworkByteOrder<EntityUpdate>(hostABytes);
+    hostABytes = Serializer::toNetworkByteOrder<EntityUpdate>(hostABytes);
 
     // Network transmission simulation
     std::vector<uint8_t> transmitted = hostABytes;
 
     // Host B: Receive and process
-    Serializer::fromNetworkByteOrder<EntityUpdate>(transmitted);
+    transmitted = Serializer::fromNetworkByteOrder<EntityUpdate>(transmitted);
     auto received = Serializer::deserialize<EntityUpdate>(transmitted);
 
-    // Verify exact match
+    // Verify exact match (validates conversion functions work correctly)
     EXPECT_EQ(received.entityId, 9876u);
     EXPECT_FLOAT_EQ(received.x, 150.25f);
     EXPECT_FLOAT_EQ(received.y, 200.75f);
@@ -607,7 +634,9 @@ TEST(SerializationTest, CrossPlatformEntityUpdateWorkflow) {
 }
 
 TEST(SerializationTest, CrossPlatformBidirectionalWorkflow) {
-    // Simulate bidirectional communication (Client ↔ Server)
+    // Test bidirectional communication workflow with byte order conversion
+    // Note: This test validates the conversion functions but runs on a single machine.
+    // True cross-platform testing would require testing between different endianness systems.
     #pragma pack(1)
     struct PlayerInput {
         uint32_t playerId;
@@ -629,10 +658,10 @@ TEST(SerializationTest, CrossPlatformBidirectionalWorkflow) {
 
     // Client sends
     auto c2s_bytes = Serializer::serialize(clientInput);
-    Serializer::toNetworkByteOrder<PlayerInput>(c2s_bytes);
+    c2s_bytes = Serializer::toNetworkByteOrder<PlayerInput>(c2s_bytes);
 
     // Server receives
-    Serializer::fromNetworkByteOrder<PlayerInput>(c2s_bytes);
+    c2s_bytes = Serializer::fromNetworkByteOrder<PlayerInput>(c2s_bytes);
     auto serverInput = Serializer::deserialize<PlayerInput>(c2s_bytes);
 
     EXPECT_EQ(serverInput.playerId, 42u);
@@ -652,10 +681,10 @@ TEST(SerializationTest, CrossPlatformBidirectionalWorkflow) {
 
     // Server sends back
     auto s2c_bytes = Serializer::serialize(serverResponse);
-    Serializer::toNetworkByteOrder<PlayerInput>(s2c_bytes);
+    s2c_bytes = Serializer::toNetworkByteOrder<PlayerInput>(s2c_bytes);
 
     // Client receives
-    Serializer::fromNetworkByteOrder<PlayerInput>(s2c_bytes);
+    s2c_bytes = Serializer::fromNetworkByteOrder<PlayerInput>(s2c_bytes);
     auto clientResponse = Serializer::deserialize<PlayerInput>(s2c_bytes);
 
     EXPECT_EQ(clientResponse.playerId, 42u);
@@ -670,7 +699,7 @@ TEST(SerializationTest, CrossPlatformRawByteVerification) {
     uint32_t value = 0x12345678;
 
     auto bytes = Serializer::serialize(value);
-    Serializer::toNetworkByteOrder<uint32_t>(bytes);
+    bytes = Serializer::toNetworkByteOrder<uint32_t>(bytes);
 
     // In network byte order (big-endian), bytes should be: 0x12, 0x34, 0x56, 0x78
     EXPECT_EQ(bytes.size(), 4u);
@@ -680,7 +709,45 @@ TEST(SerializationTest, CrossPlatformRawByteVerification) {
     EXPECT_EQ(bytes[3], 0x78);  // Least significant byte last
 
     // Convert back and verify
-    Serializer::fromNetworkByteOrder<uint32_t>(bytes);
+    bytes = Serializer::fromNetworkByteOrder<uint32_t>(bytes);
     auto restored = Serializer::deserialize<uint32_t>(bytes);
     EXPECT_EQ(restored, 0x12345678u);
+}
+
+TEST(SerializationTest, StructByteOrderConversionValidation) {
+    // Verify that struct byte order conversion actually works
+    #pragma pack(1)
+    struct TestStruct {
+        uint32_t id;
+        uint16_t flags;
+        uint8_t type;
+    };
+    #pragma pack()
+
+    TestStruct original{0x12345678, 0xABCD, 0x42};
+
+    // Serialize and convert to network byte order
+    auto bytes = Serializer::serialize(original);
+    bytes = Serializer::toNetworkByteOrder<TestStruct>(bytes);
+
+    // Verify bytes are in big-endian format
+    EXPECT_EQ(bytes.size(), 7u);
+    // uint32_t id: 0x12345678 -> big-endian: 0x12, 0x34, 0x56, 0x78
+    EXPECT_EQ(bytes[0], 0x12);
+    EXPECT_EQ(bytes[1], 0x34);
+    EXPECT_EQ(bytes[2], 0x56);
+    EXPECT_EQ(bytes[3], 0x78);
+    // uint16_t flags: 0xABCD -> big-endian: 0xAB, 0xCD
+    EXPECT_EQ(bytes[4], 0xAB);
+    EXPECT_EQ(bytes[5], 0xCD);
+    // uint8_t type: unchanged
+    EXPECT_EQ(bytes[6], 0x42);
+
+    // Convert back and verify round-trip
+    bytes = Serializer::fromNetworkByteOrder<TestStruct>(bytes);
+    auto restored = Serializer::deserialize<TestStruct>(bytes);
+
+    EXPECT_EQ(restored.id, 0x12345678u);
+    EXPECT_EQ(restored.flags, 0xABCDu);
+    EXPECT_EQ(restored.type, 0x42u);
 }

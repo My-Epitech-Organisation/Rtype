@@ -175,7 +175,7 @@ class Serializer {
      * (Network-safe)
      *
      * Converts a string to binary format by first writing the string length
-     * as a uint64_t in network byte order, followed by the string data.
+     * as a uint32_t in network byte order, followed by the string data.
      * This allows for safe deserialization of strings of any length across
      * platforms.
      *
@@ -194,6 +194,27 @@ class Serializer {
      * // Contains: [4 bytes length in network order][11 bytes "Hello World"]
      * @endcode
      */
+    static std::vector<uint8_t> serialize(const std::string& str);
+
+    /**
+     * @brief Deserialize a string from binary format
+     *
+     * Converts binary data back to a string. The first 4 bytes contain the
+     * string length in network byte order, followed by the string characters.
+     *
+     * @param buffer Binary data to deserialize
+     * @return Deserialized string
+     * @throws std::runtime_error if buffer is malformed
+     *
+     * Example usage:
+     * @code
+     * auto buffer = Serializer::serialize("Hello World");
+     * std::string restored = Serializer::deserializeString(buffer);
+     * // restored == "Hello World"
+     * @endcode
+     */
+    static std::string deserializeString(const std::vector<uint8_t>& buffer);
+
     /**
      * @brief Convert serialized buffer to network byte order (Big-Endian)
      *
@@ -202,21 +223,24 @@ class Serializer {
      * sending data over the network.
      *
      * @tparam T Type of the serialized data
-     * @param buffer Reference to the buffer to convert (modified in-place)
+     * @param buffer Buffer to convert
+     * @return New buffer with data in network byte order
      *
      * @note For primitives (uint16_t, uint32_t, int*, float), converts the
-     * value. For structs, you must ensure fields are packed and understood.
+     * value. For structs, converts all 2-byte and 4-byte fields assuming
+     * packed layout with RFC-compliant types.
      *
      * Example:
      * @code
      * uint32_t value = 42;
      * auto bytes = Serializer::serialize(value);
-     * Serializer::toNetworkByteOrder<uint32_t>(bytes);
-     * // bytes now in big-endian format
+     * auto networkBytes = Serializer::toNetworkByteOrder<uint32_t>(bytes);
+     * // networkBytes now in big-endian format
      * @endcode
      */
     template <typename T>
-    static void toNetworkByteOrder(std::vector<uint8_t>& buffer) {
+    static std::vector<uint8_t> toNetworkByteOrder(
+        const std::vector<uint8_t>& buffer) {
         static_assert(
             std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>,
             "T must be trivially copyable and standard layout");
@@ -228,15 +252,34 @@ class Serializer {
                 std::to_string(buffer.size()) + " bytes");
         }
 
-        // For supported primitives, use ByteOrder utilities
+        std::vector<uint8_t> result = buffer;
+
         if constexpr (ByteOrder::is_network_numeric_v<T>) {
             T value;
-            std::memcpy(&value, buffer.data(), sizeof(T));
+            std::memcpy(&value, result.data(), sizeof(T));
             T networkValue = ByteOrder::toNetwork(value);
-            std::memcpy(buffer.data(), &networkValue, sizeof(T));
+            std::memcpy(result.data(), &networkValue, sizeof(T));
+        } else {
+            size_t offset = 0;
+            while (offset + 4 <= result.size()) {
+                uint32_t value32;
+                std::memcpy(&value32, result.data() + offset, sizeof(uint32_t));
+                uint32_t network32 = ByteOrder::toNetwork(value32);
+                std::memcpy(result.data() + offset, &network32,
+                            sizeof(uint32_t));
+                offset += 4;
+            }
+            while (offset + 2 <= result.size()) {
+                uint16_t value16;
+                std::memcpy(&value16, result.data() + offset, sizeof(uint16_t));
+                uint16_t network16 = ByteOrder::toNetwork(value16);
+                std::memcpy(result.data() + offset, &network16,
+                            sizeof(uint16_t));
+                offset += 2;
+            }
         }
-        // For structs, user must handle field conversion manually
-        // or the struct must contain only single-byte types
+
+        return result;
     }
 
     /**
@@ -247,18 +290,21 @@ class Serializer {
      * the network and BEFORE deserialize().
      *
      * @tparam T Type of the serialized data
-     * @param buffer Reference to the buffer to convert (modified in-place)
+     * @param buffer Buffer to convert
+     * @return New buffer with data in host byte order
      *
      * Example:
      * @code
-     * auto bytes = receiveFromNetwork();
-     * Serializer::fromNetworkByteOrder<uint32_t>(bytes);
-     * uint32_t value = Serializer::deserialize<uint32_t>(bytes);
+     * auto networkBytes = receiveFromNetwork();
+     * auto hostBytes =
+     * Serializer::fromNetworkByteOrder<uint32_t>(networkBytes); uint32_t value
+     * = Serializer::deserialize<uint32_t>(hostBytes);
      * // value now in native byte order
      * @endcode
      */
     template <typename T>
-    static void fromNetworkByteOrder(std::vector<uint8_t>& buffer) {
+    static std::vector<uint8_t> fromNetworkByteOrder(
+        const std::vector<uint8_t>& buffer) {
         static_assert(
             std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>,
             "T must be trivially copyable and standard layout");
@@ -270,16 +316,35 @@ class Serializer {
                 std::to_string(buffer.size()) + " bytes");
         }
 
+        std::vector<uint8_t> result = buffer;
+
         if constexpr (ByteOrder::is_network_numeric_v<T>) {
             T networkValue;
-            std::memcpy(&networkValue, buffer.data(), sizeof(T));
+            std::memcpy(&networkValue, result.data(), sizeof(T));
             T value = ByteOrder::fromNetwork(networkValue);
-            std::memcpy(buffer.data(), &value, sizeof(T));
+            std::memcpy(result.data(), &value, sizeof(T));
+        } else {
+            size_t offset = 0;
+            while (offset + 4 <= result.size()) {
+                uint32_t network32;
+                std::memcpy(&network32, result.data() + offset,
+                            sizeof(uint32_t));
+                uint32_t value32 = ByteOrder::fromNetwork(network32);
+                std::memcpy(result.data() + offset, &value32, sizeof(uint32_t));
+                offset += 4;
+            }
+            while (offset + 2 <= result.size()) {
+                uint16_t network16;
+                std::memcpy(&network16, result.data() + offset,
+                            sizeof(uint16_t));
+                uint16_t value16 = ByteOrder::fromNetwork(network16);
+                std::memcpy(result.data() + offset, &value16, sizeof(uint16_t));
+                offset += 2;
+            }
         }
-    }
 
-    static std::vector<uint8_t> serialize(const std::string& str);
-    static std::string deserializeString(const std::vector<uint8_t>& buffer);
+        return result;
+    }
 };
 
 }  // namespace rtype::network
