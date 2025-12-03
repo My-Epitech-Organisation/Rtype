@@ -17,14 +17,12 @@ static void createSection(std::shared_ptr<ECS::Registry> registry,
                           std::vector<ECS::Entity>& entities,
                           const std::string& title, float x, float y,
                           float width, float height) {
-    // Background
     auto bg = registry->spawnEntity();
     registry->emplaceComponent<Position>(bg, x, y);
     registry->emplaceComponent<Rectangle>(
         bg, std::pair<float, float>{width, height}, sf::Color(0, 0, 0, 150),
         sf::Color(0, 0, 0, 150));
 
-    // Add outline manually since Rectangle constructor doesn't take it
     if (registry->hasComponent<Rectangle>(bg)) {
         auto& rect = registry->getComponent<Rectangle>(bg);
         rect.outlineThickness = 2.0f;
@@ -33,7 +31,6 @@ static void createSection(std::shared_ptr<ECS::Registry> registry,
 
     entities.push_back(bg);
 
-    // Title
     auto titleEnt = registry->spawnEntity();
     registry->emplaceComponent<Position>(titleEnt, x + 20, y + 10);
     registry->emplaceComponent<Text>(titleEnt,
