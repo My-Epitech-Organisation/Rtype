@@ -7,7 +7,6 @@ add_library(rtype_game_client_components STATIC
     UserEventComponent.hpp
     TagComponent.hpp
     ParallaxComponent.hpp
-    VelocityComponent.hpp
     TextureRectComponent.hpp
     BoxingComponent.hpp
 )
