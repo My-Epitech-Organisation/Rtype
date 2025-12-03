@@ -25,7 +25,7 @@ using shared::VelocityComponent;
 SpawnerSystem::SpawnerSystem(EventEmitter emitter, SpawnerConfig config)
     : _emitEvent(std::move(emitter)),
       _config(config),
-      _rng(std::random_device {}()),
+      _rng(getRandomSeed()),
       _spawnTimeDist(config.minSpawnInterval, config.maxSpawnInterval),
       _spawnYDist(config.minSpawnY, config.maxSpawnY) {
     generateNextSpawnTime();
