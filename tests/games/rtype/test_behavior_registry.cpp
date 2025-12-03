@@ -269,3 +269,109 @@ TEST_F(BehaviorRegistryTest, SizeIsNoexcept) {
     auto& registry = BehaviorRegistry::instance();
     EXPECT_TRUE(noexcept(registry.size()));
 }
+
+TEST_F(BehaviorRegistryTest, GetBehaviorAfterClear) {
+    auto& registry = BehaviorRegistry::instance();
+    registry.registerBehavior<MoveLeftBehavior>();
+
+    EXPECT_NE(registry.getBehavior(AIBehavior::MoveLeft), nullptr);
+
+    registry.clear();
+
+    EXPECT_EQ(registry.getBehavior(AIBehavior::MoveLeft), nullptr);
+}
+
+TEST_F(BehaviorRegistryTest, HasBehaviorAfterClear) {
+    auto& registry = BehaviorRegistry::instance();
+    registry.registerBehavior<MoveLeftBehavior>();
+
+    EXPECT_TRUE(registry.hasBehavior(AIBehavior::MoveLeft));
+
+    registry.clear();
+
+    EXPECT_FALSE(registry.hasBehavior(AIBehavior::MoveLeft));
+}
+
+TEST_F(BehaviorRegistryTest, RegisterAllBehaviorsIndividually) {
+    auto& registry = BehaviorRegistry::instance();
+
+    registry.registerBehavior<MoveLeftBehavior>();
+    EXPECT_EQ(registry.size(), 1u);
+
+    registry.registerBehavior<SineWaveBehavior>(50.0F, 2.0F);
+    EXPECT_EQ(registry.size(), 2u);
+
+    registry.registerBehavior<ChaseBehavior>(5.0F);
+    EXPECT_EQ(registry.size(), 3u);
+
+    registry.registerBehavior<PatrolBehavior>();
+    EXPECT_EQ(registry.size(), 4u);
+
+    registry.registerBehavior<StationaryBehavior>();
+    EXPECT_EQ(registry.size(), 5u);
+}
+
+TEST_F(BehaviorRegistryTest, GetBehaviorForAllTypes) {
+    registerDefaultBehaviors();
+
+    auto& registry = BehaviorRegistry::instance();
+
+    auto moveLeft = registry.getBehavior(AIBehavior::MoveLeft);
+    ASSERT_NE(moveLeft, nullptr);
+    EXPECT_EQ(moveLeft->getName(), "MoveLeftBehavior");
+
+    auto sineWave = registry.getBehavior(AIBehavior::SineWave);
+    ASSERT_NE(sineWave, nullptr);
+    EXPECT_EQ(sineWave->getName(), "SineWaveBehavior");
+
+    auto chase = registry.getBehavior(AIBehavior::Chase);
+    ASSERT_NE(chase, nullptr);
+    EXPECT_EQ(chase->getName(), "ChaseBehavior");
+
+    auto patrol = registry.getBehavior(AIBehavior::Patrol);
+    ASSERT_NE(patrol, nullptr);
+    EXPECT_EQ(patrol->getName(), "PatrolBehavior");
+
+    auto stationary = registry.getBehavior(AIBehavior::Stationary);
+    ASSERT_NE(stationary, nullptr);
+    EXPECT_EQ(stationary->getName(), "StationaryBehavior");
+}
+
+TEST_F(BehaviorRegistryTest, ApplyAllBehaviorsSequentially) {
+    registerDefaultBehaviors();
+
+    auto& registry = BehaviorRegistry::instance();
+
+    AIComponent ai;
+    ai.speed = 100.0F;
+    ai.targetX = 0.0F;
+    ai.targetY = 0.0F;
+    TransformComponent transform;
+    transform.x = 100.0F;
+    transform.y = 100.0F;
+    VelocityComponent velocity;
+
+    // Apply MoveLeft
+    auto moveLeft = registry.getBehavior(AIBehavior::MoveLeft);
+    moveLeft->apply(ai, transform, velocity, 0.016F);
+    EXPECT_FLOAT_EQ(velocity.vx, -100.0F);
+
+    // Apply Stationary
+    auto stationary = registry.getBehavior(AIBehavior::Stationary);
+    stationary->apply(ai, transform, velocity, 0.016F);
+    EXPECT_FLOAT_EQ(velocity.vx, 0.0F);
+
+    // Apply Chase
+    auto chase = registry.getBehavior(AIBehavior::Chase);
+    chase->apply(ai, transform, velocity, 0.016F);
+    EXPECT_LT(velocity.vx, 0.0F);
+}
+
+TEST_F(BehaviorRegistryTest, RegisterDefaultBehaviorsTwice) {
+    registerDefaultBehaviors();
+    EXPECT_EQ(BehaviorRegistry::instance().size(), 5u);
+
+    // Registering again should not add duplicates
+    registerDefaultBehaviors();
+    EXPECT_EQ(BehaviorRegistry::instance().size(), 5u);
+}

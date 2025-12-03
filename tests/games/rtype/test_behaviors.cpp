@@ -377,3 +377,160 @@ TEST_F(StationaryBehaviorTest, ApplyIgnoresAISpeed) {
     EXPECT_FLOAT_EQ(velocity.vx, 0.0F);
     EXPECT_FLOAT_EQ(velocity.vy, 0.0F);
 }
+
+// =============================================================================
+// ChaseBehavior Edge Cases
+// =============================================================================
+
+TEST_F(ChaseBehaviorTest, ApplyWhenAtTarget) {
+    ChaseBehavior behavior;
+    ai.targetX = 100.0F;
+    ai.targetY = 100.0F;
+    transform.x = 100.0F;
+    transform.y = 100.0F;
+
+    behavior.apply(ai, transform, velocity, 0.016F);
+
+    // Should stop when at target (distance = 0, which is < stopDistance)
+    EXPECT_FLOAT_EQ(velocity.vx, 0.0F);
+    EXPECT_FLOAT_EQ(velocity.vy, 0.0F);
+}
+
+TEST_F(ChaseBehaviorTest, ApplyJustOutsideStopDistance) {
+    ChaseBehavior behavior(1.0F);  // Stop distance of 1
+    ai.targetX = 0.0F;
+    ai.targetY = 0.0F;
+    transform.x = 1.5F;  // Just outside stop distance
+    transform.y = 0.0F;
+
+    behavior.apply(ai, transform, velocity, 0.016F);
+
+    // Should still be moving
+    EXPECT_NE(velocity.vx, 0.0F);
+}
+
+TEST_F(ChaseBehaviorTest, ApplyWithZeroSpeed) {
+    ChaseBehavior behavior;
+    ai.speed = 0.0F;
+    ai.targetX = 0.0F;
+    ai.targetY = 0.0F;
+    transform.x = 100.0F;
+    transform.y = 0.0F;
+
+    behavior.apply(ai, transform, velocity, 0.016F);
+
+    // With zero speed, velocity should be zero
+    EXPECT_FLOAT_EQ(velocity.vx, 0.0F);
+    EXPECT_FLOAT_EQ(velocity.vy, 0.0F);
+}
+
+TEST_F(ChaseBehaviorTest, ApplyWithNegativeTargetCoordinates) {
+    ChaseBehavior behavior;
+    ai.targetX = -100.0F;
+    ai.targetY = -100.0F;
+    transform.x = 0.0F;
+    transform.y = 0.0F;
+
+    behavior.apply(ai, transform, velocity, 0.016F);
+
+    // Should move toward negative coordinates
+    EXPECT_LT(velocity.vx, 0.0F);
+    EXPECT_LT(velocity.vy, 0.0F);
+}
+
+TEST_F(ChaseBehaviorTest, ApplyWithLargeStopDistance) {
+    ChaseBehavior behavior(1000.0F);  // Very large stop distance
+    ai.targetX = 0.0F;
+    ai.targetY = 0.0F;
+    transform.x = 100.0F;
+    transform.y = 0.0F;
+
+    behavior.apply(ai, transform, velocity, 0.016F);
+
+    // Should stop because within large stop distance
+    EXPECT_FLOAT_EQ(velocity.vx, 0.0F);
+    EXPECT_FLOAT_EQ(velocity.vy, 0.0F);
+}
+
+// =============================================================================
+// SineWaveBehavior Edge Cases
+// =============================================================================
+
+TEST_F(SineWaveBehaviorTest, ApplyWithZeroAmplitude) {
+    SineWaveBehavior behavior(0.0F, 2.0F);
+    behavior.apply(ai, transform, velocity, 0.5F);
+
+    EXPECT_FLOAT_EQ(velocity.vx, -ai.speed);
+    EXPECT_FLOAT_EQ(velocity.vy, 0.0F);
+}
+
+TEST_F(SineWaveBehaviorTest, ApplyWithZeroFrequency) {
+    SineWaveBehavior behavior(50.0F, 0.0F);
+    behavior.apply(ai, transform, velocity, 0.5F);
+
+    EXPECT_FLOAT_EQ(velocity.vx, -ai.speed);
+    EXPECT_FLOAT_EQ(velocity.vy, 0.0F);  // cos(0) * 0 = 0
+}
+
+TEST_F(SineWaveBehaviorTest, ApplyMultipleTimes) {
+    SineWaveBehavior behavior(50.0F, 2.0F);
+
+    for (int i = 0; i < 10; ++i) {
+        behavior.apply(ai, transform, velocity, 0.1F);
+    }
+
+    EXPECT_FLOAT_EQ(ai.stateTimer, 1.0F);
+    EXPECT_FLOAT_EQ(velocity.vx, -ai.speed);
+}
+
+TEST_F(SineWaveBehaviorTest, ApplyWithLargeStateTimer) {
+    SineWaveBehavior behavior(50.0F, 2.0F);
+    ai.stateTimer = 1000.0F;
+
+    behavior.apply(ai, transform, velocity, 0.1F);
+
+    EXPECT_FLOAT_EQ(ai.stateTimer, 1000.1F);
+    EXPECT_FLOAT_EQ(velocity.vx, -ai.speed);
+}
+
+// =============================================================================
+// MoveLeftBehavior Edge Cases
+// =============================================================================
+
+TEST_F(MoveLeftBehaviorTest, ApplyWithNegativeSpeed) {
+    ai.speed = -100.0F;
+    behavior.apply(ai, transform, velocity, 0.016F);
+
+    // -(-100) = 100, so entity would move right
+    EXPECT_FLOAT_EQ(velocity.vx, 100.0F);
+}
+
+TEST_F(MoveLeftBehaviorTest, ApplyMultipleTimes) {
+    for (int i = 0; i < 10; ++i) {
+        behavior.apply(ai, transform, velocity, 0.016F);
+    }
+
+    EXPECT_FLOAT_EQ(velocity.vx, -ai.speed);
+    EXPECT_FLOAT_EQ(velocity.vy, 0.0F);
+}
+
+// =============================================================================
+// PatrolBehavior Edge Cases
+// =============================================================================
+
+TEST_F(PatrolBehaviorTest, ApplyWithZeroSpeed) {
+    ai.speed = 0.0F;
+    behavior.apply(ai, transform, velocity, 0.016F);
+
+    EXPECT_FLOAT_EQ(velocity.vx, 0.0F);
+    EXPECT_FLOAT_EQ(velocity.vy, 0.0F);
+}
+
+TEST_F(PatrolBehaviorTest, ApplyMultipleTimes) {
+    for (int i = 0; i < 10; ++i) {
+        behavior.apply(ai, transform, velocity, 0.016F);
+    }
+
+    EXPECT_FLOAT_EQ(velocity.vx, -ai.speed);
+    EXPECT_FLOAT_EQ(velocity.vy, 0.0F);
+}
