@@ -23,10 +23,6 @@ namespace rtype::network {
  * - Reserved/System (0xF0-0xFF)
  */
 enum class OpCode : std::uint8_t {
-    // ========================================================================
-    // Session Management (0x01-0x0F) - RFC Section 5.1
-    // ========================================================================
-
     /// Client requests connection (RELIABLE)
     C_CONNECT = 0x01,
 
@@ -45,10 +41,6 @@ enum class OpCode : std::uint8_t {
     /// Server notifies game state change (RELIABLE)
     S_UPDATE_STATE = 0x06,
 
-    // ========================================================================
-    // Entity Management (0x10-0x1F) - RFC Section 5.2
-    // ========================================================================
-
     /// Server spawns new entity (RELIABLE)
     S_ENTITY_SPAWN = 0x10,
 
@@ -58,19 +50,11 @@ enum class OpCode : std::uint8_t {
     /// Server destroys entity (RELIABLE)
     S_ENTITY_DESTROY = 0x12,
 
-    // ========================================================================
-    // Input & Reconciliation (0x20-0x2F) - RFC Section 5.3
-    // ========================================================================
-
     /// Client sends input state (UNRELIABLE)
     C_INPUT = 0x20,
 
     /// Server sends authoritative position (UNRELIABLE)
     S_UPDATE_POS = 0x21,
-
-    // ========================================================================
-    // Reserved/System (0xF0-0xFF) - RFC Section 7
-    // ========================================================================
 
     /// Latency measurement request
     PING = 0xF0,
@@ -78,10 +62,6 @@ enum class OpCode : std::uint8_t {
     /// Latency measurement response
     PONG = 0xF1,
 };
-
-// ============================================================================
-// OpCode Categories
-// ============================================================================
 
 namespace OpCodeRange {
 constexpr std::uint8_t kSessionMin = 0x01;
@@ -93,10 +73,6 @@ constexpr std::uint8_t kInputMax = 0x2F;
 constexpr std::uint8_t kSystemMin = 0xF0;
 constexpr std::uint8_t kSystemMax = 0xFF;
 }  // namespace OpCodeRange
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
 
 /**
  * @brief Check if an OpCode requires reliable delivery (ACK)
@@ -110,19 +86,16 @@ constexpr std::uint8_t kSystemMax = 0xFF;
  */
 [[nodiscard]] constexpr bool isReliable(OpCode opcode) noexcept {
     switch (opcode) {
-        // Session Management - all reliable
         case OpCode::C_CONNECT:
         case OpCode::S_ACCEPT:
         case OpCode::DISCONNECT:
         case OpCode::C_GET_USERS:
         case OpCode::R_GET_USERS:
         case OpCode::S_UPDATE_STATE:
-        // Entity - spawn/destroy are reliable
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_DESTROY:
             return true;
 
-        // Unreliable (frequent updates, can afford loss)
         case OpCode::S_ENTITY_MOVE:
         case OpCode::C_INPUT:
         case OpCode::S_UPDATE_POS:
@@ -130,7 +103,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::PONG:
             return false;
     }
-    return false;  // Unknown opcodes are unreliable by default
+    return false;
 }
 
 /**
@@ -143,10 +116,10 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::C_CONNECT:
         case OpCode::C_GET_USERS:
         case OpCode::C_INPUT:
-        case OpCode::PING:  // Client can ping
+        case OpCode::PING:
             return true;
 
-        case OpCode::DISCONNECT:  // Can be sent by either
+        case OpCode::DISCONNECT:
             return true;
 
         default:
@@ -168,10 +141,10 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_UPDATE_POS:
-        case OpCode::PONG:  // Server responds to ping
+        case OpCode::PONG:
             return true;
 
-        case OpCode::DISCONNECT:  // Can be sent by either
+        case OpCode::DISCONNECT:
             return true;
 
         default:
