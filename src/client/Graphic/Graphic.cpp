@@ -24,7 +24,7 @@ void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event>& event) {
         return;
     }
     const auto& key = event->getIf<sf::Event::KeyReleased>();
-    if (key && key->code == this->_keybinds.getKeyBinding(GameAction::PAUSE)) {
+    if (key && key->code == this->_keybinds->getKeyBinding(GameAction::PAUSE)) {
         if (*this->_sceneManager == SceneManager::IN_GAME) {
             this->_sceneManager->setCurrentScene(SceneManager::PAUSE_MENU);
         } else if (*this->_sceneManager == SceneManager::PAUSE_MENU) {
@@ -34,10 +34,10 @@ void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event>& event) {
 }
 
 void Graphic::_pollEvents() {
-    while (const std::optional event = this->_window.pollEvent()) {
+    while (const std::optional event = this->_window->pollEvent()) {
         if (!event) return;
         if (event->is<sf::Event::Closed>()) {
-            this->_window.close();
+            this->_window->close();
         }
         if (event->is<sf::Event::KeyReleased>()) {
             this->_handleKeyReleasedEvent(event);
@@ -62,15 +62,15 @@ void Graphic::_update() {
 }
 
 void Graphic::_display() {
-    this->_window.clear();
+    this->_window->clear();
     RenderSystem::draw(this->_registry, this->_window);
-    BoxingSystem::update(this->_registry, this->_window);
-    this->_sceneManager->draw(this->_window);
-    this->_window.display();
+    BoxingSystem::draw(this->_registry, this->_window);
+    this->_sceneManager->draw();
+    this->_window->display();
 }
 
 void Graphic::loop() {
-    while (this->_window.isOpen()) {
+    while (this->_window->isOpen()) {
         this->_pollEvents();
         this->_update();
         this->_display();
@@ -78,12 +78,12 @@ void Graphic::loop() {
 }
 
 Graphic::Graphic(const std::shared_ptr<ECS::Registry>& registry)
-    : _registry(std::move(registry)),
-      _keybinds(),
-      _window(sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}),
-              "R-Type - Epitech 2025"),
+    : _registry(registry),
       _view(sf::FloatRect({0, 0}, {1920, 1080})) {
-    this->_window.setView(this->_view);
+    this->_keybinds = std::make_shared<KeyboardActions>();
+    this->_window = std::make_shared<sf::RenderWindow>(sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}),
+              "R-Type - Epitech 2025");
+    this->_window->setView(this->_view);
     this->_assetsManager = std::make_shared<AssetManager>();
     this->_sceneManager = std::make_unique<SceneManager>(
         registry, this->_assetsManager, this->_window, this->_keybinds);

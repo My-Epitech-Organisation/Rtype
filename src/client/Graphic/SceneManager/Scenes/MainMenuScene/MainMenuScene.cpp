@@ -28,16 +28,16 @@
 
 void MainMenuScene::update() {}
 
-void MainMenuScene::render(sf::RenderWindow& window) {}
+void MainMenuScene::render(const std::shared_ptr<sf::RenderWindow>& window) {}
 
 void MainMenuScene::pollEvents(const sf::Event& e) {}
 
 MainMenuScene::MainMenuScene(
     const std::shared_ptr<ECS::Registry>& ecs,
     const std::shared_ptr<AssetManager>& assetsManager,
-    std::function<void(const SceneManager::Scene&)> switchToScene,
-    sf::RenderWindow& window)
-    : AScene(ecs, assetsManager) {
+    const std::shared_ptr<sf::RenderWindow>& window,
+    std::function<void(const SceneManager::Scene&)> switchToScene)
+    : AScene(ecs, assetsManager, window) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib150(1, 150);
@@ -105,7 +105,7 @@ MainMenuScene::MainMenuScene(
              sf::Color::White, 36, "Quit"),
         Position(100, 570),
         Rectangle({400, 75}, sf::Color::Blue, sf::Color::Red),
-        std::function<void()>([&window]() { window.close(); })
+        std::function<void()>([this]() { this->_window->close(); })
 
             ));
 }

@@ -8,6 +8,8 @@
 #ifndef SRC_CLIENT_GRAPHIC_GRAPHIC_HPP_
 #define SRC_CLIENT_GRAPHIC_GRAPHIC_HPP_
 
+#include <memory>
+
 #include <SFML/Graphics.hpp>
 
 #include "AssetManager/AssetManager.hpp"
@@ -20,9 +22,9 @@ class Graphic {
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<AssetManager> _assetsManager;
     std::unique_ptr<SceneManager> _sceneManager;
-    KeyboardActions _keybinds;
+    std::shared_ptr<KeyboardActions> _keybinds;
 
-    sf::RenderWindow _window;
+    std::shared_ptr<sf::RenderWindow> _window;
     sf::View _view;
     sf::Clock _mainClock;
 

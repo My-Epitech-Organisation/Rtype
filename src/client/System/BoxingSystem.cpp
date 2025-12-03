@@ -12,8 +12,8 @@
 #include "Graphic/BoxingComponent.hpp"
 #include "Graphic/ImageComponent.hpp"
 
-void BoxingSystem::update(const std::shared_ptr<ECS::Registry>& registry,
-                          sf::RenderWindow& window) {
+void BoxingSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
+                          const std::shared_ptr<sf::RenderWindow>& window) {
     registry->view<Image, BoxingComponent>().each(
         [&window](ECS::Entity _, const Image& img, BoxingComponent& box) {
             sf::FloatRect bounds = img.sprite.getGlobalBounds();
@@ -25,6 +25,6 @@ void BoxingSystem::update(const std::shared_ptr<ECS::Registry>& registry,
             box.box.setOutlineColor(sf::Color::Red);
             box.box.setOutlineThickness(1.f);
 
-            window.draw(box.box);
+            window->draw(box.box);
         });
 }

@@ -15,7 +15,7 @@
 class RenderSystem {
    public:
     static void draw(const std::shared_ptr<ECS::Registry>& registry,
-                     sf::RenderWindow& window);
+                     const std::shared_ptr<sf::RenderWindow>& window);
 };
 
 #endif  // SRC_CLIENT_SYSTEM_RENDERSYSTEM_HPP_

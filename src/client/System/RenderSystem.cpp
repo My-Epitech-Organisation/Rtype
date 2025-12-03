@@ -18,7 +18,7 @@
 #include "ecs/ECS.hpp"
 
 void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
-                        sf::RenderWindow& window) {
+                        const std::shared_ptr<sf::RenderWindow>& window) {
     registry->view<Image, Position>().each(
         [&window, &registry](auto entt, auto& img, auto& pos) {
             img.sprite.setPosition(
@@ -33,7 +33,7 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
                 img.sprite.setTextureRect(texture.rect);
             } catch (...) {
             }
-            window.draw(img.sprite);
+            window->draw(img.sprite);
         });
 
     // Draw Standalone Rectangles (Backgrounds/Panels) - BEFORE Buttons and Text
@@ -50,7 +50,7 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
             rectData.rectangle.setOutlineColor(rectData.outlineColor);
             rectData.rectangle.setFillColor(rectData.currentColor);
 
-            window.draw(rectData.rectangle);
+            window->draw(rectData.rectangle);
         });
 
     registry->view<Rectangle, Text, Position, ButtonTag>().each(
@@ -82,8 +82,8 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
             textData.text.setFillColor(textData.color);
             textData.text.setString(textData.textContent);
 
-            window.draw(rectData.rectangle);
-            window.draw(textData.text);
+            window->draw(rectData.rectangle);
+            window->draw(textData.text);
         });
 
     // Draw Static Text LAST (on top of everything)
@@ -95,6 +95,6 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
             textData.text.setFillColor(textData.color);
             textData.text.setString(textData.textContent);
 
-            window.draw(textData.text);
+            window->draw(textData.text);
         });
 }

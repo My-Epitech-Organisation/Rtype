@@ -17,7 +17,7 @@
 class EventSystem {
    public:
     static void processEvents(const std::shared_ptr<ECS::Registry>& registry,
-                              const sf::Event& e, sf::RenderWindow& window);
+                              const sf::Event& e, const std::shared_ptr<sf::RenderWindow>& window);
 };
 
 #endif  // SRC_CLIENT_SYSTEM_EVENTSYSTEM_HPP_

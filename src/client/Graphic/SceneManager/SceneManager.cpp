@@ -41,14 +41,14 @@ void SceneManager::update() {
     this->_activeScene->update();
 }
 
-void SceneManager::draw(sf::RenderWindow& window) {
+void SceneManager::draw() {
     if (!this->_sceneList.contains(this->_currentScene)) {
         throw SceneNotFound();
     }
     if (!this->_activeScene) {
         throw SceneNotInitialized();
     }
-    this->_activeScene->render(window);
+    this->_activeScene->render(this->_window);
 }
 
 std::ostream& operator<<(std::ostream& os, const SceneManager& sceneManager) {
@@ -78,15 +78,16 @@ std::ostream& operator<<(std::ostream& os, const SceneManager& sceneManager) {
 
 SceneManager::SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
                            const std::shared_ptr<AssetManager>& texture,
-                           sf::RenderWindow& window, KeyboardActions& keybinds)
-    : _keybinds(keybinds) {
+                           const std::shared_ptr<sf::RenderWindow> &window,
+                           const std::shared_ptr<KeyboardActions>& keybinds)
+    : _window(window), _keybinds(keybinds) {
     this->_sceneList.emplace(MAIN_MENU, [ecs, texture, &window, this]() {
-        return std::make_unique<MainMenuScene>(ecs, texture,
-                                               this->_switchToScene, window);
+        return std::make_unique<MainMenuScene>(ecs, texture, window,
+                                               this->_switchToScene);
     });
     this->_sceneList.emplace(SETTINGS_MENU, [ecs, texture, &window, this]() {
         return std::make_unique<SettingsScene>(
-            ecs, texture, this->_switchToScene, window, this->_keybinds);
+            ecs, texture, window, this->_switchToScene, this->_keybinds);
     });
     this->setCurrentScene(MAIN_MENU);
 }

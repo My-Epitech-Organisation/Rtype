@@ -21,7 +21,7 @@
 class SettingsScene : public AScene {
    private:
     std::vector<ECS::Entity> _listEntity;
-    KeyboardActions& _keybinds;
+    const std::shared_ptr<KeyboardActions>& _keybinds;
     std::optional<GameAction> _actionToRebind;
     std::map<GameAction, ECS::Entity> _actionButtons;
 
@@ -31,13 +31,14 @@ class SettingsScene : public AScene {
 
    public:
     void update() override;
-    void render(sf::RenderWindow& window) override;
+    void render(const std::shared_ptr<sf::RenderWindow>& window) override;
     void pollEvents(const sf::Event& e) override;
 
     SettingsScene(const std::shared_ptr<ECS::Registry>& ecs,
                   const std::shared_ptr<AssetManager>& textureManager,
+                  const std::shared_ptr<sf::RenderWindow>& window,
                   std::function<void(const SceneManager::Scene&)> switchToScene,
-                  sf::RenderWindow& window, KeyboardActions& keybinds);
+                  const std::shared_ptr<KeyboardActions>& keybinds);
     ~SettingsScene() override;
 };
 
