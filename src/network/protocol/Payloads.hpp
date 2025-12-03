@@ -15,10 +15,6 @@
 
 namespace rtype::network {
 
-// ============================================================================
-// Game State & Entity Types (RFC Section 5.2)
-// ============================================================================
-
 /**
  * @brief Game state enumeration for S_UPDATE_STATE payload
  */
@@ -52,22 +48,13 @@ inline constexpr std::uint8_t kRight = 0x08;
 inline constexpr std::uint8_t kShoot = 0x10;
 }  // namespace InputMask
 
-// ============================================================================
-// Payload Structures - All packed for wire format
-// ============================================================================
-
 #pragma pack(push, 1)
-
-// ----------------------------------------------------------------------------
-// Session Management Payloads (RFC Section 5.1)
-// ----------------------------------------------------------------------------
 
 /**
  * @brief Payload for C_CONNECT (0x01)
  * @note Empty payload - connection request has no data
  */
 struct ConnectPayload {
-    // Empty - no payload data
 };
 
 /**
@@ -84,7 +71,6 @@ struct AcceptPayload {
  * @note Empty payload - disconnect has no data
  */
 struct DisconnectPayload {
-    // Empty - no payload data
 };
 
 /**
@@ -92,7 +78,6 @@ struct DisconnectPayload {
  * @note Empty payload - request has no data
  */
 struct GetUsersRequestPayload {
-    // Empty - no payload data
 };
 
 /**
@@ -105,7 +90,6 @@ struct GetUsersRequestPayload {
  */
 struct GetUsersResponseHeader {
     std::uint8_t count;  ///< Number of users in the array
-    // Followed by: uint32_t userIds[count]
 };
 
 /**
@@ -125,10 +109,6 @@ struct UpdateStatePayload {
         return static_cast<GameState>(stateId);
     }
 };
-
-// ----------------------------------------------------------------------------
-// Entity Management Payloads (RFC Section 5.2)
-// ----------------------------------------------------------------------------
 
 /**
  * @brief Payload for S_ENTITY_SPAWN (0x10)
@@ -169,10 +149,6 @@ struct EntityDestroyPayload {
     std::uint32_t entityId;  ///< Entity to destroy
 };
 
-// ----------------------------------------------------------------------------
-// Input & Reconciliation Payloads (RFC Section 5.3)
-// ----------------------------------------------------------------------------
-
 /**
  * @brief Payload for C_INPUT (0x20)
  *
@@ -208,16 +184,11 @@ struct UpdatePosPayload {
     float posY;  ///< Authoritative Y position
 };
 
-// ----------------------------------------------------------------------------
-// System Payloads (RFC Section 7)
-// ----------------------------------------------------------------------------
-
 /**
  * @brief Payload for PING (0xF0)
  * @note Empty - timestamp can be tracked via seqId
  */
 struct PingPayload {
-    // Empty - use header seqId for RTT calculation
 };
 
 /**
@@ -225,22 +196,15 @@ struct PingPayload {
  * @note Empty - echoes the seqId from PING via ackId
  */
 struct PongPayload {
-    // Empty - use header ackId to match original PING
 };
 
 #pragma pack(pop)
 
-// ============================================================================
-// Compile-time Size Verification
-// ============================================================================
-
-// Empty payloads
 static_assert(sizeof(ConnectPayload) == 1 || sizeof(ConnectPayload) == 0,
               "ConnectPayload should be empty or minimal");
 static_assert(sizeof(DisconnectPayload) == 1 || sizeof(DisconnectPayload) == 0,
               "DisconnectPayload should be empty or minimal");
 
-// Fixed-size payloads
 static_assert(sizeof(AcceptPayload) == 4,
               "AcceptPayload must be 4 bytes (uint32_t)");
 static_assert(sizeof(GetUsersResponseHeader) == 1,
@@ -257,7 +221,6 @@ static_assert(sizeof(InputPayload) == 1, "InputPayload must be 1 byte");
 static_assert(sizeof(UpdatePosPayload) == 8,
               "UpdatePosPayload must be 8 bytes (4+4)");
 
-// Verify all payloads are trivially copyable
 static_assert(std::is_trivially_copyable_v<AcceptPayload>);
 static_assert(std::is_trivially_copyable_v<UpdateStatePayload>);
 static_assert(std::is_trivially_copyable_v<EntitySpawnPayload>);
@@ -266,7 +229,6 @@ static_assert(std::is_trivially_copyable_v<EntityDestroyPayload>);
 static_assert(std::is_trivially_copyable_v<InputPayload>);
 static_assert(std::is_trivially_copyable_v<UpdatePosPayload>);
 
-// Verify all payloads are standard layout
 static_assert(std::is_standard_layout_v<AcceptPayload>);
 static_assert(std::is_standard_layout_v<UpdateStatePayload>);
 static_assert(std::is_standard_layout_v<EntitySpawnPayload>);
@@ -274,10 +236,6 @@ static_assert(std::is_standard_layout_v<EntityMovePayload>);
 static_assert(std::is_standard_layout_v<EntityDestroyPayload>);
 static_assert(std::is_standard_layout_v<InputPayload>);
 static_assert(std::is_standard_layout_v<UpdatePosPayload>);
-
-// ============================================================================
-// Payload Size Lookup
-// ============================================================================
 
 /**
  * @brief Get the expected payload size for a given OpCode
@@ -293,12 +251,12 @@ static_assert(std::is_standard_layout_v<UpdatePosPayload>);
         case OpCode::C_GET_USERS:
         case OpCode::PING:
         case OpCode::PONG:
-            return 0;  // Empty payloads
+            return 0;
 
         case OpCode::S_ACCEPT:
             return sizeof(AcceptPayload);
         case OpCode::R_GET_USERS:
-            return 0;  // Variable size
+            return 0;
         case OpCode::S_UPDATE_STATE:
             return sizeof(UpdateStatePayload);
 
