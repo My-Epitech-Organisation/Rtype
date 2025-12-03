@@ -56,6 +56,7 @@ class BehaviorRegistry {
      * @tparam T Behavior class deriving from IAIBehavior
      * @tparam Args Constructor argument types
      * @param args Arguments to forward to behavior constructor
+     * @note static_assert is used to make a verification at the compilation
      */
     template <typename T, typename... Args>
     void registerBehavior(Args&&... args) {
