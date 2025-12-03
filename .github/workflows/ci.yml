@@ -391,58 +391,35 @@ jobs:
             -DUSE_SFML=ON
 
       - name: Build
-        run: cmake --build --preset ${{ matrix.preset }}
+        run: cmake --build --preset ${{ matrix.preset }} --target all
 
-      - name: Copy dependencies
+      - name: Copy DLLs (Windows only)
+        if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            echo "Copying DLLs for Windows..."
-            ls -la build/vcpkg_installed/x64-windows/bin/*.dll || echo "No DLLs found"
-            cp build/vcpkg_installed/x64-windows/bin/sfml-*-3.dll build/src/client/Release/ 2>/dev/null || echo "SFML DLLs not found"
-            cp build/vcpkg_installed/x64-windows/bin/*.dll build/src/client/Release/ 2>/dev/null || echo "No additional DLLs copied"
-          fi
+          echo "Copying DLLs for Windows..."
+          ls -la build/vcpkg_installed/x64-windows/bin/*.dll || echo "No DLLs found"
+          cp build/vcpkg_installed/x64-windows/bin/*.dll build/src/client/Release/ 2>/dev/null || echo "No DLLs copied to client"
+          cp build/vcpkg_installed/x64-windows/bin/*.dll build/src/server/Release/ 2>/dev/null || echo "No DLLs copied to server"
 
-      - name: Package Client
-        shell: bash
-        run: |
-          mkdir -p packages
-
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            cd build/src/client/Release
-            zip -r ../../../packages/r-type_client-${{ matrix.os }}.zip .
-            cd ../../../..
-          elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            cd build/src/client
-            zip -r ../../packages/r-type_client-${{ matrix.os }}.zip r-type_client
-            cd ../../..
-          fi
-
-      - name: Package Server
-        shell: bash
-        run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            cd build/src/server/Release
-            zip -r ../../../packages/r-type_server-${{ matrix.os }}.zip .
-            cd ../../../..
-          elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            cd build/src/server
-            zip -r ../../packages/r-type_server-${{ matrix.os }}.zip r-type_server
-            cd ../../..
-          fi
-
-      - name: Upload Client Package
+      - name: Upload Client Artifact
         uses: actions/upload-artifact@v4
         with:
           name: r-type_client-${{ matrix.os }}
-          path: packages/r-type_client-${{ matrix.os }}.zip
+          path: |
+            build/src/client/Release/*
+            build/src/client/r-type_client*
+            build/src/client/*.exe
           if-no-files-found: warn
 
-      - name: Upload Server Package
+      - name: Upload Server Artifact
         uses: actions/upload-artifact@v4
         with:
           name: r-type_server-${{ matrix.os }}
-          path: packages/r-type_server-${{ matrix.os }}.zip
+          path: |
+            build/src/server/Release/*
+            build/src/server/r-type_server*
+            build/src/server/*.exe
           if-no-files-found: warn
 
       - name: Build Summary
