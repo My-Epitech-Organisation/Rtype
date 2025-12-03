@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-#include "../Components/TagComponent.hpp"
+#include "../Components/HiddenComponent.hpp"
 
 void EventSystem::mouseMoved(const sf::Event& e,
                              const std::shared_ptr<sf::RenderWindow>& window,
@@ -61,8 +61,13 @@ void EventSystem::processEvents(
     const std::shared_ptr<ECS::Registry>& registry, const sf::Event& e,
     const std::shared_ptr<sf::RenderWindow>& window) {
     registry->view<Rectangle, UserEvent>().each(
-        [&e, &window](auto entity, const Rectangle& rect,
-                      UserEvent& actionType) {
+        [&e, &window, &registry](auto entity, const Rectangle& rect,
+                                 UserEvent& actionType) {
+            if (registry->hasComponent<HiddenComponent>(entity)) {
+                HiddenComponent hidden =
+                    registry->getComponent<HiddenComponent>(entity);
+                if (hidden.isHidden) return;
+            }
             mouseMoved(e, window, actionType, rect);
             mousePressed(e, window, actionType, rect);
             mouseReleased(e, window, actionType, rect);

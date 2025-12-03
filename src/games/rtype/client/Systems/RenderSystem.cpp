@@ -14,27 +14,42 @@
 #include "../Components/TagComponent.hpp"
 #include "../Components/TextComponent.hpp"
 #include "../Components/TextureRectComponent.hpp"
+#include "../Components/ZIndexComponent.hpp"
+#include "../Drawable/Image.hpp"
 #include "Components/PositionComponent.hpp"
 #include "ecs/ECS.hpp"
+#include "src/games/rtype/client/Components/HiddenComponent.hpp"
 
 void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
                         const std::shared_ptr<sf::RenderWindow>& window) {
-    registry->view<Image, Position>().each(
-        [&window, &registry](auto entt, auto& img, auto& pos) {
-            img.sprite.setPosition(
-                {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-            try {
-                auto& size = registry->getComponent<Size>(entt);
-                img.sprite.setScale(sf::Vector2f({size.x, size.y}));
-            } catch (...) {
-            }
-            try {
-                auto& texture = registry->getComponent<TextureRect>(entt);
-                img.sprite.setTextureRect(texture.rect);
-            } catch (...) {
-            }
-            window->draw(img.sprite);
+    std::vector<DrawableImage> drawableImages;
+
+    registry->view<Image, Position, ZIndex>().each(
+        [&drawableImages](auto entt, auto& img, auto& pos, auto& zindex) {
+            drawableImages.push_back({entt, &img, &pos, &zindex});
         });
+
+    std::sort(drawableImages.begin(), drawableImages.end(),
+              [](const DrawableImage& a, const DrawableImage& b) {
+                  return a.zindex->depth < b.zindex->depth;
+              });
+
+    for (auto& drawable : drawableImages) {
+        drawable.img->sprite.setPosition({static_cast<float>(drawable.pos->x),
+                                          static_cast<float>(drawable.pos->y)});
+        try {
+            auto& size = registry->getComponent<Size>(drawable.entity);
+            drawable.img->sprite.setScale(sf::Vector2f({size.x, size.y}));
+        } catch (...) {
+        }
+        try {
+            auto& texture =
+                registry->getComponent<TextureRect>(drawable.entity);
+            drawable.img->sprite.setTextureRect(texture.rect);
+        } catch (...) {
+        }
+        window->draw(drawable.img->sprite);
+    }
 
     registry->view<Rectangle, Position>().each(
         [&window, &registry](auto entt, auto& rectData, auto& pos) {
@@ -48,11 +63,17 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
             rectData.rectangle.setOutlineColor(rectData.outlineColor);
             rectData.rectangle.setFillColor(rectData.currentColor);
 
+            if (registry->hasComponent<HiddenComponent>(entt)) {
+                HiddenComponent hidden =
+                    registry->getComponent<HiddenComponent>(entt);
+                if (hidden.isHidden) return;
+            }
             window->draw(rectData.rectangle);
         });
 
     registry->view<Rectangle, Text, Position, ButtonTag>().each(
-        [&window](auto _, auto& rectData, auto& textData, auto& pos, auto __) {
+        [&window, &registry](auto entt, auto& rectData, auto& textData,
+                             auto& pos, auto __) {
             rectData.rectangle.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
             rectData.rectangle.setSize(
@@ -80,18 +101,28 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
             textData.text.setFillColor(textData.color);
             textData.text.setString(textData.textContent);
 
+            if (registry->hasComponent<HiddenComponent>(entt)) {
+                HiddenComponent hidden =
+                    registry->getComponent<HiddenComponent>(entt);
+                if (hidden.isHidden) return;
+            }
             window->draw(rectData.rectangle);
             window->draw(textData.text);
         });
 
     registry->view<Text, Position, StaticTextTag>().each(
-        [&window](auto _, auto& textData, auto& pos, auto __) {
+        [&window, &registry](auto entt, auto& textData, auto& pos, auto __) {
             textData.text.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
             textData.text.setCharacterSize(textData.size);
             textData.text.setFillColor(textData.color);
             textData.text.setString(textData.textContent);
 
+            if (registry->hasComponent<HiddenComponent>(entt)) {
+                HiddenComponent hidden =
+                    registry->getComponent<HiddenComponent>(entt);
+                if (hidden.isHidden) return;
+            }
             window->draw(textData.text);
         });
 }

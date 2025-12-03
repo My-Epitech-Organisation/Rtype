@@ -31,8 +31,6 @@ class Graphic {
     static constexpr int WINDOW_WIDTH = 1920;
     static constexpr int WINDOW_HEIGHT = 1080;
 
-    void _handleKeyReleasedEvent(const std::optional<sf::Event>& event);
-
     void _pollEvents();
     void _update();
     void _display();
