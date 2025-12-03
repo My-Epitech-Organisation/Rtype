@@ -67,7 +67,7 @@ void SettingsScene::_initKeybindSection() {
             SettingsSceneUtils::actionToString(action) + ": " + keyName;
 
         auto btn = EntityFactory::createButton(
-            *this->_registry,
+            this->_registry,
             Text(this->_assetsManager->fontManager->get("title_font"),
                  sf::Color::White, 24, textStr),
             Position(x, y),
@@ -161,7 +161,7 @@ SettingsScene::SettingsScene(
     this->_initWindowSection();
 
     this->_listEntity.push_back(EntityFactory::createButton(
-        *this->_registry,
+        this->_registry,
         Text(this->_assetsManager->fontManager->get("title_font"),
              sf::Color::White, 36, "Back"),
         Position(100, 900),

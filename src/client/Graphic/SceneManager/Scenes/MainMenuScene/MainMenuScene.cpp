@@ -79,7 +79,7 @@ MainMenuScene::MainMenuScene(
     this->_createFakePlayer();
 
     this->_listEntity.push_back(EntityFactory::createButton(
-        *this->_registry,
+        this->_registry,
         Text(this->_assetsManager->fontManager->get("title_font"),
              sf::Color::White, 36, "Start Game"),
         Position(100, 350),
@@ -93,7 +93,7 @@ MainMenuScene::MainMenuScene(
             }
         })));
     this->_listEntity.push_back(EntityFactory::createButton(
-        *this->_registry,
+        this->_registry,
         Text(this->_assetsManager->fontManager->get("title_font"),
              sf::Color::White, 36, "Settings"),
         Position(100, 460),
@@ -107,7 +107,7 @@ MainMenuScene::MainMenuScene(
             }
         })));
     this->_listEntity.push_back(EntityFactory::createButton(
-        *this->_registry,
+        this->_registry,
         Text(this->_assetsManager->fontManager->get("title_font"),
              sf::Color::White, 36, "Quit"),
         Position(100, 570),
