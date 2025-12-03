@@ -18,6 +18,7 @@
 #include "System/MovementSystem.hpp"
 #include "System/ParallaxScrolling.hpp"
 #include "System/RenderSystem.hpp"
+#include "System/ResetTriggersSystem.hpp"
 
 void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event>& event) {
     if (!event) {
@@ -71,6 +72,7 @@ void Graphic::_display() {
 
 void Graphic::loop() {
     while (this->_window->isOpen()) {
+        ResetTriggersSystem::update(this->_registry);
         this->_pollEvents();
         this->_update();
         this->_display();

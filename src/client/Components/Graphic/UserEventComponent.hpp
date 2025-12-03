@@ -9,8 +9,10 @@
 #define SRC_CLIENT_COMPONENTS_GRAPHIC_USEREVENTCOMPONENT_HPP_
 
 struct UserEvent {
+    bool idle = true;
     bool isHovered = false;
     bool isClicked = false;
+    bool isReleased = false;
 };
 
 #endif  // SRC_CLIENT_COMPONENTS_GRAPHIC_USEREVENTCOMPONENT_HPP_

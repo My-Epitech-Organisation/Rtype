@@ -12,6 +12,8 @@ add_library(rtype-client-system
     MovementSystem.hpp
     BoxingSystem.cpp
     BoxingSystem.hpp
+    ResetTriggersSystem.cpp
+    ResetTriggersSystem.hpp
 )
 
 target_link_libraries(rtype-client-system
