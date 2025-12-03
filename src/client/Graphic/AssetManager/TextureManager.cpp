@@ -11,10 +11,8 @@ void TextureManager::load(const std::string& id, const std::string& filePath) {
     auto texture = std::make_unique<sf::Texture>();
 
     if (!texture->loadFromFile(filePath)) {
-        std::cerr << "Error unable to open texture: " << filePath
-                  << std::endl;
-        throw std::runtime_error("Error while loading texture: " +
-                                 filePath);
+        std::cerr << "Error unable to open texture: " << filePath << std::endl;
+        throw std::runtime_error("Error while loading texture: " + filePath);
     }
 
     this->_assets[id] = std::move(texture);
@@ -26,8 +24,7 @@ void TextureManager::load(const std::string& id, unsigned char* fileData,
     auto texture = std::make_unique<sf::Texture>();
 
     if (!texture->loadFromMemory(fileData, fileDataSize)) {
-        std::cerr << "Error unable to load texture: " << id
-                  << std::endl;
+        std::cerr << "Error unable to load texture: " << id << std::endl;
         throw std::runtime_error("Error while loading texture: " + id);
     }
 

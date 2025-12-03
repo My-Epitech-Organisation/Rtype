@@ -34,7 +34,7 @@ class SceneManager {
 
     std::map<Scene, std::function<std::unique_ptr<IScene>()>> _sceneList;
     std::unique_ptr<IScene> _activeScene;
-    const std::shared_ptr<sf::RenderWindow> &_window;
+    const std::shared_ptr<sf::RenderWindow>& _window;
 
     std::function<void(const Scene&)> _switchToScene =
         std::function<void(const Scene&)>(
@@ -57,7 +57,7 @@ class SceneManager {
 
     SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
                  const std::shared_ptr<AssetManager>& assetManager,
-                 const std::shared_ptr<sf::RenderWindow> &window,
+                 const std::shared_ptr<sf::RenderWindow>& window,
                  const std::shared_ptr<KeyboardActions>& keybinds);
     ~SceneManager() = default;
 };

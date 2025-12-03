@@ -13,8 +13,9 @@
 #include "Graphic/TagComponent.hpp"
 #include "Graphic/UserEventComponent.hpp"
 
-void EventSystem::processEvents(const std::shared_ptr<ECS::Registry>& registry,
-                                const sf::Event& e, const std::shared_ptr<sf::RenderWindow>& window) {
+void EventSystem::processEvents(
+    const std::shared_ptr<ECS::Registry>& registry, const sf::Event& e,
+    const std::shared_ptr<sf::RenderWindow>& window) {
     registry->view<Rectangle, UserEvent>().each([e, &window](auto _, auto rect,
                                                              auto& actionType) {
         if (e.is<sf::Event::MouseMoved>()) {

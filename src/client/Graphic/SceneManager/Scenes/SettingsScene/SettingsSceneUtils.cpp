@@ -7,7 +7,6 @@
 
 #include "SettingsSceneUtils.hpp"
 
-
 std::string SettingsSceneUtils::keyToString(sf::Keyboard::Key key) {
     switch (key) {
         case sf::Keyboard::Key::A:

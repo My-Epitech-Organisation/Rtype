@@ -58,8 +58,10 @@ void SettingsScene::_initKeybindSection() {
 
     for (auto action : actions) {
         auto keyOpt = this->_keybinds->getKeyBinding(action);
-        std::string keyName = keyOpt ? SettingsSceneUtils::keyToString(*keyOpt) : "None";
-        std::string textStr = SettingsSceneUtils::actionToString(action) + ": " + keyName;
+        std::string keyName =
+            keyOpt ? SettingsSceneUtils::keyToString(*keyOpt) : "None";
+        std::string textStr =
+            SettingsSceneUtils::actionToString(action) + ": " + keyName;
 
         auto btn = EntityFactory::createButton(
             *this->_registry,
@@ -75,7 +77,8 @@ void SettingsScene::_initKeybindSection() {
                     auto& textComp =
                         this->_registry->getComponent<Text>(entity);
                     std::string waitText =
-                        SettingsSceneUtils::actionToString(action) + ": Press any key...";
+                        SettingsSceneUtils::actionToString(action) +
+                        ": Press any key...";
                     textComp.textContent = waitText;
                     textComp.text.setString(waitText);
                 }
@@ -119,7 +122,8 @@ void SettingsScene::pollEvents(const sf::Event& e) {
 
             std::string keyName = SettingsSceneUtils::keyToString(key);
             std::string text =
-                SettingsSceneUtils::actionToString(*this->_actionToRebind) + ": " + keyName;
+                SettingsSceneUtils::actionToString(*this->_actionToRebind) +
+                ": " + keyName;
 
             ECS::Entity entity = _actionButtons[*this->_actionToRebind];
             if (this->_registry->hasComponent<Text>(entity)) {
@@ -160,7 +164,7 @@ SettingsScene::SettingsScene(
                 std::cerr << "Error switching to Main Menu: " << e.what()
                           << std::endl;
             }
-    })));
+        })));
 }
 
 SettingsScene::~SettingsScene() {

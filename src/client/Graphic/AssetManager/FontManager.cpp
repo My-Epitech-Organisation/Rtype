@@ -11,8 +11,7 @@ void FontManager::load(const std::string& id, const std::string& filePath) {
     auto font = std::make_unique<sf::Font>();
 
     if (!font->openFromFile(filePath)) {
-        std::cerr << "Error unable to open font: " << filePath
-                  << std::endl;
+        std::cerr << "Error unable to open font: " << filePath << std::endl;
         throw std::runtime_error("Error while loading font: " + filePath);
     }
 
@@ -25,8 +24,7 @@ void FontManager::load(const std::string& id, unsigned char* fileData,
     auto font = std::make_unique<sf::Font>();
 
     if (!font->openFromMemory(fileData, fileDataSize)) {
-        std::cerr << "Error unable to load font: " << id
-                  << std::endl;
+        std::cerr << "Error unable to load font: " << id << std::endl;
         throw std::runtime_error("Error while loading font: " + id);
     }
 

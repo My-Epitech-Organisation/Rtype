@@ -16,8 +16,9 @@
 #include "Graphic/UserEventComponent.hpp"
 #include "SceneManager/SceneException.hpp"
 
-void ButtonUpdateSystem::update(const std::shared_ptr<ECS::Registry>& registry,
-                                const std::shared_ptr<sf::RenderWindow>& window) {
+void ButtonUpdateSystem::update(
+    const std::shared_ptr<ECS::Registry>& registry,
+    const std::shared_ptr<sf::RenderWindow>& window) {
     registry->view<Button<>, UserEvent>().each(
         [](auto _, auto& buttonAct, auto& actionType) {
             if (actionType.isClicked) {

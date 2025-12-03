@@ -5,20 +5,18 @@
 ** SettingsSceneUtils.hpp
 */
 
-#ifndef R_TYPE_SETTINGSSCENEUTILS_HPP
-#define R_TYPE_SETTINGSSCENEUTILS_HPP
+#ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENEUTILS_HPP_
+#define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENEUTILS_HPP_
 #include <string>
 
 #include <SFML/Window/Keyboard.hpp>
 
 #include "GameAction.hpp"
 
-
 class SettingsSceneUtils {
-public:
+   public:
     static std::string actionToString(GameAction action);
     static std::string keyToString(sf::Keyboard::Key key);
 };
 
-
-#endif //R_TYPE_SETTINGSSCENEUTILS_HPP
+#endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENEUTILS_HPP_

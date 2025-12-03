@@ -13,7 +13,8 @@ struct Position {
     float y = 0;
     float initialX = 0;
     float initialY = 0;
-    Position(const float& x, const float& y) : x(x), y(y), initialX(x), initialY(y) {}
+    Position(const float& x, const float& y)
+        : x(x), y(y), initialX(x), initialY(y) {}
 };
 
 #endif  // SRC_CLIENT_COMPONENTS_COMMON_POSITIONCOMPONENT_HPP_

@@ -17,7 +17,7 @@
 class BoxingSystem {
    public:
     static void draw(const std::shared_ptr<ECS::Registry>& registry,
-                       const std::shared_ptr<sf::RenderWindow>& window);
+                     const std::shared_ptr<sf::RenderWindow>& window);
 };
 
 #endif  // SRC_CLIENT_SYSTEM_BOXINGSYSTEM_HPP_

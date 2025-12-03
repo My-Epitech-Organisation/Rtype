@@ -53,7 +53,7 @@ void SceneManager::draw() {
 
 SceneManager::SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
                            const std::shared_ptr<AssetManager>& texture,
-                           const std::shared_ptr<sf::RenderWindow> &window,
+                           const std::shared_ptr<sf::RenderWindow>& window,
                            const std::shared_ptr<KeyboardActions>& keybinds)
     : _window(window), _keybinds(keybinds) {
     this->_sceneList.emplace(MAIN_MENU, [ecs, texture, &window, this]() {
