@@ -104,7 +104,6 @@ else
     # 3. VCPKG_ROOT environment variable
     if [[ -d "$PROJECT_ROOT/build/vcpkg_installed" ]]; then
         echo ">>> Using cached vcpkg installation from build..."
-                # --- CORRECTION ICI ---
                 CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=$PROJECT_ROOT/external/vcpkg/scripts/buildsystems/vcpkg.cmake"
                 CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_PREFIX_PATH=$PROJECT_ROOT/build/vcpkg_installed/x64-linux -DUSE_SFML=ON"
     elif [[ -d "$PROJECT_ROOT/external/vcpkg" ]]; then
