@@ -11,6 +11,8 @@ add_library(rtype_game_client_components STATIC
     BoxingComponent.hpp
 )
 
+set_target_properties(rtype_game_client_components PROPERTIES LINKER_LANGUAGE CXX)
+
 target_link_libraries(rtype_game_client_components
     PUBLIC
     SFML::Graphics
