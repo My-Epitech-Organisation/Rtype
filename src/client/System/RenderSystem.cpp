@@ -36,10 +36,8 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
             window->draw(img.sprite);
         });
 
-    // Draw Standalone Rectangles (Backgrounds/Panels) - BEFORE Buttons and Text
     registry->view<Rectangle, Position>().each(
         [&window, &registry](auto entt, auto& rectData, auto& pos) {
-            // Skip if it's a Button (handled later)
             if (registry->hasComponent<ButtonTag>(entt)) return;
 
             rectData.rectangle.setPosition(
@@ -86,7 +84,6 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
             window->draw(textData.text);
         });
 
-    // Draw Static Text LAST (on top of everything)
     registry->view<Text, Position, StaticTextTag>().each(
         [&window](auto _, auto& textData, auto& pos, auto __) {
             textData.text.setPosition(
