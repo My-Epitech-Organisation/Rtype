@@ -11,7 +11,7 @@
 #include <random>
 
 #include "../../../../../engine/ISystem.hpp"
-#include "IGameEngine.hpp"
+#include "../../../../../engine/IGameEngine.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -36,7 +36,7 @@ struct SpawnerConfig {
  * This is a server-specific system - clients receive spawn events
  * through the network, they don't spawn enemies themselves.
  */
-class SpawnerSystem : public shared::ISystem {
+class SpawnerSystem : public ::rtype::engine::ISystem {
    public:
     using EventEmitter = std::function<void(const engine::GameEvent&)>;
 
@@ -53,16 +53,22 @@ class SpawnerSystem : public shared::ISystem {
         return "SpawnerSystem";
     }
 
+    /**
+     * @brief Get the current enemy count (read-only)
+     * @return Current number of tracked enemies
+     */
     [[nodiscard]] std::size_t getEnemyCount() const noexcept {
         return _enemyCount;
     }
+
+   private:
+    friend class GameEngine;
+
     void setEnemyCount(std::size_t count) noexcept { _enemyCount = count; }
     void incrementEnemyCount() noexcept { _enemyCount++; }
     void decrementEnemyCount() noexcept {
         if (_enemyCount > 0) --_enemyCount;
     }
-
-   private:
     void spawnBydosSlave(ECS::Registry& registry);
     void generateNextSpawnTime();
     std::random_device::result_type getRandomSeed() {
