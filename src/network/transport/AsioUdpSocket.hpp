@@ -15,6 +15,7 @@
 #include "IAsyncSocket.hpp"
 #include "core/Error.hpp"
 #include "core/Types.hpp"
+#include "protocol/Header.hpp"  // For kMaxPacketSize
 
 namespace rtype::network {
 
