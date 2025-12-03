@@ -14,18 +14,17 @@
 
 #include <SFML/Graphics/Text.hpp>
 
-#include "Components/Common/PositionComponent.hpp"
-#include "Components/Graphic/ImageComponent.hpp"
-#include "Components/Graphic/TagComponent.hpp"
-#include "Components/Graphic/TextComponent.hpp"
+#include "Components/PositionComponent.hpp"
+#include "Components/ImageComponent.hpp"
+#include "Components/TagComponent.hpp"
+#include "Components/TextComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
-#include "Graphic/BoxingComponent.hpp"
-#include "Graphic/ParallaxComponent.hpp"
-#include "Graphic/SizeComponent.hpp"
-#include "Graphic/TextureRectComponent.hpp"
-#include "Graphic/VelocityComponent.hpp"
+#include "Components/BoxingComponent.hpp"
+#include "Components/ParallaxComponent.hpp"
+#include "Components/SizeComponent.hpp"
+#include "Components/TextureRectComponent.hpp"
+#include "Components/VelocityComponent.hpp"
 #include "SceneManager/SceneException.hpp"
-
 
 void MainMenuScene::_createAstroneerVessel() {
     auto astroneerVessel = this->_registry->spawnEntity();
@@ -38,8 +37,7 @@ void MainMenuScene::_createAstroneerVessel() {
     this->_listEntity.push_back(astroneerVessel);
 }
 
-void MainMenuScene::_createFakePlayer()
-{
+void MainMenuScene::_createFakePlayer() {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib150(1, 150);
@@ -75,12 +73,10 @@ MainMenuScene::MainMenuScene(
     const std::shared_ptr<sf::RenderWindow>& window,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(ecs, assetsManager, window) {
-
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "R-TYPE"));
     this->_createAstroneerVessel();
     this->_createFakePlayer();
-
 
     this->_listEntity.push_back(EntityFactory::createButton(
         *this->_registry,

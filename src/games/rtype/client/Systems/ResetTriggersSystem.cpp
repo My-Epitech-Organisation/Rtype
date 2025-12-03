@@ -6,8 +6,7 @@
 */
 
 #include "ResetTriggersSystem.hpp"
-
-#include "Graphic/UserEventComponent.hpp"
+#include "../Components/UserEventComponent.hpp"
 
 void ResetTriggersSystem::update(
     const std::shared_ptr<ECS::Registry>& registry) {

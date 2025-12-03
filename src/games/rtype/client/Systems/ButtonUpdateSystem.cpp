@@ -10,10 +10,10 @@
 #include <exception>
 #include <iostream>
 
-#include "Graphic/ButtonComponent.hpp"
-#include "Graphic/RectangleComponent.hpp"
-#include "Graphic/TagComponent.hpp"
-#include "Graphic/UserEventComponent.hpp"
+#include "../Components/ButtonComponent.hpp"
+#include "../Components/RectangleComponent.hpp"
+#include "../Components/TagComponent.hpp"
+#include "../Components/UserEventComponent.hpp"
 #include "SceneManager/SceneException.hpp"
 
 void ButtonUpdateSystem::update(

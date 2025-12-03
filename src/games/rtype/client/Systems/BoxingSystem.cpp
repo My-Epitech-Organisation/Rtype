@@ -9,8 +9,8 @@
 
 #include <memory>
 
-#include "Graphic/BoxingComponent.hpp"
-#include "Graphic/ImageComponent.hpp"
+#include "../Components/BoxingComponent.hpp"
+#include "../Components/ImageComponent.hpp"
 
 void BoxingSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
                         const std::shared_ptr<sf::RenderWindow>& window) {

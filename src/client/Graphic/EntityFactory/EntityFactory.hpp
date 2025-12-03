@@ -14,12 +14,12 @@
 #include <SFML/System/Vector2.hpp>
 
 #include "AssetManager/AssetManager.hpp"
-#include "Components/Common/PositionComponent.hpp"
-#include "Components/Graphic/ButtonComponent.hpp"
-#include "Components/Graphic/RectangleComponent.hpp"
-#include "Components/Graphic/TagComponent.hpp"
-#include "Components/Graphic/TextComponent.hpp"
-#include "Components/Graphic/UserEventComponent.hpp"
+#include "Components/PositionComponent.hpp"
+#include "Components/ButtonComponent.hpp"
+#include "Components/RectangleComponent.hpp"
+#include "Components/TagComponent.hpp"
+#include "Components/TextComponent.hpp"
+#include "Components/UserEventComponent.hpp"
 #include "ecs/ECS.hpp"
 
 namespace EntityFactory {

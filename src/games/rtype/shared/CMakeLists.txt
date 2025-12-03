@@ -1,9 +1,7 @@
-add_subdirectory(Components)
 add_subdirectory(Systems)
 
 # Create shared game lib
 add_library(rtype_game_shared STATIC
-    $<TARGET_OBJECTS:rtype_game_shared_components>
     $<TARGET_OBJECTS:rtype_game_shared_systems>
 )
 

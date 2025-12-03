@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-#include "Graphic/TagComponent.hpp"
+#include "../Components/TagComponent.hpp"
 
 void EventSystem::mouseMoved(const sf::Event& e,
                              const std::shared_ptr<sf::RenderWindow>& window,

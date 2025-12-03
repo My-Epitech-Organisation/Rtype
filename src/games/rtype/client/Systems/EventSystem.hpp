@@ -12,8 +12,8 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 
-#include "Graphic/RectangleComponent.hpp"
-#include "Graphic/UserEventComponent.hpp"
+#include "../Components/RectangleComponent.hpp"
+#include "../Components/UserEventComponent.hpp"
 #include "ecs/ECS.hpp"
 
 class EventSystem {

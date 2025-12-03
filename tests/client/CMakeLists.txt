@@ -43,7 +43,7 @@ if(BUILD_GRAPHICAL_TESTS)
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
-        rtype-client-system
+        rtype_game_client_systems
     )
 
     target_include_directories(test_systems PRIVATE

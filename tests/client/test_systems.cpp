@@ -9,8 +9,8 @@
 #include <memory>
 #include <SFML/Graphics.hpp>
 #include <ecs/ECS.hpp>
-#include "../src/client/System/MovementSystem.hpp"
-#include "../src/client/System/RenderSystem.hpp"
+#include "../../src/games/rtype/client/Systems/MovementSystem.hpp"
+#include "../../src/games/rtype/client/Systems/RenderSystem.hpp"
 #include "../src/client/Components/Common/PositionComponent.hpp"
 #include "../src/client/Components/Graphic/VelocityComponent.hpp"
 #include "../src/client/Components/Graphic/ImageComponent.hpp"

@@ -12,13 +12,13 @@
 #include <utility>
 
 #include "AssetManager/AssetManager.hpp"
-#include "System/BoxingSystem.hpp"
-#include "System/ButtonUpdateSystem.hpp"
-#include "System/EventSystem.hpp"
-#include "System/MovementSystem.hpp"
-#include "System/ParallaxScrolling.hpp"
-#include "System/RenderSystem.hpp"
-#include "System/ResetTriggersSystem.hpp"
+#include "../../games/rtype/client/Systems/BoxingSystem.hpp"
+#include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
+#include "../../games/rtype/client/Systems/EventSystem.hpp"
+#include "../../games/rtype/client/Systems/MovementSystem.hpp"
+#include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
+#include "../../games/rtype/client/Systems/RenderSystem.hpp"
+#include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 
 void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event>& event) {
     if (!event) {

@@ -19,7 +19,7 @@ target_link_libraries(rtype-graphic-SFML
     SFML::System
     rtype_engine
     rtype-graphic-scene-manager
-    rtype-client-system
+    rtype_game_client_systems
 )
 
 target_include_directories(rtype-graphic-SFML

@@ -7,8 +7,8 @@
 
 #include "SettingsScene.hpp"
 
-#include "Components/Graphic/TagComponent.hpp"
-#include "Components/Graphic/TextComponent.hpp"
+#include "Components/TagComponent.hpp"
+#include "Components/TextComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneManager/SceneException.hpp"
 

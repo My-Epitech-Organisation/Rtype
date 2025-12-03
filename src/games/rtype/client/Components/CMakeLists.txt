@@ -1,5 +1,5 @@
-add_library(rtype-graphic-components
-    INTERFACE
+add_library(rtype_game_client_components STATIC
+    OBJECT
     ImageComponent.hpp
     RectangleComponent.hpp
     TextComponent.hpp
@@ -12,7 +12,7 @@ add_library(rtype-graphic-components
     BoxingComponent.hpp
 )
 
-target_link_libraries(rtype-graphic-scene-manager
+target_link_libraries(rtype_game_client_components
     PUBLIC
     SFML::Graphics
     SFML::Window

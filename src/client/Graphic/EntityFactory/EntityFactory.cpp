@@ -7,10 +7,10 @@
 
 #include "EntityFactory.hpp"
 
-#include "Components/Common/PositionComponent.hpp"
-#include "Components/Graphic/ImageComponent.hpp"
-#include "Components/Graphic/TagComponent.hpp"
-#include "Graphic/ParallaxComponent.hpp"
+#include "Components/PositionComponent.hpp"
+#include "Components/ImageComponent.hpp"
+#include "Components/TagComponent.hpp"
+#include "Components/ParallaxComponent.hpp"
 
 std::vector<ECS::Entity> EntityFactory::createBackground(
     const std::shared_ptr<ECS::Registry>& registry,

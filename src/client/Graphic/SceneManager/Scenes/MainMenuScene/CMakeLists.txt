@@ -15,8 +15,8 @@ target_link_libraries(rtype-graphic-main-menu-scene
 
 target_link_libraries(rtype-graphic-main-menu-scene
     PRIVATE
-    rtype-graphic-components
-    rtype-common-components
     rtype-graphic-asset-manager
     rtype-graphic-entity-factory
+    rtype_game_client
+    rtype_game_shared
 )

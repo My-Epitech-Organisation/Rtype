@@ -7,8 +7,8 @@
 
 #include "ParallaxScrolling.hpp"
 
-#include "Graphic/ImageComponent.hpp"
-#include "Graphic/ParallaxComponent.hpp"
+#include "../Components/ImageComponent.hpp"
+#include "../Components/ParallaxComponent.hpp"
 
 void ParallaxScrolling::update(const std::shared_ptr<ECS::Registry>& registry,
                                sf::View view) {

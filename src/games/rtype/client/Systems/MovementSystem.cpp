@@ -7,9 +7,9 @@
 
 #include "MovementSystem.hpp"
 
-#include "Common/PositionComponent.hpp"
-#include "Graphic/ImageComponent.hpp"
-#include "Graphic/VelocityComponent.hpp"
+#include "Components/PositionComponent.hpp"
+#include "../Components/ImageComponent.hpp"
+#include "../Components/VelocityComponent.hpp"
 
 void MovementSystem::update(const std::shared_ptr<ECS::Registry>& registry,
                             float dt) {
