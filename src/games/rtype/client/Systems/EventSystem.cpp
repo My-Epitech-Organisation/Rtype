@@ -14,7 +14,7 @@
 void EventSystem::mouseMoved(const sf::Event& e,
                              const std::shared_ptr<sf::RenderWindow>& window,
                              UserEvent& actionType, const Rectangle& rect) {
-    if (const auto* mouseMove = e.getIf<sf::Event::MouseMoved>()) {
+    if (const auto& mouseMove = e.getIf<sf::Event::MouseMoved>()) {
         sf::FloatRect rectBounds = rect.rectangle.getGlobalBounds();
         sf::Vector2f worldPos = window->mapPixelToCoords(mouseMove->position);
 
@@ -30,7 +30,7 @@ void EventSystem::mouseMoved(const sf::Event& e,
 void EventSystem::mousePressed(const sf::Event& e,
                                const std::shared_ptr<sf::RenderWindow>& window,
                                UserEvent& actionType, const Rectangle& rect) {
-    if (const auto* mousePress = e.getIf<sf::Event::MouseButtonPressed>()) {
+    if (const auto& mousePress = e.getIf<sf::Event::MouseButtonPressed>()) {
         sf::FloatRect rectBounds = rect.rectangle.getGlobalBounds();
         if (mousePress->button == sf::Mouse::Button::Left) {
             sf::Vector2f worldPos =
@@ -44,7 +44,7 @@ void EventSystem::mousePressed(const sf::Event& e,
 void EventSystem::mouseReleased(const sf::Event& e,
                                 const std::shared_ptr<sf::RenderWindow>& window,
                                 UserEvent& actionType, const Rectangle& rect) {
-    if (const auto* mouseRelease = e.getIf<sf::Event::MouseButtonReleased>()) {
+    if (const auto& mouseRelease = e.getIf<sf::Event::MouseButtonReleased>()) {
         sf::FloatRect rectBounds = rect.rectangle.getGlobalBounds();
         if (mouseRelease->button == sf::Mouse::Button::Left) {
             sf::Vector2f worldPos =
