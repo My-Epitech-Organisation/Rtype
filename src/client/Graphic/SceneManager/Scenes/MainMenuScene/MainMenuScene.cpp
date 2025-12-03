@@ -10,6 +10,7 @@
 #include <time.h>
 
 #include <functional>
+#include <random>
 
 #include <SFML/Graphics/Text.hpp>
 
@@ -24,7 +25,6 @@
 #include "Graphic/TextureRectComponent.hpp"
 #include "Graphic/VelocityComponent.hpp"
 #include "SceneManager/SceneException.hpp"
-#include <random>
 
 void MainMenuScene::update() {}
 
