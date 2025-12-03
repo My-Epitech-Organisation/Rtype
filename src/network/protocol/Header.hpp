@@ -16,16 +16,8 @@
 
 namespace rtype::network {
 
-// ============================================================================
-// Buffer Types
-// ============================================================================
-
 /// Dynamic buffer for network data
 using Buffer = std::vector<std::uint8_t>;
-
-// ============================================================================
-// Constants (RFC Section 4)
-// ============================================================================
 
 /// Magic byte for packet validation (RFC Section 4.1)
 inline constexpr std::uint8_t kMagicByte = 0xA1;
@@ -42,10 +34,6 @@ inline constexpr std::size_t kMaxPayloadSize = kMaxPacketSize - kHeaderSize;
 /// Default server port (RFC Section 3)
 inline constexpr std::uint16_t kDefaultPort = 4242;
 
-// ============================================================================
-// User ID Constants (RFC Section 4.2)
-// ============================================================================
-
 /// Server authority User ID (RFC Section 4.2)
 inline constexpr std::uint32_t kServerUserId = 0xFFFFFFFF;
 
@@ -58,10 +46,6 @@ inline constexpr std::uint32_t kMinClientUserId = 0x00000001;
 /// Maximum valid assigned client ID
 inline constexpr std::uint32_t kMaxClientUserId = 0xFFFFFFFE;
 
-// ============================================================================
-// Reliability Flags (RFC Section 4.3)
-// ============================================================================
-
 namespace Flags {
 /// No special flags (unreliable packet)
 inline constexpr std::uint8_t kNone = 0x00;
@@ -72,10 +56,6 @@ inline constexpr std::uint8_t kReliable = 0x01;
 /// Ack ID field is valid (acknowledging a previous packet)
 inline constexpr std::uint8_t kIsAck = 0x02;
 }  // namespace Flags
-
-// ============================================================================
-// Header Structure (RFC Section 4.1)
-// ============================================================================
 
 #pragma pack(push, 1)
 
@@ -109,10 +89,6 @@ struct Header {
     std::uint16_t ackId;                   ///< Last received sequence ID
     std::uint8_t flags;                    ///< Reliability flags
     std::array<std::uint8_t, 3> reserved;  ///< Padding (must be 0)
-
-    // ========================================================================
-    // Factory Methods
-    // ========================================================================
 
     /**
      * @brief Create a new header with default values
@@ -153,10 +129,6 @@ struct Header {
         return create(OpCode::C_CONNECT, kUnassignedUserId, seq, 0);
     }
 
-    // ========================================================================
-    // Flag Helpers
-    // ========================================================================
-
     /// Check if the RELIABLE flag is set
     [[nodiscard]] constexpr bool isReliable() const noexcept {
         return (flags & Flags::kReliable) != 0;
@@ -182,10 +154,6 @@ struct Header {
         ackId = ackSeqId;
     }
 
-    // ========================================================================
-    // Validation
-    // ========================================================================
-
     /// Check if the magic byte is valid
     [[nodiscard]] constexpr bool hasValidMagic() const noexcept {
         return magic == kMagicByte;
@@ -210,10 +178,6 @@ struct Header {
     [[nodiscard]] constexpr bool isValid() const noexcept {
         return hasValidMagic() && hasValidOpCode() && hasValidReserved();
     }
-
-    // ========================================================================
-    // User ID Helpers
-    // ========================================================================
 
     /// Check if this packet is from the server
     [[nodiscard]] constexpr bool isFromServer() const noexcept {
