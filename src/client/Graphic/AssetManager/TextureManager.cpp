@@ -18,7 +18,7 @@ void TextureManager::load(const std::string& id, const std::string& filePath) {
     }
 
     this->_assets[id] = std::move(texture);
-    std::cout << "Texture save with ID: " << id << std::endl;
+    std::cout << "Texture saved with ID: " << id << std::endl;
 }
 
 void TextureManager::load(const std::string& id, unsigned char* fileData,
@@ -32,7 +32,7 @@ void TextureManager::load(const std::string& id, unsigned char* fileData,
     }
 
     this->_assets[id] = std::move(texture);
-    std::cout << "Texture save with ID:: " << id << std::endl;
+    std::cout << "Texture saved with ID:: " << id << std::endl;
 }
 
 sf::Texture& TextureManager::get(const std::string& id) {

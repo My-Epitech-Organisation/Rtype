@@ -17,7 +17,7 @@ void FontManager::load(const std::string& id, const std::string& filePath) {
     }
 
     this->_assets[id] = std::move(font);
-    std::cout << "Font save with ID: " << id << std::endl;
+    std::cout << "Font saved with ID: " << id << std::endl;
 }
 
 void FontManager::load(const std::string& id, unsigned char* fileData,
@@ -31,7 +31,7 @@ void FontManager::load(const std::string& id, unsigned char* fileData,
     }
 
     this->_assets[id] = std::move(font);
-    std::cout << "Font save with ID: " << id << std::endl;
+    std::cout << "Font saved with ID: " << id << std::endl;
 }
 
 sf::Font& FontManager::get(const std::string& id) {
