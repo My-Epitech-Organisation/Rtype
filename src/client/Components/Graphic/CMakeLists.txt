@@ -5,11 +5,11 @@ add_library(rtype-graphic-components
     TextComponent.hpp
     ButtonComponent.hpp
     UserEventComponent.hpp
-        TagComponent.hpp
-        ParallaxComponent.hpp
-        VelocityComponent.hpp
-        TextureRectComponent.hpp
-        BoxingComponent.hpp
+    TagComponent.hpp
+    ParallaxComponent.hpp
+    VelocityComponent.hpp
+    TextureRectComponent.hpp
+    BoxingComponent.hpp
 )
 
 target_link_libraries(rtype-graphic-scene-manager
