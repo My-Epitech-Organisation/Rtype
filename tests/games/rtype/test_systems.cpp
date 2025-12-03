@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <vector>
 
 #include "../../../src/games/rtype/shared/Components.hpp"
@@ -145,6 +146,60 @@ TEST_F(MovementSystemTest, UpdateDoesNotAffectRotation) {
     EXPECT_FLOAT_EQ(transform.rotation, 45.0F);
 }
 
+TEST_F(MovementSystemTest, UpdateWithEmptyRegistry) {
+    // Kill the entity created in SetUp
+    registry.killEntity(entity);
+
+    // Should not crash with empty registry
+    EXPECT_NO_THROW(movementSystem.update(registry, 0.016F));
+
+    // Re-create entity for TearDown
+    entity = registry.spawnEntity();
+}
+
+TEST_F(MovementSystemTest, UpdateWithEntityMissingTransform) {
+    // Entity with only VelocityComponent
+    registry.emplaceComponent<VelocityComponent>(entity, 100.0F, 100.0F);
+    // No TransformComponent
+
+    // Should not crash
+    EXPECT_NO_THROW(movementSystem.update(registry, 0.016F));
+}
+
+TEST_F(MovementSystemTest, UpdateWithLargeDeltaTime) {
+    registry.emplaceComponent<TransformComponent>(entity, 0.0F, 0.0F, 0.0F);
+    registry.emplaceComponent<VelocityComponent>(entity, 100.0F, 100.0F);
+
+    movementSystem.update(registry, 100.0F);
+
+    auto& transform = registry.getComponent<TransformComponent>(entity);
+    EXPECT_FLOAT_EQ(transform.x, 10000.0F);
+    EXPECT_FLOAT_EQ(transform.y, 10000.0F);
+}
+
+TEST_F(MovementSystemTest, UpdateWithNegativeDeltaTime) {
+    registry.emplaceComponent<TransformComponent>(entity, 100.0F, 100.0F, 0.0F);
+    registry.emplaceComponent<VelocityComponent>(entity, 100.0F, 100.0F);
+
+    // Negative deltaTime (edge case)
+    movementSystem.update(registry, -0.5F);
+
+    auto& transform = registry.getComponent<TransformComponent>(entity);
+    EXPECT_FLOAT_EQ(transform.x, 50.0F);
+    EXPECT_FLOAT_EQ(transform.y, 50.0F);
+}
+
+TEST_F(MovementSystemTest, UpdateWithVerySmallVelocity) {
+    registry.emplaceComponent<TransformComponent>(entity, 0.0F, 0.0F, 0.0F);
+    registry.emplaceComponent<VelocityComponent>(entity, 0.001F, 0.001F);
+
+    movementSystem.update(registry, 1.0F);
+
+    auto& transform = registry.getComponent<TransformComponent>(entity);
+    EXPECT_NEAR(transform.x, 0.001F, 0.0001F);
+    EXPECT_NEAR(transform.y, 0.001F, 0.0001F);
+}
+
 // =============================================================================
 // AISystem Tests
 // =============================================================================
@@ -271,6 +326,79 @@ TEST_F(AISystemTest, UpdateDoesNotAffectEntitiesWithoutAIComponent) {
     auto& velocity = registry.getComponent<VelocityComponent>(entity);
     EXPECT_FLOAT_EQ(velocity.vx, 50.0F);
     EXPECT_FLOAT_EQ(velocity.vy, 50.0F);
+}
+
+TEST_F(AISystemTest, UpdateWithUnregisteredBehaviorDoesNothing) {
+    // Clear registry and don't register any behaviors
+    BehaviorRegistry::instance().clear();
+
+    registry.emplaceComponent<AIComponent>(entity, AIBehavior::MoveLeft, 100.0F);
+    registry.emplaceComponent<TransformComponent>(entity, 500.0F, 300.0F, 0.0F);
+    registry.emplaceComponent<VelocityComponent>(entity, 50.0F, 50.0F);
+
+    // Should not crash and velocity should remain unchanged
+    aiSystem.update(registry, 0.016F);
+
+    auto& velocity = registry.getComponent<VelocityComponent>(entity);
+    EXPECT_FLOAT_EQ(velocity.vx, 50.0F);
+    EXPECT_FLOAT_EQ(velocity.vy, 50.0F);
+
+    // Re-register behaviors for other tests
+    registerDefaultBehaviors();
+}
+
+TEST_F(AISystemTest, UpdateWithEmptyRegistry) {
+    // Kill the entity created in SetUp
+    registry.killEntity(entity);
+
+    // Should not crash with empty registry
+    EXPECT_NO_THROW(aiSystem.update(registry, 0.016F));
+
+    // Re-create entity for TearDown
+    entity = registry.spawnEntity();
+}
+
+TEST_F(AISystemTest, UpdateWithEntityMissingVelocity) {
+    // Entity with AI and Transform but no Velocity
+    registry.emplaceComponent<AIComponent>(entity, AIBehavior::MoveLeft, 100.0F);
+    registry.emplaceComponent<TransformComponent>(entity, 500.0F, 300.0F, 0.0F);
+    // No VelocityComponent
+
+    // Should not crash or affect anything
+    EXPECT_NO_THROW(aiSystem.update(registry, 0.016F));
+}
+
+TEST_F(AISystemTest, UpdateWithEntityMissingTransform) {
+    // Entity with AI and Velocity but no Transform
+    registry.emplaceComponent<AIComponent>(entity, AIBehavior::MoveLeft, 100.0F);
+    registry.emplaceComponent<VelocityComponent>(entity, 0.0F, 0.0F);
+    // No TransformComponent
+
+    // Should not crash or affect anything
+    EXPECT_NO_THROW(aiSystem.update(registry, 0.016F));
+}
+
+TEST_F(AISystemTest, UpdateWithZeroDeltaTime) {
+    registry.emplaceComponent<AIComponent>(entity, AIBehavior::SineWave, 100.0F);
+    registry.emplaceComponent<TransformComponent>(entity, 500.0F, 300.0F, 0.0F);
+    registry.emplaceComponent<VelocityComponent>(entity, 0.0F, 0.0F);
+
+    float initialStateTimer = registry.getComponent<AIComponent>(entity).stateTimer;
+    aiSystem.update(registry, 0.0F);
+
+    auto& ai = registry.getComponent<AIComponent>(entity);
+    EXPECT_FLOAT_EQ(ai.stateTimer, initialStateTimer);
+}
+
+TEST_F(AISystemTest, UpdateWithLargeDeltaTime) {
+    registry.emplaceComponent<AIComponent>(entity, AIBehavior::SineWave, 100.0F);
+    registry.emplaceComponent<TransformComponent>(entity, 500.0F, 300.0F, 0.0F);
+    registry.emplaceComponent<VelocityComponent>(entity, 0.0F, 0.0F);
+
+    aiSystem.update(registry, 10.0F);
+
+    auto& ai = registry.getComponent<AIComponent>(entity);
+    EXPECT_FLOAT_EQ(ai.stateTimer, 10.0F);
 }
 
 // =============================================================================
@@ -444,6 +572,152 @@ TEST_F(CleanupSystemTest, CustomCleanupConfig) {
     cleanupSystem.update(registry, 0.016F);
 
     EXPECT_FALSE(registry.hasComponent<DestroyTag>(entity));
+}
+
+TEST_F(CleanupSystemTest, MultipleEntitiesOutOfBounds) {
+    CleanupSystem cleanupSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    auto entity2 = registry.spawnEntity();
+    auto entity3 = registry.spawnEntity();
+
+    // Entity 1: out of bounds (left)
+    registry.emplaceComponent<TransformComponent>(entity, -150.0F, 300.0F, 0.0F);
+    registry.emplaceComponent<EnemyTag>(entity);
+
+    // Entity 2: in bounds
+    registry.emplaceComponent<TransformComponent>(entity2, 400.0F, 300.0F, 0.0F);
+    registry.emplaceComponent<EnemyTag>(entity2);
+
+    // Entity 3: out of bounds (bottom)
+    registry.emplaceComponent<TransformComponent>(entity3, 400.0F, 800.0F, 0.0F);
+    registry.emplaceComponent<EnemyTag>(entity3);
+
+    cleanupSystem.update(registry, 0.016F);
+
+    EXPECT_TRUE(registry.hasComponent<DestroyTag>(entity));
+    EXPECT_FALSE(registry.hasComponent<DestroyTag>(entity2));
+    EXPECT_TRUE(registry.hasComponent<DestroyTag>(entity3));
+
+    registry.killEntity(entity2);
+    registry.killEntity(entity3);
+}
+
+TEST_F(CleanupSystemTest, EntityAtCornerBoundaries) {
+    CleanupSystem cleanupSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Entity at top-left corner boundary
+    registry.emplaceComponent<TransformComponent>(entity, -100.0F, -100.0F, 0.0F);
+    registry.emplaceComponent<EnemyTag>(entity);
+
+    cleanupSystem.update(registry, 0.016F);
+
+    // At exactly the boundary, should NOT be destroyed
+    EXPECT_FALSE(registry.hasComponent<DestroyTag>(entity));
+}
+
+TEST_F(CleanupSystemTest, EntityAtRightBottomCorner) {
+    CleanupSystem cleanupSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Entity at bottom-right corner boundary
+    registry.emplaceComponent<TransformComponent>(entity, 900.0F, 700.0F, 0.0F);
+    registry.emplaceComponent<EnemyTag>(entity);
+
+    cleanupSystem.update(registry, 0.016F);
+
+    EXPECT_FALSE(registry.hasComponent<DestroyTag>(entity));
+}
+
+TEST_F(CleanupSystemTest, EntityJustOutsideRightBoundary) {
+    CleanupSystem cleanupSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    registry.emplaceComponent<TransformComponent>(entity, 900.1F, 300.0F, 0.0F);
+    registry.emplaceComponent<EnemyTag>(entity);
+
+    cleanupSystem.update(registry, 0.016F);
+
+    EXPECT_TRUE(registry.hasComponent<DestroyTag>(entity));
+}
+
+TEST_F(CleanupSystemTest, EntityJustOutsideTopBoundary) {
+    CleanupSystem cleanupSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    registry.emplaceComponent<TransformComponent>(entity, 400.0F, -100.1F, 0.0F);
+    registry.emplaceComponent<EnemyTag>(entity);
+
+    cleanupSystem.update(registry, 0.016F);
+
+    EXPECT_TRUE(registry.hasComponent<DestroyTag>(entity));
+}
+
+TEST_F(CleanupSystemTest, UpdateWithEmptyRegistry) {
+    CleanupSystem cleanupSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Kill entity from SetUp
+    registry.killEntity(entity);
+
+    // Should not crash with empty registry
+    EXPECT_NO_THROW(cleanupSystem.update(registry, 0.016F));
+
+    // Re-create for TearDown
+    entity = registry.spawnEntity();
+}
+
+TEST_F(CleanupSystemTest, EntityWithTransformButNoEnemyTag) {
+    CleanupSystem cleanupSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Out of bounds but no EnemyTag
+    registry.emplaceComponent<TransformComponent>(entity, -500.0F, 300.0F, 0.0F);
+    registry.emplaceComponent<PlayerTag>(entity);  // Player, not enemy
+
+    cleanupSystem.update(registry, 0.016F);
+
+    // Should NOT be marked for destruction (only enemies are cleaned up)
+    EXPECT_FALSE(registry.hasComponent<DestroyTag>(entity));
+}
+
+TEST_F(CleanupSystemTest, MultipleUpdatesDoNotDuplicateTag) {
+    CleanupSystem cleanupSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    registry.emplaceComponent<TransformComponent>(entity, -500.0F, 300.0F, 0.0F);
+    registry.emplaceComponent<EnemyTag>(entity);
+
+    cleanupSystem.update(registry, 0.016F);
+    EXPECT_TRUE(registry.hasComponent<DestroyTag>(entity));
+
+    // Second update should not throw or cause issues
+    EXPECT_NO_THROW(cleanupSystem.update(registry, 0.016F));
 }
 
 // =============================================================================
@@ -652,6 +926,83 @@ TEST_F(DestroySystemTest, DestroyedNonEnemyEventHasPlayerEntityType) {
     EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Player));
 }
 
+TEST_F(DestroySystemTest, UpdateWithEmptyRegistry) {
+    DestroySystem destroySystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        [this]() { enemyCountDecremented = true; });
+
+    // Kill entity from SetUp
+    registry.killEntity(entity);
+
+    // Should not crash with empty registry
+    EXPECT_NO_THROW(destroySystem.update(registry, 0.016F));
+
+    EXPECT_TRUE(emittedEvents.empty());
+    EXPECT_FALSE(enemyCountDecremented);
+}
+
+TEST_F(DestroySystemTest, UpdateWithNoDestroyTaggedEntities) {
+    DestroySystem destroySystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        [this]() { enemyCountDecremented = true; });
+
+    // Entity exists but has no DestroyTag
+    registry.emplaceComponent<NetworkIdComponent>(entity, 1u);
+    registry.emplaceComponent<EnemyTag>(entity);
+
+    destroySystem.update(registry, 0.016F);
+
+    EXPECT_TRUE(registry.isAlive(entity));
+    EXPECT_TRUE(emittedEvents.empty());
+    EXPECT_FALSE(enemyCountDecremented);
+
+    registry.killEntity(entity);
+}
+
+TEST_F(DestroySystemTest, DestroyEnemyWithValidNetworkId) {
+    DestroySystem destroySystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        [this]() { enemyCountDecremented = true; });
+
+    registry.emplaceComponent<DestroyTag>(entity);
+    registry.emplaceComponent<EnemyTag>(entity);
+    registry.emplaceComponent<NetworkIdComponent>(entity, 999u);
+
+    destroySystem.update(registry, 0.016F);
+
+    EXPECT_FALSE(registry.isAlive(entity));
+    EXPECT_TRUE(enemyCountDecremented);
+    ASSERT_EQ(emittedEvents.size(), 1u);
+    EXPECT_EQ(emittedEvents[0].entityNetworkId, 999u);
+    EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Enemy));
+}
+
+TEST_F(DestroySystemTest, DestroyPlayerWithValidNetworkId) {
+    DestroySystem destroySystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        [this]() { enemyCountDecremented = true; });
+
+    registry.emplaceComponent<DestroyTag>(entity);
+    registry.emplaceComponent<PlayerTag>(entity);  // Player, not enemy
+    registry.emplaceComponent<NetworkIdComponent>(entity, 123u);
+
+    destroySystem.update(registry, 0.016F);
+
+    EXPECT_FALSE(registry.isAlive(entity));
+    EXPECT_FALSE(enemyCountDecremented);  // Not an enemy
+    ASSERT_EQ(emittedEvents.size(), 1u);
+    EXPECT_EQ(emittedEvents[0].entityNetworkId, 123u);
+    EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Player));
+}
+
 // =============================================================================
 // SpawnerSystem Tests
 // =============================================================================
@@ -847,6 +1198,251 @@ TEST_F(SpawnerSystemTest, SpawnIntervalVariation) {
         EXPECT_GE(spawnTimes[i], config.minSpawnInterval - 0.2F);  // Allow small margin
         EXPECT_LE(spawnTimes[i], config.maxSpawnInterval + 0.2F);
     }
+}
+
+TEST_F(SpawnerSystemTest, NoSpawnBeforeInterval) {
+    config.minSpawnInterval = 10.0F;
+    config.maxSpawnInterval = 20.0F;
+
+    SpawnerSystem spawnerSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Update for less than minimum interval
+    for (int i = 0; i < 50; ++i) {
+        spawnerSystem.update(registry, 0.1F);  // 5 seconds total
+    }
+
+    // Should not have spawned yet
+    EXPECT_EQ(spawnerSystem.getEnemyCount(), 0u);
+}
+
+TEST_F(SpawnerSystemTest, SpawnedEntityHasCorrectAIComponent) {
+    SpawnerSystem spawnerSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Force a spawn
+    for (int i = 0; i < 100; ++i) {
+        spawnerSystem.update(registry, 0.1F);
+        if (spawnerSystem.getEnemyCount() > 0) break;
+    }
+
+    auto view = registry.view<AIComponent, EnemyTag>();
+    view.each([this](ECS::Entity /*entity*/,
+                     const AIComponent& ai,
+                     const EnemyTag& /*tag*/) {
+        EXPECT_EQ(ai.behavior, AIBehavior::MoveLeft);
+        EXPECT_FLOAT_EQ(ai.speed, config.bydosSlaveSpeed);
+    });
+}
+
+TEST_F(SpawnerSystemTest, SpawnedEntityHasCorrectHealth) {
+    SpawnerSystem spawnerSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Force a spawn
+    for (int i = 0; i < 100; ++i) {
+        spawnerSystem.update(registry, 0.1F);
+        if (spawnerSystem.getEnemyCount() > 0) break;
+    }
+
+    auto view = registry.view<HealthComponent, EnemyTag>();
+    view.each([](ECS::Entity /*entity*/,
+                 const HealthComponent& health,
+                 const EnemyTag& /*tag*/) {
+        EXPECT_EQ(health.current, 10);  // BYDOS_SLAVE_HEALTH
+        EXPECT_EQ(health.max, 10);
+    });
+}
+
+TEST_F(SpawnerSystemTest, SpawnedEntityHasCorrectBoundingBox) {
+    SpawnerSystem spawnerSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Force a spawn
+    for (int i = 0; i < 100; ++i) {
+        spawnerSystem.update(registry, 0.1F);
+        if (spawnerSystem.getEnemyCount() > 0) break;
+    }
+
+    auto view = registry.view<BoundingBoxComponent, EnemyTag>();
+    view.each([](ECS::Entity /*entity*/,
+                 const BoundingBoxComponent& bbox,
+                 const EnemyTag& /*tag*/) {
+        EXPECT_FLOAT_EQ(bbox.width, 32.0F);  // BYDOS_SLAVE_SIZE
+        EXPECT_FLOAT_EQ(bbox.height, 32.0F);
+    });
+}
+
+TEST_F(SpawnerSystemTest, NetworkIdIncrementsForEachSpawn) {
+    config.maxEnemies = 5;
+    SpawnerSystem spawnerSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Spawn multiple enemies
+    for (int i = 0; i < 300; ++i) {
+        spawnerSystem.update(registry, 0.1F);
+        if (spawnerSystem.getEnemyCount() >= 3) break;
+    }
+
+    // Check that network IDs are unique
+    std::vector<uint32_t> networkIds;
+    auto view = registry.view<NetworkIdComponent, EnemyTag>();
+    view.each([&networkIds](ECS::Entity /*entity*/,
+                            const NetworkIdComponent& netId,
+                            const EnemyTag& /*tag*/) {
+        networkIds.push_back(netId.networkId);
+    });
+
+    // All network IDs should be unique
+    std::sort(networkIds.begin(), networkIds.end());
+    auto last = std::unique(networkIds.begin(), networkIds.end());
+    EXPECT_EQ(last, networkIds.end());
+}
+
+TEST_F(SpawnerSystemTest, SpawnEventHasCorrectCoordinates) {
+    SpawnerSystem spawnerSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Force a spawn
+    for (int i = 0; i < 100; ++i) {
+        spawnerSystem.update(registry, 0.1F);
+        if (!emittedEvents.empty()) break;
+    }
+
+    ASSERT_FALSE(emittedEvents.empty());
+    EXPECT_FLOAT_EQ(emittedEvents[0].x, config.spawnX);
+    EXPECT_GE(emittedEvents[0].y, config.minSpawnY);
+    EXPECT_LE(emittedEvents[0].y, config.maxSpawnY);
+    EXPECT_FLOAT_EQ(emittedEvents[0].rotation, 0.0F);
+}
+
+TEST_F(SpawnerSystemTest, UpdateWithZeroDeltaTime) {
+    SpawnerSystem spawnerSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Multiple updates with zero delta time should not spawn
+    for (int i = 0; i < 100; ++i) {
+        spawnerSystem.update(registry, 0.0F);
+    }
+
+    EXPECT_EQ(spawnerSystem.getEnemyCount(), 0u);
+}
+
+TEST_F(SpawnerSystemTest, MaxEnemiesZeroNeverSpawns) {
+    config.maxEnemies = 0;
+    SpawnerSystem spawnerSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Run many updates
+    for (int i = 0; i < 200; ++i) {
+        spawnerSystem.update(registry, 0.1F);
+    }
+
+    EXPECT_EQ(spawnerSystem.getEnemyCount(), 0u);
+}
+
+TEST_F(SpawnerSystemTest, StopsSpawningWhenMaxReached) {
+    config.maxEnemies = 2;
+    config.minSpawnInterval = 0.1F;
+    config.maxSpawnInterval = 0.2F;
+
+    SpawnerSystem spawnerSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Run until max is reached
+    for (int i = 0; i < 100; ++i) {
+        spawnerSystem.update(registry, 0.1F);
+        if (spawnerSystem.getEnemyCount() >= config.maxEnemies) break;
+    }
+
+    size_t countAtMax = spawnerSystem.getEnemyCount();
+    EXPECT_EQ(countAtMax, config.maxEnemies);
+
+    // Run more updates - count should not increase
+    for (int i = 0; i < 50; ++i) {
+        spawnerSystem.update(registry, 0.1F);
+    }
+
+    EXPECT_EQ(spawnerSystem.getEnemyCount(), config.maxEnemies);
+}
+
+TEST_F(SpawnerSystemTest, SpawnTimerAccumulatesCorrectly) {
+    config.minSpawnInterval = 1.0F;
+    config.maxSpawnInterval = 1.0F;  // Fixed interval for predictability
+
+    SpawnerSystem spawnerSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Update with small increments
+    for (int i = 0; i < 5; ++i) {
+        spawnerSystem.update(registry, 0.1F);  // 0.5 seconds total
+    }
+
+    // Should not have spawned yet (< 1 second)
+    EXPECT_EQ(spawnerSystem.getEnemyCount(), 0u);
+
+    // Update to reach 1 second
+    for (int i = 0; i < 6; ++i) {
+        spawnerSystem.update(registry, 0.1F);  // 0.6 more seconds = 1.1 total
+    }
+
+    // Should have spawned now
+    EXPECT_GE(spawnerSystem.getEnemyCount(), 1u);
+}
+
+TEST_F(SpawnerSystemTest, SpawnYPositionWithinRange) {
+    config.minSpawnY = 100.0F;
+    config.maxSpawnY = 200.0F;
+
+    SpawnerSystem spawnerSystem(
+        [this](const rtype::engine::GameEvent& event) {
+            emittedEvents.push_back(event);
+        },
+        config);
+
+    // Spawn multiple enemies and check Y positions
+    for (int i = 0; i < 300; ++i) {
+        spawnerSystem.update(registry, 0.1F);
+        if (spawnerSystem.getEnemyCount() >= 5) break;
+    }
+
+    auto view = registry.view<TransformComponent, EnemyTag>();
+    view.each([this](ECS::Entity /*entity*/,
+                     const TransformComponent& transform,
+                     const EnemyTag& /*tag*/) {
+        EXPECT_GE(transform.y, config.minSpawnY);
+        EXPECT_LE(transform.y, config.maxSpawnY);
+    });
 }
 
 // =============================================================================
