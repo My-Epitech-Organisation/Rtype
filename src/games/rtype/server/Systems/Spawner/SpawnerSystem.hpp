@@ -65,6 +65,10 @@ class SpawnerSystem : public shared::ISystem {
    private:
     void spawnBydosSlave(ECS::Registry& registry);
     void generateNextSpawnTime();
+    std::random_device::result_type getRandomSeed() {
+        std::random_device rd;
+        return rd();
+    }
 
     EventEmitter _emitEvent;
     SpawnerConfig _config;
