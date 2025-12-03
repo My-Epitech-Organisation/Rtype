@@ -35,7 +35,7 @@ namespace ByteOrder {
 // Type Traits
 // ============================================================================
 
-/// Check if type is a supported numeric type
+/// Check if type is a supported numeric type (RFC-compliant)
 template <typename T>
 constexpr bool is_network_numeric_v =
     std::is_same_v<T, std::uint16_t> || std::is_same_v<T, std::int16_t> ||
