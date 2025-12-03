@@ -101,13 +101,13 @@ inline constexpr std::uint8_t kIsAck = 0x02;
  *       Use the accessor methods which handle byte order conversion.
  */
 struct Header {
-    std::uint8_t magic;                  ///< Must be 0xA1 (kMagicByte)
-    std::uint8_t opcode;                 ///< Operation code (OpCode enum)
-    std::uint16_t payloadSize;           ///< Payload size (excludes header)
-    std::uint32_t userId;                ///< Sender's unique ID
-    std::uint16_t seqId;                 ///< Sequence number (wraps at 65535)
-    std::uint16_t ackId;                 ///< Last received sequence ID
-    std::uint8_t flags;                  ///< Reliability flags
+    std::uint8_t magic;                    ///< Must be 0xA1 (kMagicByte)
+    std::uint8_t opcode;                   ///< Operation code (OpCode enum)
+    std::uint16_t payloadSize;             ///< Payload size (excludes header)
+    std::uint32_t userId;                  ///< Sender's unique ID
+    std::uint16_t seqId;                   ///< Sequence number (wraps at 65535)
+    std::uint16_t ackId;                   ///< Last received sequence ID
+    std::uint8_t flags;                    ///< Reliability flags
     std::array<std::uint8_t, 3> reserved;  ///< Padding (must be 0)
 
     // ========================================================================
@@ -122,9 +122,9 @@ struct Header {
      * @param payload The payload size in bytes
      * @return Initialized header (in HOST byte order - must be converted)
      */
-    [[nodiscard]] static Header create(
-        OpCode op, std::uint32_t user, std::uint16_t seq,
-        std::uint16_t payload = 0) noexcept {
+    [[nodiscard]] static Header create(OpCode op, std::uint32_t user,
+                                       std::uint16_t seq,
+                                       std::uint16_t payload = 0) noexcept {
         Header h{};
         h.magic = kMagicByte;
         h.opcode = static_cast<std::uint8_t>(op);
@@ -132,7 +132,8 @@ struct Header {
         h.userId = user;
         h.seqId = seq;
         h.ackId = 0;
-        h.flags = rtype::network::isReliable(op) ? Flags::kReliable : Flags::kNone;
+        h.flags =
+            rtype::network::isReliable(op) ? Flags::kReliable : Flags::kNone;
         h.reserved = {0, 0, 0};
         return h;
     }
@@ -148,8 +149,7 @@ struct Header {
     /**
      * @brief Create a header for client connection request
      */
-    [[nodiscard]] static Header createConnect(
-        std::uint16_t seq) noexcept {
+    [[nodiscard]] static Header createConnect(std::uint16_t seq) noexcept {
         return create(OpCode::C_CONNECT, kUnassignedUserId, seq, 0);
     }
 
