@@ -380,3 +380,148 @@ TEST_F(ValidatorTest, ValidateServerUserId) {
     EXPECT_TRUE(Validator::validateServerUserId(1).isErr());
     EXPECT_TRUE(Validator::validateServerUserId(0).isErr());
 }
+
+// ============================================================================
+// ByteOrderSpec Tests - RFC-Compliant Serialization
+// ============================================================================
+
+#include "protocol/ByteOrderSpec.hpp"
+#include "Serializer.hpp"
+
+class ByteOrderSpecTest : public ::testing::Test {};
+
+TEST_F(ByteOrderSpecTest, HeaderRoundTrip) {
+    Header original = Header::create(OpCode::C_CONNECT, 42, 1, 100);
+
+    // Serialize to network, then back
+    auto bytes = ByteOrderSpec::serializeToNetwork(original);
+    auto restored = ByteOrderSpec::deserializeFromNetwork<Header>(bytes);
+
+    EXPECT_EQ(restored.magic, original.magic);
+    EXPECT_EQ(restored.opcode, original.opcode);
+    EXPECT_EQ(restored.payloadSize, original.payloadSize);
+    EXPECT_EQ(restored.userId, original.userId);
+    EXPECT_EQ(restored.seqId, original.seqId);
+    EXPECT_EQ(restored.ackId, original.ackId);
+    EXPECT_EQ(restored.flags, original.flags);
+}
+
+TEST_F(ByteOrderSpecTest, HeaderPreservesAllFields) {
+    Header original{};
+    original.magic = kMagicByte;
+    original.opcode = static_cast<uint8_t>(OpCode::S_ACCEPT);
+    original.payloadSize = 0x1234;
+    original.userId = 0xDEADBEEF;
+    original.seqId = 0xABCD;
+    original.ackId = 0xEF01;
+    original.flags = Flags::kReliable | Flags::kIsAck;
+    original.reserved = {0, 0, 0};
+
+    auto bytes = ByteOrderSpec::serializeToNetwork(original);
+    auto restored = ByteOrderSpec::deserializeFromNetwork<Header>(bytes);
+
+    EXPECT_EQ(restored.magic, kMagicByte);
+    EXPECT_EQ(restored.payloadSize, 0x1234);
+    EXPECT_EQ(restored.userId, 0xDEADBEEF);
+    EXPECT_EQ(restored.seqId, 0xABCD);
+    EXPECT_EQ(restored.ackId, 0xEF01);
+    EXPECT_EQ(restored.flags, Flags::kReliable | Flags::kIsAck);
+}
+
+TEST_F(ByteOrderSpecTest, EntitySpawnPayloadRoundTrip) {
+    EntitySpawnPayload original{};
+    original.entityId = 12345;
+    original.type = static_cast<uint8_t>(EntityType::Player);
+    original.posX = 100.5f;
+    original.posY = 200.75f;
+
+    auto bytes = ByteOrderSpec::serializeToNetwork(original);
+    auto restored = ByteOrderSpec::deserializeFromNetwork<EntitySpawnPayload>(bytes);
+
+    EXPECT_EQ(restored.entityId, 12345);
+    EXPECT_EQ(restored.type, static_cast<uint8_t>(EntityType::Player));
+    EXPECT_FLOAT_EQ(restored.posX, 100.5f);
+    EXPECT_FLOAT_EQ(restored.posY, 200.75f);
+}
+
+TEST_F(ByteOrderSpecTest, EntityMovePayloadRoundTrip) {
+    EntityMovePayload original{};
+    original.entityId = 999;
+    original.posX = -50.0f;
+    original.posY = 75.25f;
+    original.velX = 1.5f;
+    original.velY = -2.5f;
+
+    auto bytes = ByteOrderSpec::serializeToNetwork(original);
+    auto restored = ByteOrderSpec::deserializeFromNetwork<EntityMovePayload>(bytes);
+
+    EXPECT_EQ(restored.entityId, 999);
+    EXPECT_FLOAT_EQ(restored.posX, -50.0f);
+    EXPECT_FLOAT_EQ(restored.posY, 75.25f);
+    EXPECT_FLOAT_EQ(restored.velX, 1.5f);
+    EXPECT_FLOAT_EQ(restored.velY, -2.5f);
+}
+
+TEST_F(ByteOrderSpecTest, SerializerHighLevelAPI) {
+    // Test the new Serializer::serializeForNetwork / deserializeFromNetwork
+    Header original = Header::createServer(OpCode::S_ENTITY_SPAWN, 42, 13);
+
+    auto bytes = Serializer::serializeForNetwork(original);
+    EXPECT_EQ(bytes.size(), sizeof(Header));
+
+    auto restored = Serializer::deserializeFromNetwork<Header>(bytes);
+    EXPECT_EQ(restored.magic, kMagicByte);
+    EXPECT_EQ(restored.opcode, static_cast<uint8_t>(OpCode::S_ENTITY_SPAWN));
+    EXPECT_EQ(restored.userId, kServerUserId);
+    EXPECT_EQ(restored.seqId, 42);
+    EXPECT_EQ(restored.payloadSize, 13);
+}
+
+TEST_F(ByteOrderSpecTest, AcceptPayloadRoundTrip) {
+    AcceptPayload original{};
+    original.newUserId = 0x12345678;
+
+    auto bytes = ByteOrderSpec::serializeToNetwork(original);
+    auto restored = ByteOrderSpec::deserializeFromNetwork<AcceptPayload>(bytes);
+
+    EXPECT_EQ(restored.newUserId, 0x12345678);
+}
+
+TEST_F(ByteOrderSpecTest, UpdatePosPayloadRoundTrip) {
+    UpdatePosPayload original{};
+    original.posX = 123.456f;
+    original.posY = -789.012f;
+
+    auto bytes = ByteOrderSpec::serializeToNetwork(original);
+    auto restored = ByteOrderSpec::deserializeFromNetwork<UpdatePosPayload>(bytes);
+
+    EXPECT_FLOAT_EQ(restored.posX, 123.456f);
+    EXPECT_FLOAT_EQ(restored.posY, -789.012f);
+}
+
+TEST_F(ByteOrderSpecTest, SingleBytePayloadsUnchanged) {
+    // Single-byte payloads should not be affected by byte order
+    InputPayload input{};
+    input.inputMask = InputMask::kUp | InputMask::kShoot;
+
+    auto bytes = ByteOrderSpec::serializeToNetwork(input);
+    auto restored = ByteOrderSpec::deserializeFromNetwork<InputPayload>(bytes);
+
+    EXPECT_EQ(restored.inputMask, InputMask::kUp | InputMask::kShoot);
+    EXPECT_TRUE(restored.isUp());
+    EXPECT_TRUE(restored.isShoot());
+    EXPECT_FALSE(restored.isDown());
+}
+
+TEST_F(ByteOrderSpecTest, DeserializeFromRawPointer) {
+    Header original = Header::create(OpCode::C_INPUT, 42, 100);
+    auto bytes = ByteOrderSpec::serializeToNetwork(original);
+
+    auto restored = Serializer::deserializeFromNetwork<Header>(
+        bytes.data(), bytes.size());
+
+    EXPECT_EQ(restored.magic, kMagicByte);
+    EXPECT_EQ(restored.opcode, static_cast<uint8_t>(OpCode::C_INPUT));
+    EXPECT_EQ(restored.userId, 42);
+    EXPECT_EQ(restored.seqId, 100);
+}
