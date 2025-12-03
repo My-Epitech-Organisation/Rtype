@@ -2,8 +2,6 @@ add_library(rtype_network STATIC
     # Transport layer (Asio-based async UDP)
     transport/AsioUdpSocket.cpp
 
-    # Legacy files (to be removed after migration)
-    # TODO: Remove these once all code uses protocol/
     UdpSocket.cpp
     Packet.cpp
     Serializer.cpp
