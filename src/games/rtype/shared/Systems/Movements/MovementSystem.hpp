@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "../../../engine/ISystem.hpp"
+#include "../../../../../engine/ISystem.hpp"
 #include "../../Components/TransformComponent.hpp"
 #include "../../Components/VelocityComponent.hpp"
 
@@ -20,7 +20,7 @@ namespace rtype::games::rtype::shared {
  * This is a shared system used by both client and server.
  * It applies velocity to transform each frame.
  */
-class MovementSystem : public ISystem {
+class MovementSystem : public ::rtype::engine::ISystem {
    public:
     MovementSystem() = default;
 
