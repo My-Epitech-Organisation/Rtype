@@ -45,17 +45,12 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     ECS::Entity enemy = registry.spawnEntity();
     float spawnY = _spawnYDist(_rng);
 
-    // Core components
     registry.emplaceComponent<TransformComponent>(enemy, _config.spawnX, spawnY,
                                                   0.0F);
     registry.emplaceComponent<VelocityComponent>(
         enemy, -_config.bydosSlaveSpeed, 0.0F);
-
-    // AI component with behavior
     registry.emplaceComponent<AIComponent>(enemy, AIBehavior::MoveLeft,
                                            _config.bydosSlaveSpeed);
-
-    // Gameplay components
     constexpr int BYDOS_SLAVE_HEALTH = 10;
     registry.emplaceComponent<HealthComponent>(enemy, BYDOS_SLAVE_HEALTH,
                                                BYDOS_SLAVE_HEALTH);
@@ -64,17 +59,14 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     registry.emplaceComponent<BoundingBoxComponent>(enemy, BYDOS_SLAVE_SIZE,
                                                     BYDOS_SLAVE_SIZE);
 
-    // Network ID for synchronization
     uint32_t networkId = _nextNetworkId++;
     registry.emplaceComponent<NetworkIdComponent>(enemy, networkId);
 
-    // Tags
     registry.emplaceComponent<EnemyTag>(enemy);
     registry.emplaceComponent<BydosSlaveTag>(enemy);
 
-    ++_enemyCount;
+    _enemyCount++;
 
-    // Emit spawn event for network
     engine::GameEvent event{};
     event.type = engine::GameEventType::EntitySpawned;
     event.entityNetworkId = networkId;
