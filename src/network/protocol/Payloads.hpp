@@ -54,8 +54,7 @@ inline constexpr std::uint8_t kShoot = 0x10;
  * @brief Payload for C_CONNECT (0x01)
  * @note Empty payload - connection request has no data
  */
-struct ConnectPayload {
-};
+struct ConnectPayload {};
 
 /**
  * @brief Payload for S_ACCEPT (0x02)
@@ -70,15 +69,13 @@ struct AcceptPayload {
  * @brief Payload for DISCONNECT (0x03)
  * @note Empty payload - disconnect has no data
  */
-struct DisconnectPayload {
-};
+struct DisconnectPayload {};
 
 /**
  * @brief Payload for C_GET_USERS (0x04)
  * @note Empty payload - request has no data
  */
-struct GetUsersRequestPayload {
-};
+struct GetUsersRequestPayload {};
 
 /**
  * @brief Fixed header for R_GET_USERS (0x05)
@@ -188,15 +185,13 @@ struct UpdatePosPayload {
  * @brief Payload for PING (0xF0)
  * @note Empty - timestamp can be tracked via seqId
  */
-struct PingPayload {
-};
+struct PingPayload {};
 
 /**
  * @brief Payload for PONG (0xF1)
  * @note Empty - echoes the seqId from PING via ackId
  */
-struct PongPayload {
-};
+struct PongPayload {};
 
 #pragma pack(pop)
 
