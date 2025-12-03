@@ -142,8 +142,8 @@ namespace Validator {
  * @param opcode The operation code (affects validation rules)
  * @return Success if valid, InvalidUserId error otherwise
  */
-[[nodiscard]] inline Result<void> validateClientUserId(
-    std::uint32_t userId, OpCode opcode) noexcept {
+[[nodiscard]] inline Result<void> validateClientUserId(std::uint32_t userId,
+                                                       OpCode opcode) noexcept {
     // C_CONNECT is special: allows unassigned ID
     if (opcode == OpCode::C_CONNECT) {
         if (userId == kUnassignedUserId) {
@@ -194,8 +194,9 @@ namespace Validator {
  * @param isFromServer Whether this packet claims to be from the server
  * @return Success if valid, first encountered error otherwise
  */
-[[nodiscard]] inline Result<void> validatePacket(
-    const std::uint8_t* data, std::size_t size, bool isFromServer) noexcept {
+[[nodiscard]] inline Result<void> validatePacket(const std::uint8_t* data,
+                                                 std::size_t size,
+                                                 bool isFromServer) noexcept {
     // Size check
     auto sizeResult = validatePacketSize(size);
     if (sizeResult.isErr()) {
@@ -213,8 +214,7 @@ namespace Validator {
 
     // Payload size validation
     std::size_t payloadSize = size - kHeaderSize;
-    auto payloadResult =
-        validatePayloadSize(header->getOpCode(), payloadSize);
+    auto payloadResult = validatePayloadSize(header->getOpCode(), payloadSize);
     if (payloadResult.isErr()) {
         return payloadResult;
     }
