@@ -1,6 +1,12 @@
 add_library(rtype_game_shared_systems OBJECT
     Movements/MovementSystem.cpp
     AISystem/AISystem.cpp
+    AISystem/Behaviors/MoveLeft/MoveLeftBehavior.cpp
+    AISystem/Behaviors/SineWave/SineWaveBehavior.cpp
+    AISystem/Behaviors/Chase/ChaseBehavior.cpp
+    AISystem/Behaviors/Patrol/PatrolBehavior.cpp
+    AISystem/Behaviors/Stationary/StationaryBehavior.cpp
+    AISystem/Behaviors/BehaviorRegistry.cpp
 )
 
 target_include_directories(rtype_game_shared_systems PUBLIC
