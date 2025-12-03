@@ -1,15 +1,26 @@
 add_library(rtype_network STATIC
+    # Transport layer (Asio-based async UDP)
+    transport/AsioUdpSocket.cpp
+
+    # Legacy files (to be removed after migration)
+    # TODO: Remove these once all code uses protocol/
     UdpSocket.cpp
     Packet.cpp
     Serializer.cpp
-    transport/AsioUdpSocket.cpp
 )
+
+# Protocol types are header-only (no .cpp files needed)
+# - protocol/OpCode.hpp
+# - protocol/Header.hpp
+# - protocol/Payloads.hpp
+# - protocol/Validator.hpp
 
 # Find Asio (standalone, non-Boost)
 find_package(asio CONFIG REQUIRED)
 
 target_include_directories(rtype_network PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/protocol
 )
 
 target_compile_features(rtype_network PUBLIC cxx_std_20)
