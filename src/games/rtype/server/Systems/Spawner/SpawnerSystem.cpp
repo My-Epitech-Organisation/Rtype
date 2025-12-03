@@ -21,8 +21,8 @@ using shared::HealthComponent;
 using shared::NetworkIdComponent;
 using shared::TransformComponent;
 using shared::VelocityComponent;
-constexpr float BYDOS_SLAVE_SIZE = 32.0F;
-constexpr int BYDOS_SLAVE_HEALTH = 10;
+static constexpr float BYDOS_SLAVE_SIZE = 32.0F;
+static constexpr int BYDOS_SLAVE_HEALTH = 10;
 
 SpawnerSystem::SpawnerSystem(EventEmitter emitter, SpawnerConfig config)
     : ASystem("SpawnerSystem"),
