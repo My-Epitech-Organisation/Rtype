@@ -11,7 +11,7 @@
 
 #include "ecs/ECS.hpp"
 
-namespace rtype::games::rtype::shared {
+namespace rtype::engine {
 
 /**
  * @class ISystem
@@ -65,4 +65,4 @@ class ISystem {
     bool _enabled = true;  ///< Whether system is active
 };
 
-}  // namespace rtype::games::rtype::shared
+}  // namespace rtype::engine
