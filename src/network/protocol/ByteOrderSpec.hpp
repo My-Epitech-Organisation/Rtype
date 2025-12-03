@@ -18,18 +18,7 @@
 
 namespace rtype::network {
 
-// ============================================================================
-// RFC-Compliant Byte Order Conversion Specializations
-//
-// These functions correctly convert each field based on its actual type,
-// unlike the generic "chunk-based" approach which treats all bytes blindly.
-// ============================================================================
-
 namespace ByteOrderSpec {
-
-// ----------------------------------------------------------------------------
-// Primitive Types (delegate to ByteOrder)
-// ----------------------------------------------------------------------------
 
 [[nodiscard]] inline std::uint8_t toNetwork(std::uint8_t v) noexcept {
     return v;
@@ -77,12 +66,6 @@ namespace ByteOrderSpec {
 [[nodiscard]] inline float fromNetwork(float v) noexcept {
     return ByteOrder::fromNetwork(v);
 }
-
-// ----------------------------------------------------------------------------
-// Generic Fallback for non-RFC types (uses field-agnostic conversion)
-// WARNING: This only works correctly for types with all same-sized fields!
-// For mixed-field structs, add explicit specializations above.
-// ----------------------------------------------------------------------------
 
 /// Type trait to detect RFC protocol types with explicit specializations
 template <typename T>
@@ -190,20 +173,8 @@ fromNetwork(const T& data) noexcept {
     return result;
 }
 
-// ----------------------------------------------------------------------------
-// Header (16 bytes) - RFC Section 4.1
-// ----------------------------------------------------------------------------
-
 /**
  * @brief Convert Header to network byte order (Big-Endian)
- *
- * Converts only multi-byte fields:
- * - payloadSize (uint16_t)
- * - userId (uint32_t)
- * - seqId (uint16_t)
- * - ackId (uint16_t)
- *
- * Single-byte fields (magic, opcode, flags, reserved) are unchanged.
  */
 [[nodiscard]] inline Header toNetwork(const Header& h) noexcept {
     Header result = h;
@@ -226,10 +197,6 @@ fromNetwork(const T& data) noexcept {
     return result;
 }
 
-// ----------------------------------------------------------------------------
-// AcceptPayload (4 bytes) - S_ACCEPT (0x02)
-// ----------------------------------------------------------------------------
-
 [[nodiscard]] inline AcceptPayload toNetwork(const AcceptPayload& p) noexcept {
     AcceptPayload result;
     result.newUserId = ByteOrder::toNetwork(p.newUserId);
@@ -243,15 +210,11 @@ fromNetwork(const T& data) noexcept {
     return result;
 }
 
-// ----------------------------------------------------------------------------
-// EntitySpawnPayload (13 bytes) - S_ENTITY_SPAWN (0x10)
-// ----------------------------------------------------------------------------
-
 [[nodiscard]] inline EntitySpawnPayload toNetwork(
     const EntitySpawnPayload& p) noexcept {
     EntitySpawnPayload result;
     result.entityId = ByteOrder::toNetwork(p.entityId);
-    result.type = p.type;  // uint8_t - no conversion
+    result.type = p.type;
     result.posX = ByteOrder::toNetwork(p.posX);
     result.posY = ByteOrder::toNetwork(p.posY);
     return result;
@@ -266,10 +229,6 @@ fromNetwork(const T& data) noexcept {
     result.posY = ByteOrder::fromNetwork(p.posY);
     return result;
 }
-
-// ----------------------------------------------------------------------------
-// EntityMovePayload (20 bytes) - S_ENTITY_MOVE (0x11)
-// ----------------------------------------------------------------------------
 
 [[nodiscard]] inline EntityMovePayload toNetwork(
     const EntityMovePayload& p) noexcept {
@@ -293,10 +252,6 @@ fromNetwork(const T& data) noexcept {
     return result;
 }
 
-// ----------------------------------------------------------------------------
-// EntityDestroyPayload (4 bytes) - S_ENTITY_DESTROY (0x12)
-// ----------------------------------------------------------------------------
-
 [[nodiscard]] inline EntityDestroyPayload toNetwork(
     const EntityDestroyPayload& p) noexcept {
     EntityDestroyPayload result;
@@ -310,10 +265,6 @@ fromNetwork(const T& data) noexcept {
     result.entityId = ByteOrder::fromNetwork(p.entityId);
     return result;
 }
-
-// ----------------------------------------------------------------------------
-// UpdatePosPayload (8 bytes) - S_UPDATE_POS (0x21)
-// ----------------------------------------------------------------------------
 
 [[nodiscard]] inline UpdatePosPayload toNetwork(
     const UpdatePosPayload& p) noexcept {
@@ -330,10 +281,6 @@ fromNetwork(const T& data) noexcept {
     result.posY = ByteOrder::fromNetwork(p.posY);
     return result;
 }
-
-// ----------------------------------------------------------------------------
-// Single-byte payloads (no conversion needed)
-// ----------------------------------------------------------------------------
 
 [[nodiscard]] inline UpdateStatePayload toNetwork(
     const UpdateStatePayload& p) noexcept {
@@ -353,7 +300,6 @@ fromNetwork(const T& data) noexcept {
     return p;
 }
 
-// Empty payloads (no-op)
 [[nodiscard]] inline ConnectPayload toNetwork(
     const ConnectPayload& p) noexcept {
     return p;
@@ -385,10 +331,6 @@ fromNetwork(const T& data) noexcept {
 [[nodiscard]] inline PongPayload fromNetwork(const PongPayload& p) noexcept {
     return p;
 }
-
-// ----------------------------------------------------------------------------
-// Buffer-based helpers for Serializer integration
-// ----------------------------------------------------------------------------
 
 /**
  * @brief Serialize a type to network byte order buffer
