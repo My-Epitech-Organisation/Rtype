@@ -53,7 +53,7 @@ void Graphic::_update() {
     ButtonUpdateSystem::update(this->_registry, this->_window);
     float dt = this->_mainClock.getElapsedTime().asSeconds();
     this->_mainClock.restart();
-    float scrollSpeed = 30.f;
+    float scrollSpeed = 50.f;
     sf::Vector2f center = this->_view.getCenter();
     float newX = center.x + (scrollSpeed * dt);
     this->_view.setCenter({newX, center.y});
