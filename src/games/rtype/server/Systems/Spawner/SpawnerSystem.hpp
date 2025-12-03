@@ -20,13 +20,13 @@ namespace rtype::games::rtype::server {
  * @brief Configuration for enemy spawning
  */
 struct SpawnerConfig {
-    float minSpawnInterval = 1.0F;   ///< Minimum time between spawns
-    float maxSpawnInterval = 3.0F;   ///< Maximum time between spawns
-    std::size_t maxEnemies = 50;     ///< Maximum enemies allowed
-    float spawnX = 800.0F;           ///< X position for spawning (right edge)
-    float minSpawnY = 50.0F;         ///< Minimum Y spawn position
-    float maxSpawnY = 550.0F;        ///< Maximum Y spawn position
-    float bydosSlaveSpeed = 100.0F;  ///< Speed of Bydos slave enemies
+    float minSpawnInterval = 1.0F;   // Minimum time between spawns
+    float maxSpawnInterval = 3.0F;   // Maximum time between spawns
+    std::size_t maxEnemies = 50;     // Maximum enemies allowed
+    float spawnX = 800.0F;           // X position for spawning (right edge)
+    float minSpawnY = 50.0F;         // Minimum Y spawn position
+    float maxSpawnY = 550.0F;        // Maximum Y spawn position
+    float bydosSlaveSpeed = 100.0F;  // Speed of Bydos slave enemies
 };
 
 /**
@@ -57,7 +57,7 @@ class SpawnerSystem : public shared::ISystem {
         return _enemyCount;
     }
     void setEnemyCount(std::size_t count) noexcept { _enemyCount = count; }
-    void incrementEnemyCount() noexcept { ++_enemyCount; }
+    void incrementEnemyCount() noexcept { _enemyCount++; }
     void decrementEnemyCount() noexcept {
         if (_enemyCount > 0) --_enemyCount;
     }
