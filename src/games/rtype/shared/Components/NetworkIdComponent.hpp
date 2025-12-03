@@ -19,7 +19,7 @@ namespace rtype::games::rtype::shared {
  * Each networked entity has a unique network ID assigned by the server.
  */
 struct NetworkIdComponent {
-    uint32_t networkId = 0;  ///< Unique network identifier
+    uint32_t networkId = 0;  // Unique network identifier
 };
 
 }  // namespace rtype::games::rtype::shared
