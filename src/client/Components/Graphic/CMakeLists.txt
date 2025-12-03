@@ -6,7 +6,7 @@ add_library(rtype-graphic-components
     ButtonComponent.hpp
     UserEventComponent.hpp
         TagComponent.hpp
-        PrallaxComponent.hpp
+        ParallaxComponent.hpp
         VelocityComponent.hpp
         TextureRectComponent.hpp
         BoxingComponent.hpp

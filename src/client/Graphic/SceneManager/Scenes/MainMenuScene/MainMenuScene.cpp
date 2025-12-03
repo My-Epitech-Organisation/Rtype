@@ -20,7 +20,7 @@
 #include "Components/Graphic/TextComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "Graphic/BoxingComponent.hpp"
-#include "Graphic/PrallaxComponent.hpp"
+#include "Graphic/ParallaxComponent.hpp"
 #include "Graphic/SizeComponent.hpp"
 #include "Graphic/TextureRectComponent.hpp"
 #include "Graphic/VelocityComponent.hpp"
