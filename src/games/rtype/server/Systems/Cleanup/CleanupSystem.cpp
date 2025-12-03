@@ -16,7 +16,9 @@ using shared::EnemyTag;
 using shared::TransformComponent;
 
 CleanupSystem::CleanupSystem(EventEmitter emitter, CleanupConfig config)
-    : _emitEvent(std::move(emitter)), _config(config) {}
+    : ASystem("CleanupSystem"),
+      _emitEvent(std::move(emitter)),
+      _config(config) {}
 
 void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
     auto view = registry.view<TransformComponent, EnemyTag>();

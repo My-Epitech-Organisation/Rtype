@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "../../../../../engine/ISystem.hpp"
+#include "../../../../../engine/ASystem.hpp"
 #include "../../Components/AIComponent.hpp"
 #include "../../Components/TransformComponent.hpp"
 #include "../../Components/VelocityComponent.hpp"
@@ -24,9 +24,9 @@ namespace rtype::games::rtype::shared {
  *
  * Make sure to call registerDefaultBehaviors() before using this system.
  */
-class AISystem : public ::rtype::engine::ISystem {
+class AISystem : public ::rtype::engine::ASystem {
    public:
-    AISystem() = default;
+    AISystem() : ASystem("AISystem") {}
 
     /**
      * @brief Update all entities with AI components
@@ -34,10 +34,6 @@ class AISystem : public ::rtype::engine::ISystem {
      * @param deltaTime Time elapsed since last update
      */
     void update(ECS::Registry& registry, float deltaTime) override;
-
-    [[nodiscard]] const std::string getName() const noexcept override {
-        return "AISystem";
-    }
 };
 
 }  // namespace rtype::games::rtype::shared

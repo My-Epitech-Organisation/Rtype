@@ -9,8 +9,8 @@
 
 #include <functional>
 
-#include "../../../../../engine/IGameEngine.hpp"
-#include "../../../../../engine/ISystem.hpp"
+#include "../../../../../engine/AGameEngine.hpp"
+#include "../../../../../engine/ASystem.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -20,7 +20,7 @@ namespace rtype::games::rtype::server {
  *
  * Emits destruction events for network synchronization.
  */
-class DestroySystem : public ::rtype::engine::ISystem {
+class DestroySystem : public ::rtype::engine::ASystem {
    public:
     using EventEmitter = std::function<void(const engine::GameEvent&)>;
     using EnemyCountUpdater = std::function<void()>;
@@ -29,10 +29,6 @@ class DestroySystem : public ::rtype::engine::ISystem {
                   EnemyCountUpdater enemyCountDecrementer);
 
     void update(ECS::Registry& registry, float deltaTime) override;
-
-    [[nodiscard]] const std::string getName() const noexcept override {
-        return "DestroySystem";
-    }
 
    private:
     EventEmitter _emitEvent;

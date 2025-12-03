@@ -11,7 +11,7 @@
 #include <mutex>
 #include <vector>
 
-#include "../../../engine/IGameEngine.hpp"
+#include "../../../engine/AGameEngine.hpp"
 #include "../shared/Systems/Systems.hpp"
 #include "Systems/Systems.hpp"
 #include "ecs/ECS.hpp"
@@ -56,7 +56,7 @@ struct GameConfig {
  * - Pending events queue is thread-safe
  * - update() should be called from a single thread
  */
-class GameEngine : public engine::IGameEngine {
+class GameEngine : public engine::AGameEngine {
    public:
     GameEngine();
     ~GameEngine() override;

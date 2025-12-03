@@ -9,8 +9,8 @@
 
 #include <functional>
 
-#include "../../../../../engine/IGameEngine.hpp"
-#include "../../../../../engine/ISystem.hpp"
+#include "../../../../../engine/AGameEngine.hpp"
+#include "../../../../../engine/ASystem.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -29,17 +29,13 @@ struct CleanupConfig {
  * @class CleanupSystem
  * @brief Server-only system that marks out-of-bounds entities for destruction
  */
-class CleanupSystem : public ::rtype::engine::ISystem {
+class CleanupSystem : public ::rtype::engine::ASystem {
    public:
     using EventEmitter = std::function<void(const engine::GameEvent&)>;
 
     CleanupSystem(EventEmitter emitter, CleanupConfig config);
 
     void update(ECS::Registry& registry, float deltaTime) override;
-
-    [[nodiscard]] const std::string getName() const noexcept override {
-        return "CleanupSystem";
-    }
 
    private:
     EventEmitter _emitEvent;
