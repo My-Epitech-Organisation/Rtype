@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../shared/Systems/Systems.hpp"
-#include "IGameEngine.hpp"
+#include "../../../engine/IGameEngine.hpp"
 #include "Systems/Systems.hpp"
 #include "ecs/ECS.hpp"
 

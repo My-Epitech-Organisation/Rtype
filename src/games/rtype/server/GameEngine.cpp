@@ -7,6 +7,8 @@
 
 #include "GameEngine.hpp"
 
+#include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
+
 namespace rtype::games::rtype::server {
 
 GameEngine::GameEngine() : _systemScheduler(_registry) {}
@@ -36,6 +38,7 @@ bool GameEngine::initialize() {
     spawnerConfig.bydosSlaveSpeed = GameConfig::BYDOS_SLAVE_SPEED;
     _spawnerSystem =
         std::make_unique<SpawnerSystem>(eventEmitter, spawnerConfig);
+    shared::registerDefaultBehaviors();
     _aiSystem = std::make_unique<shared::AISystem>();
     _movementSystem = std::make_unique<shared::MovementSystem>();
     CleanupConfig cleanupConfig{};
