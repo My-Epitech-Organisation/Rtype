@@ -26,9 +26,10 @@ void Graphic::_handleKeyReleasedEvent(const std::optional<sf::Event>& event) {
     }
     const auto& key = event->getIf<sf::Event::KeyReleased>();
     if (key && key->code == this->_keybinds->getKeyBinding(GameAction::PAUSE)) {
-        if (*this->_sceneManager == SceneManager::IN_GAME) {
+        if (this->_sceneManager.get()->operator==(SceneManager::IN_GAME)) {
             this->_sceneManager->setCurrentScene(SceneManager::PAUSE_MENU);
-        } else if (*this->_sceneManager == SceneManager::PAUSE_MENU) {
+        } else if (this->_sceneManager.get()->operator==(
+                       SceneManager::PAUSE_MENU)) {
             this->_sceneManager->setCurrentScene(SceneManager::IN_GAME);
         }
     }
