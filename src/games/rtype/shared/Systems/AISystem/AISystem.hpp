@@ -7,10 +7,10 @@
 
 #pragma once
 
+#include "../../../engine/ISystem.hpp"
 #include "../../Components/AIComponent.hpp"
 #include "../../Components/TransformComponent.hpp"
 #include "../../Components/VelocityComponent.hpp"
-#include "../../../engine/ISystem.hpp"
 #include "Behaviors/BehaviorRegistry.hpp"
 
 namespace rtype::games::rtype::shared {
