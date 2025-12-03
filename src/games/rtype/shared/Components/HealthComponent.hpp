@@ -19,8 +19,8 @@ namespace rtype::games::rtype::shared {
  * When current reaches 0, entity should be destroyed.
  */
 struct HealthComponent {
-    int32_t current = 100;  ///< Current health points
-    int32_t max = 100;      ///< Maximum health points
+    int32_t current = 100;  // Current health points
+    int32_t max = 100;      // Maximum health points
 
     /**
      * @brief Check if entity is alive
