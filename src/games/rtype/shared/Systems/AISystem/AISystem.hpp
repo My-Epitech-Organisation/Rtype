@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "../../../engine/ISystem.hpp"
+#include "../../../../../engine/ISystem.hpp"
 #include "../../Components/AIComponent.hpp"
 #include "../../Components/TransformComponent.hpp"
 #include "../../Components/VelocityComponent.hpp"
@@ -24,7 +24,7 @@ namespace rtype::games::rtype::shared {
  *
  * Make sure to call registerDefaultBehaviors() before using this system.
  */
-class AISystem : public ISystem {
+class AISystem : public ::rtype::engine::ISystem {
    public:
     AISystem() = default;
 
