@@ -17,9 +17,9 @@ namespace rtype::games::rtype::shared {
  * Shared between client (rendering) and server (physics/logic).
  */
 struct TransformComponent {
-    float x = 0.0F;         ///< X position in world coordinates
-    float y = 0.0F;         ///< Y position in world coordinates
-    float rotation = 0.0F;  ///< Rotation in degrees
+    float x = 0.0F;         // X position in world coordinates
+    float y = 0.0F;         // Y position in world coordinates
+    float rotation = 0.0F;  // Rotation in degrees
 };
 
 }  // namespace rtype::games::rtype::shared
