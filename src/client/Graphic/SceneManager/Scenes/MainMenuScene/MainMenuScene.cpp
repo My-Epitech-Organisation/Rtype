@@ -26,26 +26,8 @@
 #include "Graphic/VelocityComponent.hpp"
 #include "SceneManager/SceneException.hpp"
 
-void MainMenuScene::update() {}
 
-void MainMenuScene::render(const std::shared_ptr<sf::RenderWindow>& window) {}
-
-void MainMenuScene::pollEvents(const sf::Event& e) {}
-
-MainMenuScene::MainMenuScene(
-    const std::shared_ptr<ECS::Registry>& ecs,
-    const std::shared_ptr<AssetManager>& assetsManager,
-    const std::shared_ptr<sf::RenderWindow>& window,
-    std::function<void(const SceneManager::Scene&)> switchToScene)
-    : AScene(ecs, assetsManager, window) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib150(1, 150);
-    std::uniform_int_distribution<> distrib15(1, 15);
-    auto seed = static_cast<unsigned int>(time(nullptr));
-
-    this->_listEntity = (EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "R-TYPE"));
+void MainMenuScene::_createAstroneerVessel() {
     auto astroneerVessel = this->_registry->spawnEntity();
     this->_registry->emplaceComponent<Image>(
         astroneerVessel,
@@ -54,6 +36,14 @@ MainMenuScene::MainMenuScene(
     this->_registry->emplaceComponent<Size>(astroneerVessel, 0.3, 0.3);
     this->_registry->emplaceComponent<Velocity>(astroneerVessel, -135.f, -75.f);
     this->_listEntity.push_back(astroneerVessel);
+}
+
+void MainMenuScene::_createFakePlayer()
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib150(1, 150);
+    std::uniform_int_distribution<> distrib15(1, 15);
 
     for (int i = 0; i < 7; i++) {
         auto fakePlayer = this->_registry->spawnEntity();
@@ -71,6 +61,27 @@ MainMenuScene::MainMenuScene(
             fakePlayer, (distrib150(gen) % 150) + 75, 0.f);
         this->_listEntity.push_back(fakePlayer);
     }
+}
+
+void MainMenuScene::update() {}
+
+void MainMenuScene::render(const std::shared_ptr<sf::RenderWindow>& window) {}
+
+void MainMenuScene::pollEvents(const sf::Event& e) {}
+
+MainMenuScene::MainMenuScene(
+    const std::shared_ptr<ECS::Registry>& ecs,
+    const std::shared_ptr<AssetManager>& assetsManager,
+    const std::shared_ptr<sf::RenderWindow>& window,
+    std::function<void(const SceneManager::Scene&)> switchToScene)
+    : AScene(ecs, assetsManager, window) {
+
+    this->_listEntity = (EntityFactory::createBackground(
+        this->_registry, this->_assetsManager, "R-TYPE"));
+    this->_createAstroneerVessel();
+    this->_createFakePlayer();
+
+
     this->_listEntity.push_back(EntityFactory::createButton(
         *this->_registry,
         Text(this->_assetsManager->fontManager->get("title_font"),

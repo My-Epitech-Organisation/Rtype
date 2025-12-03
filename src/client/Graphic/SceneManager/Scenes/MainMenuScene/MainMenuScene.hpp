@@ -15,6 +15,9 @@ class MainMenuScene : public AScene {
    private:
     std::vector<ECS::Entity> _listEntity;
 
+    void _createAstroneerVessel();
+    void _createFakePlayer();
+
    public:
     void update() override;
     void render(const std::shared_ptr<sf::RenderWindow>& window) override;

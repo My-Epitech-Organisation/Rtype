@@ -28,11 +28,3 @@ TEST_F(ClientAppTest, Constructor_InitializesGraphic) {
         ClientApp app(registry);
     });
 }
-
-TEST_F(ClientAppTest, Constructor_WithNullRegistry_Throws) {
-    // Note: Currently doesn't throw, causes segfault - should be fixed
-    // EXPECT_THROW({
-    //     ClientApp app(nullptr);
-    // }, std::exception);
-    SUCCEED();  // Placeholder until fixed
-}
