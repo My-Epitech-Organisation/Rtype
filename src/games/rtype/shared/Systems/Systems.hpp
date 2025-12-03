@@ -7,6 +7,6 @@
 
 #pragma once
 
-#include "AISystem/AISystem.hpp"
 #include "../../engine/ISystem.hpp"
+#include "AISystem/AISystem.hpp"
 #include "Movements/MovementSystem.hpp"
