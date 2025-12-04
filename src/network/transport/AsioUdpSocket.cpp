@@ -7,8 +7,8 @@
 
 #include "AsioUdpSocket.hpp"
 
-#include <utility>
 #include <memory>
+#include <utility>
 
 namespace rtype::network {
 

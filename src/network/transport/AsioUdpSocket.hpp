@@ -7,9 +7,9 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <mutex>
-#include <functional>
 
 #include <asio.hpp>
 
@@ -52,7 +52,7 @@ class AsioUdpSocket : public IAsyncSocket {
     void asyncSendTo(const Buffer& data, const Endpoint& dest,
                      SendCallback handler) override;
 
-    void asyncReceiveFrom(std::shared_ptr<Buffer> buffer, 
+    void asyncReceiveFrom(std::shared_ptr<Buffer> buffer,
                           std::shared_ptr<Endpoint> sender,
                           ReceiveCallback handler) override;
 
