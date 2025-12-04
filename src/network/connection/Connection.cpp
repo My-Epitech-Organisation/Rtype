@@ -41,7 +41,7 @@ Result<void> Connection::disconnect() {
 }
 
 Result<void> Connection::processPacket(const Buffer& data,
-                                        const Endpoint& sender) {
+                                       const Endpoint& sender) {
     if (data.size() < kHeaderSize) {
         return Err<void>(NetworkError::PacketTooSmall);
     }
@@ -146,12 +146,12 @@ Result<Connection::OutgoingPacket> Connection::buildPacket(
     Header header;
     header.magic = kMagicByte;
     header.opcode = static_cast<std::uint8_t>(opcode);
-    header.payloadSize = ByteOrderSpec::toNetwork(
-        static_cast<std::uint16_t>(payload.size()));
+    header.payloadSize =
+        ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(payload.size()));
     header.userId = ByteOrderSpec::toNetwork(*uid);
     header.seqId = ByteOrderSpec::toNetwork(nextSequenceId());
-    header.ackId = ByteOrderSpec::toNetwork(
-        reliableChannel_.getLastReceivedSeqId());
+    header.ackId =
+        ByteOrderSpec::toNetwork(reliableChannel_.getLastReceivedSeqId());
     header.flags = Flags::kIsAck;
     header.reserved = {0, 0, 0};
 
@@ -163,7 +163,8 @@ Result<Connection::OutgoingPacket> Connection::buildPacket(
     Buffer packet(kHeaderSize + payload.size());
     std::memcpy(packet.data(), &header, kHeaderSize);
     if (!payload.empty()) {
-        std::memcpy(packet.data() + kHeaderSize, payload.data(), payload.size());
+        std::memcpy(packet.data() + kHeaderSize, payload.data(),
+                    payload.size());
     }
 
     if (reliable) {
@@ -222,8 +223,8 @@ Buffer Connection::buildConnectPacket() {
     header.payloadSize = 0;
     header.userId = ByteOrderSpec::toNetwork(kUnassignedUserId);
     header.seqId = ByteOrderSpec::toNetwork(nextSequenceId());
-    header.ackId = ByteOrderSpec::toNetwork(
-        reliableChannel_.getLastReceivedSeqId());
+    header.ackId =
+        ByteOrderSpec::toNetwork(reliableChannel_.getLastReceivedSeqId());
     header.flags = Flags::kReliable | Flags::kIsAck;
     header.reserved = {0, 0, 0};
 
@@ -245,8 +246,8 @@ Buffer Connection::buildDisconnectPacket() {
     header.payloadSize = 0;
     header.userId = ByteOrderSpec::toNetwork(uid);
     header.seqId = ByteOrderSpec::toNetwork(nextSequenceId());
-    header.ackId = ByteOrderSpec::toNetwork(
-        reliableChannel_.getLastReceivedSeqId());
+    header.ackId =
+        ByteOrderSpec::toNetwork(reliableChannel_.getLastReceivedSeqId());
     header.flags = Flags::kReliable | Flags::kIsAck;
     header.reserved = {0, 0, 0};
 
@@ -260,7 +261,7 @@ Buffer Connection::buildDisconnectPacket() {
 }
 
 Result<void> Connection::handleConnectAccept(const Header& header,
-                                              const Buffer& payload) {
+                                             const Buffer& payload) {
     if (payload.size() < sizeof(AcceptPayload)) {
         return Err<void>(NetworkError::MalformedPacket);
     }
@@ -290,8 +291,6 @@ void Connection::queuePacket(Buffer data, bool reliable) {
     outgoingQueue_.push(std::move(pkt));
 }
 
-std::uint16_t Connection::nextSequenceId() noexcept {
-    return sequenceId_++;
-}
+std::uint16_t Connection::nextSequenceId() noexcept { return sequenceId_++; }
 
 }  // namespace rtype::network

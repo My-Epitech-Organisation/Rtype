@@ -89,7 +89,8 @@ ConnectionStateMachine::UpdateResult ConnectionStateMachine::update() {
             if (isTimedOut()) {
                 ++retryCount_;
                 if (retryCount_ > config_.maxConnectRetries) {
-                    lastDisconnectReason_ = DisconnectReason::MaxRetriesExceeded;
+                    lastDisconnectReason_ =
+                        DisconnectReason::MaxRetriesExceeded;
                     transitionTo(ConnectionState::Disconnected);
                     if (callbacks_.onConnectFailed) {
                         callbacks_.onConnectFailed(
@@ -191,8 +192,8 @@ bool ConnectionStateMachine::isHeartbeatTimedOut() const noexcept {
     if (state_ != ConnectionState::Connected) {
         return false;
     }
-    auto timeSinceActivity = std::chrono::duration_cast<Duration>(
-        Clock::now() - lastActivityAt_);
+    auto timeSinceActivity =
+        std::chrono::duration_cast<Duration>(Clock::now() - lastActivityAt_);
     return timeSinceActivity >= config_.heartbeatTimeout;
 }
 

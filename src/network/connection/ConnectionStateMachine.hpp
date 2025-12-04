@@ -76,7 +76,8 @@ class ConnectionStateMachine {
     [[nodiscard]] Result<void> handleAccept(std::uint32_t userId);
 
     /**
-     * @brief Initiate graceful disconnect (CONNECTED/CONNECTING → DISCONNECTING)
+     * @brief Initiate graceful disconnect (CONNECTED/CONNECTING →
+     * DISCONNECTING)
      * @return Ok if transition valid, Err otherwise
      */
     [[nodiscard]] Result<void> initiateDisconnect();

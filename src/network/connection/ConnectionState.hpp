@@ -73,8 +73,7 @@ enum class ConnectionState : std::uint8_t {
     return current == ConnectionState::Connected;
 }
 
-[[nodiscard]] constexpr bool isTerminalState(
-    ConnectionState current) noexcept {
+[[nodiscard]] constexpr bool isTerminalState(ConnectionState current) noexcept {
     return current == ConnectionState::Disconnected;
 }
 

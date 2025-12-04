@@ -74,7 +74,8 @@ class Connection {
 
     /**
      * @brief Initiate connection to server
-     * @return Ok if connection attempt started, Err if already connecting/connected
+     * @return Ok if connection attempt started, Err if already
+     * connecting/connected
      */
     [[nodiscard]] Result<void> connect();
 
@@ -91,7 +92,7 @@ class Connection {
      * @return Ok if processed, Err if invalid packet
      */
     [[nodiscard]] Result<void> processPacket(const Buffer& data,
-                                              const Endpoint& sender);
+                                             const Endpoint& sender);
 
     /**
      * @brief Update connection state and handle timeouts
@@ -114,7 +115,7 @@ class Connection {
      * @return Ok with packet data, Err if not connected or invalid opcode
      */
     [[nodiscard]] Result<OutgoingPacket> buildPacket(OpCode opcode,
-                                                      const Buffer& payload);
+                                                     const Buffer& payload);
 
     /**
      * @brief Record that an ACK was received for a sequence ID
@@ -145,7 +146,7 @@ class Connection {
     [[nodiscard]] Buffer buildConnectPacket();
     [[nodiscard]] Buffer buildDisconnectPacket();
     [[nodiscard]] Result<void> handleConnectAccept(const Header& header,
-                                                    const Buffer& payload);
+                                                   const Buffer& payload);
     [[nodiscard]] Result<void> handleDisconnect(const Header& header);
     void processReliabilityAck(const Header& header);
     void queuePacket(Buffer data, bool reliable);
