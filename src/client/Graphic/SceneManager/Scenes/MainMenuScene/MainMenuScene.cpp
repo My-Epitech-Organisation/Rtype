@@ -33,7 +33,7 @@ void MainMenuScene::_createAstroneerVessel() {
         this->_assetsManager->textureManager->get("astro_vessel"));
     this->_registry->emplaceComponent<Position>(astroneerVessel, 1900, 1060);
     this->_registry->emplaceComponent<Size>(astroneerVessel, 0.3, 0.3);
-    this->_registry->emplaceComponent<Velocity>(astroneerVessel, -135.f, -75.f);
+    this->_registry->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(astroneerVessel, -135.f, -75.f);
     this->_listEntity.push_back(astroneerVessel);
 }
 
@@ -55,7 +55,7 @@ void MainMenuScene::_createFakePlayer() {
             fakePlayer, (-10 * (distrib150(gen) + 50)),
             72 * (distrib15(gen) % 15));
         this->_registry->emplaceComponent<Size>(fakePlayer, 2.2, 2.2);
-        this->_registry->emplaceComponent<Velocity>(
+        this->_registry->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(
             fakePlayer, (distrib150(gen) % 150) + 75, 0.f);
         this->_listEntity.push_back(fakePlayer);
     }

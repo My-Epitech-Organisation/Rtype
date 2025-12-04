@@ -1,16 +1,24 @@
 /*
 ** EPITECH PROJECT, 2025
-** r-type
+** Rtype
 ** File description:
-** VelocityComponent.hpp
+** VelocityComponent - Movement velocity data
 */
 
-#ifndef SRC_GAMES_RTYPE_SHARED_COMPONENTS_VELOCITYCOMPONENT_HPP_
-#define SRC_GAMES_RTYPE_SHARED_COMPONENTS_VELOCITYCOMPONENT_HPP_
+#pragma once
 
-struct Velocity {
-    float x = 0.0f;
-    float y = 0.0f;
+namespace rtype::games::rtype::shared {
+
+/**
+ * @struct VelocityComponent
+ * @brief Component storing entity velocity
+ *
+ * Used for entities that can move. Combined with TransformComponent
+ * by the MovementSystem to update positions.
+ */
+struct VelocityComponent {
+    float vx = 0.0F;  // Velocity on X axis (pixels/second)
+    float vy = 0.0F;  // Velocity on Y axis (pixels/second)
 };
 
-#endif  // SRC_GAMES_RTYPE_SHARED_COMPONENTS_VELOCITYCOMPONENT_HPP_
+}  // namespace rtype::games::rtype::shared

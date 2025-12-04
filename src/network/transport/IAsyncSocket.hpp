@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <utility>
 
 #include "core/Error.hpp"
 #include "core/Types.hpp"
@@ -54,7 +55,8 @@ class IAsyncSocket {
                              SendCallback handler) = 0;
 
     /// Async receive. Buffer/sender must remain valid until callback.
-    virtual void asyncReceiveFrom(Buffer& buffer, Endpoint& sender,
+    virtual void asyncReceiveFrom(std::shared_ptr<Buffer> buffer,
+                                  std::shared_ptr<Endpoint> sender,
                                   ReceiveCallback handler) = 0;
 
     /// Cancel pending operations (callbacks get NetworkError::Cancelled)
