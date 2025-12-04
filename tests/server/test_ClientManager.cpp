@@ -760,3 +760,99 @@ TEST_F(ClientManagerTest, RateLimitWindow_NotExceededWithinLimit) {
 
     EXPECT_EQ(metrics->connectionsRejected.load(), 0);
 }
+
+// ============================================================================
+// Additional Edge Case Tests for Branch Coverage
+// ============================================================================
+
+TEST_F(ClientManagerTest, HandleNewConnection_ServerFull_Additional) {
+    ClientManager manager(1, metrics); // Only allow 1 client
+    
+    // First connection should succeed
+    auto ep1 = makeEndpoint("192.168.1.1", 12345);
+    ClientId id1 = manager.handleNewConnection(ep1);
+    EXPECT_NE(id1, ClientManager::INVALID_CLIENT_ID);
+    
+    // Second connection should fail (server full)
+    auto ep2 = makeEndpoint("192.168.1.2", 12346);
+    ClientId id2 = manager.handleNewConnection(ep2);
+    EXPECT_EQ(id2, ClientManager::INVALID_CLIENT_ID);
+}
+
+TEST_F(ClientManagerTest, HandleNewConnection_DuplicateEndpoint) {
+    ClientManager manager(10, metrics);
+    
+    auto ep = makeEndpoint("192.168.1.1", 12345);
+    
+    // First connection
+    ClientId id1 = manager.handleNewConnection(ep);
+    EXPECT_NE(id1, ClientManager::INVALID_CLIENT_ID);
+    
+    // Duplicate connection attempt should return existing ID
+    ClientId id2 = manager.handleNewConnection(ep);
+    EXPECT_EQ(id2, id1);
+}
+
+TEST_F(ClientManagerTest, DisconnectClient_InvalidId) {
+    ClientManager manager(10, metrics);
+    
+    // Try to disconnect non-existent client
+    EXPECT_NO_THROW(manager.handleClientDisconnect(999, DisconnectReason::Disconnected));
+}
+
+TEST_F(ClientManagerTest, DisconnectClient_AlreadyDisconnected) {
+    ClientManager manager(10, metrics);
+    
+    auto ep = makeEndpoint("192.168.1.1", 12345);
+    ClientId id = manager.handleNewConnection(ep);
+    EXPECT_NE(id, ClientManager::INVALID_CLIENT_ID);
+    
+    // Disconnect once
+    manager.handleClientDisconnect(id, DisconnectReason::Disconnected);
+    
+    // Disconnect again (should not crash)
+    EXPECT_NO_THROW(manager.handleClientDisconnect(id, DisconnectReason::Disconnected));
+}
+
+TEST_F(ClientManagerTest, GetClientInfo_InvalidId) {
+    ClientManager manager(10, metrics);
+    
+    auto clientInfo = manager.getClientInfo(999);
+    EXPECT_FALSE(clientInfo.has_value());
+}
+
+TEST_F(ClientManagerTest, FindClientByEndpoint_NonExistent) {
+    ClientManager manager(10, metrics);
+    
+    auto ep = makeEndpoint("192.168.1.1", 12345);
+    ClientId id = manager.findClientByEndpoint(ep);
+    EXPECT_EQ(id, ClientManager::INVALID_CLIENT_ID);
+}
+
+TEST_F(ClientManagerTest, UpdateClientTimeout_NoTimeouts) {
+    ClientManager manager(10, metrics);
+    
+    // Add a client
+    auto ep = makeEndpoint("192.168.1.1", 12345);
+    ClientId id = manager.handleNewConnection(ep);
+    EXPECT_NE(id, ClientManager::INVALID_CLIENT_ID);
+    
+    // Update timeouts with no timeouts expected
+    manager.checkClientTimeouts(30);
+    
+    // Client should still be connected
+    EXPECT_EQ(manager.getConnectedClientCount(), 1u);
+}
+
+TEST_F(ClientManagerTest, ClearAllClients_EmptyManager) {
+    ClientManager manager(10, metrics);
+    
+    // Clear empty manager (should not crash)
+    EXPECT_NO_THROW(manager.clearAllClients());
+    EXPECT_EQ(manager.getConnectedClientCount(), 0u);
+}
+
+TEST_F(ClientManagerTest, GetMaxPlayers) {
+    ClientManager manager(42, metrics);
+    EXPECT_EQ(manager.getMaxPlayers(), 42u);
+}
