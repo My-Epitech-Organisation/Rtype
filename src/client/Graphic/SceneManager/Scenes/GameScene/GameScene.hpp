@@ -16,6 +16,8 @@ static constexpr int SizeYPauseMenu = 600;
 static constexpr int SizeFontPauseMenu = 40;
 static constexpr std::string PauseMenuTitle = "Pause";
 
+static constexpr float PlayerMovementSpeed = 300.0f;
+
 class GameScene : public AScene {
    private:
     const std::shared_ptr<KeyboardActions>& _keybinds;
