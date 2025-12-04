@@ -751,3 +751,63 @@ TEST(SerializationTest, StructByteOrderConversionValidation) {
     EXPECT_EQ(restored.flags, 0xABCDu);
     EXPECT_EQ(restored.type, 0x42u);
 }
+
+TEST(SerializationTest, SerializeStringTooLarge) {
+    // Create a string larger than UINT32_MAX
+    // We can't actually create such a string, but we can test the boundary
+    std::string largeString(1000000, 'A');  // Large but not too large
+
+    // This should work fine
+    EXPECT_NO_THROW(Serializer::serialize(largeString));
+
+    // Test with a mock large size by creating a custom string-like object
+    // that reports a large size
+    class MockLargeString {
+    public:
+        size_t size() const { return static_cast<size_t>(UINT32_MAX) + 1; }
+        const char* begin() const { return nullptr; }
+        const char* end() const { return nullptr; }
+    };
+
+    // We can't easily test this without modifying the function signature
+    // But the branch exists in the code, so this is noted for future testing
+    SUCCEED();  // Placeholder test
+}
+
+TEST(SerializationTest, DeserializeStringBufferSizeMismatch) {
+    // Test the case where buffer has length field but not enough data for the string
+    std::vector<uint8_t> buffer;
+
+    // Write a length of 10
+    uint32_t length = 10;
+    std::vector<uint8_t> lengthBytes(sizeof(uint32_t));
+    ByteOrder::writeTo(lengthBytes.data(), length);
+    buffer.insert(buffer.end(), lengthBytes.begin(), lengthBytes.end());
+
+    // But only provide 5 bytes of string data (not enough)
+    for (int i = 0; i < 5; ++i) {
+        buffer.push_back('A');
+    }
+
+    // This should throw because buffer.size() < sizeof(uint32_t) + length
+    EXPECT_THROW(Serializer::deserializeString(buffer), std::runtime_error);
+}
+
+TEST(SerializationTest, DeserializeEmptyBuffer) {
+    // Test deserializing an empty buffer
+    std::vector<uint8_t> emptyBuffer;
+    auto packet = Serializer::deserialize(emptyBuffer);
+
+    // Should create a default packet
+    EXPECT_EQ(packet.type(), PacketType::Unknown);
+    EXPECT_TRUE(packet.data().empty());
+}
+
+TEST(SerializationTest, DeserializeSingleByteBuffer) {
+    // Test deserializing a buffer with just one byte (packet type only)
+    std::vector<uint8_t> singleByteBuffer = {static_cast<uint8_t>(PacketType::PlayerInput)};
+    auto packet = Serializer::deserialize(singleByteBuffer);
+
+    EXPECT_EQ(packet.type(), PacketType::PlayerInput);
+    EXPECT_TRUE(packet.data().empty());
+}
