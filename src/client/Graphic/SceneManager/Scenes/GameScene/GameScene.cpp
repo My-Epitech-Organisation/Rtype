@@ -59,8 +59,10 @@ void GameScene::_updateUserMovementRight() {
 
 void GameScene::_handleKeyReleasedEvent(const sf::Event& event) {
     auto eventKeyRelease = event.getIf<sf::Event::KeyReleased>();
-    if (eventKeyRelease->code ==
-        this->_keybinds->getKeyBinding(GameAction::PAUSE)) {
+    auto keyPause = this->_keybinds->getKeyBinding(GameAction::PAUSE);
+    if (!eventKeyRelease || !keyPause.has_value())
+        return;
+    if (eventKeyRelease->code == *keyPause) {
         this->_registry->view<HiddenComponent, PauseMenuTag>().each(
             [](auto, HiddenComponent& hidden, auto) {
                 hidden.isHidden = !hidden.isHidden;
