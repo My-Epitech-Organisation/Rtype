@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -16,6 +17,9 @@
 
 #include "Packet.hpp"
 #include "core/ByteOrder.hpp"
+#include "protocol/ByteOrderSpec.hpp"
+#include "protocol/Header.hpp"
+#include "protocol/Payloads.hpp"
 
 namespace rtype::network {
 
@@ -218,25 +222,14 @@ class Serializer {
     /**
      * @brief Convert serialized buffer to network byte order (Big-Endian)
      *
-     * Converts all multi-byte numeric fields in a buffer from host byte order
-     * to network byte order. This must be called AFTER serialize() and BEFORE
-     * sending data over the network.
+     * For RFC protocol types (Header, Payloads), uses field-aware conversion.
+     * For primitives, converts the entire value.
      *
      * @tparam T Type of the serialized data
      * @param buffer Buffer to convert
      * @return New buffer with data in network byte order
      *
-     * @note For primitives (uint16_t, uint32_t, int*, float), converts the
-     * value. For structs, converts all 2-byte and 4-byte fields assuming
-     * packed layout with RFC-compliant types.
-     *
-     * Example:
-     * @code
-     * uint32_t value = 42;
-     * auto bytes = Serializer::serialize(value);
-     * auto networkBytes = Serializer::toNetworkByteOrder<uint32_t>(bytes);
-     * // networkBytes now in big-endian format
-     * @endcode
+     * @note Prefer using ByteOrderSpec::serializeToNetwork<T>() for RFC types.
      */
     template <typename T>
     static std::vector<uint8_t> toNetworkByteOrder(
@@ -252,55 +245,26 @@ class Serializer {
                 std::to_string(buffer.size()) + " bytes");
         }
 
-        std::vector<uint8_t> result = buffer;
-
-        if constexpr (ByteOrder::is_network_numeric_v<T>) {
-            T value;
-            std::memcpy(&value, result.data(), sizeof(T));
-            T networkValue = ByteOrder::toNetwork(value);
-            std::memcpy(result.data(), &networkValue, sizeof(T));
-        } else {
-            size_t offset = 0;
-            while (offset + 4 <= result.size()) {
-                uint32_t value32;
-                std::memcpy(&value32, result.data() + offset, sizeof(uint32_t));
-                uint32_t network32 = ByteOrder::toNetwork(value32);
-                std::memcpy(result.data() + offset, &network32,
-                            sizeof(uint32_t));
-                offset += 4;
-            }
-            while (offset + 2 <= result.size()) {
-                uint16_t value16;
-                std::memcpy(&value16, result.data() + offset, sizeof(uint16_t));
-                uint16_t network16 = ByteOrder::toNetwork(value16);
-                std::memcpy(result.data() + offset, &network16,
-                            sizeof(uint16_t));
-                offset += 2;
-            }
-        }
-
+        T hostValue;
+        std::memcpy(&hostValue, buffer.data(), sizeof(T));
+        T networkValue = ByteOrderSpec::toNetwork(hostValue);
+        std::vector<uint8_t> result(sizeof(T));
+        std::memcpy(result.data(), &networkValue, sizeof(T));
         return result;
     }
 
     /**
      * @brief Convert buffer from network byte order to host byte order
      *
-     * Converts all multi-byte numeric fields in a buffer from network byte
-     * order to host byte order. This must be called AFTER receiving data from
-     * the network and BEFORE deserialize().
+     * For RFC protocol types (Header, Payloads), uses field-aware conversion.
+     * For primitives, converts the entire value.
      *
      * @tparam T Type of the serialized data
      * @param buffer Buffer to convert
      * @return New buffer with data in host byte order
      *
-     * Example:
-     * @code
-     * auto networkBytes = receiveFromNetwork();
-     * auto hostBytes =
-     * Serializer::fromNetworkByteOrder<uint32_t>(networkBytes); uint32_t value
-     * = Serializer::deserialize<uint32_t>(hostBytes);
-     * // value now in native byte order
-     * @endcode
+     * @note Prefer using ByteOrderSpec::deserializeFromNetwork<T>() for RFC
+     * types.
      */
     template <typename T>
     static std::vector<uint8_t> fromNetworkByteOrder(
@@ -316,34 +280,64 @@ class Serializer {
                 std::to_string(buffer.size()) + " bytes");
         }
 
-        std::vector<uint8_t> result = buffer;
-
-        if constexpr (ByteOrder::is_network_numeric_v<T>) {
-            T networkValue;
-            std::memcpy(&networkValue, result.data(), sizeof(T));
-            T value = ByteOrder::fromNetwork(networkValue);
-            std::memcpy(result.data(), &value, sizeof(T));
-        } else {
-            size_t offset = 0;
-            while (offset + 4 <= result.size()) {
-                uint32_t network32;
-                std::memcpy(&network32, result.data() + offset,
-                            sizeof(uint32_t));
-                uint32_t value32 = ByteOrder::fromNetwork(network32);
-                std::memcpy(result.data() + offset, &value32, sizeof(uint32_t));
-                offset += 4;
-            }
-            while (offset + 2 <= result.size()) {
-                uint16_t network16;
-                std::memcpy(&network16, result.data() + offset,
-                            sizeof(uint16_t));
-                uint16_t value16 = ByteOrder::fromNetwork(network16);
-                std::memcpy(result.data() + offset, &value16, sizeof(uint16_t));
-                offset += 2;
-            }
-        }
-
+        T networkValue;
+        std::memcpy(&networkValue, buffer.data(), sizeof(T));
+        T hostValue = ByteOrderSpec::fromNetwork(networkValue);
+        std::vector<uint8_t> result(sizeof(T));
+        std::memcpy(result.data(), &hostValue, sizeof(T));
         return result;
+    }
+
+    /**
+     * @brief Serialize an RFC type directly to network byte order
+     *
+     * Combines serialize + toNetworkByteOrder in one call.
+     *
+     * @tparam T RFC protocol type (Header or Payload struct)
+     * @param data The data to serialize
+     * @return Buffer ready for network transmission
+     *
+     * Example:
+     * @code
+     * auto header = Header::create(OpCode::C_CONNECT, userId, seqId);
+     * auto bytes = Serializer::serializeForNetwork(header);
+     * socket.send(bytes);
+     * @endcode
+     */
+    template <typename T>
+    static std::vector<uint8_t> serializeForNetwork(const T& data) {
+        return ByteOrderSpec::serializeToNetwork(data);
+    }
+
+    /**
+     * @brief Deserialize an RFC type from network byte order
+     *
+     * Combines fromNetworkByteOrder + deserialize in one call.
+     *
+     * @tparam T RFC protocol type (Header or Payload struct)
+     * @param buffer Buffer received from network
+     * @return Deserialized data in host byte order
+     *
+     * Example:
+     * @code
+     * auto bytes = socket.receive();
+     * auto header = Serializer::deserializeFromNetwork<Header>(bytes);
+     * if (header.hasValidMagic()) { ... }
+     * @endcode
+     */
+    template <typename T>
+    static T deserializeFromNetwork(const std::vector<uint8_t>& buffer) {
+        return ByteOrderSpec::deserializeFromNetwork<T>(buffer);
+    }
+
+    /**
+     * @brief Deserialize from span view (zero-copy, safer than raw pointer)
+     * @param data Span view over the buffer containing network data
+     * @return Deserialized data in host byte order
+     */
+    template <typename T>
+    static T deserializeFromNetwork(std::span<const std::uint8_t> data) {
+        return ByteOrderSpec::deserializeFromNetwork<T>(data);
     }
 };
 
