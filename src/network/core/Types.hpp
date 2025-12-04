@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "../../common/Types.hpp"
+#include "protocol/Header.hpp"
 
 namespace rtype::network {
 
@@ -28,7 +29,7 @@ using Buffer = std::vector<std::uint8_t>;
  * Size chosen to stay well under typical MTU (1500 bytes).
  * Matches kMaxPacketSize defined in protocol/Header.hpp.
  */
-using FixedBuffer = std::array<std::uint8_t, 1400>;
+using FixedBuffer = std::array<std::uint8_t, kMaxPacketSize>;
 
 using Endpoint = rtype::Endpoint;
 

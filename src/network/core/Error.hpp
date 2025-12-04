@@ -12,9 +12,16 @@
 #include <string_view>
 #include <system_error>
 #include <variant>
+#include <utility>
 
 namespace rtype::network {
 
+/**
+ * @brief Enumeration of all possible network errors
+ *
+ * This enum defines all error codes that can occur during network operations.
+ * Errors are categorized by type for easier handling and debugging.
+ */
 enum class NetworkError : std::uint8_t {
     None = 0,
 
@@ -46,6 +53,12 @@ enum class NetworkError : std::uint8_t {
     AckTimeout = 61,
 };
 
+/**
+ * @brief Convert a NetworkError to its string representation
+ *
+ * @param error The error code to convert
+ * @return A string view containing the error message
+ */
 [[nodiscard]] constexpr std::string_view toString(NetworkError error) noexcept {
     constexpr std::array<std::pair<NetworkError, std::string_view>, 22>
         kErrorMessages = {{
@@ -79,8 +92,17 @@ enum class NetworkError : std::uint8_t {
     return "Unknown error";
 }
 
-/// Result type for operations that can fail
 template <typename T, typename E = NetworkError>
+/**
+ * @brief A Result monad for handling operations that may succeed or fail
+ *
+ * This class provides a type-safe way to handle operations that can either
+ * return a value of type T or an error of type E. It follows the Result pattern
+ * commonly used in functional programming and Rust.
+ *
+ * @tparam T The type of the success value
+ * @tparam E The type of the error (defaults to NetworkError)
+ */
 class Result {
    public:
     static Result ok(T value) { return Result(std::move(value)); }
@@ -147,6 +169,13 @@ class Result {
 };
 
 template <typename E>
+/**
+ * @brief Specialization of Result for void operations
+ *
+ * This specialization handles operations that don't return a value but can still fail.
+ *
+ * @tparam E The type of the error
+ */
 class Result<void, E> {
    public:
     static Result ok() { return Result(true); }
@@ -173,23 +202,28 @@ class Result<void, E> {
     std::variant<bool, E> data_;
 };
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/// Create success result
+/**
+ * @brief Helper functions for creating Result instances
+ *
+ * These functions provide convenient ways to create Result objects
+ * without having to specify template parameters explicitly.
+ */
 template <typename T>
 [[nodiscard]] inline Result<T> Ok(T value) {
     return Result<T>::ok(std::move(value));
 }
 
-/// Create void success result
 [[nodiscard]] inline Result<void> Ok() { return Result<void>::ok(); }
 
-/// Create error result
 template <typename T = void>
 [[nodiscard]] inline Result<T> Err(NetworkError error) {
     return Result<T>::err(error);
 }
 
 }  // namespace rtype::network
+
+#include <ostream>
+
+inline std::ostream& operator<<(std::ostream& os, rtype::network::NetworkError error) {
+    return os << rtype::network::toString(error);
+}
