@@ -15,6 +15,9 @@ static constexpr int SIZE_X_PAUSE_MENU = 600;
 static constexpr int SIZE_Y_PAUSE_MENU = 600;
 static constexpr int SIZE_FONT_PAUSE_MENU = 40;
 static constexpr std::string PAUSE_MENU_TITLE = "Pause";
+// Player movement speed in pixels per second. Delta time is applied in
+// MovementSystem::update() for frame-rate independent movement.
+static constexpr float PLAYER_MOVEMENT_SPEED = 300.0f;
 
 class GameScene : public AScene {
    private:

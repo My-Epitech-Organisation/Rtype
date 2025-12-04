@@ -20,7 +20,9 @@ void GameScene::_updateUserMovementUp() {
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveUp)) {
         this->_registry->view<Velocity, ControllableTag>().each(
-            [](auto, auto& velocity, auto) { velocity.y -= 300; });
+            [](auto, auto& velocity, auto) {
+                velocity.y -= PLAYER_MOVEMENT_SPEED;
+            });
     }
 }
 
@@ -31,7 +33,9 @@ void GameScene::_updateUserMovementDown() {
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveDown)) {
         this->_registry->view<Velocity, ControllableTag>().each(
-            [](auto, auto& velocity, auto) { velocity.y += 300; });
+            [](auto, auto& velocity, auto) {
+                velocity.y += PLAYER_MOVEMENT_SPEED;
+            });
     }
 }
 
@@ -42,7 +46,9 @@ void GameScene::_updateUserMovementLeft() {
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveLeft)) {
         this->_registry->view<Velocity, ControllableTag>().each(
-            [](auto, auto& velocity, auto) { velocity.x -= 300; });
+            [](auto, auto& velocity, auto) {
+                velocity.x -= PLAYER_MOVEMENT_SPEED;
+            });
     }
 }
 
@@ -53,7 +59,9 @@ void GameScene::_updateUserMovementRight() {
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveRight)) {
         this->_registry->view<Velocity, ControllableTag>().each(
-            [](auto, auto& velocity, auto) { velocity.x += 300; });
+            [](auto, auto& velocity, auto) {
+                velocity.x += PLAYER_MOVEMENT_SPEED;
+            });
     }
 }
 
