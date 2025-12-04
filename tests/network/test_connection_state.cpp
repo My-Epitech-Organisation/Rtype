@@ -8,11 +8,17 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <cstring>
 #include <thread>
 
+#include "connection/Connection.hpp"
 #include "connection/ConnectionEvents.hpp"
 #include "connection/ConnectionState.hpp"
 #include "connection/ConnectionStateMachine.hpp"
+#include "protocol/ByteOrderSpec.hpp"
+#include "protocol/Header.hpp"
+#include "protocol/OpCode.hpp"
+#include "protocol/Payloads.hpp"
 
 using namespace rtype::network;
 using namespace std::chrono_literals;
@@ -328,4 +334,117 @@ TEST_F(DisconnectReasonTest, ReasonToString) {
     EXPECT_EQ(toString(DisconnectReason::MaxRetriesExceeded),
               "MaxRetriesExceeded");
     EXPECT_EQ(toString(DisconnectReason::ProtocolError), "ProtocolError");
+}
+
+// =============================================================================
+// Connection Tests (with sender validation)
+// =============================================================================
+
+class ConnectionTest : public ::testing::Test {
+   protected:
+    void SetUp() override {
+        connection_ = std::make_unique<Connection>();
+        serverEndpoint_ = Endpoint{"192.168.1.100", 4242};
+        wrongEndpoint_ = Endpoint{"10.0.0.1", 9999};
+    }
+
+    Buffer buildAcceptPacket(std::uint32_t userId) {
+        Header header;
+        header.magic = kMagicByte;
+        header.opcode = static_cast<std::uint8_t>(OpCode::S_ACCEPT);
+        header.payloadSize = ByteOrderSpec::toNetwork(
+            static_cast<std::uint16_t>(sizeof(AcceptPayload)));
+        header.userId = ByteOrderSpec::toNetwork(userId);
+        header.seqId = ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(1));
+        header.ackId = ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(0));
+        header.flags = Flags::kReliable | Flags::kIsAck;
+        header.reserved = {0, 0, 0};
+
+        AcceptPayload payload;
+        payload.newUserId = ByteOrderSpec::toNetwork(userId);
+
+        Buffer packet(kHeaderSize + sizeof(AcceptPayload));
+        std::memcpy(packet.data(), &header, kHeaderSize);
+        std::memcpy(packet.data() + kHeaderSize, &payload, sizeof(AcceptPayload));
+        return packet;
+    }
+
+    std::unique_ptr<Connection> connection_;
+    Endpoint serverEndpoint_;
+    Endpoint wrongEndpoint_;
+};
+
+TEST_F(ConnectionTest, InitialStateIsDisconnected) {
+    EXPECT_TRUE(connection_->isDisconnected());
+    EXPECT_FALSE(connection_->isConnected());
+    EXPECT_EQ(connection_->state(), ConnectionState::Disconnected);
+}
+
+TEST_F(ConnectionTest, ConnectTransitionsToConnecting) {
+    auto result = connection_->connect();
+    EXPECT_TRUE(result.isOk());
+    EXPECT_EQ(connection_->state(), ConnectionState::Connecting);
+}
+
+TEST_F(ConnectionTest, AcceptCapturesServerEndpoint) {
+    (void)connection_->connect();
+
+    Buffer acceptPacket = buildAcceptPacket(42);
+    auto result = connection_->processPacket(acceptPacket, serverEndpoint_);
+
+    EXPECT_TRUE(result.isOk());
+    EXPECT_TRUE(connection_->isConnected());
+    EXPECT_EQ(connection_->userId().value(), 42);
+}
+
+TEST_F(ConnectionTest, RejectsPacketsFromWrongSenderAfterAccept) {
+    (void)connection_->connect();
+
+    // First accept from server establishes the endpoint
+    Buffer acceptPacket = buildAcceptPacket(42);
+    (void)connection_->processPacket(acceptPacket, serverEndpoint_);
+
+    // Now try to receive from a different endpoint - should be rejected
+    Buffer secondPacket = buildAcceptPacket(99);
+    auto result = connection_->processPacket(secondPacket, wrongEndpoint_);
+
+    EXPECT_TRUE(result.isErr());
+    EXPECT_EQ(result.error(), NetworkError::InvalidSender);
+}
+
+TEST_F(ConnectionTest, AcceptsPacketsFromCorrectServerAfterAccept) {
+    (void)connection_->connect();
+
+    Buffer acceptPacket = buildAcceptPacket(42);
+    (void)connection_->processPacket(acceptPacket, serverEndpoint_);
+
+    // Packets from same server should still be accepted
+    // (even if duplicate - that's a different error)
+    Buffer secondPacket = buildAcceptPacket(42);
+    auto result = connection_->processPacket(secondPacket, serverEndpoint_);
+
+    // Should not be InvalidSender (might be DuplicatePacket or InvalidStateTransition)
+    if (result.isErr()) {
+        EXPECT_NE(result.error(), NetworkError::InvalidSender);
+    }
+}
+
+TEST_F(ConnectionTest, ResetClearsServerEndpoint) {
+    (void)connection_->connect();
+
+    Buffer acceptPacket = buildAcceptPacket(42);
+    (void)connection_->processPacket(acceptPacket, serverEndpoint_);
+
+    connection_->reset();
+
+    EXPECT_TRUE(connection_->isDisconnected());
+    EXPECT_FALSE(connection_->userId().has_value());
+
+    // After reset, should accept from any endpoint again
+    (void)connection_->connect();
+    Buffer newAccept = buildAcceptPacket(99);
+    auto result = connection_->processPacket(newAccept, wrongEndpoint_);
+
+    EXPECT_TRUE(result.isOk());
+    EXPECT_EQ(connection_->userId().value(), 99);
 }
