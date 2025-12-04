@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <ostream>
 
 #include "ConnectionState.hpp"
 #include "core/Error.hpp"
@@ -63,8 +64,6 @@ struct ConnectionCallbacks {
 };
 
 }  // namespace rtype::network
-
-#include <ostream>
 
 inline std::ostream& operator<<(std::ostream& os,
                                 rtype::network::DisconnectReason reason) {
