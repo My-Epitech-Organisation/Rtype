@@ -51,7 +51,6 @@ enum class NetworkError : std::uint8_t {
 
     // Reliability Layer Errors (60-79)
     RetryLimitExceeded = 60,
-    MaxRetriesExceeded = 61,
     AckTimeout = 62,
 };
 
@@ -84,7 +83,6 @@ enum class NetworkError : std::uint8_t {
             {NetworkError::BufferFull, "Buffer full"},
             {NetworkError::InternalError, "Internal error"},
             {NetworkError::RetryLimitExceeded, "Retry limit exceeded"},
-            {NetworkError::MaxRetriesExceeded, "Max retries exceeded"},
             {NetworkError::AckTimeout, "ACK timeout"},
         }};
 

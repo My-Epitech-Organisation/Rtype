@@ -3,7 +3,7 @@
 ** Rtype
 ** File description:
 ** ReliableChannel - Implements Reliable UDP (RUDP) layer per RFC RTGP v1.1.0
-*Section 4.3
+** Section 4.3
 */
 
 #pragma once
@@ -48,7 +48,7 @@ struct PendingPacket {
  *
  * Key properties:
  * - Default timeout: 200ms per retransmission
- * - Default max retries: 5
+ * - Default max retries: 5 (retransmission attempts, excluding initial send)
  * - Only RELIABLE packets (0x01 flag) tracked
  * - ACKs piggybacked on any outgoing packet with IS_ACK flag (0x02)
  *
@@ -69,8 +69,8 @@ class ReliableChannel {
 
         Config() noexcept : retransmitTimeout(200), maxRetries(5) {}
 
-        Config(std::chrono::milliseconds timeout, int maxRetries_) noexcept
-            : retransmitTimeout(timeout), maxRetries(maxRetries_) {}
+        Config(std::chrono::milliseconds timeout, int maxRetries) noexcept
+            : retransmitTimeout(timeout), maxRetries(maxRetries) {}
     };
 
     /**
@@ -110,7 +110,10 @@ class ReliableChannel {
     void recordAck(std::uint16_t ackId) noexcept;
 
     /**
-     * @brief Retransmit packet info (no raw pointers)
+     * @brief Structure for packets that need retransmission
+     *
+     * Contains metadata and owned data for packets that are scheduled
+     * for retransmission due to timeout or lack of acknowledgement.
      */
     struct RetransmitPacket {
         std::uint16_t seqId;
@@ -196,10 +199,21 @@ class ReliableChannel {
     void clear() noexcept;
 
    private:
+    static constexpr std::uint16_t kReceivedSeqIdWindow = 1000;
+
+    /**
+     * @brief Prune old received sequence IDs to prevent unbounded memory growth
+     *
+     * Removes sequence IDs that are outside the sliding window behind the highest
+     * received sequence ID to maintain bounded memory usage.
+     */
+    void pruneOldReceivedSeqIds() noexcept;
+
     Config config_;
     std::unordered_map<std::uint16_t, PendingPacket> pendingPackets_;
     std::unordered_set<std::uint16_t> receivedSeqIds_;
     std::uint16_t lastReceivedSeqId_{0};
+    bool hasReceivedAny_{false};
 };
 
 }  // namespace rtype::network

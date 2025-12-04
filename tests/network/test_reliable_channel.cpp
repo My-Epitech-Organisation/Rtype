@@ -108,7 +108,7 @@ TEST_F(ReliableChannelTest, GetLastReceivedSeqId_AfterRecord) {
     EXPECT_EQ(channel_.getLastReceivedSeqId(), 42);
 }
 
-TEST_F(ReliableChannelTest, GetLastReceivedSeqId_UpdatesToMostRecent) {
+TEST_F(ReliableChannelTest, GetLastReceivedSeqId_TracksHighestSequence) {
     channel_.recordReceived(10);
     EXPECT_EQ(channel_.getLastReceivedSeqId(), 10);
 
@@ -116,7 +116,7 @@ TEST_F(ReliableChannelTest, GetLastReceivedSeqId_UpdatesToMostRecent) {
     EXPECT_EQ(channel_.getLastReceivedSeqId(), 20);
 
     channel_.recordReceived(5);
-    EXPECT_EQ(channel_.getLastReceivedSeqId(), 5);
+    EXPECT_EQ(channel_.getLastReceivedSeqId(), 20);  // Should remain 20 (highest)
 }
 
 // ============================================================================
@@ -216,15 +216,20 @@ TEST_F(ReliableChannelTest, Cleanup_FailsWhenMaxRetriesExceeded) {
     channel.trackOutgoing(1, testData_);
 
     // Trigger retransmits until limit exceeded
+    bool reachedMaxRetries = false;
     for (int i = 0; i < 5; ++i) {
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
         auto toRetransmit = channel.getPacketsToRetransmit();
         if (!toRetransmit.empty()) {
             if (toRetransmit[0].retryCount >= config.maxRetries) {
+                EXPECT_EQ(toRetransmit[0].retryCount, config.maxRetries);
+                reachedMaxRetries = true;
                 break;
             }
         }
     }
+
+    EXPECT_TRUE(reachedMaxRetries);  // Ensure we actually reached the retry limit
 
     auto result = channel.cleanup();
     EXPECT_TRUE(result.isErr());
@@ -276,6 +281,32 @@ TEST_F(ReliableChannelTest, SequenceWraparound_DuplicateDetection) {
     EXPECT_TRUE(channel_.isDuplicate(65535));
 }
 
+TEST_F(ReliableChannelTest, SequenceWraparound_AckTracking) {
+    // Test ACK tracking with wraparound
+    channel_.recordReceived(65535);  // High sequence
+    EXPECT_EQ(channel_.getLastReceivedSeqId(), 65535);
+
+    channel_.recordReceived(0);  // Wrapped around (newer)
+    EXPECT_EQ(channel_.getLastReceivedSeqId(), 0);
+
+    channel_.recordReceived(65534);  // Older (should not update)
+    EXPECT_EQ(channel_.getLastReceivedSeqId(), 0);  // Should remain 0
+}
+
+TEST_F(ReliableChannelTest, ReceivedSeqIdPruning_PreventsMemoryLeak) {
+    // Record many sequence IDs to trigger pruning
+    for (std::uint16_t i = 0; i < 1200; ++i) {  // More than window size (1000)
+        channel_.recordReceived(i);
+    }
+    
+    // Should have pruned old entries, keeping only recent ones
+    EXPECT_LE(channel_.getReceivedCount(), 1000 + 50);  // Allow some buffer
+    
+    // Verify we can still detect duplicates for recent sequences
+    EXPECT_TRUE(channel_.isDuplicate(1199));  // Recent sequence should be remembered
+    EXPECT_EQ(channel_.getLastReceivedSeqId(), 1199);  // Highest should be tracked
+}
+
 // ============================================================================
 // Out-of-Order Packet Handling
 // ============================================================================
@@ -287,11 +318,11 @@ TEST_F(ReliableChannelTest, OutOfOrder_ReceiveInDifferentOrder) {
 
     channel_.recordReceived(1);
     EXPECT_TRUE(channel_.isDuplicate(1));
-    EXPECT_EQ(channel_.getLastReceivedSeqId(), 1);
+    EXPECT_EQ(channel_.getLastReceivedSeqId(), 3);  // Should remain 3 (highest)
 
     channel_.recordReceived(2);
     EXPECT_TRUE(channel_.isDuplicate(2));
-    EXPECT_EQ(channel_.getLastReceivedSeqId(), 2);
+    EXPECT_EQ(channel_.getLastReceivedSeqId(), 3);  // Should remain 3 (highest)
 
     EXPECT_EQ(channel_.getReceivedCount(), 3);
 }

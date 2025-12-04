@@ -3,7 +3,7 @@
 ** Rtype
 ** File description:
 ** ReliableChannel - Implementation of RUDP layer per RFC RTGP v1.1.0
-*Section 4.3
+** Section 4.3
 */
 
 #include "ReliableChannel.hpp"
@@ -70,7 +70,32 @@ bool ReliableChannel::isDuplicate(std::uint16_t seqId) const noexcept {
 
 void ReliableChannel::recordReceived(std::uint16_t seqId) noexcept {
     receivedSeqIds_.insert(seqId);
-    lastReceivedSeqId_ = seqId;
+    auto isNewer = [](std::uint16_t a, std::uint16_t b) {
+        return static_cast<int16_t>(a - b) > 0;
+    };
+    if (!hasReceivedAny_ || isNewer(seqId, lastReceivedSeqId_)) {
+        lastReceivedSeqId_ = seqId;
+        hasReceivedAny_ = true;
+        pruneOldReceivedSeqIds();
+    }
+}
+
+void ReliableChannel::pruneOldReceivedSeqIds() noexcept {
+    if (receivedSeqIds_.size() <= kReceivedSeqIdWindow) {
+        return;
+    }
+
+    std::uint16_t minSeqId = static_cast<std::uint16_t>(lastReceivedSeqId_ - kReceivedSeqIdWindow);
+
+    for (auto it = receivedSeqIds_.begin(); it != receivedSeqIds_.end();) {
+        std::uint16_t seqId = *it;
+        bool isTooOld = static_cast<int16_t>(lastReceivedSeqId_ - seqId) > static_cast<int16_t>(kReceivedSeqIdWindow);
+        if (isTooOld) {
+            it = receivedSeqIds_.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 std::uint16_t ReliableChannel::getLastReceivedSeqId() const noexcept {
@@ -107,6 +132,7 @@ void ReliableChannel::clear() noexcept {
     pendingPackets_.clear();
     receivedSeqIds_.clear();
     lastReceivedSeqId_ = 0;
+    hasReceivedAny_ = false;
 }
 
 }  // namespace rtype::network
