@@ -11,8 +11,8 @@
 #include <cstdint>
 #include <string_view>
 #include <system_error>
-#include <variant>
 #include <utility>
+#include <variant>
 
 namespace rtype::network {
 
@@ -172,7 +172,8 @@ template <typename E>
 /**
  * @brief Specialization of Result for void operations
  *
- * This specialization handles operations that don't return a value but can still fail.
+ * This specialization handles operations that don't return a value but can
+ * still fail.
  *
  * @tparam E The type of the error
  */
@@ -224,6 +225,7 @@ template <typename T = void>
 
 #include <ostream>
 
-inline std::ostream& operator<<(std::ostream& os, rtype::network::NetworkError error) {
+inline std::ostream& operator<<(std::ostream& os,
+                                rtype::network::NetworkError error) {
     return os << rtype::network::toString(error);
 }

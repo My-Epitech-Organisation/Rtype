@@ -78,10 +78,11 @@ inline constexpr std::uint8_t kIsAck = 0x02;
  * ```
  *
  * @note All multi-byte fields are stored in NETWORK BYTE ORDER (Big-Endian)
- *       Byte order conversion must be handled during serialization/deserialization.
- *       Fields must be explicitly converted to/from network byte order using
- *       ByteOrderSpec::toNetwork() / ByteOrderSpec::fromNetwork() before/after
- *       network transmission. Accessor methods do NOT perform byte order conversion.
+ *       Byte order conversion must be handled during
+ * serialization/deserialization. Fields must be explicitly converted to/from
+ * network byte order using ByteOrderSpec::toNetwork() /
+ * ByteOrderSpec::fromNetwork() before/after network transmission. Accessor
+ * methods do NOT perform byte order conversion.
  */
 struct Header {
     std::uint8_t magic;                    ///< Must be 0xA1 (kMagicByte)

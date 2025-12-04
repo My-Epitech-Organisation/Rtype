@@ -9,8 +9,8 @@
 
 #include <algorithm>
 #include <memory>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace rtype::server {
 
@@ -240,19 +240,22 @@ std::optional<rtype::network::Packet> ServerApp::extractPacketFromData(
             return std::nullopt;
         }
 
-        auto header = rtype::network::Serializer::deserializeFromNetwork<rtype::network::Header>(
-            std::vector<uint8_t>(rawData.begin(), rawData.begin() + rtype::network::kHeaderSize));
+        auto header = rtype::network::Serializer::deserializeFromNetwork<
+            rtype::network::Header>(std::vector<uint8_t>(
+            rawData.begin(), rawData.begin() + rtype::network::kHeaderSize));
 
         if (!header.isValid()) {
-            LOG_WARNING("[Server] Invalid RTGP header from " << endpoint
-                        << " (magic: 0x" << std::hex << static_cast<int>(header.magic) << ")");
+            LOG_WARNING("[Server] Invalid RTGP header from "
+                        << endpoint << " (magic: 0x" << std::hex
+                        << static_cast<int>(header.magic) << ")");
             return std::nullopt;
         }
 
         size_t expectedSize = rtype::network::kHeaderSize + header.payloadSize;
         if (rawData.size() < expectedSize) {
-            LOG_WARNING("[Server] Incomplete packet from " << endpoint
-                        << " (expected: " << expectedSize << ", got: " << rawData.size() << ")");
+            LOG_WARNING("[Server] Incomplete packet from "
+                        << endpoint << " (expected: " << expectedSize
+                        << ", got: " << rawData.size() << ")");
             return std::nullopt;
         }
 
@@ -260,25 +263,30 @@ std::optional<rtype::network::Packet> ServerApp::extractPacketFromData(
             auto validationResult = rtype::network::Validator::validatePacket(
                 rawData.data(), rawData.size(), header.isFromServer());
             if (validationResult.isErr()) {
-            LOG_WARNING("[Server] Invalid packet from " << endpoint
-                            << " (validation error code: " << static_cast<int>(validationResult.error()) << ")");
+                LOG_WARNING("[Server] Invalid packet from "
+                            << endpoint << " (validation error code: "
+                            << static_cast<int>(validationResult.error())
+                            << ")");
                 return std::nullopt;
             }
         }
 
         // TODO(Anybody): Eventually migrate to full RTGP packet handling
-        rtype::network::Packet packet(static_cast<rtype::network::PacketType>(header.opcode));
+        rtype::network::Packet packet(
+            static_cast<rtype::network::PacketType>(header.opcode));
         if (header.payloadSize > 0) {
-            std::vector<uint8_t> payload(rawData.begin() + rtype::network::kHeaderSize, rawData.end());
+            std::vector<uint8_t> payload(
+                rawData.begin() + rtype::network::kHeaderSize, rawData.end());
             packet.setData(payload);
         }
 
-        LOG_DEBUG("[Server] Successfully extracted packet from " << endpoint
-                  << " (opcode: " << static_cast<int>(header.opcode)
+        LOG_DEBUG("[Server] Successfully extracted packet from "
+                  << endpoint << " (opcode: " << static_cast<int>(header.opcode)
                   << ", payload: " << header.payloadSize << " bytes)");
         return packet;
     } catch (const std::exception& e) {
-        LOG_ERROR("[Server] Exception extracting packet from " << endpoint << ": " << e.what());
+        LOG_ERROR("[Server] Exception extracting packet from "
+                  << endpoint << ": " << e.what());
         return std::nullopt;
     }
 }

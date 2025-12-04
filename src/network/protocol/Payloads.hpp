@@ -83,7 +83,8 @@ struct GetUsersRequestPayload {};
  * Variable-length payload: count + array of user IDs.
  * The full payload size is: 1 + (count * 4) bytes.
  *
- * @note For deserialization, read the header and then read `count` uint32_t user IDs from the payload.
+ * @note For deserialization, read the header and then read `count` uint32_t
+ * user IDs from the payload.
  */
 struct GetUsersResponseHeader {
     std::uint8_t count;
@@ -93,7 +94,8 @@ struct GetUsersResponseHeader {
  * @brief Maximum number of users in R_GET_USERS response
  *
  * Limited by count field being uint8_t: max 255 users
- * (255 * 4 bytes per user ID + 1 byte count = 1021 bytes < 1384 max payload size)
+ * (255 * 4 bytes per user ID + 1 byte count = 1021 bytes < 1384 max payload
+ * size)
  */
 inline constexpr std::size_t kMaxUsersInResponse = 255;
 
@@ -197,15 +199,20 @@ struct PongPayload {};
 #pragma pack(pop)
 
 static_assert(sizeof(ConnectPayload) == 1,
-              "ConnectPayload is an empty struct (size 1 in C++), serialization returns 0 bytes");
+              "ConnectPayload is an empty struct (size 1 in C++), "
+              "serialization returns 0 bytes");
 static_assert(sizeof(DisconnectPayload) == 1,
-              "DisconnectPayload is an empty struct (size 1 in C++), serialization returns 0 bytes");
+              "DisconnectPayload is an empty struct (size 1 in C++), "
+              "serialization returns 0 bytes");
 static_assert(sizeof(GetUsersRequestPayload) == 1,
-              "GetUsersRequestPayload is an empty struct (size 1 in C++), serialization returns 0 bytes");
+              "GetUsersRequestPayload is an empty struct (size 1 in C++), "
+              "serialization returns 0 bytes");
 static_assert(sizeof(PingPayload) == 1,
-              "PingPayload is an empty struct (size 1 in C++), serialization returns 0 bytes");
+              "PingPayload is an empty struct (size 1 in C++), serialization "
+              "returns 0 bytes");
 static_assert(sizeof(PongPayload) == 1,
-              "PongPayload is an empty struct (size 1 in C++), serialization returns 0 bytes");
+              "PongPayload is an empty struct (size 1 in C++), serialization "
+              "returns 0 bytes");
 
 static_assert(sizeof(AcceptPayload) == 4,
               "AcceptPayload must be 4 bytes (uint32_t)");

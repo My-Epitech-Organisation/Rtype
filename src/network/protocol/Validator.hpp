@@ -95,7 +95,8 @@ namespace Validator {
  * @return Success if size matches expected, MalformedPacket otherwise
  */
 [[nodiscard]] inline Result<void> validatePayloadSize(
-    OpCode opcode, std::size_t payloadSize, const std::uint8_t* payload = nullptr) noexcept {
+    OpCode opcode, std::size_t payloadSize,
+    const std::uint8_t* payload = nullptr) noexcept {
     if (hasVariablePayload(opcode)) {
         if (opcode == OpCode::R_GET_USERS) {
             if (payloadSize < 1) {
@@ -108,7 +109,8 @@ namespace Validator {
             if (count > kMaxUsersInResponse) {
                 return Result<void>::err(NetworkError::MalformedPacket);
             }
-            std::size_t expected = 1 + (static_cast<std::size_t>(count) * sizeof(std::uint32_t));
+            std::size_t expected =
+                1 + (static_cast<std::size_t>(count) * sizeof(std::uint32_t));
             if (payloadSize != expected) {
                 return Result<void>::err(NetworkError::MalformedPacket);
             }
@@ -216,7 +218,8 @@ namespace Validator {
 
     std::size_t payloadSize = size - kHeaderSize;
     const std::uint8_t* payload = data + kHeaderSize;
-    auto payloadResult = validatePayloadSize(header->getOpCode(), payloadSize, payload);
+    auto payloadResult =
+        validatePayloadSize(header->getOpCode(), payloadSize, payload);
     if (payloadResult.isErr()) {
         return payloadResult;
     }
