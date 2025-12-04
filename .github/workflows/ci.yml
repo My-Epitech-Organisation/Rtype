@@ -90,256 +90,255 @@ jobs:
           echo "| Linux | ${{ steps.cache-check-linux.outputs.cache-hit == 'true' && '✅ HIT - skipping deps' || '❌ MISS - will build' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Windows | ⏳ checked on Windows |" >> $GITHUB_STEP_SUMMARY
 
-#  lint:
-#    name: "🔍 Code Quality"
-#    runs-on: ubuntu-latest
-#    needs: [cache-check]
-#    steps:
-#      - uses: actions/checkout@v4
-#
-#      - name: Install linting tools (clang-format 19)
-#        run: |
-#          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
-#          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main" | sudo tee /etc/apt/sources.list.d/llvm.list
-#          sudo apt-get update
-#          sudo apt-get install -y clang-format-19 clang-tidy-19 python3
-#          sudo ln -sf /usr/bin/clang-format-19 /usr/bin/clang-format
-#          sudo ln -sf /usr/bin/clang-tidy-19 /usr/bin/clang-tidy
-#          echo "Installed versions:"
-#          clang-format --version
-#          clang-tidy --version
-#
-#      - name: Make quality script executable
-#        run: chmod +x scripts/run_quality_checks.sh
-#
-#      - name: Run Code Quality Checks
-#        id: quality-checks
-#        run: |
-#          ./scripts/run_quality_checks.sh --verbose
-#
-#      - name: Upload Quality Report
-#        if: failure()
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: code-quality-report
-#          path: /tmp/rtype_quality_report.txt
-#          if-no-files-found: warn
-#
-#      - name: Lint Summary
-#        if: always()
-#        run: |
-#          echo "### 🔍 Code Quality Results" >> $GITHUB_STEP_SUMMARY
-#          echo "" >> $GITHUB_STEP_SUMMARY
-#          echo "**Script:** \`scripts/run_quality_checks.sh\`" >> $GITHUB_STEP_SUMMARY
-#          echo "**Status:** ${{ steps.quality-checks.outcome == 'success' && '✅ All checks passed' || '❌ Issues found - pipeline blocked' }}" >> $GITHUB_STEP_SUMMARY
-#          echo "" >> $GITHUB_STEP_SUMMARY
-#          if [ -f /tmp/rtype_quality_report.txt ]; then
-#            echo "#### Detailed Report" >> $GITHUB_STEP_SUMMARY
-#            echo '```' >> $GITHUB_STEP_SUMMARY
-#            cat /tmp/rtype_quality_report.txt >> $GITHUB_STEP_SUMMARY
-#            echo '```' >> $GITHUB_STEP_SUMMARY
-#          fi
-#          echo "" >> $GITHUB_STEP_SUMMARY
-#          echo "💡 **Tip:** Run \`./scripts/run_quality_checks.sh --fix\` locally to auto-fix formatting issues" >> $GITHUB_STEP_SUMMARY
-#
-#  deps-linux:
-#    name: "📦 Dependencies (Linux)"
-#    runs-on: ubuntu-latest
-#    needs: [cache-check, lint]
-#    if: needs.cache-check.outputs.cache-hit-linux != 'true'
-#    steps:
-#      - uses: actions/checkout@v4
-#        with:
-#          submodules: true
-#          fetch-depth: 0
-#
-#      - name: Install system dependencies
-#        run: |
-#          sudo apt-get update
-#          sudo apt-get install -y \
-#            ninja-build cmake pkg-config \
-#            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
-#            libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
-#            libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
-#            libxinerama-dev libxext-dev
-#
-#      - name: Configure CMake (install vcpkg packages)
-#        run: |
-#          cmake --preset linux-release \
-#            -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF \
-#            -DUSE_SFML=ON
-#
-#      - name: Save vcpkg_installed to cache
-#        uses: actions/cache/save@v4
-#        with:
-#          path: build/vcpkg_installed
-#          key: ${{ needs.cache-check.outputs.cache-key-linux }}
-#
-#      - name: Summary
-#        run: |
-#          echo "### 📦 Dependencies (Linux)" >> $GITHUB_STEP_SUMMARY
-#          echo "✅ Built and cached vcpkg_installed" >> $GITHUB_STEP_SUMMARY
-#
-#  deps-windows:
-#    name: "📦 Dependencies (Windows)"
-#    runs-on: windows-latest
-#    needs: [cache-check, lint]
-#    outputs:
-#      cache-hit: ${{ steps.cache-check.outputs.cache-hit }}
-#    steps:
-#      - uses: actions/checkout@v4
-#        with:
-#          submodules: true
-#          fetch-depth: 0
-#
-#      - name: Check Windows cache
-#        id: cache-check
-#        uses: actions/cache/restore@v4
-#        with:
-#          path: build/vcpkg_installed
-#          key: ${{ needs.cache-check.outputs.cache-key-windows }}
-#          lookup-only: true
-#
-#      - name: Install Ninja
-#        if: steps.cache-check.outputs.cache-hit != 'true'
-#        run: choco install ninja -y
-#
-#      - name: Setup MSVC Developer Command Prompt
-#        if: steps.cache-check.outputs.cache-hit != 'true'
-#        uses: ilammy/msvc-dev-cmd@v1
-#
-#      - name: Configure CMake (install vcpkg packages)
-#        if: steps.cache-check.outputs.cache-hit != 'true'
-#        shell: bash
-#        run: |
-#          cmake --preset windows-release \
-#            -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF \
-#            -DUSE_SFML=ON
-#
-#      - name: Save vcpkg_installed to cache
-#        if: steps.cache-check.outputs.cache-hit != 'true'
-#        uses: actions/cache/save@v4
-#        with:
-#          path: build/vcpkg_installed
-#          key: ${{ needs.cache-check.outputs.cache-key-windows }}
-#
-#      - name: Summary
-#        shell: bash
-#        run: |
-#          echo "### 📦 Dependencies (Windows)" >> $GITHUB_STEP_SUMMARY
-#          if [ "${{ steps.cache-check.outputs.cache-hit }}" == "true" ]; then
-#            echo "✅ Cache HIT - skipped build" >> $GITHUB_STEP_SUMMARY
-#          else
-#            echo "✅ Built and cached vcpkg_installed" >> $GITHUB_STEP_SUMMARY
-#          fi
-#
-#  test:
-#    name: "🧪 Unit Tests (${{ matrix.os }})"
-#    runs-on: ${{ matrix.os }}
-#    needs: [cache-check, deps-linux, deps-windows]
-#    if: always() && needs.cache-check.result == 'success' && ((needs.deps-linux.result == 'success' || needs.deps-linux.result == 'skipped') || (needs.deps-windows.result == 'success' || needs.deps-windows.result == 'skipped'))
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        include:
-#          - os: ubuntu-latest
-#            preset: linux-release
-#            cache-key-output: cache-key-linux
-#            triplet: x64-linux
-#            coverage: true
-#          - os: windows-latest
-#            preset: windows-release
-#            cache-key-output: cache-key-windows
-#            triplet: x64-windows
-#            coverage: false
-#    steps:
-#      - uses: actions/checkout@v4
-#        with:
-#          submodules: true
-#          fetch-depth: 0
-#
-#      - name: Install system dependencies (Linux)
-#        if: matrix.os == 'ubuntu-latest'
-#        run: |
-#          sudo apt-get update
-#          sudo apt-get install -y \
-#            ninja-build cmake pkg-config \
-#            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
-#            libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
-#            libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
-#            libxinerama-dev libxext-dev \
-#            lcov jq
-#
-#      - name: Install Ninja (Windows)
-#        if: matrix.os == 'windows-latest'
-#        run: choco install ninja -y
-#
-#      - name: Setup MSVC Developer Command Prompt
-#        if: matrix.os == 'windows-latest'
-#        uses: ilammy/msvc-dev-cmd@v1
-#
-#      - name: Restore vcpkg_installed from cache
-#        uses: actions/cache/restore@v4
-#        with:
-#          path: build/vcpkg_installed
-#          key: ${{ needs.cache-check.outputs[matrix.cache-key-output] }}
-#          fail-on-cache-miss: true
-#
-#      - name: Configure CMake
-#        shell: bash
-#        run: |
-#          cmake --preset ${{ matrix.preset }} \
-#            -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF \
-#            -DUSE_SFML=ON
-#
-#      - name: Build tests
-#        run: cmake --build --preset ${{ matrix.preset }} --target all
-#
-#      - name: Run tests
-#        run: |
-#          cd build
-#          ctest --output-on-failure --timeout 120
-#
-#      - name: Run Coverage Analysis (Linux only)
-#        if: matrix.coverage
-#        run: |
-#          chmod +x scripts/coverage.sh
-#          ./scripts/coverage.sh --html
-#
-#      - name: Upload Coverage Report (Linux only)
-#        if: matrix.coverage && always()
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: coverage-report
-#          path: coverage/html/
-#          if-no-files-found: warn
-#
-#      - name: Test Summary
-#        if: always()
-#        shell: bash
-#        run: |
-#          echo "### 🧪 Test Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
-#          echo "" >> $GITHUB_STEP_SUMMARY
-#          if [ "${{ matrix.coverage }}" == "true" ]; then
-#            echo "#### Coverage Report" >> $GITHUB_STEP_SUMMARY
-#            echo "**Coverage thresholds:** Lines ≥80%, Functions ≥80%, Branches ≥55%" >> $GITHUB_STEP_SUMMARY
-#            if [ -d coverage/html ]; then
-#              echo "**HTML Report:** [View Coverage Report](coverage/html/index.html)" >> $GITHUB_STEP_SUMMARY
-#            fi
-#          fi
-#          if [ -f build/Testing/Temporary/LastTest.log ]; then
-#            echo "#### Test Log" >> $GITHUB_STEP_SUMMARY
-#            echo '```' >> $GITHUB_STEP_SUMMARY
-#            tail -50 build/Testing/Temporary/LastTest.log >> $GITHUB_STEP_SUMMARY
-#            echo '```' >> $GITHUB_STEP_SUMMARY
-#          fi
+  lint:
+    name: "🔍 Code Quality"
+    runs-on: ubuntu-latest
+    needs: [cache-check]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install linting tools (clang-format 19)
+        run: |
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main" | sudo tee /etc/apt/sources.list.d/llvm.list
+          sudo apt-get update
+          sudo apt-get install -y clang-format-19 clang-tidy-19 python3
+          sudo ln -sf /usr/bin/clang-format-19 /usr/bin/clang-format
+          sudo ln -sf /usr/bin/clang-tidy-19 /usr/bin/clang-tidy
+          echo "Installed versions:"
+          clang-format --version
+          clang-tidy --version
+
+      - name: Make quality script executable
+        run: chmod +x scripts/run_quality_checks.sh
+
+      - name: Run Code Quality Checks
+        id: quality-checks
+        run: |
+          ./scripts/run_quality_checks.sh --verbose
+
+      - name: Upload Quality Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality-report
+          path: /tmp/rtype_quality_report.txt
+          if-no-files-found: warn
+
+      - name: Lint Summary
+        if: always()
+        run: |
+          echo "### 🔍 Code Quality Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Script:** \`scripts/run_quality_checks.sh\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ steps.quality-checks.outcome == 'success' && '✅ All checks passed' || '❌ Issues found - pipeline blocked' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f /tmp/rtype_quality_report.txt ]; then
+            echo "#### Detailed Report" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat /tmp/rtype_quality_report.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "💡 **Tip:** Run \`./scripts/run_quality_checks.sh --fix\` locally to auto-fix formatting issues" >> $GITHUB_STEP_SUMMARY
+
+  deps-linux:
+    name: "📦 Dependencies (Linux)"
+    runs-on: ubuntu-latest
+    needs: [cache-check, lint]
+    if: needs.cache-check.outputs.cache-hit-linux != 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ninja-build cmake pkg-config \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
+            libxinerama-dev libxext-dev
+
+      - name: Configure CMake (install vcpkg packages)
+        run: |
+          cmake --preset linux-release \
+            -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF \
+            -DUSE_SFML=ON
+
+      - name: Save vcpkg_installed to cache
+        uses: actions/cache/save@v4
+        with:
+          path: build/vcpkg_installed
+          key: ${{ needs.cache-check.outputs.cache-key-linux }}
+
+      - name: Summary
+        run: |
+          echo "### 📦 Dependencies (Linux)" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Built and cached vcpkg_installed" >> $GITHUB_STEP_SUMMARY
+
+  deps-windows:
+    name: "📦 Dependencies (Windows)"
+    runs-on: windows-latest
+    needs: [cache-check, lint]
+    outputs:
+      cache-hit: ${{ steps.cache-check.outputs.cache-hit }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Check Windows cache
+        id: cache-check
+        uses: actions/cache/restore@v4
+        with:
+          path: build/vcpkg_installed
+          key: ${{ needs.cache-check.outputs.cache-key-windows }}
+          lookup-only: true
+
+      - name: Install Ninja
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        run: choco install ninja -y
+
+      - name: Setup MSVC Developer Command Prompt
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure CMake (install vcpkg packages)
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cmake --preset windows-release \
+            -DBUILD_TESTS=OFF -DBUILD_EXAMPLES=OFF \
+            -DUSE_SFML=ON
+
+      - name: Save vcpkg_installed to cache
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: build/vcpkg_installed
+          key: ${{ needs.cache-check.outputs.cache-key-windows }}
+
+      - name: Summary
+        shell: bash
+        run: |
+          echo "### 📦 Dependencies (Windows)" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.cache-check.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Cache HIT - skipped build" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Built and cached vcpkg_installed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  test:
+    name: "🧪 Unit Tests (${{ matrix.os }})"
+    runs-on: ${{ matrix.os }}
+    needs: [cache-check, deps-linux, deps-windows]
+    if: always() && needs.cache-check.result == 'success' && ((needs.deps-linux.result == 'success' || needs.deps-linux.result == 'skipped') || (needs.deps-windows.result == 'success' || needs.deps-windows.result == 'skipped'))
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            preset: linux-release
+            cache-key-output: cache-key-linux
+            triplet: x64-linux
+            coverage: true
+          - os: windows-latest
+            preset: windows-release
+            cache-key-output: cache-key-windows
+            triplet: x64-windows
+            coverage: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Install system dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ninja-build cmake pkg-config \
+            libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
+            libxinerama-dev libxext-dev \
+            lcov jq
+
+      - name: Install Ninja (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install ninja -y
+
+      - name: Setup MSVC Developer Command Prompt
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Restore vcpkg_installed from cache
+        uses: actions/cache/restore@v4
+        with:
+          path: build/vcpkg_installed
+          key: ${{ needs.cache-check.outputs[matrix.cache-key-output] }}
+          fail-on-cache-miss: true
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          cmake --preset ${{ matrix.preset }} \
+            -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF \
+            -DUSE_SFML=ON
+
+      - name: Build tests
+        run: cmake --build --preset ${{ matrix.preset }} --target all
+
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure --timeout 120
+
+      - name: Run Coverage Analysis (Linux only)
+        if: matrix.coverage
+        run: |
+          chmod +x scripts/coverage.sh
+          ./scripts/coverage.sh --html
+
+      - name: Upload Coverage Report (Linux only)
+        if: matrix.coverage && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/html/
+          if-no-files-found: warn
+
+      - name: Test Summary
+        if: always()
+        shell: bash
+        run: |
+          echo "### 🧪 Test Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ matrix.coverage }}" == "true" ]; then
+            echo "#### Coverage Report" >> $GITHUB_STEP_SUMMARY
+            echo "**Coverage thresholds:** Lines ≥80%, Functions ≥80%, Branches ≥55%" >> $GITHUB_STEP_SUMMARY
+            if [ -d coverage/html ]; then
+              echo "**HTML Report:** [View Coverage Report](coverage/html/index.html)" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          if [ -f build/Testing/Temporary/LastTest.log ]; then
+            echo "#### Test Log" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -50 build/Testing/Temporary/LastTest.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
 
   build:
     name: "🔨 Build (${{ matrix.os }})"
     runs-on: ${{ matrix.os }}
-    #    needs: [cache-check, test, deps-linux, deps-windows]
-    needs: [cache-check]
-    # if: always() && needs.test.result == 'success' && (needs.deps-windows.result == 'success' || needs.deps-windows.result == 'skipped')
+    needs: [cache-check, test, deps-linux, deps-windows]
+    if: always() && needs.test.result == 'success' && (needs.deps-windows.result == 'success' || needs.deps-windows.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
