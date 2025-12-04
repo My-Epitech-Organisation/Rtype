@@ -8,8 +8,10 @@
 #pragma once
 
 #include <cstdint>
+#include <span>
 
 #include "../core/Error.hpp"
+#include "ByteOrderSpec.hpp"
 #include "Header.hpp"
 #include "OpCode.hpp"
 #include "Payloads.hpp"
@@ -91,18 +93,18 @@ namespace Validator {
  * @brief Validate payload size for a specific OpCode
  * @param opcode The operation code
  * @param payloadSize The received payload size
- * @param payload Pointer to the payload buffer (required for R_GET_USERS)
+ * @param payload Span view of the payload buffer (required for R_GET_USERS)
  * @return Success if size matches expected, MalformedPacket otherwise
  */
 [[nodiscard]] inline Result<void> validatePayloadSize(
     OpCode opcode, std::size_t payloadSize,
-    const std::uint8_t* payload = nullptr) noexcept {
+    std::span<const std::uint8_t> payload = {}) noexcept {
     if (hasVariablePayload(opcode)) {
         if (opcode == OpCode::R_GET_USERS) {
             if (payloadSize < 1) {
                 return Result<void>::err(NetworkError::PacketTooSmall);
             }
-            if (payload == nullptr) {
+            if (payload.empty()) {
                 return Result<void>::err(NetworkError::MalformedPacket);
             }
             std::uint8_t count = payload[0];
@@ -128,13 +130,12 @@ namespace Validator {
 
 /**
  * @brief Validate R_GET_USERS payload content
- * @param payload Pointer to the payload data
- * @param payloadSize Size of the payload
+ * @param payload Span view of the payload data
  * @return Success if valid, MalformedPacket otherwise
  */
 [[nodiscard]] inline Result<void> validateRGetUsersPayload(
-    const std::uint8_t* payload, std::size_t payloadSize) noexcept {
-    if (payloadSize < 1) {
+    std::span<const std::uint8_t> payload) noexcept {
+    if (payload.size() < 1) {
         return Result<void>::err(NetworkError::PacketTooSmall);
     }
 
@@ -144,7 +145,7 @@ namespace Validator {
     }
 
     std::size_t expectedSize = 1 + static_cast<std::size_t>(count) * 4;
-    if (payloadSize != expectedSize) {
+    if (payload.size() != expectedSize) {
         return Result<void>::err(NetworkError::MalformedPacket);
     }
 
@@ -196,49 +197,48 @@ namespace Validator {
 
 /**
  * @brief Perform complete validation of a received packet
- * @param data Pointer to the raw packet data
- * @param size Size of the received data
+ * @param data Span view of the raw packet data
  * @param isFromServer Whether this packet claims to be from the server
  * @return Success if valid, first encountered error otherwise
  */
-[[nodiscard]] inline Result<void> validatePacket(const std::uint8_t* data,
-                                                 std::size_t size,
-                                                 bool isFromServer) noexcept {
-    auto sizeResult = validatePacketSize(size);
+[[nodiscard]] inline Result<void> validatePacket(
+    std::span<const std::uint8_t> data, bool isFromServer) noexcept {
+    auto sizeResult = validatePacketSize(data.size());
     if (sizeResult.isErr()) {
         return sizeResult;
     }
 
-    const auto* header = reinterpret_cast<const Header*>(data);
+    Header header = ByteOrderSpec::deserializeFromNetwork<Header>(
+        data.subspan(0, kHeaderSize));
 
-    auto headerResult = validateHeader(*header);
+    auto headerResult = validateHeader(header);
     if (headerResult.isErr()) {
         return headerResult;
     }
 
-    std::size_t payloadSize = size - kHeaderSize;
-    const std::uint8_t* payload = data + kHeaderSize;
+    std::size_t payloadSize = data.size() - kHeaderSize;
+    auto payload = data.subspan(kHeaderSize);
     auto payloadResult =
-        validatePayloadSize(header->getOpCode(), payloadSize, payload);
+        validatePayloadSize(header.getOpCode(), payloadSize, payload);
     if (payloadResult.isErr()) {
         return payloadResult;
     }
 
-    if (header->getOpCode() == OpCode::R_GET_USERS) {
-        auto rGetUsersResult = validateRGetUsersPayload(payload, payloadSize);
+    if (header.getOpCode() == OpCode::R_GET_USERS) {
+        auto rGetUsersResult = validateRGetUsersPayload(payload);
         if (rGetUsersResult.isErr()) {
             return rGetUsersResult;
         }
     }
 
     if (isFromServer) {
-        auto userResult = validateServerUserId(header->userId);
+        auto userResult = validateServerUserId(header.userId);
         if (userResult.isErr()) {
             return userResult;
         }
     } else {
         auto userResult =
-            validateClientUserId(header->userId, header->getOpCode());
+            validateClientUserId(header.userId, header.getOpCode());
         if (userResult.isErr()) {
             return userResult;
         }

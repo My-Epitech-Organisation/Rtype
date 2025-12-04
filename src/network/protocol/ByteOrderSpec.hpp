@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cstring>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -388,30 +389,34 @@ template <typename T>
 }
 
 /**
- * @brief Deserialize from raw pointer (for parsing received packets)
+ * @brief Deserialize from span (for parsing received packets)
+ * @param data Span view over the buffer containing network data
+ * @return Deserialized data in host byte order
+ * @throws std::runtime_error if buffer size is incorrect
  */
 template <typename T>
-[[nodiscard]] inline T deserializeFromNetwork(const std::uint8_t* data,
-                                              std::size_t size) {
+[[nodiscard]] inline T deserializeFromNetwork(
+    std::span<const std::uint8_t> data) {
     static_assert(std::is_trivially_copyable_v<T>,
                   "T must be trivially copyable");
 
     if constexpr (sizeof(T) == 1 && std::is_empty_v<T>) {
-        if (size != 0) {
+        if (!data.empty()) {
             throw std::runtime_error(
                 "Buffer should be empty for empty payload type, got " +
-                std::to_string(size) + " bytes");
+                std::to_string(data.size()) + " bytes");
         }
         return {};
     }
 
-    if (size < sizeof(T)) {
+    if (data.size() < sizeof(T)) {
         throw std::runtime_error(
             "Buffer too small for deserialization: expected " +
-            std::to_string(sizeof(T)) + " bytes, got " + std::to_string(size));
+            std::to_string(sizeof(T)) + " bytes, got " +
+            std::to_string(data.size()));
     }
     T networkOrder;
-    std::memcpy(&networkOrder, data, sizeof(T));
+    std::memcpy(&networkOrder, data.data(), sizeof(T));
     return fromNetwork(networkOrder);
 }
 

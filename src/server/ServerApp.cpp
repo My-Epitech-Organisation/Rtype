@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -261,7 +262,7 @@ std::optional<rtype::network::Packet> ServerApp::extractPacketFromData(
 
         if (header.payloadSize > 0) {
             auto validationResult = rtype::network::Validator::validatePacket(
-                rawData.data(), rawData.size(), header.isFromServer());
+                std::span<const std::uint8_t>(rawData), header.isFromServer());
             if (validationResult.isErr()) {
                 LOG_WARNING("[Server] Invalid packet from "
                             << endpoint << " (validation error code: "

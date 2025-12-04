@@ -92,7 +92,6 @@ enum class NetworkError : std::uint8_t {
     return "Unknown error";
 }
 
-template <typename T, typename E = NetworkError>
 /**
  * @brief A Result monad for handling operations that may succeed or fail
  *
@@ -103,6 +102,7 @@ template <typename T, typename E = NetworkError>
  * @tparam T The type of the success value
  * @tparam E The type of the error (defaults to NetworkError)
  */
+template <typename T, typename E = NetworkError>
 class Result {
    public:
     static Result ok(T value) { return Result(std::move(value)); }
@@ -168,7 +168,6 @@ class Result {
     std::variant<T, E> data_;
 };
 
-template <typename E>
 /**
  * @brief Specialization of Result for void operations
  *
@@ -177,6 +176,7 @@ template <typename E>
  *
  * @tparam E The type of the error
  */
+template <typename E>
 class Result<void, E> {
    public:
     static Result ok() { return Result(true); }

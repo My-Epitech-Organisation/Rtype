@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -332,11 +333,13 @@ class Serializer {
     }
 
     /**
-     * @brief Deserialize from raw pointer (zero-copy)
+     * @brief Deserialize from span view (zero-copy, safer than raw pointer)
+     * @param data Span view over the buffer containing network data
+     * @return Deserialized data in host byte order
      */
     template <typename T>
-    static T deserializeFromNetwork(const uint8_t* data, std::size_t size) {
-        return ByteOrderSpec::deserializeFromNetwork<T>(data, size);
+    static T deserializeFromNetwork(std::span<const std::uint8_t> data) {
+        return ByteOrderSpec::deserializeFromNetwork<T>(data);
     }
 };
 
