@@ -16,10 +16,9 @@ void ParallaxScrolling::update(const std::shared_ptr<ECS::Registry>& registry,
         [&view](auto _, auto& parallax, auto& spriteData) {
             float effectiveOffset = view.getCenter().x * parallax.scrollFactor;
             int intOffset = static_cast<int>(effectiveOffset);
-            float remainder = effectiveOffset - intOffset;
 
             spriteData.sprite.setPosition(
-                {view.getCenter().x - view.getSize().x / 2.f - remainder,
+                {view.getCenter().x - view.getSize().x / 2.f,
                  view.getCenter().y - view.getSize().y / 2.f});
 
             sf::IntRect newRect(
