@@ -19,7 +19,7 @@ namespace rtype::network {
 /**
  * @brief Protocol validation utilities
  *
- * Provides validation functions for incoming packets as per RFC RTGP v1.1.0
+ * Provides validation functions for incoming packets as per RFC RTGP v1.0.0
  * Section 6 (Security Considerations).
  */
 namespace Validator {
@@ -56,17 +56,14 @@ namespace Validator {
  */
 [[nodiscard]] inline Result<void> validateHeader(
     const Header& header) noexcept {
-    // Check magic byte
     if (!header.hasValidMagic()) {
         return Result<void>::err(NetworkError::InvalidMagic);
     }
 
-    // Check opcode
     if (!header.hasValidOpCode()) {
         return Result<void>::err(NetworkError::UnknownOpcode);
     }
 
-    // Check reserved bytes
     if (!header.hasValidReserved()) {
         return Result<void>::err(NetworkError::MalformedPacket);
     }
@@ -94,19 +91,58 @@ namespace Validator {
  * @brief Validate payload size for a specific OpCode
  * @param opcode The operation code
  * @param payloadSize The received payload size
+ * @param payload Pointer to the payload buffer (required for R_GET_USERS)
  * @return Success if size matches expected, MalformedPacket otherwise
  */
 [[nodiscard]] inline Result<void> validatePayloadSize(
-    OpCode opcode, std::size_t payloadSize) noexcept {
+    OpCode opcode, std::size_t payloadSize, const std::uint8_t* payload = nullptr) noexcept {
     if (hasVariablePayload(opcode)) {
-        if (opcode == OpCode::R_GET_USERS && payloadSize < 1) {
-            return Result<void>::err(NetworkError::PacketTooSmall);
+        if (opcode == OpCode::R_GET_USERS) {
+            if (payloadSize < 1) {
+                return Result<void>::err(NetworkError::PacketTooSmall);
+            }
+            if (payload == nullptr) {
+                return Result<void>::err(NetworkError::MalformedPacket);
+            }
+            std::uint8_t count = payload[0];
+            if (count > kMaxUsersInResponse) {
+                return Result<void>::err(NetworkError::MalformedPacket);
+            }
+            std::size_t expected = 1 + (static_cast<std::size_t>(count) * sizeof(std::uint32_t));
+            if (payloadSize != expected) {
+                return Result<void>::err(NetworkError::MalformedPacket);
+            }
         }
         return Result<void>::ok();
     }
 
     std::size_t expected = getPayloadSize(opcode);
     if (payloadSize != expected) {
+        return Result<void>::err(NetworkError::MalformedPacket);
+    }
+
+    return Result<void>::ok();
+}
+
+/**
+ * @brief Validate R_GET_USERS payload content
+ * @param payload Pointer to the payload data
+ * @param payloadSize Size of the payload
+ * @return Success if valid, MalformedPacket otherwise
+ */
+[[nodiscard]] inline Result<void> validateRGetUsersPayload(
+    const std::uint8_t* payload, std::size_t payloadSize) noexcept {
+    if (payloadSize < 1) {
+        return Result<void>::err(NetworkError::PacketTooSmall);
+    }
+
+    std::uint8_t count = payload[0];
+    if (count > kMaxUsersInResponse) {
+        return Result<void>::err(NetworkError::MalformedPacket);
+    }
+
+    std::size_t expectedSize = 1 + static_cast<std::size_t>(count) * 4;
+    if (payloadSize != expectedSize) {
         return Result<void>::err(NetworkError::MalformedPacket);
     }
 
@@ -125,6 +161,7 @@ namespace Validator {
         if (userId == kUnassignedUserId) {
             return Result<void>::ok();
         }
+        return Result<void>::err(NetworkError::InvalidUserId);
     }
 
     if (userId == kServerUserId) {
@@ -178,9 +215,17 @@ namespace Validator {
     }
 
     std::size_t payloadSize = size - kHeaderSize;
-    auto payloadResult = validatePayloadSize(header->getOpCode(), payloadSize);
+    const std::uint8_t* payload = data + kHeaderSize;
+    auto payloadResult = validatePayloadSize(header->getOpCode(), payloadSize, payload);
     if (payloadResult.isErr()) {
         return payloadResult;
+    }
+
+    if (header->getOpCode() == OpCode::R_GET_USERS) {
+        auto rGetUsersResult = validateRGetUsersPayload(payload, payloadSize);
+        if (rGetUsersResult.isErr()) {
+            return rGetUsersResult;
+        }
     }
 
     if (isFromServer) {

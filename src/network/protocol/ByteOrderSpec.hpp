@@ -116,7 +116,6 @@ toNetwork(const T& data) noexcept {
     std::uint8_t buffer[sizeof(T)];
     std::memcpy(buffer, &data, sizeof(T));
 
-    // Convert 4-byte chunks
     std::size_t offset = 0;
     while (offset + 4 <= sizeof(T)) {
         std::uint32_t val;
@@ -125,7 +124,6 @@ toNetwork(const T& data) noexcept {
         std::memcpy(buffer + offset, &val, 4);
         offset += 4;
     }
-    // Convert 2-byte chunks
     while (offset + 2 <= sizeof(T)) {
         std::uint16_t val;
         std::memcpy(&val, buffer + offset, 2);
@@ -151,7 +149,6 @@ fromNetwork(const T& data) noexcept {
     std::uint8_t buffer[sizeof(T)];
     std::memcpy(buffer, &data, sizeof(T));
 
-    // Convert 4-byte chunks
     std::size_t offset = 0;
     while (offset + 4 <= sizeof(T)) {
         std::uint32_t val;
@@ -160,7 +157,6 @@ fromNetwork(const T& data) noexcept {
         std::memcpy(buffer + offset, &val, 4);
         offset += 4;
     }
-    // Convert 2-byte chunks
     while (offset + 2 <= sizeof(T)) {
         std::uint16_t val;
         std::memcpy(&val, buffer + offset, 2);
@@ -346,6 +342,11 @@ template <typename T>
     const T& data) {
     static_assert(std::is_trivially_copyable_v<T>,
                   "T must be trivially copyable");
+
+    if constexpr (sizeof(T) == 1 && std::is_empty_v<T>) {
+        return {};
+    }
+
     T networkOrder = toNetwork(data);
     std::vector<std::uint8_t> buffer(sizeof(T));
     std::memcpy(buffer.data(), &networkOrder, sizeof(T));
@@ -365,6 +366,16 @@ template <typename T>
     const std::vector<std::uint8_t>& buffer) {
     static_assert(std::is_trivially_copyable_v<T>,
                   "T must be trivially copyable");
+
+    if constexpr (sizeof(T) == 1 && std::is_empty_v<T>) {
+        if (!buffer.empty()) {
+            throw std::runtime_error(
+                "Buffer should be empty for empty payload type, got " +
+                std::to_string(buffer.size()) + " bytes");
+        }
+        return {};
+    }
+
     if (buffer.size() < sizeof(T)) {
         throw std::runtime_error(
             "Buffer too small for deserialization: expected " +
@@ -384,6 +395,16 @@ template <typename T>
                                               std::size_t size) {
     static_assert(std::is_trivially_copyable_v<T>,
                   "T must be trivially copyable");
+
+    if constexpr (sizeof(T) == 1 && std::is_empty_v<T>) {
+        if (size != 0) {
+            throw std::runtime_error(
+                "Buffer should be empty for empty payload type, got " +
+                std::to_string(size) + " bytes");
+        }
+        return {};
+    }
+
     if (size < sizeof(T)) {
         throw std::runtime_error(
             "Buffer too small for deserialization: expected " +

@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** Rtype
 ** File description:
-** Payloads - Protocol Payload Structures as per RFC RTGP v1.1.0
+** Payloads - Protocol Payload Structures as per RFC RTGP v1.0.0
 */
 
 #pragma once
@@ -62,7 +62,7 @@ struct ConnectPayload {};
  * Server assigns a unique User ID to the connecting client.
  */
 struct AcceptPayload {
-    std::uint32_t newUserId;  ///< Assigned User ID for the client
+    std::uint32_t newUserId;
 };
 
 /**
@@ -83,24 +83,25 @@ struct GetUsersRequestPayload {};
  * Variable-length payload: count + array of user IDs.
  * The full payload size is: 1 + (count * 4) bytes.
  *
- * @note Use GetUsersResponseReader for deserialization
+ * @note For deserialization, read the header and then read `count` uint32_t user IDs from the payload.
  */
 struct GetUsersResponseHeader {
-    std::uint8_t count;  ///< Number of users in the array
+    std::uint8_t count;
 };
 
 /**
  * @brief Maximum number of users in R_GET_USERS response
  *
- * Limited by max payload size: (1384 - 1) / 4 = 345 users max
+ * Limited by count field being uint8_t: max 255 users
+ * (255 * 4 bytes per user ID + 1 byte count = 1021 bytes < 1384 max payload size)
  */
-inline constexpr std::size_t kMaxUsersInResponse = 345;
+inline constexpr std::size_t kMaxUsersInResponse = 255;
 
 /**
  * @brief Payload for S_UPDATE_STATE (0x06)
  */
 struct UpdateStatePayload {
-    std::uint8_t stateId;  ///< GameState enum value
+    std::uint8_t stateId;
 
     [[nodiscard]] constexpr GameState getState() const noexcept {
         return static_cast<GameState>(stateId);
@@ -113,10 +114,10 @@ struct UpdateStatePayload {
  * Server instructs clients to create a new game entity.
  */
 struct EntitySpawnPayload {
-    std::uint32_t entityId;  ///< Unique entity identifier
-    std::uint8_t type;       ///< EntityType enum value
-    float posX;              ///< Initial X position
-    float posY;              ///< Initial Y position
+    std::uint32_t entityId;
+    std::uint8_t type;
+    float posX;
+    float posY;
 
     [[nodiscard]] constexpr EntityType getType() const noexcept {
         return static_cast<EntityType>(type);
@@ -130,11 +131,11 @@ struct EntitySpawnPayload {
  * Unreliable - lost packets are corrected by next update.
  */
 struct EntityMovePayload {
-    std::uint32_t entityId;  ///< Entity to update
-    float posX;              ///< Current X position
-    float posY;              ///< Current Y position
-    float velX;              ///< X velocity
-    float velY;              ///< Y velocity
+    std::uint32_t entityId;
+    float posX;
+    float posY;
+    float velX;
+    float velY;
 };
 
 /**
@@ -143,7 +144,7 @@ struct EntityMovePayload {
  * Server instructs clients to remove an entity.
  */
 struct EntityDestroyPayload {
-    std::uint32_t entityId;  ///< Entity to destroy
+    std::uint32_t entityId;
 };
 
 /**
@@ -152,7 +153,7 @@ struct EntityDestroyPayload {
  * Client sends current input state to server.
  */
 struct InputPayload {
-    std::uint8_t inputMask;  ///< Bitmask of InputMask flags
+    std::uint8_t inputMask;
 
     [[nodiscard]] constexpr bool isUp() const noexcept {
         return (inputMask & InputMask::kUp) != 0;
@@ -177,8 +178,8 @@ struct InputPayload {
  * Server sends authoritative position to correct client prediction.
  */
 struct UpdatePosPayload {
-    float posX;  ///< Authoritative X position
-    float posY;  ///< Authoritative Y position
+    float posX;
+    float posY;
 };
 
 /**
@@ -195,10 +196,16 @@ struct PongPayload {};
 
 #pragma pack(pop)
 
-static_assert(sizeof(ConnectPayload) == 1 || sizeof(ConnectPayload) == 0,
-              "ConnectPayload should be empty or minimal");
-static_assert(sizeof(DisconnectPayload) == 1 || sizeof(DisconnectPayload) == 0,
-              "DisconnectPayload should be empty or minimal");
+static_assert(sizeof(ConnectPayload) == 1,
+              "ConnectPayload is an empty struct (size 1 in C++), serialization returns 0 bytes");
+static_assert(sizeof(DisconnectPayload) == 1,
+              "DisconnectPayload is an empty struct (size 1 in C++), serialization returns 0 bytes");
+static_assert(sizeof(GetUsersRequestPayload) == 1,
+              "GetUsersRequestPayload is an empty struct (size 1 in C++), serialization returns 0 bytes");
+static_assert(sizeof(PingPayload) == 1,
+              "PingPayload is an empty struct (size 1 in C++), serialization returns 0 bytes");
+static_assert(sizeof(PongPayload) == 1,
+              "PongPayload is an empty struct (size 1 in C++), serialization returns 0 bytes");
 
 static_assert(sizeof(AcceptPayload) == 4,
               "AcceptPayload must be 4 bytes (uint32_t)");

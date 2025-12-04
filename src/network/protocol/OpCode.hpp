@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** Rtype
 ** File description:
-** OpCode - Protocol Operation Codes as per RFC RTGP v1.1.0
+** OpCode - Protocol Operation Codes as per RFC RTGP v1.0.0
 */
 
 #pragma once
@@ -14,7 +14,7 @@
 namespace rtype::network {
 
 /**
- * @brief Protocol Operation Codes as defined in RFC RTGP v1.1.0 Section 5
+ * @brief Protocol Operation Codes as defined in RFC RTGP v1.0.0 Section 5
  *
  * OpCodes are divided into categories:
  * - Session Management (0x01-0x0F)
@@ -79,7 +79,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
  * @param opcode The operation code to check
  * @return true if the packet must be acknowledged
  *
- * As per RFC RTGP v1.1.0:
+ * As per RFC RTGP v1.0.0:
  * - All session management ops are RELIABLE
  * - S_ENTITY_SPAWN and S_ENTITY_DESTROY are RELIABLE
  * - S_ENTITY_MOVE, C_INPUT, S_UPDATE_POS are UNRELIABLE

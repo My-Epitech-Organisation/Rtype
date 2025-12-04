@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** Rtype
 ** File description:
-** Header - RTGP Protocol Header (16 bytes) as per RFC RTGP v1.1.0
+** Header - RTGP Protocol Header (16 bytes) as per RFC RTGP v1.0.0
 */
 
 #pragma once
@@ -62,12 +62,12 @@ inline constexpr std::uint8_t kIsAck = 0x02;
 /**
  * @brief RTGP Protocol Header - 16 bytes, network byte order
  *
- * Layout as per RFC RTGP v1.1.0 Section 4.1:
+ * Layout as per RFC RTGP v1.0.0 Section 4.1:
  * ```
  *  0                   1                   2                   3
  *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * |  Magic Byte   |  Packet Type  |          Packet Size          |
+ * |  Magic Byte   |    OpCode     |          Payload Size         |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * |                            User ID                            |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -78,7 +78,10 @@ inline constexpr std::uint8_t kIsAck = 0x02;
  * ```
  *
  * @note All multi-byte fields are stored in NETWORK BYTE ORDER (Big-Endian)
- *       Use the accessor methods which handle byte order conversion.
+ *       Byte order conversion must be handled during serialization/deserialization.
+ *       Fields must be explicitly converted to/from network byte order using
+ *       ByteOrderSpec::toNetwork() / ByteOrderSpec::fromNetwork() before/after
+ *       network transmission. Accessor methods do NOT perform byte order conversion.
  */
 struct Header {
     std::uint8_t magic;                    ///< Must be 0xA1 (kMagicByte)
@@ -129,17 +132,14 @@ struct Header {
         return create(OpCode::C_CONNECT, kUnassignedUserId, seq, 0);
     }
 
-    /// Check if the RELIABLE flag is set
     [[nodiscard]] constexpr bool isReliable() const noexcept {
         return (flags & Flags::kReliable) != 0;
     }
 
-    /// Check if the IS_ACK flag is set
     [[nodiscard]] constexpr bool isAck() const noexcept {
         return (flags & Flags::kIsAck) != 0;
     }
 
-    /// Set the RELIABLE flag
     constexpr void setReliable(bool value = true) noexcept {
         if (value) {
             flags |= Flags::kReliable;
@@ -148,48 +148,39 @@ struct Header {
         }
     }
 
-    /// Set the IS_ACK flag and the ack ID
     constexpr void setAck(std::uint16_t ackSeqId) noexcept {
         flags |= Flags::kIsAck;
         ackId = ackSeqId;
     }
 
-    /// Check if the magic byte is valid
     [[nodiscard]] constexpr bool hasValidMagic() const noexcept {
         return magic == kMagicByte;
     }
 
-    /// Check if the opcode is a known value
     [[nodiscard]] constexpr bool hasValidOpCode() const noexcept {
         return isValidOpCode(opcode);
     }
 
-    /// Get the OpCode enum value
     [[nodiscard]] constexpr OpCode getOpCode() const noexcept {
         return static_cast<OpCode>(opcode);
     }
 
-    /// Check if reserved bytes are zero (as required by RFC)
     [[nodiscard]] constexpr bool hasValidReserved() const noexcept {
         return reserved[0] == 0 && reserved[1] == 0 && reserved[2] == 0;
     }
 
-    /// Perform full header validation
     [[nodiscard]] constexpr bool isValid() const noexcept {
         return hasValidMagic() && hasValidOpCode() && hasValidReserved();
     }
 
-    /// Check if this packet is from the server
     [[nodiscard]] constexpr bool isFromServer() const noexcept {
         return userId == kServerUserId;
     }
 
-    /// Check if this is from an unassigned client (handshake)
     [[nodiscard]] constexpr bool isFromUnassigned() const noexcept {
         return userId == kUnassignedUserId;
     }
 
-    /// Check if the user ID is in valid client range
     [[nodiscard]] constexpr bool hasValidClientId() const noexcept {
         return userId >= kMinClientUserId && userId <= kMaxClientUserId;
     }
@@ -197,15 +188,12 @@ struct Header {
 
 #pragma pack(pop)
 
-// Compile-time verification of struct size
 static_assert(sizeof(Header) == kHeaderSize,
-              "Header must be exactly 16 bytes as per RFC RTGP v1.1.0");
+              "Header must be exactly 16 bytes as per RFC RTGP v1.0.0");
 
-// Verify Header is trivially copyable for network operations
 static_assert(std::is_trivially_copyable_v<Header>,
               "Header must be trivially copyable for memcpy/network ops");
 
-// Verify Header is standard layout for safe casting
 static_assert(std::is_standard_layout_v<Header>,
               "Header must be standard layout for safe buffer casting");
 
