@@ -23,6 +23,7 @@
 #include "Components/TextComponent.hpp"
 #include "Components/TextureRectComponent.hpp"
 #include "Components/VelocityComponent.hpp"
+#include "Components/ZIndexComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneManager/SceneException.hpp"
 
@@ -34,7 +35,7 @@ void MainMenuScene::_createAstroneerVessel() {
     this->_registry->emplaceComponent<Position>(astroneerVessel, 1900, 1060);
     this->_registry->emplaceComponent<Size>(astroneerVessel, 0.3, 0.3);
     this->_registry->emplaceComponent<Velocity>(astroneerVessel, -135.f, -75.f);
-    this->_registry->emplaceComponent<BackgroundTag>(astroneerVessel);
+    this->_registry->emplaceComponent<ZIndex>(astroneerVessel, -1);
     this->_listEntity.push_back(astroneerVessel);
 }
 
@@ -58,7 +59,7 @@ void MainMenuScene::_createFakePlayer() {
         this->_registry->emplaceComponent<Size>(fakePlayer, 2.2, 2.2);
         this->_registry->emplaceComponent<Velocity>(
             fakePlayer, (distrib150(gen) % 150) + 75, 0.f);
-        this->_registry->emplaceComponent<BackgroundTag>(fakePlayer);
+        this->_registry->emplaceComponent<ZIndex>(fakePlayer, 0);
         this->_listEntity.push_back(fakePlayer);
     }
 }

@@ -22,10 +22,7 @@ class SceneManager {
     enum Scene {
         MAIN_MENU,
         IN_GAME,
-        PAUSE_MENU,
-        GAME_OVER,
         SETTINGS_MENU,
-        QUIT,
         NONE,
     };
 
