@@ -31,9 +31,18 @@ target_link_libraries(test_asio_socket PRIVATE
     GTest::gtest_main
 )
 
+# Reliable Channel (RUDP) tests
+add_executable(test_reliable_channel test_reliable_channel.cpp)
+
+target_link_libraries(test_reliable_channel PRIVATE
+    rtype_network
+    GTest::gtest_main
+)
+
 # Enable test discovery
 include(GoogleTest)
 gtest_discover_tests(test_protocol)
 gtest_discover_tests(test_serialization)
 gtest_discover_tests(test_error)
 gtest_discover_tests(test_asio_socket)
+gtest_discover_tests(test_reliable_channel)

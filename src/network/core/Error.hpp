@@ -41,6 +41,7 @@ enum class NetworkError : std::uint8_t {
     MalformedPacket = 24,
     InvalidSequence = 25,
     InvalidUserId = 26,
+    DuplicatePacket = 27,
 
     // Operation Errors (40-59)
     Cancelled = 40,
@@ -49,8 +50,8 @@ enum class NetworkError : std::uint8_t {
     InternalError = 43,
 
     // Reliability Layer Errors (60-79)
-    MaxRetriesExceeded = 60,
-    AckTimeout = 61,
+    RetryLimitExceeded = 60,
+    AckTimeout = 62,
 };
 
 /**
@@ -60,7 +61,7 @@ enum class NetworkError : std::uint8_t {
  * @return A string view containing the error message
  */
 [[nodiscard]] constexpr std::string_view toString(NetworkError error) noexcept {
-    constexpr std::array<std::pair<NetworkError, std::string_view>, 22>
+    constexpr std::array<std::pair<NetworkError, std::string_view>, 24>
         kErrorMessages = {{
             {NetworkError::None, "Success"},
             {NetworkError::NotConnected, "Not connected"},
@@ -76,11 +77,12 @@ enum class NetworkError : std::uint8_t {
             {NetworkError::MalformedPacket, "Malformed packet"},
             {NetworkError::InvalidSequence, "Invalid sequence ID"},
             {NetworkError::InvalidUserId, "Invalid user ID"},
+            {NetworkError::DuplicatePacket, "Duplicate packet"},
             {NetworkError::Cancelled, "Operation cancelled"},
             {NetworkError::WouldBlock, "Would block"},
             {NetworkError::BufferFull, "Buffer full"},
             {NetworkError::InternalError, "Internal error"},
-            {NetworkError::MaxRetriesExceeded, "Max retries exceeded"},
+            {NetworkError::RetryLimitExceeded, "Retry limit exceeded"},
             {NetworkError::AckTimeout, "ACK timeout"},
         }};
 
