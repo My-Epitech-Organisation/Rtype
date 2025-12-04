@@ -64,7 +64,7 @@ enum class NetworkError : std::uint8_t {
  * @return A string view containing the error message
  */
 [[nodiscard]] constexpr std::string_view toString(NetworkError error) noexcept {
-    constexpr std::array<std::pair<NetworkError, std::string_view>, 25>
+    constexpr std::array<std::pair<NetworkError, std::string_view>, 22>
         kErrorMessages = {{
             {NetworkError::None, "Success"},
             {NetworkError::NotConnected, "Not connected"},
