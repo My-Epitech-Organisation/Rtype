@@ -100,23 +100,23 @@ GameScene::GameScene(
     auto fakePlayer = EntityFactory::createPlayer(
         this->_registry, this->_assetsManager, {4, 4}, true);
     this->_listEntity.push_back(fakePlayer);
-    auto sectionX = (1920 - SIZE_X_PAUSE_MENU) / 2;
-    auto sectionY = (1080 - SIZE_Y_PAUSE_MENU) / 2;
+    auto sectionX = (1920 - SizeXPauseMenu) / 2;
+    auto sectionY = (1080 - SizeYPauseMenu) / 2;
     auto pauseEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "", sectionX, sectionY,
-        SIZE_X_PAUSE_MENU, SIZE_Y_PAUSE_MENU);
+        SizeXPauseMenu, SizeYPauseMenu);
     pauseEntities.push_back(EntityFactory::createStaticText(
-        this->_registry, this->_assetsManager, PAUSE_MENU_TITLE, "title_font",
-        (sectionX + SIZE_X_PAUSE_MENU / 2) -
-            ((PAUSE_MENU_TITLE.length() - 2) * (SIZE_FONT_PAUSE_MENU / 2)),
-        sectionY, SIZE_FONT_PAUSE_MENU));
+        this->_registry, this->_assetsManager, PauseMenuTitle, "title_font",
+        (sectionX + SizeXPauseMenu / 2) -
+            ((PauseMenuTitle.length() - 2) * (SizeFontPauseMenu / 2)),
+        sectionY, SizeFontPauseMenu));
 
     pauseEntities.push_back(EntityFactory::createButton(
         this->_registry,
         Text(this->_assetsManager->fontManager->get("title_font"),
              sf::Color::White, 30, "Menu"),
-        Position(sectionX + ((SIZE_X_PAUSE_MENU / 2) - (150 / 2)),
-                 sectionY + SIZE_Y_PAUSE_MENU - 75),
+        Position(sectionX + ((SizeXPauseMenu / 2) - (150 / 2)),
+                 sectionY + SizeYPauseMenu - 75),
         Rectangle({150, 55}, sf::Color::Blue, sf::Color::Red),
         std::function<void()>([switchToScene]() {
             try {

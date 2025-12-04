@@ -11,10 +11,10 @@
 #include "../AScene.hpp"
 #include "SceneManager/SceneManager.hpp"
 
-static constexpr int SIZE_X_PAUSE_MENU = 600;
-static constexpr int SIZE_Y_PAUSE_MENU = 600;
-static constexpr int SIZE_FONT_PAUSE_MENU = 40;
-static constexpr std::string PAUSE_MENU_TITLE = "Pause";
+static constexpr int SizeXPauseMenu = 600;
+static constexpr int SizeYPauseMenu = 600;
+static constexpr int SizeFontPauseMenu = 40;
+static constexpr std::string PauseMenuTitle = "Pause";
 
 class GameScene : public AScene {
    private:
