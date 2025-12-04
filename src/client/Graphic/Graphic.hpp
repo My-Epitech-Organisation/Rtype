@@ -18,6 +18,11 @@
 #include "ecs/ECS.hpp"
 
 class Graphic {
+public:
+
+    static constexpr int WINDOW_WIDTH = 1920;
+    static constexpr int WINDOW_HEIGHT = 1080;
+
    private:
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<AssetManager> _assetsManager;
@@ -27,9 +32,6 @@ class Graphic {
     std::shared_ptr<sf::RenderWindow> _window;
     sf::View _view;
     sf::Clock _mainClock;
-
-    static constexpr int WINDOW_WIDTH = 1920;
-    static constexpr int WINDOW_HEIGHT = 1080;
 
     void _pollEvents();
     void _update();

@@ -7,6 +7,7 @@
 
 #include "GameScene.hpp"
 
+#include "Graphic.hpp"
 #include "Components/HiddenComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/VelocityComponent.hpp"
@@ -20,7 +21,7 @@ void GameScene::_updateUserMovementUp() {
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveUp)) {
         this->_registry->view<Velocity, ControllableTag>().each(
-            [](auto, auto& velocity, auto) { velocity.y -= 300; });
+            [](auto, auto& velocity, auto) { velocity.y -= PlayerMovementSpeed; });
     }
 }
 
@@ -31,7 +32,7 @@ void GameScene::_updateUserMovementDown() {
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveDown)) {
         this->_registry->view<Velocity, ControllableTag>().each(
-            [](auto, auto& velocity, auto) { velocity.y += 300; });
+            [](auto, auto& velocity, auto) { velocity.y += PlayerMovementSpeed; });
     }
 }
 
@@ -42,7 +43,7 @@ void GameScene::_updateUserMovementLeft() {
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveLeft)) {
         this->_registry->view<Velocity, ControllableTag>().each(
-            [](auto, auto& velocity, auto) { velocity.x -= 300; });
+            [](auto, auto& velocity, auto) { velocity.x -= PlayerMovementSpeed; });
     }
 }
 
@@ -53,7 +54,7 @@ void GameScene::_updateUserMovementRight() {
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveRight)) {
         this->_registry->view<Velocity, ControllableTag>().each(
-            [](auto, auto& velocity, auto) { velocity.x += 300; });
+            [](auto, auto& velocity, auto) { velocity.x += PlayerMovementSpeed; });
     }
 }
 
@@ -102,8 +103,8 @@ GameScene::GameScene(
     auto fakePlayer = EntityFactory::createPlayer(
         this->_registry, this->_assetsManager, {4, 4}, true);
     this->_listEntity.push_back(fakePlayer);
-    auto sectionX = (1920 - SizeXPauseMenu) / 2;
-    auto sectionY = (1080 - SizeYPauseMenu) / 2;
+    auto sectionX = (Graphic::WINDOW_WIDTH - SizeXPauseMenu) / 2;
+    auto sectionY = (Graphic::WINDOW_HEIGHT - SizeYPauseMenu) / 2;
     auto pauseEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "", sectionX, sectionY,
         SizeXPauseMenu, SizeYPauseMenu);
