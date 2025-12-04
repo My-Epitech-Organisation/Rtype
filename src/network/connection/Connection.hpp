@@ -157,7 +157,6 @@ class Connection {
     ReliableChannel reliableChannel_;
     std::queue<OutgoingPacket> outgoingQueue_;
     std::uint16_t sequenceId_{0};
-    Endpoint serverEndpoint_;
 };
 
 }  // namespace rtype::network
