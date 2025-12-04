@@ -9,6 +9,7 @@ set(ECS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/core/CommandBuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/core/Prefab.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/signal/SignalDispatcher.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/system/SystemScheduler.cpp
 )
 
 # Header files (explicitly listed for IDE integration)
