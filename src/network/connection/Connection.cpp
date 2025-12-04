@@ -46,6 +46,10 @@ Result<void> Connection::processPacket(const Buffer& data,
         return Err<void>(NetworkError::PacketTooSmall);
     }
 
+    if (serverEndpoint_.has_value() && sender != *serverEndpoint_) {
+        return Err<void>(NetworkError::InvalidSender);
+    }
+
     Header header;
     std::memcpy(&header, data.data(), kHeaderSize);
 
@@ -57,6 +61,11 @@ Result<void> Connection::processPacket(const Buffer& data,
     header.userId = ByteOrderSpec::fromNetwork(header.userId);
     header.seqId = ByteOrderSpec::fromNetwork(header.seqId);
     header.ackId = ByteOrderSpec::fromNetwork(header.ackId);
+
+    std::size_t expectedSize = kHeaderSize + header.payloadSize;
+    if (data.size() != expectedSize) {
+        return Err<void>(NetworkError::MalformedPacket);
+    }
 
     stateMachine_.recordActivity();
     processReliabilityAck(header);
@@ -70,7 +79,7 @@ Result<void> Connection::processPacket(const Buffer& data,
     }
 
     Buffer payload;
-    if (data.size() > kHeaderSize) {
+    if (header.payloadSize > 0) {
         payload.assign(data.begin() + kHeaderSize, data.end());
     }
 
@@ -78,7 +87,7 @@ Result<void> Connection::processPacket(const Buffer& data,
 
     switch (opcode) {
         case OpCode::S_ACCEPT:
-            return handleConnectAccept(header, payload);
+            return handleConnectAccept(header, payload, sender);
 
         case OpCode::DISCONNECT:
             return handleDisconnect(header);
@@ -214,6 +223,7 @@ void Connection::reset() noexcept {
         outgoingQueue_.pop();
     }
     sequenceId_ = 0;
+    serverEndpoint_.reset();
 }
 
 Buffer Connection::buildConnectPacket() {
@@ -261,9 +271,15 @@ Buffer Connection::buildDisconnectPacket() {
 }
 
 Result<void> Connection::handleConnectAccept(const Header& header,
-                                             const Buffer& payload) {
+                                             const Buffer& payload,
+                                             const Endpoint& sender) {
     if (payload.size() < sizeof(AcceptPayload)) {
         return Err<void>(NetworkError::MalformedPacket);
+    }
+
+    // Capture server endpoint on first successful accept
+    if (!serverEndpoint_.has_value()) {
+        serverEndpoint_ = sender;
     }
 
     AcceptPayload acceptPayload;

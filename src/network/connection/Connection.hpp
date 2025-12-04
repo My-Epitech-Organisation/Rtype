@@ -146,7 +146,8 @@ class Connection {
     [[nodiscard]] Buffer buildConnectPacket();
     [[nodiscard]] Buffer buildDisconnectPacket();
     [[nodiscard]] Result<void> handleConnectAccept(const Header& header,
-                                                   const Buffer& payload);
+                                                   const Buffer& payload,
+                                                   const Endpoint& sender);
     [[nodiscard]] Result<void> handleDisconnect(const Header& header);
     void processReliabilityAck(const Header& header);
     void queuePacket(Buffer data, bool reliable);
@@ -157,6 +158,7 @@ class Connection {
     ReliableChannel reliableChannel_;
     std::queue<OutgoingPacket> outgoingQueue_;
     std::uint16_t sequenceId_{0};
+    std::optional<Endpoint> serverEndpoint_;
 };
 
 }  // namespace rtype::network
