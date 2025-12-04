@@ -107,11 +107,17 @@ GameScene::GameScene(
     auto pauseEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "", sectionX, sectionY,
         SizeXPauseMenu, SizeYPauseMenu);
-    pauseEntities.push_back(EntityFactory::createStaticText(
+    auto titleEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, PauseMenuTitle, "title_font",
         (sectionX + SizeXPauseMenu / 2) -
             ((PauseMenuTitle.length() - 2) * (SizeFontPauseMenu / 2)),
-        sectionY, SizeFontPauseMenu));
+        sectionY, SizeFontPauseMenu);
+    auto& titleText = this->_registry->getComponent<Text>(titleEntity);
+    sf::FloatRect bounds = titleText.text.getLocalBounds();
+    float centeredX = sectionX + (SizeXPauseMenu - bounds.size.x) / 2;
+    auto& titlePos = this->_registry->getComponent<Position>(titleEntity);
+    titlePos.x = centeredX;
+    pauseEntities.push_back(titleEntity);
 
     pauseEntities.push_back(EntityFactory::createButton(
         this->_registry,
