@@ -245,7 +245,6 @@ class Serializer {
                 std::to_string(buffer.size()) + " bytes");
         }
 
-        // Deserialize to host type, convert, serialize back
         T hostValue;
         std::memcpy(&hostValue, buffer.data(), sizeof(T));
         T networkValue = ByteOrderSpec::toNetwork(hostValue);
@@ -281,7 +280,6 @@ class Serializer {
                 std::to_string(buffer.size()) + " bytes");
         }
 
-        // Deserialize network type, convert, serialize back
         T networkValue;
         std::memcpy(&networkValue, buffer.data(), sizeof(T));
         T hostValue = ByteOrderSpec::fromNetwork(networkValue);

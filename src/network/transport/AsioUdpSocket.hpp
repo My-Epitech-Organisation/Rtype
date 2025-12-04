@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <mutex>
+#include <functional>
 
 #include <asio.hpp>
 
@@ -30,7 +31,10 @@ class AsioUdpSocket : public IAsyncSocket {
     /**
      * @brief Construct a new AsioUdpSocket
      *
-     * @param ioContext Reference to the Asio io_context (must outlive socket)
+     * @param ioContext Reference to the Asio io_context (must outlive socket).
+     * @note Non-const reference required by Asio API - io_context is modified
+     *       internally by Asio for event dispatching and handler management.
+     *       This is a documented exception to const-correctness rules.
      */
     explicit AsioUdpSocket(asio::io_context& ioContext);
 
@@ -48,7 +52,8 @@ class AsioUdpSocket : public IAsyncSocket {
     void asyncSendTo(const Buffer& data, const Endpoint& dest,
                      SendCallback handler) override;
 
-    void asyncReceiveFrom(Buffer& buffer, Endpoint& sender,
+    void asyncReceiveFrom(std::shared_ptr<Buffer> buffer, 
+                          std::shared_ptr<Endpoint> sender,
                           ReceiveCallback handler) override;
 
     void cancel() override;

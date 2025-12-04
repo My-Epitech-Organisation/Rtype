@@ -8,6 +8,7 @@
 #include "AsioUdpSocket.hpp"
 
 #include <utility>
+#include <memory>
 
 namespace rtype::network {
 
@@ -102,26 +103,40 @@ void AsioUdpSocket::asyncSendTo(const Buffer& data, const Endpoint& dest,
         });
 }
 
-void AsioUdpSocket::asyncReceiveFrom(Buffer& buffer, Endpoint& sender,
+void AsioUdpSocket::asyncReceiveFrom(std::shared_ptr<Buffer> buffer,
+                                     std::shared_ptr<Endpoint> sender,
                                      ReceiveCallback handler) {
     if (!handler) {
         return;
     }
 
-    if (buffer.size() < kMaxPacketSize) {
-        buffer.resize(kMaxPacketSize);
+    if (!buffer || !sender) {
+        if (handler) {
+            handler(Err<std::size_t>(NetworkError::InternalError));
+        }
+        return;
+    }
+
+    if (buffer->size() < kMaxPacketSize) {
+        buffer->resize(kMaxPacketSize);
     }
 
     socket_.async_receive_from(
-        asio::buffer(buffer), remoteEndpoint_,
-        [this, &buffer, &sender, handler = std::move(handler)](
-            const asio::error_code& ec, std::size_t bytesReceived) {
+        asio::buffer(*buffer), remoteEndpoint_,
+        [this, buffer, sender, handler = std::move(handler)](
+            const asio::error_code& ec, std::size_t bytesReceived) mutable {
             if (ec) {
-                handler(Err<std::size_t>(fromAsioError(ec)));
+                if (handler) {
+                    handler(Err<std::size_t>(fromAsioError(ec)));
+                }
             } else {
-                buffer.resize(bytesReceived);
-                sender = fromAsioEndpoint(remoteEndpoint_);
-                handler(Ok(bytesReceived));
+                buffer->resize(bytesReceived);
+                auto endpoint = fromAsioEndpoint(remoteEndpoint_);
+                sender->address = std::move(endpoint.address);
+                sender->port = endpoint.port;
+                if (handler) {
+                    handler(Ok(bytesReceived));
+                }
             }
         });
 }

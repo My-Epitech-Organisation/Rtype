@@ -123,7 +123,7 @@ TEST_F(AsioUdpSocketTest, AsyncSendReceiveRoundtrip) {
     // Create server socket
     auto server = createAsyncSocket(ctx_->get());
     ASSERT_NE(server, nullptr);
-    
+
     auto bindResult = server->bind(0);
     ASSERT_TRUE(bindResult.isOk()) << "Server bind failed";
     uint16_t serverPort = server->localPort();
@@ -143,11 +143,15 @@ TEST_F(AsioUdpSocketTest, AsyncSendReceiveRoundtrip) {
     std::atomic<size_t> bytesReceived{0};
 
     // Start async receive on server
-    server->asyncReceiveFrom(recvBuffer, sender, 
-        [&](Result<size_t> result) {
+    auto recvBufferPtr = std::make_shared<Buffer>();
+    auto senderPtr = std::make_shared<Endpoint>();
+    server->asyncReceiveFrom(recvBufferPtr, senderPtr,
+        [&, recvBufferPtr, senderPtr](Result<size_t> result) {
             EXPECT_TRUE(result.isOk()) << "Receive failed: " << toString(result.error());
             if (result.isOk()) {
                 bytesReceived = result.value();
+                recvBuffer = *recvBufferPtr;
+                sender = *senderPtr;
             }
             recvComplete = true;
         });
@@ -170,7 +174,7 @@ TEST_F(AsioUdpSocketTest, AsyncSendReceiveRoundtrip) {
 
     ASSERT_TRUE(completed) << "Timeout waiting for send/receive";
     EXPECT_EQ(bytesReceived, sendData.size());
-    
+
     // Verify received data matches sent data
     for (size_t i = 0; i < sendData.size(); ++i) {
         EXPECT_EQ(recvBuffer[i], sendData[i]) << "Mismatch at index " << i;
@@ -201,11 +205,15 @@ TEST_F(AsioUdpSocketTest, EchoServerPattern) {
     std::atomic<bool> echoReceived{false};
 
     // Server: receive and echo back
-    server->asyncReceiveFrom(serverRecvBuf, serverSender,
-        [&](Result<size_t> result) {
+    auto serverRecvBufPtr = std::make_shared<Buffer>(kMaxPacketSize);
+    auto serverSenderPtr = std::make_shared<Endpoint>();
+    server->asyncReceiveFrom(serverRecvBufPtr, serverSenderPtr,
+        [&, serverRecvBufPtr, serverSenderPtr](Result<size_t> result) {
             if (result.isOk()) {
+                serverRecvBuf = *serverRecvBufPtr;
+                serverSender = *serverSenderPtr;
                 // Echo the data back
-                Buffer echo(serverRecvBuf.begin(), 
+                Buffer echo(serverRecvBuf.begin(),
                            serverRecvBuf.begin() + result.value());
                 server->asyncSendTo(echo, serverSender, [](Result<size_t>) {});
             }
@@ -216,11 +224,15 @@ TEST_F(AsioUdpSocketTest, EchoServerPattern) {
     client->asyncSendTo(request, serverEndpoint, [](Result<size_t>) {});
 
     // Client: wait for echo
-    client->asyncReceiveFrom(clientRecvBuf, clientSender,
-        [&](Result<size_t> result) {
+    auto clientRecvBufPtr = std::make_shared<Buffer>(kMaxPacketSize);
+    auto clientSenderPtr = std::make_shared<Endpoint>();
+    client->asyncReceiveFrom(clientRecvBufPtr, clientSenderPtr,
+        [&, clientRecvBufPtr, clientSenderPtr](Result<size_t> result) {
             EXPECT_TRUE(result.isOk());
             if (result.isOk()) {
                 EXPECT_EQ(result.value(), request.size());
+                clientRecvBuf = *clientRecvBufPtr;
+                clientSender = *clientSenderPtr;
             }
             echoReceived = true;
         });
@@ -265,7 +277,7 @@ TEST_F(AsioUdpSocketTest, SendToInvalidEndpoint) {
 
 TEST_F(AsioUdpSocketTest, HandleNullCallback) {
     auto socket = createAsyncSocket(ctx_->get());
-    
+
     Buffer data = {1, 2, 3};
     Endpoint dest{"127.0.0.1", 12345};
 
@@ -290,8 +302,10 @@ TEST_F(AsioUdpSocketTest, CancelPendingOperations) {
     NetworkError receivedError = NetworkError::None;
 
     // Start a receive that won't complete (no data coming)
-    socket->asyncReceiveFrom(recvBuffer, sender,
-        [&](Result<size_t> result) {
+    auto recvBufferPtr = std::make_shared<Buffer>(kMaxPacketSize);
+    auto senderPtr = std::make_shared<Endpoint>();
+    socket->asyncReceiveFrom(recvBufferPtr, senderPtr,
+        [&, recvBufferPtr, senderPtr](Result<size_t> result) {
             if (result.isErr()) {
                 receivedError = result.error();
             }
@@ -303,7 +317,7 @@ TEST_F(AsioUdpSocketTest, CancelPendingOperations) {
 
     // Run to process the cancellation
     bool completed = runUntil([&]() { return callbackCalled.load(); });
-    
+
     EXPECT_TRUE(completed) << "Callback not called after cancel";
     EXPECT_EQ(receivedError, NetworkError::Cancelled);
 }
@@ -319,8 +333,10 @@ TEST_F(AsioUdpSocketTest, CloseWithPendingOperations) {
     std::atomic<bool> callbackCalled{false};
 
     // Start a receive
-    socket->asyncReceiveFrom(recvBuffer, sender,
-        [&](Result<size_t> result) {
+    auto recvBufferPtr = std::make_shared<Buffer>(kMaxPacketSize);
+    auto senderPtr = std::make_shared<Endpoint>();
+    socket->asyncReceiveFrom(recvBufferPtr, senderPtr,
+        [&, recvBufferPtr, senderPtr](Result<size_t> result) {
             // Should be cancelled when socket closes
             EXPECT_TRUE(result.isErr());
             callbackCalled = true;
@@ -348,7 +364,7 @@ TEST(IoContextTest, CreateAndDestroy) {
 
 TEST(IoContextTest, PollWithNoWork) {
     IoContext ctx;
-    
+
     // Poll should return 0 when no work
     ctx.releaseWorkGuard();
     size_t handled = ctx.poll();
@@ -357,14 +373,14 @@ TEST(IoContextTest, PollWithNoWork) {
 
 TEST(IoContextTest, RunInBackground) {
     IoContext ctx;
-    
+
     EXPECT_FALSE(ctx.isRunningInBackground());
     ctx.runInBackground();
     EXPECT_TRUE(ctx.isRunningInBackground());
-    
+
     // Let it run briefly
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    
+
     ctx.stop();
     EXPECT_TRUE(ctx.stopped());
 }
@@ -432,13 +448,13 @@ TEST(ByteOrderTest, FloatRoundtrip) {
 
 TEST(ByteOrderTest, WriteAndRead) {
     std::array<uint8_t, 8> buffer{};
-    
+
     ByteOrder::writeTo(buffer.data(), uint32_t{0xDEADBEEF});
     ByteOrder::writeTo(buffer.data() + 4, uint16_t{0x1234});
-    
+
     uint32_t val32 = ByteOrder::readFrom<uint32_t>(buffer.data());
     uint16_t val16 = ByteOrder::readFrom<uint16_t>(buffer.data() + 4);
-    
+
     EXPECT_EQ(val32, 0xDEADBEEF);
     EXPECT_EQ(val16, 0x1234);
 }
