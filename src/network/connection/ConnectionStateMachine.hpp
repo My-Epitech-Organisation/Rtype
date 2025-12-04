@@ -35,7 +35,6 @@ class ConnectionStateMachine {
     struct Config {
         Duration connectTimeout = Duration{2000};
         Duration disconnectTimeout = Duration{1000};
-        Duration heartbeatInterval = Duration{1000};
         Duration heartbeatTimeout = Duration{10000};
         int maxConnectRetries = 3;
     };
@@ -45,8 +44,6 @@ class ConnectionStateMachine {
      */
     enum class UpdateResult : std::uint8_t {
         NoAction,
-        ShouldSendConnect,
-        ShouldSendDisconnect,
         ShouldRetryConnect,
         ConnectionTimedOut,
         DisconnectComplete
