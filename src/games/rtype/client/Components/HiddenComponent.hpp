@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** r-type
 ** File description:
-** BoxingComponent.hpp
+** HiddenComponent.hpp
 */
 
 #ifndef SRC_GAMES_RTYPE_CLIENT_COMPONENTS_HIDDENCOMPONENT_HPP_
