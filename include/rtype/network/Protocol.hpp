@@ -9,7 +9,7 @@
 
 /**
  * @file Protocol.hpp
- * @brief Public interface for RTGP protocol as per RFC RTGP v1.1.0
+ * @brief Public interface for RTGP protocol as per RFC RTGP v1.0.0
  *
  * This header re-exports all protocol type definitions for external use.
  * For internal network library code, include the src/ headers directly.
@@ -43,7 +43,7 @@
 // Include all protocol components from src/network/
 // These paths work because CMakeLists.txt adds src/network to include paths
 
-// Core protocol types (RFC RTGP v1.1.0)
+// Core protocol types (RFC RTGP v1.0.0)
 #include "protocol/OpCode.hpp"
 #include "protocol/Header.hpp"
 #include "protocol/Payloads.hpp"

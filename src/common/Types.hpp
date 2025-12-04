@@ -12,8 +12,10 @@
 #include <cstdint>
 #include <format>
 #include <functional>
+#include <iostream>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace rtype {
 
@@ -34,24 +36,41 @@ struct Endpoint {
     std::string address;
     uint16_t port = 0;
 
-    /// @brief Default constructor
+    /**
+     * @brief Default constructor
+     */
     Endpoint() = default;
 
-    /// @brief Construct from address and port
+    /**
+     * @brief Construct from address and port
+     * @param addr Network address
+     * @param p Port number
+     */
     Endpoint(std::string addr, uint16_t p)
         : address(std::move(addr)), port(p) {}
 
-    /// @brief Copy constructor
+    /**
+     * @brief Copy constructor
+     */
     Endpoint(const Endpoint&) = default;
 
-    /// @brief Move constructor (no string copy)
+    /**
+     * @brief Move constructor (no string copy)
+     * @param other Endpoint to move from
+     */
     Endpoint(Endpoint&& other) noexcept
         : address(std::move(other.address)), port(other.port) {}
 
-    /// @brief Copy assignment
+    /**
+     * @brief Copy assignment
+     */
     Endpoint& operator=(const Endpoint&) = default;
 
-    /// @brief Move assignment (no string copy)
+    /**
+     * @brief Move assignment (no string copy)
+     * @param other Endpoint to move from
+     * @return Reference to this endpoint
+     */
     Endpoint& operator=(Endpoint&& other) noexcept {
         if (this != &other) {
             address = std::move(other.address);
@@ -62,6 +81,10 @@ struct Endpoint {
 
     ~Endpoint() = default;
 
+    /**
+     * @brief Check if the endpoint is valid
+     * @return true if address is non-empty and port is non-zero
+     */
     [[nodiscard]] bool isValid() const noexcept {
         return !address.empty() && port != 0;
     }
@@ -103,6 +126,16 @@ struct Endpoint {
         return std::format("{}:{}", address, port);
     }
 };
+
+/**
+ * @brief Stream insertion operator for Endpoint
+ * @param os Output stream
+ * @param endpoint Endpoint to stream
+ * @return Reference to the output stream
+ */
+inline std::ostream& operator<<(std::ostream& os, const Endpoint& endpoint) {
+    return os << endpoint.toString();
+}
 
 }  // namespace rtype
 
