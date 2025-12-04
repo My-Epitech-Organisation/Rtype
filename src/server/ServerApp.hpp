@@ -196,7 +196,7 @@ class ServerApp {
         return _clientManager;
     }
 
-   private:
+   public:
     /**
      * @brief Configuration for the main loop timing
      */
@@ -214,6 +214,15 @@ class ServerApp {
         std::chrono::nanoseconds accumulator{0};
     };
 
+    /**
+     * @brief Get loop timing configuration (for testing)
+     * @return Loop timing configuration
+     */
+    [[nodiscard]] LoopTiming getLoopTiming() const noexcept {
+        return createLoopTiming();
+    }
+
+   private:
     /**
      * @brief Initialize server resources
      * @return true if initialization succeeded

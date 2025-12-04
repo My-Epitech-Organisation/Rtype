@@ -24,7 +24,11 @@ ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
       _verbose(verbose),
       _shutdownFlag(shutdownFlag),
       _metrics(std::make_shared<ServerMetrics>()),
-      _clientManager(maxPlayers, _metrics, verbose) {}
+      _clientManager(maxPlayers, _metrics, verbose) {
+    if (tickRate == 0) {
+        throw std::invalid_argument("tickRate cannot be zero");
+    }
+}
 
 ServerApp::~ServerApp() { shutdown(); }
 

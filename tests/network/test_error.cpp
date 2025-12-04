@@ -50,7 +50,7 @@ TEST_F(NetworkErrorTest, ToString_OperationErrors) {
 }
 
 TEST_F(NetworkErrorTest, ToString_ReliabilityErrors) {
-    EXPECT_EQ(toString(NetworkError::MaxRetriesExceeded), "Max retries exceeded");
+    EXPECT_EQ(toString(NetworkError::RetryLimitExceeded), "Retry limit exceeded");
     EXPECT_EQ(toString(NetworkError::AckTimeout), "ACK timeout");
 }
 
