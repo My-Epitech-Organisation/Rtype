@@ -12,7 +12,7 @@
  * @brief Include all RTGP protocol types
  *
  * This header provides a single include for the complete RTGP protocol
- * definition as per RFC RTGP v1.1.0.
+ * definition as per RFC RTGP v1.0.0.
  *
  * Includes:
  * - OpCode: Protocol operation codes (RFC Section 5)
@@ -23,7 +23,7 @@
  * @note Serialization logic (PacketWriter, PacketReader, Packet class)
  *       is implemented separately in issue #161.
  *
- * @see RFC RTGP v1.1.0 in docs/RFC/RFC_RTGP_v1.0.0.md
+ * @see RFC RTGP v1.0.0 in docs/RFC/RFC_RTGP_v1.0.0.md
  */
 
 #include "protocol/Header.hpp"

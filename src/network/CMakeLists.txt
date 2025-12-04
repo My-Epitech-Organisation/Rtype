@@ -18,7 +18,6 @@ find_package(asio CONFIG REQUIRED)
 
 target_include_directories(rtype_network PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/protocol
 )
 
 target_compile_features(rtype_network PUBLIC cxx_std_20)
