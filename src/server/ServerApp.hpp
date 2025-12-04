@@ -328,20 +328,16 @@ class ServerApp {
     uint32_t _tickRate;
     uint32_t _clientTimeoutSeconds;
     bool _verbose;
-    std::shared_ptr<std::atomic<bool>>
-        _shutdownFlag;
+    std::shared_ptr<std::atomic<bool>> _shutdownFlag;
     std::atomic<bool> _hasShutdown{false};
 
     std::shared_ptr<ServerMetrics> _metrics;
     ClientManager _clientManager;
 
-    SafeQueue<std::pair<Endpoint, rtype::network::Packet>>
-        _incomingPackets;
-    SafeQueue<std::pair<Endpoint, std::vector<uint8_t>>>
-        _rawNetworkData;
+    SafeQueue<std::pair<Endpoint, rtype::network::Packet>> _incomingPackets;
+    SafeQueue<std::pair<Endpoint, std::vector<uint8_t>>> _rawNetworkData;
     std::thread _networkThread;
-    std::atomic<bool> _networkThreadRunning{
-        false};
+    std::atomic<bool> _networkThreadRunning{false};
 
     // TODO(Clem): Add network socket when rtype_network is fully implemented
     // std::unique_ptr<network::UdpSocket> _socket;
