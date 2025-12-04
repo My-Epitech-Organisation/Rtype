@@ -39,6 +39,14 @@ target_link_libraries(test_reliable_channel PRIVATE
     GTest::gtest_main
 )
 
+# Connection State Machine tests
+add_executable(test_connection_state test_connection_state.cpp)
+
+target_link_libraries(test_connection_state PRIVATE
+    rtype_network
+    GTest::gtest_main
+)
+
 # Enable test discovery
 include(GoogleTest)
 gtest_discover_tests(test_protocol)
@@ -46,3 +54,4 @@ gtest_discover_tests(test_serialization)
 gtest_discover_tests(test_error)
 gtest_discover_tests(test_asio_socket)
 gtest_discover_tests(test_reliable_channel)
+gtest_discover_tests(test_connection_state)
