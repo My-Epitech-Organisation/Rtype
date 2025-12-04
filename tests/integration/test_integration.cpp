@@ -13,7 +13,8 @@
 #include "../../src/common/SafeQueue/SafeQueue.hpp"
 #include "../../src/common/Types.hpp"
 #include "../../src/games/rtype/shared/Components.hpp"
-#include "../../src/games/rtype/shared/Systems/MovementSystem.cpp"
+#include "../../src/games/rtype/shared/Systems/Movements/MovementSystem.hpp"
+#include "../../src/engine/ecs/ECS.hpp"
 
 using namespace rtype;
 using namespace rtype::games::rtype::shared;
@@ -24,21 +25,28 @@ using namespace rtype::games::rtype::shared;
 
 TEST(IntegrationTest, MovementSystemWithNetworkComponents) {
     // Test that movement system works with network-synced components
-    TransformComponent transform{0.0f, 0.0f, 0.0f};
-    VelocityComponent velocity{10.0f, 5.0f};
-    NetworkIdComponent netId{12345};
+    ECS::Registry registry;
+    auto entity = registry.spawnEntity();
+    registry.emplaceComponent<TransformComponent>(entity, 0.0f, 0.0f, 0.0f);
+    registry.emplaceComponent<VelocityComponent>(entity, 10.0f, 5.0f);
+    registry.emplaceComponent<NetworkIdComponent>(entity, 12345);
 
+    MovementSystem movementSystem;
     const float deltaTime = 0.016f;  // ~60 FPS
 
     // Update movement
-    updateMovement(transform, velocity, deltaTime);
+    movementSystem.update(registry, deltaTime);
 
     // Verify movement occurred
+    auto& transform = registry.getComponent<TransformComponent>(entity);
     EXPECT_NEAR(transform.x, 0.16f, 0.001f);
     EXPECT_NEAR(transform.y, 0.08f, 0.001f);
 
     // Network ID should remain unchanged
+    auto& netId = registry.getComponent<NetworkIdComponent>(entity);
     EXPECT_EQ(netId.networkId, 12345u);
+
+    registry.killEntity(entity);
 }
 
 TEST(IntegrationTest, SafeQueueThreadSafety) {
@@ -64,24 +72,32 @@ TEST(IntegrationTest, SafeQueueThreadSafety) {
 
 TEST(IntegrationTest, ComponentStateSynchronization) {
     // Test that components maintain state correctly for network sync
-    TransformComponent transform{100.0f, 200.0f, 90.0f};
-    VelocityComponent velocity{15.0f, -10.0f};
-    NetworkIdComponent netId{999};
+    ECS::Registry registry;
+    auto entity = registry.spawnEntity();
+    registry.emplaceComponent<TransformComponent>(entity, 100.0f, 200.0f, 90.0f);
+    registry.emplaceComponent<VelocityComponent>(entity, 15.0f, -10.0f);
+    registry.emplaceComponent<NetworkIdComponent>(entity, 999);
 
+    MovementSystem movementSystem;
     // Simulate multiple movement updates
     const float deltaTime = 0.1f;
     for (int i = 0; i < 10; ++i) {
-        updateMovement(transform, velocity, deltaTime);
+        movementSystem.update(registry, deltaTime);
     }
 
     // Verify final position
+    auto& transform = registry.getComponent<TransformComponent>(entity);
     EXPECT_NEAR(transform.x, 100.0f + 15.0f * 10 * deltaTime, 0.001f);
     EXPECT_NEAR(transform.y, 200.0f + (-10.0f) * 10 * deltaTime, 0.001f);
 
     // Components should maintain their relationships
+    auto& netId = registry.getComponent<NetworkIdComponent>(entity);
     EXPECT_EQ(netId.networkId, 999u);
+    auto& velocity = registry.getComponent<VelocityComponent>(entity);
     EXPECT_FLOAT_EQ(velocity.vx, 15.0f);
     EXPECT_FLOAT_EQ(velocity.vy, -10.0f);
+
+    registry.killEntity(entity);
 }
 
 // ============================================================================
@@ -89,16 +105,19 @@ TEST(IntegrationTest, ComponentStateSynchronization) {
 // ============================================================================
 
 TEST(PerformanceTest, MovementSystem_HighFrequency) {
-    TransformComponent transform{0.0f, 0.0f, 0.0f};
-    VelocityComponent velocity{1.0f, 1.0f};
+    ECS::Registry registry;
+    auto entity = registry.spawnEntity();
+    registry.emplaceComponent<TransformComponent>(entity, 0.0f, 0.0f, 0.0f);
+    registry.emplaceComponent<VelocityComponent>(entity, 1.0f, 1.0f);
 
+    MovementSystem movementSystem;
     const int iterations = 10000;
     const float deltaTime = 1.0f / 60.0f;  // 60 FPS
 
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < iterations; ++i) {
-        updateMovement(transform, velocity, deltaTime);
+        movementSystem.update(registry, deltaTime);
     }
 
     auto end = std::chrono::high_resolution_clock::now();
@@ -108,6 +127,9 @@ TEST(PerformanceTest, MovementSystem_HighFrequency) {
     EXPECT_LT(duration.count(), 100);
 
     // Verify final position is correct (allow for floating point precision)
+    auto& transform = registry.getComponent<TransformComponent>(entity);
     EXPECT_NEAR(transform.x, iterations * deltaTime, 0.01f);
     EXPECT_NEAR(transform.y, iterations * deltaTime, 0.01f);
+
+    registry.killEntity(entity);
 }
