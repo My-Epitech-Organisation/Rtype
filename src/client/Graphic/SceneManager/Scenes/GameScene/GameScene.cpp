@@ -20,8 +20,10 @@ void GameScene::_updateUserMovementUp() {
         return;
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveUp)) {
-        this->_registry->view<rtype::games::rtype::shared::VelocityComponent, ControllableTag>().each(
-            [](auto, auto& velocity, auto) {
+        this->_registry
+            ->view<rtype::games::rtype::shared::VelocityComponent,
+                   ControllableTag>()
+            .each([](auto, auto& velocity, auto) {
                 velocity.vy -= PlayerMovementSpeed;
             });
     }
@@ -33,8 +35,10 @@ void GameScene::_updateUserMovementDown() {
         return;
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveDown)) {
-        this->_registry->view<rtype::games::rtype::shared::VelocityComponent, ControllableTag>().each(
-            [](auto, auto& velocity, auto) {
+        this->_registry
+            ->view<rtype::games::rtype::shared::VelocityComponent,
+                   ControllableTag>()
+            .each([](auto, auto& velocity, auto) {
                 velocity.vy += PlayerMovementSpeed;
             });
     }
@@ -46,8 +50,10 @@ void GameScene::_updateUserMovementLeft() {
         return;
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveLeft)) {
-        this->_registry->view<rtype::games::rtype::shared::VelocityComponent, ControllableTag>().each(
-            [](auto, auto& velocity, auto) {
+        this->_registry
+            ->view<rtype::games::rtype::shared::VelocityComponent,
+                   ControllableTag>()
+            .each([](auto, auto& velocity, auto) {
                 velocity.vx -= PlayerMovementSpeed;
             });
     }
@@ -59,8 +65,10 @@ void GameScene::_updateUserMovementRight() {
         return;
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveRight)) {
-        this->_registry->view<rtype::games::rtype::shared::VelocityComponent, ControllableTag>().each(
-            [](auto, auto& velocity, auto) {
+        this->_registry
+            ->view<rtype::games::rtype::shared::VelocityComponent,
+                   ControllableTag>()
+            .each([](auto, auto& velocity, auto) {
                 velocity.vx += PlayerMovementSpeed;
             });
     }
@@ -79,8 +87,10 @@ void GameScene::_handleKeyReleasedEvent(const sf::Event& event) {
 }
 
 void GameScene::update() {
-    this->_registry->view<rtype::games::rtype::shared::VelocityComponent, ControllableTag>().each(
-        [](auto, auto& velocity, auto) {
+    this->_registry
+        ->view<rtype::games::rtype::shared::VelocityComponent,
+               ControllableTag>()
+        .each([](auto, auto& velocity, auto) {
             velocity.vx = 0;
             velocity.vy = 0;
         });
