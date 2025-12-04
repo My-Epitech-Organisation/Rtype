@@ -204,8 +204,8 @@ class ReliableChannel {
     /**
      * @brief Prune old received sequence IDs to prevent unbounded memory growth
      *
-     * Removes sequence IDs that are outside the sliding window behind the highest
-     * received sequence ID to maintain bounded memory usage.
+     * Removes sequence IDs that are outside the sliding window behind the
+     * highest received sequence ID to maintain bounded memory usage.
      */
     void pruneOldReceivedSeqIds() noexcept;
 

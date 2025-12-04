@@ -85,11 +85,13 @@ void ReliableChannel::pruneOldReceivedSeqIds() noexcept {
         return;
     }
 
-    std::uint16_t minSeqId = static_cast<std::uint16_t>(lastReceivedSeqId_ - kReceivedSeqIdWindow);
+    std::uint16_t minSeqId =
+        static_cast<std::uint16_t>(lastReceivedSeqId_ - kReceivedSeqIdWindow);
 
     for (auto it = receivedSeqIds_.begin(); it != receivedSeqIds_.end();) {
         std::uint16_t seqId = *it;
-        bool isTooOld = static_cast<int16_t>(lastReceivedSeqId_ - seqId) > static_cast<int16_t>(kReceivedSeqIdWindow);
+        bool isTooOld = static_cast<int16_t>(lastReceivedSeqId_ - seqId) >
+                        static_cast<int16_t>(kReceivedSeqIdWindow);
         if (isTooOld) {
             it = receivedSeqIds_.erase(it);
         } else {
