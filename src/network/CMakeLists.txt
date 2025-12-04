@@ -5,6 +5,10 @@ add_library(rtype_network STATIC
     # Reliability layer (RUDP per RFC RTGP v1.1.0)
     reliability/ReliableChannel.cpp
 
+    # Connection layer (State Machine + high-level API)
+    connection/ConnectionStateMachine.cpp
+    connection/Connection.cpp
+
     UdpSocket.cpp
     Packet.cpp
     Serializer.cpp
