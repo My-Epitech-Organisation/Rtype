@@ -321,6 +321,7 @@ class ServerApp {
     bool _verbose;
     std::shared_ptr<std::atomic<bool>> _shutdownFlag;
     std::atomic<bool> _hasShutdown{false};
+    std::atomic<bool> _isRunning{false};
 
     std::shared_ptr<ServerMetrics> _metrics;
     ClientManager _clientManager;

@@ -29,8 +29,11 @@ ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
 ServerApp::~ServerApp() { shutdown(); }
 
 bool ServerApp::run() {
+    _isRunning.store(true, std::memory_order_release);
+
     if (!initialize()) {
         LOG_ERROR("[Server] Failed to initialize server");
+        _isRunning.store(false, std::memory_order_release);
         return false;
     }
     logStartupInfo();
@@ -53,6 +56,7 @@ bool ServerApp::run() {
     }
 
     LOG_INFO("[Server] Shutting down...");
+    _isRunning.store(false, std::memory_order_release);
     shutdown();
     return true;
 }
@@ -153,7 +157,7 @@ void ServerApp::stop() noexcept {
 }
 
 bool ServerApp::isRunning() const noexcept {
-    return !_shutdownFlag->load(std::memory_order_acquire);
+    return _isRunning.load(std::memory_order_acquire);
 }
 
 size_t ServerApp::getConnectedClientCount() const noexcept {
@@ -189,6 +193,7 @@ void ServerApp::shutdown() noexcept {
         return;
     }
 
+    _isRunning.store(false, std::memory_order_release);
     stopNetworkThread();
     _clientManager.clearAllClients();
 
