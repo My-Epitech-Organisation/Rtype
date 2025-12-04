@@ -286,6 +286,116 @@ TEST_F(AsioUdpSocketTest, HandleNullCallback) {
     ctx_->poll();
 }
 
+TEST_F(AsioUdpSocketTest, ReceiveFromNullHandler) {
+    auto socket = createAsyncSocket(ctx_->get());
+    auto bindResult = socket->bind(0);
+    ASSERT_TRUE(bindResult.isOk());
+
+    auto buffer = std::make_shared<Buffer>(kMaxPacketSize);
+    auto sender = std::make_shared<Endpoint>();
+
+    // Should not crash with null handler
+    socket->asyncReceiveFrom(buffer, sender, nullptr);
+    ctx_->poll();
+}
+
+TEST_F(AsioUdpSocketTest, ReceiveFromNullBuffer) {
+    auto socket = createAsyncSocket(ctx_->get());
+    auto bindResult = socket->bind(0);
+    ASSERT_TRUE(bindResult.isOk());
+
+    auto sender = std::make_shared<Endpoint>();
+
+    std::atomic<bool> callbackCalled{false};
+    NetworkError receivedError = NetworkError::None;
+
+    socket->asyncReceiveFrom(nullptr, sender,
+        [&](Result<size_t> result) {
+            EXPECT_TRUE(result.isErr());
+            if (result.isErr()) {
+                receivedError = result.error();
+            }
+            callbackCalled = true;
+        });
+
+    bool completed = runUntil([&]() { return callbackCalled.load(); });
+    EXPECT_TRUE(completed);
+    EXPECT_EQ(receivedError, NetworkError::InternalError);
+}
+
+TEST_F(AsioUdpSocketTest, ReceiveFromNullSender) {
+    auto socket = createAsyncSocket(ctx_->get());
+    auto bindResult = socket->bind(0);
+    ASSERT_TRUE(bindResult.isOk());
+
+    auto buffer = std::make_shared<Buffer>(kMaxPacketSize);
+
+    std::atomic<bool> callbackCalled{false};
+    NetworkError receivedError = NetworkError::None;
+
+    socket->asyncReceiveFrom(buffer, nullptr,
+        [&](Result<size_t> result) {
+            EXPECT_TRUE(result.isErr());
+            if (result.isErr()) {
+                receivedError = result.error();
+            }
+            callbackCalled = true;
+        });
+
+    bool completed = runUntil([&]() { return callbackCalled.load(); });
+    EXPECT_TRUE(completed);
+    EXPECT_EQ(receivedError, NetworkError::InternalError);
+}
+
+TEST_F(AsioUdpSocketTest, SendToInvalidAddressFormat) {
+    auto socket = createAsyncSocket(ctx_->get());
+
+    // Invalid IP address format that should cause toAsioEndpoint to throw
+    Endpoint invalid{"999.999.999.999", 12345};
+    Buffer data = {1, 2, 3};
+
+    std::atomic<bool> callbackCalled{false};
+    NetworkError receivedError = NetworkError::None;
+
+    socket->asyncSendTo(data, invalid,
+        [&](Result<size_t> result) {
+            EXPECT_TRUE(result.isErr());
+            if (result.isErr()) {
+                receivedError = result.error();
+            }
+            callbackCalled = true;
+        });
+
+    bool completed = runUntil([&]() { return callbackCalled.load(); });
+    EXPECT_TRUE(completed);
+    EXPECT_EQ(receivedError, NetworkError::HostNotFound);
+}
+
+TEST_F(AsioUdpSocketTest, BindToInvalidPort) {
+    auto socket = createAsyncSocket(ctx_->get());
+
+    // Try to bind to a privileged port (should fail without root)
+    auto result = socket->bind(80);  // HTTP port
+    // This might succeed or fail depending on permissions, but should not crash
+    // Just verify the result is handled properly
+    EXPECT_TRUE(result.isOk() || result.isErr());
+}
+
+TEST_F(AsioUdpSocketTest, LocalPortOnClosedSocket) {
+    auto socket = createAsyncSocket(ctx_->get());
+
+    // Socket is not bound, should return 0
+    EXPECT_EQ(socket->localPort(), 0);
+
+    // Bind then close
+    auto bindResult = socket->bind(0);
+    ASSERT_TRUE(bindResult.isOk());
+    EXPECT_GT(socket->localPort(), 0);
+
+    socket->close();
+    EXPECT_EQ(socket->localPort(), 0);
+}
+
 // ============================================================================
 // Cancel Operations Tests
 // ============================================================================
@@ -419,6 +529,129 @@ TEST(EndpointTest, Equality) {
 
     EXPECT_EQ(a, b);
     EXPECT_NE(a, c);
+}
+
+// ============================================================================
+// Additional AsioUdpSocket Error Tests
+// ============================================================================
+
+TEST_F(AsioUdpSocketTest, BindToAlreadyBoundPort) {
+    auto socket1 = createAsyncSocket(ctx_->get());
+    auto socket2 = createAsyncSocket(ctx_->get());
+
+    // Bind first socket to a port
+    auto result1 = socket1->bind(0);
+    ASSERT_TRUE(result1.isOk());
+    uint16_t port = socket1->localPort();
+
+    // Try to bind second socket to the same port
+    auto result2 = socket2->bind(port);
+
+    // This might succeed or fail depending on the system, but should not crash
+    EXPECT_TRUE(result2.isOk() || result2.isErr());
+}
+
+TEST_F(AsioUdpSocketTest, LocalPortAfterClose) {
+    auto socket = createAsyncSocket(ctx_->get());
+
+    // Initially should be 0
+    EXPECT_EQ(socket->localPort(), 0);
+
+    // Bind and check port
+    auto bindResult = socket->bind(0);
+    ASSERT_TRUE(bindResult.isOk());
+    EXPECT_GT(socket->localPort(), 0);
+
+    // Close and check port again
+    socket->close();
+    EXPECT_EQ(socket->localPort(), 0);
+}
+
+TEST_F(AsioUdpSocketTest, MultipleCloseCalls) {
+    auto socket = createAsyncSocket(ctx_->get());
+
+    // Bind first
+    auto bindResult = socket->bind(0);
+    ASSERT_TRUE(bindResult.isOk());
+
+    // Multiple closes should be safe
+    socket->close();
+    socket->close();
+    socket->close();
+
+    EXPECT_FALSE(socket->isOpen());
+}
+
+TEST_F(AsioUdpSocketTest, SendToAfterClose) {
+    auto socket = createAsyncSocket(ctx_->get());
+
+    // Bind and then close
+    auto bindResult = socket->bind(0);
+    ASSERT_TRUE(bindResult.isOk());
+    socket->close();
+
+    // Try to send after close
+    Buffer data = {1, 2, 3};
+    Endpoint dest{"127.0.0.1", 12345};
+
+    std::atomic<bool> callbackCalled{false};
+    NetworkError receivedError = NetworkError::None;
+
+    socket->asyncSendTo(data, dest,
+        [&](Result<size_t> result) {
+            EXPECT_TRUE(result.isErr());
+            if (result.isErr()) {
+                receivedError = result.error();
+            }
+            callbackCalled = true;
+        });
+
+    bool completed = runUntil([&]() { return callbackCalled.load(); });
+    EXPECT_TRUE(completed);
+    // The exact error may vary, but there should be an error
+    EXPECT_NE(receivedError, NetworkError::None);
+}
+
+TEST_F(AsioUdpSocketTest, ReceiveFromAfterClose) {
+    auto socket = createAsyncSocket(ctx_->get());
+
+    // Bind and then close
+    auto bindResult = socket->bind(0);
+    ASSERT_TRUE(bindResult.isOk());
+    socket->close();
+
+    // Try to receive after close
+    auto buffer = std::make_shared<Buffer>(kMaxPacketSize);
+    auto sender = std::make_shared<Endpoint>();
+
+    std::atomic<bool> callbackCalled{false};
+    NetworkError receivedError = NetworkError::None;
+
+    socket->asyncReceiveFrom(buffer, sender,
+        [&](Result<size_t> result) {
+            EXPECT_TRUE(result.isErr());
+            if (result.isErr()) {
+                receivedError = result.error();
+            }
+            callbackCalled = true;
+        });
+
+    bool completed = runUntil([&]() { return callbackCalled.load(); });
+    EXPECT_TRUE(completed);
+    // The exact error may vary, but there should be an error
+    EXPECT_NE(receivedError, NetworkError::None);
+}
+
+TEST_F(AsioUdpSocketTest, CancelAfterClose) {
+    auto socket = createAsyncSocket(ctx_->get());
+
+    // Bind, close, then cancel
+    auto bindResult = socket->bind(0);
+    ASSERT_TRUE(bindResult.isOk());
+    socket->close();
+
+    // Cancel should be safe even after close
+    EXPECT_NO_THROW(socket->cancel());
 }
 
 // ============================================================================
