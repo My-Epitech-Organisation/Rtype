@@ -31,8 +31,8 @@ class AScene : public IScene {
                     const std::shared_ptr<sf::RenderWindow>& window)
         : _registry(registry), _assetsManager(assetsManager), _window(window) {}
     ~AScene() override {
-        for (auto& entities : this->_listEntity) {
-            this->_registry->killEntity(entities);
+        for (auto& entity : this->_listEntity) {
+            this->_registry->killEntity(entity);
         }
     };
 };
