@@ -69,7 +69,7 @@ ECS::Entity EntityFactory::createPlayer(
                                             std::pair<int, int>({33, 17}));
     registry->emplaceComponent<Position>(ent, 0, 0);
     registry->emplaceComponent<Size>(ent, scale.x, scale.y);
-    registry->emplaceComponent<Velocity>(ent, 0.f, 0.f);
+    registry->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(ent, 0.f, 0.f);
     registry->emplaceComponent<PlayerTag>(ent);
     registry->emplaceComponent<ZIndex>(ent, 0);
     if (isControllable) registry->emplaceComponent<ControllableTag>(ent);

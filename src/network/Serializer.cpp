@@ -7,6 +7,9 @@
 
 #include "Serializer.hpp"
 
+#include <string>
+#include <vector>
+
 namespace rtype::network {
 
 std::vector<uint8_t> Serializer::serialize(const Packet& packet) {
@@ -28,6 +31,46 @@ Packet Serializer::deserialize(const std::vector<uint8_t>& data) {
         packet.setData(payload);
     }
     return packet;
+}
+
+std::vector<uint8_t> Serializer::serialize(const std::string& str) {
+    std::vector<uint8_t> result;
+
+    if (str.size() > UINT32_MAX) {
+        throw std::runtime_error(
+            "String too large for serialization: max size is " +
+            std::to_string(UINT32_MAX) + " bytes");
+    }
+
+    uint32_t length = static_cast<uint32_t>(str.size());
+    std::vector<uint8_t> lengthBytes(sizeof(uint32_t));
+    ByteOrder::writeTo(lengthBytes.data(), length);
+    result.insert(result.end(), lengthBytes.begin(), lengthBytes.end());
+
+    result.insert(result.end(), str.begin(), str.end());
+    return result;
+}
+
+std::string Serializer::deserializeString(const std::vector<uint8_t>& buffer) {
+    if (buffer.size() < sizeof(uint32_t)) {
+        throw std::runtime_error(
+            "Buffer too small for string deserialization: expected at least " +
+            std::to_string(sizeof(uint32_t)) + " bytes for length, got " +
+            std::to_string(buffer.size()) + " bytes");
+    }
+
+    uint32_t length = ByteOrder::readFrom<uint32_t>(buffer.data());
+
+    if (buffer.size() < sizeof(uint32_t) + length) {
+        throw std::runtime_error(
+            "Buffer size mismatch for string deserialization: expected " +
+            std::to_string(sizeof(uint32_t) + length) + " bytes, got " +
+            std::to_string(buffer.size()) + " bytes");
+    }
+
+    const char* strData =
+        reinterpret_cast<const char*>(buffer.data() + sizeof(uint32_t));
+    return std::string(strData, length);
 }
 
 }  // namespace rtype::network

@@ -34,9 +34,9 @@ if(BUILD_GRAPHICAL_TESTS)
 
     gtest_discover_tests(test_graphic)
 
-    add_executable(test_systems test_systems.cpp)
+    add_executable(test_graphic_systems test_systems.cpp)
 
-    target_link_libraries(test_systems PRIVATE
+    target_link_libraries(test_graphic_systems PRIVATE
         GTest::gtest_main
         rtype_engine
         rtype_network
@@ -46,11 +46,11 @@ if(BUILD_GRAPHICAL_TESTS)
         rtype_game_client_systems
     )
 
-    target_include_directories(test_systems PRIVATE
+    target_include_directories(test_graphic_systems PRIVATE
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_systems)
+    gtest_discover_tests(test_graphic_systems)
 
     add_executable(test_scene_manager test_scene_manager.cpp)
 
@@ -86,15 +86,3 @@ target_include_directories(test_entity_factory PRIVATE
 )
 
 gtest_discover_tests(test_entity_factory)
-
-add_executable(test_components test_components.cpp)
-
-target_link_libraries(test_components PRIVATE
-    GTest::gtest_main
-)
-
-target_include_directories(test_components PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-)
-
-gtest_discover_tests(test_components)

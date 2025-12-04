@@ -13,10 +13,12 @@
 
 void MovementSystem::update(const std::shared_ptr<ECS::Registry>& registry,
                             float dt) {
-    registry->view<Velocity, Position, Image>().each(
-        [dt](auto _, auto& velocity, auto& position, auto& spriteData) {
-            position.x += velocity.x * dt;
-            position.y += velocity.y * dt;
+    registry
+        ->view<rtype::games::rtype::shared::VelocityComponent, Position,
+               Image>()
+        .each([dt](auto _, auto& velocity, auto& position, auto& spriteData) {
+            position.x += velocity.vx * dt;
+            position.y += velocity.vy * dt;
 
             spriteData.sprite.setPosition(sf::Vector2f(position.x, position.y));
         });
