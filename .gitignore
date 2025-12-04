@@ -60,3 +60,4 @@ coverage
 doxygen
 .vscode
 .idea
+_codeql_detected_source_root
