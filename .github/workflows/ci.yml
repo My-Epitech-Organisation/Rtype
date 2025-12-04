@@ -339,7 +339,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     #    needs: [cache-check, test, deps-linux, deps-windows]
     needs: [cache-check]
-    if: always() && needs.test.result == 'success' && (needs.deps-windows.result == 'success' || needs.deps-windows.result == 'skipped')
+    # if: always() && needs.test.result == 'success' && (needs.deps-windows.result == 'success' || needs.deps-windows.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
