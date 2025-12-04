@@ -347,10 +347,18 @@ TEST_F(ValidatorTest, ValidatePayloadSize) {
     EXPECT_TRUE(Validator::validatePayloadSize(OpCode::C_CONNECT, 0).isOk());
     EXPECT_TRUE(Validator::validatePayloadSize(OpCode::C_CONNECT, 1).isErr());
 
-    // Variable size (R_GET_USERS)
-    EXPECT_TRUE(Validator::validatePayloadSize(OpCode::R_GET_USERS, 1).isOk());
-    EXPECT_TRUE(Validator::validatePayloadSize(OpCode::R_GET_USERS, 100).isOk());
-    EXPECT_TRUE(Validator::validatePayloadSize(OpCode::R_GET_USERS, 0).isErr());
+    // Variable size (R_GET_USERS) - need payload data for validation
+    std::uint8_t payload0[1] = {0};  // count = 0, expected size = 1
+    EXPECT_TRUE(Validator::validatePayloadSize(OpCode::R_GET_USERS, 1, payload0).isOk());
+
+    std::uint8_t payload1[5] = {1, 0, 0, 0, 0};  // count = 1, expected size = 5
+    EXPECT_TRUE(Validator::validatePayloadSize(OpCode::R_GET_USERS, 5, payload1).isOk());
+
+    // Invalid: payload size doesn't match count
+    EXPECT_TRUE(Validator::validatePayloadSize(OpCode::R_GET_USERS, 100, payload0).isErr());
+
+    // Invalid: payload too small for header
+    EXPECT_TRUE(Validator::validatePayloadSize(OpCode::R_GET_USERS, 0, nullptr).isErr());
 }
 
 TEST_F(ValidatorTest, ValidateClientUserId) {
@@ -358,6 +366,10 @@ TEST_F(ValidatorTest, ValidateClientUserId) {
     EXPECT_TRUE(
         Validator::validateClientUserId(kUnassignedUserId, OpCode::C_CONNECT)
             .isOk());
+
+    // Invalid: C_CONNECT must use unassigned ID
+    EXPECT_TRUE(
+        Validator::validateClientUserId(1, OpCode::C_CONNECT).isErr());
 
     // Normal operation
     EXPECT_TRUE(Validator::validateClientUserId(1, OpCode::C_INPUT).isOk());
@@ -379,6 +391,69 @@ TEST_F(ValidatorTest, ValidateServerUserId) {
     EXPECT_TRUE(Validator::validateServerUserId(kServerUserId).isOk());
     EXPECT_TRUE(Validator::validateServerUserId(1).isErr());
     EXPECT_TRUE(Validator::validateServerUserId(0).isErr());
+}
+
+TEST_F(ValidatorTest, ValidateRGetUsersPayload) {
+    // Valid: count = 0, size = 1
+    std::uint8_t payload0[1] = {0};
+    EXPECT_TRUE(Validator::validateRGetUsersPayload(payload0, 1).isOk());
+
+    // Valid: count = 1, size = 1 + 4 = 5
+    std::uint8_t payload1[5] = {1, 0, 0, 0, 0};  // count=1, userId=0
+    EXPECT_TRUE(Validator::validateRGetUsersPayload(payload1, 5).isOk());
+
+    // Valid: count = 255 (max), size = 1 + 255*4 = 1021
+    std::uint8_t payload255[1021];
+    payload255[0] = 255;
+    // Fill rest with zeros
+    std::memset(payload255 + 1, 0, 1020);
+    EXPECT_TRUE(Validator::validateRGetUsersPayload(payload255, 1021).isOk());
+
+    // Invalid: count > 255
+    std::uint8_t payload256[1] = {0};  // Can't set to 256 since uint8_t max is 255
+    // But since uint8_t can't hold 256, we can't test this directly
+    // The comparison will work since 255 is the max
+
+    // Invalid: payload too small
+    EXPECT_TRUE(Validator::validateRGetUsersPayload(payload0, 0).isErr());
+
+    // Invalid: size doesn't match count (count=1, size=2)
+    EXPECT_TRUE(Validator::validateRGetUsersPayload(payload1, 2).isErr());
+
+    // Invalid: size doesn't match count (count=1, size=6)
+    EXPECT_TRUE(Validator::validateRGetUsersPayload(payload1, 6).isErr());
+}
+
+TEST_F(ValidatorTest, ValidatePacketRGetUsers) {
+    // Valid R_GET_USERS packet: count=1, userId=0x12345678
+    std::uint8_t packet[21];  // 16 header + 5 payload
+    std::memset(packet, 0, sizeof(packet));
+
+    // Header
+    packet[0] = kMagicByte;  // magic
+    packet[1] = 0x05;        // opcode R_GET_USERS
+    packet[2] = 5;           // payloadSize low byte
+    packet[3] = 0;           // payloadSize high byte
+    // userId: server (0xFFFFFFFF)
+    packet[4] = 0xFF;
+    packet[5] = 0xFF;
+    packet[6] = 0xFF;
+    packet[7] = 0xFF;
+    packet[8] = 1;  // seqId
+    // rest 0
+
+    // Payload
+    packet[16] = 1;  // count=1
+    packet[17] = 0x12;
+    packet[18] = 0x34;
+    packet[19] = 0x56;
+    packet[20] = 0x78;  // userId=0x12345678
+
+    EXPECT_TRUE(Validator::validatePacket(packet, sizeof(packet), true).isOk());
+
+    // Invalid: payload size doesn't match count
+    packet[2] = 2;   // payloadSize=2 (should be 5)
+    EXPECT_TRUE(Validator::validatePacket(packet, 16 + 2, true).isErr());
 }
 
 // ============================================================================
@@ -511,6 +586,38 @@ TEST_F(ByteOrderSpecTest, SingleBytePayloadsUnchanged) {
     EXPECT_TRUE(restored.isUp());
     EXPECT_TRUE(restored.isShoot());
     EXPECT_FALSE(restored.isDown());
+}
+
+TEST_F(ByteOrderSpecTest, EmptyPayloadsSerializeToEmptyBuffers) {
+    // Empty payloads should serialize to empty buffers (0 bytes) despite sizeof(T) == 1
+    ConnectPayload connect{};
+    auto connectBytes = ByteOrderSpec::serializeToNetwork(connect);
+    EXPECT_EQ(connectBytes.size(), 0u);
+
+    DisconnectPayload disconnect{};
+    auto disconnectBytes = ByteOrderSpec::serializeToNetwork(disconnect);
+    EXPECT_EQ(disconnectBytes.size(), 0u);
+
+    PingPayload ping{};
+    auto pingBytes = ByteOrderSpec::serializeToNetwork(ping);
+    EXPECT_EQ(pingBytes.size(), 0u);
+
+    PongPayload pong{};
+    auto pongBytes = ByteOrderSpec::serializeToNetwork(pong);
+    EXPECT_EQ(pongBytes.size(), 0u);
+}
+
+TEST_F(ByteOrderSpecTest, EmptyPayloadsDeserializeFromEmptyBuffers) {
+    // Empty payloads should deserialize from empty buffers
+    std::vector<uint8_t> emptyBuffer;
+
+    auto connect = ByteOrderSpec::deserializeFromNetwork<ConnectPayload>(emptyBuffer);
+    auto disconnect = ByteOrderSpec::deserializeFromNetwork<DisconnectPayload>(emptyBuffer);
+    auto ping = ByteOrderSpec::deserializeFromNetwork<PingPayload>(emptyBuffer);
+    auto pong = ByteOrderSpec::deserializeFromNetwork<PongPayload>(emptyBuffer);
+
+    // Should succeed without throwing
+    SUCCEED();
 }
 
 TEST_F(ByteOrderSpecTest, DeserializeFromRawPointer) {
