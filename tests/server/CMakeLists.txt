@@ -15,7 +15,12 @@ target_link_libraries(test_client_manager PRIVATE
     rtype_common
 )
 
-add_executable(test_server_app test_server_app.cpp test_server_app_private.cpp
+set(SERVER_APP_TEST_SRCS test_server_app.cpp)
+if(NOT WIN32)
+    list(APPEND SERVER_APP_TEST_SRCS test_server_app_private.cpp)
+endif()
+
+add_executable(test_server_app ${SERVER_APP_TEST_SRCS}
     ${CMAKE_SOURCE_DIR}/src/server/ServerApp.cpp
     ${CMAKE_SOURCE_DIR}/src/server/ClientManager.cpp
 )
