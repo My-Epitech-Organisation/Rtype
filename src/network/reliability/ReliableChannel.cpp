@@ -8,7 +8,6 @@
 
 #include "ReliableChannel.hpp"
 
-#include <algorithm>
 #include <vector>
 
 namespace rtype::network {
@@ -84,9 +83,6 @@ void ReliableChannel::pruneOldReceivedSeqIds() noexcept {
     if (receivedSeqIds_.size() <= kReceivedSeqIdWindow) {
         return;
     }
-
-    std::uint16_t minSeqId =
-        static_cast<std::uint16_t>(lastReceivedSeqId_ - kReceivedSeqIdWindow);
 
     for (auto it = receivedSeqIds_.begin(); it != receivedSeqIds_.end();) {
         std::uint16_t seqId = *it;
