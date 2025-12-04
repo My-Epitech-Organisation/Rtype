@@ -52,6 +52,9 @@ enum class NetworkError : std::uint8_t {
     // Reliability Layer Errors (60-79)
     RetryLimitExceeded = 60,
     AckTimeout = 62,
+
+    // Connection State Errors (80-99)
+    InvalidStateTransition = 80,
 };
 
 /**
@@ -61,7 +64,7 @@ enum class NetworkError : std::uint8_t {
  * @return A string view containing the error message
  */
 [[nodiscard]] constexpr std::string_view toString(NetworkError error) noexcept {
-    constexpr std::array<std::pair<NetworkError, std::string_view>, 24>
+    constexpr std::array<std::pair<NetworkError, std::string_view>, 25>
         kErrorMessages = {{
             {NetworkError::None, "Success"},
             {NetworkError::NotConnected, "Not connected"},
@@ -84,6 +87,7 @@ enum class NetworkError : std::uint8_t {
             {NetworkError::InternalError, "Internal error"},
             {NetworkError::RetryLimitExceeded, "Retry limit exceeded"},
             {NetworkError::AckTimeout, "ACK timeout"},
+            {NetworkError::InvalidStateTransition, "Invalid state transition"},
         }};
 
     for (const auto& [code, message] : kErrorMessages) {
