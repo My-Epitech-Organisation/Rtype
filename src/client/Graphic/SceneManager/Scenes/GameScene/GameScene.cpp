@@ -7,11 +7,11 @@
 
 #include "GameScene.hpp"
 
-#include "Graphic.hpp"
 #include "Components/HiddenComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/VelocityComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
+#include "Graphic.hpp"
 #include "SceneManager/SceneException.hpp"
 
 void GameScene::_updateUserMovementUp() {
@@ -21,7 +21,9 @@ void GameScene::_updateUserMovementUp() {
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveUp)) {
         this->_registry->view<Velocity, ControllableTag>().each(
-            [](auto, auto& velocity, auto) { velocity.y -= PlayerMovementSpeed; });
+            [](auto, auto& velocity, auto) {
+                velocity.y -= PlayerMovementSpeed;
+            });
     }
 }
 
@@ -32,7 +34,9 @@ void GameScene::_updateUserMovementDown() {
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveDown)) {
         this->_registry->view<Velocity, ControllableTag>().each(
-            [](auto, auto& velocity, auto) { velocity.y += PlayerMovementSpeed; });
+            [](auto, auto& velocity, auto) {
+                velocity.y += PlayerMovementSpeed;
+            });
     }
 }
 
@@ -43,7 +47,9 @@ void GameScene::_updateUserMovementLeft() {
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveLeft)) {
         this->_registry->view<Velocity, ControllableTag>().each(
-            [](auto, auto& velocity, auto) { velocity.x -= PlayerMovementSpeed; });
+            [](auto, auto& velocity, auto) {
+                velocity.x -= PlayerMovementSpeed;
+            });
     }
 }
 
@@ -54,15 +60,16 @@ void GameScene::_updateUserMovementRight() {
     }
     if (sf::Keyboard::isKeyPressed(*keyMoveRight)) {
         this->_registry->view<Velocity, ControllableTag>().each(
-            [](auto, auto& velocity, auto) { velocity.x += PlayerMovementSpeed; });
+            [](auto, auto& velocity, auto) {
+                velocity.x += PlayerMovementSpeed;
+            });
     }
 }
 
 void GameScene::_handleKeyReleasedEvent(const sf::Event& event) {
     auto eventKeyRelease = event.getIf<sf::Event::KeyReleased>();
     auto keyPause = this->_keybinds->getKeyBinding(GameAction::PAUSE);
-    if (!eventKeyRelease || !keyPause.has_value())
-        return;
+    if (!eventKeyRelease || !keyPause.has_value()) return;
     if (eventKeyRelease->code == *keyPause) {
         this->_registry->view<HiddenComponent, PauseMenuTag>().each(
             [](auto, HiddenComponent& hidden, auto) {

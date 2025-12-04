@@ -20,7 +20,8 @@
 #include "ecs/ECS.hpp"
 #include "src/games/rtype/client/Components/HiddenComponent.hpp"
 
-bool RenderSystem::isEntityHidden(const std::shared_ptr<ECS::Registry> &registry, ECS::Entity entity)  {
+bool RenderSystem::isEntityHidden(
+    const std::shared_ptr<ECS::Registry>& registry, ECS::Entity entity) {
     if (registry->hasComponent<HiddenComponent>(entity)) {
         return registry->getComponent<HiddenComponent>(entity).isHidden;
     }
@@ -70,8 +71,7 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
             rectData.rectangle.setOutlineColor(rectData.outlineColor);
             rectData.rectangle.setFillColor(rectData.currentColor);
 
-            if (isEntityHidden(registry, entt))
-                return;
+            if (isEntityHidden(registry, entt)) return;
             window->draw(rectData.rectangle);
         });
 
@@ -105,8 +105,7 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
             textData.text.setFillColor(textData.color);
             textData.text.setString(textData.textContent);
 
-            if (isEntityHidden(registry, entt))
-                return;
+            if (isEntityHidden(registry, entt)) return;
             window->draw(rectData.rectangle);
             window->draw(textData.text);
         });
@@ -119,8 +118,7 @@ void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
             textData.text.setFillColor(textData.color);
             textData.text.setString(textData.textContent);
 
-            if (isEntityHidden(registry, entt))
-                return;
+            if (isEntityHidden(registry, entt)) return;
             window->draw(textData.text);
         });
 }

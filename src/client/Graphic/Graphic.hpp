@@ -18,8 +18,7 @@
 #include "ecs/ECS.hpp"
 
 class Graphic {
-public:
-
+   public:
     static constexpr int WINDOW_WIDTH = 1920;
     static constexpr int WINDOW_HEIGHT = 1080;
 

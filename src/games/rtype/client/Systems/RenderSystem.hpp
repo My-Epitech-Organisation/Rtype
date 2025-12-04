@@ -10,12 +10,13 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
-#include "ecs/ECS.hpp"
 #include "../Components/HiddenComponent.hpp"
+#include "ecs/ECS.hpp"
 
 class RenderSystem {
    public:
-    static bool isEntityHidden(const std::shared_ptr<ECS::Registry>& registry, ECS::Entity entity);
+    static bool isEntityHidden(const std::shared_ptr<ECS::Registry>& registry,
+                               ECS::Entity entity);
     static void draw(const std::shared_ptr<ECS::Registry>& registry,
                      const std::shared_ptr<sf::RenderWindow>& window);
 };
