@@ -5,8 +5,8 @@
 ** RTypeConfigParser - R-Type specific configuration parser
 */
 
-#ifndef SRC_GAMES_RTYPE_SHARED_CONFIG_RTYPECONFIGPARSER_HPP_
-#define SRC_GAMES_RTYPE_SHARED_CONFIG_RTYPECONFIGPARSER_HPP_
+#ifndef SRC_GAMES_RTYPE_SHARED_CONFIG_PARSER_RTYPECONFIGPARSER_HPP_
+#define SRC_GAMES_RTYPE_SHARED_CONFIG_PARSER_RTYPECONFIGPARSER_HPP_
 
 #include <filesystem>
 #include <functional>
@@ -14,8 +14,8 @@
 #include <string>
 #include <vector>
 
-#include "Config/TomlParser.hpp"
 #include "../GameConfig/RTypeGameConfig.hpp"
+#include "Config/TomlParser.hpp"
 
 namespace rtype::game::config {
 
@@ -121,4 +121,4 @@ class RTypeConfigParser {
 
 }  // namespace rtype::game::config
 
-#endif  // SRC_GAMES_RTYPE_SHARED_CONFIG_RTYPECONFIGPARSER_HPP_
+#endif  // SRC_GAMES_RTYPE_SHARED_CONFIG_PARSER_RTYPECONFIGPARSER_HPP_
