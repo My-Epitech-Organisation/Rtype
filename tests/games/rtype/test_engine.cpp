@@ -13,7 +13,7 @@
 
 #include "AGameEngine.hpp"
 #include "ASystem.hpp"
-#include "ecs/ECS.hpp"
+#include "ECS.hpp"
 
 using namespace rtype::engine;
 
