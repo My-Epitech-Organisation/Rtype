@@ -20,7 +20,6 @@ std::vector<uint8_t> GameStateSerializer::serialize(
     stateCopy.updateTimestamp();
     stateCopy.header.checksum = stateCopy.calculateChecksum();
 
-    // Write header
     BinarySerializer::writeUint32(data, stateCopy.header.magic);
     BinarySerializer::writeUint32(data, stateCopy.header.version);
     BinarySerializer::writeUint64(data, stateCopy.header.timestamp);
@@ -30,22 +29,11 @@ std::vector<uint8_t> GameStateSerializer::serialize(
     size_t dataSizeOffset = data.size() - sizeof(uint32_t);
     size_t dataStartOffset = data.size();
 
-    // Write save name
     BinarySerializer::writeString(data, stateCopy.saveName);
-
-    // Write players
     serializePlayers(data, stateCopy.players);
-
-    // Write enemies
     serializeEnemies(data, stateCopy.enemies);
-
-    // Write progression
     serializeProgression(data, stateCopy.progression);
-
-    // Write difficulty
     serializeDifficulty(data, stateCopy.difficulty);
-
-    // Update data size in header
     uint32_t dataSize = static_cast<uint32_t>(data.size() - dataStartOffset);
     std::memcpy(data.data() + dataSizeOffset, &dataSize, sizeof(dataSize));
 
@@ -63,7 +51,6 @@ std::optional<RTypeGameState> GameStateSerializer::deserialize(
     size_t offset = 0;
 
     try {
-        // Read header
         state.header.magic = BinarySerializer::readUint32(data, offset);
         if (state.header.magic != SAVE_MAGIC_NUMBER) {
             outError = "Invalid save file magic number";
@@ -74,20 +61,10 @@ std::optional<RTypeGameState> GameStateSerializer::deserialize(
         state.header.timestamp = BinarySerializer::readUint64(data, offset);
         state.header.checksum = BinarySerializer::readUint32(data, offset);
         state.header.dataSize = BinarySerializer::readUint32(data, offset);
-
-        // Read save name
         state.saveName = BinarySerializer::readString(data, offset);
-
-        // Read players
         deserializePlayers(data, offset, state.players);
-
-        // Read enemies
         deserializeEnemies(data, offset, state.enemies);
-
-        // Read progression
         deserializeProgression(data, offset, state.progression);
-
-        // Read difficulty
         deserializeDifficulty(data, offset, state.difficulty);
 
         return state;
@@ -139,8 +116,6 @@ void GameStateSerializer::serializeProgression(
     BinarySerializer::writeUint32(data, progression.enemiesDefeated);
     BinarySerializer::writeUint32(data, progression.totalScore);
     BinarySerializer::writeFloat(data, progression.playTimeSeconds);
-
-    // Checkpoint
     BinarySerializer::writeUint32(data,
                                   progression.lastCheckpoint.checkpointId);
     BinarySerializer::writeUint32(data, progression.lastCheckpoint.waveNumber);
@@ -204,8 +179,6 @@ void GameStateSerializer::deserializeProgression(
     progression.enemiesDefeated = BinarySerializer::readUint32(data, offset);
     progression.totalScore = BinarySerializer::readUint32(data, offset);
     progression.playTimeSeconds = BinarySerializer::readFloat(data, offset);
-
-    // Checkpoint
     progression.lastCheckpoint.checkpointId =
         BinarySerializer::readUint32(data, offset);
     progression.lastCheckpoint.waveNumber =
