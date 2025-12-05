@@ -46,6 +46,8 @@ TEST_F(TomlParserBranchTest, ParseFileNotFound) {
     EXPECT_NE(parser.getLastResult().errorMessage.find("not found"), std::string::npos);
 }
 
+#ifndef _WIN32
+// Skip on Windows - POSIX file permissions don't work the same way
 TEST_F(TomlParserBranchTest, ParseFileCannotOpen) {
     // Create a file without read permissions
     auto filePath = testDir / "unreadable.toml";
@@ -65,6 +67,7 @@ TEST_F(TomlParserBranchTest, ParseFileCannotOpen) {
     // Trying to open a file without read permissions should fail
     EXPECT_FALSE(result.has_value());
 }
+#endif
 
 TEST_F(TomlParserBranchTest, ParseFileValidToml) {
     const std::string toml = R"(
@@ -957,6 +960,8 @@ url = "https://example.com/path?query=value&other=123"
 // Additional Branch Coverage Tests - saveToFile error paths
 // ============================================================================
 
+#ifndef _WIN32
+// Skip on Windows - /proc doesn't exist
 TEST_F(TomlParserBranchTest, SaveToFileCannotCreateTemp) {
     toml::table table;
     table.insert("key", "value");
@@ -969,6 +974,7 @@ TEST_F(TomlParserBranchTest, SaveToFileCannotCreateTemp) {
     EXPECT_FALSE(result);
     EXPECT_FALSE(parser.getLastResult().errorMessage.empty());
 }
+#endif
 
 TEST_F(TomlParserBranchTest, SaveToFileRenameFailure) {
     toml::table table;
@@ -1140,6 +1146,8 @@ key = "value" # another comment
 // Additional Branch Coverage Tests - file permission variations
 // ============================================================================
 
+#ifndef _WIN32
+// Skip on Windows - POSIX file permissions don't work the same way
 TEST_F(TomlParserBranchTest, SaveToFilePermissionDenied) {
     toml::table table;
     table.insert("key", "value");
@@ -1157,6 +1165,7 @@ TEST_F(TomlParserBranchTest, SaveToFilePermissionDenied) {
 
     EXPECT_FALSE(result);
 }
+#endif
 
 TEST_F(TomlParserBranchTest, ParseFileEmptyContent) {
     writeFile("empty.toml", "");
@@ -1485,6 +1494,8 @@ bool_false = false
     EXPECT_FALSE(parser.getValue<bool>(*result, "types", "bool_false", true));
 }
 
+#ifndef _WIN32
+// Skip on Windows - POSIX file permissions don't work the same way
 TEST_F(TomlParserBranchTest, ErrorCallbackOnFileSaveFailure) {
     std::vector<ParseError> errors;
     TomlParser parser;
@@ -1508,6 +1519,7 @@ TEST_F(TomlParserBranchTest, ErrorCallbackOnFileSaveFailure) {
     EXPECT_FALSE(result);
     EXPECT_FALSE(errors.empty());
 }
+#endif
 
 TEST_F(TomlParserBranchTest, MultipleCallbackErrors) {
     std::vector<ParseError> errors;

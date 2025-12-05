@@ -1020,6 +1020,8 @@ configPath = "/custom/config"
     EXPECT_EQ(result->paths.assetsPath, "/custom/assets");
 }
 
+#ifndef _WIN32
+// Skip on Windows - /proc doesn't exist
 TEST_F(RTypeConfigParserTest, SaveToFilePermissionDenied) {
     RTypeGameConfig config;
     RTypeConfigParser parser;
@@ -1029,6 +1031,7 @@ TEST_F(RTypeConfigParserTest, SaveToFilePermissionDenied) {
 
     EXPECT_FALSE(result);
 }
+#endif
 
 TEST_F(RTypeConfigParserTest, SaveToFileRenameFailure) {
     RTypeGameConfig config;
