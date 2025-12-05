@@ -324,32 +324,47 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
     }
 }
 
-const EnemyConfig* EntityConfigRegistry::getEnemy(const std::string& id) const {
+OptionalRef<EnemyConfig> EntityConfigRegistry::getEnemy(const std::string& id) const {
     auto it = m_enemies.find(id);
-    return (it != m_enemies.end()) ? &it->second : nullptr;
+    if (it != m_enemies.end()) {
+        return std::cref(it->second);
+    }
+    return std::nullopt;
 }
 
-const ProjectileConfig* EntityConfigRegistry::getProjectile(
+OptionalRef<ProjectileConfig> EntityConfigRegistry::getProjectile(
     const std::string& id) const {
     auto it = m_projectiles.find(id);
-    return (it != m_projectiles.end()) ? &it->second : nullptr;
+    if (it != m_projectiles.end()) {
+        return std::cref(it->second);
+    }
+    return std::nullopt;
 }
 
-const PlayerConfig* EntityConfigRegistry::getPlayer(
+OptionalRef<PlayerConfig> EntityConfigRegistry::getPlayer(
     const std::string& id) const {
     auto it = m_players.find(id);
-    return (it != m_players.end()) ? &it->second : nullptr;
+    if (it != m_players.end()) {
+        return std::cref(it->second);
+    }
+    return std::nullopt;
 }
 
-const PowerUpConfig* EntityConfigRegistry::getPowerUp(
+OptionalRef<PowerUpConfig> EntityConfigRegistry::getPowerUp(
     const std::string& id) const {
     auto it = m_powerUps.find(id);
-    return (it != m_powerUps.end()) ? &it->second : nullptr;
+    if (it != m_powerUps.end()) {
+        return std::cref(it->second);
+    }
+    return std::nullopt;
 }
 
-const LevelConfig* EntityConfigRegistry::getLevel(const std::string& id) const {
+OptionalRef<LevelConfig> EntityConfigRegistry::getLevel(const std::string& id) const {
     auto it = m_levels.find(id);
-    return (it != m_levels.end()) ? &it->second : nullptr;
+    if (it != m_levels.end()) {
+        return std::cref(it->second);
+    }
+    return std::nullopt;
 }
 
 void EntityConfigRegistry::clear() {

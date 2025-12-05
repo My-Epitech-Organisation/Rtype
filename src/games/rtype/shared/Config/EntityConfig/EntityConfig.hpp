@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <functional>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -18,6 +20,9 @@
 #include "EntitiesStructs/WaveConfig.hpp"
 
 namespace rtype::games::rtype::shared {
+
+template <typename T>
+using OptionalRef = std::optional<std::reference_wrapper<const T>>;
 
 /**
  * @class EntityConfigRegistry
@@ -36,7 +41,6 @@ class EntityConfigRegistry {
         return instance;
     }
 
-    // Prevent copying
     EntityConfigRegistry(const EntityConfigRegistry&) = delete;
     EntityConfigRegistry& operator=(const EntityConfigRegistry&) = delete;
 
@@ -77,15 +81,13 @@ class EntityConfigRegistry {
      */
     bool loadLevel(const std::string& filepath);
 
-    // Getters
-    [[nodiscard]] const EnemyConfig* getEnemy(const std::string& id) const;
-    [[nodiscard]] const ProjectileConfig* getProjectile(
+    [[nodiscard]] OptionalRef<EnemyConfig> getEnemy(const std::string& id) const;
+    [[nodiscard]] OptionalRef<ProjectileConfig> getProjectile(
         const std::string& id) const;
-    [[nodiscard]] const PlayerConfig* getPlayer(const std::string& id) const;
-    [[nodiscard]] const PowerUpConfig* getPowerUp(const std::string& id) const;
-    [[nodiscard]] const LevelConfig* getLevel(const std::string& id) const;
+    [[nodiscard]] OptionalRef<PlayerConfig> getPlayer(const std::string& id) const;
+    [[nodiscard]] OptionalRef<PowerUpConfig> getPowerUp(const std::string& id) const;
+    [[nodiscard]] OptionalRef<LevelConfig> getLevel(const std::string& id) const;
 
-    // Get all configs
     [[nodiscard]] const std::unordered_map<std::string, EnemyConfig>&
     getAllEnemies() const {
         return m_enemies;
