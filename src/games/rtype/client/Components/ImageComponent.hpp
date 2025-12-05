@@ -10,8 +10,9 @@
 
 #include <utility>
 
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Texture.hpp>
+#include <SFML/Graphics.hpp>
+
+namespace rtype::games::rtype::client {
 
 struct Image {
     sf::Texture textureId;
@@ -21,5 +22,6 @@ struct Image {
         : textureId(texture), sprite(texture) {}
     Image(const Image& other) = default;
 };
+}  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_IMAGECOMPONENT_HPP_

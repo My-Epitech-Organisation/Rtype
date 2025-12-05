@@ -56,11 +56,14 @@ SceneManager::SceneManager(std::shared_ptr<ECS::Registry> ecs,
                            std::shared_ptr<sf::RenderWindow> window,
                            std::shared_ptr<KeyboardActions> keybinds)
     : _window(window), _keybinds(keybinds) {
-    this->_sceneList.emplace(MAIN_MENU, [ecs, texture, &window, this]() {
+    this->_switchToScene = [this](const Scene& scene) {
+        this->setCurrentScene(scene);
+    };
+    this->_sceneList.emplace(MAIN_MENU, [ecs, texture, window, this]() {
         return std::make_unique<MainMenuScene>(ecs, texture, window,
                                                this->_switchToScene);
     });
-    this->_sceneList.emplace(SETTINGS_MENU, [ecs, texture, &window, this]() {
+    this->_sceneList.emplace(SETTINGS_MENU, [ecs, texture, window, this]() {
         return std::make_unique<SettingsScene>(
             ecs, texture, window, this->_switchToScene, this->_keybinds);
     });

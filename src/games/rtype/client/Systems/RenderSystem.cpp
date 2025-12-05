@@ -17,28 +17,41 @@
 #include "Components/PositionComponent.hpp"
 #include "ecs/ECS.hpp"
 
-void RenderSystem::draw(std::shared_ptr<ECS::Registry> registry,
-                        std::shared_ptr<sf::RenderWindow> window) {
-    registry->view<Image, Position>().each(
-        [&window, &registry](auto entt, auto& img, auto& pos) {
+RenderSystem::RenderSystem(std::shared_ptr<sf::RenderWindow> window)
+    : rtype::engine::ASystem("RenderSystem"), _window(std::move(window)) {}
+
+void RenderSystem::update(ECS::Registry& registry, float dt) {
+    registry
+        .view<rtype::games::rtype::client::Image,
+              rtype::games::rtype::shared::Position>()
+        .each([&registry, this](auto entt, auto& img, auto& pos) {
             img.sprite.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
             try {
-                auto& size = registry->getComponent<Size>(entt);
+                auto& size =
+                    registry.getComponent<rtype::games::rtype::client::Size>(
+                        entt);
                 img.sprite.setScale(sf::Vector2f({size.x, size.y}));
             } catch (...) {
             }
             try {
-                auto& texture = registry->getComponent<TextureRect>(entt);
+                auto& texture =
+                    registry
+                        .getComponent<rtype::games::rtype::client::TextureRect>(
+                            entt);
                 img.sprite.setTextureRect(texture.rect);
             } catch (...) {
             }
-            window->draw(img.sprite);
+            this->_window->draw(img.sprite);
         });
 
-    registry->view<Rectangle, Position>().each(
-        [&window, &registry](auto entt, auto& rectData, auto& pos) {
-            if (registry->hasComponent<ButtonTag>(entt)) return;
+    registry
+        .view<rtype::games::rtype::client::Rectangle,
+              rtype::games::rtype::shared::Position>()
+        .each([this, &registry](auto entt, auto& rectData, auto& pos) {
+            if (registry.hasComponent<rtype::games::rtype::client::ButtonTag>(
+                    entt))
+                return;
 
             rectData.rectangle.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
@@ -48,11 +61,16 @@ void RenderSystem::draw(std::shared_ptr<ECS::Registry> registry,
             rectData.rectangle.setOutlineColor(rectData.outlineColor);
             rectData.rectangle.setFillColor(rectData.currentColor);
 
-            window->draw(rectData.rectangle);
+            this->_window->draw(rectData.rectangle);
         });
 
-    registry->view<Rectangle, Text, Position, ButtonTag>().each(
-        [&window](auto _, auto& rectData, auto& textData, auto& pos, auto __) {
+    registry
+        .view<rtype::games::rtype::client::Rectangle,
+              rtype::games::rtype::client::Text,
+              rtype::games::rtype::shared::Position,
+              rtype::games::rtype::client::ButtonTag>()
+        .each([this](auto _, auto& rectData, auto& textData, auto& pos,
+                     auto __) {
             rectData.rectangle.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
             rectData.rectangle.setSize(
@@ -80,18 +98,21 @@ void RenderSystem::draw(std::shared_ptr<ECS::Registry> registry,
             textData.text.setFillColor(textData.color);
             textData.text.setString(textData.textContent);
 
-            window->draw(rectData.rectangle);
-            window->draw(textData.text);
+            this->_window->draw(rectData.rectangle);
+            this->_window->draw(textData.text);
         });
 
-    registry->view<Text, Position, StaticTextTag>().each(
-        [&window](auto _, auto& textData, auto& pos, auto __) {
+    registry
+        .view<rtype::games::rtype::client::Text,
+              rtype::games::rtype::shared::Position,
+              rtype::games::rtype::client::StaticTextTag>()
+        .each([this](auto _, auto& textData, auto& pos, auto __) {
             textData.text.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
             textData.text.setCharacterSize(textData.size);
             textData.text.setFillColor(textData.color);
             textData.text.setString(textData.textContent);
 
-            window->draw(textData.text);
+            this->_window->draw(textData.text);
         });
 }

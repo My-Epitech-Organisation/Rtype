@@ -14,6 +14,7 @@
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
 
+namespace rtype::games::rtype::client {
 struct Text {
     sf::Font font;
     sf::Text text;
@@ -30,5 +31,6 @@ struct Text {
           size(size) {}
     Text(const Text& other) = default;
 };
+}  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_TEXTCOMPONENT_HPP_

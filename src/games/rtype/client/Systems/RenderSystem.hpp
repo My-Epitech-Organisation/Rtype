@@ -10,12 +10,16 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
+#include "ASystem.hpp"
 #include "ecs/ECS.hpp"
 
-class RenderSystem {
+class RenderSystem : public rtype::engine::ASystem {
+   private:
+    std::shared_ptr<sf::RenderWindow> _window;
+
    public:
-    static void draw(std::shared_ptr<ECS::Registry> registry,
-                     std::shared_ptr<sf::RenderWindow> window);
+    explicit RenderSystem(std::shared_ptr<sf::RenderWindow> window);
+    void update(ECS::Registry& registry, float dt) override;
 };
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_RENDERSYSTEM_HPP_

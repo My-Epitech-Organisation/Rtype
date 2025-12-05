@@ -36,9 +36,7 @@ class SceneManager {
     std::unique_ptr<IScene> _activeScene;
     std::shared_ptr<sf::RenderWindow> _window;
 
-    std::function<void(const Scene&)> _switchToScene =
-        std::function<void(const Scene&)>(
-            [this](const Scene& scene) { this->setCurrentScene(scene); });
+    std::function<void(const Scene&)> _switchToScene;
 
     std::shared_ptr<KeyboardActions> _keybinds;
 

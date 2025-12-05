@@ -11,10 +11,13 @@
 #include "../Components/ImageComponent.hpp"
 #include "Components/PositionComponent.hpp"
 
-void MovementSystem::update(std::shared_ptr<ECS::Registry> registry, float dt) {
+MovementSystem::MovementSystem() : rtype::engine::ASystem("MovementSystem") {}
+
+void MovementSystem::update(ECS::Registry& registry, float dt) {
     registry
-        ->view<rtype::games::rtype::shared::VelocityComponent, Position,
-               Image>()
+        .view<rtype::games::rtype::shared::VelocityComponent,
+              rtype::games::rtype::shared::Position,
+              rtype::games::rtype::client::Image>()
         .each([dt](auto _, auto& velocity, auto& position, auto& spriteData) {
             position.x += velocity.vx * dt;
             position.y += velocity.vy * dt;

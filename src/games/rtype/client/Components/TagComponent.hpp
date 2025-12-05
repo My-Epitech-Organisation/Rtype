@@ -8,8 +8,9 @@
 #ifndef SRC_GAMES_RTYPE_CLIENT_COMPONENTS_TAGCOMPONENT_HPP_
 #define SRC_GAMES_RTYPE_CLIENT_COMPONENTS_TAGCOMPONENT_HPP_
 
+namespace rtype::games::rtype::client {
 struct StaticTextTag {};
 struct ButtonTag {};
 struct RepeatingTag {};
-
+}  // namespace rtype::games::rtype::client
 #endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_TAGCOMPONENT_HPP_

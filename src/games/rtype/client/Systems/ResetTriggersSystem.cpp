@@ -9,7 +9,12 @@
 
 #include "../Components/UserEventComponent.hpp"
 
-void ResetTriggersSystem::update(std::shared_ptr<ECS::Registry> registry) {
-    registry->view<UserEvent>().each(
-        [](auto _, UserEvent& event) { event.isReleased = false; });
+ResetTriggersSystem::ResetTriggersSystem()
+    : rtype::engine::ASystem("ResetTriggersSystem") {}
+
+void ResetTriggersSystem::update(ECS::Registry& registry, float dt) {
+    registry.view<rtype::games::rtype::client::UserEvent>().each(
+        [](auto _, rtype::games::rtype::client::UserEvent& event) {
+            event.isReleased = false;
+        });
 }

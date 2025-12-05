@@ -12,19 +12,20 @@
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneManager/SceneException.hpp"
 
-static std::vector<ECS::Entity> createSection(
+static std::vector<ECS::Entity> _createSection(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assets, const std::string& title, float x,
     float y, float width, float height) {
     std::vector<ECS::Entity> entities;
     auto bg = registry->spawnEntity();
-    registry->emplaceComponent<Position>(bg, x, y);
-    registry->emplaceComponent<Rectangle>(
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(bg, x, y);
+    registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
         bg, std::pair<float, float>{width, height}, sf::Color(0, 0, 0, 150),
         sf::Color(0, 0, 0, 150));
 
-    if (registry->hasComponent<Rectangle>(bg)) {
-        auto& rect = registry->getComponent<Rectangle>(bg);
+    if (registry->hasComponent<rtype::games::rtype::client::Rectangle>(bg)) {
+        auto& rect =
+            registry->getComponent<rtype::games::rtype::client::Rectangle>(bg);
         rect.outlineThickness = 2.0f;
         rect.outlineColor = sf::Color::White;
     }
@@ -32,11 +33,13 @@ static std::vector<ECS::Entity> createSection(
     entities.push_back(bg);
 
     auto titleEnt = registry->spawnEntity();
-    registry->emplaceComponent<Position>(titleEnt, x + 20, y + 10);
-    registry->emplaceComponent<Text>(titleEnt,
-                                     assets->fontManager->get("title_font"),
-                                     sf::Color::White, 30, title);
-    registry->emplaceComponent<StaticTextTag>(titleEnt);
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+        titleEnt, x + 20, y + 10);
+    registry->emplaceComponent<rtype::games::rtype::client::Text>(
+        titleEnt, assets->fontManager->get("title_font"), sf::Color::White, 30,
+        title);
+    registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
+        titleEnt);
     entities.push_back(titleEnt);
     return entities;
 }
@@ -50,7 +53,7 @@ void SettingsScene::_initKeybindSection() {
     float sectionY = 225;
     float sectionW = 600;
     float sectionH = 600;
-    std::vector<ECS::Entity> sectionEntities = createSection(
+    std::vector<ECS::Entity> sectionEntities = _createSection(
         this->_registry, this->_assetsManager, "Keyboard Assignment", sectionX,
         sectionY, sectionW, sectionH);
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
@@ -66,19 +69,25 @@ void SettingsScene::_initKeybindSection() {
         std::string textStr =
             SettingsSceneUtils::actionToString(action) + ": " + keyName;
 
-        auto btn = EntityFactory::createButton(
+        auto btn = createButton(
             this->_registry,
-            Text(this->_assetsManager->fontManager->get("title_font"),
-                 sf::Color::White, 24, textStr),
-            Position(x, y),
-            Rectangle({500, 50}, sf::Color::Blue, sf::Color::Red),
+            rtype::games::rtype::client::Text(
+                this->_assetsManager->fontManager->get("title_font"),
+                sf::Color::White, 24, textStr),
+            rtype::games::rtype::shared::Position(x, y),
+            rtype::games::rtype::client::Rectangle({500, 50}, sf::Color::Blue,
+                                                   sf::Color::Red),
             std::function<void()>([this, action]() {
                 if (this->_actionToRebind.has_value()) return;
                 this->_actionToRebind = action;
                 ECS::Entity entity = this->_actionButtons[action];
-                if (this->_registry->hasComponent<Text>(entity)) {
+                if (this->_registry
+                        ->hasComponent<rtype::games::rtype::client::Text>(
+                            entity)) {
                     auto& textComp =
-                        this->_registry->getComponent<Text>(entity);
+                        this->_registry
+                            ->getComponent<rtype::games::rtype::client::Text>(
+                                entity);
                     std::string waitText =
                         SettingsSceneUtils::actionToString(action) +
                         ": Press any key...";
@@ -99,8 +108,8 @@ void SettingsScene::_initAudioSection() {
     float sectionH = 200;
 
     std::vector<ECS::Entity> sectionEntities =
-        createSection(this->_registry, this->_assetsManager, "Audio", sectionX,
-                      sectionY, sectionW, sectionH);
+        _createSection(this->_registry, this->_assetsManager, "Audio", sectionX,
+                       sectionY, sectionW, sectionH);
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 }
@@ -112,8 +121,8 @@ void SettingsScene::_initWindowSection() {
     float sectionH = 385;
 
     std::vector<ECS::Entity> sectionEntities =
-        createSection(this->_registry, this->_assetsManager, "Window", sectionX,
-                      sectionY, sectionW, sectionH);
+        _createSection(this->_registry, this->_assetsManager, "Window",
+                       sectionX, sectionY, sectionW, sectionH);
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 }
@@ -135,8 +144,12 @@ void SettingsScene::pollEvents(const sf::Event& e) {
                 ": " + keyName;
 
             ECS::Entity entity = this->_actionButtons[*this->_actionToRebind];
-            if (this->_registry->hasComponent<Text>(entity)) {
-                auto& textComp = this->_registry->getComponent<Text>(entity);
+            if (this->_registry
+                    ->hasComponent<rtype::games::rtype::client::Text>(entity)) {
+                auto& textComp =
+                    this->_registry
+                        ->getComponent<rtype::games::rtype::client::Text>(
+                            entity);
                 textComp.textContent = text;
                 textComp.text.setString(text);
             }
@@ -153,19 +166,21 @@ SettingsScene::SettingsScene(
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::shared_ptr<KeyboardActions> keybinds)
     : AScene(ecs, textureManager, window), _keybinds(keybinds) {
-    this->_listEntity = (EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "Settings"));
+    this->_listEntity =
+        (createBackground(this->_registry, this->_assetsManager, "Settings"));
 
     this->_initKeybindSection();
     this->_initAudioSection();
     this->_initWindowSection();
 
-    this->_listEntity.push_back(EntityFactory::createButton(
+    this->_listEntity.push_back(createButton(
         this->_registry,
-        Text(this->_assetsManager->fontManager->get("title_font"),
-             sf::Color::White, 36, "Back"),
-        Position(100, 900),
-        Rectangle({400, 75}, sf::Color::Blue, sf::Color::Red),
+        rtype::games::rtype::client::Text(
+            this->_assetsManager->fontManager->get("title_font"),
+            sf::Color::White, 36, "Back"),
+        rtype::games::rtype::shared::Position(100, 900),
+        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
+                                               sf::Color::Red),
         std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::MAIN_MENU);
