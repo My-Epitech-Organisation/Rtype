@@ -40,6 +40,28 @@ target_link_libraries(test_server_app PRIVATE
     rtype_engine
 )
 
+# ServerApp GameConfig integration tests
+add_executable(test_server_app_gameconfig test_server_app_gameconfig.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/ServerApp.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/ClientManager.cpp
+)
+
+target_include_directories(test_server_app_gameconfig PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/common
+)
+
+target_compile_features(test_server_app_gameconfig PRIVATE cxx_std_20)
+
+target_link_libraries(test_server_app_gameconfig PRIVATE
+    GTest::gtest_main
+    rtype_common
+    rtype_network
+    rtype_engine
+)
+
 include(GoogleTest)
 gtest_discover_tests(test_client_manager)
 gtest_discover_tests(test_server_app)
+gtest_discover_tests(test_server_app_gameconfig)
