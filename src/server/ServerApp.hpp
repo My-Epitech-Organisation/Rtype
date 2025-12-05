@@ -20,6 +20,9 @@
 #include "../common/SafeQueue/SafeQueue.hpp"
 #include "../common/Types.hpp"
 #include "../network/Packet.hpp"
+#include "../network/Serializer.hpp"
+#include "../network/protocol/Header.hpp"
+#include "../network/protocol/Validator.hpp"
 #include "Client.hpp"
 #include "ClientManager.hpp"
 #include "IGameConfig.hpp"
@@ -58,32 +61,46 @@ using rtype::Endpoint;
  */
 class ServerApp {
    public:
+    /**
+     * @brief Default client timeout in seconds
+     */
     static constexpr uint32_t DEFAULT_CLIENT_TIMEOUT_SECONDS = 10;
 
-    // @brief Maximum physics/logic updates per frame to prevent spiral of
-    // death
-    // @details When the game loop falls behind (e.g., due to a lag spike),
-    // limiting updates per frame prevents spending too long catching up,
-    // which would cause further frame drops and create a feedback loop.
+    /**
+     * @brief Maximum physics/logic updates per frame to prevent spiral of death
+     *
+     * When the game loop falls behind (e.g., due to a lag spike),
+     * limiting updates per frame prevents spending too long catching up,
+     * which would cause further frame drops and create a feedback loop.
+     */
     static constexpr uint32_t MAX_UPDATES_PER_FRAME = 5;
 
-    // @brief Maximum frame time in milliseconds before clamping
-    // @details Prevents spiral of death during severe lag spikes. If a frame
-    // takes longer than this, we clamp it to avoid accumulating too much
-    // time in the accumulator, which would cause excessive catch-up updates.
-    // 250ms allows ~4 FPS minimum before time clamping kicks in.
+    /**
+     * @brief Maximum frame time in milliseconds before clamping
+     *
+     * Prevents spiral of death during severe lag spikes. If a frame
+     * takes longer than this, we clamp it to avoid accumulating too much
+     * time in the accumulator, which would cause excessive catch-up updates.
+     * 250ms allows ~4 FPS minimum before time clamping kicks in.
+     */
     static constexpr uint32_t MAX_FRAME_TIME_MS = 250;
 
-    // @brief Percentage of calculated sleep time to actually sleep
-    // @details We sleep for only 95% of the remaining frame time to account
-    // for OS scheduler granularity and potential timing inaccuracies.
-    // This prevents oversleeping past the target frame time.
+    /**
+     * @brief Percentage of calculated sleep time to actually sleep
+     *
+     * We sleep for only 95% of the remaining frame time to account
+     * for OS scheduler granularity and potential timing inaccuracies.
+     * This prevents oversleeping past the target frame time.
+     */
     static constexpr uint32_t SLEEP_TIME_SAFETY_PERCENT = 95;
 
-    // @brief Minimum sleep threshold in microseconds
-    // @details Below this threshold, busy-waiting is more accurate than
-    // sleeping. Sleep syscalls have overhead and OS scheduler granularity
-    // (typically 1-15ms on most systems) makes very short sleeps unreliable.
+    /**
+     * @brief Minimum sleep threshold in microseconds
+     *
+     * Below this threshold, busy-waiting is more accurate than
+     * sleeping. Sleep syscalls have overhead and OS scheduler granularity
+     * (typically 1-15ms on most systems) makes very short sleeps unreliable.
+     */
     static constexpr uint32_t MIN_SLEEP_THRESHOLD_US = 100;
 
     /**
@@ -220,20 +237,33 @@ class ServerApp {
      */
     [[nodiscard]] bool reloadConfiguration();
 
-   private:
-    // @brief Configuration for the main loop timing
+   public:
+    /**
+     * @brief Configuration for the main loop timing
+     */
     struct LoopTiming {
         std::chrono::nanoseconds fixedDeltaNs;
         std::chrono::nanoseconds maxFrameTime;
         uint32_t maxUpdatesPerFrame;
     };
 
-    // @brief State for the main loop
+    /**
+     * @brief State for the main loop
+     */
     struct LoopState {
         std::chrono::steady_clock::time_point previousTime;
         std::chrono::nanoseconds accumulator{0};
     };
 
+    /**
+     * @brief Get loop timing configuration (for testing)
+     * @return Loop timing configuration
+     */
+    [[nodiscard]] LoopTiming getLoopTiming() const noexcept {
+        return createLoopTiming();
+    }
+
+   private:
     /**
      * @brief Initialize server resources
      * @return true if initialization succeeded
@@ -312,6 +342,20 @@ class ServerApp {
     void networkThreadFunction() noexcept;
 
     /**
+     * @brief Process raw network data and extract complete packets
+     */
+    void processRawNetworkData() noexcept;
+
+    /**
+     * @brief Extract complete RTGP packets from the network buffer
+     * @param endpoint The endpoint that sent the data
+     * @param rawData The raw packet data
+     * @return Optional containing the extracted packet if successful
+     */
+    std::optional<rtype::network::Packet> extractPacketFromData(
+        const Endpoint& endpoint, const std::vector<uint8_t>& rawData) noexcept;
+
+    /**
      * @brief Update game state (ECS tick)
      */
     void update() noexcept;
@@ -321,16 +365,15 @@ class ServerApp {
      */
     void broadcastGameState() noexcept;
 
-    uint16_t _port;                  ///< Server port
-    uint32_t _tickRate;              ///< Server tick rate in Hz
-    uint32_t _clientTimeoutSeconds;  ///< Client timeout in seconds
-    bool _verbose;                   ///< Enable verbose debug output
-    std::shared_ptr<std::atomic<bool>>
-        _shutdownFlag;  ///< External shutdown flag shared pointer
-    std::atomic<bool> _hasShutdown{false};  ///< Guard against double shutdown
+    uint16_t _port;
+    uint32_t _tickRate;
+    uint32_t _clientTimeoutSeconds;
+    bool _verbose;
+    std::shared_ptr<std::atomic<bool>> _shutdownFlag;
+    std::atomic<bool> _hasShutdown{false};
 
-    std::shared_ptr<ServerMetrics> _metrics;   ///< Server performance metrics
-    ClientManager _clientManager;              ///< Client connection manager
+    std::shared_ptr<ServerMetrics> _metrics;  ///< Server performance metrics
+    ClientManager _clientManager;             ///< Client connection manager
     std::unique_ptr<IGameConfig> _gameConfig;  ///< Game-specific configuration
 
     // Network thread and packet queue for producer-consumer pattern

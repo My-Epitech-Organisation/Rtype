@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include <memory>
+#include <span>
+#include <utility>
 #include <vector>
 
 namespace rtype::server {
@@ -22,7 +24,11 @@ ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
       _verbose(verbose),
       _shutdownFlag(shutdownFlag),
       _metrics(std::make_shared<ServerMetrics>()),
-      _clientManager(maxPlayers, _metrics, verbose) {}
+      _clientManager(maxPlayers, _metrics, verbose) {
+    if (tickRate == 0) {
+        throw std::invalid_argument("tickRate cannot be zero");
+    }
+}
 
 ServerApp::ServerApp(std::unique_ptr<IGameConfig> gameConfig,
                      std::shared_ptr<std::atomic<bool>> shutdownFlag,
@@ -69,6 +75,7 @@ bool ServerApp::run() {
         state->accumulator += frameTime;
 
         processIncomingData();
+        processRawNetworkData();
         performFixedUpdates(state, timing);
         broadcastGameState();
         sleepUntilNextFrame(frameStartTime, timing);
@@ -270,9 +277,79 @@ void ServerApp::processIncomingData() noexcept {
     }
 }
 
+void ServerApp::processRawNetworkData() noexcept {
+    while (auto rawDataOpt = _rawNetworkData.pop()) {
+        auto& [endpoint, rawData] = *rawDataOpt;
+
+        if (auto packetOpt = extractPacketFromData(endpoint, rawData)) {
+            _incomingPackets.push({endpoint, std::move(*packetOpt)});
+        }
+    }
+}
+
 void ServerApp::update() noexcept {
     // TODO(Sam): Update game state via ECS
     // This will be called every tick to update game logic
+}
+
+std::optional<rtype::network::Packet> ServerApp::extractPacketFromData(
+    const Endpoint& endpoint, const std::vector<uint8_t>& rawData) noexcept {
+    try {
+        if (rawData.size() < rtype::network::kHeaderSize) {
+            LOG_DEBUG("[Server] Received packet too small from "
+                      << endpoint << " (" << rawData.size() << " bytes)");
+            return std::nullopt;
+        }
+
+        auto header = rtype::network::Serializer::deserializeFromNetwork<
+            rtype::network::Header>(std::vector<uint8_t>(
+            rawData.begin(), rawData.begin() + rtype::network::kHeaderSize));
+
+        if (!header.isValid()) {
+            LOG_WARNING("[Server] Invalid RTGP header from "
+                        << endpoint << " (magic: 0x" << std::hex
+                        << static_cast<int>(header.magic) << ")");
+            return std::nullopt;
+        }
+
+        size_t expectedSize = rtype::network::kHeaderSize + header.payloadSize;
+        if (rawData.size() < expectedSize) {
+            LOG_WARNING("[Server] Incomplete packet from "
+                        << endpoint << " (expected: " << expectedSize
+                        << ", got: " << rawData.size() << ")");
+            return std::nullopt;
+        }
+
+        if (header.payloadSize > 0) {
+            auto validationResult = rtype::network::Validator::validatePacket(
+                std::span<const std::uint8_t>(rawData), header.isFromServer());
+            if (validationResult.isErr()) {
+                LOG_WARNING("[Server] Invalid packet from "
+                            << endpoint << " (validation error code: "
+                            << static_cast<int>(validationResult.error())
+                            << ")");
+                return std::nullopt;
+            }
+        }
+
+        // TODO(Anybody): Eventually migrate to full RTGP packet handling
+        rtype::network::Packet packet(
+            static_cast<rtype::network::PacketType>(header.opcode));
+        if (header.payloadSize > 0) {
+            std::vector<uint8_t> payload(
+                rawData.begin() + rtype::network::kHeaderSize, rawData.end());
+            packet.setData(payload);
+        }
+
+        LOG_DEBUG("[Server] Successfully extracted packet from "
+                  << endpoint << " (opcode: " << static_cast<int>(header.opcode)
+                  << ", payload: " << header.payloadSize << " bytes)");
+        return packet;
+    } catch (const std::exception& e) {
+        LOG_ERROR("[Server] Exception extracting packet from "
+                  << endpoint << ": " << e.what());
+        return std::nullopt;
+    }
 }
 
 void ServerApp::broadcastGameState() noexcept {
@@ -322,8 +399,7 @@ void ServerApp::networkThreadFunction() noexcept {
         // if (_socket.hasData()) {
         //     Endpoint sender;
         //     std::vector<uint8_t> rawData = _socket.receive(sender);
-        //     rtype::network::Packet packet = deserializePacket(rawData);
-        //     _incomingPackets.push({sender, packet});
+        //     _rawNetworkData.push({sender, std::move(rawData)});
         // }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));

@@ -11,10 +11,17 @@
 #include <cstdint>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <variant>
 
 namespace rtype::network {
 
+/**
+ * @brief Enumeration of all possible network errors
+ *
+ * This enum defines all error codes that can occur during network operations.
+ * Errors are categorized by type for easier handling and debugging.
+ */
 enum class NetworkError : std::uint8_t {
     None = 0,
 
@@ -34,6 +41,8 @@ enum class NetworkError : std::uint8_t {
     MalformedPacket = 24,
     InvalidSequence = 25,
     InvalidUserId = 26,
+    DuplicatePacket = 27,
+    InvalidSender = 28,
 
     // Operation Errors (40-59)
     Cancelled = 40,
@@ -42,12 +51,21 @@ enum class NetworkError : std::uint8_t {
     InternalError = 43,
 
     // Reliability Layer Errors (60-79)
-    MaxRetriesExceeded = 60,
-    AckTimeout = 61,
+    RetryLimitExceeded = 60,
+    AckTimeout = 62,
+
+    // Connection State Errors (80-99)
+    InvalidStateTransition = 80,
 };
 
+/**
+ * @brief Convert a NetworkError to its string representation
+ *
+ * @param error The error code to convert
+ * @return A string view containing the error message
+ */
 [[nodiscard]] constexpr std::string_view toString(NetworkError error) noexcept {
-    constexpr std::array<std::pair<NetworkError, std::string_view>, 22>
+    constexpr std::array<std::pair<NetworkError, std::string_view>, 23>
         kErrorMessages = {{
             {NetworkError::None, "Success"},
             {NetworkError::NotConnected, "Not connected"},
@@ -63,12 +81,15 @@ enum class NetworkError : std::uint8_t {
             {NetworkError::MalformedPacket, "Malformed packet"},
             {NetworkError::InvalidSequence, "Invalid sequence ID"},
             {NetworkError::InvalidUserId, "Invalid user ID"},
+            {NetworkError::DuplicatePacket, "Duplicate packet"},
+            {NetworkError::InvalidSender, "Invalid sender endpoint"},
             {NetworkError::Cancelled, "Operation cancelled"},
             {NetworkError::WouldBlock, "Would block"},
             {NetworkError::BufferFull, "Buffer full"},
             {NetworkError::InternalError, "Internal error"},
-            {NetworkError::MaxRetriesExceeded, "Max retries exceeded"},
+            {NetworkError::RetryLimitExceeded, "Retry limit exceeded"},
             {NetworkError::AckTimeout, "ACK timeout"},
+            {NetworkError::InvalidStateTransition, "Invalid state transition"},
         }};
 
     for (const auto& [code, message] : kErrorMessages) {
@@ -79,7 +100,16 @@ enum class NetworkError : std::uint8_t {
     return "Unknown error";
 }
 
-/// Result type for operations that can fail
+/**
+ * @brief A Result monad for handling operations that may succeed or fail
+ *
+ * This class provides a type-safe way to handle operations that can either
+ * return a value of type T or an error of type E. It follows the Result pattern
+ * commonly used in functional programming and Rust.
+ *
+ * @tparam T The type of the success value
+ * @tparam E The type of the error (defaults to NetworkError)
+ */
 template <typename T, typename E = NetworkError>
 class Result {
    public:
@@ -146,6 +176,14 @@ class Result {
     std::variant<T, E> data_;
 };
 
+/**
+ * @brief Specialization of Result for void operations
+ *
+ * This specialization handles operations that don't return a value but can
+ * still fail.
+ *
+ * @tparam E The type of the error
+ */
 template <typename E>
 class Result<void, E> {
    public:
@@ -173,23 +211,29 @@ class Result<void, E> {
     std::variant<bool, E> data_;
 };
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/// Create success result
+/**
+ * @brief Helper functions for creating Result instances
+ *
+ * These functions provide convenient ways to create Result objects
+ * without having to specify template parameters explicitly.
+ */
 template <typename T>
 [[nodiscard]] inline Result<T> Ok(T value) {
     return Result<T>::ok(std::move(value));
 }
 
-/// Create void success result
 [[nodiscard]] inline Result<void> Ok() { return Result<void>::ok(); }
 
-/// Create error result
 template <typename T = void>
 [[nodiscard]] inline Result<T> Err(NetworkError error) {
     return Result<T>::err(error);
 }
 
 }  // namespace rtype::network
+
+#include <ostream>
+
+inline std::ostream& operator<<(std::ostream& os,
+                                rtype::network::NetworkError error) {
+    return os << rtype::network::toString(error);
+}

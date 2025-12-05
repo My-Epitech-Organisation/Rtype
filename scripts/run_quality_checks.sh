@@ -22,6 +22,8 @@ NC='\033[0m'
 
 FIX_MODE=0
 VERBOSE=0
+SKIP_TIDY=0
+SKIP_COMPILER=0
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPORT_FILE="/tmp/rtype_quality_report.txt"
@@ -30,6 +32,8 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --fix) FIX_MODE=1; shift ;;
         --verbose) VERBOSE=1; shift ;;
+        --no-tidy) SKIP_TIDY=1; shift ;;
+        --no-compil) SKIP_COMPILER=1; shift ;;
         *) echo "Unknown option: $1"; exit 1 ;;
     esac
 done
@@ -193,46 +197,56 @@ echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  CLANG-TIDY - Static Analysis${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-log_info "Running Clang-Tidy on source files..."
-echo "" >> "$REPORT_FILE"
-echo "3. CLANG-TIDY RESULTS" >> "$REPORT_FILE"
-echo "======================================" >> "$REPORT_FILE"
 
-CLANG_TIDY_ERRORS=0
-CLANG_TIDY_CONFIG="$PROJECT_ROOT/config/clang/.clang-tidy"
-
-# Only analyze .cpp files (headers are analyzed via includes)
-TIDY_FILES=$(find "$PROJECT_ROOT/src" -type f -name "*.cpp" 2>/dev/null)
-
-if [ ! -f "$CLANG_TIDY_CONFIG" ]; then
-    log_warning "Clang-Tidy config not found"
-    echo "Status: SKIPPED - .clang-tidy config not found" >> "$REPORT_FILE"
+if [ $SKIP_TIDY -eq 1 ]; then
+    log_info "Skipping Clang-Tidy (--no-tidy flag used)"
+    echo "" >> "$REPORT_FILE"
+    echo "3. CLANG-TIDY RESULTS" >> "$REPORT_FILE"
+    echo "======================================" >> "$REPORT_FILE"
+    echo "Status: SKIPPED - Clang-Tidy disabled via --no-tidy flag" >> "$REPORT_FILE"
+    CLANG_TIDY_ERRORS=0
 else
-    if [ -z "$TIDY_FILES" ]; then
-        log_warning "No source files found to analyze"
-        echo "Status: SKIPPED - No source files found" >> "$REPORT_FILE"
+    log_info "Running Clang-Tidy on source files..."
+    echo "" >> "$REPORT_FILE"
+    echo "3. CLANG-TIDY RESULTS" >> "$REPORT_FILE"
+    echo "======================================" >> "$REPORT_FILE"
+
+    CLANG_TIDY_ERRORS=0
+    CLANG_TIDY_CONFIG="$PROJECT_ROOT/config/clang/.clang-tidy"
+
+    # Only analyze .cpp files (headers are analyzed via includes)
+    TIDY_FILES=$(find "$PROJECT_ROOT/src" -type f -name "*.cpp" 2>/dev/null)
+
+    if [ ! -f "$CLANG_TIDY_CONFIG" ]; then
+        log_warning "Clang-Tidy config not found"
+        echo "Status: SKIPPED - .clang-tidy config not found" >> "$REPORT_FILE"
     else
-        TIDY_OUTPUT=$(clang-tidy --config-file="$CLANG_TIDY_CONFIG" $TIDY_FILES -- -std=c++20 -Iinclude 2>&1 | grep "warning:" | head -50 || true)
-
-        if [ -z "$TIDY_OUTPUT" ]; then
-            CLANG_TIDY_ERRORS=0
+        if [ -z "$TIDY_FILES" ]; then
+            log_warning "No source files found to analyze"
+            echo "Status: SKIPPED - No source files found" >> "$REPORT_FILE"
         else
-            CLANG_TIDY_ERRORS=$(echo "$TIDY_OUTPUT" | wc -l)
-        fi
+            TIDY_OUTPUT=$(clang-tidy --config-file="$CLANG_TIDY_CONFIG" $TIDY_FILES -- -std=c++20 -Iinclude 2>&1 | grep "warning:" | head -50 || true)
 
-        if [ $CLANG_TIDY_ERRORS -eq 0 ]; then
-            log_success "Clang-Tidy: No warnings found ✓"
-            echo "Status: PASS - No analysis warnings" >> "$REPORT_FILE"
-        else
-            log_warning "Clang-Tidy: Found $CLANG_TIDY_ERRORS warning(s)"
-            echo "Status: WARNINGS - Found $CLANG_TIDY_ERRORS issue(s)" >> "$REPORT_FILE"
-            echo "" >> "$REPORT_FILE"
-            echo "Warnings:" >> "$REPORT_FILE"
-            echo "$TIDY_OUTPUT" >> "$REPORT_FILE"
+            if [ -z "$TIDY_OUTPUT" ]; then
+                CLANG_TIDY_ERRORS=0
+            else
+                CLANG_TIDY_ERRORS=$(echo "$TIDY_OUTPUT" | wc -l)
+            fi
 
-            if [ $VERBOSE -eq 1 ]; then
-                echo "Clang-Tidy Warnings:"
-                echo "$TIDY_OUTPUT"
+            if [ $CLANG_TIDY_ERRORS -eq 0 ]; then
+                log_success "Clang-Tidy: No warnings found ✓"
+                echo "Status: PASS - No analysis warnings" >> "$REPORT_FILE"
+            else
+                log_warning "Clang-Tidy: Found $CLANG_TIDY_ERRORS warning(s)"
+                echo "Status: WARNINGS - Found $CLANG_TIDY_ERRORS issue(s)" >> "$REPORT_FILE"
+                echo "" >> "$REPORT_FILE"
+                echo "Warnings:" >> "$REPORT_FILE"
+                echo "$TIDY_OUTPUT" >> "$REPORT_FILE"
+
+                if [ $VERBOSE -eq 1 ]; then
+                    echo "Clang-Tidy Warnings:"
+                    echo "$TIDY_OUTPUT"
+                fi
             fi
         fi
     fi
@@ -243,40 +257,50 @@ echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  COMPILER WARNINGS - Type & Size Optimization${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-log_info "Checking for compiler optimization warnings..."
-echo "" >> "$REPORT_FILE"
-echo "4. COMPILER WARNINGS - OPTIMIZATION CHECKS" >> "$REPORT_FILE"
-echo "======================================" >> "$REPORT_FILE"
 
-COMPILER_WARNINGS=0
-
-COMPILER_OUTPUT=""
-for file in $CPP_FILES; do
-    FILE_WARNINGS=$(clang++ -Wall -Wextra -Wconversion -Wsign-conversion \
-        -Wdouble-promotion -Wnarrowing -std=c++20 -I"$PROJECT_ROOT/include" \
-        -fsyntax-only "$file" 2>&1 | grep -E "warning:|error:" || true)
-
-    if [ -n "$FILE_WARNINGS" ]; then
-        COMPILER_OUTPUT="${COMPILER_OUTPUT}${FILE_WARNINGS}\n"
-    fi
-done
-
-COMPILER_WARNINGS=$(echo -e "$COMPILER_OUTPUT" | grep -c "warning:" || echo 0)
-
-if [ "$COMPILER_WARNINGS" -eq 0 ]; then
-    log_success "Compiler: No optimization warnings found ✓"
-    echo "Status: PASS - No type/size optimization issues detected" >> "$REPORT_FILE"
-else
-    log_warning "Compiler: Found $COMPILER_WARNINGS optimization warning(s)"
-    echo "Status: WARNINGS - Found $COMPILER_WARNINGS optimization suggestion(s)" >> "$REPORT_FILE"
+if [ $SKIP_COMPILER -eq 1 ]; then
+    log_info "Skipping Compiler Warnings check (--no-compil flag used)"
     echo "" >> "$REPORT_FILE"
-    echo "Optimization Suggestions:" >> "$REPORT_FILE"
-    echo -e "$COMPILER_OUTPUT" >> "$REPORT_FILE"
+    echo "4. COMPILER WARNINGS - OPTIMIZATION CHECKS" >> "$REPORT_FILE"
+    echo "======================================" >> "$REPORT_FILE"
+    echo "Status: SKIPPED - Compiler warnings disabled via --no-compil flag" >> "$REPORT_FILE"
+    COMPILER_WARNINGS=0
+else
+    log_info "Checking for compiler optimization warnings..."
+    echo "" >> "$REPORT_FILE"
+    echo "4. COMPILER WARNINGS - OPTIMIZATION CHECKS" >> "$REPORT_FILE"
+    echo "======================================" >> "$REPORT_FILE"
 
-    if [ $VERBOSE -eq 1 ]; then
-        echo ""
-        echo "Optimization warnings details:"
-        echo -e "$COMPILER_OUTPUT" | head -20
+    COMPILER_WARNINGS=0
+
+    COMPILER_OUTPUT=""
+    for file in $CPP_FILES; do
+        FILE_WARNINGS=$(clang++ -Wall -Wextra -Wconversion -Wsign-conversion \
+            -Wdouble-promotion -Wnarrowing -std=c++20 -I"$PROJECT_ROOT/include" \
+            -fsyntax-only "$file" 2>&1 | grep -E "warning:|error:" || true)
+
+        if [ -n "$FILE_WARNINGS" ]; then
+            COMPILER_OUTPUT="${COMPILER_OUTPUT}${FILE_WARNINGS}\n"
+        fi
+    done
+
+    COMPILER_WARNINGS=$(echo -e "$COMPILER_OUTPUT" | grep -c "warning:" || echo 0)
+
+    if [ "$COMPILER_WARNINGS" -eq 0 ]; then
+        log_success "Compiler: No optimization warnings found ✓"
+        echo "Status: PASS - No type/size optimization issues detected" >> "$REPORT_FILE"
+    else
+        log_warning "Compiler: Found $COMPILER_WARNINGS optimization warning(s)"
+        echo "Status: WARNINGS - Found $COMPILER_WARNINGS optimization suggestion(s)" >> "$REPORT_FILE"
+        echo "" >> "$REPORT_FILE"
+        echo "Optimization Suggestions:" >> "$REPORT_FILE"
+        echo -e "$COMPILER_OUTPUT" >> "$REPORT_FILE"
+
+        if [ $VERBOSE -eq 1 ]; then
+            echo ""
+            echo "Optimization warnings details:"
+            echo -e "$COMPILER_OUTPUT" | head -20
+        fi
     fi
 fi
 

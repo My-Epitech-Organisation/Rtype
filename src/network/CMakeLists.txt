@@ -1,9 +1,24 @@
 add_library(rtype_network STATIC
+    # Transport layer (Asio-based async UDP)
+    transport/AsioUdpSocket.cpp
+
+    # Reliability layer (RUDP per RFC RTGP v1.1.0)
+    reliability/ReliableChannel.cpp
+
+    # Connection layer (State Machine + high-level API)
+    connection/ConnectionStateMachine.cpp
+    connection/Connection.cpp
+
     UdpSocket.cpp
     Packet.cpp
     Serializer.cpp
-    transport/AsioUdpSocket.cpp
 )
+
+# Protocol types are header-only (no .cpp files needed)
+# - protocol/OpCode.hpp
+# - protocol/Header.hpp
+# - protocol/Payloads.hpp
+# - protocol/Validator.hpp
 
 # Find Asio (standalone, non-Boost)
 find_package(asio CONFIG REQUIRED)
