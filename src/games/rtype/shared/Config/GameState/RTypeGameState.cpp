@@ -30,7 +30,7 @@ void RTypeGameState::updateTimestamp() {
     auto now = std::chrono::system_clock::now();
     auto epoch = now.time_since_epoch();
     header.timestamp = static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::seconds>(epoch).count());
+        std::chrono::duration_cast<std::chrono::milliseconds>(epoch).count());
 }
 
 uint32_t RTypeGameState::calculateChecksum() const {
