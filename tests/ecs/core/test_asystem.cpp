@@ -13,8 +13,8 @@
 #include <string>
 #include <vector>
 
-#include "engine/ASystem.hpp"
-#include "engine/ecs/ECS.hpp"
+#include "ASystem.hpp"
+#include "ecs/ECS.hpp"
 
 using namespace rtype::engine;
 

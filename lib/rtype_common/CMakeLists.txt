@@ -2,6 +2,9 @@
 # Common Utilities Library (Header-Only)
 # ============================================================================
 
+# Include the src subdirectory which contains rtype_toml_parser
+add_subdirectory(src)
+
 add_library(rtype_common INTERFACE)
 
 target_include_directories(rtype_common INTERFACE

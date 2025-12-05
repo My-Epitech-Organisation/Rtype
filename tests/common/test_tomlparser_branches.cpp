@@ -10,7 +10,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include "common/Config/TomlParser.hpp"
+#include "Config/TomlParser.hpp"
 
 using namespace rtype::config;
 

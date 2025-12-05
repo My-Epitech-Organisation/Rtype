@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-#include "common/Logger.hpp"
+#include "Logger.hpp"
 
 namespace rtype::games::rtype::server {
 

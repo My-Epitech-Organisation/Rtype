@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 
-#include "engine/AGameEngine.hpp"
+#include "AGameEngine.hpp"
 
 using namespace rtype::engine;
 
