@@ -40,7 +40,8 @@ struct ParseError {
 struct ParseResult {
     bool success = false;
     std::vector<ParseError> errors;
-    std::string errorMessage;  ///< General error message (file not found, parse error, etc.)
+    std::string errorMessage;  ///< General error message (file not found, parse
+                               ///< error, etc.)
 
     [[nodiscard]] explicit operator bool() const noexcept { return success; }
 };
@@ -64,9 +65,8 @@ struct ParseResult {
  * auto table = parser.parseFile("config/client.toml");
  * if (table) {
  *     auto width = parser.getValue<uint32_t>(*table, "video", "width", 1280);
- *     auto address = parser.getString(*table, "network", "serverAddress", "127.0.0.1");
- * } else {
- *     for (const auto& error : parser.getLastErrors()) {
+ *     auto address = parser.getString(*table, "network", "serverAddress",
+ * "127.0.0.1"); } else { for (const auto& error : parser.getLastErrors()) {
  *         LOG_ERROR("{}", error.toString());
  *     }
  * }
@@ -99,7 +99,8 @@ class TomlParser {
      * @param content TOML content string
      * @return Parsed TOML table, or nullopt on failure
      */
-    [[nodiscard]] std::optional<toml::table> parseString(const std::string& content);
+    [[nodiscard]] std::optional<toml::table> parseString(
+        const std::string& content);
 
     /**
      * @brief Save TOML table to file
@@ -107,7 +108,8 @@ class TomlParser {
      * @param filepath Output file path
      * @return true if successful
      */
-    bool saveToFile(const toml::table& table, const std::filesystem::path& filepath);
+    bool saveToFile(const toml::table& table,
+                    const std::filesystem::path& filepath);
 
     /**
      * @brief Get a value from a TOML table with default fallback
@@ -141,8 +143,10 @@ class TomlParser {
      * @param defaultValue Default value if key not found
      * @return String value from table or default
      */
-    [[nodiscard]] std::string getString(const toml::table& table, std::string_view section,
-                                        std::string_view key, const std::string& defaultValue);
+    [[nodiscard]] std::string getString(const toml::table& table,
+                                        std::string_view section,
+                                        std::string_view key,
+                                        const std::string& defaultValue);
 
     /**
      * @brief Get the last parse result
@@ -156,7 +160,8 @@ class TomlParser {
      * @brief Get errors from last parse operation
      * @return Vector of parse errors
      */
-    [[nodiscard]] const std::vector<ParseError>& getLastErrors() const noexcept {
+    [[nodiscard]] const std::vector<ParseError>& getLastErrors()
+        const noexcept {
         return _lastResult.errors;
     }
 

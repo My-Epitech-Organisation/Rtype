@@ -12,7 +12,8 @@
 
 namespace rtype::config {
 
-std::optional<toml::table> TomlParser::parseFile(const std::filesystem::path& filepath) {
+std::optional<toml::table> TomlParser::parseFile(
+    const std::filesystem::path& filepath) {
     _lastResult = ParseResult{};
 
     if (!std::filesystem::exists(filepath)) {
@@ -52,7 +53,8 @@ std::optional<toml::table> TomlParser::parseString(const std::string& content) {
     }
 }
 
-bool TomlParser::saveToFile(const toml::table& table, const std::filesystem::path& filepath) {
+bool TomlParser::saveToFile(const toml::table& table,
+                            const std::filesystem::path& filepath) {
     if (filepath.has_parent_path()) {
         std::filesystem::create_directories(filepath.parent_path());
     }
@@ -69,7 +71,8 @@ bool TomlParser::saveToFile(const toml::table& table, const std::filesystem::pat
     file.close();
 
     if (!file) {
-        _lastResult.errorMessage = "Failed to write to file: " + filepath.string();
+        _lastResult.errorMessage =
+            "Failed to write to file: " + filepath.string();
         reportError({"file", "", _lastResult.errorMessage});
         std::filesystem::remove(tempPath);
         return false;
@@ -78,7 +81,8 @@ bool TomlParser::saveToFile(const toml::table& table, const std::filesystem::pat
     try {
         std::filesystem::rename(tempPath, filepath);
     } catch (const std::exception& e) {
-        _lastResult.errorMessage = std::string("Failed to save file: ") + e.what();
+        _lastResult.errorMessage =
+            std::string("Failed to save file: ") + e.what();
         reportError({"file", "", _lastResult.errorMessage});
         std::filesystem::remove(tempPath);
         return false;
@@ -87,13 +91,13 @@ bool TomlParser::saveToFile(const toml::table& table, const std::filesystem::pat
     return true;
 }
 
-std::string TomlParser::getString(const toml::table& table, std::string_view section,
-                                  std::string_view key, const std::string& defaultValue) {
+std::string TomlParser::getString(const toml::table& table,
+                                  std::string_view section,
+                                  std::string_view key,
+                                  const std::string& defaultValue) {
     try {
-        if (auto* sec = table[section].as_table()) {
-            if (auto val = (*sec)[key].value<std::string>()) {
-                return *val;
-            }
+        if (auto val = table[section][key].value<std::string>()) {
+            return *val;
         }
     } catch (const std::exception& e) {
         reportError({std::string(section), std::string(key), e.what()});
