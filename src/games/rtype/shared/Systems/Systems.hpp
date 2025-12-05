@@ -7,6 +7,7 @@
 
 #pragma once
 
-#include "../../engine/ISystem.hpp"
+#include <rtype/engine.hpp>
+
 #include "AISystem/AISystem.hpp"
 #include "Movements/MovementSystem.hpp"

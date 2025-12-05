@@ -22,8 +22,10 @@ namespace rtype::server {
 struct ServerMetrics {
     std::atomic<uint64_t> packetsReceived{0};  ///< Total packets received
     std::atomic<uint64_t> packetsSent{0};      ///< Total packets sent
-    std::atomic<uint64_t> bytesReceived{0};    ///< Total bytes received
-    std::atomic<uint64_t> bytesSent{0};        ///< Total bytes sent
+    std::atomic<uint64_t> packetsDropped{
+        0};  ///< Packets dropped (validation failed)
+    std::atomic<uint64_t> bytesReceived{0};  ///< Total bytes received
+    std::atomic<uint64_t> bytesSent{0};      ///< Total bytes sent
     std::atomic<uint64_t> tickOverruns{
         0};  ///< Number of ticks that took too long
     std::atomic<uint64_t> connectionsRejected{
