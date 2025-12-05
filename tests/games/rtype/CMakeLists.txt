@@ -80,3 +80,22 @@ target_include_directories(test_systems PRIVATE
 
 gtest_discover_tests(test_systems)
 
+# SaveManager functional tests
+add_executable(test_rtype_savemanager
+    ${CMAKE_SOURCE_DIR}/tests/savemanager_functional_test.cpp
+)
+
+target_link_libraries(test_rtype_savemanager PRIVATE
+    rtype_game_shared
+    rtype_engine
+)
+
+target_include_directories(test_rtype_savemanager PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+add_test(NAME test_rtype_savemanager COMMAND test_rtype_savemanager)
+
+gtest_discover_tests(test_systems)
+

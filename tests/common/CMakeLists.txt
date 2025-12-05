@@ -64,3 +64,93 @@ target_include_directories(test_savemanager PRIVATE
 )
 
 gtest_discover_tests(test_savemanager)
+
+# Branch coverage tests for Config
+add_executable(test_config_branches test_config_branches.cpp)
+
+target_link_libraries(test_config_branches PRIVATE
+    GTest::gtest_main
+    rtype_game_config
+)
+
+target_include_directories(test_config_branches PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+gtest_discover_tests(test_config_branches)
+
+# Branch coverage tests for TomlParser
+add_executable(test_tomlparser_branches test_tomlparser_branches.cpp)
+
+target_link_libraries(test_tomlparser_branches PRIVATE
+    GTest::gtest_main
+    rtype_game_config
+)
+
+target_include_directories(test_tomlparser_branches PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+gtest_discover_tests(test_tomlparser_branches)
+
+# Branch coverage tests for SaveManager
+add_executable(test_savemanager_branches test_savemanager_branches.cpp)
+
+target_link_libraries(test_savemanager_branches PRIVATE
+    GTest::gtest_main
+    rtype_game_config
+)
+
+target_include_directories(test_savemanager_branches PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+gtest_discover_tests(test_savemanager_branches)
+
+# Branch coverage tests for FileOperations
+add_executable(test_fileoperations_branches test_fileoperations_branches.cpp)
+
+target_link_libraries(test_fileoperations_branches PRIVATE
+    GTest::gtest_main
+    rtype_game_config
+)
+
+target_include_directories(test_fileoperations_branches PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+gtest_discover_tests(test_fileoperations_branches)
+
+# Branch coverage tests for RTypeConfigParser
+add_executable(test_configparser_branches test_configparser_branches.cpp)
+
+target_link_libraries(test_configparser_branches PRIVATE
+    GTest::gtest_main
+    rtype_game_config
+)
+
+target_include_directories(test_configparser_branches PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+gtest_discover_tests(test_configparser_branches)
+
+# Branch coverage tests for BinarySerializer
+add_executable(test_binaryserializer_branches test_binaryserializer_branches.cpp)
+
+target_link_libraries(test_binaryserializer_branches PRIVATE
+    GTest::gtest_main
+    rtype_game_config
+)
+
+target_include_directories(test_binaryserializer_branches PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+gtest_discover_tests(test_binaryserializer_branches)
