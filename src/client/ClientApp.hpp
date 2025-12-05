@@ -8,6 +8,8 @@
 #ifndef SRC_CLIENT_CLIENTAPP_HPP_
 #define SRC_CLIENT_CLIENTAPP_HPP_
 
+#include <rtype/ecs.hpp>
+
 #include "Graphic/Graphic.hpp"
 
 class ClientApp {

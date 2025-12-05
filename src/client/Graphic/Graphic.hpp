@@ -11,6 +11,7 @@
 #include <memory>
 
 #include <SFML/Graphics.hpp>
+#include <rtype/ecs.hpp>
 
 #include "AssetManager/AssetManager.hpp"
 #include "KeyboardActions.hpp"

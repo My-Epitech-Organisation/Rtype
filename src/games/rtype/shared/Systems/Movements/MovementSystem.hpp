@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "../../../../../engine/ASystem.hpp"
+#include <rtype/engine.hpp>
+
 #include "../../Components/TransformComponent.hpp"
 #include "../../Components/VelocityComponent.hpp"
 
