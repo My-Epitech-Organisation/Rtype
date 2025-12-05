@@ -17,7 +17,8 @@ docs/website/package-lock.json
 *.d
 
 # Compiled Object files
-build*
+build/*
+build-coverage/*
 *.slo
 *.lo
 *.o

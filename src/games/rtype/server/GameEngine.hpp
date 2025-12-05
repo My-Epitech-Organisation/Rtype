@@ -11,11 +11,11 @@
 #include <mutex>
 #include <vector>
 
+#include <rtype/ecs.hpp>
 #include <rtype/engine.hpp>
 
 #include "../shared/Systems/Systems.hpp"
 #include "Systems/Systems.hpp"
-#include "ecs/ECS.hpp"
 
 namespace rtype::games::rtype::server {
 
