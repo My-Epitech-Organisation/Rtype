@@ -17,8 +17,7 @@ bool FileOperations::writeToFile(const std::filesystem::path& filepath,
         try {
             std::filesystem::create_directories(filepath.parent_path());
         } catch (const std::exception& e) {
-            outError =
-                std::string("Cannot create save directory: ") + e.what();
+            outError = std::string("Cannot create save directory: ") + e.what();
             return false;
         }
     }
