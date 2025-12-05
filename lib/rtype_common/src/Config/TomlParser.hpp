@@ -40,8 +40,7 @@ struct ParseError {
 struct ParseResult {
     bool success = false;
     std::vector<ParseError> errors;
-    std::string errorMessage;  ///< General error message (file not found, parse
-                               ///< error, etc.)
+    std::string errorMessage;
 
     [[nodiscard]] explicit operator bool() const noexcept { return success; }
 };
