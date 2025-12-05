@@ -629,8 +629,9 @@ void NetworkServer::checkTimeouts() {
     {
         std::lock_guard<std::mutex> lock(clientsMutex_);
         for (auto& [key, client] : clients_) {
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-                now - client->lastActivity);
+            auto elapsed =
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    now - client->lastActivity);
 
             if (elapsed > config_.clientTimeout) {
                 timedOutUsers.push_back(client->userId);
