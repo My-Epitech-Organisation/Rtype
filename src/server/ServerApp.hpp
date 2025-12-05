@@ -372,8 +372,8 @@ class ServerApp {
     std::shared_ptr<std::atomic<bool>> _shutdownFlag;
     std::atomic<bool> _hasShutdown{false};
 
-    std::shared_ptr<ServerMetrics> _metrics;  ///< Server performance metrics
-    ClientManager _clientManager;             ///< Client connection manager
+    std::shared_ptr<ServerMetrics> _metrics;   ///< Server performance metrics
+    ClientManager _clientManager;              ///< Client connection manager
     std::unique_ptr<IGameConfig> _gameConfig;  ///< Game-specific configuration
 
     // Network thread and packet queue for producer-consumer pattern
