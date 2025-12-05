@@ -17,8 +17,6 @@ SaveInfo SaveInfoReader::readSaveInfo(const std::filesystem::path& filepath) {
     if (!file.is_open()) {
         return info;
     }
-
-    // Read just the header
     std::vector<uint8_t> headerData(sizeof(SaveHeader));
     file.read(reinterpret_cast<char*>(headerData.data()), sizeof(SaveHeader));
 
@@ -36,10 +34,8 @@ SaveInfo SaveInfoReader::readSaveInfo(const std::filesystem::path& filepath) {
     info.version = BinarySerializer::readUint32(headerData, offset);
     info.timestamp = BinarySerializer::readUint64(headerData, offset);
 
-    // Skip checksum and dataSize
     offset += 8;
 
-    // Read full file for additional info
     file.seekg(0, std::ios::end);
     auto fileSize = file.tellg();
     file.seekg(0, std::ios::beg);
@@ -48,14 +44,12 @@ SaveInfo SaveInfoReader::readSaveInfo(const std::filesystem::path& filepath) {
     file.read(reinterpret_cast<char*>(fullData.data()), fileSize);
     file.close();
 
-    // Try to read progression info
     offset = sizeof(SaveHeader);
     if (offset < fullData.size()) {
         try {
             readProgressionInfo(fullData, offset, info);
             info.isValid = true;
         } catch (...) {
-            // Failed to read additional info, but header was valid
             info.isValid = true;
         }
     }
