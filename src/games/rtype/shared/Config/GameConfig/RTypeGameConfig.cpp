@@ -128,7 +128,6 @@ std::vector<ConfigError> RTypeGameConfig::validate() const {
 void RTypeGameConfig::applyDefaults() {
     RTypeGameConfig defaults = createDefault();
 
-    // Only apply defaults if current values are invalid
     if (video.width == 0 || video.width > 7680)
         video.width = defaults.video.width;
     if (video.height == 0 || video.height > 4320)
@@ -183,7 +182,7 @@ void RTypeGameConfig::applyDefaults() {
 }
 
 RTypeGameConfig RTypeGameConfig::createDefault() {
-    return RTypeGameConfig{};  // Uses default member initializers
+    return RTypeGameConfig{};
 }
 
 }  // namespace rtype::game::config
