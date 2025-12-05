@@ -100,7 +100,7 @@ void GameScene::update() {
     this->_updateUserMovementRight();
 }
 
-void GameScene::render(const std::shared_ptr<sf::RenderWindow>& window) {}
+void GameScene::render(std::shared_ptr<sf::RenderWindow> window) {}
 
 void GameScene::pollEvents(const sf::Event& e) {
     if (e.is<sf::Event::KeyReleased>()) {
@@ -109,10 +109,10 @@ void GameScene::pollEvents(const sf::Event& e) {
 }
 
 GameScene::GameScene(
-    const std::shared_ptr<ECS::Registry>& ecs,
-    const std::shared_ptr<AssetManager>& textureManager,
-    const std::shared_ptr<sf::RenderWindow>& window,
-    const std::shared_ptr<KeyboardActions>& keybinds,
+    std::shared_ptr<ECS::Registry> ecs,
+    std::shared_ptr<AssetManager> textureManager,
+    std::shared_ptr<sf::RenderWindow> window,
+    std::shared_ptr<KeyboardActions> keybinds,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(ecs, textureManager, window), _keybinds(keybinds) {
     this->_listEntity = (EntityFactory::createBackground(

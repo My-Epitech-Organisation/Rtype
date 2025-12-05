@@ -19,17 +19,17 @@
 class EventSystem {
    private:
    public:
-    static void processEvents(const std::shared_ptr<ECS::Registry>& registry,
+    static void processEvents(std::shared_ptr<ECS::Registry> registry,
                               const sf::Event& e,
-                              const std::shared_ptr<sf::RenderWindow>& window);
+                              std::shared_ptr<sf::RenderWindow> window);
     static void mouseMoved(const sf::Event& e,
-                           const std::shared_ptr<sf::RenderWindow>& window,
+                           std::shared_ptr<sf::RenderWindow> window,
                            UserEvent& actionType, const Rectangle& rect);
     static void mousePressed(const sf::Event& e,
-                             const std::shared_ptr<sf::RenderWindow>& window,
+                             std::shared_ptr<sf::RenderWindow> window,
                              UserEvent& actionType, const Rectangle& rect);
     static void mouseReleased(const sf::Event& e,
-                              const std::shared_ptr<sf::RenderWindow>& window,
+                              std::shared_ptr<sf::RenderWindow> window,
                               UserEvent& actionType, const Rectangle& rect);
 };
 

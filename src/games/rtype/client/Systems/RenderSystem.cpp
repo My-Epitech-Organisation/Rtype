@@ -21,15 +21,15 @@
 #include "src/games/rtype/client/Components/HiddenComponent.hpp"
 
 bool RenderSystem::isEntityHidden(
-    const std::shared_ptr<ECS::Registry>& registry, ECS::Entity entity) {
+    std::shared_ptr<ECS::Registry> registry, ECS::Entity entity) {
     if (registry->hasComponent<HiddenComponent>(entity)) {
         return registry->getComponent<HiddenComponent>(entity).isHidden;
     }
     return false;
 }
 
-void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
-                        const std::shared_ptr<sf::RenderWindow>& window) {
+void RenderSystem::draw(std::shared_ptr<ECS::Registry> registry,
+                        std::shared_ptr<sf::RenderWindow> window) {
     std::vector<DrawableImage> drawableImages;
 
     registry->view<Image, Position, ZIndex>().each(

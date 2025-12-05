@@ -11,8 +11,7 @@
 #include "../Components/ImageComponent.hpp"
 #include "Components/PositionComponent.hpp"
 
-void MovementSystem::update(const std::shared_ptr<ECS::Registry>& registry,
-                            float dt) {
+void MovementSystem::update(std::shared_ptr<ECS::Registry> registry, float dt) {
     registry
         ->view<rtype::games::rtype::shared::VelocityComponent, Position,
                Image>()

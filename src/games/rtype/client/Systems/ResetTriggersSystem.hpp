@@ -16,7 +16,7 @@
 
 class ResetTriggersSystem {
    public:
-    static void update(const std::shared_ptr<ECS::Registry>& registry);
+    static void update(std::shared_ptr<ECS::Registry> registry);
 };
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_RESETTRIGGERSSYSTEM_HPP_

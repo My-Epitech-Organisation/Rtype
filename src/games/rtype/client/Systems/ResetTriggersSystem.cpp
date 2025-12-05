@@ -9,8 +9,7 @@
 
 #include "../Components/UserEventComponent.hpp"
 
-void ResetTriggersSystem::update(
-    const std::shared_ptr<ECS::Registry>& registry) {
+void ResetTriggersSystem::update(std::shared_ptr<ECS::Registry> registry) {
     registry->view<UserEvent>().each(
         [](auto _, UserEvent& event) { event.isReleased = false; });
 }

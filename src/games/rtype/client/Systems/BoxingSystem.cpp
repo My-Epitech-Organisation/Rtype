@@ -12,8 +12,8 @@
 #include "../Components/BoxingComponent.hpp"
 #include "../Components/ImageComponent.hpp"
 
-void BoxingSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
-                        const std::shared_ptr<sf::RenderWindow>& window) {
+void BoxingSystem::draw(std::shared_ptr<ECS::Registry> registry,
+                        std::shared_ptr<sf::RenderWindow> window) {
     registry->view<Image, BoxingComponent>().each(
         [&window](ECS::Entity _, const Image& img, BoxingComponent& box) {
             sf::FloatRect bounds = img.sprite.getGlobalBounds();

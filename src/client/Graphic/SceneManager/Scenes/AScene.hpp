@@ -18,17 +18,17 @@ class AScene : public IScene {
    protected:
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<AssetManager> _assetsManager;
-    const std::shared_ptr<sf::RenderWindow>& _window;
+    std::shared_ptr<sf::RenderWindow> _window;
     std::vector<ECS::Entity> _listEntity;
 
    public:
     void pollEvents(const sf::Event& e) override = 0;
     void update() override = 0;
-    void render(const std::shared_ptr<sf::RenderWindow>& window) override = 0;
+    void render(std::shared_ptr<sf::RenderWindow> window) override = 0;
 
-    explicit AScene(const std::shared_ptr<ECS::Registry>& registry,
-                    const std::shared_ptr<AssetManager>& assetsManager,
-                    const std::shared_ptr<sf::RenderWindow>& window)
+    explicit AScene(std::shared_ptr<ECS::Registry> registry,
+                    std::shared_ptr<AssetManager> assetsManager,
+                    std::shared_ptr<sf::RenderWindow> window)
         : _registry(registry), _assetsManager(assetsManager), _window(window) {}
     ~AScene() override {
         for (auto& entity : this->_listEntity) {

@@ -13,8 +13,7 @@
 
 class MovementSystem {
    public:
-    static void update(const std::shared_ptr<ECS::Registry>& registry,
-                       float dt);
+    static void update(std::shared_ptr<ECS::Registry> registry, float dt);
 };
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_MOVEMENTSYSTEM_HPP_
