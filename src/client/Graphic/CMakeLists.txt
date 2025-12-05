@@ -10,6 +10,21 @@ add_library(rtype-graphic-SFML
     KeyboardActions.hpp
 )
 
+target_include_directories(rtype-graphic-SFML PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+find_package(SFML
+        COMPONENTS
+        Network
+        Graphics
+        Window
+        Audio
+        System
+        CONFIG
+        REQUIRED
+)
+
 target_link_libraries(rtype-graphic-SFML
     PUBLIC
     SFML::Network

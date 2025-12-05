@@ -24,27 +24,31 @@
 
 namespace EntityFactory {
 template <typename... Args>
-static ECS::Entity createButton(const std::shared_ptr<ECS::Registry>& registry,
-                                const Text& text, const Position& position,
-                                const Rectangle& rectangle,
-                                std::function<void(Args...)> onClick) {
+static ECS::Entity createButton(
+    std::shared_ptr<ECS::Registry> registry,
+    const rtype::games::rtype::client::Text& text,
+    const rtype::games::rtype::shared::Position& position,
+    const rtype::games::rtype::client::Rectangle& rectangle,
+    std::function<void(Args...)> onClick) {
     auto entity = registry->spawnEntity();
-    registry->emplaceComponent<Text>(entity, text);
-    registry->emplaceComponent<Position>(entity, position);
-    registry->emplaceComponent<Rectangle>(entity, rectangle);
-    registry->emplaceComponent<Button<Args...>>(entity, onClick);
-    registry->emplaceComponent<UserEvent>(entity);
-    registry->emplaceComponent<ButtonTag>(entity);
+    registry->emplaceComponent<rtype::games::rtype::client::Text>(entity, text);
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(entity,
+                                                                      position);
+    registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
+        entity, rectangle);
+    registry->emplaceComponent<rtype::games::rtype::client::Button<Args...>>(
+        entity, onClick);
+    registry->emplaceComponent<rtype::games::rtype::client::UserEvent>(entity);
+    registry->emplaceComponent<rtype::games::rtype::client::ButtonTag>(entity);
     return entity;
 }
 
 std::vector<ECS::Entity> createBackground(
-    const std::shared_ptr<ECS::Registry>& registry,
-    const std::shared_ptr<AssetManager>& assetManager,
-    const std::string& PageName);
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assetManager, const std::string& PageName);
 
-ECS::Entity createPlayer(const std::shared_ptr<ECS::Registry>& registry,
-                         const std::shared_ptr<AssetManager>& assetManager,
+ECS::Entity createPlayer(std::shared_ptr<ECS::Registry> registry,
+                         std::shared_ptr<AssetManager> assetManager,
                          sf::Vector2i scale = sf::Vector2i(1, 1),
                          bool isControllable = false);
 

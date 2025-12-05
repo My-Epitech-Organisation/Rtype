@@ -254,14 +254,32 @@ jobs:
           if git rev-parse --verify "$LATEST_TAG" >/dev/null 2>&1; then
             echo "Generating changelog from $LATEST_TAG to HEAD"
 
-            git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h) - @%an" --reverse >> release_notes.md
+            git log ${LATEST_TAG}..HEAD --pretty=format:"%s (%h) - %ae" --reverse | while read line; do
+              email=$(echo "$line" | grep -oE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+' | head -1)
+              if [ ! -z "$email" ]; then
+                username=$(curl -s "https://api.github.com/search/users?q=${email}" -H "Accept: application/vnd.github.v3+json" | grep -o '"login":"[^"]*' | head -1 | cut -d'"' -f4)
+                if [ ! -z "$username" ]; then
+                  line=$(echo "$line" | sed "s/${email}/@${username}/")
+                fi
+              fi
+              echo "- $line" >> release_notes.md
+            done
 
             echo "" >> release_notes.md
             echo "" >> release_notes.md
             echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...${NEW_VERSION}" >> release_notes.md
           else
             echo "First release, generating full changelog"
-            git log HEAD --pretty=format:"- %s (%h) - @%an" --reverse >> release_notes.md
+            git log HEAD --pretty=format:"%s (%h) - %ae" --reverse | while read line; do
+              email=$(echo "$line" | grep -oE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+' | head -1)
+              if [ ! -z "$email" ]; then
+                username=$(curl -s "https://api.github.com/search/users?q=${email}" -H "Accept: application/vnd.github.v3+json" | grep -o '"login":"[^"]*' | head -1 | cut -d'"' -f4)
+                if [ ! -z "$username" ]; then
+                  line=$(echo "$line" | sed "s/${email}/@${username}/")
+                fi
+              fi
+              echo "- $line" >> release_notes.md
+            done
             echo "" >> release_notes.md
             echo "" >> release_notes.md
             echo "**Full Changelog**: https://github.com/${{ github.repository }}/commits/${NEW_VERSION}" >> release_notes.md
@@ -272,12 +290,20 @@ jobs:
           echo "" >> release_notes.md
 
           if git rev-parse --verify "$LATEST_TAG" >/dev/null 2>&1; then
-            git log ${LATEST_TAG}..HEAD --format='%an' | sort -u | while read name; do
-              echo "- @${name}" >> release_notes.md
+            git log ${LATEST_TAG}..HEAD --format='%ae' | sort -u | while read email; do
+              username=$(curl -s "https://api.github.com/search/users?q=${email}" -H "Accept: application/vnd.github.v3+json" | grep -o '"login":"[^"]*' | head -1 | cut -d'"' -f4)
+              if [ -z "$username" ]; then
+                username=$(echo "$email" | sed 's/@.*//')
+              fi
+              echo "- @${username}" >> release_notes.md
             done
           else
-            git log HEAD --format='%an' | sort -u | while read name; do
-              echo "- @${name}" >> release_notes.md
+            git log HEAD --format='%ae' | sort -u | while read email; do
+              username=$(curl -s "https://api.github.com/search/users?q=${email}" -H "Accept: application/vnd.github.v3+json" | grep -o '"login":"[^"]*' | head -1 | cut -d'"' -f4)
+              if [ -z "$username" ]; then
+                username=$(echo "$email" | sed 's/@.*//')
+              fi
+              echo "- @${username}" >> release_notes.md
             done
           fi
 

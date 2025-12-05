@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include <unordered_set>
 #include <unordered_map>
-#include "../../../src/engine/ecs/core/Entity.hpp"
+#include "../../../lib/rtype_ecs/src/ecs/core/Entity.hpp"
 
 using namespace ECS;
 

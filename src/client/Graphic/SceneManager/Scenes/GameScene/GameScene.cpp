@@ -22,7 +22,7 @@ void GameScene::_updateUserMovementUp() {
     if (sf::Keyboard::isKeyPressed(*keyMoveUp)) {
         this->_registry
             ->view<rtype::games::rtype::shared::VelocityComponent,
-                   ControllableTag>()
+                   rtype::games::rtype::client::ControllableTag>()
             .each([](auto, auto& velocity, auto) {
                 velocity.vy -= PlayerMovementSpeed;
             });
@@ -37,7 +37,7 @@ void GameScene::_updateUserMovementDown() {
     if (sf::Keyboard::isKeyPressed(*keyMoveDown)) {
         this->_registry
             ->view<rtype::games::rtype::shared::VelocityComponent,
-                   ControllableTag>()
+                   rtype::games::rtype::client::ControllableTag>()
             .each([](auto, auto& velocity, auto) {
                 velocity.vy += PlayerMovementSpeed;
             });
@@ -52,7 +52,7 @@ void GameScene::_updateUserMovementLeft() {
     if (sf::Keyboard::isKeyPressed(*keyMoveLeft)) {
         this->_registry
             ->view<rtype::games::rtype::shared::VelocityComponent,
-                   ControllableTag>()
+                   rtype::games::rtype::client::ControllableTag>()
             .each([](auto, auto& velocity, auto) {
                 velocity.vx -= PlayerMovementSpeed;
             });
@@ -67,7 +67,7 @@ void GameScene::_updateUserMovementRight() {
     if (sf::Keyboard::isKeyPressed(*keyMoveRight)) {
         this->_registry
             ->view<rtype::games::rtype::shared::VelocityComponent,
-                   ControllableTag>()
+                   rtype::games::rtype::client::ControllableTag>()
             .each([](auto, auto& velocity, auto) {
                 velocity.vx += PlayerMovementSpeed;
             });
@@ -79,17 +79,18 @@ void GameScene::_handleKeyReleasedEvent(const sf::Event& event) {
     auto keyPause = this->_keybinds->getKeyBinding(GameAction::PAUSE);
     if (!eventKeyRelease || !keyPause.has_value()) return;
     if (eventKeyRelease->code == *keyPause) {
-        this->_registry->view<HiddenComponent, PauseMenuTag>().each(
-            [](auto, HiddenComponent& hidden, auto) {
-                hidden.isHidden = !hidden.isHidden;
-            });
+        this->_registry
+            ->view<rtype::games::rtype::client::HiddenComponent,
+                   rtype::games::rtype::client::PauseMenuTag>()
+            .each([](auto, rtype::games::rtype::client::HiddenComponent& hidden,
+                     auto) { hidden.isHidden = !hidden.isHidden; });
     }
 }
 
 void GameScene::update() {
     this->_registry
         ->view<rtype::games::rtype::shared::VelocityComponent,
-               ControllableTag>()
+               rtype::games::rtype::client::ControllableTag>()
         .each([](auto, auto& velocity, auto) {
             velocity.vx = 0;
             velocity.vy = 0;
@@ -100,7 +101,7 @@ void GameScene::update() {
     this->_updateUserMovementRight();
 }
 
-void GameScene::render(const std::shared_ptr<sf::RenderWindow>& window) {}
+void GameScene::render(std::shared_ptr<sf::RenderWindow> window) {}
 
 void GameScene::pollEvents(const sf::Event& e) {
     if (e.is<sf::Event::KeyReleased>()) {
@@ -109,10 +110,10 @@ void GameScene::pollEvents(const sf::Event& e) {
 }
 
 GameScene::GameScene(
-    const std::shared_ptr<ECS::Registry>& ecs,
-    const std::shared_ptr<AssetManager>& textureManager,
-    const std::shared_ptr<sf::RenderWindow>& window,
-    const std::shared_ptr<KeyboardActions>& keybinds,
+    std::shared_ptr<ECS::Registry> ecs,
+    std::shared_ptr<AssetManager> textureManager,
+    std::shared_ptr<sf::RenderWindow> window,
+    std::shared_ptr<KeyboardActions> keybinds,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(ecs, textureManager, window), _keybinds(keybinds) {
     this->_listEntity = (EntityFactory::createBackground(
@@ -130,20 +131,27 @@ GameScene::GameScene(
         (sectionX + SizeXPauseMenu / 2) -
             ((PauseMenuTitle.length() - 2) * (SizeFontPauseMenu / 2)),
         sectionY, SizeFontPauseMenu);
-    auto& titleText = this->_registry->getComponent<Text>(titleEntity);
+    auto& titleText =
+        this->_registry->getComponent<rtype::games::rtype::client::Text>(
+            titleEntity);
     sf::FloatRect bounds = titleText.text.getLocalBounds();
     float centeredX = sectionX + (SizeXPauseMenu - bounds.size.x) / 2;
-    auto& titlePos = this->_registry->getComponent<Position>(titleEntity);
+    auto& titlePos =
+        this->_registry->getComponent<rtype::games::rtype::shared::Position>(
+            titleEntity);
     titlePos.x = centeredX;
     pauseEntities.push_back(titleEntity);
 
     pauseEntities.push_back(EntityFactory::createButton(
         this->_registry,
-        Text(this->_assetsManager->fontManager->get("title_font"),
-             sf::Color::White, 30, "Menu"),
-        Position(sectionX + ((SizeXPauseMenu / 2) - (150 / 2)),
-                 sectionY + SizeYPauseMenu - 75),
-        Rectangle({150, 55}, sf::Color::Blue, sf::Color::Red),
+        rtype::games::rtype::client::Text(
+            this->_assetsManager->fontManager->get("title_font"),
+            sf::Color::White, 30, "Menu"),
+        rtype::games::rtype::shared::Position(
+            sectionX + ((SizeXPauseMenu / 2) - (150 / 2)),
+            sectionY + SizeYPauseMenu - 75),
+        rtype::games::rtype::client::Rectangle({150, 55}, sf::Color::Blue,
+                                               sf::Color::Red),
         std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::MAIN_MENU);
@@ -154,8 +162,11 @@ GameScene::GameScene(
         })));
 
     for (auto& entt : pauseEntities) {
-        this->_registry->emplaceComponent<HiddenComponent>(entt, true);
-        this->_registry->emplaceComponent<PauseMenuTag>(entt);
+        this->_registry
+            ->emplaceComponent<rtype::games::rtype::client::HiddenComponent>(
+                entt, true);
+        this->_registry
+            ->emplaceComponent<rtype::games::rtype::client::PauseMenuTag>(entt);
     }
     this->_listEntity.insert(this->_listEntity.end(), pauseEntities.begin(),
                              pauseEntities.end());

@@ -9,12 +9,15 @@
 #define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_MOVEMENTSYSTEM_HPP_
 #include <memory>
 
+#include "ASystem.hpp"
 #include "ecs/ECS.hpp"
 
-class MovementSystem {
+namespace rtype::games::rtype::client {
+class MovementSystem : public ::rtype::engine::ASystem {
    public:
-    static void update(const std::shared_ptr<ECS::Registry>& registry,
-                       float dt);
+    MovementSystem();
+    void update(ECS::Registry& registry, float dt) override;
 };
+}  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_MOVEMENTSYSTEM_HPP_

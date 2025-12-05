@@ -12,11 +12,15 @@
 
 #include <SFML/Graphics.hpp>
 
+#include "ASystem.hpp"
 #include "ecs/ECS.hpp"
 
-class ResetTriggersSystem {
+namespace rtype::games::rtype::client {
+class ResetTriggersSystem : public ::rtype::engine::ASystem {
    public:
-    static void update(const std::shared_ptr<ECS::Registry>& registry);
+    ResetTriggersSystem();
+    void update(ECS::Registry& registry, float dt) override;
 };
+}  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_RESETTRIGGERSSYSTEM_HPP_

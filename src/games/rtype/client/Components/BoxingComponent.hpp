@@ -9,6 +9,7 @@
 #define SRC_GAMES_RTYPE_CLIENT_COMPONENTS_BOXINGCOMPONENT_HPP_
 #include <SFML/Graphics/RectangleShape.hpp>
 
+namespace rtype::games::rtype::client {
 struct BoxingComponent {
     sf::RectangleShape box;
     sf::FloatRect bounds;
@@ -23,5 +24,5 @@ struct BoxingComponent {
         this->box.setOutlineThickness(1.f);
     }
 };
-
+}  // namespace rtype::games::rtype::client
 #endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_BOXINGCOMPONENT_HPP_

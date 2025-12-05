@@ -6,6 +6,7 @@ target_include_directories(test_client_manager PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/server
     ${CMAKE_SOURCE_DIR}/src/common
+    ${CMAKE_SOURCE_DIR}/include
 )
 
 target_compile_features(test_client_manager PRIVATE cxx_std_20)
@@ -29,6 +30,7 @@ target_include_directories(test_server_app PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/server
     ${CMAKE_SOURCE_DIR}/src/common
+    ${CMAKE_SOURCE_DIR}/include
 )
 
 target_compile_features(test_server_app PRIVATE cxx_std_20)

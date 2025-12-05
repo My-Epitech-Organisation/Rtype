@@ -8,6 +8,8 @@
 #ifndef SRC_CLIENT_CLIENTAPP_HPP_
 #define SRC_CLIENT_CLIENTAPP_HPP_
 
+#include <rtype/ecs.hpp>
+
 #include "Graphic/Graphic.hpp"
 
 class ClientApp {
@@ -15,7 +17,7 @@ class ClientApp {
     Graphic _graphic;
 
    public:
-    explicit ClientApp(const std::shared_ptr<ECS::Registry>& registry);
+    explicit ClientApp(std::shared_ptr<ECS::Registry> registry);
     ~ClientApp() = default;
 
     void run();

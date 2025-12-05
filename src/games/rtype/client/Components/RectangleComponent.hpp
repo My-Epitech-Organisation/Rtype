@@ -10,6 +10,7 @@
 #include <utility>
 
 #include <SFML/Graphics/RectangleShape.hpp>
+namespace rtype::games::rtype::client {
 
 struct Rectangle {
     std::pair<float, float> size;
@@ -25,5 +26,6 @@ struct Rectangle {
         : size(size), mainColor(color), hoveredColor(hoveredColor) {}
     Rectangle(const Rectangle& other) = default;
 };
+}  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_RECTANGLECOMPONENT_HPP_

@@ -10,11 +10,14 @@
 
 #include <functional>
 
+namespace rtype::games::rtype::client {
+
 template <typename... Args>
 struct Button {
     std::function<void(Args...)> callback;
     explicit Button(std::function<void(Args...)> callback)
         : callback(callback) {}
 };
+}  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_BUTTONCOMPONENT_HPP_

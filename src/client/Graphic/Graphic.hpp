@@ -11,11 +11,18 @@
 #include <memory>
 
 #include <SFML/Graphics.hpp>
+#include <rtype/ecs.hpp>
 
+#include "../../games/rtype/client/Systems/BoxingSystem.hpp"
+#include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
+#include "../../games/rtype/client/Systems/MovementSystem.hpp"
+#include "../../games/rtype/client/Systems/RenderSystem.hpp"
+#include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
 #include "ecs/ECS.hpp"
+#include "src/games/rtype/client/Systems/ParallaxScrolling.hpp"
 
 class Graphic {
    public:
@@ -29,8 +36,20 @@ class Graphic {
     std::shared_ptr<KeyboardActions> _keybinds;
 
     std::shared_ptr<sf::RenderWindow> _window;
-    sf::View _view;
+    std::shared_ptr<sf::View> _view;
     sf::Clock _mainClock;
+
+    // Systems
+    std::unique_ptr<::rtype::games::rtype::client::MovementSystem>
+        _movementSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ButtonUpdateSystem>
+        _buttonUpdateSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ParallaxScrolling>
+        _parallaxScrolling;
+    std::unique_ptr<::rtype::games::rtype::client::RenderSystem> _renderSystem;
+    std::unique_ptr<::rtype::games::rtype::client::BoxingSystem> _boxingSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ResetTriggersSystem>
+        _resetTriggersSystem;
 
     void _pollEvents();
     void _update();
@@ -39,7 +58,7 @@ class Graphic {
    public:
     void loop();
 
-    explicit Graphic(const std::shared_ptr<ECS::Registry>& registry);
+    explicit Graphic(std::shared_ptr<ECS::Registry> registry);
     ~Graphic() = default;
 
     Graphic(const Graphic&) = delete;

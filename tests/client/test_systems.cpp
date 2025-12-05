@@ -39,7 +39,8 @@ TEST_F(SystemsTest, MovementSystem_Update_AppliesVelocity) {
     registry->emplaceComponent<Position>(entity, Position{0.0f, 0.0f});
     registry->emplaceComponent<Image>(entity, Image{texture});
 
-    MovementSystem::update(registry, 1.0f);
+    MovementSystem movementSystem;
+    movementSystem.update(*registry, 1.0f);
 
     auto& pos = registry->getComponent<Position>(entity);
     EXPECT_EQ(pos.x, 1.0f);
@@ -50,7 +51,9 @@ TEST_F(SystemsTest, RenderSystem_Draw_DoesNotThrow) {
     auto entity = registry->spawnEntity();
     // Add renderable components if needed
 
-    EXPECT_NO_THROW(RenderSystem::draw(registry, window));
+    auto windowPtr = std::make_shared<sf::RenderWindow>(window);
+    RenderSystem renderSystem(windowPtr);
+    EXPECT_NO_THROW(renderSystem.update(*registry, 0.f));
 }
 
 TEST_F(SystemsTest, MovementSystem_NoVelocity_NoChange) {
@@ -58,7 +61,8 @@ TEST_F(SystemsTest, MovementSystem_NoVelocity_NoChange) {
     registry->emplaceComponent<Position>(entity, Position{10.0f, 20.0f});
     // No velocity
 
-    MovementSystem::update(registry, 1.0f);
+    MovementSystem movementSystem;
+    movementSystem.update(*registry, 1.0f);
 
     auto& pos = registry->getComponent<Position>(entity);
     EXPECT_EQ(pos.x, 10.0f);

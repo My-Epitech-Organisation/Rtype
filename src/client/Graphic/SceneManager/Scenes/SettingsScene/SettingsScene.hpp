@@ -21,7 +21,7 @@
 
 class SettingsScene : public AScene {
    private:
-    const std::shared_ptr<KeyboardActions>& _keybinds;
+    std::shared_ptr<KeyboardActions> _keybinds;
     std::optional<GameAction> _actionToRebind;
     std::map<GameAction, ECS::Entity> _actionButtons;
 
@@ -31,14 +31,14 @@ class SettingsScene : public AScene {
 
    public:
     void update() override;
-    void render(const std::shared_ptr<sf::RenderWindow>& window) override;
+    void render(std::shared_ptr<sf::RenderWindow> window) override;
     void pollEvents(const sf::Event& e) override;
 
-    SettingsScene(const std::shared_ptr<ECS::Registry>& ecs,
-                  const std::shared_ptr<AssetManager>& textureManager,
-                  const std::shared_ptr<sf::RenderWindow>& window,
+    SettingsScene(std::shared_ptr<ECS::Registry> ecs,
+                  std::shared_ptr<AssetManager> textureManager,
+                  std::shared_ptr<sf::RenderWindow> window,
                   std::function<void(const SceneManager::Scene&)> switchToScene,
-                  const std::shared_ptr<KeyboardActions>& keybinds);
+                  std::shared_ptr<KeyboardActions> keybinds);
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENE_HPP_

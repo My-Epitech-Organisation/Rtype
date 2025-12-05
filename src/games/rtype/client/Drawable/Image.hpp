@@ -12,10 +12,12 @@
 #include "Components/PositionComponent.hpp"
 #include "ecs/core/Entity.hpp"
 
+namespace rtype::games::rtype::client {
 struct DrawableImage {
     ECS::Entity entity;
     Image* img;
-    Position* pos;
+    ::rtype::games::rtype::shared::Position* pos;
     ZIndex* zindex;
 };
+}  // namespace rtype::games::rtype::client
 #endif  // SRC_GAMES_RTYPE_CLIENT_DRAWABLE_IMAGE_HPP_

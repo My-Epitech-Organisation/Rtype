@@ -10,8 +10,7 @@
 #include <functional>
 #include <random>
 
-#include "../../../../../engine/AGameEngine.hpp"
-#include "../../../../../engine/ASystem.hpp"
+#include <rtype/engine.hpp>
 
 namespace rtype::games::rtype::server {
 

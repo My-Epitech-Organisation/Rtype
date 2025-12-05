@@ -14,23 +14,30 @@
 
 #include "../Components/RectangleComponent.hpp"
 #include "../Components/UserEventComponent.hpp"
+#include "ASystem.hpp"
 #include "ecs/ECS.hpp"
 
-class EventSystem {
+namespace rtype::games::rtype::client {
+class EventSystem : public ::rtype::engine::ASystem {
    private:
+    const sf::Event& _event;
+    std::shared_ptr<sf::RenderWindow> _window;
+
+    void _mouseMoved(
+        ::rtype::games::rtype::client::UserEvent& actionType,
+        const ::rtype::games::rtype::client::Rectangle& rect) const;
+    void _mousePressed(
+        ::rtype::games::rtype::client::UserEvent& actionType,
+        const ::rtype::games::rtype::client::Rectangle& rect) const;
+    void _mouseReleased(
+        ::rtype::games::rtype::client::UserEvent& actionType,
+        const ::rtype::games::rtype::client::Rectangle& rect) const;
+
    public:
-    static void processEvents(const std::shared_ptr<ECS::Registry>& registry,
-                              const sf::Event& e,
-                              const std::shared_ptr<sf::RenderWindow>& window);
-    static void mouseMoved(const sf::Event& e,
-                           const std::shared_ptr<sf::RenderWindow>& window,
-                           UserEvent& actionType, const Rectangle& rect);
-    static void mousePressed(const sf::Event& e,
-                             const std::shared_ptr<sf::RenderWindow>& window,
-                             UserEvent& actionType, const Rectangle& rect);
-    static void mouseReleased(const sf::Event& e,
-                              const std::shared_ptr<sf::RenderWindow>& window,
-                              UserEvent& actionType, const Rectangle& rect);
+    void update(ECS::Registry& registry, float) override;
+    EventSystem(std::shared_ptr<sf::RenderWindow> window,
+                const sf::Event& event);
 };
+}  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_EVENTSYSTEM_HPP_

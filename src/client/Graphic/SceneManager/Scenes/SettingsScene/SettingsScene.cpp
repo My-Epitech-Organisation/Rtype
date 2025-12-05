@@ -39,17 +39,23 @@ void SettingsScene::_initKeybindSection() {
 
         auto btn = EntityFactory::createButton(
             this->_registry,
-            Text(this->_assetsManager->fontManager->get("title_font"),
-                 sf::Color::White, 24, textStr),
-            Position(x, y),
-            Rectangle({500, 50}, sf::Color::Blue, sf::Color::Red),
+            rtype::games::rtype::client::Text(
+                this->_assetsManager->fontManager->get("title_font"),
+                sf::Color::White, 24, textStr),
+            rtype::games::rtype::shared::Position(x, y),
+            rtype::games::rtype::client::Rectangle({500, 50}, sf::Color::Blue,
+                                                   sf::Color::Red),
             std::function<void()>([this, action]() {
                 if (this->_actionToRebind.has_value()) return;
                 this->_actionToRebind = action;
                 ECS::Entity entity = this->_actionButtons[action];
-                if (this->_registry->hasComponent<Text>(entity)) {
+                if (this->_registry
+                        ->hasComponent<rtype::games::rtype::client::Text>(
+                            entity)) {
                     auto& textComp =
-                        this->_registry->getComponent<Text>(entity);
+                        this->_registry
+                            ->getComponent<rtype::games::rtype::client::Text>(
+                                entity);
                     std::string waitText =
                         SettingsSceneUtils::actionToString(action) +
                         ": Press any key...";
@@ -91,7 +97,7 @@ void SettingsScene::_initWindowSection() {
 
 void SettingsScene::update() {}
 
-void SettingsScene::render(const std::shared_ptr<sf::RenderWindow>& window) {}
+void SettingsScene::render(std::shared_ptr<sf::RenderWindow> window) {}
 
 void SettingsScene::pollEvents(const sf::Event& e) {
     if (this->_actionToRebind.has_value()) {
@@ -106,8 +112,12 @@ void SettingsScene::pollEvents(const sf::Event& e) {
                 ": " + keyName;
 
             ECS::Entity entity = this->_actionButtons[*this->_actionToRebind];
-            if (this->_registry->hasComponent<Text>(entity)) {
-                auto& textComp = this->_registry->getComponent<Text>(entity);
+            if (this->_registry
+                    ->hasComponent<rtype::games::rtype::client::Text>(entity)) {
+                auto& textComp =
+                    this->_registry
+                        ->getComponent<rtype::games::rtype::client::Text>(
+                            entity);
                 textComp.textContent = text;
                 textComp.text.setString(text);
             }
@@ -118,11 +128,11 @@ void SettingsScene::pollEvents(const sf::Event& e) {
 }
 
 SettingsScene::SettingsScene(
-    const std::shared_ptr<ECS::Registry>& ecs,
-    const std::shared_ptr<AssetManager>& textureManager,
-    const std::shared_ptr<sf::RenderWindow>& window,
+    std::shared_ptr<ECS::Registry> ecs,
+    std::shared_ptr<AssetManager> textureManager,
+    std::shared_ptr<sf::RenderWindow> window,
     std::function<void(const SceneManager::Scene&)> switchToScene,
-    const std::shared_ptr<KeyboardActions>& keybinds)
+    std::shared_ptr<KeyboardActions> keybinds)
     : AScene(ecs, textureManager, window), _keybinds(keybinds) {
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "Settings"));
@@ -133,10 +143,12 @@ SettingsScene::SettingsScene(
 
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
-        Text(this->_assetsManager->fontManager->get("title_font"),
-             sf::Color::White, 36, "Back"),
-        Position(100, 900),
-        Rectangle({400, 75}, sf::Color::Blue, sf::Color::Red),
+        rtype::games::rtype::client::Text(
+            this->_assetsManager->fontManager->get("title_font"),
+            sf::Color::White, 36, "Back"),
+        rtype::games::rtype::shared::Position(100, 900),
+        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
+                                               sf::Color::Red),
         std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::MAIN_MENU);

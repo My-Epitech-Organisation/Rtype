@@ -12,12 +12,17 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
+#include "ASystem.hpp"
 #include "ecs/ECS.hpp"
 
-class BoxingSystem {
-   public:
-    static void draw(const std::shared_ptr<ECS::Registry>& registry,
-                     const std::shared_ptr<sf::RenderWindow>& window);
-};
+namespace rtype::games::rtype::client {
+class BoxingSystem : public ::rtype::engine::ASystem {
+   private:
+    std::shared_ptr<sf::RenderWindow> _window;
 
+   public:
+    explicit BoxingSystem(std::shared_ptr<sf::RenderWindow> window);
+    void update(ECS::Registry& registry, float dt) override;
+};
+}  // namespace rtype::games::rtype::client
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BOXINGSYSTEM_HPP_

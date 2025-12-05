@@ -16,11 +16,16 @@
 #include "../Components/UserEventComponent.hpp"
 #include "SceneManager/SceneException.hpp"
 
-void ButtonUpdateSystem::update(
-    const std::shared_ptr<ECS::Registry>& registry,
-    const std::shared_ptr<sf::RenderWindow>& window) {
-    registry->view<Button<>, UserEvent>().each(
-        [](auto _, auto& buttonAct, auto& actionType) {
+namespace rtype::games::rtype::client {
+ButtonUpdateSystem::ButtonUpdateSystem(std::shared_ptr<sf::RenderWindow> window)
+    : ::rtype::engine::ASystem("ButtonUpdateSystem"),
+      _window(std::move(window)) {}
+
+void ButtonUpdateSystem::update(ECS::Registry& registry, float dt) {
+    registry
+        .view<::rtype::games::rtype::client::Button<>,
+              ::rtype::games::rtype::client::UserEvent>()
+        .each([](auto _, auto& buttonAct, auto& actionType) {
             if (actionType.isClicked) {
                 try {
                     buttonAct.callback();
@@ -30,8 +35,11 @@ void ButtonUpdateSystem::update(
                 }
             }
         });
-    registry->view<Rectangle, UserEvent, ButtonTag>().each(
-        [](auto _, auto& rect, auto& actionType, auto __) {
+    registry
+        .view<::rtype::games::rtype::client::Rectangle,
+              ::rtype::games::rtype::client::UserEvent,
+              ::rtype::games::rtype::client::ButtonTag>()
+        .each([](auto _, auto& rect, auto& actionType, auto __) {
             if (actionType.isHovered) {
                 rect.currentColor = rect.hoveredColor;
             } else {
@@ -39,3 +47,4 @@ void ButtonUpdateSystem::update(
             }
         });
 }
+}  // namespace rtype::games::rtype::client

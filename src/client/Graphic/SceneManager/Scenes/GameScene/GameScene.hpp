@@ -20,7 +20,7 @@ static constexpr float PlayerMovementSpeed = 300.0f;
 
 class GameScene : public AScene {
    private:
-    const std::shared_ptr<KeyboardActions>& _keybinds;
+    std::shared_ptr<KeyboardActions> _keybinds;
 
     void _updateUserMovementUp();
     void _updateUserMovementDown();
@@ -31,13 +31,13 @@ class GameScene : public AScene {
 
    public:
     void update() override;
-    void render(const std::shared_ptr<sf::RenderWindow>& window) override;
+    void render(std::shared_ptr<sf::RenderWindow> window) override;
     void pollEvents(const sf::Event& e) override;
 
-    GameScene(const std::shared_ptr<ECS::Registry>& ecs,
-              const std::shared_ptr<AssetManager>& textureManager,
-              const std::shared_ptr<sf::RenderWindow>& window,
-              const std::shared_ptr<KeyboardActions>& keybinds,
+    GameScene(std::shared_ptr<ECS::Registry> ecs,
+              std::shared_ptr<AssetManager> textureManager,
+              std::shared_ptr<sf::RenderWindow> window,
+              std::shared_ptr<KeyboardActions> keybinds,
               std::function<void(const SceneManager::Scene&)> switchToScene);
 };
 

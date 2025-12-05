@@ -12,12 +12,18 @@
 
 #include <SFML/Graphics/View.hpp>
 
+#include "ASystem.hpp"
 #include "ecs/ECS.hpp"
 
-class ParallaxScrolling {
+namespace rtype::games::rtype::client {
+class ParallaxScrolling : public ::rtype::engine::ASystem {
+   private:
+    std::shared_ptr<sf::View> _view;
+
    public:
-    static void update(const std::shared_ptr<ECS::Registry>& registry,
-                       const sf::View& view);
+    explicit ParallaxScrolling(std::shared_ptr<sf::View> view);
+    void update(ECS::Registry& registry, float dt) override;
 };
+}  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_PARALLAXSCROLLING_HPP_

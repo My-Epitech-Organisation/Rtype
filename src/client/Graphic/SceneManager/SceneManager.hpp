@@ -31,13 +31,11 @@ class SceneManager {
 
     std::map<Scene, std::function<std::unique_ptr<IScene>()>> _sceneList;
     std::unique_ptr<IScene> _activeScene;
-    const std::shared_ptr<sf::RenderWindow>& _window;
+    std::shared_ptr<sf::RenderWindow> _window;
 
-    std::function<void(const Scene&)> _switchToScene =
-        std::function<void(const Scene&)>(
-            [this](const Scene& scene) { this->setCurrentScene(scene); });
+    std::function<void(const Scene&)> _switchToScene;
 
-    const std::shared_ptr<KeyboardActions>& _keybinds;
+    std::shared_ptr<KeyboardActions> _keybinds;
 
    public:
     [[nodiscard]] Scene getCurrentScene() const { return _currentScene; }
@@ -52,10 +50,10 @@ class SceneManager {
         return false;
     }
 
-    SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
-                 const std::shared_ptr<AssetManager>& assetManager,
-                 const std::shared_ptr<sf::RenderWindow>& window,
-                 const std::shared_ptr<KeyboardActions>& keybinds);
+    SceneManager(std::shared_ptr<ECS::Registry> ecs,
+                 std::shared_ptr<AssetManager> assetManager,
+                 std::shared_ptr<sf::RenderWindow> window,
+                 std::shared_ptr<KeyboardActions> keybinds);
     ~SceneManager() = default;
 };
 

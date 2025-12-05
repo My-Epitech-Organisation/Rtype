@@ -7,14 +7,22 @@
 
 #ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BUTTONUPDATESYSTEM_HPP_
 #define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BUTTONUPDATESYSTEM_HPP_
-#include <SFML/Graphics/RenderWindow.hpp>
 
-#include "ecs/core/Registry/Registry.hpp"
+#include <SFML/Graphics.hpp>
 
-class ButtonUpdateSystem {
+#include "ASystem.hpp"
+#include "SFML/Window.hpp"
+#include "ecs/ECS.hpp"
+
+namespace rtype::games::rtype::client {
+class ButtonUpdateSystem : public ::rtype::engine::ASystem {
+   private:
+    std::shared_ptr<sf::RenderWindow> _window;
+
    public:
-    static void update(const std::shared_ptr<ECS::Registry>& registry,
-                       const std::shared_ptr<sf::RenderWindow>& window);
+    explicit ButtonUpdateSystem(std::shared_ptr<sf::RenderWindow> window);
+    void update(ECS::Registry& registry, float dt) override;
 };
+}  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BUTTONUPDATESYSTEM_HPP_
