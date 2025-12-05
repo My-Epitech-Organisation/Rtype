@@ -18,7 +18,8 @@ void EventSystem::update(ECS::Registry& registry, float) {
     registry
         .view<::rtype::games::rtype::client::Rectangle,
               ::rtype::games::rtype::client::UserEvent>()
-        .each([this](auto _, const ::rtype::games::rtype::client::Rectangle& rect,
+        .each([this](auto _,
+                     const ::rtype::games::rtype::client::Rectangle& rect,
                      ::rtype::games::rtype::client::UserEvent& actionType) {
             this->_mouseMoved(actionType, rect);
             this->_mousePressed(actionType, rect);

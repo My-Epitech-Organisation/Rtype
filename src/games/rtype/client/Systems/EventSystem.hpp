@@ -23,8 +23,9 @@ class EventSystem : public ::rtype::engine::ASystem {
     const sf::Event& _event;
     std::shared_ptr<sf::RenderWindow> _window;
 
-    void _mouseMoved(::rtype::games::rtype::client::UserEvent& actionType,
-                     const ::rtype::games::rtype::client::Rectangle& rect) const;
+    void _mouseMoved(
+        ::rtype::games::rtype::client::UserEvent& actionType,
+        const ::rtype::games::rtype::client::Rectangle& rect) const;
     void _mousePressed(
         ::rtype::games::rtype::client::UserEvent& actionType,
         const ::rtype::games::rtype::client::Rectangle& rect) const;

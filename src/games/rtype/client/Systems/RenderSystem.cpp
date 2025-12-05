@@ -37,10 +37,8 @@ void RenderSystem::update(ECS::Registry& registry, float dt) {
             } catch (...) {
             }
             try {
-                auto& texture =
-                    registry
-                        .getComponent<::rtype::games::rtype::client::TextureRect>(
-                            entt);
+                auto& texture = registry.getComponent<
+                    ::rtype::games::rtype::client::TextureRect>(entt);
                 img.sprite.setTextureRect(texture.rect);
             } catch (...) {
             }

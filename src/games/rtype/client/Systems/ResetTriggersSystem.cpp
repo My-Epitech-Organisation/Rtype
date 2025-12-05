@@ -19,4 +19,4 @@ void ResetTriggersSystem::update(ECS::Registry& registry, float dt) {
             event.isReleased = false;
         });
 }
-}
+}  // namespace rtype::games::rtype::client

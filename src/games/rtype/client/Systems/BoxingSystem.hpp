@@ -16,13 +16,13 @@
 #include "ecs/ECS.hpp"
 
 namespace rtype::games::rtype::client {
-    class BoxingSystem : public ::rtype::engine::ASystem {
-    private:
-        std::shared_ptr<sf::RenderWindow> _window;
+class BoxingSystem : public ::rtype::engine::ASystem {
+   private:
+    std::shared_ptr<sf::RenderWindow> _window;
 
-    public:
-        explicit BoxingSystem(std::shared_ptr<sf::RenderWindow> window);
-        void update(ECS::Registry& registry, float dt) override;
-    };
+   public:
+    explicit BoxingSystem(std::shared_ptr<sf::RenderWindow> window);
+    void update(ECS::Registry& registry, float dt) override;
+};
 }  // namespace rtype::games::rtype::client
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BOXINGSYSTEM_HPP_
