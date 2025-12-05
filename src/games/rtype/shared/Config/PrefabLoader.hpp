@@ -9,10 +9,10 @@
 
 #include <string>
 
+#include "../Components.hpp"
+#include "../Components/Tags.hpp"
+#include "EntityConfig/EntityConfig.hpp"
 #include "engine/ecs/ECS.hpp"
-#include "EntityConfig.hpp"
-#include "Components.hpp"
-#include "Components/Tags.hpp"
 
 namespace rtype::games::rtype::shared {
 
@@ -34,7 +34,7 @@ namespace rtype::games::rtype::shared {
  * @endcode
  */
 class PrefabLoader {
- public:
+   public:
     /**
      * @brief Register all entity prefabs from loaded configs
      * @param prefabs PrefabManager to populate
@@ -53,28 +53,22 @@ class PrefabLoader {
         auto& configRegistry = EntityConfigRegistry::getInstance();
 
         for (const auto& [id, config] : configRegistry.getAllEnemies()) {
-            // Capture config by value for the lambda
-            prefabs.registerPrefab("enemy_" + id,
+            prefabs.registerPrefab(
+                "enemy_" + id,
                 [cfg = config](ECS::Registry& registry, ECS::Entity entity) {
-                    // Transform at origin (caller can customize position)
-                    registry.emplaceComponent<TransformComponent>(entity, 0.0f, 0.0f, 0.0f);
-
-                    // Velocity based on behavior
-                    float velX = (cfg.behavior == AIBehavior::MoveLeft) ? -cfg.speed : 0.0f;
-                    registry.emplaceComponent<VelocityComponent>(entity, velX, 0.0f);
-
-                    // Health from config
-                    registry.emplaceComponent<HealthComponent>(entity, cfg.health, cfg.health);
-
-                    // AI behavior
-                    registry.emplaceComponent<AIComponent>(entity,
-                        cfg.behavior, cfg.speed, 0.0f, 0.0f, 0.0f);
-
-                    // Hitbox
-                    registry.emplaceComponent<BoundingBoxComponent>(entity,
-                        cfg.hitboxWidth, cfg.hitboxHeight);
-
-                    // Tag as enemy
+                    registry.emplaceComponent<TransformComponent>(entity, 0.0f,
+                                                                  0.0f, 0.0f);
+                    float velX = (cfg.behavior == AIBehavior::MoveLeft)
+                                     ? -cfg.speed
+                                     : 0.0f;
+                    registry.emplaceComponent<VelocityComponent>(entity, velX,
+                                                                 0.0f);
+                    registry.emplaceComponent<HealthComponent>(
+                        entity, cfg.health, cfg.health);
+                    registry.emplaceComponent<AIComponent>(
+                        entity, cfg.behavior, cfg.speed, 0.0f, 0.0f, 0.0f);
+                    registry.emplaceComponent<BoundingBoxComponent>(
+                        entity, cfg.hitboxWidth, cfg.hitboxHeight);
                     registry.emplaceComponent<EnemyTag>(entity);
                 });
         }
@@ -87,21 +81,18 @@ class PrefabLoader {
         auto& configRegistry = EntityConfigRegistry::getInstance();
 
         for (const auto& [id, config] : configRegistry.getAllProjectiles()) {
-            prefabs.registerPrefab("projectile_" + id,
+            prefabs.registerPrefab(
+                "projectile_" + id,
                 [cfg = config](ECS::Registry& registry, ECS::Entity entity) {
-                    registry.emplaceComponent<TransformComponent>(entity, 0.0f, 0.0f, 0.0f);
+                    registry.emplaceComponent<TransformComponent>(entity, 0.0f,
+                                                                  0.0f, 0.0f);
 
-                    // Default velocity (rightward), caller customizes direction
-                    registry.emplaceComponent<VelocityComponent>(entity, cfg.speed, 0.0f);
-
-                    // Hitbox
-                    registry.emplaceComponent<BoundingBoxComponent>(entity,
-                        cfg.hitboxWidth, cfg.hitboxHeight);
-
-                    // Store damage in health (or create DamageComponent)
-                    registry.emplaceComponent<HealthComponent>(entity, cfg.damage, cfg.damage);
-
-                    // Tag as projectile
+                    registry.emplaceComponent<VelocityComponent>(
+                        entity, cfg.speed, 0.0f);
+                    registry.emplaceComponent<BoundingBoxComponent>(
+                        entity, cfg.hitboxWidth, cfg.hitboxHeight);
+                    registry.emplaceComponent<HealthComponent>(
+                        entity, cfg.damage, cfg.damage);
                     registry.emplaceComponent<ProjectileTag>(entity);
                 });
         }
@@ -114,13 +105,17 @@ class PrefabLoader {
         auto& configRegistry = EntityConfigRegistry::getInstance();
 
         for (const auto& [id, config] : configRegistry.getAllPlayers()) {
-            prefabs.registerPrefab("player_" + id,
+            prefabs.registerPrefab(
+                "player_" + id,
                 [cfg = config](ECS::Registry& registry, ECS::Entity entity) {
-                    registry.emplaceComponent<TransformComponent>(entity, 0.0f, 0.0f, 0.0f);
-                    registry.emplaceComponent<VelocityComponent>(entity, 0.0f, 0.0f);
-                    registry.emplaceComponent<HealthComponent>(entity, cfg.health, cfg.health);
-                    registry.emplaceComponent<BoundingBoxComponent>(entity,
-                        cfg.hitboxWidth, cfg.hitboxHeight);
+                    registry.emplaceComponent<TransformComponent>(entity, 0.0f,
+                                                                  0.0f, 0.0f);
+                    registry.emplaceComponent<VelocityComponent>(entity, 0.0f,
+                                                                 0.0f);
+                    registry.emplaceComponent<HealthComponent>(
+                        entity, cfg.health, cfg.health);
+                    registry.emplaceComponent<BoundingBoxComponent>(
+                        entity, cfg.hitboxWidth, cfg.hitboxHeight);
                     registry.emplaceComponent<PlayerTag>(entity);
                 });
         }
@@ -133,12 +128,15 @@ class PrefabLoader {
         auto& configRegistry = EntityConfigRegistry::getInstance();
 
         for (const auto& [id, config] : configRegistry.getAllPowerUps()) {
-            prefabs.registerPrefab("powerup_" + id,
+            prefabs.registerPrefab(
+                "powerup_" + id,
                 [cfg = config](ECS::Registry& registry, ECS::Entity entity) {
-                    registry.emplaceComponent<TransformComponent>(entity, 0.0f, 0.0f, 0.0f);
-                    registry.emplaceComponent<VelocityComponent>(entity, -50.0f, 0.0f);  // Drift left
-                    registry.emplaceComponent<BoundingBoxComponent>(entity,
-                        cfg.hitboxWidth, cfg.hitboxHeight);
+                    registry.emplaceComponent<TransformComponent>(entity, 0.0f,
+                                                                  0.0f, 0.0f);
+                    registry.emplaceComponent<VelocityComponent>(
+                        entity, -50.0f, 0.0f);
+                    registry.emplaceComponent<BoundingBoxComponent>(
+                        entity, cfg.hitboxWidth, cfg.hitboxHeight);
                     registry.emplaceComponent<PickupTag>(entity);
                 });
         }
@@ -148,22 +146,27 @@ class PrefabLoader {
      * @brief Helper to get config values (for systems that need stats)
      */
     [[nodiscard]] static float getPlayerSpeed(const std::string& playerId) {
-        const auto* config = EntityConfigRegistry::getInstance().getPlayer(playerId);
+        const auto* config =
+            EntityConfigRegistry::getInstance().getPlayer(playerId);
         return config ? config->speed : 200.0f;
     }
 
     [[nodiscard]] static float getPlayerFireRate(const std::string& playerId) {
-        const auto* config = EntityConfigRegistry::getInstance().getPlayer(playerId);
+        const auto* config =
+            EntityConfigRegistry::getInstance().getPlayer(playerId);
         return config ? config->fireRate : 5.0f;
     }
 
     [[nodiscard]] static int32_t getEnemyScore(const std::string& enemyId) {
-        const auto* config = EntityConfigRegistry::getInstance().getEnemy(enemyId);
+        const auto* config =
+            EntityConfigRegistry::getInstance().getEnemy(enemyId);
         return config ? config->scoreValue : 100;
     }
 
-    [[nodiscard]] static int32_t getProjectileDamage(const std::string& projectileId) {
-        const auto* config = EntityConfigRegistry::getInstance().getProjectile(projectileId);
+    [[nodiscard]] static int32_t getProjectileDamage(
+        const std::string& projectileId) {
+        const auto* config =
+            EntityConfigRegistry::getInstance().getProjectile(projectileId);
         return config ? config->damage : 10;
     }
 };
