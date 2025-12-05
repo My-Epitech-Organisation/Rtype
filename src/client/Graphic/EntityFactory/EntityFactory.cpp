@@ -7,13 +7,6 @@
 
 #include "EntityFactory.hpp"
 
-#include "../../../games/rtype/client/Components/ImageComponent.hpp"
-#include "../../../games/rtype/client/Components/ParallaxComponent.hpp"
-#include "../../../games/rtype/client/Components/SizeComponent.hpp"
-#include "../../../games/rtype/client/Components/TagComponent.hpp"
-#include "../../../games/rtype/client/Components/TextureRectComponent.hpp"
-#include "../../../games/rtype/shared/Components/PositionComponent.hpp"
-#include "../../../games/rtype/shared/Components/VelocityComponent.hpp"
 #include "Components/ImageComponent.hpp"
 #include "Components/ParallaxComponent.hpp"
 #include "Components/PositionComponent.hpp"
