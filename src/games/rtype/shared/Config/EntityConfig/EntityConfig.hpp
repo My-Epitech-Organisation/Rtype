@@ -81,12 +81,16 @@ class EntityConfigRegistry {
      */
     bool loadLevel(const std::string& filepath);
 
-    [[nodiscard]] OptionalRef<EnemyConfig> getEnemy(const std::string& id) const;
+    [[nodiscard]] OptionalRef<EnemyConfig> getEnemy(
+        const std::string& id) const;
     [[nodiscard]] OptionalRef<ProjectileConfig> getProjectile(
         const std::string& id) const;
-    [[nodiscard]] OptionalRef<PlayerConfig> getPlayer(const std::string& id) const;
-    [[nodiscard]] OptionalRef<PowerUpConfig> getPowerUp(const std::string& id) const;
-    [[nodiscard]] OptionalRef<LevelConfig> getLevel(const std::string& id) const;
+    [[nodiscard]] OptionalRef<PlayerConfig> getPlayer(
+        const std::string& id) const;
+    [[nodiscard]] OptionalRef<PowerUpConfig> getPowerUp(
+        const std::string& id) const;
+    [[nodiscard]] OptionalRef<LevelConfig> getLevel(
+        const std::string& id) const;
 
     [[nodiscard]] const std::unordered_map<std::string, EnemyConfig>&
     getAllEnemies() const {

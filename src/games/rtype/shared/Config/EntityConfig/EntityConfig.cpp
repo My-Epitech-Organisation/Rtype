@@ -132,7 +132,6 @@ bool EntityConfigRegistry::loadEnemies(const std::string& filepath) {
         std::cout << "[EntityConfig] Loaded " << m_enemies.size()
                   << " enemies from " << filepath << "\n";
         return true;
-
     } catch (const toml::parse_error& err) {
         std::cerr << "[EntityConfig] Failed to parse " << filepath << ": "
                   << err.what() << "\n";
@@ -174,7 +173,6 @@ bool EntityConfigRegistry::loadProjectiles(const std::string& filepath) {
         std::cout << "[EntityConfig] Loaded " << m_projectiles.size()
                   << " projectiles from " << filepath << "\n";
         return true;
-
     } catch (const toml::parse_error& err) {
         std::cerr << "[EntityConfig] Failed to parse " << filepath << ": "
                   << err.what() << "\n";
@@ -218,7 +216,6 @@ bool EntityConfigRegistry::loadPlayers(const std::string& filepath) {
         std::cout << "[EntityConfig] Loaded " << m_players.size()
                   << " players from " << filepath << "\n";
         return true;
-
     } catch (const toml::parse_error& err) {
         std::cerr << "[EntityConfig] Failed to parse " << filepath << ": "
                   << err.what() << "\n";
@@ -258,7 +255,6 @@ bool EntityConfigRegistry::loadPowerUps(const std::string& filepath) {
         std::cout << "[EntityConfig] Loaded " << m_powerUps.size()
                   << " power-ups from " << filepath << "\n";
         return true;
-
     } catch (const toml::parse_error& err) {
         std::cerr << "[EntityConfig] Failed to parse " << filepath << ": "
                   << err.what() << "\n";
@@ -314,9 +310,7 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
             std::cout << "[EntityConfig] Loaded level: " << config.id << "\n";
             return true;
         }
-
         return false;
-
     } catch (const toml::parse_error& err) {
         std::cerr << "[EntityConfig] Failed to parse level " << filepath << ": "
                   << err.what() << "\n";
@@ -324,7 +318,8 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
     }
 }
 
-OptionalRef<EnemyConfig> EntityConfigRegistry::getEnemy(const std::string& id) const {
+OptionalRef<EnemyConfig> EntityConfigRegistry::getEnemy(
+    const std::string& id) const {
     auto it = m_enemies.find(id);
     if (it != m_enemies.end()) {
         return std::cref(it->second);
@@ -359,7 +354,8 @@ OptionalRef<PowerUpConfig> EntityConfigRegistry::getPowerUp(
     return std::nullopt;
 }
 
-OptionalRef<LevelConfig> EntityConfigRegistry::getLevel(const std::string& id) const {
+OptionalRef<LevelConfig> EntityConfigRegistry::getLevel(
+    const std::string& id) const {
     auto it = m_levels.find(id);
     if (it != m_levels.end()) {
         return std::cref(it->second);
