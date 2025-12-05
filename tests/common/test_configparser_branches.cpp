@@ -893,4 +893,318 @@ width = 1280
     EXPECT_EQ(result2->video.width, 1280);
 }
 
+// =============================================================================
+// Additional Branch Coverage Tests - Resolution parsing edge cases
+// =============================================================================
+
+TEST_F(RTypeConfigParserTest, LoadFromStringResolutionWithoutX) {
+    std::string content = R"(
+[video]
+resolution = "1920"
+)";
+
+    RTypeConfigParser parser;
+    auto result = parser.loadFromString(content);
+
+    // Resolution parsing should fail due to missing 'x'
+    EXPECT_TRUE(result.has_value());
+    // Width/height should be defaults
+}
+
+TEST_F(RTypeConfigParserTest, LoadFromStringResolutionInvalidNumber) {
+    std::string content = R"(
+[video]
+resolution = "abcxdef"
+)";
+
+    RTypeConfigParser parser;
+    bool errorReported = false;
+    parser.setErrorCallback([&errorReported](const ConfigError& error) {
+        if (error.key == "resolution") {
+            errorReported = true;
+        }
+    });
+
+    auto result = parser.loadFromString(content);
+
+    EXPECT_TRUE(result.has_value());
+    EXPECT_TRUE(errorReported);
+}
+
+TEST_F(RTypeConfigParserTest, LoadFromStringResolutionPartialInvalid) {
+    std::string content = R"(
+[video]
+resolution = "1920xabc"
+)";
+
+    RTypeConfigParser parser;
+    bool errorReported = false;
+    parser.setErrorCallback([&errorReported](const ConfigError& error) {
+        if (error.key == "resolution") {
+            errorReported = true;
+        }
+    });
+
+    auto result = parser.loadFromString(content);
+
+    EXPECT_TRUE(result.has_value());
+    EXPECT_TRUE(errorReported);
+}
+
+TEST_F(RTypeConfigParserTest, LoadFromStringAllSectionsComplete) {
+    std::string content = R"(
+[video]
+width = 1920
+height = 1080
+fullscreen = true
+vsync = false
+maxFps = 144
+uiScale = 1.5
+
+[audio]
+masterVolume = 0.5
+musicVolume = 0.6
+sfxVolume = 0.7
+muted = true
+
+[network]
+serverAddress = "192.168.1.100"
+serverPort = 12345
+clientPort = 12346
+connectionTimeout = 10000
+maxRetries = 5
+tickrate = 128
+
+[server]
+port = 54321
+max_players = 8
+tickrate = 64
+mapName = "custom_map"
+
+[gameplay]
+difficulty = "hard"
+startingLives = 5
+waves = 20
+playerSpeed = 300.0
+enemySpeedMultiplier = 1.5
+friendlyFire = true
+
+[input]
+moveUp = "Up"
+moveDown = "Down"
+moveLeft = "Left"
+moveRight = "Right"
+fire = "X"
+pause = "P"
+mouseSensitivity = 2.0
+
+[paths]
+assetsPath = "/custom/assets"
+savesPath = "/custom/saves"
+logsPath = "/custom/logs"
+configPath = "/custom/config"
+)";
+
+    RTypeConfigParser parser;
+    auto result = parser.loadFromString(content);
+
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->video.width, 1920);
+    EXPECT_TRUE(result->video.fullscreen);
+    EXPECT_TRUE(result->audio.muted);
+    EXPECT_EQ(result->network.serverAddress, "192.168.1.100");
+    EXPECT_EQ(result->server.maxPlayers, 8);
+    EXPECT_EQ(result->gameplay.difficulty, "hard");
+    EXPECT_EQ(result->input.fire, "X");
+    EXPECT_EQ(result->paths.assetsPath, "/custom/assets");
+}
+
+TEST_F(RTypeConfigParserTest, SaveToFilePermissionDenied) {
+    RTypeGameConfig config;
+    RTypeConfigParser parser;
+
+    // Try to save to a read-only location
+    bool result = parser.saveToFile(config, "/proc/test.toml");
+
+    EXPECT_FALSE(result);
+}
+
+TEST_F(RTypeConfigParserTest, SaveToFileRenameFailure) {
+    RTypeGameConfig config;
+    RTypeConfigParser parser;
+
+    // Create a directory with the same name as target
+    auto targetPath = testDir / "blocked_config.toml";
+    std::filesystem::create_directories(targetPath);
+
+    bool result = parser.saveToFile(config, targetPath);
+
+    // Clean up before assertion
+    std::filesystem::remove_all(targetPath);
+
+    EXPECT_FALSE(result);
+}
+
+TEST_F(RTypeConfigParserTest, SerializeToStringAllFields) {
+    RTypeGameConfig config;
+    config.video.width = 2560;
+    config.video.height = 1440;
+    config.audio.masterVolume = 0.5f;
+    config.network.serverAddress = "test.server.com";
+
+    RTypeConfigParser parser;
+    std::string serialized = parser.serializeToString(config);
+
+    EXPECT_FALSE(serialized.empty());
+    EXPECT_NE(serialized.find("2560"), std::string::npos);
+    EXPECT_NE(serialized.find("1440"), std::string::npos);
+    EXPECT_NE(serialized.find("test.server.com"), std::string::npos);
+}
+
+TEST_F(RTypeConfigParserTest, LoadFromStringVideoSectionOnly) {
+    std::string content = R"(
+[video]
+width = 800
+height = 600
+fullscreen = false
+)";
+
+    RTypeConfigParser parser;
+    auto result = parser.loadFromString(content);
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->video.width, 800);
+    EXPECT_EQ(result->video.height, 600);
+    // Other sections should have defaults
+}
+
+TEST_F(RTypeConfigParserTest, LoadFromStringNetworkSectionOnly) {
+    std::string content = R"(
+[network]
+serverAddress = "localhost"
+serverPort = 8080
+)";
+
+    RTypeConfigParser parser;
+    auto result = parser.loadFromString(content);
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->network.serverAddress, "localhost");
+    EXPECT_EQ(result->network.serverPort, 8080);
+}
+
+TEST_F(RTypeConfigParserTest, LoadFromFileSaveRoundTrip) {
+    RTypeGameConfig original;
+    original.video.width = 1600;
+    original.video.height = 900;
+    original.audio.masterVolume = 0.75f;
+    original.network.serverAddress = "roundtrip.test";
+    original.gameplay.difficulty = "hard";  // Use valid difficulty value
+
+    auto filepath = testDir / "roundtrip.toml";
+
+    RTypeConfigParser parser;
+    ASSERT_TRUE(parser.saveToFile(original, filepath));
+
+    auto loaded = parser.loadFromFile(filepath);
+    ASSERT_TRUE(loaded.has_value());
+
+    EXPECT_EQ(loaded->video.width, original.video.width);
+    EXPECT_EQ(loaded->video.height, original.video.height);
+    EXPECT_NEAR(loaded->audio.masterVolume, original.audio.masterVolume, 0.01f);
+    EXPECT_EQ(loaded->network.serverAddress, original.network.serverAddress);
+    EXPECT_EQ(loaded->gameplay.difficulty, original.gameplay.difficulty);
+}
+
+TEST_F(RTypeConfigParserTest, ErrorCallbackMultipleErrors) {
+    std::vector<ConfigError> errors;
+    RTypeConfigParser parser;
+    parser.setErrorCallback([&errors](const ConfigError& error) {
+        errors.push_back(error);
+    });
+
+    // Cause multiple errors
+    [[maybe_unused]] auto r1 = parser.loadFromFile("nonexistent1.toml");
+    [[maybe_unused]] auto r2 = parser.loadFromFile("nonexistent2.toml");
+
+    EXPECT_GE(errors.size(), 2u);
+}
+
+TEST_F(RTypeConfigParserTest, LoadFromStringBooleanValues) {
+    std::string content = R"(
+[video]
+fullscreen = true
+vsync = false
+
+[audio]
+muted = true
+
+[gameplay]
+friendlyFire = false
+)";
+
+    RTypeConfigParser parser;
+    auto result = parser.loadFromString(content);
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_TRUE(result->video.fullscreen);
+    EXPECT_FALSE(result->video.vsync);
+    EXPECT_TRUE(result->audio.muted);
+    EXPECT_FALSE(result->gameplay.friendlyFire);
+}
+
+TEST_F(RTypeConfigParserTest, LoadFromStringFloatValues) {
+    std::string content = R"(
+[video]
+uiScale = 1.25
+
+[audio]
+masterVolume = 0.333
+musicVolume = 0.666
+sfxVolume = 0.999
+
+[input]
+mouseSensitivity = 2.5
+)";
+
+    RTypeConfigParser parser;
+    auto result = parser.loadFromString(content);
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_NEAR(result->video.uiScale, 1.25f, 0.001f);
+    EXPECT_NEAR(result->audio.masterVolume, 0.333f, 0.001f);
+    EXPECT_NEAR(result->input.mouseSensitivity, 2.5f, 0.001f);
+}
+
+TEST_F(RTypeConfigParserTest, LoadFromStringIntegerValues) {
+    std::string content = R"(
+[video]
+maxFps = 240
+
+[network]
+connectionTimeout = 30000
+maxRetries = 10
+tickrate = 128
+
+[server]
+max_players = 16
+tickrate = 32
+
+[gameplay]
+startingLives = 10
+waves = 50
+)";
+
+    RTypeConfigParser parser;
+    auto result = parser.loadFromString(content);
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->video.maxFps, 240);
+    EXPECT_EQ(result->network.connectionTimeout, 30000);
+    EXPECT_EQ(result->server.maxPlayers, 16);
+    EXPECT_EQ(result->gameplay.waves, 50);
+}
+
 }  // namespace rtype::game::config
+

@@ -952,3 +952,650 @@ url = "https://example.com/path?query=value&other=123"
     std::string url = parser.getString(*table, "section", "url", "");
     EXPECT_FALSE(url.empty());
 }
+
+// ============================================================================
+// Additional Branch Coverage Tests - saveToFile error paths
+// ============================================================================
+
+TEST_F(TomlParserBranchTest, SaveToFileCannotCreateTemp) {
+    toml::table table;
+    table.insert("key", "value");
+
+    // Try to save to a path where we cannot create files
+    // Using /proc which is read-only on Linux
+    TomlParser parser;
+    bool result = parser.saveToFile(table, "/proc/test_output.toml");
+
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(parser.getLastResult().errorMessage.empty());
+}
+
+TEST_F(TomlParserBranchTest, SaveToFileRenameFailure) {
+    toml::table table;
+    table.insert("key", "value");
+
+    // Create a directory with same name as target to cause rename failure
+    auto targetPath = testDir / "blocked_file.toml";
+    std::filesystem::create_directories(targetPath);
+
+    TomlParser parser;
+    bool result = parser.saveToFile(table, targetPath);
+
+    // Clean up the directory before assertion
+    std::filesystem::remove_all(targetPath);
+
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(parser.getLastResult().errorMessage.empty());
+}
+
+TEST_F(TomlParserBranchTest, SaveToFileNoParentPathBranch) {
+    toml::table table;
+    table.insert("key", "value");
+
+    // Use a filename-only path (no parent directory component)
+    // This tests the "filepath.has_parent_path()" branch being false
+    auto cwd = std::filesystem::current_path();
+    std::filesystem::current_path(testDir);
+
+    TomlParser parser;
+    bool result = parser.saveToFile(table, "no_parent.toml");
+
+    std::filesystem::current_path(cwd);
+
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(std::filesystem::exists(testDir / "no_parent.toml"));
+}
+
+// ============================================================================
+// Additional Branch Coverage Tests - getValue template branches
+// ============================================================================
+
+TEST_F(TomlParserBranchTest, GetValueSectionNotTable) {
+    const std::string toml = R"(
+section = "not a table"
+[other]
+key = 123
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // "section" exists but is not a table (it's a string)
+    // This tests the "if (auto* sec = table[section].as_table())" branch being false
+    int64_t value = parser.getValue<int64_t>(*table, "section", "key", 999);
+    EXPECT_EQ(value, 999);
+}
+
+TEST_F(TomlParserBranchTest, GetStringSectionNotTable) {
+    const std::string toml = R"(
+section = "not a table"
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Try getString on a section that exists but is not a table
+    std::string value = parser.getString(*table, "section", "key", "default");
+    EXPECT_EQ(value, "default");
+}
+
+TEST_F(TomlParserBranchTest, GetValueNullSection) {
+    const std::string toml = R"(
+[real_section]
+key = 42
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Access a completely non-existent section
+    int64_t value = parser.getValue<int64_t>(*table, "nonexistent", "key", 123);
+    EXPECT_EQ(value, 123);
+}
+
+TEST_F(TomlParserBranchTest, GetStringNullSection) {
+    const std::string toml = R"(
+[real_section]
+key = "value"
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Access a completely non-existent section
+    std::string value = parser.getString(*table, "nonexistent", "key", "default");
+    EXPECT_EQ(value, "default");
+}
+
+// ============================================================================
+// Additional Branch Coverage Tests - error callback branches
+// ============================================================================
+
+TEST_F(TomlParserBranchTest, ReportErrorWithoutCallback) {
+    TomlParser parser;
+    // Don't set callback - test the "if (_errorCallback)" branch being false
+
+    [[maybe_unused]] auto result = parser.parseFile("nonexistent.toml");
+
+    // Should work without crashing even without callback
+    EXPECT_FALSE(parser.getLastResult().errorMessage.empty());
+    EXPECT_FALSE(parser.getLastResult().errors.empty());
+}
+
+TEST_F(TomlParserBranchTest, ReportErrorWithCallback) {
+    std::vector<ParseError> errors;
+    TomlParser parser;
+    parser.setErrorCallback([&errors](const ParseError& e) {
+        errors.push_back(e);
+    });
+
+    [[maybe_unused]] auto result = parser.parseFile("nonexistent.toml");
+
+    EXPECT_FALSE(errors.empty());
+}
+
+// ============================================================================
+// Additional Branch Coverage Tests - parseString exception branches
+// ============================================================================
+
+TEST_F(TomlParserBranchTest, ParseStringBadEscapeSequence) {
+    // Try to trigger a parse error
+    const std::string toml = "[section]\nkey = \"value\\x\"";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    // This should fail due to invalid escape sequence
+    EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(TomlParserBranchTest, ParseStringNestedArrayBrackets) {
+    const std::string toml = "[section]\narray = [[1, 2], [3, 4]]";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    ASSERT_TRUE(result.has_value());
+}
+
+TEST_F(TomlParserBranchTest, ParseStringWithComments) {
+    const std::string toml = R"(
+# This is a comment
+[section] # inline comment
+key = "value" # another comment
+# trailing comment
+)";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    ASSERT_TRUE(result.has_value());
+}
+
+// ============================================================================
+// Additional Branch Coverage Tests - file permission variations
+// ============================================================================
+
+TEST_F(TomlParserBranchTest, SaveToFilePermissionDenied) {
+    toml::table table;
+    table.insert("key", "value");
+
+    // Create a directory and make it read-only
+    auto readOnlyDir = testDir / "readonly_dir";
+    std::filesystem::create_directories(readOnlyDir);
+    std::filesystem::permissions(readOnlyDir, std::filesystem::perms::owner_read | std::filesystem::perms::owner_exec);
+
+    TomlParser parser;
+    bool result = parser.saveToFile(table, readOnlyDir / "output.toml");
+
+    // Restore permissions for cleanup
+    std::filesystem::permissions(readOnlyDir, std::filesystem::perms::owner_all);
+
+    EXPECT_FALSE(result);
+}
+
+TEST_F(TomlParserBranchTest, ParseFileEmptyContent) {
+    writeFile("empty.toml", "");
+
+    TomlParser parser;
+    auto result = parser.parseFile(testDir / "empty.toml");
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_TRUE(parser.getLastResult().success);
+}
+
+TEST_F(TomlParserBranchTest, ParseFileWhitespaceOnly) {
+    writeFile("whitespace.toml", "   \n\t\n   ");
+
+    TomlParser parser;
+    auto result = parser.parseFile(testDir / "whitespace.toml");
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_TRUE(parser.getLastResult().success);
+}
+
+// ============================================================================
+// Additional Branch Coverage Tests - getValue type variations
+// ============================================================================
+
+TEST_F(TomlParserBranchTest, GetValueFloat) {
+    const std::string toml = R"(
+[section]
+value = 1.5
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    float value = parser.getValue<float>(*table, "section", "value", 0.0f);
+    EXPECT_NEAR(value, 1.5f, 0.001f);
+}
+
+TEST_F(TomlParserBranchTest, GetValueInt32) {
+    const std::string toml = R"(
+[section]
+value = 100
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    int32_t value = parser.getValue<int32_t>(*table, "section", "value", 0);
+    EXPECT_EQ(value, 100);
+}
+
+TEST_F(TomlParserBranchTest, GetValueKeyExists) {
+    const std::string toml = R"(
+[section]
+existing = 42
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Key exists - tests the "if (auto val = (*sec)[key].value<T>())" branch being true
+    int64_t value = parser.getValue<int64_t>(*table, "section", "existing", 0);
+    EXPECT_EQ(value, 42);
+}
+
+TEST_F(TomlParserBranchTest, GetValueKeyMissing) {
+    const std::string toml = R"(
+[section]
+other = 42
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Key doesn't exist - tests the "if (auto val = (*sec)[key].value<T>())" branch being false
+    int64_t value = parser.getValue<int64_t>(*table, "section", "missing", 999);
+    EXPECT_EQ(value, 999);
+}
+
+// ============================================================================
+// More Branch Coverage Tests - toml++ optional value branches
+// ============================================================================
+
+TEST_F(TomlParserBranchTest, GetStringFromArrayElement) {
+    const std::string toml = R"(
+[section]
+key = ["array", "values"]
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Trying to get array as string should return default
+    std::string value = parser.getString(*table, "section", "key", "default");
+    EXPECT_EQ(value, "default");
+}
+
+TEST_F(TomlParserBranchTest, GetValueFromTableValue) {
+    const std::string toml = R"(
+[section]
+key = { nested = "table" }
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Trying to get inline table as int should return default
+    int64_t value = parser.getValue<int64_t>(*table, "section", "key", 123);
+    EXPECT_EQ(value, 123);
+}
+
+TEST_F(TomlParserBranchTest, GetStringFromTableValue) {
+    const std::string toml = R"(
+[section]
+key = { nested = "table" }
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Trying to get inline table as string should return default
+    std::string value = parser.getString(*table, "section", "key", "default");
+    EXPECT_EQ(value, "default");
+}
+
+TEST_F(TomlParserBranchTest, ParseFileLargeContent) {
+    // Create a large TOML file to test buffer handling
+    std::string toml = "[large]\n";
+    for (int i = 0; i < 100; ++i) {
+        toml += "key" + std::to_string(i) + " = " + std::to_string(i) + "\n";
+    }
+    writeFile("large.toml", toml);
+
+    TomlParser parser;
+    auto result = parser.parseFile(testDir / "large.toml");
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(parser.getValue<int64_t>(*result, "large", "key50", 0), 50);
+}
+
+TEST_F(TomlParserBranchTest, GetValueUint16) {
+    const std::string toml = R"(
+[section]
+port = 8080
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Test uint16_t conversion (common for ports)
+    uint16_t value = parser.getValue<uint16_t>(*table, "section", "port", 0);
+    EXPECT_EQ(value, 8080);
+}
+
+TEST_F(TomlParserBranchTest, GetValueFromEmptyTable) {
+    const std::string toml = R"(
+[empty_section]
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Section exists but is empty
+    double value = parser.getValue<double>(*table, "empty_section", "missing", 3.14);
+    EXPECT_NEAR(value, 3.14, 0.001);
+}
+
+TEST_F(TomlParserBranchTest, GetValueBoolFromWrongType) {
+    const std::string toml = R"(
+[section]
+value = "not a bool"
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    bool value = parser.getValue<bool>(*table, "section", "value", true);
+    EXPECT_TRUE(value);  // Should return default
+}
+
+TEST_F(TomlParserBranchTest, GetValueDoubleFromInt) {
+    const std::string toml = R"(
+[section]
+value = 42
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Getting int as double - should return default since types differ in TOML
+    double value = parser.getValue<double>(*table, "section", "value", 99.9);
+    // TOML++ may or may not convert int to double
+    EXPECT_TRUE(value == 42.0 || value == 99.9);
+}
+
+TEST_F(TomlParserBranchTest, ParseStringVariousEscapes) {
+    const std::string toml = R"(
+[section]
+newline = "line1\nline2"
+tab = "col1\tcol2"
+quote = "he said \"hello\""
+backslash = "path\\to\\file"
+)";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    ASSERT_TRUE(result.has_value());
+    std::string newline = parser.getString(*result, "section", "newline", "");
+    EXPECT_NE(newline.find('\n'), std::string::npos);
+}
+
+TEST_F(TomlParserBranchTest, ParseStringLiteralStrings) {
+    const std::string toml = R"(
+[section]
+literal = 'no escape \n here'
+)";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    ASSERT_TRUE(result.has_value());
+    std::string literal = parser.getString(*result, "section", "literal", "");
+    // Literal strings preserve backslashes
+    EXPECT_NE(literal.find("\\n"), std::string::npos);
+}
+
+TEST_F(TomlParserBranchTest, SaveToFileEmptyTable) {
+    toml::table empty;
+
+    TomlParser parser;
+    bool result = parser.saveToFile(empty, testDir / "empty_output.toml");
+
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(std::filesystem::exists(testDir / "empty_output.toml"));
+}
+
+TEST_F(TomlParserBranchTest, SaveToFileNestedTables) {
+    toml::table table;
+    toml::table inner;
+    toml::table deeper;
+    deeper.insert("value", 42);
+    inner.insert("deep", deeper);
+    table.insert("outer", inner);
+
+    TomlParser parser;
+    bool result = parser.saveToFile(table, testDir / "nested.toml");
+
+    EXPECT_TRUE(result);
+
+    // Verify it can be read back
+    auto loaded = parser.parseFile(testDir / "nested.toml");
+    ASSERT_TRUE(loaded.has_value());
+}
+
+TEST_F(TomlParserBranchTest, GetStringEmptySection) {
+    const std::string toml = R"(
+[section]
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    std::string value = parser.getString(*table, "section", "nonexistent", "default");
+    EXPECT_EQ(value, "default");
+}
+
+TEST_F(TomlParserBranchTest, GetValueLargeNumber) {
+    const std::string toml = R"(
+[section]
+big = 9223372036854775807
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    int64_t value = parser.getValue<int64_t>(*table, "section", "big", 0);
+    EXPECT_EQ(value, 9223372036854775807LL);
+}
+
+TEST_F(TomlParserBranchTest, GetValueNegativeLargeNumber) {
+    const std::string toml = R"(
+[section]
+small = -9223372036854775807
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    int64_t value = parser.getValue<int64_t>(*table, "section", "small", 0);
+    EXPECT_EQ(value, -9223372036854775807LL);
+}
+
+TEST_F(TomlParserBranchTest, ParseStringMixedTypes) {
+    const std::string toml = R"(
+[types]
+string = "hello"
+integer = 42
+float = 3.14159
+bool_true = true
+bool_false = false
+)";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+    ASSERT_TRUE(result.has_value());
+
+    EXPECT_EQ(parser.getString(*result, "types", "string", ""), "hello");
+    EXPECT_EQ(parser.getValue<int64_t>(*result, "types", "integer", 0), 42);
+    EXPECT_NEAR(parser.getValue<double>(*result, "types", "float", 0.0), 3.14159, 0.00001);
+    EXPECT_TRUE(parser.getValue<bool>(*result, "types", "bool_true", false));
+    EXPECT_FALSE(parser.getValue<bool>(*result, "types", "bool_false", true));
+}
+
+TEST_F(TomlParserBranchTest, ErrorCallbackOnFileSaveFailure) {
+    std::vector<ParseError> errors;
+    TomlParser parser;
+    parser.setErrorCallback([&errors](const ParseError& e) {
+        errors.push_back(e);
+    });
+
+    toml::table table;
+    table.insert("key", "value");
+
+    // Create a read-only directory to prevent file creation
+    auto readOnlyDir = testDir / "readonly_save_test";
+    std::filesystem::create_directories(readOnlyDir);
+    std::filesystem::permissions(readOnlyDir, std::filesystem::perms::owner_read | std::filesystem::perms::owner_exec);
+
+    bool result = parser.saveToFile(table, readOnlyDir / "file.toml");
+
+    // Restore permissions for cleanup
+    std::filesystem::permissions(readOnlyDir, std::filesystem::perms::owner_all);
+
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(errors.empty());
+}
+
+TEST_F(TomlParserBranchTest, MultipleCallbackErrors) {
+    std::vector<ParseError> errors;
+    TomlParser parser;
+    parser.setErrorCallback([&errors](const ParseError& e) {
+        errors.push_back(e);
+    });
+
+    // Cause multiple errors
+    [[maybe_unused]] auto r1 = parser.parseFile("nonexistent1.toml");
+    [[maybe_unused]] auto r2 = parser.parseFile("nonexistent2.toml");
+    [[maybe_unused]] auto r3 = parser.parseString("[invalid");
+
+    EXPECT_GE(errors.size(), 3u);
+}
+
+TEST_F(TomlParserBranchTest, ParseErrorEmptyKey) {
+    ParseError error{"section", "", "error message"};
+    EXPECT_EQ(error.toString(), "[section] error message");
+}
+
+TEST_F(TomlParserBranchTest, ParseErrorWithKey) {
+    ParseError error{"section", "key", "error message"};
+    EXPECT_EQ(error.toString(), "[section.key] error message");
+}
+
+TEST_F(TomlParserBranchTest, ParseResultOperatorBool) {
+    ParseResult success;
+    success.success = true;
+    EXPECT_TRUE(static_cast<bool>(success));
+
+    ParseResult failure;
+    failure.success = false;
+    EXPECT_FALSE(static_cast<bool>(failure));
+}
+
+// ============================================================================
+// Edge Cases for Branch Coverage
+// ============================================================================
+
+TEST_F(TomlParserBranchTest, GetValueFromDeeplyNestedSection) {
+    const std::string toml = R"(
+[a.b.c]
+value = 123
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Access via top-level key only
+    int64_t value = parser.getValue<int64_t>(*table, "a", "value", 999);
+    EXPECT_EQ(value, 999);  // Should return default since "a" is a table not containing "value" directly
+}
+
+TEST_F(TomlParserBranchTest, SaveToFileWithSpecialCharacters) {
+    toml::table table;
+    toml::table section;
+    section.insert("special", "value with \"quotes\" and 'apostrophes'");
+    section.insert("newlines", "line1\nline2\nline3");
+    table.insert("section", section);
+
+    auto filepath = testDir / "special_chars.toml";
+    TomlParser parser;
+    bool result = parser.saveToFile(table, filepath);
+
+    EXPECT_TRUE(result);
+
+    // Verify round-trip
+    auto loaded = parser.parseFile(filepath);
+    ASSERT_TRUE(loaded.has_value());
+}
+
+TEST_F(TomlParserBranchTest, ParseFileSymlink) {
+    // Create a regular file
+    writeFile("original.toml", "[test]\nvalue = 42");
+
+    // Create a symlink to it (if possible)
+    auto linkPath = testDir / "link.toml";
+    std::error_code ec;
+    std::filesystem::create_symlink(testDir / "original.toml", linkPath, ec);
+
+    if (!ec) {
+        TomlParser parser;
+        auto result = parser.parseFile(linkPath);
+
+        ASSERT_TRUE(result.has_value());
+        EXPECT_EQ(parser.getValue<int64_t>(*result, "test", "value", 0), 42);
+    }
+}
+
