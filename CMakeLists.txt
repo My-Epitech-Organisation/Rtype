@@ -37,6 +37,9 @@ if(ENABLE_COVERAGE)
     endif()
 endif()
 
+# Add libraries first (dependencies)
+add_subdirectory(lib)
+
 # Add source directory
 add_subdirectory(src)
 

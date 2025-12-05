@@ -6,6 +6,8 @@ target_link_libraries(test_argparser PRIVATE
 
 target_include_directories(test_argparser PRIVATE
     ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib/rtype_common/src
+    ${CMAKE_SOURCE_DIR}/lib
 )
 
 include(GoogleTest)
@@ -20,6 +22,7 @@ target_link_libraries(test_logger PRIVATE
 
 target_include_directories(test_logger PRIVATE
     ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib
 )
 
 gtest_discover_tests(test_logger)
@@ -32,6 +35,8 @@ target_link_libraries(test_safe_queue PRIVATE
 
 target_include_directories(test_safe_queue PRIVATE
     ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib/rtype_common/src
+    ${CMAKE_SOURCE_DIR}/lib
 )
 
 gtest_discover_tests(test_safe_queue)

@@ -11,7 +11,7 @@
 #include <chrono>
 #include <cstdint>
 
-#include "../common/Types.hpp"
+#include <rtype/common.hpp>
 
 namespace rtype::server {
 

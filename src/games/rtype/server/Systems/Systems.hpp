@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "../../../../engine/ISystem.hpp"
+#include <rtype/engine.hpp>
+
 #include "Cleanup/CleanupSystem.hpp"
 #include "Destroy/DestroySystem.hpp"
 #include "Spawner/SpawnerSystem.hpp"

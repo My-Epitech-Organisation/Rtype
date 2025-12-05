@@ -15,7 +15,8 @@
 #include <memory>
 #include <vector>
 
-#include "../common/ArgParser.hpp"
+#include <rtype/common.hpp>
+
 #include "ServerApp.hpp"
 
 /**

@@ -47,6 +47,14 @@ target_link_libraries(test_connection_state PRIVATE
     GTest::gtest_main
 )
 
+# Packet Validation Security tests (RFC RTGP v1.1.0 Section 6)
+add_executable(test_packet_validation test_packet_validation.cpp)
+
+target_link_libraries(test_packet_validation PRIVATE
+    rtype_network
+    GTest::gtest_main
+)
+
 # Enable test discovery
 include(GoogleTest)
 gtest_discover_tests(test_protocol)
@@ -55,3 +63,4 @@ gtest_discover_tests(test_error)
 gtest_discover_tests(test_asio_socket)
 gtest_discover_tests(test_reliable_channel)
 gtest_discover_tests(test_connection_state)
+gtest_discover_tests(test_packet_validation)

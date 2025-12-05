@@ -432,15 +432,26 @@ TEST_F(ValidatorTest, ValidatePacketRGetUsers) {
     // Header
     packet[0] = kMagicByte;  // magic
     packet[1] = 0x05;        // opcode R_GET_USERS
-    packet[2] = 5;           // payloadSize low byte
-    packet[3] = 0;           // payloadSize high byte
-    // userId: server (0xFFFFFFFF)
+    // payloadSize: 5 in network byte order (big-endian)
+    packet[2] = 0x00;        // payloadSize high byte
+    packet[3] = 0x05;        // payloadSize low byte
+    // userId: server (0xFFFFFFFF) in network byte order (big-endian)
     packet[4] = 0xFF;
     packet[5] = 0xFF;
     packet[6] = 0xFF;
     packet[7] = 0xFF;
-    packet[8] = 1;  // seqId
-    // rest 0
+    // seqId: 1 in big-endian network byte order (0x0001)
+    packet[8] = 0x00;
+    packet[9] = 0x01;
+    // ackId: 0
+    packet[10] = 0x00;
+    packet[11] = 0x00;
+    // flags
+    packet[12] = 0;
+    // reserved
+    packet[13] = 0;
+    packet[14] = 0;
+    packet[15] = 0;
 
     // Payload
     packet[16] = 1;  // count=1
@@ -452,7 +463,7 @@ TEST_F(ValidatorTest, ValidatePacketRGetUsers) {
     EXPECT_TRUE(Validator::validatePacket(std::span<const std::uint8_t>(packet, sizeof(packet)), true).isOk());
 
     // Invalid: payload size doesn't match count
-    packet[2] = 2;   // payloadSize=2 (should be 5)
+    packet[3] = 0x02;   // payloadSize=2 (should be 5)
     EXPECT_TRUE(Validator::validatePacket(std::span<const std::uint8_t>(packet, 16 + 2), true).isErr());
 }
 

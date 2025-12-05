@@ -17,9 +17,11 @@
 
 #include "Packet.hpp"
 #include "core/ByteOrder.hpp"
+#include "core/Error.hpp"
 #include "protocol/ByteOrderSpec.hpp"
 #include "protocol/Header.hpp"
 #include "protocol/Payloads.hpp"
+#include "protocol/Validator.hpp"
 
 namespace rtype::network {
 
@@ -338,6 +340,122 @@ class Serializer {
     template <typename T>
     static T deserializeFromNetwork(std::span<const std::uint8_t> data) {
         return ByteOrderSpec::deserializeFromNetwork<T>(data);
+    }
+
+    /**
+     * @brief Safely deserialize a Header with bounds checking
+     *
+     * Validates buffer bounds before deserialization to prevent buffer
+     * overruns. This is the preferred method for deserializing headers
+     * from untrusted network data.
+     *
+     * @param buffer The raw packet data
+     * @return Result containing Header on success, error code otherwise
+     */
+    [[nodiscard]] static Result<Header> safeDeserializeHeader(
+        std::span<const std::uint8_t> buffer) noexcept {
+        if (buffer.size() < kHeaderSize) {
+            return Result<Header>::err(NetworkError::PacketTooSmall);
+        }
+        try {
+            Header header =
+                deserializeFromNetwork<Header>(buffer.subspan(0, kHeaderSize));
+            return Result<Header>::ok(header);
+        } catch (...) {
+            return Result<Header>::err(NetworkError::MalformedPacket);
+        }
+    }
+
+    /**
+     * @brief Extract and validate a complete packet from raw network data
+     *
+     * Performs complete validation pipeline as per RFC RTGP v1.1.0 Section 6:
+     * 1. Size validation (>= 16 bytes, <= max packet size)
+     * 2. Magic byte check (must be 0xA1)
+     * 3. Payload size check (must be <= max payload)
+     * 4. Header validation (OpCode, reserved bytes)
+     * 5. Payload size consistency
+     * 6. UserID validation
+     *
+     * Invalid packets are rejected with appropriate error codes.
+     * No exceptions are thrown - all errors returned via Result type.
+     *
+     * @param rawData Raw packet data from network
+     * @param isFromServer Whether packet claims to be from server
+     * @return Result containing validated header and payload, or error
+     *
+     * @note This is the main validation entry point for all received packets.
+     * Both server and client should use this method.
+     */
+    [[nodiscard]] static Result<
+        std::pair<Header, std::span<const std::uint8_t>>>
+    validateAndExtractPacket(std::span<const std::uint8_t> rawData,
+                             bool isFromServer) noexcept {
+        auto sizeResult = Validator::validatePacketSize(rawData.size());
+        if (sizeResult.isErr()) {
+            return Result<std::pair<Header, std::span<const std::uint8_t>>>::
+                err(sizeResult.error());
+        }
+
+        auto headerResult = safeDeserializeHeader(rawData);
+        if (headerResult.isErr()) {
+            return Result<std::pair<Header, std::span<const std::uint8_t>>>::
+                err(headerResult.error());
+        }
+
+        Header header = headerResult.value();
+
+        if (!header.hasValidMagic()) {
+            return Result<std::pair<Header, std::span<const std::uint8_t>>>::
+                err(NetworkError::InvalidMagic);
+        }
+
+        auto maxSizeResult =
+            Validator::validatePayloadMaxSize(header.payloadSize);
+        if (maxSizeResult.isErr()) {
+            return Result<std::pair<Header, std::span<const std::uint8_t>>>::
+                err(maxSizeResult.error());
+        }
+
+        auto headerValidResult = Validator::validateHeader(header);
+        if (headerValidResult.isErr()) {
+            return Result<std::pair<Header, std::span<const std::uint8_t>>>::
+                err(headerValidResult.error());
+        }
+
+        std::size_t expectedSize = kHeaderSize + header.payloadSize;
+        if (rawData.size() < expectedSize) {
+            return Result<std::pair<Header, std::span<const std::uint8_t>>>::
+                err(NetworkError::MalformedPacket);
+        }
+
+        auto payload = rawData.subspan(kHeaderSize);
+        auto payloadValidResult = Validator::validatePayloadSize(
+            header.getOpCode(), header.payloadSize, payload);
+        if (payloadValidResult.isErr()) {
+            return Result<std::pair<Header, std::span<const std::uint8_t>>>::
+                err(payloadValidResult.error());
+        }
+
+        if (isFromServer) {
+            auto userResult = Validator::validateServerUserId(header.userId);
+            if (userResult.isErr()) {
+                return Result<std::pair<
+                    Header, std::span<const std::uint8_t>>>::err(userResult
+                                                                     .error());
+            }
+        } else {
+            auto userResult = Validator::validateClientUserId(
+                header.userId, header.getOpCode());
+            if (userResult.isErr()) {
+                return Result<std::pair<
+                    Header, std::span<const std::uint8_t>>>::err(userResult
+                                                                     .error());
+            }
+        }
+
+        return Result<std::pair<Header, std::span<const std::uint8_t>>>::ok(
+            {header, payload});
     }
 };
 
