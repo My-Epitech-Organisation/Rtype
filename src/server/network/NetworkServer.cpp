@@ -260,25 +260,33 @@ void NetworkServer::poll() {
 
     checkTimeouts();
 
-    for (auto& [key, client] : clients_) {
-        auto retransmits = client->reliableChannel.getPacketsToRetransmit();
-        for (auto& pkt : retransmits) {
-            socket_->asyncSendTo(
-                pkt.data, client->endpoint,
-                [](network::Result<std::size_t> result) { (void)result; });
-        }
+    std::vector<std::uint32_t> usersToRemove;
 
-        auto cleanupResult = client->reliableChannel.cleanup();
-        if (!cleanupResult) {
-            std::uint32_t userId = client->userId;
-            queueCallback([this, userId]() {
-                if (onClientDisconnectedCallback_) {
-                    onClientDisconnectedCallback_(
-                        userId, network::DisconnectReason::MaxRetriesExceeded);
-                }
-            });
-            removeClient(userId);
+    {
+        std::lock_guard<std::mutex> lock(clientsMutex_);
+        for (auto& [key, client] : clients_) {
+            auto retransmits = client->reliableChannel.getPacketsToRetransmit();
+            for (auto& pkt : retransmits) {
+                socket_->asyncSendTo(
+                    pkt.data, client->endpoint,
+                    [](network::Result<std::size_t> result) { (void)result; });
+            }
+
+            auto cleanupResult = client->reliableChannel.cleanup();
+            if (!cleanupResult) {
+                usersToRemove.push_back(client->userId);
+            }
         }
+    }
+
+    for (std::uint32_t userId : usersToRemove) {
+        queueCallback([this, userId]() {
+            if (onClientDisconnectedCallback_) {
+                onClientDisconnectedCallback_(
+                    userId, network::DisconnectReason::MaxRetriesExceeded);
+            }
+        });
+        removeClient(userId);
     }
 
     dispatchCallbacks();
@@ -618,12 +626,15 @@ void NetworkServer::checkTimeouts() {
     auto now = std::chrono::steady_clock::now();
     std::vector<std::uint32_t> timedOutUsers;
 
-    for (auto& [key, client] : clients_) {
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-            now - client->lastActivity);
+    {
+        std::lock_guard<std::mutex> lock(clientsMutex_);
+        for (auto& [key, client] : clients_) {
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                now - client->lastActivity);
 
-        if (elapsed > config_.clientTimeout) {
-            timedOutUsers.push_back(client->userId);
+            if (elapsed > config_.clientTimeout) {
+                timedOutUsers.push_back(client->userId);
+            }
         }
     }
 
