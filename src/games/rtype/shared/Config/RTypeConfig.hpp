@@ -8,9 +8,9 @@
 #ifndef SRC_GAMES_RTYPE_SHARED_CONFIG_RTYPECONFIG_HPP_
 #define SRC_GAMES_RTYPE_SHARED_CONFIG_RTYPECONFIG_HPP_
 
-#include "Parser/RTypeConfigParser.hpp"
 #include "GameConfig/RTypeGameConfig.hpp"
 #include "GameState/RTypeGameState.hpp"
+#include "Parser/RTypeConfigParser.hpp"
 #include "SaveManager/RTypeSaveManager.hpp"
 
 /**
