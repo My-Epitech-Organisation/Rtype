@@ -3,10 +3,14 @@ add_subdirectory(Systems)
 
 # R-Type specific configuration library
 add_library(rtype_game_config STATIC
-    Config/RTypeGameConfig.cpp
-    Config/RTypeGameState.cpp
-    Config/RTypeConfigParser.cpp
-    Config/RTypeSaveManager.cpp
+    Config/GameConfig/RTypeGameConfig.cpp
+    Config/GameState/RTypeGameState.cpp
+    Config/Parser/RTypeConfigParser.cpp
+    Config/SaveManager/RTypeSaveManager.cpp
+    Config/SaveManager/Serialization/BinarySerializer.cpp
+    Config/SaveManager/Serialization/GameStateSerializer.cpp
+    Config/SaveManager/Operations/FileOperations.cpp
+    Config/SaveManager/Operations/SaveInfoReader.cpp
 )
 
 target_include_directories(rtype_game_config PUBLIC
@@ -21,7 +25,7 @@ target_link_libraries(rtype_game_config PUBLIC
 # Create shared game lib
 add_library(rtype_game_shared STATIC
     $<TARGET_OBJECTS:rtype_game_shared_systems>
-    ${CMAKE_CURRENT_SOURCE_DIR}/EntityConfig.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Config/EntityConfig/EntityConfig.cpp
 )
 
 target_include_directories(rtype_game_shared PUBLIC
