@@ -146,28 +146,25 @@ class PrefabLoader {
      * @brief Helper to get config values (for systems that need stats)
      */
     [[nodiscard]] static float getPlayerSpeed(const std::string& playerId) {
-        const auto* config =
-            EntityConfigRegistry::getInstance().getPlayer(playerId);
-        return config ? config->speed : 200.0f;
+        auto config = EntityConfigRegistry::getInstance().getPlayer(playerId);
+        return config ? config->get().speed : 200.0f;
     }
 
     [[nodiscard]] static float getPlayerFireRate(const std::string& playerId) {
-        const auto* config =
-            EntityConfigRegistry::getInstance().getPlayer(playerId);
-        return config ? config->fireRate : 5.0f;
+        auto config = EntityConfigRegistry::getInstance().getPlayer(playerId);
+        return config ? config->get().fireRate : 5.0f;
     }
 
     [[nodiscard]] static int32_t getEnemyScore(const std::string& enemyId) {
-        const auto* config =
-            EntityConfigRegistry::getInstance().getEnemy(enemyId);
-        return config ? config->scoreValue : 100;
+        auto config = EntityConfigRegistry::getInstance().getEnemy(enemyId);
+        return config ? config->get().scoreValue : 100;
     }
 
     [[nodiscard]] static int32_t getProjectileDamage(
         const std::string& projectileId) {
-        const auto* config =
+        auto config =
             EntityConfigRegistry::getInstance().getProjectile(projectileId);
-        return config ? config->damage : 10;
+        return config ? config->get().damage : 10;
     }
 };
 
