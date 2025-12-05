@@ -133,8 +133,8 @@ class PrefabLoader {
                 [cfg = config](ECS::Registry& registry, ECS::Entity entity) {
                     registry.emplaceComponent<TransformComponent>(entity, 0.0f,
                                                                   0.0f, 0.0f);
-                    registry.emplaceComponent<VelocityComponent>(
-                        entity, -50.0f, 0.0f);
+                    registry.emplaceComponent<VelocityComponent>(entity, -50.0f,
+                                                                 0.0f);
                     registry.emplaceComponent<BoundingBoxComponent>(
                         entity, cfg.hitboxWidth, cfg.hitboxHeight);
                     registry.emplaceComponent<PickupTag>(entity);
