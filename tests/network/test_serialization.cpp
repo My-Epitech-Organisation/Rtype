@@ -9,8 +9,8 @@
 #include <vector>
 #include <string>
 
-#include "../../src/network/Packet.hpp"
-#include "../../src/network/Serializer.hpp"
+#include "../../lib/rtype_network/src/Packet.hpp"
+#include "../../lib/rtype_network/src/Serializer.hpp"
 
 using namespace rtype::network;
 

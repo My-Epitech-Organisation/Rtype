@@ -196,7 +196,46 @@ namespace Validator {
 }
 
 /**
+ * @brief Validate payload size against maximum to prevent buffer overflow
+ * @param payloadSize The payload size from the header
+ * @return Success if within limits, PacketTooLarge otherwise
+ */
+[[nodiscard]] inline Result<void> validatePayloadMaxSize(
+    std::uint16_t payloadSize) noexcept {
+    if (payloadSize > kMaxPayloadSize) {
+        return Result<void>::err(NetworkError::PacketTooLarge);
+    }
+    return Result<void>::ok();
+}
+
+/**
+ * @brief Validate bounds before deserializing from buffer
+ * @param buffer The buffer to check
+ * @param offset Starting offset in the buffer
+ * @param size Required number of bytes
+ * @return Success if bounds are valid, MalformedPacket otherwise
+ */
+[[nodiscard]] inline Result<void> validateBufferBounds(
+    std::span<const std::uint8_t> buffer, std::size_t offset,
+    std::size_t size) noexcept {
+    if (offset + size > buffer.size()) {
+        return Result<void>::err(NetworkError::MalformedPacket);
+    }
+    return Result<void>::ok();
+}
+
+/**
  * @brief Perform complete validation of a received packet
+ *
+ * Implements the validation pipeline from RFC RTGP v1.1.0 Section 6:
+ * 1. Size >= 16 bytes (minimum header size)
+ * 2. Magic byte == 0xA1
+ * 3. Payload size <= MAX_PAYLOAD (4096 bytes)
+ * 4. Valid OpCode
+ * 5. Reserved bytes == 0
+ * 6. Payload size matches expected for OpCode
+ * 7. UserID validation (server/client authority check)
+ *
  * @param data Span view of the raw packet data
  * @param isFromServer Whether this packet claims to be from the server
  * @return Success if valid, first encountered error otherwise
@@ -208,18 +247,36 @@ namespace Validator {
         return sizeResult;
     }
 
+    auto boundsResult = validateBufferBounds(data, 0, kHeaderSize);
+    if (boundsResult.isErr()) {
+        return boundsResult;
+    }
+
     Header header = ByteOrderSpec::deserializeFromNetwork<Header>(
         data.subspan(0, kHeaderSize));
+
+    if (!header.hasValidMagic()) {
+        return Result<void>::err(NetworkError::InvalidMagic);
+    }
+
+    auto maxSizeResult = validatePayloadMaxSize(header.payloadSize);
+    if (maxSizeResult.isErr()) {
+        return maxSizeResult;
+    }
 
     auto headerResult = validateHeader(header);
     if (headerResult.isErr()) {
         return headerResult;
     }
 
-    std::size_t payloadSize = data.size() - kHeaderSize;
+    std::size_t actualPayloadSize = data.size() - kHeaderSize;
+    if (actualPayloadSize != header.payloadSize) {
+        return Result<void>::err(NetworkError::MalformedPacket);
+    }
+
     auto payload = data.subspan(kHeaderSize);
     auto payloadResult =
-        validatePayloadSize(header.getOpCode(), payloadSize, payload);
+        validatePayloadSize(header.getOpCode(), header.payloadSize, payload);
     if (payloadResult.isErr()) {
         return payloadResult;
     }
@@ -245,6 +302,38 @@ namespace Validator {
     }
 
     return Result<void>::ok();
+}
+
+/**
+ * @brief Safely deserialize with bounds checking
+ *
+ * Validates buffer bounds before attempting to deserialize.
+ * Prevents buffer overruns when reading from untrusted network data.
+ *
+ * @tparam T Type to deserialize
+ * @param buffer The buffer containing network data
+ * @param offset Starting offset in the buffer
+ * @return Result containing deserialized value or error
+ */
+template <typename T>
+[[nodiscard]] inline Result<T> safeDeserialize(
+    std::span<const std::uint8_t> buffer, std::size_t offset = 0) noexcept {
+    static_assert(
+        std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>,
+        "T must be trivially copyable and standard layout");
+
+    auto boundsResult = validateBufferBounds(buffer, offset, sizeof(T));
+    if (boundsResult.isErr()) {
+        return Result<T>::err(boundsResult.error());
+    }
+
+    try {
+        T value = ByteOrderSpec::deserializeFromNetwork<T>(
+            buffer.subspan(offset, sizeof(T)));
+        return Result<T>::ok(value);
+    } catch (...) {
+        return Result<T>::err(NetworkError::MalformedPacket);
+    }
 }
 
 }  // namespace Validator

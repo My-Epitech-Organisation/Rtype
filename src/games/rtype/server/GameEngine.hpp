@@ -11,7 +11,8 @@
 #include <mutex>
 #include <vector>
 
-#include "../../../engine/AGameEngine.hpp"
+#include <rtype/engine.hpp>
+
 #include "../shared/Systems/Systems.hpp"
 #include "Systems/Systems.hpp"
 #include "ecs/ECS.hpp"

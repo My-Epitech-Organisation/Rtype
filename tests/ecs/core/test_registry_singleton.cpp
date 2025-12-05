@@ -6,7 +6,7 @@
 */
 
 #include <gtest/gtest.h>
-#include "engine/ecs/core/Registry/Registry.hpp"
+#include "../../../lib/rtype_ecs/src/ecs/core/Registry/Registry.hpp"
 #include <string>
 #include <memory>
 
