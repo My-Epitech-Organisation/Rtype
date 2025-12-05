@@ -7,6 +7,11 @@ add_library(rtype-graphic-SFML
     KeyboardActions.cpp
     KeyboardActions.hpp
 )
+
+target_include_directories(rtype-graphic-SFML PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+
 find_package(SFML
         COMPONENTS
         Network

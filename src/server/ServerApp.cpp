@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <memory>
 #include <span>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -265,8 +266,10 @@ void ServerApp::processIncomingData() noexcept {
         if (clientId == ClientManager::INVALID_CLIENT_ID) {
             clientId = _clientManager.handleNewConnection(endpoint);
             if (clientId == ClientManager::INVALID_CLIENT_ID) {
-                // TODO(Anyone): Log rejection reason and update metrics when
-                // client connection is rejected
+                LOG_WARNING("[Server] Rejected connection from "
+                            << endpoint << " (server full or invalid state)");
+                _metrics->connectionsRejected.fetch_add(
+                    1, std::memory_order_relaxed);
                 continue;
             }
         }
@@ -295,59 +298,65 @@ void ServerApp::update() noexcept {
 std::optional<rtype::network::Packet> ServerApp::extractPacketFromData(
     const Endpoint& endpoint, const std::vector<uint8_t>& rawData) noexcept {
     try {
-        if (rawData.size() < rtype::network::kHeaderSize) {
-            LOG_DEBUG("[Server] Received packet too small from "
-                      << endpoint << " (" << rawData.size() << " bytes)");
+        auto validationResult =
+            rtype::network::Serializer::validateAndExtractPacket(
+                std::span<const std::uint8_t>(rawData), false);
+
+        if (validationResult.isErr()) {
+            LOG_DEBUG("[Server] Dropped packet from "
+                      << endpoint << " (validation error: "
+                      << rtype::network::toString(validationResult.error())
+                      << ")");
+            _metrics->packetsDropped.fetch_add(1, std::memory_order_relaxed);
             return std::nullopt;
         }
 
-        auto header = rtype::network::Serializer::deserializeFromNetwork<
-            rtype::network::Header>(std::vector<uint8_t>(
-            rawData.begin(), rawData.begin() + rtype::network::kHeaderSize));
+        auto [header, payload] = validationResult.value();
 
-        if (!header.isValid()) {
-            LOG_WARNING("[Server] Invalid RTGP header from "
-                        << endpoint << " (magic: 0x" << std::hex
-                        << static_cast<int>(header.magic) << ")");
+        std::string connectionKey = endpoint.toString();
+        auto seqResult =
+            _securityContext.validateSequenceId(connectionKey, header.seqId);
+        if (seqResult.isErr()) {
+            LOG_DEBUG("[Server] Dropped packet from "
+                      << endpoint << " (invalid sequence: "
+                      << rtype::network::toString(seqResult.error())
+                      << ", SeqID=" << header.seqId << ")");
+            _metrics->packetsDropped.fetch_add(1, std::memory_order_relaxed);
             return std::nullopt;
         }
 
-        size_t expectedSize = rtype::network::kHeaderSize + header.payloadSize;
-        if (rawData.size() < expectedSize) {
-            LOG_WARNING("[Server] Incomplete packet from "
-                        << endpoint << " (expected: " << expectedSize
-                        << ", got: " << rawData.size() << ")");
+        auto userIdResult = _securityContext.validateUserIdMapping(
+            connectionKey, header.userId);
+        if (userIdResult.isErr()) {
+            LOG_WARNING("[Server] Dropped packet from "
+                        << endpoint << " (UserID spoofing: claimed="
+                        << header.userId << ")");
+            _metrics->packetsDropped.fetch_add(1, std::memory_order_relaxed);
             return std::nullopt;
         }
 
-        if (header.payloadSize > 0) {
-            auto validationResult = rtype::network::Validator::validatePacket(
-                std::span<const std::uint8_t>(rawData), header.isFromServer());
-            if (validationResult.isErr()) {
-                LOG_WARNING("[Server] Invalid packet from "
-                            << endpoint << " (validation error code: "
-                            << static_cast<int>(validationResult.error())
-                            << ")");
-                return std::nullopt;
-            }
-        }
-
-        // TODO(Anybody): Eventually migrate to full RTGP packet handling
         rtype::network::Packet packet(
             static_cast<rtype::network::PacketType>(header.opcode));
         if (header.payloadSize > 0) {
-            std::vector<uint8_t> payload(
-                rawData.begin() + rtype::network::kHeaderSize, rawData.end());
-            packet.setData(payload);
+            std::vector<uint8_t> payloadData(payload.begin(), payload.end());
+            packet.setData(payloadData);
         }
 
-        LOG_DEBUG("[Server] Successfully extracted packet from "
-                  << endpoint << " (opcode: " << static_cast<int>(header.opcode)
-                  << ", payload: " << header.payloadSize << " bytes)");
+        LOG_DEBUG("[Server] Accepted packet from "
+                  << endpoint << " (OpCode=" << static_cast<int>(header.opcode)
+                  << ", SeqID=" << header.seqId << ", UserID=" << header.userId
+                  << ", Payload=" << header.payloadSize << " bytes)");
+
         return packet;
     } catch (const std::exception& e) {
         LOG_ERROR("[Server] Exception extracting packet from "
                   << endpoint << ": " << e.what());
+        _metrics->packetsDropped.fetch_add(1, std::memory_order_relaxed);
+        return std::nullopt;
+    } catch (...) {
+        LOG_ERROR("[Server] Unknown exception extracting packet from "
+                  << endpoint);
+        _metrics->packetsDropped.fetch_add(1, std::memory_order_relaxed);
         return std::nullopt;
     }
 }

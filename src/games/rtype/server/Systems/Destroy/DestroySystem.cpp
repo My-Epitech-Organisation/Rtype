@@ -9,7 +9,8 @@
 
 #include <vector>
 
-#include "../../../../../common/Logger.hpp"
+#include <rtype/common.hpp>
+
 #include "../../../shared/Components.hpp"
 
 namespace rtype::games::rtype::server {

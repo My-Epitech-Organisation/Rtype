@@ -17,8 +17,8 @@
 #include "../../../src/games/rtype/server/Systems/Cleanup/CleanupSystem.hpp"
 #include "../../../src/games/rtype/server/Systems/Destroy/DestroySystem.hpp"
 #include "../../../src/games/rtype/server/Systems/Spawner/SpawnerSystem.hpp"
-#include "../../../src/engine/ecs/ECS.hpp"
-#include "../../../src/engine/IGameEngine.hpp"
+#include "../../../../lib/rtype_ecs/src/ecs/ECS.hpp"
+#include "../../../../lib/rtype_engine/src/IGameEngine.hpp"
 
 using namespace rtype::games::rtype::shared;
 using namespace rtype::games::rtype::server;

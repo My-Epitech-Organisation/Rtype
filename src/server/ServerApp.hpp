@@ -16,13 +16,9 @@
 #include <thread>
 #include <vector>
 
-#include "../common/Logger.hpp"
-#include "../common/SafeQueue/SafeQueue.hpp"
-#include "../common/Types.hpp"
-#include "../network/Packet.hpp"
-#include "../network/Serializer.hpp"
-#include "../network/protocol/Header.hpp"
-#include "../network/protocol/Validator.hpp"
+#include <rtype/common.hpp>
+#include <rtype/network.hpp>
+
 #include "Client.hpp"
 #include "ClientManager.hpp"
 #include "IGameConfig.hpp"
@@ -237,6 +233,22 @@ class ServerApp {
      */
     [[nodiscard]] bool reloadConfiguration();
 
+    /**
+     * @brief Register a UserID to endpoint mapping for security validation
+     * @param endpoint The client's network endpoint
+     * @param userId The assigned user ID
+     *
+     * This should be called when a client successfully connects and is
+     * assigned a UserID. It prevents UserID spoofing by binding the UserID
+     * to the client's IP:Port.
+     */
+    void registerUserIdMapping(const Endpoint& endpoint,
+                               std::uint32_t userId) noexcept {
+        _securityContext.registerConnection(endpoint.toString(), userId);
+        LOG_DEBUG("[Server] Registered UserID " << userId << " for endpoint "
+                                                << endpoint);
+    }
+
    public:
     /**
      * @brief Configuration for the main loop timing
@@ -384,6 +396,8 @@ class ServerApp {
     std::thread _networkThread;  ///< Network I/O thread
     std::atomic<bool> _networkThreadRunning{
         false};  ///< Flag to control network thread
+
+    rtype::network::SecurityContext _securityContext;
 
     // TODO(Clem): Add network socket when rtype_network is fully implemented
     // std::unique_ptr<network::UdpSocket> _socket;

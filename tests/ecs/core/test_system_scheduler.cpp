@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "../../../src/engine/ecs/system/SystemScheduler.hpp"
-#include "../../../src/engine/ecs/core/Registry/Registry.hpp"
+#include "../../../lib/rtype_ecs/src/ecs/system/SystemScheduler.hpp"
+#include "../../../lib/rtype_ecs/src/ecs/core/Registry/Registry.hpp"
 
 using namespace ECS;
 

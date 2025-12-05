@@ -9,8 +9,8 @@
 #define SRC_CLIENT_GRAPHIC_GRAPHIC_HPP_
 
 #include <SFML/Graphics.hpp>
+#include <rtype/ecs.hpp>
 
-#include "../../engine/ecs/ECS.hpp"
 #include "KeyboardActions.hpp"
 #include "SceneManager.hpp"
 

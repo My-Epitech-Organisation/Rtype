@@ -15,8 +15,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../common/Logger.hpp"
-#include "../common/Types.hpp"
+#include <rtype/common.hpp>
+
 #include "Client.hpp"
 #include "ServerMetrics.hpp"
 
