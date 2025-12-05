@@ -30,6 +30,7 @@ class Graphic {
     static constexpr int WINDOW_HEIGHT = 1080;
 
    private:
+    constexpr static float scrollSpeed = 50.0f;
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<AssetManager> _assetsManager;
     std::unique_ptr<SceneManager> _sceneManager;
