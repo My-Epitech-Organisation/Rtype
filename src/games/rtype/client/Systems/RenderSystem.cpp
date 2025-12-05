@@ -20,8 +20,8 @@
 #include "ecs/ECS.hpp"
 #include "src/games/rtype/client/Components/HiddenComponent.hpp"
 
-bool RenderSystem::isEntityHidden(
-    std::shared_ptr<ECS::Registry> registry, ECS::Entity entity) {
+bool RenderSystem::isEntityHidden(std::shared_ptr<ECS::Registry> registry,
+                                  ECS::Entity entity) {
     if (registry->hasComponent<HiddenComponent>(entity)) {
         return registry->getComponent<HiddenComponent>(entity).isHidden;
     }
