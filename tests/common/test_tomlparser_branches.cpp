@@ -1599,3 +1599,262 @@ TEST_F(TomlParserBranchTest, ParseFileSymlink) {
     }
 }
 
+// ============================================================================
+// Additional Edge Cases for Better Branch Coverage
+// ============================================================================
+
+TEST_F(TomlParserBranchTest, GetValueTypeMismatchArrayToScalar) {
+    const std::string toml = R"(
+[section]
+array = [1, 2, 3]
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Trying to get array as scalar should return default
+    int64_t value = parser.getValue<int64_t>(*table, "section", "array", 999);
+    EXPECT_EQ(value, 999);
+}
+
+TEST_F(TomlParserBranchTest, GetStringFromNumericValue) {
+    const std::string toml = R"(
+[section]
+number = 12345
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    std::string value = parser.getString(*table, "section", "number", "default");
+    EXPECT_EQ(value, "default");
+}
+
+TEST_F(TomlParserBranchTest, GetValueFromNonExistentSection) {
+    const std::string toml = R"(
+[existing]
+key = 42
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    // Non-existent section
+    int64_t value = parser.getValue<int64_t>(*table, "nonexistent", "key", 123);
+    EXPECT_EQ(value, 123);
+}
+
+TEST_F(TomlParserBranchTest, ParseStringWithAllTypes) {
+    const std::string toml = R"(
+[types]
+string = "hello world"
+integer = 42
+float = 3.14159
+boolean = true
+date = 2025-01-15
+time = 14:30:00
+datetime = 2025-01-15T14:30:00Z
+array_int = [1, 2, 3]
+array_str = ["a", "b", "c"]
+inline_table = { x = 1, y = 2 }
+)";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    ASSERT_TRUE(result.has_value());
+}
+
+TEST_F(TomlParserBranchTest, GetValueZero) {
+    const std::string toml = R"(
+[section]
+zero_int = 0
+zero_float = 0.0
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    EXPECT_EQ(parser.getValue<int64_t>(*table, "section", "zero_int", 999), 0);
+    EXPECT_NEAR(parser.getValue<double>(*table, "section", "zero_float", 999.0), 0.0, 0.001);
+}
+
+TEST_F(TomlParserBranchTest, GetValueNegativeDefault) {
+    const std::string toml = R"(
+[section]
+other = 100
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    int64_t value = parser.getValue<int64_t>(*table, "section", "missing", -999);
+    EXPECT_EQ(value, -999);
+}
+
+TEST_F(TomlParserBranchTest, SaveToFileWithArray) {
+    toml::table table;
+    toml::array arr;
+    arr.push_back(1);
+    arr.push_back(2);
+    arr.push_back(3);
+    table.insert("array", arr);
+
+    TomlParser parser;
+    bool result = parser.saveToFile(table, testDir / "array.toml");
+
+    EXPECT_TRUE(result);
+}
+
+TEST_F(TomlParserBranchTest, ParseFileWithBOM) {
+    // UTF-8 BOM + content
+    std::string content = "\xEF\xBB\xBF[section]\nkey = \"value\"";
+    writeFile("bom.toml", content);
+
+    TomlParser parser;
+    auto result = parser.parseFile(testDir / "bom.toml");
+
+    // TOML++ may or may not handle BOM
+    // Just test it doesn't crash
+}
+
+TEST_F(TomlParserBranchTest, GetValueEmptyDefault) {
+    const std::string toml = R"(
+[section]
+existing = "value"
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    std::string value = parser.getString(*table, "section", "missing", "");
+    EXPECT_EQ(value, "");
+}
+
+TEST_F(TomlParserBranchTest, ParseStringWithHexNumbers) {
+    const std::string toml = R"(
+[section]
+hex = 0xDEADBEEF
+)";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    ASSERT_TRUE(result.has_value());
+    int64_t value = parser.getValue<int64_t>(*result, "section", "hex", 0);
+    EXPECT_EQ(value, 0xDEADBEEF);
+}
+
+TEST_F(TomlParserBranchTest, ParseStringWithOctalNumbers) {
+    const std::string toml = R"(
+[section]
+octal = 0o755
+)";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    ASSERT_TRUE(result.has_value());
+    int64_t value = parser.getValue<int64_t>(*result, "section", "octal", 0);
+    EXPECT_EQ(value, 0755);
+}
+
+TEST_F(TomlParserBranchTest, ParseStringWithBinaryNumbers) {
+    const std::string toml = R"(
+[section]
+binary = 0b11010110
+)";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    ASSERT_TRUE(result.has_value());
+    int64_t value = parser.getValue<int64_t>(*result, "section", "binary", 0);
+    EXPECT_EQ(value, 0b11010110);
+}
+
+TEST_F(TomlParserBranchTest, ParseStringWithScientificNotation) {
+    const std::string toml = R"(
+[section]
+sci1 = 1e10
+sci2 = 5e-3
+sci3 = 3.14e2
+)";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_NEAR(parser.getValue<double>(*result, "section", "sci1", 0.0), 1e10, 1e5);
+    EXPECT_NEAR(parser.getValue<double>(*result, "section", "sci2", 0.0), 5e-3, 1e-6);
+    EXPECT_NEAR(parser.getValue<double>(*result, "section", "sci3", 0.0), 314.0, 0.1);
+}
+
+TEST_F(TomlParserBranchTest, ParseStringWithInfinity) {
+    const std::string toml = R"(
+[section]
+pos_inf = inf
+neg_inf = -inf
+nan_val = nan
+)";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    ASSERT_TRUE(result.has_value());
+    double pos_inf = parser.getValue<double>(*result, "section", "pos_inf", 0.0);
+    double neg_inf = parser.getValue<double>(*result, "section", "neg_inf", 0.0);
+
+    EXPECT_TRUE(std::isinf(pos_inf) && pos_inf > 0);
+    EXPECT_TRUE(std::isinf(neg_inf) && neg_inf < 0);
+}
+
+TEST_F(TomlParserBranchTest, GetValueUint8) {
+    const std::string toml = R"(
+[section]
+byte = 255
+)";
+
+    TomlParser parser;
+    auto table = parser.parseString(toml);
+    ASSERT_TRUE(table.has_value());
+
+    uint8_t value = parser.getValue<uint8_t>(*table, "section", "byte", 0);
+    EXPECT_EQ(value, 255);
+}
+
+TEST_F(TomlParserBranchTest, ParseStringNestedArrayOfTables) {
+    const std::string toml = R"(
+[[products]]
+name = "Hammer"
+sku = 738594937
+
+[[products]]
+name = "Nail"
+sku = 284758393
+)";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    ASSERT_TRUE(result.has_value());
+}
+
+TEST_F(TomlParserBranchTest, ParseStringDottedKeys) {
+    const std::string toml = R"(
+fruit.apple.color = "red"
+fruit.apple.taste.sweet = true
+)";
+
+    TomlParser parser;
+    auto result = parser.parseString(toml);
+
+    ASSERT_TRUE(result.has_value());
+}
+

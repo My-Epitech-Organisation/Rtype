@@ -1126,3 +1126,137 @@ mouseSensitivity = 0.0
     // Many validation errors should be captured
     EXPECT_GT(capturedErrors.size(), 10u);
 }
+
+// ============================================================================
+// Additional tests for "false" branches (valid values)
+// ============================================================================
+
+TEST(RTypeGameConfigBranchTest, ValidateAllValid) {
+    RTypeGameConfig config = RTypeGameConfig::createDefault();
+    // All values should be valid
+    auto errors = config.validate();
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(RTypeGameConfigBranchTest, ValidateValidBoundaryValues) {
+    RTypeGameConfig config = RTypeGameConfig::createDefault();
+    config.video.width = 1;
+    config.video.height = 1;
+    config.video.maxFps = 1;
+    config.video.uiScale = 0.5F;
+    config.audio.masterVolume = 0.0F;
+    config.audio.musicVolume = 0.0F;
+    config.audio.sfxVolume = 0.0F;
+    config.network.serverAddress = "a";
+    config.network.serverPort = 1;
+    config.network.connectionTimeout = 1;
+    config.network.tickrate = 1;
+    config.server.port = 1;
+    config.server.maxPlayers = 1;
+    config.server.tickrate = 1;
+    config.gameplay.difficulty = "easy";
+    config.gameplay.startingLives = 1;
+    config.gameplay.waves = 1;
+    config.gameplay.playerSpeed = 0.1F;
+    config.gameplay.enemySpeedMultiplier = 0.1F;
+    config.input.moveUp = "a";
+    config.input.moveDown = "a";
+    config.input.moveLeft = "a";
+    config.input.moveRight = "a";
+    config.input.fire = "a";
+    config.input.mouseSensitivity = 0.1F;
+
+    auto errors = config.validate();
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(RTypeGameConfigBranchTest, ValidateMaxBoundaryValues) {
+    RTypeGameConfig config = RTypeGameConfig::createDefault();
+    config.video.width = 7680;
+    config.video.height = 4320;
+    config.video.maxFps = 500;
+    config.video.uiScale = 3.0F;
+    config.audio.masterVolume = 1.0F;
+    config.audio.musicVolume = 1.0F;
+    config.audio.sfxVolume = 1.0F;
+    config.network.tickrate = 240;
+    config.server.maxPlayers = 64;
+    config.server.tickrate = 240;
+    config.gameplay.difficulty = "nightmare";
+    config.gameplay.startingLives = 99;
+    config.input.mouseSensitivity = 10.0F;
+
+    auto errors = config.validate();
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(RTypeGameConfigBranchTest, ApplyDefaultsAllValid) {
+    RTypeGameConfig config = RTypeGameConfig::createDefault();
+    RTypeGameConfig backup = config;
+    config.applyDefaults();
+
+    // Nothing should change since all values are valid
+    EXPECT_EQ(config.video.width, backup.video.width);
+    EXPECT_EQ(config.video.height, backup.video.height);
+    EXPECT_EQ(config.network.serverAddress, backup.network.serverAddress);
+}
+
+TEST(RTypeGameConfigBranchTest, ApplyDefaultsPreservesValidValues) {
+    RTypeGameConfig config;
+    config.video.width = 1920;
+    config.video.height = 1080;
+    config.video.maxFps = 120;
+    config.video.uiScale = 1.5F;
+    config.audio.masterVolume = 0.8F;
+    config.network.serverAddress = "custom.server.com";
+    config.network.serverPort = 9999;
+    config.network.tickrate = 120;
+    config.gameplay.difficulty = "hard";
+    config.gameplay.startingLives = 5;
+    config.input.mouseSensitivity = 2.0F;
+
+    config.applyDefaults();
+
+    // Valid values should be preserved
+    EXPECT_EQ(config.video.width, 1920);
+    EXPECT_EQ(config.video.height, 1080);
+    EXPECT_EQ(config.video.maxFps, 120);
+    EXPECT_NEAR(config.video.uiScale, 1.5F, 0.01F);
+    EXPECT_EQ(config.network.serverAddress, "custom.server.com");
+    EXPECT_EQ(config.network.serverPort, 9999);
+    EXPECT_EQ(config.gameplay.difficulty, "hard");
+}
+
+TEST(RTypeGameConfigBranchTest, ValidateDifficultyVariants) {
+    // Test all valid difficulty values
+    for (const auto& diff : {"easy", "normal", "hard", "nightmare"}) {
+        RTypeGameConfig config = RTypeGameConfig::createDefault();
+        config.gameplay.difficulty = diff;
+        auto errors = config.validate();
+
+        bool diffError = false;
+        for (const auto& e : errors) {
+            if (e.section == "gameplay" && e.key == "difficulty") {
+                diffError = true;
+            }
+        }
+        EXPECT_FALSE(diffError) << "Difficulty '" << diff << "' should be valid";
+    }
+}
+
+TEST(RTypeGameConfigBranchTest, ApplyDefaultsDifficultyVariants) {
+    // Test all valid difficulty values preserved
+    for (const auto& diff : {"easy", "normal", "hard", "nightmare"}) {
+        RTypeGameConfig config;
+        config.gameplay.difficulty = diff;
+        config.applyDefaults();
+        EXPECT_EQ(config.gameplay.difficulty, diff);
+    }
+
+    // Test invalid difficulty gets defaulted
+    RTypeGameConfig config;
+    config.gameplay.difficulty = "invalid";
+    config.applyDefaults();
+    EXPECT_EQ(config.gameplay.difficulty, "normal");
+}
+

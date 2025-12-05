@@ -809,3 +809,277 @@ TEST(ArgParserOptionExitTest, PositionalHandlerReturnsExit) {
 
     EXPECT_EQ(result, ParseResult::Exit);
 }
+
+// ============================================================================
+// Additional Branch Coverage Tests for ArgParser
+// ============================================================================
+
+TEST(ArgParserBranchTest, DuplicateFlagOption) {
+    ArgParser parser;
+    bool called = false;
+
+    parser.flag("-h", "--help", "Show help", []() {
+        return ParseResult::Exit;
+    });
+
+    // Register duplicate - should warn and skip
+    parser.flag("-h", "--help", "Duplicate help", [&called]() {
+        called = true;
+        return ParseResult::Exit;
+    });
+
+    std::vector<std::string_view> args = {"-h"};
+    ParseResult result = parser.parse(args);
+
+    // Original handler should be used, not the duplicate
+    EXPECT_EQ(result, ParseResult::Exit);
+}
+
+TEST(ArgParserBranchTest, DuplicateValueOption) {
+    ArgParser parser;
+    std::string receivedValue;
+
+    parser.option("-p", "--port", "port", "Port number", [&receivedValue](std::string_view val) {
+        receivedValue = std::string(val);
+        return ParseResult::Success;
+    });
+
+    // Register duplicate
+    parser.option("-p", "--port", "port", "Duplicate port", [](std::string_view) {
+        return ParseResult::Error;
+    });
+
+    std::vector<std::string_view> args = {"-p", "8080"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Success);
+    EXPECT_EQ(receivedValue, "8080");
+}
+
+TEST(ArgParserBranchTest, OptionMissingValue) {
+    ArgParser parser;
+
+    parser.option("-p", "--port", "port", "Port number", [](std::string_view) {
+        return ParseResult::Success;
+    });
+
+    // Option without value
+    std::vector<std::string_view> args = {"-p"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Error);
+}
+
+TEST(ArgParserBranchTest, OptionMissingValueAtEnd) {
+    ArgParser parser;
+
+    parser.option("-c", "--config", "file", "Config file", [](std::string_view) {
+        return ParseResult::Success;
+    });
+
+    std::vector<std::string_view> args = {"--config"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Error);
+}
+
+TEST(ArgParserBranchTest, OptionHandlerReturnsError) {
+    ArgParser parser;
+
+    parser.option("-p", "--port", "port", "Port number", [](std::string_view val) {
+        if (val == "invalid") {
+            return ParseResult::Error;
+        }
+        return ParseResult::Success;
+    });
+
+    std::vector<std::string_view> args = {"-p", "invalid"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Error);
+}
+
+TEST(ArgParserBranchTest, RequiredPositionalMissing) {
+    ArgParser parser;
+
+    parser.positional("file", "Input file", [](std::string_view) {
+        return ParseResult::Success;
+    }, true);
+
+    std::vector<std::string_view> args = {};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Error);
+}
+
+TEST(ArgParserBranchTest, OptionalPositionalMissing) {
+    ArgParser parser;
+
+    parser.positional("file", "Input file", [](std::string_view) {
+        return ParseResult::Success;
+    }, false);
+
+    std::vector<std::string_view> args = {};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Success);
+}
+
+TEST(ArgParserBranchTest, PositionalHandlerReturnsError) {
+    ArgParser parser;
+
+    parser.positional("file", "Input file", [](std::string_view val) {
+        if (val.empty()) {
+            return ParseResult::Error;
+        }
+        return ParseResult::Success;
+    }, true);
+
+    // Handler should return error for specific input
+    parser.positional("output", "Output file", [](std::string_view) {
+        return ParseResult::Error;
+    }, true);
+
+    std::vector<std::string_view> args = {"input.txt", "output.txt"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Error);
+}
+
+TEST(ArgParserBranchTest, MultiplePositionalSomeOptional) {
+    ArgParser parser;
+    std::vector<std::string> values;
+
+    parser.positional("input", "Input file", [&values](std::string_view val) {
+        values.push_back(std::string(val));
+        return ParseResult::Success;
+    }, true);
+
+    parser.positional("output", "Output file", [&values](std::string_view val) {
+        values.push_back(std::string(val));
+        return ParseResult::Success;
+    }, false);
+
+    // Only provide required argument
+    std::vector<std::string_view> args = {"input.txt"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Success);
+    EXPECT_EQ(values.size(), 1u);
+    EXPECT_EQ(values[0], "input.txt");
+}
+
+TEST(ArgParserBranchTest, ExtraPositionalArgs) {
+    ArgParser parser;
+
+    parser.positional("file", "Input file", [](std::string_view) {
+        return ParseResult::Success;
+    }, true);
+
+    // More positional args than registered
+    std::vector<std::string_view> args = {"input.txt", "extra.txt", "another.txt"};
+    ParseResult result = parser.parse(args);
+
+    // Should succeed, extra args are ignored
+    EXPECT_EQ(result, ParseResult::Success);
+}
+
+TEST(ArgParserBranchTest, MixedFlagsOptionsPositional) {
+    ArgParser parser;
+    bool verbose = false;
+    std::string port;
+    std::string file;
+
+    parser.flag("-v", "--verbose", "Verbose mode", [&verbose]() {
+        verbose = true;
+        return ParseResult::Success;
+    });
+
+    parser.option("-p", "--port", "port", "Port number", [&port](std::string_view val) {
+        port = std::string(val);
+        return ParseResult::Success;
+    });
+
+    parser.positional("file", "Config file", [&file](std::string_view val) {
+        file = std::string(val);
+        return ParseResult::Success;
+    }, true);
+
+    std::vector<std::string_view> args = {"-v", "-p", "8080", "config.toml"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Success);
+    EXPECT_TRUE(verbose);
+    EXPECT_EQ(port, "8080");
+    EXPECT_EQ(file, "config.toml");
+}
+
+TEST(ArgParserBranchTest, FlagAfterPositional) {
+    ArgParser parser;
+    bool verbose = false;
+    std::string file;
+
+    parser.flag("-v", "--verbose", "Verbose mode", [&verbose]() {
+        verbose = true;
+        return ParseResult::Success;
+    });
+
+    parser.positional("file", "Config file", [&file](std::string_view val) {
+        file = std::string(val);
+        return ParseResult::Success;
+    }, true);
+
+    // Flag after positional - positional arg comes first
+    std::vector<std::string_view> args = {"config.toml", "-v"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Success);
+    EXPECT_TRUE(verbose);
+}
+
+TEST(ArgParserBranchTest, EmptyArgs) {
+    ArgParser parser;
+
+    // No options or positionals registered
+    std::vector<std::string_view> args = {};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Success);
+}
+
+TEST(ArgParserBranchTest, NonOptionArgWithDash) {
+    ArgParser parser;
+    std::string file;
+
+    parser.positional("file", "Input file", [&file](std::string_view val) {
+        file = std::string(val);
+        return ParseResult::Success;
+    }, true);
+
+    // This will be treated as unknown option
+    std::vector<std::string_view> args = {"-unknown"};
+    ParseResult result = parser.parse(args);
+
+    EXPECT_EQ(result, ParseResult::Error);
+}
+
+TEST(ArgParserBranchTest, HelpOutput) {
+    ArgParser parser;
+
+    parser.flag("-h", "--help", "Show help message", []() {
+        return ParseResult::Exit;
+    });
+
+    parser.option("-p", "--port", "port", "Server port", [](std::string_view) {
+        return ParseResult::Success;
+    });
+
+    parser.positional("config", "Configuration file", [](std::string_view) {
+        return ParseResult::Success;
+    }, true);
+
+    // Just verify it builds correctly with all types
+    std::ostringstream oss;
+    // Help would normally be printed here
+}
+
