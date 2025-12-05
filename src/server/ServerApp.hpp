@@ -22,6 +22,7 @@
 #include "../network/Packet.hpp"
 #include "Client.hpp"
 #include "ClientManager.hpp"
+#include "IGameConfig.hpp"
 #include "ServerMetrics.hpp"
 
 namespace rtype::server {
@@ -86,7 +87,7 @@ class ServerApp {
     static constexpr uint32_t MIN_SLEEP_THRESHOLD_US = 100;
 
     /**
-     * @brief Construct a new ServerApp
+     * @brief Construct a new ServerApp with manual configuration
      * @param port Port to listen on
      * @param maxPlayers Maximum number of concurrent players
      * @param tickRate Server tick rate in Hz
@@ -100,6 +101,16 @@ class ServerApp {
         std::shared_ptr<std::atomic<bool>> shutdownFlag,
         uint32_t clientTimeoutSeconds = DEFAULT_CLIENT_TIMEOUT_SECONDS,
         bool verbose = false);
+
+    /**
+     * @brief Construct a new ServerApp with game configuration
+     * @param gameConfig Game-specific configuration (takes ownership)
+     * @param shutdownFlag Shared pointer to external shutdown flag
+     * @param verbose Enable verbose debug output (default: false)
+     */
+    explicit ServerApp(std::unique_ptr<IGameConfig> gameConfig,
+                       std::shared_ptr<std::atomic<bool>> shutdownFlag,
+                       bool verbose = false);
 
     /**
      * @brief Destructor - ensures clean shutdown
@@ -178,6 +189,36 @@ class ServerApp {
     [[nodiscard]] const ClientManager& getClientManager() const noexcept {
         return _clientManager;
     }
+
+    /**
+     * @brief Get game configuration (if available)
+     * @return Pointer to game config, or nullptr if not set
+     */
+    [[nodiscard]] IGameConfig* getGameConfig() noexcept {
+        return _gameConfig.get();
+    }
+
+    /**
+     * @brief Get game configuration (const version)
+     * @return Const pointer to game config, or nullptr if not set
+     */
+    [[nodiscard]] const IGameConfig* getGameConfig() const noexcept {
+        return _gameConfig.get();
+    }
+
+    /**
+     * @brief Check if game configuration is available
+     * @return true if game config is loaded
+     */
+    [[nodiscard]] bool hasGameConfig() const noexcept {
+        return _gameConfig != nullptr && _gameConfig->isInitialized();
+    }
+
+    /**
+     * @brief Reload server configuration (hot-reload)
+     * @return true if reload was successful
+     */
+    [[nodiscard]] bool reloadConfiguration();
 
    private:
     // @brief Configuration for the main loop timing
@@ -288,8 +329,9 @@ class ServerApp {
         _shutdownFlag;  ///< External shutdown flag shared pointer
     std::atomic<bool> _hasShutdown{false};  ///< Guard against double shutdown
 
-    std::shared_ptr<ServerMetrics> _metrics;  ///< Server performance metrics
-    ClientManager _clientManager;             ///< Client connection manager
+    std::shared_ptr<ServerMetrics> _metrics;   ///< Server performance metrics
+    ClientManager _clientManager;              ///< Client connection manager
+    std::unique_ptr<IGameConfig> _gameConfig;  ///< Game-specific configuration
 
     // Network thread and packet queue for producer-consumer pattern
     SafeQueue<std::pair<Endpoint, rtype::network::Packet>>
