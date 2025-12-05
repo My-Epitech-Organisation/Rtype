@@ -8,10 +8,10 @@
 #ifndef SRC_GAMES_RTYPE_SHARED_CONFIG_RTYPECONFIG_HPP_
 #define SRC_GAMES_RTYPE_SHARED_CONFIG_RTYPECONFIG_HPP_
 
-#include "RTypeConfigParser.hpp"
-#include "RTypeGameConfig.hpp"
-#include "RTypeGameState.hpp"
-#include "RTypeSaveManager.hpp"
+#include "Parser/RTypeConfigParser.hpp"
+#include "GameConfig/RTypeGameConfig.hpp"
+#include "GameState/RTypeGameState.hpp"
+#include "SaveManager/RTypeSaveManager.hpp"
 
 /**
  * @namespace rtype::game::config
@@ -55,10 +55,9 @@
  * rtype::game::config::RTypeSaveManager saveManager("saves/");
  *
  * // Save game
- * rtype::game::config::RTypeGameState state = rtype::game::config::RTypeGameState::createNew();
- * state.players[0].score = 5000;
- * state.progression.currentLevel = 3;
- * saveManager.save(state, "slot1");
+ * rtype::game::config::RTypeGameState state =
+ * rtype::game::config::RTypeGameState::createNew(); state.players[0].score =
+ * 5000; state.progression.currentLevel = 3; saveManager.save(state, "slot1");
  *
  * // Load game
  * auto loaded = saveManager.load("slot1");
