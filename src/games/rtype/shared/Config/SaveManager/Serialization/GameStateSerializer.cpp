@@ -68,7 +68,6 @@ std::optional<RTypeGameState> GameStateSerializer::deserialize(
         deserializeDifficulty(data, offset, state.difficulty);
 
         return state;
-
     } catch (const std::exception& e) {
         outError = std::string("Failed to deserialize save: ") + e.what();
         return std::nullopt;
@@ -77,8 +76,7 @@ std::optional<RTypeGameState> GameStateSerializer::deserialize(
 
 void GameStateSerializer::serializePlayers(
     std::vector<uint8_t>& data, const std::vector<PlayerState>& players) {
-    BinarySerializer::writeUint32(data,
-                                  static_cast<uint32_t>(players.size()));
+    BinarySerializer::writeUint32(data, static_cast<uint32_t>(players.size()));
     for (const auto& player : players) {
         BinarySerializer::writeUint32(data, player.playerId);
         BinarySerializer::writeFloat(data, player.positionX);
@@ -97,8 +95,7 @@ void GameStateSerializer::serializePlayers(
 
 void GameStateSerializer::serializeEnemies(
     std::vector<uint8_t>& data, const std::vector<EnemyState>& enemies) {
-    BinarySerializer::writeUint32(data,
-                                  static_cast<uint32_t>(enemies.size()));
+    BinarySerializer::writeUint32(data, static_cast<uint32_t>(enemies.size()));
     for (const auto& enemy : enemies) {
         BinarySerializer::writeUint32(data, enemy.enemyId);
         BinarySerializer::writeUint8(data, enemy.enemyType);
@@ -131,9 +128,9 @@ void GameStateSerializer::serializeDifficulty(
     BinarySerializer::writeUint32(data, difficulty.startingLives);
 }
 
-void GameStateSerializer::deserializePlayers(const std::vector<uint8_t>& data,
-                                             size_t& offset,
-                                             std::vector<PlayerState>& players) {
+void GameStateSerializer::deserializePlayers(
+    const std::vector<uint8_t>& data, size_t& offset,
+    std::vector<PlayerState>& players) {
     uint32_t playerCount = BinarySerializer::readUint32(data, offset);
     players.reserve(playerCount);
     for (uint32_t i = 0; i < playerCount; ++i) {
@@ -187,9 +184,9 @@ void GameStateSerializer::deserializeProgression(
         BinarySerializer::readFloat(data, offset);
 }
 
-void GameStateSerializer::deserializeDifficulty(const std::vector<uint8_t>& data,
-                                                size_t& offset,
-                                                DifficultySnapshot& difficulty) {
+void GameStateSerializer::deserializeDifficulty(
+    const std::vector<uint8_t>& data, size_t& offset,
+    DifficultySnapshot& difficulty) {
     difficulty.difficultyLevel = BinarySerializer::readString(data, offset);
     difficulty.enemyHealthMultiplier =
         BinarySerializer::readFloat(data, offset);
