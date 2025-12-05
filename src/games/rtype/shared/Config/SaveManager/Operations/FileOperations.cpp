@@ -12,7 +12,6 @@ namespace rtype::game::config {
 bool FileOperations::writeToFile(const std::filesystem::path& filepath,
                                  const std::vector<uint8_t>& data,
                                  std::string& outError) {
-    // Create parent directories if needed
     if (filepath.has_parent_path() &&
         !std::filesystem::exists(filepath.parent_path())) {
         try {
@@ -23,8 +22,6 @@ bool FileOperations::writeToFile(const std::filesystem::path& filepath,
             return false;
         }
     }
-
-    // Write to temporary file first (safe write pattern)
     auto tempPath = filepath.string() + ".tmp";
 
     std::ofstream file(tempPath, std::ios::binary);
@@ -32,18 +29,14 @@ bool FileOperations::writeToFile(const std::filesystem::path& filepath,
         outError = "Cannot create save file: " + filepath.string();
         return false;
     }
-
     file.write(reinterpret_cast<const char*>(data.data()),
                static_cast<std::streamsize>(data.size()));
     file.close();
-
     if (!file) {
         outError = "Failed to write save file";
         std::filesystem::remove(tempPath);
         return false;
     }
-
-    // Atomic rename
     try {
         std::filesystem::rename(tempPath, filepath);
     } catch (const std::exception& e) {
