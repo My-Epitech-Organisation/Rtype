@@ -80,7 +80,7 @@ void Graphic::loop() {
     }
 }
 
-Graphic::Graphic(const std::shared_ptr<ECS::Registry>& registry)
+Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
     : _registry(registry), _view(sf::FloatRect({0, 0}, {1920, 1080})) {
     this->_keybinds = std::make_shared<KeyboardActions>();
     this->_window = std::make_shared<sf::RenderWindow>(

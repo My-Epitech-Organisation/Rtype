@@ -13,9 +13,8 @@
 #include "Components/TagComponent.hpp"
 
 std::vector<ECS::Entity> EntityFactory::createBackground(
-    const std::shared_ptr<ECS::Registry>& registry,
-    const std::shared_ptr<AssetManager>& assetManager,
-    const std::string& PageName) {
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assetManager, const std::string& PageName) {
     auto background = registry->spawnEntity();
     registry->emplaceComponent<Image>(
         background, assetManager->textureManager->get("bg_menu"));

@@ -51,10 +51,10 @@ void SceneManager::draw() {
     this->_activeScene->render(this->_window);
 }
 
-SceneManager::SceneManager(const std::shared_ptr<ECS::Registry>& ecs,
-                           const std::shared_ptr<AssetManager>& texture,
-                           const std::shared_ptr<sf::RenderWindow>& window,
-                           const std::shared_ptr<KeyboardActions>& keybinds)
+SceneManager::SceneManager(std::shared_ptr<ECS::Registry> ecs,
+                           std::shared_ptr<AssetManager> texture,
+                           std::shared_ptr<sf::RenderWindow> window,
+                           std::shared_ptr<KeyboardActions> keybinds)
     : _window(window), _keybinds(keybinds) {
     this->_sceneList.emplace(MAIN_MENU, [ecs, texture, &window, this]() {
         return std::make_unique<MainMenuScene>(ecs, texture, window,

@@ -16,8 +16,8 @@
 
 class BoxingSystem {
    public:
-    static void draw(const std::shared_ptr<ECS::Registry>& registry,
-                     const std::shared_ptr<sf::RenderWindow>& window);
+    static void draw(std::shared_ptr<ECS::Registry> registry,
+                     std::shared_ptr<sf::RenderWindow> window);
 };
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BOXINGSYSTEM_HPP_

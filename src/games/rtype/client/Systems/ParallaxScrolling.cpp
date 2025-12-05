@@ -10,7 +10,7 @@
 #include "../Components/ImageComponent.hpp"
 #include "../Components/ParallaxComponent.hpp"
 
-void ParallaxScrolling::update(const std::shared_ptr<ECS::Registry>& registry,
+void ParallaxScrolling::update(std::shared_ptr<ECS::Registry> registry,
                                sf::View view) {
     registry->view<Parallax, Image>().each(
         [&view](auto _, auto& parallax, auto& spriteData) {

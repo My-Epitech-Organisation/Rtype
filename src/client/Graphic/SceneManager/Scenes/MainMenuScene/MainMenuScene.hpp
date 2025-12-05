@@ -22,13 +22,13 @@ class MainMenuScene : public AScene {
 
    public:
     void update() override;
-    void render(const std::shared_ptr<sf::RenderWindow>& window) override;
+    void render(std::shared_ptr<sf::RenderWindow> window) override;
     void pollEvents(const sf::Event& e) override;
 
     MainMenuScene(
-        const std::shared_ptr<ECS::Registry>& ecs,
-        const std::shared_ptr<AssetManager>& textureManager,
-        const std::shared_ptr<sf::RenderWindow>& window,
+        std::shared_ptr<ECS::Registry> ecs,
+        std::shared_ptr<AssetManager> textureManager,
+        std::shared_ptr<sf::RenderWindow> window,
         std::function<void(const SceneManager::Scene&)> switchToScene);
     ~MainMenuScene() override;
 };

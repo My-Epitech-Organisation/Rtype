@@ -120,7 +120,7 @@ void SettingsScene::_initWindowSection() {
 
 void SettingsScene::update() {}
 
-void SettingsScene::render(const std::shared_ptr<sf::RenderWindow>& window) {}
+void SettingsScene::render(std::shared_ptr<sf::RenderWindow> window) {}
 
 void SettingsScene::pollEvents(const sf::Event& e) {
     if (this->_actionToRebind.has_value()) {
@@ -147,11 +147,11 @@ void SettingsScene::pollEvents(const sf::Event& e) {
 }
 
 SettingsScene::SettingsScene(
-    const std::shared_ptr<ECS::Registry>& ecs,
-    const std::shared_ptr<AssetManager>& textureManager,
-    const std::shared_ptr<sf::RenderWindow>& window,
+    std::shared_ptr<ECS::Registry> ecs,
+    std::shared_ptr<AssetManager> textureManager,
+    std::shared_ptr<sf::RenderWindow> window,
     std::function<void(const SceneManager::Scene&)> switchToScene,
-    const std::shared_ptr<KeyboardActions>& keybinds)
+    std::shared_ptr<KeyboardActions> keybinds)
     : AScene(ecs, textureManager, window), _keybinds(keybinds) {
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "Settings"));

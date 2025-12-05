@@ -12,7 +12,7 @@
 #include "../Components/TagComponent.hpp"
 
 void EventSystem::mouseMoved(const sf::Event& e,
-                             const std::shared_ptr<sf::RenderWindow>& window,
+                             std::shared_ptr<sf::RenderWindow> window,
                              UserEvent& actionType, const Rectangle& rect) {
     if (const auto& mouseMove = e.getIf<sf::Event::MouseMoved>()) {
         sf::FloatRect rectBounds = rect.rectangle.getGlobalBounds();
@@ -28,7 +28,7 @@ void EventSystem::mouseMoved(const sf::Event& e,
 }
 
 void EventSystem::mousePressed(const sf::Event& e,
-                               const std::shared_ptr<sf::RenderWindow>& window,
+                               std::shared_ptr<sf::RenderWindow> window,
                                UserEvent& actionType, const Rectangle& rect) {
     if (const auto& mousePress = e.getIf<sf::Event::MouseButtonPressed>()) {
         sf::FloatRect rectBounds = rect.rectangle.getGlobalBounds();
@@ -42,7 +42,7 @@ void EventSystem::mousePressed(const sf::Event& e,
 }
 
 void EventSystem::mouseReleased(const sf::Event& e,
-                                const std::shared_ptr<sf::RenderWindow>& window,
+                                std::shared_ptr<sf::RenderWindow> window,
                                 UserEvent& actionType, const Rectangle& rect) {
     if (const auto& mouseRelease = e.getIf<sf::Event::MouseButtonReleased>()) {
         sf::FloatRect rectBounds = rect.rectangle.getGlobalBounds();
@@ -57,9 +57,9 @@ void EventSystem::mouseReleased(const sf::Event& e,
     }
 }
 
-void EventSystem::processEvents(
-    const std::shared_ptr<ECS::Registry>& registry, const sf::Event& e,
-    const std::shared_ptr<sf::RenderWindow>& window) {
+void EventSystem::processEvents(std::shared_ptr<ECS::Registry> registry,
+                                const sf::Event& e,
+                                std::shared_ptr<sf::RenderWindow> window) {
     registry->view<Rectangle, UserEvent>().each(
         [&e, &window](auto entity, const Rectangle& rect,
                       UserEvent& actionType) {

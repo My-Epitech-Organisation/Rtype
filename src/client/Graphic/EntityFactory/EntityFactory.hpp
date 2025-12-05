@@ -24,7 +24,7 @@
 
 namespace EntityFactory {
 template <typename... Args>
-static ECS::Entity createButton(const std::shared_ptr<ECS::Registry>& registry,
+static ECS::Entity createButton(std::shared_ptr<ECS::Registry> registry,
                                 const Text& text, const Position& position,
                                 const Rectangle& rectangle,
                                 std::function<void(Args...)> onClick) {
@@ -39,9 +39,8 @@ static ECS::Entity createButton(const std::shared_ptr<ECS::Registry>& registry,
 }
 
 std::vector<ECS::Entity> createBackground(
-    const std::shared_ptr<ECS::Registry>& registry,
-    const std::shared_ptr<AssetManager>& assetManager,
-    const std::string& PageName);
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assetManager, const std::string& PageName);
 };  // namespace EntityFactory
 
 #endif  // SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_

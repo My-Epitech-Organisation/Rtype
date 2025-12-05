@@ -17,8 +17,8 @@
 #include "Components/PositionComponent.hpp"
 #include "ecs/ECS.hpp"
 
-void RenderSystem::draw(const std::shared_ptr<ECS::Registry>& registry,
-                        const std::shared_ptr<sf::RenderWindow>& window) {
+void RenderSystem::draw(std::shared_ptr<ECS::Registry> registry,
+                        std::shared_ptr<sf::RenderWindow> window) {
     registry->view<Image, Position>().each(
         [&window, &registry](auto entt, auto& img, auto& pos) {
             img.sprite.setPosition(

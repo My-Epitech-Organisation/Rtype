@@ -40,7 +40,7 @@ class Graphic {
    public:
     void loop();
 
-    explicit Graphic(const std::shared_ptr<ECS::Registry>& registry);
+    explicit Graphic(std::shared_ptr<ECS::Registry> registry);
     ~Graphic() = default;
 
     Graphic(const Graphic&) = delete;

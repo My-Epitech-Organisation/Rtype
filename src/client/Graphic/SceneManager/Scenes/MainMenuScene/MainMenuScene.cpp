@@ -66,14 +66,14 @@ void MainMenuScene::_createFakePlayer() {
 
 void MainMenuScene::update() {}
 
-void MainMenuScene::render(const std::shared_ptr<sf::RenderWindow>& window) {}
+void MainMenuScene::render(std::shared_ptr<sf::RenderWindow> window) {}
 
 void MainMenuScene::pollEvents(const sf::Event& e) {}
 
 MainMenuScene::MainMenuScene(
-    const std::shared_ptr<ECS::Registry>& ecs,
-    const std::shared_ptr<AssetManager>& assetsManager,
-    const std::shared_ptr<sf::RenderWindow>& window,
+    std::shared_ptr<ECS::Registry> ecs,
+    std::shared_ptr<AssetManager> assetsManager,
+    std::shared_ptr<sf::RenderWindow> window,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(ecs, assetsManager, window) {
     this->_listEntity = (EntityFactory::createBackground(
