@@ -35,3 +35,32 @@ target_include_directories(test_safe_queue PRIVATE
 )
 
 gtest_discover_tests(test_safe_queue)
+
+# Config and SaveManager tests
+add_executable(test_config test_config.cpp)
+
+target_link_libraries(test_config PRIVATE
+    GTest::gtest_main
+    rtype_game_config
+)
+
+target_include_directories(test_config PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+gtest_discover_tests(test_config)
+
+add_executable(test_savemanager test_savemanager.cpp)
+
+target_link_libraries(test_savemanager PRIVATE
+    GTest::gtest_main
+    rtype_game_config
+)
+
+target_include_directories(test_savemanager PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+gtest_discover_tests(test_savemanager)
