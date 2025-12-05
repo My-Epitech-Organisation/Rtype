@@ -17,19 +17,21 @@
 #include "Components/PositionComponent.hpp"
 #include "ecs/ECS.hpp"
 
+namespace rtype::games::rtype::client {
+
 RenderSystem::RenderSystem(std::shared_ptr<sf::RenderWindow> window)
-    : rtype::engine::ASystem("RenderSystem"), _window(std::move(window)) {}
+    : ::rtype::engine::ASystem("RenderSystem"), _window(std::move(window)) {}
 
 void RenderSystem::update(ECS::Registry& registry, float dt) {
     registry
-        .view<rtype::games::rtype::client::Image,
-              rtype::games::rtype::shared::Position>()
+        .view<::rtype::games::rtype::client::Image,
+              ::rtype::games::rtype::shared::Position>()
         .each([&registry, this](auto entt, auto& img, auto& pos) {
             img.sprite.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
             try {
                 auto& size =
-                    registry.getComponent<rtype::games::rtype::client::Size>(
+                    registry.getComponent<::rtype::games::rtype::client::Size>(
                         entt);
                 img.sprite.setScale(sf::Vector2f({size.x, size.y}));
             } catch (...) {
@@ -37,7 +39,7 @@ void RenderSystem::update(ECS::Registry& registry, float dt) {
             try {
                 auto& texture =
                     registry
-                        .getComponent<rtype::games::rtype::client::TextureRect>(
+                        .getComponent<::rtype::games::rtype::client::TextureRect>(
                             entt);
                 img.sprite.setTextureRect(texture.rect);
             } catch (...) {
@@ -46,10 +48,10 @@ void RenderSystem::update(ECS::Registry& registry, float dt) {
         });
 
     registry
-        .view<rtype::games::rtype::client::Rectangle,
-              rtype::games::rtype::shared::Position>()
+        .view<::rtype::games::rtype::client::Rectangle,
+              ::rtype::games::rtype::shared::Position>()
         .each([this, &registry](auto entt, auto& rectData, auto& pos) {
-            if (registry.hasComponent<rtype::games::rtype::client::ButtonTag>(
+            if (registry.hasComponent<::rtype::games::rtype::client::ButtonTag>(
                     entt))
                 return;
 
@@ -65,10 +67,10 @@ void RenderSystem::update(ECS::Registry& registry, float dt) {
         });
 
     registry
-        .view<rtype::games::rtype::client::Rectangle,
-              rtype::games::rtype::client::Text,
-              rtype::games::rtype::shared::Position,
-              rtype::games::rtype::client::ButtonTag>()
+        .view<::rtype::games::rtype::client::Rectangle,
+              ::rtype::games::rtype::client::Text,
+              ::rtype::games::rtype::shared::Position,
+              ::rtype::games::rtype::client::ButtonTag>()
         .each([this](auto _, auto& rectData, auto& textData, auto& pos,
                      auto __) {
             rectData.rectangle.setPosition(
@@ -103,9 +105,9 @@ void RenderSystem::update(ECS::Registry& registry, float dt) {
         });
 
     registry
-        .view<rtype::games::rtype::client::Text,
-              rtype::games::rtype::shared::Position,
-              rtype::games::rtype::client::StaticTextTag>()
+        .view<::rtype::games::rtype::client::Text,
+              ::rtype::games::rtype::shared::Position,
+              ::rtype::games::rtype::client::StaticTextTag>()
         .each([this](auto _, auto& textData, auto& pos, auto __) {
             textData.text.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
@@ -116,3 +118,4 @@ void RenderSystem::update(ECS::Registry& registry, float dt) {
             this->_window->draw(textData.text);
         });
 }
+}  // namespace rtype::games::rtype::client

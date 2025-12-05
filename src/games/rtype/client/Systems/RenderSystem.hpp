@@ -12,8 +12,8 @@
 
 #include "ASystem.hpp"
 #include "ecs/ECS.hpp"
-
-class RenderSystem : public rtype::engine::ASystem {
+namespace rtype::games::rtype::client {
+class RenderSystem : public ::rtype::engine::ASystem {
    private:
     std::shared_ptr<sf::RenderWindow> _window;
 
@@ -21,5 +21,6 @@ class RenderSystem : public rtype::engine::ASystem {
     explicit RenderSystem(std::shared_ptr<sf::RenderWindow> window);
     void update(ECS::Registry& registry, float dt) override;
 };
+}  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_RENDERSYSTEM_HPP_

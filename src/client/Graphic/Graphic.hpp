@@ -36,12 +36,12 @@ class Graphic {
     sf::Clock _mainClock;
 
     // Systems
-    std::unique_ptr<MovementSystem> _movementSystem;
-    std::unique_ptr<ButtonUpdateSystem> _buttonUpdateSystem;
-    std::unique_ptr<ParallaxScrolling> _parallaxScrolling;
-    std::unique_ptr<RenderSystem> _renderSystem;
-    std::unique_ptr<BoxingSystem> _boxingSystem;
-    std::unique_ptr<ResetTriggersSystem> _resetTriggersSystem;
+    std::unique_ptr<::rtype::games::rtype::client::MovementSystem> _movementSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ButtonUpdateSystem> _buttonUpdateSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ParallaxScrolling> _parallaxScrolling;
+    std::unique_ptr<::rtype::games::rtype::client::RenderSystem> _renderSystem;
+    std::unique_ptr<::rtype::games::rtype::client::BoxingSystem> _boxingSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ResetTriggersSystem> _resetTriggersSystem;
 
     static constexpr int WINDOW_WIDTH = 1920;
     static constexpr int WINDOW_HEIGHT = 1080;

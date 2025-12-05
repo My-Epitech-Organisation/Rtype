@@ -26,7 +26,7 @@ void Graphic::_pollEvents() {
         if (event->is<sf::Event::Closed>()) {
             this->_window->close();
         }
-        auto eventSystem = EventSystem(this->_window, *event);
+        auto eventSystem = ::rtype::games::rtype::client::EventSystem(this->_window, *event);
         eventSystem.update(*this->_registry, 0.f);
         this->_sceneManager->pollEvents(*event);
     }
@@ -75,13 +75,13 @@ Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
         registry, this->_assetsManager, this->_window, this->_keybinds);
 
     // Initialize systems
-    this->_movementSystem = std::make_unique<MovementSystem>();
+    this->_movementSystem = std::make_unique<::rtype::games::rtype::client::MovementSystem>();
     this->_buttonUpdateSystem =
-        std::make_unique<ButtonUpdateSystem>(this->_window);
-    this->_parallaxScrolling = std::make_unique<ParallaxScrolling>(this->_view);
-    this->_renderSystem = std::make_unique<RenderSystem>(this->_window);
-    this->_boxingSystem = std::make_unique<BoxingSystem>(this->_window);
-    this->_resetTriggersSystem = std::make_unique<ResetTriggersSystem>();
+        std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(this->_window);
+    this->_parallaxScrolling = std::make_unique<::rtype::games::rtype::client::ParallaxScrolling>(this->_view);
+    this->_renderSystem = std::make_unique<::rtype::games::rtype::client::RenderSystem>(this->_window);
+    this->_boxingSystem = std::make_unique<::rtype::games::rtype::client::BoxingSystem>(this->_window);
+    this->_resetTriggersSystem = std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
 
     this->_mainClock.start();
 }

@@ -12,16 +12,18 @@
 #include "../Components/BoxingComponent.hpp"
 #include "../Components/ImageComponent.hpp"
 
+namespace rtype::games::rtype::client {
+
 BoxingSystem::BoxingSystem(std::shared_ptr<sf::RenderWindow> window)
-    : rtype::engine::ASystem("BoxingSystem"), _window(std::move(window)) {}
+    : ::rtype::engine::ASystem("BoxingSystem"), _window(std::move(window)) {}
 
 void BoxingSystem::update(ECS::Registry& registry, float dt) {
     registry
-        .view<rtype::games::rtype::client::Image,
-              rtype::games::rtype::client::BoxingComponent>()
+        .view<::rtype::games::rtype::client::Image,
+              ::rtype::games::rtype::client::BoxingComponent>()
         .each([this](ECS::Entity _,
-                     const rtype::games::rtype::client::Image& img,
-                     rtype::games::rtype::client::BoxingComponent& box) {
+                     const ::rtype::games::rtype::client::Image& img,
+                     ::rtype::games::rtype::client::BoxingComponent& box) {
             sf::FloatRect bounds = img.sprite.getGlobalBounds();
 
             box.box.setSize({bounds.size.x, bounds.size.y});
@@ -34,3 +36,4 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
             this->_window->draw(box.box);
         });
 }
+}  // namespace rtype::games::rtype::client

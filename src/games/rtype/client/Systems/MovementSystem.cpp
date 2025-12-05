@@ -11,13 +11,15 @@
 #include "../Components/ImageComponent.hpp"
 #include "Components/PositionComponent.hpp"
 
-MovementSystem::MovementSystem() : rtype::engine::ASystem("MovementSystem") {}
+namespace rtype::games::rtype::client {
+
+MovementSystem::MovementSystem() : ::rtype::engine::ASystem("MovementSystem") {}
 
 void MovementSystem::update(ECS::Registry& registry, float dt) {
     registry
-        .view<rtype::games::rtype::shared::VelocityComponent,
-              rtype::games::rtype::shared::Position,
-              rtype::games::rtype::client::Image>()
+        .view<::rtype::games::rtype::shared::VelocityComponent,
+              ::rtype::games::rtype::shared::Position,
+              ::rtype::games::rtype::client::Image>()
         .each([dt](auto _, auto& velocity, auto& position, auto& spriteData) {
             position.x += velocity.vx * dt;
             position.y += velocity.vy * dt;
@@ -25,3 +27,4 @@ void MovementSystem::update(ECS::Registry& registry, float dt) {
             spriteData.sprite.setPosition(sf::Vector2f(position.x, position.y));
         });
 }
+}  // namespace rtype::games::rtype::client
