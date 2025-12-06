@@ -10,6 +10,12 @@ if(NOT DEFINED CMAKE_CXX_COMPILER AND NOT DEFINED ENV{CXX})
     endif()
 endif()
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Build Debug détecté : Activation de AddressSanitizer")
+    add_compile_options(-fsanitize=address -g -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
+
 project(r-type LANGUAGES CXX)
 
 # Set C++20 standard globally
