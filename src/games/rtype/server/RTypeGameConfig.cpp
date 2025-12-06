@@ -19,11 +19,9 @@
 namespace rtype::games::rtype::server {
 
 namespace fs = std::filesystem;
-using ::rtype::game::config::RTypeConfigParser;
-using ::rtype::game::config::RTypeGameState;
-using ::rtype::game::config::RTypeSaveManager;
-using ::rtype::game::config::SaveResult;
-using ::rtype::games::rtype::shared::EntityConfigRegistry;
+namespace config = ::rtype::game::config;
+namespace shared = ::rtype::games::rtype::shared;
+namespace server_ns = ::rtype::server;
 
 RTypeGameConfig::RTypeGameConfig() = default;
 
@@ -75,7 +73,7 @@ bool RTypeGameConfig::reloadConfiguration() {
 
     const auto gameConfigDir = _configDir.parent_path() / "game";
     if (fs::exists(gameConfigDir)) {
-        EntityConfigRegistry::getInstance().clear();
+        shared::EntityConfigRegistry::getInstance().clear();
         static_cast<void>(loadEntityConfigs(gameConfigDir));
     }
 
@@ -89,7 +87,7 @@ bool RTypeGameConfig::reloadConfiguration() {
     return true;
 }
 
-ServerGenericServerSettings RTypeGameConfig::getServerSettings()
+server_ns::GenericServerSettings RTypeGameConfig::getServerSettings()
     const noexcept {
     return {.port = _config.server.port,
             .maxPlayers = _config.server.maxPlayers,
@@ -97,7 +95,7 @@ ServerGenericServerSettings RTypeGameConfig::getServerSettings()
             .mapName = _config.server.mapName};
 }
 
-ServerGenericGameplaySettings RTypeGameConfig::getGameplaySettings()
+server_ns::GenericGameplaySettings RTypeGameConfig::getGameplaySettings()
     const noexcept {
     return {.difficulty = _config.gameplay.difficulty,
             .startingLives = _config.gameplay.startingLives,
@@ -136,7 +134,7 @@ bool RTypeGameConfig::loadServerConfig(const fs::path& configFile) {
 }
 
 bool RTypeGameConfig::loadEntityConfigs(const fs::path& gameConfigDir) {
-    auto& registry = EntityConfigRegistry::getInstance();
+    auto& registry = shared::EntityConfigRegistry::getInstance();
 
     bool success = registry.loadFromDirectory(gameConfigDir.string());
 
@@ -168,7 +166,7 @@ bool RTypeGameConfig::initializeSaveManager() {
         }
     }
 
-    _saveManager = std::make_unique<RTypeSaveManager>(savesPath);
+    _saveManager = std::make_unique<config::RTypeSaveManager>(savesPath);
     LOG_INFO(
         "[RTypeConfig] Save manager initialized at: " << savesPath.string());
 
@@ -196,8 +194,6 @@ bool RTypeGameConfig::validateConfiguration() {
     return true;
 }
 
-// ==================== Save Management ====================
-
 bool RTypeGameConfig::saveGame(const std::string& slotName,
                                const std::vector<uint8_t>& gameStateData) {
     if (!_saveManager) {
@@ -205,15 +201,12 @@ bool RTypeGameConfig::saveGame(const std::string& slotName,
         return false;
     }
 
-    // Deserialize game state from generic data
-    // For now, this is a simple pass-through - in production,
-    // you'd deserialize the data into RTypeGameState
-    ::rtype::game::config::RTypeGameState state;
-    // TODO(music-soul1-1): Implement proper deserialization from gameStateData
+    config::RTypeGameState state;
+    // TODO(Sam): Implement proper deserialization from gameStateData
     (void)gameStateData;
 
     auto result = _saveManager->save(state, slotName);
-    if (result != SaveResult::Success) {
+    if (result != config::SaveResult::Success) {
         _lastError = _saveManager->getLastError();
         return false;
     }
@@ -232,14 +225,13 @@ std::vector<uint8_t> RTypeGameConfig::loadGame(const std::string& slotName) {
         return {};
     }
 
-    // Serialize to generic format
-    // TODO(music-soul1-1): Implement proper serialization
+    // TODO(Sam): Implement proper serialization
     std::vector<uint8_t> data;
     return data;
 }
 
-std::vector<ServerGenericSaveInfo> RTypeGameConfig::listSaves() const {
-    std::vector<ServerGenericSaveInfo> result;
+std::vector<server_ns::GenericSaveInfo> RTypeGameConfig::listSaves() const {
+    std::vector<server_ns::GenericSaveInfo> result;
 
     if (!_saveManager) {
         return result;
@@ -269,21 +261,21 @@ bool RTypeGameConfig::deleteSave(const std::string& slotName) {
     return _saveManager->deleteSave(slotName);
 }
 
-SaveResult RTypeGameConfig::saveRTypeState(const RTypeGameState& state,
-                                           const std::string& slotName) {
+config::SaveResult RTypeGameConfig::saveRTypeState(
+    const config::RTypeGameState& state, const std::string& slotName) {
     if (!_saveManager) {
         _lastError = "Save manager not initialized";
-        return SaveResult::IOError;
+        return config::SaveResult::IOError;
     }
 
     auto result = _saveManager->save(state, slotName);
-    if (result != SaveResult::Success) {
+    if (result != config::SaveResult::Success) {
         _lastError = _saveManager->getLastError();
     }
     return result;
 }
 
-std::optional<RTypeGameState> RTypeGameConfig::loadRTypeState(
+std::optional<config::RTypeGameState> RTypeGameConfig::loadRTypeState(
     const std::string& slotName) {
     if (!_saveManager) {
         _lastError = "Save manager not initialized";
@@ -297,7 +289,7 @@ std::optional<RTypeGameState> RTypeGameConfig::loadRTypeState(
     return state;
 }
 
-bool RTypeGameConfig::createAutosave(const RTypeGameState& state) {
+bool RTypeGameConfig::createAutosave(const config::RTypeGameState& state) {
     if (!_saveManager) {
         _lastError = "Save manager not initialized";
         return false;
@@ -320,7 +312,7 @@ bool RTypeGameConfig::createAutosave(const RTypeGameState& state) {
     std::string slot = std::string(AUTOSAVE_SLOT) + "_1";
     auto result = _saveManager->save(state, slot);
 
-    if (result != SaveResult::Success) {
+    if (result != config::SaveResult::Success) {
         _lastError = _saveManager->getLastError();
         return false;
     }
@@ -329,9 +321,7 @@ bool RTypeGameConfig::createAutosave(const RTypeGameState& state) {
     return true;
 }
 
-// ==================== Factory ====================
-
-std::unique_ptr<ServerIGameConfig> createRTypeGameConfig() {
+std::unique_ptr<server_ns::IGameConfig> createRTypeGameConfig() {
     return std::make_unique<RTypeGameConfig>();
 }
 

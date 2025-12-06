@@ -22,11 +22,8 @@
 
 namespace rtype::games::rtype::server {
 
-// Type aliases for cleaner code
-using ServerIGameConfig = ::rtype::server::IGameConfig;
-using ServerGenericServerSettings = ::rtype::server::GenericServerSettings;
-using ServerGenericGameplaySettings = ::rtype::server::GenericGameplaySettings;
-using ServerGenericSaveInfo = ::rtype::server::GenericSaveInfo;
+// Namespace aliases for cleaner code
+namespace server_ns = ::rtype::server;
 
 /**
  * @class RTypeGameConfig
@@ -35,7 +32,7 @@ using ServerGenericSaveInfo = ::rtype::server::GenericSaveInfo;
  * Provides R-Type specific configuration loading, entity management,
  * and save system integration for the generic server.
  */
-class RTypeGameConfig : public ServerIGameConfig {
+class RTypeGameConfig : public server_ns::IGameConfig {
    public:
     RTypeGameConfig();
     ~RTypeGameConfig() override = default;
@@ -45,17 +42,15 @@ class RTypeGameConfig : public ServerIGameConfig {
     RTypeGameConfig(RTypeGameConfig&&) = default;
     RTypeGameConfig& operator=(RTypeGameConfig&&) = default;
 
-    // ==================== IGameConfig Implementation ====================
-
     [[nodiscard]] bool initialize(const std::string& configDir) override;
     [[nodiscard]] bool reloadConfiguration() override;
     [[nodiscard]] bool isInitialized() const noexcept override {
         return _initialized;
     }
 
-    [[nodiscard]] ServerGenericServerSettings getServerSettings()
+    [[nodiscard]] server_ns::GenericServerSettings getServerSettings()
         const noexcept override;
-    [[nodiscard]] ServerGenericGameplaySettings getGameplaySettings()
+    [[nodiscard]] server_ns::GenericGameplaySettings getGameplaySettings()
         const noexcept override;
     [[nodiscard]] std::string getSavesPath() const noexcept override;
 
@@ -64,7 +59,8 @@ class RTypeGameConfig : public ServerIGameConfig {
         const std::vector<uint8_t>& gameStateData) override;
     [[nodiscard]] std::vector<uint8_t> loadGame(
         const std::string& slotName) override;
-    [[nodiscard]] std::vector<ServerGenericSaveInfo> listSaves() const override;
+    [[nodiscard]] std::vector<server_ns::GenericSaveInfo> listSaves()
+        const override;
     [[nodiscard]] bool saveExists(const std::string& slotName) const override;
     bool deleteSave(const std::string& slotName) override;
 
@@ -75,8 +71,6 @@ class RTypeGameConfig : public ServerIGameConfig {
     [[nodiscard]] std::string getGameId() const noexcept override {
         return "rtype";
     }
-
-    // ==================== R-Type Specific Methods ====================
 
     /**
      * @brief Get R-Type specific configuration
@@ -142,7 +136,7 @@ class RTypeGameConfig : public ServerIGameConfig {
  * @brief Factory function to create R-Type game config
  * @return Unique pointer to IGameConfig implementation
  */
-[[nodiscard]] std::unique_ptr<ServerIGameConfig> createRTypeGameConfig();
+[[nodiscard]] std::unique_ptr<server_ns::IGameConfig> createRTypeGameConfig();
 
 }  // namespace rtype::games::rtype::server
 
