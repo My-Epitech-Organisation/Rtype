@@ -246,6 +246,24 @@ jobs:
           LATEST_TAG="${{ steps.latest_release.outputs.latest_tag }}"
           NEW_VERSION="${{ steps.version.outputs.new_version }}"
 
+          get_username() {
+            local email="$1"
+            case "$email" in
+              "paul-antoine.salmon@epitech.eu") echo "Arkteus" ;;
+              "noa.roussiere@epitech.eu") echo "nduboi" ;;
+              "samuel.tesson@epitech.eu") echo "SamTess" ;;
+              "clement.talneau@epitech.eu") echo "ctalneau" ;;
+              *)
+                local api_username=$(curl -s "https://api.github.com/search/users?q=${email}" -H "Accept: application/vnd.github.v3+json" | grep -o '"login":"[^"]*' | head -1 | cut -d'"' -f4)
+                if [ ! -z "$api_username" ]; then
+                  echo "$api_username"
+                else
+                  echo "$email" | sed 's/@.*//'
+                fi
+                ;;
+            esac
+          }
+
           cat > release_notes.md << 'EOF'
           ## What's Changed
 
@@ -257,7 +275,7 @@ jobs:
             git log ${LATEST_TAG}..HEAD --pretty=format:"%s (%h) - %ae" --reverse | while read line; do
               email=$(echo "$line" | grep -oE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+' | head -1)
               if [ ! -z "$email" ]; then
-                username=$(curl -s "https://api.github.com/search/users?q=${email}" -H "Accept: application/vnd.github.v3+json" | grep -o '"login":"[^"]*' | head -1 | cut -d'"' -f4)
+                username=$(get_username "$email")
                 if [ ! -z "$username" ]; then
                   line=$(echo "$line" | sed "s/${email}/@${username}/")
                 fi
@@ -273,7 +291,7 @@ jobs:
             git log HEAD --pretty=format:"%s (%h) - %ae" --reverse | while read line; do
               email=$(echo "$line" | grep -oE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+' | head -1)
               if [ ! -z "$email" ]; then
-                username=$(curl -s "https://api.github.com/search/users?q=${email}" -H "Accept: application/vnd.github.v3+json" | grep -o '"login":"[^"]*' | head -1 | cut -d'"' -f4)
+                username=$(get_username "$email")
                 if [ ! -z "$username" ]; then
                   line=$(echo "$line" | sed "s/${email}/@${username}/")
                 fi
@@ -291,18 +309,12 @@ jobs:
 
           if git rev-parse --verify "$LATEST_TAG" >/dev/null 2>&1; then
             git log ${LATEST_TAG}..HEAD --format='%ae' | sort -u | while read email; do
-              username=$(curl -s "https://api.github.com/search/users?q=${email}" -H "Accept: application/vnd.github.v3+json" | grep -o '"login":"[^"]*' | head -1 | cut -d'"' -f4)
-              if [ -z "$username" ]; then
-                username=$(echo "$email" | sed 's/@.*//')
-              fi
+              username=$(get_username "$email")
               echo "- @${username}" >> release_notes.md
             done
           else
             git log HEAD --format='%ae' | sort -u | while read email; do
-              username=$(curl -s "https://api.github.com/search/users?q=${email}" -H "Accept: application/vnd.github.v3+json" | grep -o '"login":"[^"]*' | head -1 | cut -d'"' -f4)
-              if [ -z "$username" ]; then
-                username=$(echo "$email" | sed 's/@.*//')
-              fi
+              username=$(get_username "$email")
               echo "- @${username}" >> release_notes.md
             done
           fi

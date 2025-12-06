@@ -9,7 +9,7 @@
 
 #include <string>
 
-#include "ecs/ECS.hpp"
+#include "ECS.hpp"
 
 namespace rtype::engine {
 

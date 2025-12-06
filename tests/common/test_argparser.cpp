@@ -5,7 +5,8 @@
 ** Unit tests for ArgParser
 */
 
-#include "rtype_common/src/ArgParser.hpp"
+#include "rtype_common/src/ArgParser/ArgParser.hpp"
+#include "rtype_common/src/ArgParser/NumberParser.hpp"
 #include <gtest/gtest.h>
 #include <vector>
 #include <string>

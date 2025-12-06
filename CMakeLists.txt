@@ -43,6 +43,9 @@ add_subdirectory(lib)
 # Add source directory
 add_subdirectory(src)
 
+# Add tools (test utilities)
+# add_subdirectory(tools)
+
 # Add tests if enabled
 if(BUILD_TESTS)
     enable_testing()

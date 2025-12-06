@@ -2,6 +2,8 @@ add_executable(r-type_server
     main.cpp
     ServerApp.cpp
     ClientManager.cpp
+    network/NetworkServer.cpp
+    network/ServerNetworkSystem.cpp
 )
 
 target_compile_features(r-type_server PRIVATE cxx_std_20)

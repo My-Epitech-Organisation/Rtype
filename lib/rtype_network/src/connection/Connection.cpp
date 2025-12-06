@@ -8,7 +8,8 @@
 #include "Connection.hpp"
 
 #include <cstring>
-
+#include <vector>
+#include <utility>
 #include "protocol/ByteOrderSpec.hpp"
 
 namespace rtype::network {
@@ -71,11 +72,23 @@ Result<void> Connection::processPacket(const Buffer& data,
     processReliabilityAck(header);
 
     if (reliableChannel_.isDuplicate(header.seqId)) {
+        if (header.flags & Flags::kReliable) {
+            auto uid = stateMachine_.userId();
+            if (uid) {
+                Buffer ackPacket = buildAckPacket(*uid);
+                queuePacket(std::move(ackPacket), false);
+            }
+        }
         return Err<void>(NetworkError::DuplicatePacket);
     }
 
     if (header.flags & Flags::kReliable) {
         reliableChannel_.recordReceived(header.seqId);
+        auto uid = stateMachine_.userId();
+        if (uid) {
+            Buffer ackPacket = buildAckPacket(*uid);
+            queuePacket(std::move(ackPacket), false);
+        }
     }
 
     Buffer payload;
@@ -270,6 +283,24 @@ Buffer Connection::buildDisconnectPacket() {
     return packet;
 }
 
+Buffer Connection::buildAckPacket(std::uint32_t userId) {
+    Header header;
+    header.magic = kMagicByte;
+    header.opcode = static_cast<std::uint8_t>(OpCode::PING);
+    header.payloadSize = 0;
+    header.userId = ByteOrderSpec::toNetwork(userId);
+    header.seqId = ByteOrderSpec::toNetwork(nextSequenceId());
+    header.ackId =
+        ByteOrderSpec::toNetwork(reliableChannel_.getLastReceivedSeqId());
+    header.flags = Flags::kIsAck;
+    header.reserved = {0, 0, 0};
+
+    Buffer packet(kHeaderSize);
+    std::memcpy(packet.data(), &header, kHeaderSize);
+
+    return packet;
+}
+
 Result<void> Connection::handleConnectAccept(const Header& header,
                                              const Buffer& payload,
                                              const Endpoint& sender) {
@@ -287,7 +318,13 @@ Result<void> Connection::handleConnectAccept(const Header& header,
     std::uint32_t newUserId =
         ByteOrderSpec::fromNetwork(acceptPayload.newUserId);
 
-    return stateMachine_.handleAccept(newUserId);
+    auto result = stateMachine_.handleAccept(newUserId);
+    if (result) {
+        Buffer ackPacket = buildAckPacket(newUserId);
+        queuePacket(std::move(ackPacket), false);
+    }
+
+    return result;
 }
 
 Result<void> Connection::handleDisconnect(const Header& header) {

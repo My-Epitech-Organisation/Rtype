@@ -3,11 +3,11 @@
 # ============================================================================
 
 add_library(rtype_engine_core STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/Time.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Time.cpp
 )
 
 target_include_directories(rtype_engine_core PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../rtype_common/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../rtype_common/src/Logger
 )

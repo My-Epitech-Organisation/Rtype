@@ -4,6 +4,8 @@ add_executable(r-type_client
         main.cpp
         ClientApp.cpp
         GameAction.hpp
+        network/NetworkClient.cpp
+        network/ClientNetworkSystem.cpp
 )
 
 target_compile_features(r-type_client PRIVATE cxx_std_20)
