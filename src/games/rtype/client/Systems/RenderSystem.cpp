@@ -15,7 +15,6 @@
 #include "../Components/TextComponent.hpp"
 #include "../Components/TextureRectComponent.hpp"
 #include "../Components/ZIndexComponent.hpp"
-#include "../Drawable/Image.hpp"
 #include "Components/PositionComponent.hpp"
 #include "ecs/ECS.hpp"
 #include "src/games/rtype/client/Components/HiddenComponent.hpp"
@@ -33,29 +32,33 @@ bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
 }
 
 void RenderSystem::update(ECS::Registry& registry, float dt) {
-    std::vector<DrawableImage> drawableImages;
+    std::vector<ECS::Entity> drawableEntities;
     registry.view<Image, shared::Position, ZIndex>().each(
-        [&drawableImages](auto entt, auto& img, auto& pos, auto& zindex) {
-            drawableImages.push_back({entt, &img, &pos, &zindex});
+        [&drawableEntities](auto entt, auto& img, auto& pos, auto& zindex) {
+            drawableEntities.push_back(entt);
         });
-    std::sort(drawableImages.begin(), drawableImages.end(),
-              [](const DrawableImage& a, const DrawableImage& b) {
-                  return a.zindex->depth < b.zindex->depth;
+    std::sort(drawableEntities.begin(), drawableEntities.end(),
+              [&registry](ECS::Entity a, ECS::Entity b) {
+                  auto& za = registry.getComponent<ZIndex>(a);
+                  auto& zb = registry.getComponent<ZIndex>(b);
+                  return za.depth < zb.depth;
               });
-    for (auto& drawable : drawableImages) {
-        drawable.img->sprite.setPosition({static_cast<float>(drawable.pos->x),
-                                          static_cast<float>(drawable.pos->y)});
+    for (auto entt : drawableEntities) {
+        auto& img = registry.getComponent<Image>(entt);
+        auto& pos = registry.getComponent<shared::Position>(entt);
+        img.sprite.setPosition(
+            {static_cast<float>(pos.x), static_cast<float>(pos.y)});
         try {
-            auto& size = registry.getComponent<Size>(drawable.entity);
-            drawable.img->sprite.setScale(sf::Vector2f({size.x, size.y}));
+            auto& size = registry.getComponent<Size>(entt);
+            img.sprite.setScale(sf::Vector2f({size.x, size.y}));
         } catch (...) {
         }
         try {
-            auto& texture = registry.getComponent<TextureRect>(drawable.entity);
-            drawable.img->sprite.setTextureRect(texture.rect);
+            auto& texture = registry.getComponent<TextureRect>(entt);
+            img.sprite.setTextureRect(texture.rect);
         } catch (...) {
         }
-        this->_window->draw(drawable.img->sprite);
+        this->_window->draw(img.sprite);
     }
 
     registry
