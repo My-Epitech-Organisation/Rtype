@@ -15,6 +15,7 @@ add_library(rtype_game_config STATIC
 
 target_include_directories(rtype_game_config PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
 )
 

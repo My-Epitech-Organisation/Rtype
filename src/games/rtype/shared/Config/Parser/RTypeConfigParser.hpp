@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "../GameConfig/RTypeGameConfig.hpp"
-#include "Config/TomlParser.hpp"
+#include <rtype/common.hpp>
 
 namespace rtype::game::config {
 
