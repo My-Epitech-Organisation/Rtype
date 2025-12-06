@@ -43,8 +43,8 @@ class ServerSignals {
  * @brief Server configuration structure
  */
 struct ServerConfig {
-    uint16_t port = 4000;
-    size_t maxPlayers = 8;
+    uint16_t port = 4242;
+    size_t maxPlayers = 4;
     uint32_t tickRate = 60;
     bool verbose = false;
     std::string configPath = "config/server";
