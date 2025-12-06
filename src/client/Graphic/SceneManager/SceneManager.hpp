@@ -11,6 +11,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 
 #include "../KeyboardActions.hpp"
 #include "AssetManager/AssetManager.hpp"
@@ -27,6 +28,7 @@ class SceneManager {
     };
 
    private:
+    std::optional<Scene> _nextScene = std::nullopt;  // Scène en attente
     Scene _currentScene = NONE;
 
     std::map<Scene, std::function<std::unique_ptr<IScene>()>> _sceneList;
@@ -36,6 +38,8 @@ class SceneManager {
     std::function<void(const Scene&)> _switchToScene;
 
     std::shared_ptr<KeyboardActions> _keybinds;
+
+    void _applySceneChange();
 
    public:
     [[nodiscard]] Scene getCurrentScene() const { return _currentScene; }

@@ -13,19 +13,32 @@
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
 #include "Scenes/SettingsScene/SettingsScene.hpp"
 
+void SceneManager::_applySceneChange() {
+    if (this->_nextScene.has_value()) {
+        Scene scene = this->_nextScene.value();
+
+        if (this->_currentScene == scene) {
+            this->_nextScene = std::nullopt;
+            return;
+        }
+
+        this->_currentScene = scene;
+        this->_activeScene = this->_sceneList[this->_currentScene]();
+
+        this->_nextScene = std::nullopt;
+    }
+}
+
 void SceneManager::setCurrentScene(const Scene scene) {
     if (!this->_sceneList.contains(scene)) {
         throw SceneNotFound();
     }
-    if (this->_currentScene == scene) return;
-    this->_currentScene = scene;
-    this->_activeScene = this->_sceneList[this->_currentScene]();
+    this->_nextScene = scene;
 }
 
 void SceneManager::pollEvents(const sf::Event& e) {
-    if (!this->_sceneList.contains(this->_currentScene)) {
-        throw SceneNotFound();
-    }
+    this->_applySceneChange();
+
     if (!this->_activeScene) {
         throw SceneNotInitialized();
     }
@@ -33,9 +46,8 @@ void SceneManager::pollEvents(const sf::Event& e) {
 }
 
 void SceneManager::update() {
-    if (!this->_sceneList.contains(this->_currentScene)) {
-        throw SceneNotFound();
-    }
+    this->_applySceneChange();
+
     if (!this->_activeScene) {
         throw SceneNotInitialized();
     }
@@ -43,9 +55,8 @@ void SceneManager::update() {
 }
 
 void SceneManager::draw() {
-    if (!this->_sceneList.contains(this->_currentScene)) {
-        throw SceneNotFound();
-    }
+    this->_applySceneChange();
+
     if (!this->_activeScene) {
         throw SceneNotInitialized();
     }
@@ -60,13 +71,13 @@ SceneManager::SceneManager(std::shared_ptr<ECS::Registry> ecs,
     this->_switchToScene = [this](const Scene& scene) {
         this->setCurrentScene(scene);
     };
-    this->_sceneList.emplace(MAIN_MENU, [ecs, texture, window, this]() {
-        return std::make_unique<MainMenuScene>(ecs, texture, window,
+    this->_sceneList.emplace(MAIN_MENU, [ecs, texture, this]() {
+        return std::make_unique<MainMenuScene>(ecs, texture, this->_window,
                                                this->_switchToScene);
     });
-    this->_sceneList.emplace(SETTINGS_MENU, [ecs, texture, window, this]() {
+    this->_sceneList.emplace(SETTINGS_MENU, [ecs, texture, this]() {
         return std::make_unique<SettingsScene>(
-            ecs, texture, window, this->_switchToScene, this->_keybinds);
+            ecs, texture, this->_window, this->_switchToScene, this->_keybinds);
     });
     this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
         return std::make_unique<GameScene>(
