@@ -7,6 +7,7 @@ target_link_libraries(test_integration
     PRIVATE
         gtest_main
         rtype_common
+        rtype_toml_parser
         rtype_network
         rtype_game_shared
 )
