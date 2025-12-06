@@ -17,8 +17,10 @@ class ClientApp {
     Graphic _graphic;
 
    public:
-    explicit ClientApp(const std::shared_ptr<ECS::Registry>& registry);
+    explicit ClientApp(std::shared_ptr<ECS::Registry> registry);
     ~ClientApp() = default;
+
+    void run();
 
     ClientApp(const ClientApp&) = delete;
     ClientApp& operator=(const ClientApp&) = delete;

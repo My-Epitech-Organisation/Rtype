@@ -1,0 +1,70 @@
+/*
+** EPITECH PROJECT, 2025
+** R-Type
+** File description:
+** Unit tests for Client Systems
+*/
+
+#include <gtest/gtest.h>
+#include <memory>
+#include <SFML/Graphics.hpp>
+#include <ecs/ECS.hpp>
+#include "../../src/games/rtype/client/Systems/MovementSystem.hpp"
+#include "../../src/games/rtype/client/Systems/RenderSystem.hpp"
+#include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/client/Components/VelocityComponent.hpp"
+#include "games/rtype/client/Components/ImageComponent.hpp"
+
+class SystemsTest : public ::testing::Test {
+protected:
+    std::shared_ptr<ECS::Registry> registry;
+    sf::RenderWindow window;
+
+    void SetUp() override {
+        registry = std::make_shared<ECS::Registry>();
+        window.create(sf::VideoMode({800, 600}), "Test");
+    }
+
+    void TearDown() override {
+        window.close();
+    }
+};
+
+TEST_F(SystemsTest, MovementSystem_Update_AppliesVelocity) {
+    sf::Texture texture;
+    unsigned char pixels[4] = {255, 0, 0, 255};  // Red pixel
+    texture.loadFromMemory(pixels, sizeof(pixels));
+    auto entity = registry->spawnEntity();
+    registry->emplaceComponent<Velocity>(entity, Velocity{1.0f, 2.0f});
+    registry->emplaceComponent<Position>(entity, Position{0.0f, 0.0f});
+    registry->emplaceComponent<Image>(entity, Image{texture});
+
+    MovementSystem movementSystem;
+    movementSystem.update(*registry, 1.0f);
+
+    auto& pos = registry->getComponent<Position>(entity);
+    EXPECT_EQ(pos.x, 1.0f);
+    EXPECT_EQ(pos.y, 2.0f);
+}
+
+TEST_F(SystemsTest, RenderSystem_Draw_DoesNotThrow) {
+    auto entity = registry->spawnEntity();
+    // Add renderable components if needed
+
+    auto windowPtr = std::make_shared<sf::RenderWindow>(window);
+    RenderSystem renderSystem(windowPtr);
+    EXPECT_NO_THROW(renderSystem.update(*registry, 0.f));
+}
+
+TEST_F(SystemsTest, MovementSystem_NoVelocity_NoChange) {
+    auto entity = registry->spawnEntity();
+    registry->emplaceComponent<Position>(entity, Position{10.0f, 20.0f});
+    // No velocity
+
+    MovementSystem movementSystem;
+    movementSystem.update(*registry, 1.0f);
+
+    auto& pos = registry->getComponent<Position>(entity);
+    EXPECT_EQ(pos.x, 10.0f);
+    EXPECT_EQ(pos.y, 20.0f);
+}

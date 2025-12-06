@@ -1,9 +1,11 @@
+add_subdirectory(SceneManager)
+add_subdirectory(AssetManager)
+add_subdirectory(EntityFactory)
+
 add_library(rtype-graphic-SFML
     STATIC
     Graphic.cpp
     Graphic.hpp
-    SceneManager.cpp
-    SceneManager.hpp
     KeyboardActions.cpp
     KeyboardActions.hpp
 )
@@ -24,17 +26,24 @@ find_package(SFML
 )
 
 target_link_libraries(rtype-graphic-SFML
-        PUBLIC
-        SFML::Network
-        SFML::Graphics
-        SFML::Window
-        SFML::Audio
-        SFML::System
-        rtype_engine
+    PUBLIC
+    SFML::Network
+    SFML::Graphics
+    SFML::Window
+    SFML::Audio
+    SFML::System
+    rtype_engine
+    rtype-graphic-scene-manager
+    rtype_game_client_systems
 )
 
 target_include_directories(rtype-graphic-SFML
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ../
+)
+
+target_include_directories(rtype-graphic-main-menu-scene
+    PUBLIC
+    ./
 )
