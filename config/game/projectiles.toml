@@ -1,0 +1,110 @@
+# =============================================================================
+# R-Type Projectile Configuration
+# =============================================================================
+# Defines all projectile types (player and enemy bullets, missiles, etc.)
+
+# -----------------------------------------------------------------------------
+# Player Projectiles
+# -----------------------------------------------------------------------------
+
+[[projectile]]
+id = "basic_bullet"
+sprite_sheet = "assets/sprites/projectiles/basic_bullet.png"
+
+damage = 25
+speed = 500.0
+lifetime = 3.0
+
+hitbox_width = 16.0
+hitbox_height = 8.0
+
+piercing = false
+max_hits = 1
+
+[[projectile]]
+id = "charged_shot"
+sprite_sheet = "assets/sprites/projectiles/charged_shot.png"
+
+damage = 100
+speed = 600.0
+lifetime = 4.0
+
+hitbox_width = 32.0
+hitbox_height = 24.0
+
+piercing = true
+max_hits = 3
+
+[[projectile]]
+id = "missile"
+sprite_sheet = "assets/sprites/projectiles/missile.png"
+
+damage = 75
+speed = 350.0
+lifetime = 5.0
+
+hitbox_width = 24.0
+hitbox_height = 12.0
+
+piercing = false
+max_hits = 1
+
+[[projectile]]
+id = "laser_beam"
+sprite_sheet = "assets/sprites/projectiles/laser.png"
+
+damage = 50
+speed = 800.0
+lifetime = 2.0
+
+hitbox_width = 48.0
+hitbox_height = 8.0
+
+piercing = true
+max_hits = 10
+
+# -----------------------------------------------------------------------------
+# Enemy Projectiles
+# -----------------------------------------------------------------------------
+
+[[projectile]]
+id = "enemy_bullet"
+sprite_sheet = "assets/sprites/projectiles/enemy_bullet.png"
+
+damage = 15
+speed = 300.0
+lifetime = 5.0
+
+hitbox_width = 12.0
+hitbox_height = 12.0
+
+piercing = false
+max_hits = 1
+
+[[projectile]]
+id = "heavy_bullet"
+sprite_sheet = "assets/sprites/projectiles/heavy_bullet.png"
+
+damage = 30
+speed = 250.0
+lifetime = 6.0
+
+hitbox_width = 20.0
+hitbox_height = 20.0
+
+piercing = false
+max_hits = 1
+
+[[projectile]]
+id = "boss_bullet"
+sprite_sheet = "assets/sprites/projectiles/boss_bullet.png"
+
+damage = 40
+speed = 400.0
+lifetime = 5.0
+
+hitbox_width = 24.0
+hitbox_height = 24.0
+
+piercing = true
+max_hits = 2

@@ -6,6 +6,9 @@
     "name" : "asio",
     "version>=" : "1.28.0"
   }, {
+    "name" : "tomlplusplus",
+    "version>=" : "3.4.0"
+  }, {
     "name" : "brotli",
     "version>=" : "1.2.0"
   }, {

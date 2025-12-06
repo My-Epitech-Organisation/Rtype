@@ -18,6 +18,7 @@
 #include <rtype/common.hpp>
 
 #include "ServerApp.hpp"
+#include "games/rtype/server/RTypeGameConfig.hpp"
 
 /**
  * @brief Signal handler for graceful shutdown and config reload
@@ -68,29 +69,39 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
                   config->verbose = true;
                   return rtype::ParseResult::Success;
               })
-        .option("-p", "--port", "port", "Server port (1-65535, default: 4242)",
+        .option("-c", "--config", "path",
+                "Path to configuration directory (default: config/server)",
                 [config](std::string_view val) {
-                    auto v =
-                        rtype::parseNumber<uint16_t>(val, "port", 1, 65535);
-                    if (!v.has_value()) return rtype::ParseResult::Error;
-                    config->port = v.value();
+                    config->configPath = std::string(val);
                     return rtype::ParseResult::Success;
                 })
         .option(
-            "-m", "--max-players", "n", "Maximum players (1-256, default: 4)",
+            "-p", "--port", "port", "Server port (1-65535, overrides config)",
             [config](std::string_view val) {
-                auto v = rtype::parseNumber<size_t>(val, "max-players", 1, 256);
+                auto v = rtype::parseNumber<uint16_t>(val, "port", 1, 65535);
                 if (!v.has_value()) return rtype::ParseResult::Error;
-                config->maxPlayers = v.value();
+                config->port = v.value();
+                config->portOverride = true;
                 return rtype::ParseResult::Success;
             })
+        .option("-m", "--max-players", "n",
+                "Maximum players (1-256, overrides config)",
+                [config](std::string_view val) {
+                    auto v =
+                        rtype::parseNumber<size_t>(val, "max-players", 1, 256);
+                    if (!v.has_value()) return rtype::ParseResult::Error;
+                    config->maxPlayers = v.value();
+                    config->maxPlayersOverride = true;
+                    return rtype::ParseResult::Success;
+                })
         .option("-t", "--tick-rate", "hz",
-                "Tick rate in Hz (1-1000, default: 60)",
+                "Tick rate in Hz (1-1000, overrides config)",
                 [config](std::string_view val) {
                     auto v =
                         rtype::parseNumber<uint32_t>(val, "tick-rate", 1, 1000);
                     if (!v.has_value()) return rtype::ParseResult::Error;
                     config->tickRate = v.value();
+                    config->tickRateOverride = true;
                     return rtype::ParseResult::Success;
                 });
     return parser;
@@ -104,9 +115,13 @@ static void printBanner(const ServerConfig& config) {
     std::cout << "==================================\n"
               << "    R-Type Server\n"
               << "==================================\n"
-              << std::format("  Port:        {}\n", config.port)
-              << std::format("  Max Players: {}\n", config.maxPlayers)
-              << std::format("  Tick Rate:   {} Hz\n", config.tickRate)
+              << std::format("  Config Dir:  {}\n", config.configPath)
+              << std::format("  Port:        {}{}\n", config.port,
+                             config.portOverride ? " (override)" : "")
+              << std::format("  Max Players: {}{}\n", config.maxPlayers,
+                             config.maxPlayersOverride ? " (override)" : "")
+              << std::format("  Tick Rate:   {} Hz{}\n", config.tickRate,
+                             config.tickRateOverride ? " (override)" : "")
               << std::format("  Verbose:     {}\n",
                              config.verbose ? "yes" : "no")
               << "==================================" << std::endl;
@@ -122,14 +137,19 @@ static void printBanner(const ServerConfig& config) {
 static int runServer(const ServerConfig& config,
                      std::shared_ptr<std::atomic<bool>> shutdownFlag,
                      std::shared_ptr<std::atomic<bool>> reloadConfigFlag) {
-    rtype::server::ServerApp server(
-        config.port, config.maxPlayers, config.tickRate, shutdownFlag,
-        rtype::server::ServerApp::DEFAULT_CLIENT_TIMEOUT_SECONDS,
-        config.verbose);
+    auto gameConfig = rtype::games::rtype::server::createRTypeGameConfig();
 
-    // Check for config reload requests during runtime
-    // TODO(Clem): Implement hot reload when reloadConfigFlag becomes true
-    (void)reloadConfigFlag;  // Suppress unused warning until implemented
+    if (!gameConfig->initialize(config.configPath)) {
+        std::cerr << "[Main] Failed to initialize game configuration: "
+                  << gameConfig->getLastError() << std::endl;
+        return 1;
+    }
+
+    rtype::server::ServerApp server(std::move(gameConfig), shutdownFlag,
+                                    config.verbose);
+
+    // TODO(Clem): Implement hot reload in main loop when reloadConfigFlag
+    (void)reloadConfigFlag;
 
     if (!server.run()) {
         std::cerr << "[Main] Server failed to start." << std::endl;

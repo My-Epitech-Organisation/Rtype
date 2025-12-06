@@ -1,0 +1,29 @@
+# R-Type Server Configuration
+# Schema version: 1
+
+[server]
+port = 4000
+max_players = 8
+tickrate = 60
+mapName = "default"
+
+[network]
+serverAddress = "0.0.0.0"
+serverPort = 4000
+connectionTimeout = 10000
+maxRetries = 5
+tickrate = 60
+
+[gameplay]
+difficulty = "normal"
+startingLives = 3
+waves = 10
+playerSpeed = 200.0
+enemySpeedMultiplier = 1.0
+friendlyFire = false
+
+[paths]
+assetsPath = "assets"
+savesPath = "saves"
+logsPath = "logs"
+configPath = "config"

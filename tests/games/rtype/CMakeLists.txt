@@ -87,4 +87,3 @@ target_include_directories(test_systems PRIVATE
 )
 
 gtest_discover_tests(test_systems)
-
