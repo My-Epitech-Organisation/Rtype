@@ -14,8 +14,9 @@
 #include <string>
 #include <vector>
 
-#include "../GameConfig/RTypeGameConfig.hpp"
 #include <rtype/common.hpp>
+
+#include "../GameConfig/RTypeGameConfig.hpp"
 
 namespace rtype::game::config {
 
