@@ -10,7 +10,7 @@
 #include <iostream>
 #include <utility>
 
-#include "../Components/TagComponent.hpp"
+#include "../Components/HiddenComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -18,9 +18,15 @@ void EventSystem::update(ECS::Registry& registry, float) {
     registry
         .view<::rtype::games::rtype::client::Rectangle,
               ::rtype::games::rtype::client::UserEvent>()
-        .each([this](auto _,
-                     const ::rtype::games::rtype::client::Rectangle& rect,
-                     ::rtype::games::rtype::client::UserEvent& actionType) {
+        .each([this, &registry](
+                  auto entity,
+                  const ::rtype::games::rtype::client::Rectangle& rect,
+                  ::rtype::games::rtype::client::UserEvent& actionType) {
+            if (registry.hasComponent<HiddenComponent>(entity)) {
+                HiddenComponent hidden =
+                    registry.getComponent<HiddenComponent>(entity);
+                if (hidden.isHidden) return;
+            }
             this->_mouseMoved(actionType, rect);
             this->_mousePressed(actionType, rect);
             this->_mouseReleased(actionType, rect);

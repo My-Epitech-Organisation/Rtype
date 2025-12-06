@@ -23,6 +23,7 @@
 #include "Components/TextComponent.hpp"
 #include "Components/TextureRectComponent.hpp"
 #include "Components/VelocityComponent.hpp"
+#include "Components/ZIndexComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneManager/SceneException.hpp"
 
@@ -38,6 +39,8 @@ void MainMenuScene::_createAstroneerVessel() {
     this->_registry
         ->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(
             astroneerVessel, -135.f, -75.f);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        astroneerVessel, -1);
     this->_listEntity.push_back(astroneerVessel);
 }
 
@@ -65,6 +68,8 @@ void MainMenuScene::_createFakePlayer() {
         this->_registry
             ->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(
                 fakePlayer, (distrib150(gen) % 150) + 75, 0.f);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            fakePlayer, 0);
         this->_listEntity.push_back(fakePlayer);
     }
 }
@@ -81,12 +86,12 @@ MainMenuScene::MainMenuScene(
     std::shared_ptr<sf::RenderWindow> window,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(ecs, assetsManager, window) {
-    this->_listEntity =
-        (createBackground(this->_registry, this->_assetsManager, "R-TYPE"));
+    this->_listEntity = (EntityFactory::createBackground(
+        this->_registry, this->_assetsManager, "R-TYPE"));
     this->_createAstroneerVessel();
     this->_createFakePlayer();
 
-    this->_listEntity.push_back(createButton(
+    this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("title_font"),
@@ -102,7 +107,7 @@ MainMenuScene::MainMenuScene(
                           << std::endl;
             }
         })));
-    this->_listEntity.push_back(createButton(
+    this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("title_font"),
@@ -118,7 +123,7 @@ MainMenuScene::MainMenuScene(
                           << std::endl;
             }
         })));
-    this->_listEntity.push_back(createButton(
+    this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("title_font"),
@@ -129,10 +134,4 @@ MainMenuScene::MainMenuScene(
         std::function<void()>([this]() { this->_window->close(); })
 
             ));
-}
-
-MainMenuScene::~MainMenuScene() {
-    for (auto& entity : this->_listEntity) {
-        this->_registry->killEntity(entity);
-    }
 }

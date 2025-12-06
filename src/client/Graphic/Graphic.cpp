@@ -19,6 +19,7 @@
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "AssetManager/AssetManager.hpp"
+#include "SceneManager/SceneException.hpp"
 
 void Graphic::_pollEvents() {
     while (const std::optional event = this->_window->pollEvent()) {
@@ -65,7 +66,8 @@ void Graphic::loop() {
 
 Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
     : _registry(registry),
-      _view(std::make_shared<sf::View>(sf::FloatRect({0, 0}, {1920, 1080}))) {
+      _view(std::make_shared<sf::View>(
+          sf::FloatRect({0, 0}, {WINDOW_WIDTH, WINDOW_HEIGHT}))) {
     this->_keybinds = std::make_shared<KeyboardActions>();
     this->_window = std::make_shared<sf::RenderWindow>(
         sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");

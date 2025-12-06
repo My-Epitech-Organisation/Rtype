@@ -25,6 +25,10 @@
 #include "src/games/rtype/client/Systems/ParallaxScrolling.hpp"
 
 class Graphic {
+   public:
+    static constexpr int WINDOW_WIDTH = 1920;
+    static constexpr int WINDOW_HEIGHT = 1080;
+
    private:
     constexpr static float scrollSpeed = 50.0f;
     std::shared_ptr<ECS::Registry> _registry;
@@ -47,9 +51,6 @@ class Graphic {
     std::unique_ptr<::rtype::games::rtype::client::BoxingSystem> _boxingSystem;
     std::unique_ptr<::rtype::games::rtype::client::ResetTriggersSystem>
         _resetTriggersSystem;
-
-    static constexpr int WINDOW_WIDTH = 1920;
-    static constexpr int WINDOW_HEIGHT = 1080;
 
     void _pollEvents();
     void _update();

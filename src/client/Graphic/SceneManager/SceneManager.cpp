@@ -9,6 +9,7 @@
 
 #include "../../GameAction.hpp"
 #include "SceneException.hpp"
+#include "Scenes/GameScene/GameScene.hpp"
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
 #include "Scenes/SettingsScene/SettingsScene.hpp"
 
@@ -66,6 +67,10 @@ SceneManager::SceneManager(std::shared_ptr<ECS::Registry> ecs,
     this->_sceneList.emplace(SETTINGS_MENU, [ecs, texture, window, this]() {
         return std::make_unique<SettingsScene>(
             ecs, texture, window, this->_switchToScene, this->_keybinds);
+    });
+    this->_sceneList.emplace(IN_GAME, [ecs, texture, &window, this]() {
+        return std::make_unique<GameScene>(
+            ecs, texture, window, this->_keybinds, this->_switchToScene);
     });
     this->setCurrentScene(MAIN_MENU);
 }

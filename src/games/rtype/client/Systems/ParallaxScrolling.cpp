@@ -22,13 +22,14 @@ void ParallaxScrolling::update(ECS::Registry& registry, float dt) {
             float effectiveOffset =
                 this->_view->getCenter().x * parallax.scrollFactor;
 
+            int intOffset = static_cast<int>(effectiveOffset);
             spriteData.sprite.setPosition(
                 {this->_view->getCenter().x - this->_view->getSize().x / 2.f,
-                 0.f});
+                 this->_view->getCenter().y - this->_view->getSize().y / 2.f});
 
             sf::IntRect newRect(
-                {static_cast<int>(effectiveOffset), 0},
-                {static_cast<int>(this->_view->getSize().x),
+                {intOffset, 0},
+                {static_cast<int>(this->_view->getSize().x) + 1,
                  static_cast<int>(spriteData.sprite.getTexture().getSize().y)});
 
             spriteData.sprite.setTextureRect(newRect);

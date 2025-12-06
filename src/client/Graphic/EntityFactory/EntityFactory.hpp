@@ -22,7 +22,7 @@
 #include "Components/UserEventComponent.hpp"
 #include "ecs/ECS.hpp"
 
-// namespace EntityFactory {
+namespace EntityFactory {
 template <typename... Args>
 static ECS::Entity createButton(
     std::shared_ptr<ECS::Registry> registry,
@@ -44,21 +44,24 @@ static ECS::Entity createButton(
 }
 
 std::vector<ECS::Entity> createBackground(
-    const std::shared_ptr<ECS::Registry>& registry,
-    const std::shared_ptr<AssetManager>& assetManager,
-    const std::string& PageName);
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assetManager, const std::string& PageName);
 
-ECS::Entity createPlayer(const std::shared_ptr<ECS::Registry>& registry,
-                         const std::shared_ptr<AssetManager>& assetsManager,
-                         sf::Vector2i scale, bool isControllable);
+ECS::Entity createPlayer(std::shared_ptr<ECS::Registry> registry,
+                         std::shared_ptr<AssetManager> assetManager,
+                         sf::Vector2i scale = sf::Vector2i(1, 1),
+                         bool isControllable = false);
 
-std::vector<ECS::Entity> createSection(
-    const std::shared_ptr<ECS::Registry>& registry,
-    const std::shared_ptr<AssetManager>& assets, const std::string& title,
-    float x, float y, float width, float height);
+std::vector<ECS::Entity> createSection(std::shared_ptr<ECS::Registry> registry,
+                                       std::shared_ptr<AssetManager> assets,
+                                       const std::string& title, float x,
+                                       float y, float width, float height);
 
-ECS::Entity createStaticText(const std::shared_ptr<ECS::Registry>& registry,
-                             const std::shared_ptr<AssetManager>& assets,
-                             const std::string& text, float x, float y);
+ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
+                             std::shared_ptr<AssetManager> assets,
+                             const std::string& title,
+                             const std::string& fontId, float posX, float posY,
+                             float size);
+};  // namespace EntityFactory
 
 #endif  // SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_

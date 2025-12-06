@@ -9,6 +9,8 @@ add_library(rtype_game_client_components STATIC
     ParallaxComponent.hpp
     TextureRectComponent.hpp
     BoxingComponent.hpp
+    HiddenComponent.hpp
+    ZIndexComponent.hpp
 )
 
 set_target_properties(rtype_game_client_components PROPERTIES LINKER_LANGUAGE CXX)

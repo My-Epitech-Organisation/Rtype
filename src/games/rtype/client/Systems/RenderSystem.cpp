@@ -14,36 +14,52 @@
 #include "../Components/TagComponent.hpp"
 #include "../Components/TextComponent.hpp"
 #include "../Components/TextureRectComponent.hpp"
+#include "../Components/ZIndexComponent.hpp"
 #include "Components/PositionComponent.hpp"
 #include "ecs/ECS.hpp"
+#include "src/games/rtype/client/Components/HiddenComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
 RenderSystem::RenderSystem(std::shared_ptr<sf::RenderWindow> window)
     : ::rtype::engine::ASystem("RenderSystem"), _window(std::move(window)) {}
 
+bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
+    if (registry.hasComponent<HiddenComponent>(entity)) {
+        return registry.getComponent<HiddenComponent>(entity).isHidden;
+    }
+    return false;
+}
+
 void RenderSystem::update(ECS::Registry& registry, float dt) {
-    registry
-        .view<::rtype::games::rtype::client::Image,
-              ::rtype::games::rtype::shared::Position>()
-        .each([&registry, this](auto entt, auto& img, auto& pos) {
-            img.sprite.setPosition(
-                {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-            try {
-                auto& size =
-                    registry.getComponent<::rtype::games::rtype::client::Size>(
-                        entt);
-                img.sprite.setScale(sf::Vector2f({size.x, size.y}));
-            } catch (...) {
-            }
-            try {
-                auto& texture = registry.getComponent<
-                    ::rtype::games::rtype::client::TextureRect>(entt);
-                img.sprite.setTextureRect(texture.rect);
-            } catch (...) {
-            }
-            this->_window->draw(img.sprite);
+    std::vector<ECS::Entity> drawableEntities;
+    registry.view<Image, shared::Position, ZIndex>().each(
+        [&drawableEntities](auto entt, auto& img, auto& pos, auto& zindex) {
+            drawableEntities.push_back(entt);
         });
+    std::sort(drawableEntities.begin(), drawableEntities.end(),
+              [&registry](ECS::Entity a, ECS::Entity b) {
+                  auto& za = registry.getComponent<ZIndex>(a);
+                  auto& zb = registry.getComponent<ZIndex>(b);
+                  return za.depth < zb.depth;
+              });
+    for (auto entt : drawableEntities) {
+        auto& img = registry.getComponent<Image>(entt);
+        auto& pos = registry.getComponent<shared::Position>(entt);
+        img.sprite.setPosition(
+            {static_cast<float>(pos.x), static_cast<float>(pos.y)});
+        try {
+            auto& size = registry.getComponent<Size>(entt);
+            img.sprite.setScale(sf::Vector2f({size.x, size.y}));
+        } catch (...) {
+        }
+        try {
+            auto& texture = registry.getComponent<TextureRect>(entt);
+            img.sprite.setTextureRect(texture.rect);
+        } catch (...) {
+        }
+        this->_window->draw(img.sprite);
+    }
 
     registry
         .view<::rtype::games::rtype::client::Rectangle,
@@ -61,6 +77,7 @@ void RenderSystem::update(ECS::Registry& registry, float dt) {
             rectData.rectangle.setOutlineColor(rectData.outlineColor);
             rectData.rectangle.setFillColor(rectData.currentColor);
 
+            if (isEntityHidden(registry, entt)) return;
             this->_window->draw(rectData.rectangle);
         });
 
@@ -69,8 +86,8 @@ void RenderSystem::update(ECS::Registry& registry, float dt) {
               ::rtype::games::rtype::client::Text,
               ::rtype::games::rtype::shared::Position,
               ::rtype::games::rtype::client::ButtonTag>()
-        .each([this](auto _, auto& rectData, auto& textData, auto& pos,
-                     auto __) {
+        .each([this, &registry](auto entt, auto& rectData, auto& textData,
+                                auto& pos, auto __) {
             rectData.rectangle.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
             rectData.rectangle.setSize(
@@ -98,6 +115,7 @@ void RenderSystem::update(ECS::Registry& registry, float dt) {
             textData.text.setFillColor(textData.color);
             textData.text.setString(textData.textContent);
 
+            if (isEntityHidden(registry, entt)) return;
             this->_window->draw(rectData.rectangle);
             this->_window->draw(textData.text);
         });
@@ -106,13 +124,14 @@ void RenderSystem::update(ECS::Registry& registry, float dt) {
         .view<::rtype::games::rtype::client::Text,
               ::rtype::games::rtype::shared::Position,
               ::rtype::games::rtype::client::StaticTextTag>()
-        .each([this](auto _, auto& textData, auto& pos, auto __) {
+        .each([this, &registry](auto entt, auto& textData, auto& pos, auto __) {
             textData.text.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
             textData.text.setCharacterSize(textData.size);
             textData.text.setFillColor(textData.color);
             textData.text.setString(textData.textContent);
 
+            if (isEntityHidden(registry, entt)) return;
             this->_window->draw(textData.text);
         });
 }

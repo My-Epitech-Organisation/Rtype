@@ -10,6 +10,7 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
+#include "../Components/HiddenComponent.hpp"
 #include "ASystem.hpp"
 #include "ecs/ECS.hpp"
 namespace rtype::games::rtype::client {
@@ -18,6 +19,7 @@ class RenderSystem : public ::rtype::engine::ASystem {
     std::shared_ptr<sf::RenderWindow> _window;
 
    public:
+    static bool isEntityHidden(ECS::Registry& registry, ECS::Entity entity);
     explicit RenderSystem(std::shared_ptr<sf::RenderWindow> window);
     void update(ECS::Registry& registry, float dt) override;
 };
