@@ -12,6 +12,7 @@ target_link_libraries(rtype-graphic-asset-manager
         PUBLIC
         SFML::Network
         SFML::Graphics
+        rtype_common
 )
 
 target_include_directories(rtype-graphic-asset-manager
