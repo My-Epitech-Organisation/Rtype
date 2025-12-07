@@ -7,7 +7,7 @@
 
 #include "ClientApp.hpp"
 
-ClientApp::ClientApp(const std::shared_ptr<ECS::Registry>& registry)
-    : _graphic(registry) {
-    this->_graphic.loop();
-}
+ClientApp::ClientApp(std::shared_ptr<ECS::Registry> registry)
+    : _graphic(registry) {}
+
+void ClientApp::run() { this->_graphic.loop(); }
