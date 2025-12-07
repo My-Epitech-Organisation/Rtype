@@ -26,13 +26,12 @@ StressTestScene::StressTestScene(
     std::shared_ptr<sf::RenderWindow> window,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(ecs, assetsManager, window), _switchToScene(switchToScene) {
-
     // Reserve space for frame times
     _frameTimes.reserve(1000);
 
     // Create background
-    auto bgEntities = EntityFactory::createBackground(
-        _registry, _assetsManager, "STRESS TEST");
+    auto bgEntities = EntityFactory::createBackground(_registry, _assetsManager,
+                                                      "STRESS TEST");
     for (auto& e : bgEntities) {
         _listEntity.push_back(e);
     }
@@ -44,9 +43,7 @@ StressTestScene::StressTestScene(
     _testClock.restart();
 }
 
-StressTestScene::~StressTestScene() {
-    _destroyAllTestEntities();
-}
+StressTestScene::~StressTestScene() { _destroyAllTestEntities(); }
 
 void StressTestScene::_createUI() {
     auto& font = _assetsManager->fontManager->get("title_font");
@@ -54,24 +51,25 @@ void StressTestScene::_createUI() {
     // FPS counter (top right)
     _fpsText = _registry->spawnEntity();
     _registry->emplaceComponent<rs::Position>(_fpsText, 1500.0f, 50.0f);
-    _registry->emplaceComponent<rc::Text>(
-        _fpsText, font, sf::Color::Green, 32, "FPS: 0");
+    _registry->emplaceComponent<rc::Text>(_fpsText, font, sf::Color::Green, 32,
+                                          "FPS: 0");
     _registry->emplaceComponent<rc::StaticTextTag>(_fpsText);
     _listEntity.push_back(_fpsText);
 
     // Entity count (top right, below FPS)
     _entityCountText = _registry->spawnEntity();
-    _registry->emplaceComponent<rs::Position>(_entityCountText, 1500.0f, 100.0f);
-    _registry->emplaceComponent<rc::Text>(
-        _entityCountText, font, sf::Color::Yellow, 28, "Entities: 0");
+    _registry->emplaceComponent<rs::Position>(_entityCountText, 1500.0f,
+                                              100.0f);
+    _registry->emplaceComponent<rc::Text>(_entityCountText, font,
+                                          sf::Color::Yellow, 28, "Entities: 0");
     _registry->emplaceComponent<rc::StaticTextTag>(_entityCountText);
     _listEntity.push_back(_entityCountText);
 
     // Phase indicator (top center)
     _phaseText = _registry->spawnEntity();
     _registry->emplaceComponent<rs::Position>(_phaseText, 800.0f, 50.0f);
-    _registry->emplaceComponent<rc::Text>(
-        _phaseText, font, sf::Color::Cyan, 36, "Phase: IDLE");
+    _registry->emplaceComponent<rc::Text>(_phaseText, font, sf::Color::Cyan, 36,
+                                          "Phase: IDLE");
     _registry->emplaceComponent<rc::StaticTextTag>(_phaseText);
     _listEntity.push_back(_phaseText);
 
@@ -99,56 +97,46 @@ void StressTestScene::_createButtons() {
 
     // Add 100 entities button
     _listEntity.push_back(EntityFactory::createButton(
-        _registry,
-        rc::Text(font, sf::Color::White, 28, "+100 Entities"),
+        _registry, rc::Text(font, sf::Color::White, 28, "+100 Entities"),
         rs::Position(50, 350),
         rc::Rectangle({250, 60}, sf::Color(0, 100, 0), sf::Color(0, 150, 0)),
-        std::function<void()>([this]() { _spawnTestEntities(100); })
-    ));
+        std::function<void()>([this]() { _spawnTestEntities(100); })));
 
     // Add 500 entities button
     _listEntity.push_back(EntityFactory::createButton(
-        _registry,
-        rc::Text(font, sf::Color::White, 28, "+500 Entities"),
+        _registry, rc::Text(font, sf::Color::White, 28, "+500 Entities"),
         rs::Position(50, 430),
         rc::Rectangle({250, 60}, sf::Color(0, 100, 0), sf::Color(0, 150, 0)),
-        std::function<void()>([this]() { _spawnTestEntities(500); })
-    ));
+        std::function<void()>([this]() { _spawnTestEntities(500); })));
 
     // Remove 100 entities button
     _listEntity.push_back(EntityFactory::createButton(
-        _registry,
-        rc::Text(font, sf::Color::White, 28, "-100 Entities"),
+        _registry, rc::Text(font, sf::Color::White, 28, "-100 Entities"),
         rs::Position(50, 510),
         rc::Rectangle({250, 60}, sf::Color(150, 50, 0), sf::Color(200, 75, 0)),
-        std::function<void()>([this]() { _destroyTestEntities(100); })
-    ));
+        std::function<void()>([this]() { _destroyTestEntities(100); })));
 
     // Clear all button
     _listEntity.push_back(EntityFactory::createButton(
-        _registry,
-        rc::Text(font, sf::Color::White, 28, "Clear All"),
+        _registry, rc::Text(font, sf::Color::White, 28, "Clear All"),
         rs::Position(50, 590),
         rc::Rectangle({250, 60}, sf::Color(150, 0, 0), sf::Color(200, 0, 0)),
-        std::function<void()>([this]() { _destroyAllTestEntities(); })
-    ));
+        std::function<void()>([this]() { _destroyAllTestEntities(); })));
 
     // Toggle auto mode button
     _listEntity.push_back(EntityFactory::createButton(
-        _registry,
-        rc::Text(font, sf::Color::White, 28, "Auto Mode"),
+        _registry, rc::Text(font, sf::Color::White, 28, "Auto Mode"),
         rs::Position(50, 670),
-        rc::Rectangle({250, 60}, sf::Color(100, 0, 100), sf::Color(150, 0, 150)),
+        rc::Rectangle({250, 60}, sf::Color(100, 0, 100),
+                      sf::Color(150, 0, 150)),
         std::function<void()>([this]() {
             _autoMode = !_autoMode;
             _currentPhase = _autoMode ? TestPhase::SPAWNING : TestPhase::IDLE;
-        })
-    ));
+        })));
 
     // Back to menu button
     _listEntity.push_back(EntityFactory::createButton(
-        _registry,
-        rc::Text(font, sf::Color::White, 28, "Back to Menu"),
+        _registry, rc::Text(font, sf::Color::White, 28, "Back to Menu"),
         rs::Position(50, 750),
         rc::Rectangle({250, 60}, sf::Color::Blue, sf::Color(50, 50, 200)),
         std::function<void()>([this]() {
@@ -158,8 +146,7 @@ void StressTestScene::_createButtons() {
                 std::cerr << "Error switching to Main Menu: " << e.what()
                           << std::endl;
             }
-        })
-    ));
+        })));
 }
 
 void StressTestScene::_spawnTestEntities(std::size_t count) {
@@ -175,7 +162,8 @@ void StressTestScene::_spawnTestEntities(std::size_t count) {
 
     auto& texture = _assetsManager->textureManager->get("player_vessel");
 
-    std::size_t toSpawn = std::min(count, MAX_ENTITY_COUNT - _currentEntityCount);
+    std::size_t toSpawn =
+        std::min(count, MAX_ENTITY_COUNT - _currentEntityCount);
 
     for (std::size_t i = 0; i < toSpawn; ++i) {
         auto entity = _registry->spawnEntity();
@@ -183,7 +171,8 @@ void StressTestScene::_spawnTestEntities(std::size_t count) {
         _registry->emplaceComponent<rc::Image>(entity, texture);
         _registry->emplaceComponent<rc::TextureRect>(
             entity, std::pair<int, int>({0, 0}), std::pair<int, int>({33, 17}));
-        _registry->emplaceComponent<rs::Position>(entity, posX(_rng), posY(_rng));
+        _registry->emplaceComponent<rs::Position>(entity, posX(_rng),
+                                                  posY(_rng));
         _registry->emplaceComponent<rc::Size>(entity, 2.0f, 2.0f);
         _registry->emplaceComponent<rs::VelocityComponent>(
             entity, rs::VelocityComponent{velX(_rng), velY(_rng)});
@@ -282,7 +271,8 @@ void StressTestScene::_updateMetrics(float deltaTime) {
 
     // Calculate metrics
     if (!_frameTimes.empty()) {
-        float sum = std::accumulate(_frameTimes.begin(), _frameTimes.end(), 0.0f);
+        float sum =
+            std::accumulate(_frameTimes.begin(), _frameTimes.end(), 0.0f);
         _avgFrameTime = sum / static_cast<float>(_frameTimes.size());
     }
 
@@ -299,14 +289,17 @@ void StressTestScene::_updateUI() {
     if (_registry->hasComponent<rc::Text>(_fpsText)) {
         auto& fpsTextComp = _registry->getComponent<rc::Text>(_fpsText);
         std::ostringstream fpsStream;
-        fpsStream << "FPS: " << std::fixed << std::setprecision(1) << _currentFps;
+        fpsStream << "FPS: " << std::fixed << std::setprecision(1)
+                  << _currentFps;
         fpsTextComp.textContent = fpsStream.str();
     }
 
     // Update entity count text
     if (_registry->hasComponent<rc::Text>(_entityCountText)) {
-        auto& countTextComp = _registry->getComponent<rc::Text>(_entityCountText);
-        countTextComp.textContent = "Entities: " + std::to_string(_currentEntityCount);
+        auto& countTextComp =
+            _registry->getComponent<rc::Text>(_entityCountText);
+        countTextComp.textContent =
+            "Entities: " + std::to_string(_currentEntityCount);
     }
 
     // Update phase text
@@ -381,7 +374,8 @@ void StressTestScene::pollEvents(const sf::Event& e) {
 
             case sf::Keyboard::Key::A:
                 _autoMode = !_autoMode;
-                _currentPhase = _autoMode ? TestPhase::SPAWNING : TestPhase::IDLE;
+                _currentPhase =
+                    _autoMode ? TestPhase::SPAWNING : TestPhase::IDLE;
                 break;
 
             case sf::Keyboard::Key::C:

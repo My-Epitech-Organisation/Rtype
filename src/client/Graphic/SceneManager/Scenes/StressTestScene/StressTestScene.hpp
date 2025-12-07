@@ -5,8 +5,8 @@
 ** StressTestScene.hpp - Interactive visual stress test scene
 */
 
-#ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_STRESSTESTSCENE_HPP_
-#define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_STRESSTESTSCENE_HPP_
+#ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_STRESSTESTSCENE_STRESSTESTSCENE_HPP_
+#define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_STRESSTESTSCENE_STRESSTESTSCENE_HPP_
 
 #include <chrono>
 #include <functional>
@@ -34,11 +34,11 @@ class StressTestScene : public AScene {
    public:
     /// @brief Stress test phases
     enum class TestPhase {
-        IDLE,           ///< Waiting for user to start
-        SPAWNING,       ///< Adding entities
-        SUSTAINED,      ///< Running at target entity count
-        DESTROYING,     ///< Removing entities
-        COMPLETED       ///< Test finished
+        IDLE,        ///< Waiting for user to start
+        SPAWNING,    ///< Adding entities
+        SUSTAINED,   ///< Running at target entity count
+        DESTROYING,  ///< Removing entities
+        COMPLETED    ///< Test finished
     };
 
    private:
@@ -78,7 +78,7 @@ class StressTestScene : public AScene {
     ECS::Entity _statsText;
 
     // Random number generation
-    std::mt19937 _rng{std::random_device{}()};
+    std::mt19937 _rng;
 
     // Private methods
     void _createUI();
@@ -106,4 +106,4 @@ class StressTestScene : public AScene {
     void render(std::shared_ptr<sf::RenderWindow> window) override;
 };
 
-#endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_STRESSTESTSCENE_HPP_
+#endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_STRESSTESTSCENE_STRESSTESTSCENE_HPP_

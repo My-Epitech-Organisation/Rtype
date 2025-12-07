@@ -120,8 +120,8 @@ MainMenuScene::MainMenuScene(
             this->_assetsManager->fontManager->get("title_font"),
             sf::Color::White, 36, "Stress Test"),
         rtype::games::rtype::shared::Position(100, 570),
-        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color(128, 0, 128),
-                                               sf::Color(180, 0, 180)),
+        rtype::games::rtype::client::Rectangle(
+            {400, 75}, sf::Color(128, 0, 128), sf::Color(180, 0, 180)),
         std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::STRESS_TEST);
