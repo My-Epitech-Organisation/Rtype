@@ -14,6 +14,7 @@
 
 #include "AllComponents.hpp"
 #include "EntityFactory/EntityFactory.hpp"
+#include "Logger.hpp"
 #include "SceneManager/SceneException.hpp"
 
 // Namespace aliases
@@ -147,8 +148,8 @@ void StressTestScene::_createButtons() {
             try {
                 _switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
-                std::cerr << "Error switching to Main Menu: " << e.what()
-                          << std::endl;
+                LOG_ERROR("Error switching to Main Menu: " +
+                          std::string(e.what()));
             }
         })));
 }
@@ -368,7 +369,7 @@ void StressTestScene::pollEvents(const sf::Event& e) {
                 try {
                     _switchToScene(SceneManager::MAIN_MENU);
                 } catch (SceneNotFound& ex) {
-                    std::cerr << "Error: " << ex.what() << std::endl;
+                    LOG_ERROR("Error: " + std::string(ex.what()));
                 }
                 break;
 
