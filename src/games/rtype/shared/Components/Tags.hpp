@@ -78,4 +78,22 @@ struct InvincibleTag {};
  */
 struct DisabledTag {};
 
+/**
+ * @struct BackgroundTag
+ * @brief Tag component to mark background entities
+ */
+struct BackgroundTag {};
+
+/**
+ * @struct ControllableTag
+ * @brief Tag component for controllable entities
+ */
+struct ControllableTag {};
+
+/**
+ * @struct StaticTextTag
+ * @brief Tag component for static text entities
+ */
+struct StaticTextTag {};
+
 }  // namespace rtype::games::rtype::shared

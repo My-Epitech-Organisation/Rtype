@@ -1,3 +1,14 @@
+find_package(SFML
+        COMPONENTS
+        Network
+        Graphics
+        Window
+        Audio
+        System
+        CONFIG
+        REQUIRED
+)
+
 add_subdirectory(Graphic)
 
 add_executable(r-type_client
@@ -18,4 +29,22 @@ target_link_libraries(r-type_client PUBLIC
     rtype_game_shared
     rtype_game_client
     rtype-graphic-SFML
+    rtype_game_client
+)
+
+target_include_directories(rtype-graphic-main-menu-scene
+        PUBLIC
+        ./
+)
+
+target_link_libraries(rtype-graphic-SFML
+    PRIVATE
+    rtype_engine
+    rtype_game_client_systems
+)
+
+execute_process(
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_SOURCE_DIR}/assets
+        ${CMAKE_BINARY_DIR}/assets
 )
