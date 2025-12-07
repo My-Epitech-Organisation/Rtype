@@ -24,6 +24,7 @@ class SceneManager {
         MAIN_MENU,
         IN_GAME,
         SETTINGS_MENU,
+        STRESS_TEST,
         NONE,
     };
 
