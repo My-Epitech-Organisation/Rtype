@@ -31,6 +31,31 @@ class FontManager {
 
     sf::Font& get(const std::string& id);
 
+    /**
+     * @brief Check if a font is loaded
+     * @param id The font identifier
+     * @return true if the font is loaded, false otherwise
+     */
+    bool isLoaded(const std::string& id) const;
+
+    /**
+     * @brief Unload a specific font by id
+     * @param id The font identifier to unload
+     * @return true if the font was unloaded, false if not found
+     */
+    bool unload(const std::string& id);
+
+    /**
+     * @brief Unload all fonts
+     */
+    void unloadAll();
+
+    /**
+     * @brief Get the number of loaded fonts
+     * @return Number of fonts currently loaded
+     */
+    std::size_t size() const;
+
     FontManager() = default;
 };
 
