@@ -10,13 +10,13 @@
 #include "../Components/UserEventComponent.hpp"
 
 namespace rtype::games::rtype::client {
+
 ResetTriggersSystem::ResetTriggersSystem()
     : ::rtype::engine::ASystem("ResetTriggersSystem") {}
 
-void ResetTriggersSystem::update(ECS::Registry& registry, float dt) {
-    registry.view<::rtype::games::rtype::client::UserEvent>().each(
-        [](auto _, ::rtype::games::rtype::client::UserEvent& event) {
-            event.isReleased = false;
-        });
+void ResetTriggersSystem::update(ECS::Registry& registry, float /*dt*/) {
+    registry.view<UserEvent>().each(
+        [](auto /*entity*/, UserEvent& event) { event.isReleased = false; });
 }
+
 }  // namespace rtype::games::rtype::client
