@@ -47,7 +47,7 @@ class StressTestScene : public AScene {
     // Test configuration
     static constexpr std::size_t SPAWN_BATCH_SIZE = 50;
     static constexpr std::size_t TARGET_ENTITY_COUNT = 1000;
-    static constexpr std::size_t MAX_ENTITY_COUNT = 5000;
+    static constexpr std::size_t MAX_ENTITY_COUNT = 1000000;
     static constexpr float SPAWN_INTERVAL = 0.05f;  // seconds between spawns
 
     // Test state
