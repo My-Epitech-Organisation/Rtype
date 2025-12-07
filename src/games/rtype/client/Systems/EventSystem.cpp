@@ -7,23 +7,39 @@
 
 #include "EventSystem.hpp"
 
-#include <iostream>
 #include <utility>
 
-#include "../Components/HiddenComponent.hpp"
+#include "../AllComponents.hpp"
 
 namespace rtype::games::rtype::client {
 
-void EventSystem::update(ECS::Registry& registry, float) {
-    registry
-        .view<::rtype::games::rtype::client::Rectangle,
-              ::rtype::games::rtype::client::UserEvent>()
-        .each([this, &registry](
-                  auto entity,
-                  const ::rtype::games::rtype::client::Rectangle& rect,
-                  ::rtype::games::rtype::client::UserEvent& actionType) {
+namespace rc = ::rtype::games::rtype::client;
+
+EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window)
+    : ASystem("EventSystem"), _window(std::move(window)) {}
+
+EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window,
+                         const sf::Event& event)
+    : ASystem("EventSystem"), _event(event), _window(std::move(window)) {}
+
+void EventSystem::setEvent(const sf::Event& event) { _event = event; }
+
+void EventSystem::clearEvent() { _event.reset(); }
+
+bool EventSystem::_isPointInRect(sf::Vector2i pixelPos,
+                                 const rc::Rectangle& rect) const {
+    sf::Vector2f worldPos = _window->mapPixelToCoords(pixelPos);
+    return rect.rectangle.getGlobalBounds().contains(worldPos);
+}
+
+void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
+    if (!_event.has_value()) return;
+
+    registry.view<Rectangle, UserEvent>().each(
+        [this, &registry](auto entity, const Rectangle& rect,
+                          UserEvent& actionType) {
             if (registry.hasComponent<HiddenComponent>(entity)) {
-                HiddenComponent hidden =
+                const auto& hidden =
                     registry.getComponent<HiddenComponent>(entity);
                 if (hidden.isHidden) return;
             }
@@ -33,54 +49,37 @@ void EventSystem::update(ECS::Registry& registry, float) {
         });
 }
 
-EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window,
-                         const sf::Event& event)
-    : ASystem("EventSystem"), _event(event), _window(std::move(window)) {}
-
-void EventSystem::_mouseMoved(
-    ::rtype::games::rtype::client::UserEvent& actionType,
-    const ::rtype::games::rtype::client::Rectangle& rect) const {
-    if (const auto& mouseMove = this->_event.getIf<sf::Event::MouseMoved>()) {
-        sf::FloatRect rectBounds = rect.rectangle.getGlobalBounds();
-        sf::Vector2f worldPos =
-            this->_window->mapPixelToCoords(mouseMove->position);
-
-        if (rectBounds.contains(worldPos)) {
-            actionType.isHovered = true;
-        } else {
-            actionType.isHovered = false;
+void EventSystem::_mouseMoved(UserEvent& actionType,
+                              const Rectangle& rect) const {
+    if (const auto* mouseMove = _event->getIf<sf::Event::MouseMoved>()) {
+        bool isInside = _isPointInRect(mouseMove->position, rect);
+        actionType.isHovered = isInside;
+        if (!isInside) {
             actionType.isClicked = false;
         }
     }
 }
 
-void EventSystem::_mousePressed(
-    ::rtype::games::rtype::client::UserEvent& actionType,
-    const ::rtype::games::rtype::client::Rectangle& rect) const {
-    if (const auto& mousePress =
-            this->_event.getIf<sf::Event::MouseButtonPressed>()) {
-        sf::FloatRect rectBounds = rect.rectangle.getGlobalBounds();
-        if (mousePress->button == sf::Mouse::Button::Left) {
-            sf::Vector2f worldPos =
-                this->_window->mapPixelToCoords(mousePress->position);
-
-            if (rectBounds.contains(worldPos)) actionType.isClicked = true;
+void EventSystem::_mousePressed(UserEvent& actionType,
+                                const Rectangle& rect) const {
+    if (const auto* mousePress =
+            _event->getIf<sf::Event::MouseButtonPressed>()) {
+        if (mousePress->button == sf::Mouse::Button::Left &&
+            _isPointInRect(mousePress->position, rect)) {
+            actionType.isClicked = true;
         }
     }
 }
 
-void EventSystem::_mouseReleased(
-    ::rtype::games::rtype::client::UserEvent& actionType,
-    const ::rtype::games::rtype::client::Rectangle& rect) const {
-    if (const auto& mouseRelease =
-            this->_event.getIf<sf::Event::MouseButtonReleased>()) {
-        sf::FloatRect rectBounds = rect.rectangle.getGlobalBounds();
+void EventSystem::_mouseReleased(UserEvent& actionType,
+                                 const Rectangle& rect) const {
+    if (const auto* mouseRelease =
+            _event->getIf<sf::Event::MouseButtonReleased>()) {
         if (mouseRelease->button == sf::Mouse::Button::Left) {
-            sf::Vector2f worldPos =
-                this->_window->mapPixelToCoords(mouseRelease->position);
-
-            if (rectBounds.contains(worldPos) && actionType.isClicked)
+            if (_isPointInRect(mouseRelease->position, rect) &&
+                actionType.isClicked) {
                 actionType.isReleased = true;
+            }
             actionType.isClicked = false;
         }
     }
