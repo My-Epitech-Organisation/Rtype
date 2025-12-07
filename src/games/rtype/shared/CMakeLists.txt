@@ -1,4 +1,3 @@
-add_subdirectory(Components)
 add_subdirectory(Systems)
 
 # Create shared game lib
@@ -16,5 +15,5 @@ target_compile_features(rtype_game_shared PUBLIC cxx_std_20)
 # Shared depends on engine and components (interface lib)
 target_link_libraries(rtype_game_shared PUBLIC
     rtype_engine
-    rtype_game_shared_components
+#    rtype_game_shared_components
 )
