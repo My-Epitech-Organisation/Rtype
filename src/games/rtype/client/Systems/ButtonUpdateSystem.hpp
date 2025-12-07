@@ -8,11 +8,13 @@
 #ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BUTTONUPDATESYSTEM_HPP_
 #define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BUTTONUPDATESYSTEM_HPP_
 
+#include <memory>
+
 #include <SFML/Graphics.hpp>
 
 #include "ASystem.hpp"
+#include "ECS.hpp"
 #include "SFML/Window.hpp"
-#include "ecs/ECS.hpp"
 
 namespace rtype::games::rtype::client {
 class ButtonUpdateSystem : public ::rtype::engine::ASystem {

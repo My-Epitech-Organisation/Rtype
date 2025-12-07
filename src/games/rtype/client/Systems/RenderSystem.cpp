@@ -7,6 +7,10 @@
 
 #include "RenderSystem.hpp"
 
+#include <algorithm>
+#include <utility>
+#include <vector>
+
 #include "../Components/ButtonComponent.hpp"
 #include "../Components/ImageComponent.hpp"
 #include "../Components/RectangleComponent.hpp"
@@ -16,7 +20,7 @@
 #include "../Components/TextureRectComponent.hpp"
 #include "../Components/ZIndexComponent.hpp"
 #include "Components/PositionComponent.hpp"
-#include "ecs/ECS.hpp"
+#include "ECS.hpp"
 #include "src/games/rtype/client/Components/HiddenComponent.hpp"
 
 namespace rtype::games::rtype::client {
