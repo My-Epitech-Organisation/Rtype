@@ -68,6 +68,67 @@ if(BUILD_GRAPHICAL_TESTS)
     )
 
     gtest_discover_tests(test_scene_manager)
+
+    # ==========================================================================
+    # Stress Tests - Performance testing under heavy load
+    # ==========================================================================
+
+    # Rendering stress tests
+    add_executable(test_stress_rendering test_stress_rendering.cpp)
+
+    target_link_libraries(test_stress_rendering PRIVATE
+        GTest::gtest_main
+        rtype_engine
+        rtype_network
+        rtype_game_shared
+        rtype_game_client
+        rtype-graphic-SFML
+        rtype_game_client_systems
+    )
+
+    target_include_directories(test_stress_rendering PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
+
+    gtest_discover_tests(test_stress_rendering)
+
+    # ECS component stress tests
+    add_executable(test_stress_ecs test_stress_ecs.cpp)
+
+    target_link_libraries(test_stress_ecs PRIVATE
+        GTest::gtest_main
+        rtype_engine
+        rtype_network
+        rtype_game_shared
+        rtype_game_client
+        rtype-graphic-SFML
+    )
+
+    target_include_directories(test_stress_ecs PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
+
+    gtest_discover_tests(test_stress_ecs)
+
+    # Event system stress tests
+    add_executable(test_stress_events test_stress_events.cpp)
+
+    target_link_libraries(test_stress_events PRIVATE
+        GTest::gtest_main
+        rtype_engine
+        rtype_network
+        rtype_game_shared
+        rtype_game_client
+        rtype-graphic-SFML
+        rtype_game_client_systems
+    )
+
+    target_include_directories(test_stress_events PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
+
+    gtest_discover_tests(test_stress_events)
+
 endif()
 
 add_executable(test_entity_factory test_entity_factory.cpp)
