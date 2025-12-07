@@ -7,17 +7,9 @@
 
 #include "Graphic.hpp"
 
-#include <iostream>
 #include <optional>
 #include <utility>
 
-#include "../../games/rtype/client/Systems/BoxingSystem.hpp"
-#include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
-#include "../../games/rtype/client/Systems/EventSystem.hpp"
-#include "../../games/rtype/client/Systems/MovementSystem.hpp"
-#include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
-#include "../../games/rtype/client/Systems/RenderSystem.hpp"
-#include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "SceneManager/SceneException.hpp"
 
@@ -27,41 +19,106 @@ void Graphic::_pollEvents() {
         if (event->is<sf::Event::Closed>()) {
             this->_window->close();
         }
-        auto eventSystem =
-            ::rtype::games::rtype::client::EventSystem(this->_window, *event);
-        eventSystem.update(*this->_registry, 0.f);
+        _eventSystem->setEvent(*event);
+        _eventSystem->update(*this->_registry, 0.f);
         this->_sceneManager->pollEvents(*event);
     }
 }
 
-void Graphic::_update() {
-    this->_buttonUpdateSystem->update(*this->_registry, 0.f);
-    float dt = this->_mainClock.getElapsedTime().asSeconds();
+void Graphic::_updateDeltaTime() {
+    _currentDeltaTime = this->_mainClock.getElapsedTime().asSeconds();
     this->_mainClock.restart();
-    sf::Vector2f center = this->_view->getCenter();
-    float newX = center.x + (scrollSpeed * dt);
-    this->_view->setCenter({newX, center.y});
+}
 
-    this->_parallaxScrolling->update(*this->_registry, dt);
-    this->_movementSystem->update(*this->_registry, dt);
+void Graphic::_updateViewScrolling() {
+    sf::Vector2f center = this->_view->getCenter();
+    float newX = center.x + (scrollSpeed * _currentDeltaTime);
+    this->_view->setCenter({newX, center.y});
+}
+
+void Graphic::_update() {
+    _updateDeltaTime();
+    _updateViewScrolling();
+
+    _systemScheduler->runSystem("button_update");
+    _systemScheduler->runSystem("parallax");
+    _systemScheduler->runSystem("movement");
     this->_sceneManager->update();
 }
 
 void Graphic::_display() {
     this->_window->clear();
-    this->_renderSystem->update(*this->_registry, 0.f);
-    this->_boxingSystem->update(*this->_registry, 0.f);
+
+    _systemScheduler->runSystem("render");
+    _systemScheduler->runSystem("boxing");
+
     this->_sceneManager->draw();
     this->_window->display();
 }
 
 void Graphic::loop() {
     while (this->_window->isOpen()) {
-        this->_resetTriggersSystem->update(*this->_registry, 0.f);
+        _systemScheduler->runSystem("reset_triggers");
         this->_pollEvents();
         this->_update();
         this->_display();
     }
+}
+
+void Graphic::_initializeSystems() {
+    _movementSystem =
+        std::make_unique<::rtype::games::rtype::client::MovementSystem>();
+    _buttonUpdateSystem =
+        std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(
+            this->_window);
+    _parallaxScrolling =
+        std::make_unique<::rtype::games::rtype::client::ParallaxScrolling>(
+            this->_view);
+    _renderSystem =
+        std::make_unique<::rtype::games::rtype::client::RenderSystem>(
+            this->_window);
+    _boxingSystem =
+        std::make_unique<::rtype::games::rtype::client::BoxingSystem>(
+            this->_window);
+    _resetTriggersSystem =
+        std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
+    _eventSystem = std::make_unique<::rtype::games::rtype::client::EventSystem>(
+        this->_window);
+
+    _systemScheduler = std::make_unique<ECS::SystemScheduler>(*this->_registry);
+
+    _systemScheduler->addSystem("reset_triggers", [this](ECS::Registry& reg) {
+        _resetTriggersSystem->update(reg, 0.f);
+    });
+
+    _systemScheduler->addSystem(
+        "button_update",
+        [this](ECS::Registry& reg) { _buttonUpdateSystem->update(reg, 0.f); },
+        {"reset_triggers"});
+
+    _systemScheduler->addSystem("parallax",
+                                [this](ECS::Registry& reg) {
+                                    _parallaxScrolling->update(
+                                        reg, _currentDeltaTime);
+                                },
+                                {"button_update"});
+
+    _systemScheduler->addSystem("movement",
+                                [this](ECS::Registry& reg) {
+                                    _movementSystem->update(reg,
+                                                            _currentDeltaTime);
+                                },
+                                {"parallax"});
+
+    _systemScheduler->addSystem(
+        "render",
+        [this](ECS::Registry& reg) { _renderSystem->update(reg, 0.f); },
+        {"movement"});
+
+    _systemScheduler->addSystem(
+        "boxing",
+        [this](ECS::Registry& reg) { _boxingSystem->update(reg, 0.f); },
+        {"render"});
 }
 
 Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
@@ -75,24 +132,6 @@ Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
     this->_assetsManager = std::make_shared<AssetManager>();
     this->_sceneManager = std::make_unique<SceneManager>(
         registry, this->_assetsManager, this->_window, this->_keybinds);
-
-    // Initialize systems
-    this->_movementSystem =
-        std::make_unique<::rtype::games::rtype::client::MovementSystem>();
-    this->_buttonUpdateSystem =
-        std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(
-            this->_window);
-    this->_parallaxScrolling =
-        std::make_unique<::rtype::games::rtype::client::ParallaxScrolling>(
-            this->_view);
-    this->_renderSystem =
-        std::make_unique<::rtype::games::rtype::client::RenderSystem>(
-            this->_window);
-    this->_boxingSystem =
-        std::make_unique<::rtype::games::rtype::client::BoxingSystem>(
-            this->_window);
-    this->_resetTriggersSystem =
-        std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
-
+    _initializeSystems();
     this->_mainClock.start();
 }
