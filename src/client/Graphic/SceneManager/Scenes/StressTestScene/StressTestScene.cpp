@@ -26,6 +26,10 @@ StressTestScene::StressTestScene(
     std::shared_ptr<sf::RenderWindow> window,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(ecs, assetsManager, window), _switchToScene(switchToScene) {
+    // Initialize random number generator
+    std::random_device rd;
+    _rng.seed(rd());
+
     // Reserve space for frame times
     _frameTimes.reserve(1000);
 
