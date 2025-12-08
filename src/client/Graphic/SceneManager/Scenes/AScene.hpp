@@ -8,12 +8,15 @@
 #ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_ASCENE_HPP_
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_ASCENE_HPP_
 
+#include <memory>
+#include <vector>
+
 #include <SFML/Graphics/RenderWindow.hpp>
 
 #include "AudioLib/AudioLib.hpp"
+#include "ECS.hpp"
 #include "Graphic/AssetManager/AssetManager.hpp"
 #include "IScene.hpp"
-#include "ecs/ECS.hpp"
 
 class AScene : public IScene {
    protected:

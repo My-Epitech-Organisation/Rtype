@@ -8,27 +8,41 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <SFML/Graphics.hpp>
-#include <ecs/ECS.hpp>
+#include <ECS.hpp>
 #include "../../src/games/rtype/client/Systems/MovementSystem.hpp"
 #include "../../src/games/rtype/client/Systems/RenderSystem.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
-#include "games/rtype/client/Components/VelocityComponent.hpp"
+#include "games/rtype/shared/Components/VelocityComponent.hpp"
 #include "games/rtype/client/Components/ImageComponent.hpp"
+
+using Position = rtype::games::rtype::shared::Position;
+using Velocity = rtype::games::rtype::shared::VelocityComponent;
+using Image = rtype::games::rtype::client::Image;
+using MovementSystem = rtype::games::rtype::client::MovementSystem;
+using RenderSystem = rtype::games::rtype::client::RenderSystem;
 
 class SystemsTest : public ::testing::Test {
 protected:
     std::shared_ptr<ECS::Registry> registry;
-    sf::RenderWindow window;
+    std::shared_ptr<sf::RenderWindow> window;
 
     void SetUp() override {
         registry = std::make_shared<ECS::Registry>();
-        window.create(sf::VideoMode({800, 600}), "Test");
+        window = std::make_shared<sf::RenderWindow>();
+        window->create(sf::VideoMode({800, 600}), "Test");
     }
 
     void TearDown() override {
-        window.close();
+        window->close();
     }
 };
+
+// Type aliases for readability
+using Velocity = rtype::games::rtype::shared::VelocityComponent;
+using Position = rtype::games::rtype::shared::Position;
+using Image = rtype::games::rtype::client::Image;
+using MovementSystem = rtype::games::rtype::client::MovementSystem;
+using RenderSystem = rtype::games::rtype::client::RenderSystem;
 
 TEST_F(SystemsTest, MovementSystem_Update_AppliesVelocity) {
     sf::Texture texture;
@@ -37,7 +51,7 @@ TEST_F(SystemsTest, MovementSystem_Update_AppliesVelocity) {
     auto entity = registry->spawnEntity();
     registry->emplaceComponent<Velocity>(entity, Velocity{1.0f, 2.0f});
     registry->emplaceComponent<Position>(entity, Position{0.0f, 0.0f});
-    registry->emplaceComponent<Image>(entity, Image{texture});
+    registry->emplaceComponent<Image>(entity, texture);
 
     MovementSystem movementSystem;
     movementSystem.update(*registry, 1.0f);
@@ -51,7 +65,7 @@ TEST_F(SystemsTest, RenderSystem_Draw_DoesNotThrow) {
     auto entity = registry->spawnEntity();
     // Add renderable components if needed
 
-    auto windowPtr = std::make_shared<sf::RenderWindow>(window);
+    auto windowPtr = std::make_shared<sf::RenderWindow>(std::move(window));
     RenderSystem renderSystem(windowPtr);
     EXPECT_NO_THROW(renderSystem.update(*registry, 0.f));
 }

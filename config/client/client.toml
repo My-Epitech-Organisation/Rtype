@@ -1,0 +1,47 @@
+# R-Type Client Configuration
+# Schema version: 1
+
+[video]
+width = 1920
+height = 1080
+fullscreen = false
+vsync = true
+maxFps = 60
+uiScale = 1.0
+
+[audio]
+masterVolume = 1.0
+musicVolume = 0.8
+sfxVolume = 1.0
+muted = false
+
+[network]
+serverAddress = "127.0.0.1"
+serverPort = 4000
+clientPort = 0
+connectionTimeout = 5000
+maxRetries = 3
+tickrate = 60
+
+[gameplay]
+difficulty = "normal"
+startingLives = 3
+waves = 10
+playerSpeed = 200.0
+enemySpeedMultiplier = 1.0
+friendlyFire = false
+
+[input]
+moveUp = "Up"
+moveDown = "Down"
+moveLeft = "Left"
+moveRight = "Right"
+fire = "Space"
+pause = "Escape"
+mouseSensitivity = 1.0
+
+[paths]
+assetsPath = "assets"
+savesPath = "saves"
+logsPath = "logs"
+configPath = "config"

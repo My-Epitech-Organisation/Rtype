@@ -7,17 +7,9 @@
 
 #include "Graphic.hpp"
 
-#include <iostream>
 #include <optional>
 #include <utility>
 
-#include "../../games/rtype/client/Systems/BoxingSystem.hpp"
-#include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
-#include "../../games/rtype/client/Systems/EventSystem.hpp"
-#include "../../games/rtype/client/Systems/MovementSystem.hpp"
-#include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
-#include "../../games/rtype/client/Systems/RenderSystem.hpp"
-#include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "SceneManager/SceneException.hpp"
 
@@ -27,58 +19,53 @@ void Graphic::_pollEvents() {
         if (event->is<sf::Event::Closed>()) {
             this->_window->close();
         }
-        auto eventSystem =
-            ::rtype::games::rtype::client::EventSystem(this->_window, *event);
-        eventSystem.update(*this->_registry, 0.f);
+        this->_eventSystem->setEvent(*event);
+        this->_eventSystem->update(*this->_registry, 0.f);
         this->_sceneManager->pollEvents(*event);
     }
 }
 
-void Graphic::_update() {
-    this->_buttonUpdateSystem->update(*this->_registry, 0.f);
-    float dt = this->_mainClock.getElapsedTime().asSeconds();
+void Graphic::_updateDeltaTime() {
+    _currentDeltaTime = this->_mainClock.getElapsedTime().asSeconds();
     this->_mainClock.restart();
-    sf::Vector2f center = this->_view->getCenter();
-    float newX = center.x + (scrollSpeed * dt);
-    this->_view->setCenter({newX, center.y});
+}
 
-    this->_parallaxScrolling->update(*this->_registry, dt);
-    this->_movementSystem->update(*this->_registry, dt);
+void Graphic::_updateViewScrolling() {
+    sf::Vector2f center = this->_view->getCenter();
+    float newX = center.x + (scrollSpeed * _currentDeltaTime);
+    this->_view->setCenter({newX, center.y});
+}
+
+void Graphic::_update() {
+    this->_updateDeltaTime();
+    this->_updateViewScrolling();
+
+    this->_systemScheduler->runSystem("button_update");
+    this->_systemScheduler->runSystem("parallax");
+    this->_systemScheduler->runSystem("movement");
     this->_sceneManager->update();
 }
 
 void Graphic::_display() {
     this->_window->clear();
-    this->_renderSystem->update(*this->_registry, 0.f);
-    this->_boxingSystem->update(*this->_registry, 0.f);
+
+    this->_systemScheduler->runSystem("render");
+    this->_systemScheduler->runSystem("boxing");
+
     this->_sceneManager->draw();
     this->_window->display();
 }
 
 void Graphic::loop() {
     while (this->_window->isOpen()) {
-        this->_resetTriggersSystem->update(*this->_registry, 0.f);
+        this->_systemScheduler->runSystem("reset_triggers");
         this->_pollEvents();
         this->_update();
         this->_display();
     }
 }
 
-Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
-    : _registry(registry),
-      _view(std::make_shared<sf::View>(
-          sf::FloatRect({0, 0}, {WINDOW_WIDTH, WINDOW_HEIGHT}))) {
-    this->_keybinds = std::make_shared<KeyboardActions>();
-    this->_window = std::make_shared<sf::RenderWindow>(
-        sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");
-    this->_window->setView(*this->_view);
-    this->_assetsManager = std::make_shared<AssetManager>();
-    this->_audioLib = std::make_shared<AudioLib>();
-    this->_sceneManager = std::make_unique<SceneManager>(
-        registry, this->_assetsManager, this->_window, this->_keybinds,
-        this->_audioLib);
-
-    // Initialize systems
+void Graphic::_initializeSystems() {
     this->_movementSystem =
         std::make_unique<::rtype::games::rtype::client::MovementSystem>();
     this->_buttonUpdateSystem =
@@ -95,6 +82,58 @@ Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
             this->_window);
     this->_resetTriggersSystem =
         std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
+    this->_eventSystem = std::make_unique<::rtype::games::rtype::client::EventSystem>(
+        this->_window);
 
+    this->_systemScheduler = std::make_unique<ECS::SystemScheduler>(*this->_registry);
+
+    this->_systemScheduler->addSystem("reset_triggers", [this](ECS::Registry& reg) {
+        this->_resetTriggersSystem->update(reg, 0.f);
+    });
+
+    this->_systemScheduler->addSystem(
+        "button_update",
+        [this](ECS::Registry& reg) { this->_buttonUpdateSystem->update(reg, 0.f); },
+        {"reset_triggers"});
+
+    this->_systemScheduler->addSystem("parallax",
+                                [this](ECS::Registry& reg) {
+                                    this->_parallaxScrolling->update(
+                                        reg, this->_currentDeltaTime);
+                                },
+                                {"button_update"});
+
+    this->_systemScheduler->addSystem("movement",
+                                [this](ECS::Registry& reg) {
+                                    this->_movementSystem->update(reg,
+                                                            this->_currentDeltaTime);
+                                },
+                                {"parallax"});
+
+    this->_systemScheduler->addSystem(
+        "render",
+        [this](ECS::Registry& reg) { this->_renderSystem->update(reg, 0.f); },
+        {"movement"});
+
+    this->_systemScheduler->addSystem(
+        "boxing",
+        [this](ECS::Registry& reg) { this->_boxingSystem->update(reg, 0.f); },
+        {"render"});
+}
+
+Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
+    : _registry(registry),
+      _view(std::make_shared<sf::View>(
+          sf::FloatRect({0, 0}, {WINDOW_WIDTH, WINDOW_HEIGHT}))) {
+    this->_keybinds = std::make_shared<KeyboardActions>();
+    this->_window = std::make_shared<sf::RenderWindow>(
+        sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");
+    this->_window->setView(*this->_view);
+    this->_assetsManager = std::make_shared<AssetManager>();
+    this->_audioLib = std::make_shared<AudioLib>();
+    this->_sceneManager = std::make_unique<SceneManager>(
+        registry, this->_assetsManager, this->_window, this->_keybinds,
+        this->_audioLib);
+    _initializeSystems();
     this->_mainClock.start();
 }

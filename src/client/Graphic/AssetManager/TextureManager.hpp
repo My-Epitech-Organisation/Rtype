@@ -31,6 +31,31 @@ class TextureManager {
 
     sf::Texture& get(const std::string& id);
 
+    /**
+     * @brief Check if a texture is loaded
+     * @param id The texture identifier
+     * @return true if the texture is loaded, false otherwise
+     */
+    bool isLoaded(const std::string& id) const;
+
+    /**
+     * @brief Unload a specific texture by id
+     * @param id The texture identifier to unload
+     * @return true if the texture was unloaded, false if not found
+     */
+    bool unload(const std::string& id);
+
+    /**
+     * @brief Unload all textures
+     */
+    void unloadAll();
+
+    /**
+     * @brief Get the number of loaded textures
+     * @return Number of textures currently loaded
+     */
+    std::size_t size() const;
+
     TextureManager() = default;
 };
 

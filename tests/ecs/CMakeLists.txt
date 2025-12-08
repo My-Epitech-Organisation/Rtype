@@ -15,11 +15,15 @@ set(ECS_TESTS
     core/test_registry_signal
     core/test_registry_relationship
     core/test_system_scheduler
+    core/test_agameengine
+    core/test_asystem
     # Storage tests
     storage/test_isparse_set
     storage/test_sparse_set
     # Traits tests
     traits/test_component_traits
+    # Signal tests
+    signal/test_signal_dispatcher
 )
 
 # Function to create a test executable with common configuration

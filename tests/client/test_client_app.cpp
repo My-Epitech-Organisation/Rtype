@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 #include <memory>
-#include <ecs/ECS.hpp>
+#include <ECS.hpp>
 #include "../src/client/ClientApp.hpp"
 
 class ClientAppTest : public ::testing::Test {

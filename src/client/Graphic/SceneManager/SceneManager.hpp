@@ -16,8 +16,8 @@
 #include "../KeyboardActions.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "AudioLib/AudioLib.hpp"
+#include "ECS.hpp"
 #include "Scenes/IScene.hpp"
-#include "ecs/ECS.hpp"
 
 class SceneManager {
    public:
