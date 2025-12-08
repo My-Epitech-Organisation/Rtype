@@ -1,0 +1,60 @@
+# =============================================================================
+# R-Type Player Ship Configuration
+# =============================================================================
+# Defines player ship types with their stats and abilities
+
+[[player]]
+id = "default_ship"
+name = "R-9A Arrowhead"
+sprite_sheet = "assets/sprites/players/r9a.png"
+
+health = 100
+speed = 250.0
+fire_rate = 8.0
+
+hitbox_width = 32.0
+hitbox_height = 16.0
+
+default_projectile = "basic_bullet"
+
+[[player]]
+id = "speed_ship"
+name = "R-9D Shooting Star"
+sprite_sheet = "assets/sprites/players/r9d.png"
+
+health = 75
+speed = 350.0
+fire_rate = 12.0
+
+hitbox_width = 28.0
+hitbox_height = 14.0
+
+default_projectile = "basic_bullet"
+
+[[player]]
+id = "tank_ship"
+name = "R-9C War-Head"
+sprite_sheet = "assets/sprites/players/r9c.png"
+
+health = 150
+speed = 180.0
+fire_rate = 5.0
+
+hitbox_width = 40.0
+hitbox_height = 20.0
+
+default_projectile = "heavy_shot"
+
+[[player]]
+id = "balanced_ship"
+name = "R-9B Strider"
+sprite_sheet = "assets/sprites/players/r9b.png"
+
+health = 100
+speed = 280.0
+fire_rate = 10.0
+
+hitbox_width = 32.0
+hitbox_height = 16.0
+
+default_projectile = "basic_bullet"

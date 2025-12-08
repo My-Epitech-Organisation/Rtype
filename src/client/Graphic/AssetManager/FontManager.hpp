@@ -1,0 +1,62 @@
+/*
+** EPITECH PROJECT, 2025
+** r-type
+** File description:
+** FontManager.hpp
+*/
+
+#ifndef SRC_CLIENT_GRAPHIC_ASSETMANAGER_FONTMANAGER_HPP_
+#define SRC_CLIENT_GRAPHIC_ASSETMANAGER_FONTMANAGER_HPP_
+
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+
+#include <SFML/Graphics/Font.hpp>
+
+class FontManager {
+   private:
+    std::unordered_map<std::string, std::unique_ptr<sf::Font>> _assets;
+
+   public:
+    FontManager(const FontManager&) = delete;
+    FontManager& operator=(const FontManager&) = delete;
+
+    void load(const std::string& id, const std::string& filePath);
+
+    void load(const std::string& id, unsigned char* fileData,
+              unsigned int fileDataSize);
+
+    sf::Font& get(const std::string& id);
+
+    /**
+     * @brief Check if a font is loaded
+     * @param id The font identifier
+     * @return true if the font is loaded, false otherwise
+     */
+    bool isLoaded(const std::string& id) const;
+
+    /**
+     * @brief Unload a specific font by id
+     * @param id The font identifier to unload
+     * @return true if the font was unloaded, false if not found
+     */
+    bool unload(const std::string& id);
+
+    /**
+     * @brief Unload all fonts
+     */
+    void unloadAll();
+
+    /**
+     * @brief Get the number of loaded fonts
+     * @return Number of fonts currently loaded
+     */
+    std::size_t size() const;
+
+    FontManager() = default;
+};
+
+#endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_FONTMANAGER_HPP_

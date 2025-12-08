@@ -2,26 +2,21 @@
 ** EPITECH PROJECT, 2025
 ** Rtype
 ** File description:
-** Components
+** Components - Aggregate header for all shared components
 */
 
 #pragma once
 
-namespace rtype::games::rtype::shared {
+// Core Components
+#include "Components/NetworkIdComponent.hpp"
+#include "Components/TransformComponent.hpp"
+#include "Components/VelocityComponent.hpp"
 
-struct TransformComponent {
-    float x = 0.0f;
-    float y = 0.0f;
-    float rotation = 0.0f;
-};
+// Gameplay Components
+#include "Components/AIComponent.hpp"
+#include "Components/BoundingBoxComponent.hpp"
+#include "Components/HealthComponent.hpp"
 
-struct VelocityComponent {
-    float vx = 0.0f;
-    float vy = 0.0f;
-};
-
-struct NetworkIdComponent {
-    unsigned int networkId = 0;
-};
-
-} // namespace rtype::games::rtype::shared
+// Entity Types and Tags
+#include "Components/EntityType.hpp"
+#include "Components/Tags.hpp"

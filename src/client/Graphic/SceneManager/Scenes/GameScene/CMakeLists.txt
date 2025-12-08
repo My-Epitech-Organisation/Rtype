@@ -1,0 +1,22 @@
+add_library(rtype-graphic-game-scene
+        STATIC
+        GameScene.cpp
+        GameScene.hpp
+)
+
+target_link_libraries(rtype-graphic-game-scene
+        PUBLIC
+        SFML::Graphics
+        SFML::Window
+        SFML::Audio
+        SFML::System
+        rtype_engine
+)
+
+target_link_libraries(rtype-graphic-game-scene
+        PRIVATE
+        rtype-graphic-asset-manager
+        rtype-graphic-entity-factory
+        rtype_game_client
+        rtype_game_shared
+)
