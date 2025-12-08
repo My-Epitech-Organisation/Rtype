@@ -21,7 +21,6 @@ struct PowerUpConfig {
     std::string name;
     std::string spriteSheet;
 
-    // Effect type
     enum class EffectType : uint8_t {
         Health,
         SpeedBoost,
@@ -32,9 +31,8 @@ struct PowerUpConfig {
     EffectType effect = EffectType::Health;
 
     float duration = 0.0F;  // 0 = permanent (like health)
-    int32_t value = 25;     // Health amount, speed %, etc.
+    int32_t value = 25;
 
-    // Hitbox
     float hitboxWidth = 16.0F;
     float hitboxHeight = 16.0F;
 
