@@ -6,13 +6,14 @@
 */
 #include "AssetManager.hpp"
 
-#include "assets/Audiowide_Regular.h"
-#include "assets/astroVessel.h"
-#include "assets/bgMainMenu.h"
-#include "assets/planet1.h"
-#include "assets/planet2.h"
-#include "assets/planet3.h"
-#include "assets/playerVessel.h"
+#include "assets/font/Audiowide_Regular.h"
+#include "assets/img/astroVessel.h"
+#include "assets/img/bgMainMenu.h"
+#include "assets/img/planet1.h"
+#include "assets/img/planet2.h"
+#include "assets/img/planet3.h"
+#include "assets/img/playerVessel.h"
+#include "assets/audio/mainMenuMusic.h"
 
 AssetManager::AssetManager() {
     this->fontManager->load("title_font", Audiowide_Regular_ttf,
@@ -26,8 +27,11 @@ AssetManager::AssetManager() {
     this->textureManager->load("player_vessel", playerVessel_gif,
                                playerVessel_gif_len);
 
+    this->audioManager->load("main_menu_music", mainMenuMusic_mp3, mainMenuMusic_mp3_len);
+
     this->textureManager->get("bg_menu").setRepeated(true);
     this->textureManager->get("bg_planet_1").setRepeated(true);
     this->textureManager->get("bg_planet_2").setRepeated(true);
     this->textureManager->get("bg_planet_3").setRepeated(true);
+
 }

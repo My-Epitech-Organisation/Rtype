@@ -1,0 +1,38 @@
+/*
+** EPITECH PROJECT, 2025
+** r-type
+** File description:
+** AudioManager.hpp
+*/
+
+#ifndef SRC_CLIENT_GRAPHIC_AUDIOMANAGER_FONTMANAGER_HPP_
+#define SRC_CLIENT_GRAPHIC_AUDIOMANAGER_FONTMANAGER_HPP_
+
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <SFML/Audio/Music.hpp>
+
+#include <SFML/Audio.hpp>
+
+class AudioManager {
+   private:
+    std::unordered_map<std::string, std::shared_ptr<sf::Music>> _assets;
+
+   public:
+    AudioManager(const AudioManager&) = delete;
+    AudioManager& operator=(const AudioManager&) = delete;
+
+    void load(const std::string& id, const std::string& filePath);
+
+    void load(const std::string& id, unsigned char* fileData,
+              unsigned int fileDataSize);
+
+    std::shared_ptr<sf::Music> get(const std::string& id);
+
+    AudioManager() = default;
+};
+
+#endif  // SRC_CLIENT_GRAPHIC_AUDIOMANAGER_FONTMANAGER_HPP_
