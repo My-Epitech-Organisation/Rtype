@@ -23,7 +23,7 @@ auto main(int argc, char** argv) -> int {
         ClientApp client(config);
         client.run();
     } catch (const std::exception& e) {
-        LOG_ERROR(std::string("Program exited with an error: ") + e.what());
+        LOG_ERROR(std::string("Program exited with an error: ") + std::string(e.what()));
         return 1;
     }
     return 0;
