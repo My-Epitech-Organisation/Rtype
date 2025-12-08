@@ -40,24 +40,20 @@ class FileOperationsTest : public ::testing::Test {
 TEST_F(FileOperationsTest, WriteToFileSuccessSimplePath) {
     auto filepath = testDir / "simple_file.bin";
     std::vector<uint8_t> data = {0x01, 0x02, 0x03, 0x04, 0x05};
-    std::string error;
 
-    bool result = FileOperations::writeToFile(filepath, data, error);
+    auto error = FileOperations::writeToFile(filepath, data);
 
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(error.empty());
+    EXPECT_FALSE(error.has_value());
     EXPECT_TRUE(std::filesystem::exists(filepath));
 }
 
 TEST_F(FileOperationsTest, WriteToFileSuccessEmptyData) {
     auto filepath = testDir / "empty_file.bin";
     std::vector<uint8_t> data;
-    std::string error;
 
-    bool result = FileOperations::writeToFile(filepath, data, error);
+    auto error = FileOperations::writeToFile(filepath, data);
 
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(error.empty());
+    EXPECT_FALSE(error.has_value());
     EXPECT_TRUE(std::filesystem::exists(filepath));
 }
 
@@ -67,12 +63,10 @@ TEST_F(FileOperationsTest, WriteToFileLargeData) {
     for (size_t i = 0; i < data.size(); ++i) {
         data[i] = static_cast<uint8_t>(i % 256);
     }
-    std::string error;
 
-    bool result = FileOperations::writeToFile(filepath, data, error);
+    auto error = FileOperations::writeToFile(filepath, data);
 
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(error.empty());
+    EXPECT_FALSE(error.has_value());
 
     // Verify file size
     auto fileSize = std::filesystem::file_size(filepath);
@@ -82,15 +76,13 @@ TEST_F(FileOperationsTest, WriteToFileLargeData) {
 TEST_F(FileOperationsTest, WriteToFileCreatesNestedDirectories) {
     auto filepath = testDir / "nested" / "deep" / "path" / "file.bin";
     std::vector<uint8_t> data = {0xAA, 0xBB, 0xCC};
-    std::string error;
 
     // Directory doesn't exist yet
     EXPECT_FALSE(std::filesystem::exists(filepath.parent_path()));
 
-    bool result = FileOperations::writeToFile(filepath, data, error);
+    auto error = FileOperations::writeToFile(filepath, data);
 
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(error.empty());
+    EXPECT_FALSE(error.has_value());
     EXPECT_TRUE(std::filesystem::exists(filepath));
 }
 
@@ -99,11 +91,10 @@ TEST_F(FileOperationsTest, WriteToFileNoParentPath) {
     auto currentDir = std::filesystem::current_path();
     auto filepath = currentDir / "temp_test_file_no_parent.bin";
     std::vector<uint8_t> data = {0x11, 0x22, 0x33};
-    std::string error;
 
-    bool result = FileOperations::writeToFile(filepath, data, error);
+    auto error = FileOperations::writeToFile(filepath, data);
 
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(error.has_value());
     std::filesystem::remove(filepath);  // Cleanup
 }
 
@@ -111,16 +102,15 @@ TEST_F(FileOperationsTest, WriteToFileOverwritesExisting) {
     auto filepath = testDir / "overwrite_file.bin";
     std::vector<uint8_t> oldData = {0x01, 0x02, 0x03};
     std::vector<uint8_t> newData = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB};
-    std::string error;
 
     // First write
-    (void)FileOperations::writeToFile(filepath, oldData, error);
+    (void)FileOperations::writeToFile(filepath, oldData);
     EXPECT_EQ(std::filesystem::file_size(filepath), 3);
 
     // Second write should overwrite
-    bool result = FileOperations::writeToFile(filepath, newData, error);
+    auto error = FileOperations::writeToFile(filepath, newData);
 
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(error.has_value());
     EXPECT_EQ(std::filesystem::file_size(filepath), 5);
 }
 
@@ -131,11 +121,10 @@ TEST_F(FileOperationsTest, WriteToFileBinaryData) {
     for (int i = 0; i < 256; ++i) {
         data.push_back(static_cast<uint8_t>(i));
     }
-    std::string error;
 
-    bool result = FileOperations::writeToFile(filepath, data, error);
+    auto error = FileOperations::writeToFile(filepath, data);
 
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(error.has_value());
 
     // Read back and verify
     std::ifstream inFile(filepath, std::ios::binary);
@@ -149,13 +138,11 @@ TEST_F(FileOperationsTest, WriteToFileBinaryData) {
 TEST_F(FileOperationsTest, WriteToFileExistingDirectoryNoCreate) {
     auto filepath = testDir / "existing_dir_file.bin";
     std::vector<uint8_t> data = {0x01};
-    std::string error;
 
     // testDir already exists, so no directory creation needed
-    bool result = FileOperations::writeToFile(filepath, data, error);
+    auto error = FileOperations::writeToFile(filepath, data);
 
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(error.empty());
+    EXPECT_FALSE(error.has_value());
 }
 
 // =============================================================================
@@ -172,23 +159,21 @@ TEST_F(FileOperationsTest, ReadFromFileSuccess) {
                   static_cast<std::streamsize>(originalData.size()));
     outFile.close();
 
-    std::string error;
-    auto result = FileOperations::readFromFile(filepath, error);
+    auto [data, error] = FileOperations::readFromFile(filepath);
 
-    EXPECT_TRUE(result.has_value());
-    EXPECT_TRUE(error.empty());
-    EXPECT_EQ(*result, originalData);
+    EXPECT_TRUE(data.has_value());
+    EXPECT_FALSE(error.has_value());
+    EXPECT_EQ(*data, originalData);
 }
 
 TEST_F(FileOperationsTest, ReadFromFileNotFound) {
     auto filepath = testDir / "nonexistent_file.bin";
-    std::string error;
 
-    auto result = FileOperations::readFromFile(filepath, error);
+    auto [data, error] = FileOperations::readFromFile(filepath);
 
-    EXPECT_FALSE(result.has_value());
-    EXPECT_FALSE(error.empty());
-    EXPECT_TRUE(error.find("not found") != std::string::npos);
+    EXPECT_FALSE(data.has_value());
+    EXPECT_TRUE(error.has_value());
+    EXPECT_TRUE(error->find("not found") != std::string::npos);
 }
 
 TEST_F(FileOperationsTest, ReadFromFileEmptyFile) {
@@ -198,11 +183,10 @@ TEST_F(FileOperationsTest, ReadFromFileEmptyFile) {
     std::ofstream outFile(filepath, std::ios::binary);
     outFile.close();
 
-    std::string error;
-    auto result = FileOperations::readFromFile(filepath, error);
+    auto [data, error] = FileOperations::readFromFile(filepath);
 
-    EXPECT_TRUE(result.has_value());
-    EXPECT_TRUE(result->empty());
+    EXPECT_TRUE(data.has_value());
+    EXPECT_TRUE(data->empty());
 }
 
 TEST_F(FileOperationsTest, ReadFromFileLargeFile) {
@@ -218,12 +202,11 @@ TEST_F(FileOperationsTest, ReadFromFileLargeFile) {
                   static_cast<std::streamsize>(originalData.size()));
     outFile.close();
 
-    std::string error;
-    auto result = FileOperations::readFromFile(filepath, error);
+    auto [data, error] = FileOperations::readFromFile(filepath);
 
-    EXPECT_TRUE(result.has_value());
-    EXPECT_EQ(result->size(), originalData.size());
-    EXPECT_EQ(*result, originalData);
+    EXPECT_TRUE(data.has_value());
+    EXPECT_EQ(data->size(), originalData.size());
+    EXPECT_EQ(*data, originalData);
 }
 
 TEST_F(FileOperationsTest, ReadFromFileBinaryContent) {
@@ -238,11 +221,10 @@ TEST_F(FileOperationsTest, ReadFromFileBinaryContent) {
                   static_cast<std::streamsize>(originalData.size()));
     outFile.close();
 
-    std::string error;
-    auto result = FileOperations::readFromFile(filepath, error);
+    auto [data, error] = FileOperations::readFromFile(filepath);
 
-    EXPECT_TRUE(result.has_value());
-    EXPECT_EQ(*result, originalData);
+    EXPECT_TRUE(data.has_value());
+    EXPECT_EQ(*data, originalData);
 }
 
 // =============================================================================
@@ -259,22 +241,19 @@ TEST_F(FileOperationsTest, DeleteFileSuccess) {
 
     EXPECT_TRUE(std::filesystem::exists(filepath));
 
-    std::string error;
-    bool result = FileOperations::deleteFile(filepath, error);
+    auto error = FileOperations::deleteFile(filepath);
 
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(error.empty());
+    EXPECT_FALSE(error.has_value());
     EXPECT_FALSE(std::filesystem::exists(filepath));
 }
 
 TEST_F(FileOperationsTest, DeleteFileNotFound) {
     auto filepath = testDir / "nonexistent_delete.bin";
-    std::string error;
 
-    // File doesn't exist - should return false
-    bool result = FileOperations::deleteFile(filepath, error);
+    // File doesn't exist - should succeed (no-op)
+    auto error = FileOperations::deleteFile(filepath);
 
-    EXPECT_FALSE(result);
+    EXPECT_FALSE(error.has_value());
 }
 
 TEST_F(FileOperationsTest, DeleteFileEmptyFile) {
@@ -284,10 +263,9 @@ TEST_F(FileOperationsTest, DeleteFileEmptyFile) {
     std::ofstream outFile(filepath, std::ios::binary);
     outFile.close();
 
-    std::string error;
-    bool result = FileOperations::deleteFile(filepath, error);
+    auto error = FileOperations::deleteFile(filepath);
 
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(error.has_value());
     EXPECT_FALSE(std::filesystem::exists(filepath));
 }
 
@@ -306,11 +284,9 @@ TEST_F(FileOperationsTest, CopyFileSuccess) {
                   static_cast<std::streamsize>(data.size()));
     outFile.close();
 
-    std::string error;
-    bool result = FileOperations::copyFile(source, destination, error);
+    auto error = FileOperations::copyFile(source, destination);
 
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(error.empty());
+    EXPECT_FALSE(error.has_value());
     EXPECT_TRUE(std::filesystem::exists(destination));
 
     // Verify content
@@ -323,14 +299,12 @@ TEST_F(FileOperationsTest, CopyFileSuccess) {
 TEST_F(FileOperationsTest, CopyFileSourceNotFound) {
     auto source = testDir / "nonexistent_source.bin";
     auto destination = testDir / "copy_dest2.bin";
-    std::string error;
 
-    bool result = FileOperations::copyFile(source, destination, error);
+    auto error = FileOperations::copyFile(source, destination);
 
-    EXPECT_FALSE(result);
-    EXPECT_FALSE(error.empty());
-    EXPECT_TRUE(error.find("copy") != std::string::npos ||
-                error.find("Failed") != std::string::npos);
+    EXPECT_TRUE(error.has_value());
+    EXPECT_TRUE(error->find("copy") != std::string::npos ||
+                error->find("Failed") != std::string::npos);
 }
 
 TEST_F(FileOperationsTest, CopyFileOverwriteExisting) {
@@ -351,10 +325,9 @@ TEST_F(FileOperationsTest, CopyFileOverwriteExisting) {
                    static_cast<std::streamsize>(destData.size()));
     destFile.close();
 
-    std::string error;
-    bool result = FileOperations::copyFile(source, destination, error);
+    auto error = FileOperations::copyFile(source, destination);
 
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(error.has_value());
 
     // Verify destination now has source content
     std::ifstream inFile(destination, std::ios::binary);
@@ -376,10 +349,9 @@ TEST_F(FileOperationsTest, CopyFileLargeFile) {
                   static_cast<std::streamsize>(data.size()));
     outFile.close();
 
-    std::string error;
-    bool result = FileOperations::copyFile(source, destination, error);
+    auto error = FileOperations::copyFile(source, destination);
 
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(error.has_value());
     EXPECT_EQ(std::filesystem::file_size(destination), data.size());
 }
 
@@ -391,10 +363,9 @@ TEST_F(FileOperationsTest, CopyFileEmptyFile) {
     std::ofstream outFile(source, std::ios::binary);
     outFile.close();
 
-    std::string error;
-    bool result = FileOperations::copyFile(source, destination, error);
+    auto error = FileOperations::copyFile(source, destination);
 
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(error.has_value());
     EXPECT_EQ(std::filesystem::file_size(destination), 0);
 }
 
@@ -442,14 +413,13 @@ TEST_F(FileOperationsTest, ExistsEmptyPath) {
 TEST_F(FileOperationsTest, RoundTripSmallData) {
     auto filepath = testDir / "roundtrip_small.bin";
     std::vector<uint8_t> originalData = {0x01, 0x02, 0x03, 0x04, 0x05};
-    std::string error;
 
-    bool writeResult = FileOperations::writeToFile(filepath, originalData, error);
-    EXPECT_TRUE(writeResult);
+    auto writeError = FileOperations::writeToFile(filepath, originalData);
+    EXPECT_FALSE(writeError.has_value());
 
-    auto readResult = FileOperations::readFromFile(filepath, error);
-    EXPECT_TRUE(readResult.has_value());
-    EXPECT_EQ(*readResult, originalData);
+    auto [data, readError] = FileOperations::readFromFile(filepath);
+    EXPECT_TRUE(data.has_value());
+    EXPECT_EQ(*data, originalData);
 }
 
 TEST_F(FileOperationsTest, RoundTripLargeData) {
@@ -458,27 +428,25 @@ TEST_F(FileOperationsTest, RoundTripLargeData) {
     for (size_t i = 0; i < originalData.size(); ++i) {
         originalData[i] = static_cast<uint8_t>((i * 17 + 3) % 256);
     }
-    std::string error;
 
-    bool writeResult = FileOperations::writeToFile(filepath, originalData, error);
-    EXPECT_TRUE(writeResult);
+    auto writeError = FileOperations::writeToFile(filepath, originalData);
+    EXPECT_FALSE(writeError.has_value());
 
-    auto readResult = FileOperations::readFromFile(filepath, error);
-    EXPECT_TRUE(readResult.has_value());
-    EXPECT_EQ(*readResult, originalData);
+    auto [data, readError] = FileOperations::readFromFile(filepath);
+    EXPECT_TRUE(data.has_value());
+    EXPECT_EQ(*data, originalData);
 }
 
 TEST_F(FileOperationsTest, RoundTripEmptyData) {
     auto filepath = testDir / "roundtrip_empty.bin";
     std::vector<uint8_t> originalData;
-    std::string error;
 
-    bool writeResult = FileOperations::writeToFile(filepath, originalData, error);
-    EXPECT_TRUE(writeResult);
+    auto writeError = FileOperations::writeToFile(filepath, originalData);
+    EXPECT_FALSE(writeError.has_value());
 
-    auto readResult = FileOperations::readFromFile(filepath, error);
-    EXPECT_TRUE(readResult.has_value());
-    EXPECT_TRUE(readResult->empty());
+    auto [data, readError] = FileOperations::readFromFile(filepath);
+    EXPECT_TRUE(data.has_value());
+    EXPECT_TRUE(data->empty());
 }
 
 // =============================================================================
@@ -488,23 +456,23 @@ TEST_F(FileOperationsTest, RoundTripEmptyData) {
 TEST_F(FileOperationsTest, WriteReadDeleteSequence) {
     auto filepath = testDir / "write_read_delete.bin";
     std::vector<uint8_t> data = {0xDE, 0xAD, 0xBE, 0xEF};
-    std::string error;
 
     // Write
-    EXPECT_TRUE(FileOperations::writeToFile(filepath, data, error));
+    EXPECT_FALSE(FileOperations::writeToFile(filepath, data).has_value());
     EXPECT_TRUE(FileOperations::exists(filepath));
 
     // Read
-    auto readResult = FileOperations::readFromFile(filepath, error);
-    EXPECT_TRUE(readResult.has_value());
-    EXPECT_EQ(*readResult, data);
+    auto [readData, readError] = FileOperations::readFromFile(filepath);
+    EXPECT_TRUE(readData.has_value());
+    EXPECT_EQ(*readData, data);
 
     // Delete
-    EXPECT_TRUE(FileOperations::deleteFile(filepath, error));
+    EXPECT_FALSE(FileOperations::deleteFile(filepath).has_value());
     EXPECT_FALSE(FileOperations::exists(filepath));
 
     // Read after delete should fail
-    auto readAfterDelete = FileOperations::readFromFile(filepath, error);
+    auto [readAfterDelete, errorAfterDelete] =
+        FileOperations::readFromFile(filepath);
     EXPECT_FALSE(readAfterDelete.has_value());
 }
 
@@ -513,49 +481,46 @@ TEST_F(FileOperationsTest, CopyThenModifyOriginal) {
     auto copy = testDir / "copy.bin";
     std::vector<uint8_t> originalData = {0x01, 0x02, 0x03};
     std::vector<uint8_t> modifiedData = {0xFF, 0xFE, 0xFD, 0xFC};
-    std::string error;
 
     // Write original
-    (void)FileOperations::writeToFile(source, originalData, error);
+    (void)FileOperations::writeToFile(source, originalData);
 
     // Copy
-    (void)FileOperations::copyFile(source, copy, error);
+    (void)FileOperations::copyFile(source, copy);
 
     // Modify original
-    (void)FileOperations::writeToFile(source, modifiedData, error);
+    (void)FileOperations::writeToFile(source, modifiedData);
 
     // Verify copy still has original data
-    auto copyResult = FileOperations::readFromFile(copy, error);
-    EXPECT_TRUE(copyResult.has_value());
-    EXPECT_EQ(*copyResult, originalData);
+    auto [copyData, copyError] = FileOperations::readFromFile(copy);
+    EXPECT_TRUE(copyData.has_value());
+    EXPECT_EQ(*copyData, originalData);
 
     // Verify original has new data
-    auto sourceResult = FileOperations::readFromFile(source, error);
-    EXPECT_TRUE(sourceResult.has_value());
-    EXPECT_EQ(*sourceResult, modifiedData);
+    auto [sourceData, sourceError] = FileOperations::readFromFile(source);
+    EXPECT_TRUE(sourceData.has_value());
+    EXPECT_EQ(*sourceData, modifiedData);
 }
 
 TEST_F(FileOperationsTest, MultipleWritesToSameFile) {
     auto filepath = testDir / "multiple_writes.bin";
-    std::string error;
 
     for (int i = 0; i < 10; ++i) {
         std::vector<uint8_t> data(i + 1, static_cast<uint8_t>(i));
-        EXPECT_TRUE(FileOperations::writeToFile(filepath, data, error));
+        EXPECT_FALSE(FileOperations::writeToFile(filepath, data).has_value());
 
-        auto readResult = FileOperations::readFromFile(filepath, error);
-        EXPECT_TRUE(readResult.has_value());
-        EXPECT_EQ(readResult->size(), static_cast<size_t>(i + 1));
+        auto [readData, readError] = FileOperations::readFromFile(filepath);
+        EXPECT_TRUE(readData.has_value());
+        EXPECT_EQ(readData->size(), static_cast<size_t>(i + 1));
     }
 }
 
 TEST_F(FileOperationsTest, SpecialCharactersInPath) {
     auto filepath = testDir / "file with spaces.bin";
     std::vector<uint8_t> data = {0x01, 0x02};
-    std::string error;
 
-    bool result = FileOperations::writeToFile(filepath, data, error);
-    EXPECT_TRUE(result);
+    auto error = FileOperations::writeToFile(filepath, data);
+    EXPECT_FALSE(error.has_value());
     EXPECT_TRUE(FileOperations::exists(filepath));
 }
 
