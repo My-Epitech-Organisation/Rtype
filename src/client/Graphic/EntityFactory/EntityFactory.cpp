@@ -8,11 +8,13 @@
 #include "EntityFactory.hpp"
 
 #include "../../games/rtype/client/GraphicsConstants.hpp"
+#include "Components/CountdownComponent.hpp"
 #include "Components/ImageComponent.hpp"
 #include "Components/ParallaxComponent.hpp"
 #include "Components/PositionComponent.hpp"
 #include "Components/SizeComponent.hpp"
 #include "Components/TagComponent.hpp"
+#include "Components/Tags.hpp"
 #include "Components/TextureRectComponent.hpp"
 #include "Components/VelocityComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
@@ -95,11 +97,36 @@ ECS::Entity EntityFactory::createPlayer(
         ent, 0.f, 0.f);
     registry->emplaceComponent<rtype::games::rtype::client::PlayerTag>(ent);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(ent, 0);
-    if (isControllable)
+    if (isControllable) {
         registry
             ->emplaceComponent<rtype::games::rtype::client::ControllableTag>(
                 ent);
+        registry
+            ->emplaceComponent<rtype::games::rtype::client::CountdownPlayer>(
+                ent, 0);
+    }
     return ent;
+}
+
+ECS::Entity EntityFactory::createProjectile(
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assetManager, sf::Vector2f position) {
+    auto entt = registry->spawnEntity();
+    registry->emplaceComponent<rtype::games::rtype::client::Image>(
+        entt, assetManager->textureManager->get("projectile_player_laser"));
+    registry->emplaceComponent<rtype::games::rtype::client::TextureRect>(
+        entt, std::pair<int, int>({0, 0}), std::pair<int, int>({33.25, 34}));
+    // registry->emplaceComponent<rtype::games::rtype::client::AnimatedComponent>(entt,
+    // 4);
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+        entt, position.x, position.y);
+    registry->emplaceComponent<rtype::games::rtype::client::Size>(entt, 2, 2);
+    registry->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(
+        entt, cfg::PROJECTILE_SPEED_LASER, 0.f);
+    registry->emplaceComponent<rtype::games::rtype::shared::ProjectileTag>(
+        entt);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entt, 1);
+    return entt;
 }
 
 std::vector<ECS::Entity> EntityFactory::createSection(

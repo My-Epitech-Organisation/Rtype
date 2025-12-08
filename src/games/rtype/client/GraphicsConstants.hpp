@@ -53,6 +53,17 @@ inline constexpr float PARALLAX_PLANET_3 = 0.2f;
 inline constexpr float SCROLL_SPEED = 50.0f;
 
 // ==========================================================================
+// Projectile Configuration
+// ==========================================================================
+
+/// @brief Projectile speed in pixels per second
+inline constexpr float PROJECTILE_SPEED_LASER = 800.0f;
+
+/// @brief Projectile laser countdown in sec
+
+inline constexpr float PROJECTILE_CD = 0.175f;
+
+// ==========================================================================
 // Z-Index Layers
 // ==========================================================================
 
