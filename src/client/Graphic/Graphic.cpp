@@ -14,6 +14,7 @@
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "games/rtype/client/AllComponents.hpp"
+#include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 
