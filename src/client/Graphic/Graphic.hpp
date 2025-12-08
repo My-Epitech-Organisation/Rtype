@@ -24,8 +24,6 @@
 #include "AssetManager/AssetManager.hpp"
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
-#include "ecs/ECS.hpp"
-#include "src/games/rtype/client/Systems/ParallaxScrolling.hpp"
 
 /**
  * @brief Main graphics class managing the game window and rendering pipeline.

@@ -15,7 +15,7 @@
 
 #include "../Components/HiddenComponent.hpp"
 #include "ASystem.hpp"
-#include "ecs/ECS.hpp"
+#include "ECS.hpp"
 
 namespace rtype::games::rtype::client {
 

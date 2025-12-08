@@ -10,7 +10,7 @@
 #include <algorithm>
 
 #include "../AllComponents.hpp"
-#include "ecs/ECS.hpp"
+#include "ECS.hpp"
 
 // Use shorter aliases for readability
 namespace rc = ::rtype::games::rtype::client;
