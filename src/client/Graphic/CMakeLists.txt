@@ -33,6 +33,7 @@ target_link_libraries(rtype-graphic-SFML
     SFML::Audio
     SFML::System
     rtype_engine
+    rtype_network
     rtype-graphic-scene-manager
     rtype_game_client_systems
 )
