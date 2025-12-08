@@ -8,6 +8,7 @@
 #ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_EVENTSYSTEM_HPP_
 #define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_EVENTSYSTEM_HPP_
 #include <memory>
+#include <optional>
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
@@ -18,10 +19,27 @@
 #include "ECS.hpp"
 
 namespace rtype::games::rtype::client {
+
+/**
+ * @brief System responsible for processing input events.
+ *
+ * Handles mouse interactions with UI elements:
+ * - Mouse hover detection
+ * - Mouse click detection
+ * - Mouse release detection
+ *
+ * The system can be reused across multiple events by calling setEvent()
+ * before update(), avoiding per-event allocation.
+ */
 class EventSystem : public ::rtype::engine::ASystem {
    private:
-    const sf::Event& _event;
+    std::optional<sf::Event> _event;
     std::shared_ptr<sf::RenderWindow> _window;
+
+    /// @brief Check if world position is within rectangle bounds
+    [[nodiscard]] bool _isPointInRect(
+        sf::Vector2i pixelPos,
+        const ::rtype::games::rtype::client::Rectangle& rect) const;
 
     void _mouseMoved(
         ::rtype::games::rtype::client::UserEvent& actionType,
@@ -34,9 +52,38 @@ class EventSystem : public ::rtype::engine::ASystem {
         const ::rtype::games::rtype::client::Rectangle& rect) const;
 
    public:
-    void update(ECS::Registry& registry, float) override;
+    /**
+     * @brief Construct a new EventSystem (reusable version).
+     * @param window Shared pointer to the SFML render window
+     */
+    explicit EventSystem(std::shared_ptr<sf::RenderWindow> window);
+
+    /**
+     * @brief Legacy constructor for backward compatibility.
+     * @param window Shared pointer to the SFML render window
+     * @param event The event to process
+     * @deprecated Use the single-argument constructor and setEvent() instead
+     */
     EventSystem(std::shared_ptr<sf::RenderWindow> window,
                 const sf::Event& event);
+
+    /**
+     * @brief Set the current event to process.
+     * @param event The event to process
+     */
+    void setEvent(const sf::Event& event);
+
+    /**
+     * @brief Clear the current event.
+     */
+    void clearEvent();
+
+    /**
+     * @brief Process the current event for all UI entities.
+     * @param registry The ECS registry
+     * @param dt Delta time (unused)
+     */
+    void update(ECS::Registry& registry, float dt) override;
 };
 }  // namespace rtype::games::rtype::client
 
