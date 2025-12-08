@@ -27,6 +27,7 @@ target_link_libraries(rtype_game_config PUBLIC
 add_library(rtype_game_shared STATIC
     $<TARGET_OBJECTS:rtype_game_shared_systems>
     ${CMAKE_CURRENT_SOURCE_DIR}/Config/EntityConfig/EntityConfig.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Config/PrefabLoader.cpp
 )
 
 target_include_directories(rtype_game_shared PUBLIC
