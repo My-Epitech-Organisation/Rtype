@@ -10,6 +10,7 @@
 
 #include <functional>
 #include <memory>
+#include <string_view>
 #include <vector>
 
 #include "ECS.hpp"
@@ -26,7 +27,7 @@ class RtypePauseMenu {
     static constexpr int kSizeXPauseMenu = 600;
     static constexpr int kSizeYPauseMenu = 600;
     static constexpr int kSizeFontPauseMenu = 40;
-    static constexpr const std::string kPauseMenuTitle = "Pause";
+    static constexpr std::string_view kPauseMenuTitle = "Pause";
 
     /**
      * @brief Create the pause menu entities

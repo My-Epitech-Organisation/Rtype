@@ -31,8 +31,7 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
     auto titleEntity = EntityFactory::createStaticText(
         registry, assetsManager, kPauseMenuTitle, "title_font",
         (sectionX + kSizeXPauseMenu / 2) -
-            ((std::string(kPauseMenuTitle).length() - 2) *
-             (kSizeFontPauseMenu / 2)),
+            ((kPauseMenuTitle.length() - 2) * (kSizeFontPauseMenu / 2)),
         sectionY, kSizeFontPauseMenu);
 
     auto& titleText = registry->getComponent<Text>(titleEntity);
