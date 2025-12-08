@@ -10,6 +10,8 @@
 
 static constexpr int nbr_vessels = 7;
 
+#include <SFML/Graphics/Color.hpp>
+
 #include "../../../../network/ClientNetworkSystem.hpp"
 #include "../../../../network/NetworkClient.hpp"
 #include "../AScene.hpp"
@@ -23,8 +25,38 @@ class MainMenuScene : public AScene {
     /// @brief Network system for ECS synchronization
     std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
 
+    /// @brief IP input field entity
+    ECS::Entity _ipInputEntity;
+
+    /// @brief Port input field entity
+    ECS::Entity _portInputEntity;
+
+    /// @brief Status text entity
+    ECS::Entity _statusEntity;
+
     void _createAstroneerVessel();
     void _createFakePlayer();
+
+    /**
+     * @brief Create the connection panel UI
+     * @param switchToScene Scene switch callback
+     */
+    void _createConnectionPanel(
+        std::function<void(const SceneManager::Scene&)> switchToScene);
+
+    /**
+     * @brief Handle connect button click
+     * @param switchToScene Scene switch callback
+     */
+    void _onConnectClicked(
+        std::function<void(const SceneManager::Scene&)> switchToScene);
+
+    /**
+     * @brief Update the status text
+     * @param message Status message
+     * @param color Text color
+     */
+    void _updateStatus(const std::string& message, sf::Color color);
 
    public:
     void update() override;
