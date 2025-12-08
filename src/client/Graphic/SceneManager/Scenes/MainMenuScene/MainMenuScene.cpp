@@ -23,7 +23,6 @@
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneManager/SceneException.hpp"
 
-// Connection panel constants
 static constexpr float kConnectionPanelX = 1400.f;
 static constexpr float kConnectionPanelY = 300.f;
 static constexpr float kConnectionPanelWidth = 450.f;
@@ -101,27 +100,19 @@ void MainMenuScene::_createConnectionPanel(
         kConnectionPanelX + kInputOffsetX, kConnectionPanelY + 85.f,
         kInputWidth, kInputHeight, "127.0.0.1", "127.0.0.1", 15, false);
     this->_listEntity.push_back(_ipInputEntity);
-
-    // Port Label
     auto portLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Port:", "title_font",
         kConnectionPanelX + kLabelOffsetX, kConnectionPanelY + 150.f, 24);
     this->_listEntity.push_back(portLabel);
-
-    // Port Input field (numeric only)
     _portInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
         kConnectionPanelX + kInputOffsetX, kConnectionPanelY + 145.f,
         kInputWidth, kInputHeight, "4242", "4242", 5, true);
     this->_listEntity.push_back(_portInputEntity);
-
-    // Status text (initially empty)
     _statusEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "title_font",
         kConnectionPanelX + kLabelOffsetX, kConnectionPanelY + 200.f, 18);
     this->_listEntity.push_back(_statusEntity);
-
-    // Connect button
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
@@ -142,8 +133,6 @@ void MainMenuScene::_onConnectClicked(
         _updateStatus("Error: Network not available", sf::Color::Red);
         return;
     }
-
-    // Get IP and Port from input fields
     std::string ip = "127.0.0.1";
     std::uint16_t port = 4242;
 
@@ -174,12 +163,9 @@ void MainMenuScene::_onConnectClicked(
 
     _updateStatus("Connecting to " + ip + ":" + std::to_string(port) + "...",
                   sf::Color::Yellow);
-
-    // Setup callbacks before connecting
     _networkClient->onConnected([this, switchToScene](std::uint32_t userId) {
         std::cout << "[Client] Connected with user ID: " << userId << std::endl;
         _updateStatus("Connected! Starting game...", sf::Color::Green);
-        // Switch to game scene after connection
         try {
             switchToScene(SceneManager::IN_GAME);
         } catch (SceneNotFound& e) {
@@ -209,8 +195,6 @@ void MainMenuScene::_onConnectClicked(
             }
             _updateStatus(reasonStr, sf::Color::Red);
         });
-
-    // Attempt connection
     if (!_networkClient->connect(ip, port)) {
         _updateStatus("Failed to start connection", sf::Color::Red);
     }
@@ -228,14 +212,12 @@ void MainMenuScene::_updateStatus(const std::string& message, sf::Color color) {
 }
 
 void MainMenuScene::update() {
-    // Poll network if we're trying to connect
     if (_networkClient && !_networkClient->isConnected()) {
         _networkClient->poll();
     }
 }
 
 void MainMenuScene::render(std::shared_ptr<sf::RenderWindow> window) {
-    // Render text inputs
     auto view = _registry->view<rtype::games::rtype::client::TextInput,
                                 rtype::games::rtype::shared::Position,
                                 rtype::games::rtype::client::TextInputTag>();
@@ -249,13 +231,10 @@ void MainMenuScene::render(std::shared_ptr<sf::RenderWindow> window) {
 }
 
 void MainMenuScene::pollEvents(const sf::Event& e) {
-    // Handle mouse click for text input focus
     if (auto* mousePressed = e.getIf<sf::Event::MouseButtonPressed>()) {
         if (mousePressed->button == sf::Mouse::Button::Left) {
             float mouseX = static_cast<float>(mousePressed->position.x);
             float mouseY = static_cast<float>(mousePressed->position.y);
-
-            // Check each text input
             auto view =
                 _registry->view<rtype::games::rtype::client::TextInput,
                                 rtype::games::rtype::shared::Position,
@@ -269,8 +248,6 @@ void MainMenuScene::pollEvents(const sf::Event& e) {
             });
         }
     }
-
-    // Handle text input
     if (auto* textEntered = e.getIf<sf::Event::TextEntered>()) {
         auto view =
             _registry->view<rtype::games::rtype::client::TextInput,
@@ -283,8 +260,6 @@ void MainMenuScene::pollEvents(const sf::Event& e) {
             }
         });
     }
-
-    // Handle special keys
     if (auto* keyPressed = e.getIf<sf::Event::KeyPressed>()) {
         auto view =
             _registry->view<rtype::games::rtype::client::TextInput,
@@ -316,11 +291,7 @@ MainMenuScene::MainMenuScene(
         this->_registry, this->_assetsManager, "R-TYPE"));
     this->_createAstroneerVessel();
     this->_createFakePlayer();
-
-    // Create connection panel on the right side
     this->_createConnectionPanel(switchToScene);
-
-    // Left side buttons
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
