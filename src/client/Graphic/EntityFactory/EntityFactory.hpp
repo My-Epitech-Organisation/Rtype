@@ -20,6 +20,7 @@
 #include "Components/RectangleComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
+#include "Components/TextInputComponent.hpp"
 #include "Components/UserEventComponent.hpp"
 #include "ECS.hpp"
 
@@ -43,6 +44,27 @@ static ECS::Entity createButton(
     registry->emplaceComponent<rtype::games::rtype::client::ButtonTag>(entity);
     return entity;
 }
+
+/**
+ * @brief Create a text input field entity
+ * @param registry ECS registry
+ * @param assetManager Asset manager for fonts
+ * @param position Position of the input field
+ * @param width Width of the input field
+ * @param height Height of the input field
+ * @param placeholder Placeholder text
+ * @param initialValue Initial text value
+ * @param maxLength Maximum number of characters (0 = unlimited)
+ * @param isNumericOnly Only allow numeric input
+ * @return Created entity
+ */
+ECS::Entity createTextInput(std::shared_ptr<ECS::Registry> registry,
+                            std::shared_ptr<AssetManager> assetManager,
+                            float x, float y, float width, float height,
+                            const std::string& placeholder = "",
+                            const std::string& initialValue = "",
+                            std::size_t maxLength = 0,
+                            bool isNumericOnly = false);
 
 std::vector<ECS::Entity> createBackground(
     std::shared_ptr<ECS::Registry> registry,

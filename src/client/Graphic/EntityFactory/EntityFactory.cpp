@@ -13,6 +13,7 @@
 #include "Components/PositionComponent.hpp"
 #include "Components/SizeComponent.hpp"
 #include "Components/TagComponent.hpp"
+#include "Components/TextInputComponent.hpp"
 #include "Components/TextureRectComponent.hpp"
 #include "Components/VelocityComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
@@ -150,4 +151,25 @@ ECS::Entity EntityFactory::createStaticText(
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         titleEnt);
     return titleEnt;
+}
+
+ECS::Entity EntityFactory::createTextInput(
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assetManager, float x, float y, float width,
+    float height, const std::string& placeholder,
+    const std::string& initialValue, std::size_t maxLength,
+    bool isNumericOnly) {
+    auto entity = registry->spawnEntity();
+
+    registry->emplaceComponent<rtype::games::rtype::client::TextInput>(
+        entity, assetManager->fontManager->get("title_font"), width, height,
+        placeholder, initialValue, maxLength, isNumericOnly);
+
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(entity, x,
+                                                                      y);
+
+    registry->emplaceComponent<rtype::games::rtype::client::TextInputTag>(
+        entity);
+
+    return entity;
 }
