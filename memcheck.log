@@ -1,0 +1,52 @@
+==224391== Memcheck, a memory error detector
+==224391== Copyright (C) 2002-2024, and GNU GPL'd, by Julian Seward et al.
+==224391== Using Valgrind-3.24.0 and LibVEX; rerun with -h for copyright info
+==224391== Command: ./build/src/server/r-type_server -v -p 4242
+==224391== 
+==================================
+    R-Type Server
+==================================
+  Config Dir:  config/server
+  Port:        4242 (override)
+  Max Players: 4
+  Tick Rate:   60 Hz
+  Verbose:     yes
+==================================
+[2025-12-08 16:25:29.083] [INFO] [RTypeConfig] Initializing from: config/server
+[2025-12-08 16:25:29.270] [INFO] [RTypeConfig] Loaded config - Port: 4000, Max Players: 8, Tick Rate: 60 Hz
+[EntityConfig] Loaded 7 enemies from config/game/enemies.toml
+[EntityConfig] Loaded 7 projectiles from config/game/projectiles.toml
+[EntityConfig] Loaded 4 players from config/game/players.toml
+[EntityConfig] Loaded 6 power-ups from config/game/powerups.toml
+[EntityConfig] Loaded level: 
+[2025-12-08 16:25:29.491] [INFO] [RTypeConfig] Entity configs - Enemies: 7, Players: 4, Projectiles: 7
+[2025-12-08 16:25:29.497] [INFO] [RTypeConfig] Save manager initialized at: saves
+[2025-12-08 16:25:29.498] [INFO] [RTypeConfig] Initialization complete
+[2025-12-08 16:25:29.517] [INFO] [Server] Configured from game: rtype
+[2025-12-08 16:25:29.544] [DEBUG] [Server] Network thread started
+[2025-12-08 16:25:29.545] [DEBUG] [Server] Initialized (network stub - waiting for rtype_network implementation)
+[2025-12-08 16:25:29.546] [INFO] [Server] Starting on port 4000
+[2025-12-08 16:25:29.547] [INFO] [Server] Max players: 8
+[2025-12-08 16:25:29.548] [INFO] [Server] Tick rate: 60 Hz
+[2025-12-08 16:25:29.549] [DEBUG] [Server] Client timeout: 10s
+[2025-12-08 16:25:29.550] [INFO] [Server] Game: rtype
+[2025-12-08 16:25:29.551] [INFO] [Server] Difficulty: normal
+[2025-12-08 16:25:29.551] [INFO] [Server] Starting lives: 3
+[2025-12-08 16:25:29.571] [DEBUG] [Server] Network thread running
+
+[Main] Received shutdown signal
+[2025-12-08 16:25:43.522] [INFO] [Server] Shutting down...
+[2025-12-08 16:25:43.525] [DEBUG] [Server] Network thread exiting
+[2025-12-08 16:25:43.531] [DEBUG] [Server] Network thread stopped
+[2025-12-08 16:25:43.534] [DEBUG] [Server] Shutdown complete
+[Main] Server terminated.
+[2025-12-08 16:25:43.536] [DEBUG] [Server] Shutdown already performed, skipping
+==224391== 
+==224391== HEAP SUMMARY:
+==224391==     in use at exit: 0 bytes in 0 blocks
+==224391==   total heap usage: 1,385 allocs, 1,385 frees, 256,061 bytes allocated
+==224391== 
+==224391== All heap blocks were freed -- no leaks are possible
+==224391== 
+==224391== For lists of detected and suppressed errors, rerun with: -s
+==224391== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

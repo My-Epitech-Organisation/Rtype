@@ -166,17 +166,22 @@ int main(int argc, char** argv) {
     try {
         auto config = std::make_shared<ServerConfig>();
         std::vector<std::string_view> args(argv + 1, argv + argc);
-        auto parser = std::make_shared<rtype::ArgParser>();
+        {
+            auto parser = std::make_shared<rtype::ArgParser>();
+            parser->programName(argv[0]);
+            configureParser(parser, config);
+            rtype::ParseResult parseResult = parser->parse(args);
+            if (parseResult == rtype::ParseResult::Error) {
+                return 1;
+            }
+            if (parseResult == rtype::ParseResult::Exit) {
+                return 0;
+            }
+            // Explicitly clear handlers to release lambda captures
+            parser->clear();
+            // parser goes out of scope and is destroyed here
+        }
 
-        parser->programName(argv[0]);
-        configureParser(parser, config);
-        rtype::ParseResult parseResult = parser->parse(args);
-        if (parseResult == rtype::ParseResult::Error) {
-            return 1;
-        }
-        if (parseResult == rtype::ParseResult::Exit) {
-            return 0;
-        }
         printBanner(*config);
         setupSignalHandlers();
         return runServer(*config, ServerSignals::shutdown(),
