@@ -24,7 +24,7 @@ struct LevelConfig {
     std::string name;
     std::string backgroundPath;
 
-    float scrollSpeed = 50.0F;  // Background scroll speed
+    float scrollSpeed = 50.0F;
     std::vector<WaveConfig> waves;
 
     // Boss (optional)
