@@ -16,7 +16,7 @@ auto main(int argc, char** argv) -> int {
 
     try {
         ClientApp::Config config;
-        // TODO: Parse command line arguments for server host/port
+        // TODO(Noa): Parse command line arguments for server host/port
         // config.defaultServerHost = "127.0.0.1";
         // config.defaultServerPort = 4242;
 
