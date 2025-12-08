@@ -8,10 +8,10 @@
 #ifndef SRC_GAMES_RTYPE_CLIENT_COMPONENTS_TEXTINPUTCOMPONENT_HPP_
 #define SRC_GAMES_RTYPE_CLIENT_COMPONENTS_TEXTINPUTCOMPONENT_HPP_
 
+#include <cctype>
+#include <cstddef>
 #include <functional>
 #include <string>
-#include <cstddef>
-#include <cctype>
 
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Font.hpp>

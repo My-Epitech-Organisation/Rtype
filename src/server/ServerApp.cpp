@@ -444,7 +444,8 @@ bool ServerApp::startNetworkThread() {
         LOG_DEBUG("[Server] Network thread started");
         return true;
     } catch (const std::exception& e) {
-        LOG_ERROR("[Server] Failed to start network thread: " << std::string(e.what()));
+        LOG_ERROR("[Server] Failed to start network thread: "
+                  << std::string(e.what()));
         _networkThreadRunning.store(false, std::memory_order_release);
         return false;
     }

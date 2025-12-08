@@ -169,7 +169,8 @@ void MainMenuScene::_onConnectClicked(
         try {
             switchToScene(SceneManager::IN_GAME);
         } catch (SceneNotFound& e) {
-            LOG_ERROR(std::string("Error switching to Game: ") + std::string(e.what()));
+            LOG_ERROR(std::string("Error switching to Game: ") +
+                      std::string(e.what()));
         }
     });
 

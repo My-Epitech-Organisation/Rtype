@@ -16,7 +16,8 @@ std::optional<std::string> FileOperations::writeToFile(
         try {
             std::filesystem::create_directories(filepath.parent_path());
         } catch (const std::exception& e) {
-            return std::string("Cannot create save directory: ") + std::string(e.what());
+            return std::string("Cannot create save directory: ") +
+                   std::string(e.what());
         }
     }
     auto tempPath = filepath.string() + ".tmp";

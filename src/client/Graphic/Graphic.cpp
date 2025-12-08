@@ -85,7 +85,7 @@ void Graphic::_setupNetworkEntityFactory() {
 
     _networkSystem->setEntityFactory(
         rc::RtypeEntityFactory::createNetworkEntityFactory(registry,
-                                                          assetsManager));
+                                                           assetsManager));
     _networkSystem->onLocalPlayerAssigned(
         [registry](std::uint32_t /*userId*/, ECS::Entity entity) {
             if (registry->isAlive(entity)) {

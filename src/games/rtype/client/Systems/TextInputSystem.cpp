@@ -16,8 +16,7 @@ bool TextInputSystem::handleEvent(ECS::Registry& registry,
                                   const sf::Event& event) {
     if (auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>()) {
         if (mousePressed->button == sf::Mouse::Button::Left) {
-            handleClick(registry,
-                        static_cast<float>(mousePressed->position.x),
+            handleClick(registry, static_cast<float>(mousePressed->position.x),
                         static_cast<float>(mousePressed->position.y));
             return true;
         }
@@ -35,13 +34,13 @@ bool TextInputSystem::handleEvent(ECS::Registry& registry,
 void TextInputSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
     auto view = registry.view<TextInput, shared::Position, TextInputTag>();
 
-    view.each([this](auto /*entity*/, TextInput& input, shared::Position& pos,
-                     auto) {
-        input.background.setPosition({pos.x, pos.y});
-        input.text.setPosition({pos.x + 10.f, pos.y + 5.f});
-        _window->draw(input.background);
-        _window->draw(input.text);
-    });
+    view.each(
+        [this](auto /*entity*/, TextInput& input, shared::Position& pos, auto) {
+            input.background.setPosition({pos.x, pos.y});
+            input.text.setPosition({pos.x + 10.f, pos.y + 5.f});
+            _window->draw(input.background);
+            _window->draw(input.text);
+        });
 }
 
 std::optional<ECS::Entity> TextInputSystem::getFocusedInput() const {

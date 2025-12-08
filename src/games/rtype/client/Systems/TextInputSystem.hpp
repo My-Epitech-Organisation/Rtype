@@ -8,9 +8,9 @@
 #ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_TEXTINPUTSYSTEM_HPP_
 #define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_TEXTINPUTSYSTEM_HPP_
 
+#include <cctype>
 #include <memory>
 #include <optional>
-#include <cctype>
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
