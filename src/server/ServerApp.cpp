@@ -31,6 +31,31 @@ ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
     }
 }
 
+ServerApp::ServerApp(std::unique_ptr<IGameConfig> gameConfig,
+                     std::shared_ptr<std::atomic<bool>> shutdownFlag,
+                     bool verbose)
+    : _port(gameConfig && gameConfig->isInitialized()
+                ? gameConfig->getServerSettings().port
+                : 4000),
+      _tickRate(gameConfig && gameConfig->isInitialized()
+                    ? gameConfig->getServerSettings().tickRate
+                    : 60),
+      _clientTimeoutSeconds(DEFAULT_CLIENT_TIMEOUT_SECONDS),
+      _verbose(verbose),
+      _shutdownFlag(shutdownFlag),
+      _metrics(std::make_shared<ServerMetrics>()),
+      _clientManager(gameConfig && gameConfig->isInitialized()
+                         ? gameConfig->getServerSettings().maxPlayers
+                         : 4,
+                     _metrics, verbose),
+      _gameConfig(std::move(gameConfig)) {
+    if (_gameConfig && _gameConfig->isInitialized()) {
+        LOG_INFO("[Server] Configured from game: " << _gameConfig->getGameId());
+    } else {
+        LOG_WARNING("[Server] Game config not initialized, using defaults");
+    }
+}
+
 ServerApp::~ServerApp() { shutdown(); }
 
 bool ServerApp::run() {
@@ -67,6 +92,37 @@ void ServerApp::logStartupInfo() const noexcept {
     LOG_INFO("[Server] Max players: " << _clientManager.getMaxPlayers());
     LOG_INFO("[Server] Tick rate: " << _tickRate << " Hz");
     LOG_DEBUG("[Server] Client timeout: " << _clientTimeoutSeconds << "s");
+
+    if (_gameConfig && _gameConfig->isInitialized()) {
+        const auto gameplay = _gameConfig->getGameplaySettings();
+        LOG_INFO("[Server] Game: " << _gameConfig->getGameId());
+        LOG_INFO("[Server] Difficulty: " << gameplay.difficulty);
+        LOG_INFO("[Server] Starting lives: " << gameplay.startingLives);
+    }
+}
+
+bool ServerApp::reloadConfiguration() {
+    if (!_gameConfig || !_gameConfig->isInitialized()) {
+        LOG_WARNING("[Server] Cannot reload - game config not initialized");
+        return false;
+    }
+
+    if (!_gameConfig->reloadConfiguration()) {
+        LOG_ERROR("[Server] Configuration reload failed");
+        return false;
+    }
+    const auto gameplay = _gameConfig->getGameplaySettings();
+    LOG_INFO("[Server] Configuration reloaded:");
+    LOG_INFO("[Server]   Difficulty: " << gameplay.difficulty);
+    LOG_INFO(
+        "[Server]   Enemy speed multiplier: " << gameplay.enemySpeedMultiplier);
+    const auto serverSettings = _gameConfig->getServerSettings();
+    if (serverSettings.port != _port) {
+        LOG_WARNING("[Server] Port change requires restart (current: "
+                    << _port << ", new: " << serverSettings.port << ")");
+    }
+
+    return true;
 }
 
 ServerApp::LoopTiming ServerApp::createLoopTiming() const noexcept {

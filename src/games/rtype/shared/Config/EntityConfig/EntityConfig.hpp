@@ -1,0 +1,186 @@
+/*
+** EPITECH PROJECT, 2025
+** Rtype
+** File description:
+** EntityConfig - Entity configuration definitions from config files
+*/
+
+#pragma once
+
+#include <functional>
+#include <optional>
+#include <string>
+#include <unordered_map>
+
+#include "EntitiesStructs/EnemyConfig.hpp"
+#include "EntitiesStructs/LevelConfig.hpp"
+#include "EntitiesStructs/PlayerConfig.hpp"
+#include "EntitiesStructs/PowerUpConfig.hpp"
+#include "EntitiesStructs/ProjectileConfig.hpp"
+#include "EntitiesStructs/WaveConfig.hpp"
+
+namespace rtype::games::rtype::shared {
+
+template <typename T>
+using OptionalRef = std::optional<std::reference_wrapper<const T>>;
+
+/**
+ * @class EntityConfigRegistry
+ * @brief Central registry for all entity configurations
+ *
+ * Loads and provides access to all entity configurations.
+ * Used by factories to create entities with correct stats.
+ */
+class EntityConfigRegistry {
+   public:
+    /**
+     * @brief Get singleton instance
+     */
+    static EntityConfigRegistry& getInstance() {
+        static EntityConfigRegistry instance;
+        return instance;
+    }
+
+    EntityConfigRegistry(const EntityConfigRegistry&) = delete;
+    EntityConfigRegistry& operator=(const EntityConfigRegistry&) = delete;
+
+    /**
+     * @brief Load all configurations from directory
+     * @param configDir Path to configuration directory
+     * @return true if loaded successfully
+     */
+    bool loadFromDirectory(const std::string& configDir);
+
+    /**
+     * @brief Load enemy configurations from file
+     * @param filepath Path to enemies.toml
+     */
+    bool loadEnemies(const std::string& filepath);
+
+    /**
+     * @brief Load projectile configurations from file
+     * @param filepath Path to projectiles.toml
+     */
+    bool loadProjectiles(const std::string& filepath);
+
+    /**
+     * @brief Load player configurations from file
+     * @param filepath Path to players.toml
+     */
+    bool loadPlayers(const std::string& filepath);
+
+    /**
+     * @brief Load power-up configurations from file
+     * @param filepath Path to powerups.toml
+     */
+    bool loadPowerUps(const std::string& filepath);
+
+    /**
+     * @brief Load level configurations from file
+     * @param filepath Path to level file
+     */
+    bool loadLevel(const std::string& filepath);
+
+    /**
+     * @brief Get enemy configuration by ID
+     * @param id Unique identifier for the enemy type
+     * @return Optional reference to the enemy config, empty if not found
+     */
+    [[nodiscard]] OptionalRef<EnemyConfig> getEnemy(
+        const std::string& id) const;
+
+    /**
+     * @brief Get projectile configuration by ID
+     * @param id Unique identifier for the projectile type
+     * @return Optional reference to the projectile config, empty if not found
+     */
+    [[nodiscard]] OptionalRef<ProjectileConfig> getProjectile(
+        const std::string& id) const;
+
+    /**
+     * @brief Get player configuration by ID
+     * @param id Unique identifier for the player type
+     * @return Optional reference to the player config, empty if not found
+     */
+    [[nodiscard]] OptionalRef<PlayerConfig> getPlayer(
+        const std::string& id) const;
+
+    /**
+     * @brief Get power-up configuration by ID
+     * @param id Unique identifier for the power-up type
+     * @return Optional reference to the power-up config, empty if not found
+     */
+    [[nodiscard]] OptionalRef<PowerUpConfig> getPowerUp(
+        const std::string& id) const;
+
+    /**
+     * @brief Get level configuration by ID
+     * @param id Unique identifier for the level
+     * @return Optional reference to the level config, empty if not found
+     */
+    [[nodiscard]] OptionalRef<LevelConfig> getLevel(
+        const std::string& id) const;
+
+    /**
+     * @brief Get all registered enemy configurations
+     * @return Const reference to the map of enemy configs (id -> EnemyConfig)
+     */
+    [[nodiscard]] const std::unordered_map<std::string, EnemyConfig>&
+    getAllEnemies() const {
+        return m_enemies;
+    }
+
+    /**
+     * @brief Get all registered projectile configurations
+     * @return Const reference to the map of projectile configs (id ->
+     * ProjectileConfig)
+     */
+    [[nodiscard]] const std::unordered_map<std::string, ProjectileConfig>&
+    getAllProjectiles() const {
+        return m_projectiles;
+    }
+
+    /**
+     * @brief Get all registered player configurations
+     * @return Const reference to the map of player configs (id -> PlayerConfig)
+     */
+    [[nodiscard]] const std::unordered_map<std::string, PlayerConfig>&
+    getAllPlayers() const {
+        return m_players;
+    }
+
+    /**
+     * @brief Get all registered power-up configurations
+     * @return Const reference to the map of power-up configs (id ->
+     * PowerUpConfig)
+     */
+    [[nodiscard]] const std::unordered_map<std::string, PowerUpConfig>&
+    getAllPowerUps() const {
+        return m_powerUps;
+    }
+
+    /**
+     * @brief Get all registered level configurations
+     * @return Const reference to the map of level configs (id -> LevelConfig)
+     */
+    [[nodiscard]] const std::unordered_map<std::string, LevelConfig>&
+    getAllLevels() const {
+        return m_levels;
+    }
+
+    /**
+     * @brief Clear all loaded configurations
+     */
+    void clear();
+
+   private:
+    EntityConfigRegistry() = default;
+
+    std::unordered_map<std::string, EnemyConfig> m_enemies;
+    std::unordered_map<std::string, ProjectileConfig> m_projectiles;
+    std::unordered_map<std::string, PlayerConfig> m_players;
+    std::unordered_map<std::string, PowerUpConfig> m_powerUps;
+    std::unordered_map<std::string, LevelConfig> m_levels;
+};
+
+}  // namespace rtype::games::rtype::shared

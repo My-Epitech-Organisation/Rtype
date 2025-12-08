@@ -36,7 +36,7 @@
  * commas)
  */
 #define LOG_DEBUG(...) \
-    rtype::Logger::instance().debug(LOG_TO_STRING(__VA_ARGS__))
+    ::rtype::Logger::instance().debug(LOG_TO_STRING(__VA_ARGS__))
 
 /**
  * @brief Info logging macro - always prints to stdout
@@ -47,7 +47,8 @@
  * @param ... The message to log (supports << chaining and expressions with
  * commas)
  */
-#define LOG_INFO(...) rtype::Logger::instance().info(LOG_TO_STRING(__VA_ARGS__))
+#define LOG_INFO(...) \
+    ::rtype::Logger::instance().info(LOG_TO_STRING(__VA_ARGS__))
 
 /**
  * @brief Warning logging macro - always prints to stderr
@@ -59,7 +60,7 @@
  * commas)
  */
 #define LOG_WARNING(...) \
-    rtype::Logger::instance().warning(LOG_TO_STRING(__VA_ARGS__))
+    ::rtype::Logger::instance().warning(LOG_TO_STRING(__VA_ARGS__))
 
 /**
  * @brief Error logging macro - always prints to stderr
@@ -71,6 +72,6 @@
  * commas)
  */
 #define LOG_ERROR(...) \
-    rtype::Logger::instance().error(LOG_TO_STRING(__VA_ARGS__))
+    ::rtype::Logger::instance().error(LOG_TO_STRING(__VA_ARGS__))
 
 #endif  // SRC_COMMON_LOGGER_MACROS_HPP_
