@@ -1,4 +1,5 @@
 add_subdirectory(Systems)
+add_subdirectory(Components)
 
 # R-Type specific configuration library
 add_library(rtype_game_config STATIC

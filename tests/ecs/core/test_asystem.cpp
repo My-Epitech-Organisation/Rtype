@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "ASystem.hpp"
-#include "ecs/ECS.hpp"
+#include <rtype/ecs.hpp>
 
 using namespace rtype::engine;
 
