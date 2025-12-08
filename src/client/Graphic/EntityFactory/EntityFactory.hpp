@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <SFML/System/Vector2.hpp>
@@ -61,14 +62,14 @@ static ECS::Entity createButton(
 ECS::Entity createTextInput(std::shared_ptr<ECS::Registry> registry,
                             std::shared_ptr<AssetManager> assetManager, float x,
                             float y, float width, float height,
-                            const std::string& placeholder = "",
-                            const std::string& initialValue = "",
+                            std::string_view placeholder = "",
+                            std::string_view initialValue = "",
                             std::size_t maxLength = 0,
                             bool isNumericOnly = false);
 
 std::vector<ECS::Entity> createBackground(
     std::shared_ptr<ECS::Registry> registry,
-    std::shared_ptr<AssetManager> assetManager, const std::string& PageName);
+    std::shared_ptr<AssetManager> assetManager, std::string_view PageName);
 
 ECS::Entity createPlayer(std::shared_ptr<ECS::Registry> registry,
                          std::shared_ptr<AssetManager> assetManager,
@@ -77,13 +78,13 @@ ECS::Entity createPlayer(std::shared_ptr<ECS::Registry> registry,
 
 std::vector<ECS::Entity> createSection(std::shared_ptr<ECS::Registry> registry,
                                        std::shared_ptr<AssetManager> assets,
-                                       const std::string& title, float x,
+                                       std::string_view title, float x,
                                        float y, float width, float height);
 
 ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
                              std::shared_ptr<AssetManager> assets,
-                             const std::string& title,
-                             const std::string& fontId, float posX, float posY,
+                             std::string_view title,
+                             std::string_view fontId, float posX, float posY,
                              float size);
 };  // namespace EntityFactory
 

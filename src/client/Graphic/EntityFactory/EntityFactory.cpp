@@ -7,6 +7,9 @@
 
 #include "EntityFactory.hpp"
 
+#include <string>
+#include <string_view>
+
 #include "../../games/rtype/client/GraphicsConstants.hpp"
 #include "Components/ImageComponent.hpp"
 #include "Components/ParallaxComponent.hpp"
@@ -22,7 +25,7 @@ namespace cfg = ::rtype::games::rtype::client::GraphicsConfig;
 
 std::vector<ECS::Entity> EntityFactory::createBackground(
     std::shared_ptr<ECS::Registry> registry,
-    std::shared_ptr<AssetManager> assetManager, const std::string& PageName) {
+    std::shared_ptr<AssetManager> assetManager, std::string_view PageName) {
     auto background = registry->spawnEntity();
     auto& bgTexture = assetManager->textureManager->get("bg_menu");
     registry->emplaceComponent<rtype::games::rtype::client::Image>(background,
@@ -105,7 +108,7 @@ ECS::Entity EntityFactory::createPlayer(
 
 std::vector<ECS::Entity> EntityFactory::createSection(
     std::shared_ptr<ECS::Registry> registry,
-    std::shared_ptr<AssetManager> assets, const std::string& title, float x,
+    std::shared_ptr<AssetManager> assets, std::string_view title, float x,
     float y, float width, float height) {
     std::vector<ECS::Entity> entities;
     auto bg = registry->spawnEntity();
@@ -140,14 +143,14 @@ std::vector<ECS::Entity> EntityFactory::createSection(
 
 ECS::Entity EntityFactory::createStaticText(
     std::shared_ptr<ECS::Registry> registry,
-    std::shared_ptr<AssetManager> assets, const std::string& title,
-    const std::string& fontId, float posX, float posY, float size) {
+    std::shared_ptr<AssetManager> assets, std::string_view title,
+    std::string_view fontId, float posX, float posY, float size) {
     auto titleEnt = registry->spawnEntity();
     registry->emplaceComponent<rtype::games::rtype::shared::Position>(
         titleEnt, posX, posY);
     registry->emplaceComponent<rtype::games::rtype::client::Text>(
-        titleEnt, assets->fontManager->get(fontId), sf::Color::White, size,
-        title);
+        titleEnt, assets->fontManager->get(std::string(fontId)),
+        sf::Color::White, size, title);
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         titleEnt);
     return titleEnt;
@@ -156,8 +159,8 @@ ECS::Entity EntityFactory::createStaticText(
 ECS::Entity EntityFactory::createTextInput(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assetManager, float x, float y, float width,
-    float height, const std::string& placeholder,
-    const std::string& initialValue, std::size_t maxLength,
+    float height, std::string_view placeholder,
+    std::string_view initialValue, std::size_t maxLength,
     bool isNumericOnly) {
     auto entity = registry->spawnEntity();
 
