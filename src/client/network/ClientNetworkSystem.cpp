@@ -16,7 +16,6 @@
 
 namespace rtype::client {
 
-// Type aliases for convenience
 using Position = rtype::games::rtype::shared::Position;
 using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
