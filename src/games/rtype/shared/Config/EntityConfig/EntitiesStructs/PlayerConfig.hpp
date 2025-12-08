@@ -25,11 +25,9 @@ struct PlayerConfig {
     float speed = 200.0F;
     float fireRate = 5.0F;
 
-    // Hitbox
     float hitboxWidth = 32.0F;
     float hitboxHeight = 16.0F;
 
-    // Starting projectile
     std::string defaultProjectile = "basic_bullet";
 
     [[nodiscard]] bool isValid() const noexcept {
