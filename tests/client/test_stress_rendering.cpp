@@ -428,7 +428,6 @@ TEST_F(RenderStressTest, ZIndexSorting_1000Entities_RandomDepths) {
     }
 
     // Force cache invalidation and render first frame (cold)
-    renderSystem->invalidateCache();
 
     double coldTime = measureTime([this]() {
         window->clear();
@@ -510,7 +509,6 @@ TEST_F(RenderStressTest, EntityChurn_RenderDuringChurn_60Frames) {
             }
         }
 
-        renderSystem->invalidateCache();
         window->clear();
         renderSystem->update(*registry, 0.016f);
         window->display();

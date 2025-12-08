@@ -46,13 +46,13 @@ void SceneManager::pollEvents(const sf::Event& e) {
     this->_activeScene->pollEvents(e);
 }
 
-void SceneManager::update() {
+void SceneManager::update(float dt) {
     this->_applySceneChange();
 
     if (!this->_activeScene) {
         throw SceneNotInitialized();
     }
-    this->_activeScene->update();
+    this->_activeScene->update(dt);
 }
 
 void SceneManager::draw() {
