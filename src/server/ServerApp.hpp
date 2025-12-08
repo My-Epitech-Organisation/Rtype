@@ -13,18 +13,36 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <set>
 #include <thread>
 #include <vector>
 
 #include <rtype/common.hpp>
+#include <rtype/engine.hpp>
 #include <rtype/network.hpp>
 
 #include "Client.hpp"
 #include "ClientManager.hpp"
 #include "IGameConfig.hpp"
 #include "ServerMetrics.hpp"
+#include "network/NetworkServer.hpp"
+#include "network/ServerNetworkSystem.hpp"
 
 namespace rtype::server {
+
+/**
+ * @brief Server game state
+ *
+ * Controls what the server does at each tick:
+ * - WaitingForPlayers: Server accepts connections but doesn't run gameplay
+ * - Playing: Full game simulation running
+ * - Paused: Game paused (all clients disconnected during game)
+ */
+enum class GameState {
+    WaitingForPlayers,  ///< Waiting for at least one player to be ready
+    Playing,            ///< Game is actively running
+    Paused              ///< Game paused (no players connected)
+};
 
 using rtype::ClientId;
 using rtype::Endpoint;
@@ -201,6 +219,39 @@ class ServerApp {
      */
     [[nodiscard]] const ClientManager& getClientManager() const noexcept {
         return _clientManager;
+    }
+
+    /**
+     * @brief Get the current game state
+     * @return Current game state
+     */
+    [[nodiscard]] GameState getGameState() const noexcept {
+        return _gameState;
+    }
+
+    /**
+     * @brief Check if the game is actively playing
+     * @return true if state is Playing
+     */
+    [[nodiscard]] bool isPlaying() const noexcept {
+        return _gameState == GameState::Playing;
+    }
+
+    /**
+     * @brief Signal that a player is ready to play
+     * @param userId The user ID that signaled ready
+     *
+     * When enough players are ready (at least 1), the game transitions
+     * from WaitingForPlayers to Playing.
+     */
+    void playerReady(std::uint32_t userId);
+
+    /**
+     * @brief Get the number of ready players
+     * @return Count of players who signaled ready
+     */
+    [[nodiscard]] size_t getReadyPlayerCount() const noexcept {
+        return _readyPlayers.size();
     }
 
     /**
@@ -395,8 +446,64 @@ class ServerApp {
 
     rtype::network::SecurityContext _securityContext;
 
-    // TODO(Clem): Add network socket when rtype_network is fully implemented
-    // std::unique_ptr<network::UdpSocket> _socket;
+    // Game engine and network integration
+    std::unique_ptr<engine::IGameEngine> _gameEngine;
+    std::shared_ptr<NetworkServer> _networkServer;
+    std::unique_ptr<ServerNetworkSystem> _networkSystem;
+    std::shared_ptr<ECS::Registry> _registry;
+
+    // Game state management
+    GameState _gameState{GameState::WaitingForPlayers};
+    std::set<std::uint32_t> _readyPlayers;  ///< Players who signaled ready
+    static constexpr size_t MIN_PLAYERS_TO_START = 1;  ///< Minimum ready players to start
+
+    /**
+     * @brief Handle a new client connection
+     * @param userId The user ID of the connected client
+     */
+    void handleClientConnected(std::uint32_t userId);
+
+    /**
+     * @brief Handle a client disconnection
+     * @param userId The user ID of the disconnected client
+     */
+    void handleClientDisconnected(std::uint32_t userId);
+
+    /**
+     * @brief Handle client input
+     * @param userId The user ID of the client
+     * @param inputMask The input bitmask
+     * @param entity The player entity (if any)
+     */
+    void handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
+                          std::optional<ECS::Entity> entity);
+
+    /**
+     * @brief Process game events and send to network
+     */
+    void processGameEvents();
+
+    /**
+     * @brief Synchronize entity positions with network
+     */
+    void syncEntityPositions();
+
+    /**
+     * @brief Transition game state
+     * @param newState The new state to transition to
+     */
+    void transitionToState(GameState newState);
+
+    /**
+     * @brief Handle player ready signal
+     * @param userId User ID of client that sent ready
+     */
+    void handlePlayerReady(std::uint32_t userId);
+
+    /**
+     * @brief Check if game should start (enough ready players)
+     */
+    void checkGameStart();
 };
 
 }  // namespace rtype::server

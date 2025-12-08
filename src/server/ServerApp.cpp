@@ -91,6 +91,8 @@ void ServerApp::logStartupInfo() const noexcept {
     LOG_INFO("[Server] Starting on port " << _port);
     LOG_INFO("[Server] Max players: " << _clientManager.getMaxPlayers());
     LOG_INFO("[Server] Tick rate: " << _tickRate << " Hz");
+    LOG_INFO("[Server] State: Waiting for players (need "
+             << MIN_PLAYERS_TO_START << " ready to start)");
     LOG_DEBUG("[Server] Client timeout: " << _clientTimeoutSeconds << "s");
 
     if (_gameConfig && _gameConfig->isInitialized()) {
@@ -230,17 +232,50 @@ std::optional<Client> ServerApp::getClientInfo(ClientId clientId) const {
 }
 
 bool ServerApp::initialize() {
-    // TODO(Clem): Initialize network socket when rtype_network is fully
-    // implemented Example: _socket.bind(_port);
+    _registry = std::make_shared<ECS::Registry>();
+    _gameEngine = engine::createGameEngine();
+    if (!_gameEngine) {
+        LOG_ERROR("[Server] Failed to create game engine");
+        return false;
+    }
+    if (!_gameEngine->initialize()) {
+        LOG_ERROR("[Server] Failed to initialize game engine");
+        return false;
+    }
+    LOG_INFO("[Server] Game engine initialized");
+
+    NetworkServer::Config netConfig;
+    netConfig.clientTimeout = std::chrono::milliseconds(_clientTimeoutSeconds * 1000);
+    _networkServer = std::make_shared<NetworkServer>(netConfig);
+    _networkSystem = std::make_unique<ServerNetworkSystem>(_registry, _networkServer);
+    _networkSystem->onClientConnected(
+        [this](std::uint32_t userId) { handleClientConnected(userId); });
+    _networkSystem->onClientDisconnected(
+        [this](std::uint32_t userId) { handleClientDisconnected(userId); });
+    _networkSystem->setInputHandler(
+        [this](std::uint32_t userId, std::uint8_t inputMask,
+               std::optional<ECS::Entity> entity) {
+            handleClientInput(userId, inputMask, entity);
+        });
+    _gameEngine->setEventCallback([this](const engine::GameEvent& event) {
+        if (_verbose) {
+            LOG_DEBUG("[Server] Game event: type="
+                      << static_cast<int>(event.type)
+                      << " entityId=" << event.entityNetworkId);
+        }
+    });
+    if (!_networkServer->start(_port)) {
+        LOG_ERROR("[Server] Failed to start network server on port " << _port);
+        return false;
+    }
+    LOG_INFO("[Server] Network server started on port " << _port);
 
     if (!startNetworkThread()) {
         LOG_ERROR("[Server] Failed to start network thread");
         return false;
     }
 
-    LOG_DEBUG(
-        "[Server] Initialized (network stub - waiting for rtype_network "
-        "implementation)");
+    LOG_INFO("[Server] Server initialized successfully");
     return true;
 }
 
@@ -251,14 +286,23 @@ void ServerApp::shutdown() noexcept {
     }
 
     stopNetworkThread();
-    _clientManager.clearAllClients();
+    if (_networkServer) {
+        _networkServer->stop();
+        LOG_DEBUG("[Server] Network server stopped");
+    }
+    if (_gameEngine && _gameEngine->isRunning()) {
+        _gameEngine->shutdown();
+        LOG_DEBUG("[Server] Game engine shutdown");
+    }
 
-    // TODO(Clem): Close network socket
-    // _socket.close();
+    _clientManager.clearAllClients();
     LOG_DEBUG("[Server] Shutdown complete");
 }
 
 void ServerApp::processIncomingData() noexcept {
+    if (_networkServer && _networkServer->isRunning()) {
+        _networkServer->poll();
+    }
     while (auto packetOpt = _incomingPackets.pop()) {
         auto& [endpoint, packet] = *packetOpt;
 
@@ -291,8 +335,19 @@ void ServerApp::processRawNetworkData() noexcept {
 }
 
 void ServerApp::update() noexcept {
-    // TODO(Sam): Update game state via ECS
-    // This will be called every tick to update game logic
+    if (_gameState != GameState::Playing) {
+        return;
+    }
+    const float deltaTime = 1.0F / static_cast<float>(_tickRate);
+
+    if (_gameEngine && _gameEngine->isRunning()) {
+        _gameEngine->update(deltaTime);
+    }
+    if (_networkSystem) {
+        _networkSystem->update();
+    }
+    processGameEvents();
+    syncEntityPositions();
 }
 
 std::optional<rtype::network::Packet> ServerApp::extractPacketFromData(
@@ -362,16 +417,17 @@ std::optional<rtype::network::Packet> ServerApp::extractPacketFromData(
 }
 
 void ServerApp::broadcastGameState() noexcept {
-    // TODO(Clem): Send game state to all connected clients
-    // This will serialize entity states and send them via the network
+    if (_networkSystem) {
+        _networkSystem->broadcastEntityUpdates();
+    }
 }
 
 void ServerApp::processPacket(ClientId clientId,
                               const rtype::network::Packet& packet) noexcept {
-    // TODO(Clem): Implement packet processing logic
-    // This will handle different packet types (player input, etc.)
-    LOG_DEBUG("[Server] Processing packet from client "
-              << clientId << " of type " << static_cast<int>(packet.type()));
+    if (_verbose) {
+        LOG_DEBUG("[Server] Legacy packet processing from client "
+                  << clientId << " of type " << static_cast<int>(packet.type()));
+    }
 }
 
 bool ServerApp::startNetworkThread() {
@@ -401,20 +457,178 @@ void ServerApp::networkThreadFunction() noexcept {
     LOG_DEBUG("[Server] Network thread running");
 
     while (_networkThreadRunning.load(std::memory_order_acquire)) {
-        // TODO(Clem): Implement actual network receiving when rtype_network is
-        // ready For now, this is a stub that simulates receiving packets
-        //
-        // Pseudocode:
-        // if (_socket.hasData()) {
-        //     Endpoint sender;
-        //     std::vector<uint8_t> rawData = _socket.receive(sender);
-        //     _rawNetworkData.push({sender, std::move(rawData)});
-        // }
-
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     LOG_DEBUG("[Server] Network thread exiting");
+}
+
+void ServerApp::handleClientConnected(std::uint32_t userId) {
+    LOG_INFO("[Server] Client connected: userId=" << userId);
+    _metrics->totalConnections.fetch_add(1, std::memory_order_relaxed);
+
+    if (_gameState == GameState::WaitingForPlayers) {
+        LOG_INFO("[Server] Waiting for client " << userId
+                 << " to signal ready (send START_GAME packet)");
+    }
+
+    // TODO(Priority 2): Spawn player entity for this client
+    // This will be implemented in the next phase:
+    // 1. Create player entity in registry
+    // 2. Register it with network system
+    // 3. Associate userId with entity
+}
+
+void ServerApp::handleClientDisconnected(std::uint32_t userId) {
+    LOG_INFO("[Server] Client disconnected: userId=" << userId);
+    _readyPlayers.erase(userId);
+    if (_gameState == GameState::Playing && _readyPlayers.empty()) {
+        transitionToState(GameState::Paused);
+    }
+
+    // TODO(Priority 2): Handle player entity cleanup
+    // This will be implemented in the next phase:
+    // 1. Find player entity associated with userId
+    // 2. Destroy entity in registry
+    // 3. Notify other clients
+}
+
+void ServerApp::handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
+                                  std::optional<ECS::Entity> entity) {
+    if (_gameState == GameState::WaitingForPlayers ||
+        _gameState == GameState::Paused) {
+        if (_readyPlayers.find(userId) == _readyPlayers.end()) {
+            handlePlayerReady(userId);
+        }
+    }
+    if (_verbose) {
+        LOG_DEBUG("[Server] Input from userId=" << userId
+                  << " inputMask=" << static_cast<int>(inputMask)
+                  << " hasEntity=" << entity.has_value());
+    }
+    if (_gameState != GameState::Playing) {
+        return;
+    }
+
+    // TODO(Priority 2): Apply input to player entity
+    // This will be implemented in the next phase:
+    // 1. Validate entity exists
+    // 2. Apply input to velocity/movement components
+    // 3. Server-authoritative movement
+    (void)entity;  // Suppress unused warning for now
+}
+
+void ServerApp::processGameEvents() {
+    if (!_gameEngine || !_networkSystem) {
+        return;
+    }
+    auto events = _gameEngine->getPendingEvents();
+
+    for (const auto& event : events) {
+        switch (event.type) {
+            case engine::GameEventType::EntitySpawned: {
+                if (_verbose) {
+                    LOG_DEBUG("[Server] Entity spawned: networkId="
+                              << event.entityNetworkId
+                              << " pos=(" << event.x << ", " << event.y << ")");
+                }
+                break;
+            }
+            case engine::GameEventType::EntityDestroyed: {
+                _networkSystem->unregisterNetworkedEntityById(
+                    event.entityNetworkId);
+                if (_verbose) {
+                    LOG_DEBUG("[Server] Entity destroyed: networkId="
+                              << event.entityNetworkId);
+                }
+                break;
+            }
+            case engine::GameEventType::EntityUpdated: {
+                _networkSystem->updateEntityPosition(
+                    event.entityNetworkId, event.x, event.y, 0.0F, 0.0F);
+                break;
+            }
+        }
+    }
+    _gameEngine->clearPendingEvents();
+}
+
+void ServerApp::syncEntityPositions() {
+    if (_networkSystem) {
+        _networkSystem->broadcastEntityUpdates();
+    }
+}
+
+void ServerApp::playerReady(std::uint32_t userId) {
+    handlePlayerReady(userId);
+}
+
+void ServerApp::handlePlayerReady(std::uint32_t userId) {
+    if (_gameState == GameState::Playing) {
+        LOG_DEBUG("[Server] Player " << userId
+                  << " signaled ready but game already running");
+        return;
+    }
+
+    _readyPlayers.insert(userId);
+    LOG_INFO("[Server] Player " << userId << " is ready ("
+             << _readyPlayers.size() << "/" << MIN_PLAYERS_TO_START
+             << " needed to start)");
+
+    checkGameStart();
+}
+
+void ServerApp::checkGameStart() {
+    if (_gameState != GameState::WaitingForPlayers &&
+        _gameState != GameState::Paused) {
+        return;
+    }
+
+    if (_readyPlayers.size() >= MIN_PLAYERS_TO_START) {
+        transitionToState(GameState::Playing);
+    }
+}
+
+void ServerApp::transitionToState(GameState newState) {
+    if (_gameState == newState) {
+        return;
+    }
+
+    const auto stateToString = [](GameState state) -> const char* {
+        switch (state) {
+            case GameState::WaitingForPlayers: return "WaitingForPlayers";
+            case GameState::Playing: return "Playing";
+            case GameState::Paused: return "Paused";
+            default: return "Unknown";
+        }
+    };
+
+    LOG_INFO("[Server] State transition: " << stateToString(_gameState)
+             << " -> " << stateToString(newState));
+
+    GameState oldState = _gameState;
+    _gameState = newState;
+
+    switch (newState) {
+        case GameState::Playing: {
+            LOG_INFO("[Server] *** GAME STARTED *** ("
+                     << _readyPlayers.size() << " players)");
+            if (_networkSystem) {
+                _networkSystem->broadcastGameStart();
+            }
+            break;
+        }
+        case GameState::Paused: {
+            LOG_INFO("[Server] Game paused - waiting for players to reconnect");
+            break;
+        }
+        case GameState::WaitingForPlayers: {
+            if (oldState == GameState::Paused) {
+                LOG_INFO("[Server] Resuming wait for players");
+            }
+            break;
+        }
+    }
 }
 
 }  // namespace rtype::server
