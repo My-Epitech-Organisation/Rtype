@@ -9,6 +9,7 @@
 
 #include <rtype/engine.hpp>
 
+#include "Collision/CollisionSystem.hpp"
 #include "Cleanup/CleanupSystem.hpp"
 #include "Destroy/DestroySystem.hpp"
 #include "Spawner/SpawnerSystem.hpp"
