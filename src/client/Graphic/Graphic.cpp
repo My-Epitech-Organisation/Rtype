@@ -73,8 +73,10 @@ Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
         sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");
     this->_window->setView(*this->_view);
     this->_assetsManager = std::make_shared<AssetManager>();
+    this->_audioLib = std::make_shared<AudioLib>();
     this->_sceneManager = std::make_unique<SceneManager>(
-        registry, this->_assetsManager, this->_window, this->_keybinds);
+        registry, this->_assetsManager, this->_window, this->_keybinds,
+        this->_audioLib);
 
     // Initialize systems
     this->_movementSystem =

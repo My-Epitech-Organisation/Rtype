@@ -19,6 +19,7 @@
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "AssetManager/AssetManager.hpp"
+#include "AudioLib/AudioLib.hpp"
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
 #include "ecs/ECS.hpp"
@@ -35,7 +36,7 @@ class Graphic {
     std::shared_ptr<AssetManager> _assetsManager;
     std::unique_ptr<SceneManager> _sceneManager;
     std::shared_ptr<KeyboardActions> _keybinds;
-
+    std::shared_ptr<AudioLib> _audioLib;
     std::shared_ptr<sf::RenderWindow> _window;
     std::shared_ptr<sf::View> _view;
     sf::Clock _mainClock;

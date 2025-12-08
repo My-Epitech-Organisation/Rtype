@@ -7,6 +7,7 @@
 
 #include "SettingsScene.hpp"
 
+#include "AudioLib/AudioLib.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
@@ -131,9 +132,9 @@ SettingsScene::SettingsScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> textureManager,
     std::shared_ptr<sf::RenderWindow> window,
-    std::function<void(const SceneManager::Scene&)> switchToScene,
-    std::shared_ptr<KeyboardActions> keybinds)
-    : AScene(ecs, textureManager, window), _keybinds(keybinds) {
+    std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
+    std::function<void(const SceneManager::Scene&)> switchToScene)
+    : AScene(ecs, textureManager, window, audio), _keybinds(keybinds) {
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "Settings"));
 

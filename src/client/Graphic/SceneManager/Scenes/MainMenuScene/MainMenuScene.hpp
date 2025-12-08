@@ -16,8 +16,6 @@ static constexpr int nbr_vessels = 7;
 
 class MainMenuScene : public AScene {
    private:
-    AudioLib _audio;
-
     void _createAstroneerVessel();
     void _createFakePlayer();
 
@@ -30,6 +28,7 @@ class MainMenuScene : public AScene {
         std::shared_ptr<ECS::Registry> ecs,
         std::shared_ptr<AssetManager> textureManager,
         std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<AudioLib> audioLib,
         std::function<void(const SceneManager::Scene&)> switchToScene);
 };
 

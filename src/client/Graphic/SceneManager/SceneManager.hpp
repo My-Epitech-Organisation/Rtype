@@ -15,6 +15,7 @@
 
 #include "../KeyboardActions.hpp"
 #include "AssetManager/AssetManager.hpp"
+#include "AudioLib/AudioLib.hpp"
 #include "Scenes/IScene.hpp"
 #include "ecs/ECS.hpp"
 
@@ -34,6 +35,7 @@ class SceneManager {
     std::map<Scene, std::function<std::unique_ptr<IScene>()>> _sceneList;
     std::unique_ptr<IScene> _activeScene;
     std::shared_ptr<sf::RenderWindow> _window;
+    std::shared_ptr<AudioLib> _audio;
 
     std::function<void(const Scene&)> _switchToScene;
 
@@ -57,7 +59,8 @@ class SceneManager {
     SceneManager(std::shared_ptr<ECS::Registry> ecs,
                  std::shared_ptr<AssetManager> assetManager,
                  std::shared_ptr<sf::RenderWindow> window,
-                 std::shared_ptr<KeyboardActions> keybinds);
+                 std::shared_ptr<KeyboardActions> keybinds,
+                 std::shared_ptr<AudioLib> audioLib);
     ~SceneManager() = default;
 };
 

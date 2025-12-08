@@ -85,8 +85,9 @@ MainMenuScene::MainMenuScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> assetsManager,
     std::shared_ptr<sf::RenderWindow> window,
+    std::shared_ptr<AudioLib> audioLib,
     std::function<void(const SceneManager::Scene&)> switchToScene)
-    : AScene(ecs, assetsManager, window) {
+    : AScene(ecs, assetsManager, window, audioLib) {
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "R-TYPE"));
     this->_createAstroneerVessel();
@@ -137,9 +138,8 @@ MainMenuScene::MainMenuScene(
             ));
     this->_assetsManager->audioManager->load(
         "main_menu_music", mainMenuMusic_mp3, mainMenuMusic_mp3_len);
-    auto bgMusicVolume =
-        this->_assetsManager->audioManager->get("main_menu_music");
-    this->_audio.loadMusic(bgMusicVolume);
-    this->_audio.setLoop(true);
-    this->_audio.play();
+    auto bgMusic = this->_assetsManager->audioManager->get("main_menu_music");
+    this->_audio->loadMusic(bgMusic);
+    this->_audio->setLoop(true);
+    this->_audio->play();
 }
