@@ -6,27 +6,27 @@
 */
 
 // ============================================================================
-// USAGE - EntityConfig avec PrefabManager (ECS)
+// USAGE - EntityConfig with PrefabManager (ECS)
 // ============================================================================
 
 /*
-// 1. INITIALISATION (au démarrage du jeu)
-// ========================================
+// 1. INITIALIZATION (at game startup)
+// ====================================
 
 #include "games/rtype/shared/EntityConfig.hpp"
 #include "games/rtype/shared/PrefabLoader.hpp"
 #include "engine/ecs/ECS.hpp"
 
 void GameServer::init() {
-    // Charger les configs TOML
+    // Load TOML configs
     auto& configRegistry = EntityConfigRegistry::getInstance();
     configRegistry.loadFromDirectory("config/game");
 
-    // Créer le PrefabManager et enregistrer les prefabs depuis les configs
+    // Create the PrefabManager and register prefabs from configs
     ECS::PrefabManager prefabs(registry);
     PrefabLoader::registerAllPrefabs(prefabs);
 
-    // Maintenant les prefabs sont disponibles:
+    // Now the prefabs are available:
     // - "enemy_basic", "enemy_wave", "enemy_boss_1", etc.
     // - "projectile_basic_bullet", "projectile_missile", etc.
     // - "player_default_ship", "player_speed_ship", etc.
@@ -34,11 +34,11 @@ void GameServer::init() {
 }
 
 
-// 2. SPAWN D'ENTITÉS AVEC PREFABS
-// ================================
+// 2. SPAWNING ENTITIES WITH PREFABS
+// ==================================
 
 void SpawnSystem::spawnEnemy(float x, float y) {
-    // Spawn avec position personnalisée
+    // Spawn with custom position
     auto enemy = prefabs.instantiate("enemy_basic", [x, y](auto& r, auto e) {
         r.getComponent<TransformComponent>(e) = {x, y, 0.0f};
     });
@@ -49,7 +49,7 @@ void SpawnSystem::spawnPlayer(uint32_t playerId, float x, float y) {
         r.getComponent<TransformComponent>(e) = {x, y, 0.0f};
     });
     
-    // Récupérer les stats depuis le config
+    // Retrieve stats from config
     float speed = PrefabLoader::getPlayerSpeed("default_ship");
     float fireRate = PrefabLoader::getPlayerFireRate("default_ship");
 }
@@ -61,13 +61,13 @@ void ShootSystem::playerShoot(Entity player) {
         r.getComponent<TransformComponent>(e) = {
             transform.x + 32.0f, transform.y, 0.0f
         };
-        // Velocity déjà configurée par le prefab (vers la droite)
+        // Velocity already configured by the prefab (moving right)
     });
 }
 
 
-// 3. CHARGEMENT DE NIVEAU AVEC WAVES
-// ===================================
+// 3. LEVEL LOADING WITH WAVES
+// ============================
 
 void LevelManager::loadLevel(const std::string& levelId) {
     const auto* level = EntityConfigRegistry::getInstance().getLevel(levelId);
@@ -75,7 +75,7 @@ void LevelManager::loadLevel(const std::string& levelId) {
 
     for (const auto& wave : level->waves) {
         for (const auto& spawn : wave.spawns) {
-            // Spawn avec délai (utiliser un système de timer)
+            // Spawn with delay (use a timer system)
             scheduleSpawn(spawn.delay, [&, spawn]() {
                 for (int i = 0; i < spawn.count; ++i) {
                     prefabs.instantiate("enemy_" + spawn.enemyId, [&](auto& r, auto e) {
@@ -88,11 +88,11 @@ void LevelManager::loadLevel(const std::string& levelId) {
 }
 
 
-// 4. SPAWN MULTIPLE
+// 4. MULTIPLE SPAWN
 // ==================
 
 void SpawnSystem::spawnWave() {
-    // Spawn 5 ennemis basic d'un coup
+    // Spawn 5 basic enemies at once
     auto enemies = prefabs.instantiateMultiple("enemy_basic", 5);
 
     float y = 100.0f;
@@ -103,8 +103,8 @@ void SpawnSystem::spawnWave() {
 }
 
 
-// 5. ACCÈS AUX CONFIGS POUR LES SYSTEMS
-// ======================================
+// 5. ACCESSING CONFIGS FOR SYSTEMS
+// =================================
 
 void ScoreSystem::onEnemyKilled(const std::string& enemyType) {
     int32_t score = PrefabLoader::getEnemyScore(enemyType);
@@ -112,7 +112,7 @@ void ScoreSystem::onEnemyKilled(const std::string& enemyType) {
 }
 
 void DamageSystem::applyProjectileDamage(Entity projectile, Entity target) {
-    // Le damage est stocké dans HealthComponent du projectile
+    // Damage is stored in the projectile's HealthComponent
     auto& projHealth = registry.getComponent<HealthComponent>(projectile);
     auto& targetHealth = registry.getComponent<HealthComponent>(target);
     
@@ -120,10 +120,10 @@ void DamageSystem::applyProjectileDamage(Entity projectile, Entity target) {
 }
 
 
-// 6. STRUCTURE DES PREFABS ENREGISTRÉS
-// =====================================
+// 6. REGISTERED PREFABS STRUCTURE
+// ================================
 //
-// Nommage: "{type}_{id}" où id vient du TOML
+// Naming: "{type}_{id}" where id comes from TOML
 //
 // Enemies:      "enemy_basic", "enemy_wave", "enemy_shooter", "enemy_boss_1"
 // Projectiles:  "projectile_basic_bullet", "projectile_missile"
