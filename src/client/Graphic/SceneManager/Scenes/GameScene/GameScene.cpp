@@ -7,7 +7,6 @@
 
 #include "GameScene.hpp"
 
-#include <iostream>
 #include <memory>
 #include <utility>
 
