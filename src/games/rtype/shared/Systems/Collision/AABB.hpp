@@ -13,7 +13,8 @@
 namespace rtype::games::rtype::shared::collision {
 
 /**
- * @brief Checks overlap between two axis-aligned bounding boxes given their transforms.
+ * @brief Checks overlap between two axis-aligned bounding boxes given their
+ * transforms.
  * @return true if the boxes intersect, false otherwise.
  */
 inline bool overlaps(const TransformComponent& aTransform,
@@ -35,8 +36,8 @@ inline bool overlaps(const TransformComponent& aTransform,
     const float bTop = bTransform.y - bHalfH;
     const float bBottom = bTransform.y + bHalfH;
 
-    const bool separated = aRight < bLeft || bRight < aLeft || aBottom < bTop ||
-                           bBottom < aTop;
+    const bool separated =
+        aRight < bLeft || bRight < aLeft || aBottom < bTop || bBottom < aTop;
     return !separated;
 }
 

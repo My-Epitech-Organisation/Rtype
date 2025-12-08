@@ -26,29 +26,33 @@ CollisionSystem::CollisionSystem() : ASystem("CollisionSystem") {}
 
 void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
     std::vector<ECS::Entity> projectiles;
-    auto projView = registry.view<TransformComponent, BoundingBoxComponent,
-                                  ProjectileTag>();
+    auto projView =
+        registry
+            .view<TransformComponent, BoundingBoxComponent, ProjectileTag>();
     projView.each([&projectiles](ECS::Entity entity, auto&, auto&, auto&) {
         projectiles.push_back(entity);
     });
 
-    auto enemyView = registry.view<TransformComponent, BoundingBoxComponent,
-                                   EnemyTag>();
-    auto playerView = registry.view<TransformComponent, BoundingBoxComponent,
-                                    PlayerTag>();
+    auto enemyView =
+        registry.view<TransformComponent, BoundingBoxComponent, EnemyTag>();
+    auto playerView =
+        registry.view<TransformComponent, BoundingBoxComponent, PlayerTag>();
 
     for (ECS::Entity projectile : projectiles) {
-        auto& projTransform = registry.getComponent<TransformComponent>(projectile);
+        auto& projTransform =
+            registry.getComponent<TransformComponent>(projectile);
         auto& projBox = registry.getComponent<BoundingBoxComponent>(projectile);
 
         const bool projectileDestroyed =
             registry.hasComponent<DestroyTag>(projectile);
 
         if (!projectileDestroyed) {
-            enemyView.each([&](ECS::Entity enemy, const TransformComponent& enemyTransform,
+            enemyView.each([&](ECS::Entity enemy,
+                               const TransformComponent& enemyTransform,
                                const BoundingBoxComponent& enemyBox, auto&) {
                 if (registry.hasComponent<DestroyTag>(enemy)) return;
-                if (overlaps(projTransform, projBox, enemyTransform, enemyBox)) {
+                if (overlaps(projTransform, projBox, enemyTransform,
+                             enemyBox)) {
                     registry.emplaceComponent<DestroyTag>(enemy, DestroyTag{});
                     registry.emplaceComponent<DestroyTag>(projectile,
                                                           DestroyTag{});
@@ -60,7 +64,8 @@ void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
             continue;
         }
 
-        playerView.each([&](ECS::Entity player, const TransformComponent& playerTransform,
+        playerView.each([&](ECS::Entity player,
+                            const TransformComponent& playerTransform,
                             const BoundingBoxComponent& playerBox, auto&) {
             if (registry.hasComponent<DestroyTag>(player)) return;
             if (overlaps(projTransform, projBox, playerTransform, playerBox)) {

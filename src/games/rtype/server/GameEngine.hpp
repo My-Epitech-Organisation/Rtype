@@ -15,8 +15,8 @@
 #include <rtype/engine.hpp>
 
 #include "../shared/Systems/Systems.hpp"
-#include "Systems/Systems.hpp"
 #include "Systems/Collision/CollisionSystem.hpp"
+#include "Systems/Systems.hpp"
 
 namespace rtype::games::rtype::server {
 
