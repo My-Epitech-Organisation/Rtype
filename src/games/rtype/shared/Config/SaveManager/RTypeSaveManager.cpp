@@ -41,7 +41,8 @@ SaveResult RTypeSaveManager::save(const RTypeGameState& state,
 
     auto data = GameStateSerializer::serialize(state);
 
-    if (!FileOperations::writeToFile(getFilePath(slotName), data, _lastError)) {
+    if (auto error = FileOperations::writeToFile(getFilePath(slotName), data)) {
+        _lastError = *error;
         _lastResult = SaveResult::IOError;
         return _lastResult;
     }
@@ -62,14 +63,16 @@ std::optional<RTypeGameState> RTypeSaveManager::load(
         return std::nullopt;
     }
 
-    auto data = FileOperations::readFromFile(filepath, _lastError);
+    auto [data, readError] = FileOperations::readFromFile(filepath);
     if (!data) {
+        _lastError = readError.value_or("Unknown read error");
         _lastResult = SaveResult::IOError;
         return std::nullopt;
     }
 
-    auto state = GameStateSerializer::deserialize(*data, _lastError);
+    auto [state, deserializeError] = GameStateSerializer::deserialize(*data);
     if (!state) {
+        _lastError = deserializeError.value_or("Unknown deserialization error");
         _lastResult = SaveResult::FileCorrupted;
         return std::nullopt;
     }
@@ -105,7 +108,11 @@ std::optional<RTypeGameState> RTypeSaveManager::load(
 }
 
 bool RTypeSaveManager::deleteSave(const std::string& slotName) {
-    return FileOperations::deleteFile(getFilePath(slotName), _lastError);
+    if (auto error = FileOperations::deleteFile(getFilePath(slotName))) {
+        _lastError = *error;
+        return false;
+    }
+    return true;
 }
 
 bool RTypeSaveManager::saveExists(const std::string& slotName) const {
@@ -164,7 +171,11 @@ bool RTypeSaveManager::createBackup(const std::string& slotName,
         backupName.empty() ? slotName + ".bak" : backupName;
     auto backupPath = getFilePath(backupSlot);
 
-    return FileOperations::copyFile(filepath, backupPath, _lastError);
+    if (auto error = FileOperations::copyFile(filepath, backupPath)) {
+        _lastError = *error;
+        return false;
+    }
+    return true;
 }
 
 bool RTypeSaveManager::restoreBackup(const std::string& slotName,
@@ -179,7 +190,11 @@ bool RTypeSaveManager::restoreBackup(const std::string& slotName,
     }
 
     auto filepath = getFilePath(slotName);
-    return FileOperations::copyFile(backupPath, filepath, _lastError);
+    if (auto error = FileOperations::copyFile(backupPath, filepath)) {
+        _lastError = *error;
+        return false;
+    }
+    return true;
 }
 
 }  // namespace rtype::game::config
