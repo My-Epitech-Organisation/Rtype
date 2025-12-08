@@ -17,21 +17,17 @@ namespace rtype::games::rtype::shared {
  * @brief Configuration for a projectile type
  */
 struct ProjectileConfig {
-    std::string id;           // Unique identifier
-    std::string spriteSheet;  // Path to sprite sheet
+    std::string id;
+    std::string spriteSheet;
 
     int32_t damage = 10;
     float speed = 300.0F;
-    float lifetime = 5.0F;  // Seconds before auto-destroy
-
-    // Hitbox
+    float lifetime = 5.0F;
     float hitboxWidth = 8.0F;
     float hitboxHeight = 4.0F;
 
-    // Effects
-    bool piercing = false;  // Can hit multiple enemies
-    int32_t maxHits = 1;    // Max enemies hit (if piercing)
-
+    bool piercing = false;
+    int32_t maxHits = 1;
     [[nodiscard]] bool isValid() const noexcept {
         return !id.empty() && damage > 0 && speed > 0;
     }
