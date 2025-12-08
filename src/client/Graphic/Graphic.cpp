@@ -36,8 +36,21 @@ void Graphic::_updateViewScrolling() {
     this->_view->setCenter({newX, center.y});
 }
 
+void Graphic::_updateNetwork() {
+    // Poll network to receive and process incoming packets
+    // This handles:
+    // - Connection state updates (connected/disconnected)
+    // - Entity spawn/move/destroy events from server
+    // - Position corrections
+    // - Game state changes
+    if (_networkSystem) {
+        _networkSystem->update();
+    }
+}
+
 void Graphic::_update() {
     _updateDeltaTime();
+    _updateNetwork();
     _updateViewScrolling();
 
     _systemScheduler->runSystem("button_update");
@@ -121,8 +134,13 @@ void Graphic::_initializeSystems() {
         {"render"});
 }
 
-Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
-    : _registry(registry),
+Graphic::Graphic(
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<rtype::client::NetworkClient> networkClient,
+    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem)
+    : _registry(std::move(registry)),
+      _networkClient(std::move(networkClient)),
+      _networkSystem(std::move(networkSystem)),
       _view(std::make_shared<sf::View>(
           sf::FloatRect({0, 0}, {WINDOW_WIDTH, WINDOW_HEIGHT}))) {
     this->_keybinds = std::make_shared<KeyboardActions>();
@@ -131,7 +149,8 @@ Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
     this->_window->setView(*this->_view);
     this->_assetsManager = std::make_shared<AssetManager>();
     this->_sceneManager = std::make_unique<SceneManager>(
-        registry, this->_assetsManager, this->_window, this->_keybinds);
+        _registry, this->_assetsManager, this->_window, this->_keybinds,
+        _networkClient, _networkSystem);
     _initializeSystems();
     this->_mainClock.start();
 }
