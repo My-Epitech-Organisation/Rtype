@@ -41,12 +41,6 @@ void Graphic::_updateViewScrolling() {
 }
 
 void Graphic::_updateNetwork() {
-    // Poll network to receive and process incoming packets
-    // This handles:
-    // - Connection state updates (connected/disconnected)
-    // - Entity spawn/move/destroy events from server
-    // - Position corrections
-    // - Game state changes
     if (_networkSystem) {
         _networkSystem->update();
     }
@@ -98,14 +92,9 @@ void Graphic::_setupNetworkEntityFactory() {
                       << ", " << event.y << ")" << std::endl;
 
             auto entity = reg.spawnEntity();
-
-            // Add Position component at spawn location
             reg.emplaceComponent<rs::Position>(entity, event.x, event.y);
-
-            // Add Velocity component (initial velocity is 0)
             reg.emplaceComponent<rs::VelocityComponent>(entity, 0.f, 0.f);
 
-            // Add graphics based on entity type
             switch (event.type) {
                 case rtype::network::EntityType::Player:
                     std::cout << "[Graphic::entityFactory] Adding Player "
@@ -141,8 +130,6 @@ void Graphic::_setupNetworkEntityFactory() {
 
             return entity;
         });
-
-    // Register callback to mark local player as controllable
     _networkSystem->onLocalPlayerAssigned([registry](std::uint32_t /*userId*/,
                                                      ECS::Entity entity) {
         if (registry->isAlive(entity)) {
@@ -223,9 +210,6 @@ Graphic::Graphic(
     this->_window->setView(*this->_view);
     this->_assetsManager = std::make_shared<AssetManager>();
 
-    // Configure network entity factory to create entities with graphics
-    // This must be done here (after _assetsManager is created) so that
-    // entities spawned before GameScene is created also have graphics
     if (_networkSystem) {
         _setupNetworkEntityFactory();
     }
