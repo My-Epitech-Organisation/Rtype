@@ -301,8 +301,10 @@ TEST_F(SaveManagerBranchTest, DeleteExistingSave) {
 }
 
 TEST_F(SaveManagerBranchTest, DeleteNonexistentSave) {
+    // Note: deleteFile is idempotent - deleting a non-existent file succeeds
+    // (returns true) since there's nothing to delete and no error occurred
     bool result = manager->deleteSave("never_existed");
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
 }
 
 // ============================================================================

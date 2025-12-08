@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -29,37 +30,43 @@ class BinarySerializer {
     /**
      * @brief Write a uint8_t to the buffer
      */
-    static void writeUint8(std::vector<uint8_t>& buffer, uint8_t value);
+    static void writeUint8(std::shared_ptr<std::vector<uint8_t>> buffer,
+                           uint8_t value);
 
     /**
      * @brief Write a uint16_t to the buffer (little-endian)
      */
-    static void writeUint16(std::vector<uint8_t>& buffer, uint16_t value);
+    static void writeUint16(std::shared_ptr<std::vector<uint8_t>> buffer,
+                            uint16_t value);
 
     /**
      * @brief Write a uint32_t to the buffer (little-endian)
      */
-    static void writeUint32(std::vector<uint8_t>& buffer, uint32_t value);
+    static void writeUint32(std::shared_ptr<std::vector<uint8_t>> buffer,
+                            uint32_t value);
 
     /**
      * @brief Write a uint64_t to the buffer (little-endian)
      */
-    static void writeUint64(std::vector<uint8_t>& buffer, uint64_t value);
+    static void writeUint64(std::shared_ptr<std::vector<uint8_t>> buffer,
+                            uint64_t value);
 
     /**
      * @brief Write an int32_t to the buffer
      */
-    static void writeInt32(std::vector<uint8_t>& buffer, int32_t value);
+    static void writeInt32(std::shared_ptr<std::vector<uint8_t>> buffer,
+                           int32_t value);
 
     /**
      * @brief Write a float to the buffer
      */
-    static void writeFloat(std::vector<uint8_t>& buffer, float value);
+    static void writeFloat(std::shared_ptr<std::vector<uint8_t>> buffer,
+                           float value);
 
     /**
      * @brief Write a string to the buffer (length-prefixed)
      */
-    static void writeString(std::vector<uint8_t>& buffer,
+    static void writeString(std::shared_ptr<std::vector<uint8_t>> buffer,
                             const std::string& value);
 
     // ==================== Read methods ====================
@@ -68,50 +75,57 @@ class BinarySerializer {
      * @brief Read a uint8_t from the buffer
      * @throws std::out_of_range if buffer overflow
      */
-    [[nodiscard]] static uint8_t readUint8(const std::vector<uint8_t>& buffer,
-                                           size_t& offset);
+    [[nodiscard]] static uint8_t readUint8(
+        std::shared_ptr<const std::vector<uint8_t>> buffer,
+        std::shared_ptr<size_t> offset);
 
     /**
      * @brief Read a uint16_t from the buffer (little-endian)
      * @throws std::out_of_range if buffer overflow
      */
-    [[nodiscard]] static uint16_t readUint16(const std::vector<uint8_t>& buffer,
-                                             size_t& offset);
+    [[nodiscard]] static uint16_t readUint16(
+        std::shared_ptr<const std::vector<uint8_t>> buffer,
+        std::shared_ptr<size_t> offset);
 
     /**
      * @brief Read a uint32_t from the buffer (little-endian)
      * @throws std::out_of_range if buffer overflow
      */
-    [[nodiscard]] static uint32_t readUint32(const std::vector<uint8_t>& buffer,
-                                             size_t& offset);
+    [[nodiscard]] static uint32_t readUint32(
+        std::shared_ptr<const std::vector<uint8_t>> buffer,
+        std::shared_ptr<size_t> offset);
 
     /**
      * @brief Read a uint64_t from the buffer (little-endian)
      * @throws std::out_of_range if buffer overflow
      */
-    [[nodiscard]] static uint64_t readUint64(const std::vector<uint8_t>& buffer,
-                                             size_t& offset);
+    [[nodiscard]] static uint64_t readUint64(
+        std::shared_ptr<const std::vector<uint8_t>> buffer,
+        std::shared_ptr<size_t> offset);
 
     /**
      * @brief Read an int32_t from the buffer
      * @throws std::out_of_range if buffer overflow
      */
-    [[nodiscard]] static int32_t readInt32(const std::vector<uint8_t>& buffer,
-                                           size_t& offset);
+    [[nodiscard]] static int32_t readInt32(
+        std::shared_ptr<const std::vector<uint8_t>> buffer,
+        std::shared_ptr<size_t> offset);
 
     /**
      * @brief Read a float from the buffer
      * @throws std::out_of_range if buffer overflow
      */
-    [[nodiscard]] static float readFloat(const std::vector<uint8_t>& buffer,
-                                         size_t& offset);
+    [[nodiscard]] static float readFloat(
+        std::shared_ptr<const std::vector<uint8_t>> buffer,
+        std::shared_ptr<size_t> offset);
 
     /**
      * @brief Read a string from the buffer (length-prefixed)
      * @throws std::out_of_range if buffer overflow
      */
     [[nodiscard]] static std::string readString(
-        const std::vector<uint8_t>& buffer, size_t& offset);
+        std::shared_ptr<const std::vector<uint8_t>> buffer,
+        std::shared_ptr<size_t> offset);
 };
 
 }  // namespace rtype::game::config

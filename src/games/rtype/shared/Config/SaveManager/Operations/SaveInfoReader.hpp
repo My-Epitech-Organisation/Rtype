@@ -10,6 +10,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <vector>
 
 #include "../../GameState/RTypeGameState.hpp"
@@ -33,8 +34,9 @@ class SaveInfoReader {
         const std::filesystem::path& filepath);
 
    private:
-    static void readProgressionInfo(const std::vector<uint8_t>& data,
-                                    size_t& offset, SaveInfo& info);
+    static void readProgressionInfo(
+        std::shared_ptr<const std::vector<uint8_t>> data,
+        std::shared_ptr<size_t> offset, SaveInfo& info);
 };
 
 }  // namespace rtype::game::config

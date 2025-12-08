@@ -13,8 +13,8 @@ namespace rtype::game::config {
 
 std::vector<uint8_t> GameStateSerializer::serialize(
     const RTypeGameState& state) {
-    std::vector<uint8_t> data;
-    data.reserve(1024);
+    auto data = std::make_shared<std::vector<uint8_t>>();
+    data->reserve(1024);
 
     RTypeGameState stateCopy = state;
     stateCopy.updateTimestamp();
@@ -26,18 +26,18 @@ std::vector<uint8_t> GameStateSerializer::serialize(
     BinarySerializer::writeUint32(data, stateCopy.header.checksum);
     BinarySerializer::writeUint32(data, 0);  // dataSize placeholder
 
-    size_t dataSizeOffset = data.size() - sizeof(uint32_t);
-    size_t dataStartOffset = data.size();
+    size_t dataSizeOffset = data->size() - sizeof(uint32_t);
+    size_t dataStartOffset = data->size();
 
     BinarySerializer::writeString(data, stateCopy.saveName);
     serializePlayers(data, stateCopy.players);
     serializeEnemies(data, stateCopy.enemies);
     serializeProgression(data, stateCopy.progression);
     serializeDifficulty(data, stateCopy.difficulty);
-    uint32_t dataSize = static_cast<uint32_t>(data.size() - dataStartOffset);
-    std::memcpy(data.data() + dataSizeOffset, &dataSize, sizeof(dataSize));
+    uint32_t dataSize = static_cast<uint32_t>(data->size() - dataStartOffset);
+    std::memcpy(data->data() + dataSizeOffset, &dataSize, sizeof(dataSize));
 
-    return data;
+    return *data;
 }
 
 std::pair<std::optional<RTypeGameState>, std::optional<std::string>>
@@ -47,24 +47,36 @@ GameStateSerializer::deserialize(const std::vector<uint8_t>& data) {
     }
 
     RTypeGameState state;
-    size_t offset = 0;
+    auto offset = std::make_shared<size_t>(0);
+    auto dataPtr = std::make_shared<const std::vector<uint8_t>>(data);
 
     try {
-        state.header.magic = BinarySerializer::readUint32(data, offset);
+        state.header.magic = BinarySerializer::readUint32(dataPtr, offset);
         if (state.header.magic != SAVE_MAGIC_NUMBER) {
             return {std::nullopt,
                     std::string("Invalid save file magic number")};
         }
 
-        state.header.version = BinarySerializer::readUint32(data, offset);
-        state.header.timestamp = BinarySerializer::readUint64(data, offset);
-        state.header.checksum = BinarySerializer::readUint32(data, offset);
-        state.header.dataSize = BinarySerializer::readUint32(data, offset);
-        state.saveName = BinarySerializer::readString(data, offset);
-        deserializePlayers(data, offset, state.players);
-        deserializeEnemies(data, offset, state.enemies);
-        deserializeProgression(data, offset, state.progression);
-        deserializeDifficulty(data, offset, state.difficulty);
+        state.header.version = BinarySerializer::readUint32(dataPtr, offset);
+        state.header.timestamp = BinarySerializer::readUint64(dataPtr, offset);
+        state.header.checksum = BinarySerializer::readUint32(dataPtr, offset);
+        state.header.dataSize = BinarySerializer::readUint32(dataPtr, offset);
+        state.saveName = BinarySerializer::readString(dataPtr, offset);
+
+        auto players = std::make_shared<std::vector<PlayerState>>();
+        auto enemies = std::make_shared<std::vector<EnemyState>>();
+        auto progression = std::make_shared<ProgressionData>();
+        auto difficulty = std::make_shared<DifficultySnapshot>();
+
+        deserializePlayers(dataPtr, offset, players);
+        deserializeEnemies(dataPtr, offset, enemies);
+        deserializeProgression(dataPtr, offset, progression);
+        deserializeDifficulty(dataPtr, offset, difficulty);
+
+        state.players = *players;
+        state.enemies = *enemies;
+        state.progression = *progression;
+        state.difficulty = *difficulty;
 
         return {state, std::nullopt};
     } catch (const std::exception& e) {
@@ -74,7 +86,8 @@ GameStateSerializer::deserialize(const std::vector<uint8_t>& data) {
 }
 
 void GameStateSerializer::serializePlayers(
-    std::vector<uint8_t>& data, const std::vector<PlayerState>& players) {
+    std::shared_ptr<std::vector<uint8_t>> data,
+    const std::vector<PlayerState>& players) {
     BinarySerializer::writeUint32(data, static_cast<uint32_t>(players.size()));
     for (const auto& player : players) {
         BinarySerializer::writeUint32(data, player.playerId);
@@ -93,7 +106,8 @@ void GameStateSerializer::serializePlayers(
 }
 
 void GameStateSerializer::serializeEnemies(
-    std::vector<uint8_t>& data, const std::vector<EnemyState>& enemies) {
+    std::shared_ptr<std::vector<uint8_t>> data,
+    const std::vector<EnemyState>& enemies) {
     BinarySerializer::writeUint32(data, static_cast<uint32_t>(enemies.size()));
     for (const auto& enemy : enemies) {
         BinarySerializer::writeUint32(data, enemy.enemyId);
@@ -105,7 +119,8 @@ void GameStateSerializer::serializeEnemies(
 }
 
 void GameStateSerializer::serializeProgression(
-    std::vector<uint8_t>& data, const ProgressionData& progression) {
+    std::shared_ptr<std::vector<uint8_t>> data,
+    const ProgressionData& progression) {
     BinarySerializer::writeUint32(data, progression.currentLevel);
     BinarySerializer::writeUint32(data, progression.currentWave);
     BinarySerializer::writeUint32(data, progression.totalWaves);
@@ -119,7 +134,8 @@ void GameStateSerializer::serializeProgression(
 }
 
 void GameStateSerializer::serializeDifficulty(
-    std::vector<uint8_t>& data, const DifficultySnapshot& difficulty) {
+    std::shared_ptr<std::vector<uint8_t>> data,
+    const DifficultySnapshot& difficulty) {
     BinarySerializer::writeString(data, difficulty.difficultyLevel);
     BinarySerializer::writeFloat(data, difficulty.enemyHealthMultiplier);
     BinarySerializer::writeFloat(data, difficulty.enemySpeedMultiplier);
@@ -128,10 +144,11 @@ void GameStateSerializer::serializeDifficulty(
 }
 
 void GameStateSerializer::deserializePlayers(
-    const std::vector<uint8_t>& data, size_t& offset,
-    std::vector<PlayerState>& players) {
+    std::shared_ptr<const std::vector<uint8_t>> data,
+    std::shared_ptr<size_t> offset,
+    std::shared_ptr<std::vector<PlayerState>> players) {
     uint32_t playerCount = BinarySerializer::readUint32(data, offset);
-    players.reserve(playerCount);
+    players->reserve(playerCount);
     for (uint32_t i = 0; i < playerCount; ++i) {
         PlayerState player;
         player.playerId = BinarySerializer::readUint32(data, offset);
@@ -146,15 +163,16 @@ void GameStateSerializer::deserializePlayers(
             static_cast<PowerUpType>(BinarySerializer::readUint8(data, offset));
         player.powerUpTimeRemaining = BinarySerializer::readFloat(data, offset);
         player.weaponLevel = BinarySerializer::readUint32(data, offset);
-        players.push_back(player);
+        players->push_back(player);
     }
 }
 
-void GameStateSerializer::deserializeEnemies(const std::vector<uint8_t>& data,
-                                             size_t& offset,
-                                             std::vector<EnemyState>& enemies) {
+void GameStateSerializer::deserializeEnemies(
+    std::shared_ptr<const std::vector<uint8_t>> data,
+    std::shared_ptr<size_t> offset,
+    std::shared_ptr<std::vector<EnemyState>> enemies) {
     uint32_t enemyCount = BinarySerializer::readUint32(data, offset);
-    enemies.reserve(enemyCount);
+    enemies->reserve(enemyCount);
     for (uint32_t i = 0; i < enemyCount; ++i) {
         EnemyState enemy;
         enemy.enemyId = BinarySerializer::readUint32(data, offset);
@@ -162,37 +180,40 @@ void GameStateSerializer::deserializeEnemies(const std::vector<uint8_t>& data,
         enemy.positionX = BinarySerializer::readFloat(data, offset);
         enemy.positionY = BinarySerializer::readFloat(data, offset);
         enemy.health = BinarySerializer::readInt32(data, offset);
-        enemies.push_back(enemy);
+        enemies->push_back(enemy);
     }
 }
 
 void GameStateSerializer::deserializeProgression(
-    const std::vector<uint8_t>& data, size_t& offset,
-    ProgressionData& progression) {
-    progression.currentLevel = BinarySerializer::readUint32(data, offset);
-    progression.currentWave = BinarySerializer::readUint32(data, offset);
-    progression.totalWaves = BinarySerializer::readUint32(data, offset);
-    progression.enemiesDefeated = BinarySerializer::readUint32(data, offset);
-    progression.totalScore = BinarySerializer::readUint32(data, offset);
-    progression.playTimeSeconds = BinarySerializer::readFloat(data, offset);
-    progression.lastCheckpoint.checkpointId =
+    std::shared_ptr<const std::vector<uint8_t>> data,
+    std::shared_ptr<size_t> offset,
+    std::shared_ptr<ProgressionData> progression) {
+    progression->currentLevel = BinarySerializer::readUint32(data, offset);
+    progression->currentWave = BinarySerializer::readUint32(data, offset);
+    progression->totalWaves = BinarySerializer::readUint32(data, offset);
+    progression->enemiesDefeated = BinarySerializer::readUint32(data, offset);
+    progression->totalScore = BinarySerializer::readUint32(data, offset);
+    progression->playTimeSeconds = BinarySerializer::readFloat(data, offset);
+    progression->lastCheckpoint.checkpointId =
         BinarySerializer::readUint32(data, offset);
-    progression.lastCheckpoint.waveNumber =
+    progression->lastCheckpoint.waveNumber =
         BinarySerializer::readUint32(data, offset);
-    progression.lastCheckpoint.waveProgress =
+    progression->lastCheckpoint.waveProgress =
         BinarySerializer::readFloat(data, offset);
 }
 
 void GameStateSerializer::deserializeDifficulty(
-    const std::vector<uint8_t>& data, size_t& offset,
-    DifficultySnapshot& difficulty) {
-    difficulty.difficultyLevel = BinarySerializer::readString(data, offset);
-    difficulty.enemyHealthMultiplier =
+    std::shared_ptr<const std::vector<uint8_t>> data,
+    std::shared_ptr<size_t> offset,
+    std::shared_ptr<DifficultySnapshot> difficulty) {
+    difficulty->difficultyLevel = BinarySerializer::readString(data, offset);
+    difficulty->enemyHealthMultiplier =
         BinarySerializer::readFloat(data, offset);
-    difficulty.enemySpeedMultiplier = BinarySerializer::readFloat(data, offset);
-    difficulty.playerDamageMultiplier =
+    difficulty->enemySpeedMultiplier =
         BinarySerializer::readFloat(data, offset);
-    difficulty.startingLives = BinarySerializer::readUint32(data, offset);
+    difficulty->playerDamageMultiplier =
+        BinarySerializer::readFloat(data, offset);
+    difficulty->startingLives = BinarySerializer::readUint32(data, offset);
 }
 
 }  // namespace rtype::game::config
