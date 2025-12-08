@@ -630,3 +630,275 @@ TEST_F(ServerAppUnitTest, EdgeCase_LargeUserId) {
     EXPECT_EQ(server.getReadyPlayerCount(), 1u);
 }
 
+// ============================================================================
+// GAME STATE TRANSITION TESTS
+// ============================================================================
+
+TEST_F(ServerAppUnitTest, GameState_TransitionToPlaying_WithNetworkSystem) {
+    // Use constructor that initializes network system through run()
+    shutdownFlag_->store(true);  // Will exit immediately
+
+    ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+
+    // Make player ready before run
+    server.playerReady(1);
+
+    EXPECT_TRUE(server.isPlaying());
+    EXPECT_EQ(server.getGameState(), GameState::Playing);
+}
+
+TEST_F(ServerAppUnitTest, GameState_CheckGameStart_AlreadyPlaying) {
+    ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+
+    // Transition to playing
+    server.playerReady(1);
+    EXPECT_TRUE(server.isPlaying());
+
+    // Additional playerReady should not change state
+    server.playerReady(2);
+    server.playerReady(3);
+
+    EXPECT_TRUE(server.isPlaying());
+    EXPECT_EQ(server.getReadyPlayerCount(), 1u);  // Only first counted
+}
+
+// ============================================================================
+// RUN WITH DIFFERENT CONFIGURATIONS
+// ============================================================================
+
+TEST_F(ServerAppUnitTest, Run_WithGameConfig_Initialized) {
+    auto config = std::make_unique<MockGameConfigUnit>();
+    config->setInitialized(true);
+
+    GenericServerSettings settings;
+    settings.port = 8085;
+    settings.maxPlayers = 8;
+    settings.tickRate = 30;
+    config->setServerSettings(settings);
+
+    shutdownFlag_->store(true);  // Exit immediately
+
+    ServerApp server(std::move(config), shutdownFlag_, false);
+
+    // Should use config values
+    EXPECT_EQ(server.getClientManager().getMaxPlayers(), 8u);
+}
+
+TEST_F(ServerAppUnitTest, Run_WithGameConfig_NotInitialized) {
+    auto config = std::make_unique<MockGameConfigUnit>();
+    config->setInitialized(false);
+
+    shutdownFlag_->store(true);
+
+    ServerApp server(std::move(config), shutdownFlag_, false);
+
+    // Should use default values
+    EXPECT_EQ(server.getClientManager().getMaxPlayers(), 4u);
+}
+
+// ============================================================================
+// RELOAD CONFIGURATION TESTS (MORE BRANCHES)
+// ============================================================================
+
+TEST_F(ServerAppUnitTest, ReloadConfig_SuccessfulReload) {
+    auto config = std::make_unique<MockGameConfigUnit>();
+    config->setInitialized(true);
+
+    ServerApp server(std::move(config), shutdownFlag_, false);
+
+    EXPECT_TRUE(server.reloadConfiguration());
+}
+
+TEST_F(ServerAppUnitTest, ReloadConfig_FailedReload) {
+    auto config = std::make_unique<MockGameConfigUnit>();
+    config->setInitialized(true);
+    config->setShouldFailReload(true);
+
+    ServerApp server(std::move(config), shutdownFlag_, false);
+
+    EXPECT_FALSE(server.reloadConfiguration());
+}
+
+TEST_F(ServerAppUnitTest, ReloadConfig_NullConfig) {
+    ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+
+    // No game config, should fail
+    EXPECT_FALSE(server.reloadConfiguration());
+}
+
+TEST_F(ServerAppUnitTest, ReloadConfig_UninitializedConfig) {
+    auto config = std::make_unique<MockGameConfigUnit>();
+    config->setInitialized(false);
+
+    ServerApp server(std::move(config), shutdownFlag_, false);
+
+    EXPECT_FALSE(server.reloadConfiguration());
+}
+
+// ============================================================================
+// SECURITY CONTEXT TESTS
+// ============================================================================
+
+TEST_F(ServerAppUnitTest, SecurityContext_RegisterMapping) {
+    ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+
+    Endpoint endpoint("192.168.1.100", 54321);
+
+    EXPECT_NO_THROW({
+        server.registerUserIdMapping(endpoint, 42);
+    });
+}
+
+TEST_F(ServerAppUnitTest, SecurityContext_MultipleEndpoints) {
+    ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+
+    for (int i = 0; i < 10; ++i) {
+        Endpoint endpoint("192.168.1." + std::to_string(i), 50000 + i);
+        EXPECT_NO_THROW({
+            server.registerUserIdMapping(endpoint, static_cast<uint32_t>(i));
+        });
+    }
+}
+
+// ============================================================================
+// LOOP TIMING EDGE CASES
+// ============================================================================
+
+TEST_F(ServerAppUnitTest, LoopTiming_VeryLowTickRate) {
+    ServerApp server(8080, 4, 1, shutdownFlag_, 30, false);  // 1 FPS
+
+    auto timing = server.getLoopTiming();
+    // At 1 FPS, fixed delta should be ~1 second
+    EXPECT_GT(timing.fixedDeltaNs.count(), 900000000);  // > 900ms
+    EXPECT_LT(timing.fixedDeltaNs.count(), 1100000000); // < 1100ms
+}
+
+TEST_F(ServerAppUnitTest, LoopTiming_VeryHighTickRate) {
+    ServerApp server(8080, 4, 1000, shutdownFlag_, 30, false);  // 1000 FPS
+
+    auto timing = server.getLoopTiming();
+    // At 1000 FPS, fixed delta should be ~1ms
+    EXPECT_GT(timing.fixedDeltaNs.count(), 900000);   // > 0.9ms
+    EXPECT_LT(timing.fixedDeltaNs.count(), 1100000);  // < 1.1ms
+}
+
+TEST_F(ServerAppUnitTest, LoopTiming_StandardTickRate) {
+    ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);  // 60 FPS
+
+    auto timing = server.getLoopTiming();
+    // At 60 FPS, fixed delta should be ~16.67ms
+    EXPECT_GT(timing.fixedDeltaNs.count(), 15000000);  // > 15ms
+    EXPECT_LT(timing.fixedDeltaNs.count(), 18000000);  // < 18ms
+}
+
+// ============================================================================
+// HAS GAME CONFIG TESTS
+// ============================================================================
+
+TEST_F(ServerAppUnitTest, HasGameConfig_WithConfig) {
+    auto config = std::make_unique<MockGameConfigUnit>();
+    config->setInitialized(true);
+
+    ServerApp server(std::move(config), shutdownFlag_, false);
+
+    EXPECT_TRUE(server.hasGameConfig());
+}
+
+TEST_F(ServerAppUnitTest, HasGameConfig_WithoutConfig) {
+    ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+
+    EXPECT_FALSE(server.hasGameConfig());
+}
+
+// ============================================================================
+// GET GAME CONFIG TESTS
+// ============================================================================
+
+TEST_F(ServerAppUnitTest, GetGameConfig_WithConfig) {
+    auto config = std::make_unique<MockGameConfigUnit>();
+    config->setInitialized(true);
+
+    GenericGameplaySettings gameplay;
+    gameplay.playerSpeed = 500.0f;
+    config->setGameplaySettings(gameplay);
+
+    ServerApp server(std::move(config), shutdownFlag_, false);
+
+    auto* gameConfig = server.getGameConfig();
+    ASSERT_NE(gameConfig, nullptr);
+    EXPECT_FLOAT_EQ(gameConfig->getGameplaySettings().playerSpeed, 500.0f);
+}
+
+TEST_F(ServerAppUnitTest, GetGameConfig_WithoutConfig) {
+    ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+
+    auto* gameConfig = server.getGameConfig();
+    EXPECT_EQ(gameConfig, nullptr);
+}
+
+// ============================================================================
+// PLAYER READY DUPLICATE TESTS
+// ============================================================================
+
+TEST_F(ServerAppUnitTest, PlayerReady_SamePlayerMultipleTimes) {
+    ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+
+    // First player ready
+    server.playerReady(1);
+    EXPECT_EQ(server.getReadyPlayerCount(), 1u);
+    EXPECT_TRUE(server.isPlaying());
+
+    // Same player again (game already playing)
+    server.playerReady(1);
+    server.playerReady(1);
+    server.playerReady(1);
+
+    // Count should still be 1
+    EXPECT_EQ(server.getReadyPlayerCount(), 1u);
+}
+
+// ============================================================================
+// RUN AND SHUTDOWN INTEGRATION
+// ============================================================================
+
+TEST_F(ServerAppUnitTest, Run_QuickShutdown) {
+    ServerApp server(14260, 4, 60, shutdownFlag_, 30, false);
+
+    // Start server in background
+    std::thread serverThread([&]() {
+        [[maybe_unused]] bool result = server.run();
+    });
+
+    // Let it run briefly
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    // Signal shutdown
+    server.stop();
+
+    // Wait for thread
+    serverThread.join();
+
+    EXPECT_FALSE(server.isRunning());
+}
+
+TEST_F(ServerAppUnitTest, Run_WithPlayerReadyDuringRun) {
+    ServerApp server(14261, 4, 60, shutdownFlag_, 30, false);
+
+    std::thread serverThread([&]() {
+        [[maybe_unused]] bool result = server.run();
+    });
+
+    // Let server initialize
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Player ready during game
+    server.playerReady(1);
+
+    // Let game run briefly
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    server.stop();
+    serverThread.join();
+
+    EXPECT_TRUE(server.isPlaying());
+}
