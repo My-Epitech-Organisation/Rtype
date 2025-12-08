@@ -388,14 +388,13 @@ class ServerApp {
     ClientManager _clientManager;              ///< Client connection manager
     std::unique_ptr<IGameConfig> _gameConfig;  ///< Game-specific configuration
 
-    // Network thread and packet queue for producer-consumer pattern
     SafeQueue<std::pair<Endpoint, std::vector<uint8_t>>>
-        _rawNetworkData;  ///< Thread-safe queue for raw network data
+        _rawNetworkData;
     SafeQueue<std::pair<Endpoint, rtype::network::Packet>>
-        _incomingPackets;        ///< Thread-safe queue for incoming packets
-    std::thread _networkThread;  ///< Network I/O thread
+        _incomingPackets;
+    std::thread _networkThread;
     std::atomic<bool> _networkThreadRunning{
-        false};  ///< Flag to control network thread
+        false};
 
     rtype::network::SecurityContext _securityContext;
 
