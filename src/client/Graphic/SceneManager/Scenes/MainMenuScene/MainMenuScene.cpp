@@ -10,7 +10,10 @@
 #include <cstdlib>
 #include <ctime>
 #include <functional>
+#include <iostream>
+#include <memory>
 #include <random>
+#include <utility>
 
 #include <SFML/Graphics/Text.hpp>
 
@@ -75,8 +78,12 @@ MainMenuScene::MainMenuScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> assetsManager,
     std::shared_ptr<sf::RenderWindow> window,
-    std::function<void(const SceneManager::Scene&)> switchToScene)
-    : AScene(ecs, assetsManager, window) {
+    std::function<void(const SceneManager::Scene&)> switchToScene,
+    std::shared_ptr<rtype::client::NetworkClient> networkClient,
+    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem)
+    : AScene(ecs, assetsManager, window),
+      _networkClient(std::move(networkClient)),
+      _networkSystem(std::move(networkSystem)) {
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "R-TYPE"));
     this->_createAstroneerVessel();
