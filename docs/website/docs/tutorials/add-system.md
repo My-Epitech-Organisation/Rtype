@@ -19,7 +19,6 @@ This tutorial shows the steps to add a new System (server or client), register i
 - `src/games/rtype/server/Systems/HealthRegenSystem.hpp`
 - `src/games/rtype/server/Systems/HealthRegenSystem.cpp`
 
-1. Derive from `rtype::engine::ASystem` and implement `update`:
 2. Inherit from `rtype::engine::ASystem` and implement `update`:
 
 ```cpp
@@ -45,7 +44,7 @@ void HealthRegenSystem::update(ECS::Registry& registry, float dt) {
 }
 ```
 
-- ## 4) Register the system with the scheduler (server) or create it in the client scene
+## 4) Register the system with the scheduler (server) or create it in the client scene
 
 - Server: Add your system instance to `src/games/rtype/server/GameEngine.cpp::initialize()`, and ensure it’s scheduled in the right order relative to other systems.
 - Client: Create and register the system in the client scene manager or the `Graphic` setup (see `src/client/Graphic/SceneManager/*` and `src/games/rtype/client/Systems/*`).
@@ -61,7 +60,7 @@ void HealthRegenSystem::update(ECS::Registry& registry, float dt) {
 
 ---
 
-- ### Tips
+### Tip
 
 - Keep systems decoupled: don't access rendering logic from server systems and do not access game logic in render systems.
 - Use `Event`/signals for cross-system notifications.

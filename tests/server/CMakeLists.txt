@@ -86,8 +86,8 @@ target_link_libraries(test_server_network_messages PRIVATE
     rtype_server_network
 )
 
-gtest_discover_tests(test_server_network_messages)
 include(GoogleTest)
+gtest_discover_tests(test_server_network_messages)
 gtest_discover_tests(test_client_manager)
 gtest_discover_tests(test_server_app)
 gtest_discover_tests(test_server_app_gameconfig)
