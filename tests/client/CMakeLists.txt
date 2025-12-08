@@ -147,3 +147,21 @@ target_include_directories(test_entity_factory PRIVATE
 )
 
 gtest_discover_tests(test_entity_factory)
+
+# UI Components tests (Rectangle, Text, Button)
+add_executable(test_ui_components test_ui_components.cpp)
+
+target_link_libraries(test_ui_components PRIVATE
+    GTest::gtest_main
+    rtype_engine
+    rtype_network
+    rtype_game_shared
+    rtype_game_client
+    rtype-graphic-SFML
+)
+
+target_include_directories(test_ui_components PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_ui_components)
