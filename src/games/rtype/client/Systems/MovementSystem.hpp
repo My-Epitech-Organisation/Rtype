@@ -10,7 +10,7 @@
 #include <memory>
 
 #include "ASystem.hpp"
-#include "ecs/ECS.hpp"
+#include "ECS.hpp"
 
 namespace rtype::games::rtype::client {
 class MovementSystem : public ::rtype::engine::ASystem {

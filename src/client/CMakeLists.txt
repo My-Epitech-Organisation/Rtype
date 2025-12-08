@@ -9,12 +9,19 @@ find_package(SFML
         REQUIRED
 )
 
+find_package(PNG QUIET)
+find_package(ZLIB QUIET)
+find_package(BZip2 QUIET)
+find_package(unofficial-brotli CONFIG QUIET)
+
 add_subdirectory(Graphic)
 
 add_executable(r-type_client
         main.cpp
         ClientApp.cpp
         GameAction.hpp
+        network/NetworkClient.cpp
+        network/ClientNetworkSystem.cpp
 )
 
 target_compile_features(r-type_client PRIVATE cxx_std_20)
@@ -31,6 +38,19 @@ target_link_libraries(r-type_client PUBLIC
     rtype-graphic-SFML
     rtype_game_client
 )
+
+if(PNG_FOUND)
+    target_link_libraries(r-type_client PRIVATE PNG::PNG)
+endif()
+if(ZLIB_FOUND)
+    target_link_libraries(r-type_client PRIVATE ZLIB::ZLIB)
+endif()
+if(BZip2_FOUND)
+    target_link_libraries(r-type_client PRIVATE BZip2::BZip2)
+endif()
+if(TARGET unofficial::brotli::brotlidec)
+    target_link_libraries(r-type_client PRIVATE unofficial::brotli::brotlidec unofficial::brotli::brotlicommon)
+endif()
 
 target_include_directories(rtype-graphic-main-menu-scene
         PUBLIC

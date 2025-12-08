@@ -8,11 +8,13 @@
 #ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_RENDERSYSTEM_HPP_
 #define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_RENDERSYSTEM_HPP_
 
+#include <memory>
+
 #include <SFML/Graphics/RenderWindow.hpp>
 
 #include "../Components/HiddenComponent.hpp"
 #include "ASystem.hpp"
-#include "ecs/ECS.hpp"
+#include "ECS.hpp"
 namespace rtype::games::rtype::client {
 class RenderSystem : public ::rtype::engine::ASystem {
    private:

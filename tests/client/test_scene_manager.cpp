@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <SFML/Graphics.hpp>
-#include <ecs/ECS.hpp>
+#include <ECS.hpp>
 #include "../src/client/Graphic/SceneManager/SceneManager.hpp"
 #include "../src/client/Graphic/AssetManager/AssetManager.hpp"
 
@@ -16,17 +16,19 @@ class SceneManagerTest : public ::testing::Test {
 protected:
     std::shared_ptr<ECS::Registry> registry;
     std::shared_ptr<AssetManager> assetManager;
-    KeyboardActions keyboardActions;
-    sf::RenderWindow window;
+    std::shared_ptr<KeyboardActions> keyboardActions;
+    std::shared_ptr<sf::RenderWindow> window;
 
     void SetUp() override {
         registry = std::make_shared<ECS::Registry>();
         assetManager = std::make_shared<AssetManager>();
-        window.create(sf::VideoMode({800, 600}), "Test");
+        keyboardActions = std::make_shared<KeyboardActions>();
+        window = std::make_shared<sf::RenderWindow>();
+        window->create(sf::VideoMode({800, 600}), "Test");
     }
 
     void TearDown() override {
-        window.close();
+        window->close();
     }
 };
 
@@ -48,5 +50,5 @@ TEST_F(SceneManagerTest, Update_DoesNotThrow) {
 
 TEST_F(SceneManagerTest, Draw_DoesNotThrow) {
     SceneManager manager(registry, assetManager, window, keyboardActions);
-    EXPECT_NO_THROW(manager.draw(window));
+    EXPECT_NO_THROW(manager.draw());
 }

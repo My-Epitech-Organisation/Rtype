@@ -15,7 +15,7 @@
 #include "../Components/RectangleComponent.hpp"
 #include "../Components/UserEventComponent.hpp"
 #include "ASystem.hpp"
-#include "ecs/ECS.hpp"
+#include "ECS.hpp"
 
 namespace rtype::games::rtype::client {
 class EventSystem : public ::rtype::engine::ASystem {

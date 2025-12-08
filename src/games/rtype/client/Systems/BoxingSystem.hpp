@@ -13,7 +13,7 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 
 #include "ASystem.hpp"
-#include "ecs/ECS.hpp"
+#include "ECS.hpp"
 
 namespace rtype::games::rtype::client {
 class BoxingSystem : public ::rtype::engine::ASystem {

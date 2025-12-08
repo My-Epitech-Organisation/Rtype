@@ -17,6 +17,7 @@ target_link_libraries(test_client_manager PRIVATE
 )
 
 set(SERVER_APP_TEST_SRCS test_server_app.cpp)
+list(APPEND SERVER_APP_TEST_SRCS test_server_app_extra.cpp)
 if(NOT WIN32)
     list(APPEND SERVER_APP_TEST_SRCS test_server_app_private.cpp)
 endif()

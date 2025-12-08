@@ -6,7 +6,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <ecs/ECS.hpp>
+#include <ECS.hpp>
 #include "../src/client/Graphic/EntityFactory/EntityFactory.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
 #include "games/rtype/client/Components/TextComponent.hpp"

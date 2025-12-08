@@ -60,4 +60,5 @@ build-coverage/*
 coverage
 doxygen
 .vscode
+tools/*
 .idea

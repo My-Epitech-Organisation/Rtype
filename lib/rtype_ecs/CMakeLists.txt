@@ -3,12 +3,13 @@
 # ============================================================================
 
 set(ECS_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ecs/core/Registry/RegistryEntity.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ecs/core/Relationship.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ecs/core/CommandBuffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ecs/core/Prefab.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ecs/signal/SignalDispatcher.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ecs/system/SystemScheduler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/Registry/RegistryEntity.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/Relationship.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/CommandBuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/Prefab.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/signal/SignalDispatcher.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/system/SystemScheduler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/serialization/Serialization.cpp
 )
 
 add_library(rtype_ecs STATIC ${ECS_SOURCES})

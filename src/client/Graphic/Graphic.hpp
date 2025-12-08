@@ -19,9 +19,9 @@
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "AssetManager/AssetManager.hpp"
+#include "ECS.hpp"
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
-#include "ecs/ECS.hpp"
 #include "src/games/rtype/client/Systems/ParallaxScrolling.hpp"
 
 class Graphic {

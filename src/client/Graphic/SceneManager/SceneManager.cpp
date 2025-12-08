@@ -4,8 +4,9 @@
 ** File description:
 ** SceneManager.cpp
 */
-
 #include "SceneManager.hpp"
+
+#include <memory>
 
 #include "../../GameAction.hpp"
 #include "SceneException.hpp"
@@ -84,4 +85,5 @@ SceneManager::SceneManager(std::shared_ptr<ECS::Registry> ecs,
             ecs, texture, this->_window, this->_keybinds, this->_switchToScene);
     });
     this->setCurrentScene(MAIN_MENU);
+    this->_applySceneChange();
 }

@@ -9,6 +9,7 @@
 #define SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include <SFML/System/Vector2.hpp>
@@ -20,7 +21,7 @@
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
 #include "Components/UserEventComponent.hpp"
-#include "ecs/ECS.hpp"
+#include "ECS.hpp"
 
 namespace EntityFactory {
 template <typename... Args>

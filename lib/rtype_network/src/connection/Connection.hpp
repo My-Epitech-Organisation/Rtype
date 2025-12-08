@@ -145,6 +145,7 @@ class Connection {
    private:
     [[nodiscard]] Buffer buildConnectPacket();
     [[nodiscard]] Buffer buildDisconnectPacket();
+    [[nodiscard]] Buffer buildAckPacket(std::uint32_t userId);
     [[nodiscard]] Result<void> handleConnectAccept(const Header& header,
                                                    const Buffer& payload,
                                                    const Endpoint& sender);
