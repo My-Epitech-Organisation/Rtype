@@ -12,11 +12,13 @@
 #include "Components/TextComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneManager/SceneException.hpp"
+#include "assets/audio/settingsMusic.h"
 
 void SettingsScene::_initKeybindSection() {
     std::vector<GameAction> actions = {
         GameAction::MOVE_UP,    GameAction::MOVE_DOWN, GameAction::MOVE_LEFT,
-        GameAction::MOVE_RIGHT, GameAction::SHOOT,     GameAction::PAUSE};
+        GameAction::MOVE_RIGHT, GameAction::SHOOT,     GameAction::CHANGE_AMMO,
+        GameAction::PAUSE};
 
     float sectionX = 50;
     float sectionY = 225;
@@ -66,7 +68,7 @@ void SettingsScene::_initKeybindSection() {
             }));
         this->_actionButtons[action] = btn;
         this->_listEntity.push_back(btn);
-        y += 80;
+        y += 65;
     }
 }
 
@@ -158,4 +160,11 @@ SettingsScene::SettingsScene(
                           << std::endl;
             }
         })));
+    this->_assetsManager->audioManager->load(
+        "main_settings_music", settingsMusic_mp3, settingsMusic_mp3_len);
+    auto settings =
+        this->_assetsManager->audioManager->get("main_settings_music");
+    settings->setLooping(true);
+    this->_audio->loadMusic(settings);
+    this->_audio->play();
 }
