@@ -60,8 +60,10 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
     std::shared_ptr<ServerConfig> config) {
     (*parser)
         .flag("-h", "--help", "Show this help message",
-              [parser]() {
-                  parser->printUsage();
+              [weak_parser = std::weak_ptr<rtype::ArgParser>(parser)]() {
+                  if (auto p = weak_parser.lock()) {
+                      p->printUsage();
+                  }
                   return rtype::ParseResult::Exit;
               })
         .flag("-v", "--verbose", "Enable verbose debug output",
