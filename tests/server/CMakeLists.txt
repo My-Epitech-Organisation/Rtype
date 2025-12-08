@@ -26,6 +26,8 @@ endif()
 add_executable(test_server_app ${SERVER_APP_TEST_SRCS}
     ${CMAKE_SOURCE_DIR}/src/server/ServerApp.cpp
     ${CMAKE_SOURCE_DIR}/src/server/ClientManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
 )
 
 target_include_directories(test_server_app PRIVATE
@@ -43,12 +45,16 @@ target_link_libraries(test_server_app PRIVATE
     rtype_toml_parser
     rtype_network
     rtype_engine
+    rtype_game_server
+    rtype_game_shared
 )
 
 # ServerApp GameConfig integration tests
 add_executable(test_server_app_gameconfig test_server_app_gameconfig.cpp
     ${CMAKE_SOURCE_DIR}/src/server/ServerApp.cpp
     ${CMAKE_SOURCE_DIR}/src/server/ClientManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
 )
 
 target_include_directories(test_server_app_gameconfig PRIVATE
@@ -65,6 +71,8 @@ target_link_libraries(test_server_app_gameconfig PRIVATE
     rtype_toml_parser
     rtype_network
     rtype_engine
+    rtype_game_server
+    rtype_game_shared
 )
 
 include(GoogleTest)

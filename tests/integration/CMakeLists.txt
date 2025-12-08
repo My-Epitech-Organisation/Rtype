@@ -4,8 +4,12 @@ cmake_minimum_required(VERSION 3.20)
 add_executable(test_integration
     test_integration.cpp
     test_network_api.cpp
+    test_server_integration.cpp
     ${CMAKE_SOURCE_DIR}/src/client/network/NetworkClient.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/ServerApp.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/ClientManager.cpp
 )
 
 target_link_libraries(test_integration
@@ -15,7 +19,9 @@ target_link_libraries(test_integration
         rtype_toml_parser
         rtype_network
         rtype_ecs
+        rtype_engine
         rtype_game_shared
+        rtype_game_server
 )
 
 target_include_directories(test_integration
