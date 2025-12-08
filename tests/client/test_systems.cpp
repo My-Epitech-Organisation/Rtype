@@ -37,6 +37,13 @@ protected:
     }
 };
 
+// Type aliases for readability
+using Velocity = rtype::games::rtype::shared::VelocityComponent;
+using Position = rtype::games::rtype::shared::Position;
+using Image = rtype::games::rtype::client::Image;
+using MovementSystem = rtype::games::rtype::client::MovementSystem;
+using RenderSystem = rtype::games::rtype::client::RenderSystem;
+
 TEST_F(SystemsTest, MovementSystem_Update_AppliesVelocity) {
     sf::Texture texture;
     unsigned char pixels[4] = {255, 0, 0, 255};  // Red pixel
@@ -44,7 +51,7 @@ TEST_F(SystemsTest, MovementSystem_Update_AppliesVelocity) {
     auto entity = registry->spawnEntity();
     registry->emplaceComponent<Velocity>(entity, Velocity{1.0f, 2.0f});
     registry->emplaceComponent<Position>(entity, Position{0.0f, 0.0f});
-    registry->emplaceComponent<Image>(entity, Image{texture});
+    registry->emplaceComponent<Image>(entity, texture);
 
     MovementSystem movementSystem;
     movementSystem.update(*registry, 1.0f);
@@ -58,7 +65,8 @@ TEST_F(SystemsTest, RenderSystem_Draw_DoesNotThrow) {
     auto entity = registry->spawnEntity();
     // Add renderable components if needed
 
-    RenderSystem renderSystem(window);
+    auto windowPtr = std::make_shared<sf::RenderWindow>(std::move(window));
+    RenderSystem renderSystem(windowPtr);
     EXPECT_NO_THROW(renderSystem.update(*registry, 0.f));
 }
 

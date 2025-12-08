@@ -7,9 +7,25 @@
 
 #pragma once
 
+#include <stdexcept>
+#include <string>
+
 #include "ISystem.hpp"
 
 namespace rtype::engine {
+
+/**
+ * @brief Exception thrown when a required component is missing
+ */
+class MissingComponentError : public std::runtime_error {
+   public:
+    MissingComponentError(const std::string& systemName,
+                          const std::string& componentName,
+                          uint32_t entityId)
+        : std::runtime_error("System '" + systemName +
+                             "' requires component '" + componentName +
+                             "' on entity " + std::to_string(entityId)) {}
+};
 
 /**
  * @class ASystem
@@ -65,6 +81,35 @@ class ASystem : public ISystem {
      * @param name The name of the system for debugging/logging
      */
     explicit ASystem(std::string name) : _name(std::move(name)) {}
+
+    /**
+     * @brief Require a component on an entity (throws if missing)
+     * @tparam Component The component type to check
+     * @param registry The ECS registry
+     * @param entity The entity to check
+     * @param componentName Human-readable name for error messages
+     * @throws MissingComponentError if component is not present
+     */
+    template <typename Component>
+    void requireComponent(ECS::Registry& registry, ECS::Entity entity,
+                          const std::string& componentName) const {
+        if (!registry.hasComponent<Component>(entity)) {
+            throw MissingComponentError(_name, componentName, entity.id);
+        }
+    }
+
+    /**
+     * @brief Check if entity has a component (non-throwing)
+     * @tparam Component The component type to check
+     * @param registry The ECS registry
+     * @param entity The entity to check
+     * @return true if component exists
+     */
+    template <typename Component>
+    [[nodiscard]] bool hasComponent(ECS::Registry& registry,
+                                    ECS::Entity entity) const {
+        return registry.hasComponent<Component>(entity);
+    }
 
    private:
     std::string _name;     ///< System name for debugging

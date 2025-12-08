@@ -14,16 +14,7 @@
 
 #include <SFML/Graphics/Text.hpp>
 
-#include "Components/BoxingComponent.hpp"
-#include "Components/ImageComponent.hpp"
-#include "Components/ParallaxComponent.hpp"
-#include "Components/PositionComponent.hpp"
-#include "Components/SizeComponent.hpp"
-#include "Components/TagComponent.hpp"
-#include "Components/TextComponent.hpp"
-#include "Components/TextureRectComponent.hpp"
-#include "Components/VelocityComponent.hpp"
-#include "Components/ZIndexComponent.hpp"
+#include "AllComponents.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneManager/SceneException.hpp"
 
