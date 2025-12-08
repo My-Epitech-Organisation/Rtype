@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "../../GameAction.hpp"
+#include "GameScene/RtypeGameScene.hpp"
 #include "SceneException.hpp"
 #include "Scenes/GameScene/GameScene.hpp"
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
@@ -88,9 +89,15 @@ SceneManager::SceneManager(
             ecs, texture, this->_window, this->_switchToScene, this->_keybinds);
     });
     this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
+        auto rtypeGameScene =
+            std::make_unique<rtype::games::rtype::client::RtypeGameScene>(
+                ecs, texture, this->_window, this->_keybinds,
+                this->_switchToScene, this->_networkClient,
+                this->_networkSystem);
         return std::make_unique<GameScene>(
             ecs, texture, this->_window, this->_keybinds, this->_switchToScene,
-            this->_networkClient, this->_networkSystem);
+            std::move(rtypeGameScene), this->_networkClient,
+            this->_networkSystem);
     });
     this->setCurrentScene(MAIN_MENU);
     this->_applySceneChange();
