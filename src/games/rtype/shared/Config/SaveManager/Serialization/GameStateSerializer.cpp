@@ -40,11 +40,10 @@ std::vector<uint8_t> GameStateSerializer::serialize(
     return data;
 }
 
-std::optional<RTypeGameState> GameStateSerializer::deserialize(
-    const std::vector<uint8_t>& data, std::string& outError) {
+std::pair<std::optional<RTypeGameState>, std::optional<std::string>>
+GameStateSerializer::deserialize(const std::vector<uint8_t>& data) {
     if (data.size() < sizeof(SaveHeader)) {
-        outError = "Save file too small";
-        return std::nullopt;
+        return {std::nullopt, std::string("Save file too small")};
     }
 
     RTypeGameState state;
@@ -53,8 +52,8 @@ std::optional<RTypeGameState> GameStateSerializer::deserialize(
     try {
         state.header.magic = BinarySerializer::readUint32(data, offset);
         if (state.header.magic != SAVE_MAGIC_NUMBER) {
-            outError = "Invalid save file magic number";
-            return std::nullopt;
+            return {std::nullopt,
+                    std::string("Invalid save file magic number")};
         }
 
         state.header.version = BinarySerializer::readUint32(data, offset);
@@ -67,10 +66,10 @@ std::optional<RTypeGameState> GameStateSerializer::deserialize(
         deserializeProgression(data, offset, state.progression);
         deserializeDifficulty(data, offset, state.difficulty);
 
-        return state;
+        return {state, std::nullopt};
     } catch (const std::exception& e) {
-        outError = std::string("Failed to deserialize save: ") + e.what();
-        return std::nullopt;
+        return {std::nullopt,
+                std::string("Failed to deserialize save: ") + e.what()};
     }
 }
 

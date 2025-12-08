@@ -10,6 +10,7 @@
 
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "../../GameState/RTypeGameState.hpp"
@@ -35,11 +36,11 @@ class GameStateSerializer {
     /**
      * @brief Deserialize binary data to game state
      * @param data Binary data
-     * @param outError Output error message on failure
-     * @return Deserialized state, or nullopt on failure
+     * @return Pair of optional state and optional error message
      */
-    [[nodiscard]] static std::optional<RTypeGameState> deserialize(
-        const std::vector<uint8_t>& data, std::string& outError);
+    [[nodiscard]] static std::pair<std::optional<RTypeGameState>,
+                                   std::optional<std::string>>
+    deserialize(const std::vector<uint8_t>& data);
 
    private:
     static void serializePlayers(std::vector<uint8_t>& data,
