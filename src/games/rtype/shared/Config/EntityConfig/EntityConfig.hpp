@@ -81,32 +81,91 @@ class EntityConfigRegistry {
      */
     bool loadLevel(const std::string& filepath);
 
+    /**
+     * @brief Get enemy configuration by ID
+     * @param id Unique identifier for the enemy type
+     * @return Optional reference to the enemy config, empty if not found
+     */
     [[nodiscard]] OptionalRef<EnemyConfig> getEnemy(
         const std::string& id) const;
+
+    /**
+     * @brief Get projectile configuration by ID
+     * @param id Unique identifier for the projectile type
+     * @return Optional reference to the projectile config, empty if not found
+     */
     [[nodiscard]] OptionalRef<ProjectileConfig> getProjectile(
         const std::string& id) const;
+
+    /**
+     * @brief Get player configuration by ID
+     * @param id Unique identifier for the player type
+     * @return Optional reference to the player config, empty if not found
+     */
     [[nodiscard]] OptionalRef<PlayerConfig> getPlayer(
         const std::string& id) const;
+
+    /**
+     * @brief Get power-up configuration by ID
+     * @param id Unique identifier for the power-up type
+     * @return Optional reference to the power-up config, empty if not found
+     */
     [[nodiscard]] OptionalRef<PowerUpConfig> getPowerUp(
         const std::string& id) const;
+
+    /**
+     * @brief Get level configuration by ID
+     * @param id Unique identifier for the level
+     * @return Optional reference to the level config, empty if not found
+     */
     [[nodiscard]] OptionalRef<LevelConfig> getLevel(
         const std::string& id) const;
 
+    /**
+     * @brief Get all registered enemy configurations
+     * @return Const reference to the map of enemy configs (id -> EnemyConfig)
+     */
     [[nodiscard]] const std::unordered_map<std::string, EnemyConfig>&
     getAllEnemies() const {
         return m_enemies;
     }
+
+    /**
+     * @brief Get all registered projectile configurations
+     * @return Const reference to the map of projectile configs (id ->
+     * ProjectileConfig)
+     */
     [[nodiscard]] const std::unordered_map<std::string, ProjectileConfig>&
     getAllProjectiles() const {
         return m_projectiles;
     }
+
+    /**
+     * @brief Get all registered player configurations
+     * @return Const reference to the map of player configs (id -> PlayerConfig)
+     */
     [[nodiscard]] const std::unordered_map<std::string, PlayerConfig>&
     getAllPlayers() const {
         return m_players;
     }
+
+    /**
+     * @brief Get all registered power-up configurations
+     * @return Const reference to the map of power-up configs (id ->
+     * PowerUpConfig)
+     */
     [[nodiscard]] const std::unordered_map<std::string, PowerUpConfig>&
     getAllPowerUps() const {
         return m_powerUps;
+    }
+
+    /**
+     * @brief Get all registered level configurations
+     * @return Const reference to the map of level configs (id -> LevelConfig)
+     */
+    [[nodiscard]] const std::unordered_map<std::string, LevelConfig>&
+    getAllLevels() const {
+        return m_levels;
     }
 
     /**
