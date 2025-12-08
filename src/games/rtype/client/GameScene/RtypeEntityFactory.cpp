@@ -7,10 +7,10 @@
 
 #include "RtypeEntityFactory.hpp"
 
-#include <iostream>
 #include <utility>
 
 #include "AllComponents.hpp"
+#include "Logger/Macros.hpp"
 #include "protocol/Payloads.hpp"
 
 namespace rtype::games::rtype::client {
@@ -22,9 +22,9 @@ RtypeEntityFactory::createNetworkEntityFactory(
     return [assetsManager, registry](
                ECS::Registry& reg,
                const ::rtype::client::EntitySpawnEvent& event) -> ECS::Entity {
-        std::cout << "[RtypeEntityFactory] Creating entity type="
+        LOG_DEBUG("[RtypeEntityFactory] Creating entity type="
                   << static_cast<int>(event.type) << " pos=(" << event.x << ", "
-                  << event.y << ")" << std::endl;
+                  << event.y << ")");
 
         auto entity = reg.spawnEntity();
 
@@ -54,7 +54,7 @@ RtypeEntityFactory::createNetworkEntityFactory(
 void RtypeEntityFactory::setupPlayerEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity) {
-    std::cout << "[RtypeEntityFactory] Adding Player components" << std::endl;
+    LOG_DEBUG("[RtypeEntityFactory] Adding Player components");
     reg.emplaceComponent<Image>(
         entity, assetsManager->textureManager->get("player_vessel"));
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
@@ -67,7 +67,7 @@ void RtypeEntityFactory::setupPlayerEntity(
 void RtypeEntityFactory::setupBydosEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity) {
-    std::cout << "[RtypeEntityFactory] Adding Bydos components" << std::endl;
+    LOG_DEBUG("[RtypeEntityFactory] Adding Bydos components");
     // TODO(Noa): Add Bydos enemy sprite when available
     reg.emplaceComponent<Image>(
         entity, assetsManager->textureManager->get("player_vessel"));
@@ -79,7 +79,7 @@ void RtypeEntityFactory::setupBydosEntity(
 
 void RtypeEntityFactory::setupMissileEntity(ECS::Registry& reg,
                                             ECS::Entity entity) {
-    std::cout << "[RtypeEntityFactory] Adding Missile components" << std::endl;
+    LOG_DEBUG("[RtypeEntityFactory] Adding Missile components");
     // TODO(Noa): Add Missile sprite when available
     reg.emplaceComponent<Size>(entity, 1, 1);
     reg.emplaceComponent<ZIndex>(entity, 1);

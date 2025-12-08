@@ -7,9 +7,8 @@
 
 #include "RtypePauseMenu.hpp"
 
-#include <iostream>
-
 #include "AllComponents.hpp"
+#include "Logger/Macros.hpp"
 #include "Graphic.hpp"
 #include "Graphic/EntityFactory/EntityFactory.hpp"
 #include "SceneManager/SceneException.hpp"
@@ -57,8 +56,7 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
             try {
                 switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
-                std::cerr << "Error switching to Main Menu: " << e.what()
-                          << std::endl;
+                LOG_ERROR("Error switching to Main Menu: " << e.what());
             }
         })));
 

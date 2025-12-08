@@ -133,14 +133,12 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
         return;
     }
 
-    // Update Position component if present
     if (registry_->hasComponent<Position>(entity)) {
         auto& pos = registry_->getComponent<Position>(entity);
         pos.x = event.x;
         pos.y = event.y;
     }
 
-    // Update Velocity component if present
     if (registry_->hasComponent<Velocity>(entity)) {
         auto& vel = registry_->getComponent<Velocity>(entity);
         vel.vx = event.vx;
@@ -179,7 +177,6 @@ void ClientNetworkSystem::handlePositionCorrection(float x, float y) {
         return;
     }
 
-    // Apply server authoritative position correction
     if (registry_->hasComponent<Position>(entity)) {
         auto& pos = registry_->getComponent<Position>(entity);
         pos.x = x;

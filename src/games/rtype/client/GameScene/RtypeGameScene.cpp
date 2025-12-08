@@ -7,10 +7,10 @@
 
 #include "RtypeGameScene.hpp"
 
-#include <iostream>
 #include <utility>
 
 #include "AllComponents.hpp"
+#include "Logger/Macros.hpp"
 #include "Graphic/EntityFactory/EntityFactory.hpp"
 #include "RtypeEntityFactory.hpp"
 #include "RtypeInputHandler.hpp"
@@ -78,7 +78,7 @@ std::uint8_t RtypeGameScene::getInputMask() const {
 }
 
 void RtypeGameScene::setupEntityFactory() {
-    std::cout << "[RtypeGameScene] Setting up entityFactory" << std::endl;
+    LOG_DEBUG("[RtypeGameScene] Setting up entityFactory");
     _networkSystem->setEntityFactory(
         RtypeEntityFactory::createNetworkEntityFactory(_registry,
                                                        _assetsManager));
@@ -90,8 +90,7 @@ void RtypeGameScene::setupLocalPlayerCallback() {
         [registry](std::uint32_t /*userId*/, ECS::Entity entity) {
             if (registry->isAlive(entity)) {
                 registry->emplaceComponent<ControllableTag>(entity);
-                std::cout << "[RtypeGameScene] Local player entity assigned"
-                          << std::endl;
+                LOG_DEBUG("[RtypeGameScene] Local player entity assigned");
             }
         });
 }
