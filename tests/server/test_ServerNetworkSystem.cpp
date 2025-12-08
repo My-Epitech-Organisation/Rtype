@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <memory>
@@ -587,5 +588,164 @@ TEST_F(ServerNetworkSystemTest, EdgeCase_LargeNetworkId) {
     });
 
     EXPECT_TRUE(system_->findEntityByNetworkId(largeId).has_value());
+}
+
+// ============================================================================
+// INPUT HANDLER INTEGRATION TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, InputHandler_WithPlayerEntity) {
+    std::uint32_t receivedUserId = 0;
+    std::uint8_t receivedInput = 0;
+    bool hasEntity = false;
+
+    system_->setInputHandler(
+        [&](std::uint32_t userId, std::uint8_t inputMask,
+            std::optional<ECS::Entity> entity) {
+            receivedUserId = userId;
+            receivedInput = inputMask;
+            hasEntity = entity.has_value();
+        });
+
+    // Create and register player entity
+    ECS::Entity player = registry_->spawnEntity();
+    system_->registerNetworkedEntity(player, 1,
+        ServerNetworkSystem::EntityType::Player, 0.0f, 0.0f);
+    system_->setPlayerEntity(100, player);
+
+    // The handler is set and entity is registered
+    EXPECT_TRUE(system_->getPlayerEntity(100).has_value());
+}
+
+TEST_F(ServerNetworkSystemTest, InputHandler_NullHandler) {
+    // Set handler then clear it
+    system_->setInputHandler(
+        [](std::uint32_t, std::uint8_t, std::optional<ECS::Entity>) {});
+    
+    system_->setInputHandler(nullptr);
+
+    // Should not crash when handler is null
+    EXPECT_NO_THROW({
+        system_->update();
+    });
+}
+
+// ============================================================================
+// BROADCAST WITH CONNECTED SERVER TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, BroadcastWithRunningServer) {
+    // Start the server
+    EXPECT_TRUE(server_->start(14245));
+    
+    ECS::Entity entity = registry_->spawnEntity();
+    system_->registerNetworkedEntity(entity, 1,
+        ServerNetworkSystem::EntityType::Player, 100.0f, 200.0f);
+
+    // Update and broadcast
+    system_->updateEntityPosition(1, 150.0f, 250.0f, 5.0f, 10.0f);
+    
+    EXPECT_NO_THROW({
+        system_->broadcastEntityUpdates();
+    });
+    
+    EXPECT_NO_THROW({
+        system_->broadcastGameStart();
+    });
+
+    server_->stop();
+}
+
+TEST_F(ServerNetworkSystemTest, CorrectPlayerPositionWithRunningServer) {
+    EXPECT_TRUE(server_->start(14246));
+    
+    EXPECT_NO_THROW({
+        system_->correctPlayerPosition(1, 500.0f, 400.0f);
+    });
+
+    server_->stop();
+}
+
+// ============================================================================
+// MULTIPLE ENTITY LIFECYCLE TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, MultipleEntities_RegisterUpdateUnregister) {
+    std::vector<ECS::Entity> entities;
+    
+    // Register multiple entities
+    for (int i = 0; i < 10; ++i) {
+        ECS::Entity entity = registry_->spawnEntity();
+        entities.push_back(entity);
+        system_->registerNetworkedEntity(entity, static_cast<std::uint32_t>(i + 1),
+            ServerNetworkSystem::EntityType::Bydos,
+            static_cast<float>(i * 100), static_cast<float>(i * 50));
+    }
+
+    // Update all positions
+    for (int i = 0; i < 10; ++i) {
+        system_->updateEntityPosition(static_cast<std::uint32_t>(i + 1),
+            static_cast<float>(i * 100 + 50), static_cast<float>(i * 50 + 25),
+            1.0f, 2.0f);
+    }
+
+    // Broadcast updates
+    system_->broadcastEntityUpdates();
+
+    // Verify all entities registered
+    for (int i = 0; i < 10; ++i) {
+        EXPECT_TRUE(system_->findEntityByNetworkId(static_cast<std::uint32_t>(i + 1)).has_value());
+    }
+
+    // Unregister half of them
+    for (int i = 0; i < 5; ++i) {
+        system_->unregisterNetworkedEntityById(static_cast<std::uint32_t>(i + 1));
+    }
+
+    // Verify state
+    for (int i = 0; i < 5; ++i) {
+        EXPECT_FALSE(system_->findEntityByNetworkId(static_cast<std::uint32_t>(i + 1)).has_value());
+    }
+    for (int i = 5; i < 10; ++i) {
+        EXPECT_TRUE(system_->findEntityByNetworkId(static_cast<std::uint32_t>(i + 1)).has_value());
+    }
+}
+
+// ============================================================================
+// ENTITY TYPE TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, AllEntityTypes) {
+    ECS::Entity player = registry_->spawnEntity();
+    ECS::Entity bydos = registry_->spawnEntity();
+    ECS::Entity missile = registry_->spawnEntity();
+
+    system_->registerNetworkedEntity(player, 1,
+        ServerNetworkSystem::EntityType::Player, 0.0f, 0.0f);
+    system_->registerNetworkedEntity(bydos, 2,
+        ServerNetworkSystem::EntityType::Bydos, 100.0f, 100.0f);
+    system_->registerNetworkedEntity(missile, 3,
+        ServerNetworkSystem::EntityType::Missile, 200.0f, 200.0f);
+
+    EXPECT_TRUE(system_->findEntityByNetworkId(1).has_value());
+    EXPECT_TRUE(system_->findEntityByNetworkId(2).has_value());
+    EXPECT_TRUE(system_->findEntityByNetworkId(3).has_value());
+}
+
+// ============================================================================
+// NEXT NETWORK ID STRESS TEST
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, NextNetworkId_ManyIds) {
+    std::vector<std::uint32_t> ids;
+    
+    for (int i = 0; i < 100; ++i) {
+        ids.push_back(system_->nextNetworkId());
+    }
+
+    // All IDs should be unique
+    std::sort(ids.begin(), ids.end());
+    auto last = std::unique(ids.begin(), ids.end());
+    EXPECT_EQ(last, ids.end());  // No duplicates
 }
 
