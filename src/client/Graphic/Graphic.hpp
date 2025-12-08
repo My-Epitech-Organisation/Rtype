@@ -143,7 +143,8 @@ class Graphic {
     /// @brief Initialize and register all systems with the scheduler
     void _initializeSystems();
 
-    /// @brief Configure network entity factory for creating entities with graphics
+    /// @brief Configure network entity factory for creating entities with
+    /// graphics
     void _setupNetworkEntityFactory();
 
    public:

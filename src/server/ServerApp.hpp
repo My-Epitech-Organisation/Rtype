@@ -225,9 +225,7 @@ class ServerApp {
      * @brief Get the current game state
      * @return Current game state
      */
-    [[nodiscard]] GameState getGameState() const noexcept {
-        return _gameState;
-    }
+    [[nodiscard]] GameState getGameState() const noexcept { return _gameState; }
 
     /**
      * @brief Check if the game is actively playing
@@ -461,7 +459,8 @@ class ServerApp {
     // Game state management
     GameState _gameState{GameState::WaitingForPlayers};
     std::set<std::uint32_t> _readyPlayers;  ///< Players who signaled ready
-    static constexpr size_t MIN_PLAYERS_TO_START = 1;  ///< Minimum ready players to start
+    static constexpr size_t MIN_PLAYERS_TO_START =
+        1;  ///< Minimum ready players to start
 
     /**
      * @brief Handle a new client connection
@@ -482,7 +481,7 @@ class ServerApp {
      * @param entity The player entity (if any)
      */
     void handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
-                          std::optional<ECS::Entity> entity);
+                           std::optional<ECS::Entity> entity);
 
     /**
      * @brief Process game events and send to network

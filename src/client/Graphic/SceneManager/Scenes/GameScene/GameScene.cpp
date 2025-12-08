@@ -107,72 +107,73 @@ GameScene::GameScene(
         std::cout << "[GameScene] Setting up entityFactory" << std::endl;
         auto assetsManager = this->_assetsManager;
         auto registry = this->_registry;
-        _networkSystem->setEntityFactory(
-            [assetsManager,
-             registry](ECS::Registry& reg,
-                       const rtype::client::EntitySpawnEvent& event)
-                -> ECS::Entity {
-                std::cout << "[GameScene::entityFactory] Creating entity type="
-                          << static_cast<int>(event.type)
-                          << " pos=(" << event.x << ", " << event.y << ")"
-                          << std::endl;
+        _networkSystem->setEntityFactory([assetsManager, registry](
+                                             ECS::Registry& reg,
+                                             const rtype::client::
+                                                 EntitySpawnEvent& event)
+                                             -> ECS::Entity {
+            std::cout << "[GameScene::entityFactory] Creating entity type="
+                      << static_cast<int>(event.type) << " pos=(" << event.x
+                      << ", " << event.y << ")" << std::endl;
 
-                auto entity = reg.spawnEntity();
+            auto entity = reg.spawnEntity();
 
-                // Add Position component at spawn location
-                reg.emplaceComponent<rtype::games::rtype::shared::Position>(
-                    entity, event.x, event.y);
+            // Add Position component at spawn location
+            reg.emplaceComponent<rtype::games::rtype::shared::Position>(
+                entity, event.x, event.y);
 
-                // Add Velocity component (initial velocity is 0)
-                reg.emplaceComponent<
-                    rtype::games::rtype::shared::VelocityComponent>(
-                    entity, 0.f, 0.f);
+            // Add Velocity component (initial velocity is 0)
+            reg.emplaceComponent<
+                rtype::games::rtype::shared::VelocityComponent>(entity, 0.f,
+                                                                0.f);
 
-                // Add graphics based on entity type
-                switch (event.type) {
-                    case rtype::network::EntityType::Player:
-                        std::cout << "[GameScene::entityFactory] Adding Player components" << std::endl;
-                        reg.emplaceComponent<rtype::games::rtype::client::Image>(
-                            entity,
-                            assetsManager->textureManager->get("player_vessel"));
-                        reg.emplaceComponent<
-                            rtype::games::rtype::client::TextureRect>(
-                            entity, std::pair<int, int>({0, 0}),
-                            std::pair<int, int>({33, 17}));
-                        reg.emplaceComponent<rtype::games::rtype::client::Size>(
-                            entity, 4, 4);
-                        reg.emplaceComponent<
-                            rtype::games::rtype::client::PlayerTag>(entity);
-                        reg.emplaceComponent<
-                            rtype::games::rtype::client::ZIndex>(entity, 0);
-                        break;
+            // Add graphics based on entity type
+            switch (event.type) {
+                case rtype::network::EntityType::Player:
+                    std::cout
+                        << "[GameScene::entityFactory] Adding Player components"
+                        << std::endl;
+                    reg.emplaceComponent<rtype::games::rtype::client::Image>(
+                        entity,
+                        assetsManager->textureManager->get("player_vessel"));
+                    reg.emplaceComponent<
+                        rtype::games::rtype::client::TextureRect>(
+                        entity, std::pair<int, int>({0, 0}),
+                        std::pair<int, int>({33, 17}));
+                    reg.emplaceComponent<rtype::games::rtype::client::Size>(
+                        entity, 4, 4);
+                    reg.emplaceComponent<
+                        rtype::games::rtype::client::PlayerTag>(entity);
+                    reg.emplaceComponent<rtype::games::rtype::client::ZIndex>(
+                        entity, 0);
+                    break;
 
-                    case rtype::network::EntityType::Bydos:
-                        // TODO: Add Bydos enemy sprite when available
-                        reg.emplaceComponent<rtype::games::rtype::client::Image>(
-                            entity,
-                            assetsManager->textureManager->get("player_vessel"));
-                        reg.emplaceComponent<
-                            rtype::games::rtype::client::TextureRect>(
-                            entity, std::pair<int, int>({0, 0}),
-                            std::pair<int, int>({33, 17}));
-                        reg.emplaceComponent<rtype::games::rtype::client::Size>(
-                            entity, 3, 3);
-                        reg.emplaceComponent<
-                            rtype::games::rtype::client::ZIndex>(entity, 0);
-                        break;
+                case rtype::network::EntityType::Bydos:
+                    // TODO: Add Bydos enemy sprite when available
+                    reg.emplaceComponent<rtype::games::rtype::client::Image>(
+                        entity,
+                        assetsManager->textureManager->get("player_vessel"));
+                    reg.emplaceComponent<
+                        rtype::games::rtype::client::TextureRect>(
+                        entity, std::pair<int, int>({0, 0}),
+                        std::pair<int, int>({33, 17}));
+                    reg.emplaceComponent<rtype::games::rtype::client::Size>(
+                        entity, 3, 3);
+                    reg.emplaceComponent<rtype::games::rtype::client::ZIndex>(
+                        entity, 0);
+                    break;
 
-                    case rtype::network::EntityType::Missile:
-                        // TODO: Add Missile sprite when available
-                        reg.emplaceComponent<rtype::games::rtype::client::Size>(
-                            entity, 1, 1);
-                        reg.emplaceComponent<
-                            rtype::games::rtype::client::ZIndex>(entity, 1);
-                        break;
-                }
+                case rtype::network::EntityType::Missile:
+                    // TODO: Add Missile sprite when available
+                    reg.emplaceComponent<rtype::games::rtype::client::Size>(
+                        entity, 1, 1);
+                    reg.emplaceComponent<rtype::games::rtype::client::ZIndex>(
+                        entity, 1);
+                    break;
+            }
 
-                return entity;
-            });
+            return entity;
+        });
 
         // Register callback to mark local player as controllable
         _networkSystem->onLocalPlayerAssigned(

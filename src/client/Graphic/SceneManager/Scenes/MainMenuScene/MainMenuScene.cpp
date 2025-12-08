@@ -98,8 +98,8 @@ void MainMenuScene::_createConnectionPanel(
     this->_listEntity.push_back(ipLabel);
     _ipInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
-        kConnectionPanelX + kInputOffsetX, kConnectionPanelY + 85.f, kInputWidth,
-        kInputHeight, "127.0.0.1", "127.0.0.1", 15, false);
+        kConnectionPanelX + kInputOffsetX, kConnectionPanelY + 85.f,
+        kInputWidth, kInputHeight, "127.0.0.1", "127.0.0.1", 15, false);
     this->_listEntity.push_back(_ipInputEntity);
 
     // Port Label
@@ -216,13 +216,11 @@ void MainMenuScene::_onConnectClicked(
     }
 }
 
-void MainMenuScene::_updateStatus(const std::string& message,
-                                  sf::Color color) {
+void MainMenuScene::_updateStatus(const std::string& message, sf::Color color) {
     if (_registry->hasComponent<rtype::games::rtype::client::Text>(
             _statusEntity)) {
-        auto& text =
-            _registry->getComponent<rtype::games::rtype::client::Text>(
-                _statusEntity);
+        auto& text = _registry->getComponent<rtype::games::rtype::client::Text>(
+            _statusEntity);
         text.textContent = message;
         text.text.setString(message);
         text.text.setFillColor(color);
@@ -259,15 +257,14 @@ void MainMenuScene::pollEvents(const sf::Event& e) {
 
             // Check each text input
             auto view =
-                _registry
-                    ->view<rtype::games::rtype::client::TextInput,
-                           rtype::games::rtype::shared::Position,
-                           rtype::games::rtype::client::TextInputTag>();
+                _registry->view<rtype::games::rtype::client::TextInput,
+                                rtype::games::rtype::shared::Position,
+                                rtype::games::rtype::client::TextInputTag>();
 
             view.each([mouseX, mouseY](auto, auto& input, auto& pos, auto) {
-                sf::FloatRect bounds(
-                    {pos.x, pos.y},
-                    {input.background.getSize().x, input.background.getSize().y});
+                sf::FloatRect bounds({pos.x, pos.y},
+                                     {input.background.getSize().x,
+                                      input.background.getSize().y});
                 input.setFocus(bounds.contains({mouseX, mouseY}));
             });
         }
@@ -275,9 +272,9 @@ void MainMenuScene::pollEvents(const sf::Event& e) {
 
     // Handle text input
     if (auto* textEntered = e.getIf<sf::Event::TextEntered>()) {
-        auto view = _registry
-                        ->view<rtype::games::rtype::client::TextInput,
-                               rtype::games::rtype::client::TextInputTag>();
+        auto view =
+            _registry->view<rtype::games::rtype::client::TextInput,
+                            rtype::games::rtype::client::TextInputTag>();
 
         view.each([textEntered](auto, auto& input, auto) {
             if (input.isFocused && textEntered->unicode >= 32 &&
@@ -289,9 +286,9 @@ void MainMenuScene::pollEvents(const sf::Event& e) {
 
     // Handle special keys
     if (auto* keyPressed = e.getIf<sf::Event::KeyPressed>()) {
-        auto view = _registry
-                        ->view<rtype::games::rtype::client::TextInput,
-                               rtype::games::rtype::client::TextInputTag>();
+        auto view =
+            _registry->view<rtype::games::rtype::client::TextInput,
+                            rtype::games::rtype::client::TextInputTag>();
 
         view.each([keyPressed](auto, auto& input, auto) {
             if (!input.isFocused) return;

@@ -88,10 +88,9 @@ SceneManager::SceneManager(
             ecs, texture, this->_window, this->_switchToScene, this->_keybinds);
     });
     this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
-        return std::make_unique<GameScene>(ecs, texture, this->_window,
-                                           this->_keybinds, this->_switchToScene,
-                                           this->_networkClient,
-                                           this->_networkSystem);
+        return std::make_unique<GameScene>(
+            ecs, texture, this->_window, this->_keybinds, this->_switchToScene,
+            this->_networkClient, this->_networkSystem);
     });
     this->setCurrentScene(MAIN_MENU);
     this->_applySceneChange();

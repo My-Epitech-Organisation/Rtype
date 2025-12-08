@@ -90,9 +90,9 @@ void Graphic::_setupNetworkEntityFactory() {
     auto registry = this->_registry;
 
     _networkSystem->setEntityFactory(
-        [assetsManager, registry](ECS::Registry& reg,
-                                  const rtype::client::EntitySpawnEvent& event)
-            -> ECS::Entity {
+        [assetsManager, registry](
+            ECS::Registry& reg,
+            const rtype::client::EntitySpawnEvent& event) -> ECS::Entity {
             std::cout << "[Graphic::entityFactory] Creating entity type="
                       << static_cast<int>(event.type) << " pos=(" << event.x
                       << ", " << event.y << ")" << std::endl;
@@ -143,14 +143,13 @@ void Graphic::_setupNetworkEntityFactory() {
         });
 
     // Register callback to mark local player as controllable
-    _networkSystem->onLocalPlayerAssigned(
-        [registry](std::uint32_t /*userId*/, ECS::Entity entity) {
-            if (registry->isAlive(entity)) {
-                registry->emplaceComponent<rc::ControllableTag>(entity);
-                std::cout << "[Graphic] Local player entity assigned"
-                          << std::endl;
-            }
-        });
+    _networkSystem->onLocalPlayerAssigned([registry](std::uint32_t /*userId*/,
+                                                     ECS::Entity entity) {
+        if (registry->isAlive(entity)) {
+            registry->emplaceComponent<rc::ControllableTag>(entity);
+            std::cout << "[Graphic] Local player entity assigned" << std::endl;
+        }
+    });
 }
 
 void Graphic::_initializeSystems() {

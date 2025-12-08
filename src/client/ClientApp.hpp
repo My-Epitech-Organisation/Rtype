@@ -41,8 +41,7 @@ class ClientApp {
         std::string defaultServerHost;
         std::uint16_t defaultServerPort;
 
-        Config()
-            : defaultServerHost("127.0.0.1"), defaultServerPort(4242) {}
+        Config() : defaultServerHost("127.0.0.1"), defaultServerPort(4242) {}
     };
 
     /**

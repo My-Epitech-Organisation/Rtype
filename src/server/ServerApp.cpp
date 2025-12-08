@@ -248,18 +248,20 @@ bool ServerApp::initialize() {
     LOG_INFO("[Server] Game engine initialized");
 
     NetworkServer::Config netConfig;
-    netConfig.clientTimeout = std::chrono::milliseconds(_clientTimeoutSeconds * 1000);
+    netConfig.clientTimeout =
+        std::chrono::milliseconds(_clientTimeoutSeconds * 1000);
     _networkServer = std::make_shared<NetworkServer>(netConfig);
-    _networkSystem = std::make_unique<ServerNetworkSystem>(_registry, _networkServer);
+    _networkSystem =
+        std::make_unique<ServerNetworkSystem>(_registry, _networkServer);
     _networkSystem->onClientConnected(
         [this](std::uint32_t userId) { handleClientConnected(userId); });
     _networkSystem->onClientDisconnected(
         [this](std::uint32_t userId) { handleClientDisconnected(userId); });
-    _networkSystem->setInputHandler(
-        [this](std::uint32_t userId, std::uint8_t inputMask,
-               std::optional<ECS::Entity> entity) {
-            handleClientInput(userId, inputMask, entity);
-        });
+    _networkSystem->setInputHandler([this](std::uint32_t userId,
+                                           std::uint8_t inputMask,
+                                           std::optional<ECS::Entity> entity) {
+        handleClientInput(userId, inputMask, entity);
+    });
     _gameEngine->setEventCallback([this](const engine::GameEvent& event) {
         if (_verbose) {
             LOG_DEBUG("[Server] Game event: type="
@@ -432,7 +434,8 @@ void ServerApp::processPacket(ClientId clientId,
                               const rtype::network::Packet& packet) noexcept {
     if (_verbose) {
         LOG_DEBUG("[Server] Legacy packet processing from client "
-                  << clientId << " of type " << static_cast<int>(packet.type()));
+                  << clientId << " of type "
+                  << static_cast<int>(packet.type()));
     }
 }
 
@@ -474,8 +477,8 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
     _metrics->totalConnections.fetch_add(1, std::memory_order_relaxed);
 
     if (_gameState == GameState::WaitingForPlayers) {
-        LOG_INFO("[Server] Waiting for client " << userId
-                 << " to signal ready (send START_GAME packet)");
+        LOG_INFO("[Server] Waiting for client "
+                 << userId << " to signal ready (send START_GAME packet)");
     }
 
     // Spawn player entity for this client
@@ -489,7 +492,8 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
     // Calculate spawn position - spread players vertically
     size_t playerCount = _readyPlayers.size();
     float spawnX = 100.0F;  // Left side of screen
-    float spawnY = 150.0F + static_cast<float>(playerCount) * 100.0F;  // Spread vertically
+    float spawnY =
+        150.0F + static_cast<float>(playerCount) * 100.0F;  // Spread vertically
 
     // Add components
     _registry->emplaceComponent<Position>(playerEntity, spawnX, spawnY);
@@ -498,16 +502,17 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
     // Use userId as networkId so client can identify its own player entity
     std::uint32_t networkId = userId;
 
-    // Register entity with network system (this sends S_ENTITY_SPAWN to all clients)
+    // Register entity with network system (this sends S_ENTITY_SPAWN to all
+    // clients)
     _networkSystem->registerNetworkedEntity(playerEntity, networkId,
                                             EntityType::Player, spawnX, spawnY);
 
     // Associate userId with player entity (for input routing)
     _networkSystem->setPlayerEntity(userId, playerEntity);
 
-    LOG_INFO("[Server] Spawned player entity for userId=" << userId
-             << " networkId=" << networkId
-             << " pos=(" << spawnX << ", " << spawnY << ")");
+    LOG_INFO("[Server] Spawned player entity for userId="
+             << userId << " networkId=" << networkId << " pos=(" << spawnX
+             << ", " << spawnY << ")");
 }
 
 void ServerApp::handleClientDisconnected(std::uint32_t userId) {
@@ -541,8 +546,8 @@ void ServerApp::handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
         }
     }
     if (_verbose) {
-        LOG_DEBUG("[Server] Input from userId=" << userId
-                  << " inputMask=" << static_cast<int>(inputMask)
+        LOG_DEBUG("[Server] Input from userId="
+                  << userId << " inputMask=" << static_cast<int>(inputMask)
                   << " hasEntity=" << entity.has_value());
     }
     if (_gameState != GameState::Playing) {
@@ -615,8 +620,8 @@ void ServerApp::processGameEvents() {
             case engine::GameEventType::EntitySpawned: {
                 if (_verbose) {
                     LOG_DEBUG("[Server] Entity spawned: networkId="
-                              << event.entityNetworkId
-                              << " pos=(" << event.x << ", " << event.y << ")");
+                              << event.entityNetworkId << " pos=(" << event.x
+                              << ", " << event.y << ")");
                 }
                 break;
             }
@@ -647,7 +652,8 @@ void ServerApp::updatePlayerMovement(float deltaTime) noexcept {
     constexpr float minX = 0.0F;
     constexpr float maxX = 1920.0F - 64.0F;  // Screen width minus sprite width
     constexpr float minY = 0.0F;
-    constexpr float maxY = 1080.0F - 64.0F;  // Screen height minus sprite height
+    constexpr float maxY =
+        1080.0F - 64.0F;  // Screen height minus sprite height
 
     // Update all entities with Position and Velocity
     auto view = _registry->view<Position, Velocity>();
@@ -669,8 +675,8 @@ void ServerApp::updatePlayerMovement(float deltaTime) noexcept {
         // Mark entity as dirty for network sync
         auto networkIdOpt = _networkSystem->getNetworkId(entity);
         if (networkIdOpt.has_value()) {
-            _networkSystem->updateEntityPosition(
-                *networkIdOpt, pos.x, pos.y, vel.vx, vel.vy);
+            _networkSystem->updateEntityPosition(*networkIdOpt, pos.x, pos.y,
+                                                 vel.vx, vel.vy);
         }
     });
 }
@@ -681,21 +687,19 @@ void ServerApp::syncEntityPositions() {
     }
 }
 
-void ServerApp::playerReady(std::uint32_t userId) {
-    handlePlayerReady(userId);
-}
+void ServerApp::playerReady(std::uint32_t userId) { handlePlayerReady(userId); }
 
 void ServerApp::handlePlayerReady(std::uint32_t userId) {
     if (_gameState == GameState::Playing) {
-        LOG_DEBUG("[Server] Player " << userId
-                  << " signaled ready but game already running");
+        LOG_DEBUG("[Server] Player "
+                  << userId << " signaled ready but game already running");
         return;
     }
 
     _readyPlayers.insert(userId);
     LOG_INFO("[Server] Player " << userId << " is ready ("
-             << _readyPlayers.size() << "/" << MIN_PLAYERS_TO_START
-             << " needed to start)");
+                                << _readyPlayers.size() << "/"
+                                << MIN_PLAYERS_TO_START << " needed to start)");
 
     checkGameStart();
 }
@@ -718,23 +722,27 @@ void ServerApp::transitionToState(GameState newState) {
 
     const auto stateToString = [](GameState state) -> const char* {
         switch (state) {
-            case GameState::WaitingForPlayers: return "WaitingForPlayers";
-            case GameState::Playing: return "Playing";
-            case GameState::Paused: return "Paused";
-            default: return "Unknown";
+            case GameState::WaitingForPlayers:
+                return "WaitingForPlayers";
+            case GameState::Playing:
+                return "Playing";
+            case GameState::Paused:
+                return "Paused";
+            default:
+                return "Unknown";
         }
     };
 
-    LOG_INFO("[Server] State transition: " << stateToString(_gameState)
-             << " -> " << stateToString(newState));
+    LOG_INFO("[Server] State transition: "
+             << stateToString(_gameState) << " -> " << stateToString(newState));
 
     GameState oldState = _gameState;
     _gameState = newState;
 
     switch (newState) {
         case GameState::Playing: {
-            LOG_INFO("[Server] *** GAME STARTED *** ("
-                     << _readyPlayers.size() << " players)");
+            LOG_INFO("[Server] *** GAME STARTED *** (" << _readyPlayers.size()
+                                                       << " players)");
             if (_networkSystem) {
                 _networkSystem->broadcastGameStart();
             }

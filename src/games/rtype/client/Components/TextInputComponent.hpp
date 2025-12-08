@@ -76,8 +76,8 @@ struct TextInput {
         background.setOutlineThickness(2.f);
         background.setOutlineColor(unfocusedBorderColor);
         text.setCharacterSize(fontSize);
-        text.setFillColor(
-            content.empty() ? sf::Color(150, 150, 150) : textColor);
+        text.setFillColor(content.empty() ? sf::Color(150, 150, 150)
+                                          : textColor);
     }
 
     /**

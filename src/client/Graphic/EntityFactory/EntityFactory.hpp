@@ -59,8 +59,8 @@ static ECS::Entity createButton(
  * @return Created entity
  */
 ECS::Entity createTextInput(std::shared_ptr<ECS::Registry> registry,
-                            std::shared_ptr<AssetManager> assetManager,
-                            float x, float y, float width, float height,
+                            std::shared_ptr<AssetManager> assetManager, float x,
+                            float y, float width, float height,
                             const std::string& placeholder = "",
                             const std::string& initialValue = "",
                             std::size_t maxLength = 0,

@@ -37,8 +37,7 @@ class TextInputSystem {
      * @return true if the event was consumed by a text input
      */
     bool handleEvent(ECS::Registry& registry, const sf::Event& event) {
-        if (auto* mousePressed =
-                event.getIf<sf::Event::MouseButtonPressed>()) {
+        if (auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>()) {
             if (mousePressed->button == sf::Mouse::Button::Left) {
                 handleClick(registry,
                             static_cast<float>(mousePressed->position.x),
@@ -60,8 +59,7 @@ class TextInputSystem {
      * @brief Update and render text inputs
      */
     void update(ECS::Registry& registry, float /*deltaTime*/) {
-        auto view =
-            registry.view<TextInput, shared::Position, TextInputTag>();
+        auto view = registry.view<TextInput, shared::Position, TextInputTag>();
 
         view.each([this](auto /*entity*/, TextInput& input,
                          shared::Position& pos, auto) {
@@ -81,11 +79,9 @@ class TextInputSystem {
 
    private:
     void handleClick(ECS::Registry& registry, float mouseX, float mouseY) {
-        auto view =
-            registry.view<TextInput, shared::Position, TextInputTag>();
-        view.each([](auto, TextInput& input, auto, auto) {
-            input.setFocus(false);
-        });
+        auto view = registry.view<TextInput, shared::Position, TextInputTag>();
+        view.each(
+            [](auto, TextInput& input, auto, auto) { input.setFocus(false); });
         _focusedInput = std::nullopt;
         view.each([this, mouseX, mouseY](ECS::Entity entity, TextInput& input,
                                          shared::Position& pos, auto) {
