@@ -15,13 +15,12 @@
 #include <string>
 #include <utility>
 
-#include "Logger/Macros.hpp"
-
 #include <SFML/Graphics/Text.hpp>
 
 #include "AllComponents.hpp"
 #include "Components/TextInputComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
+#include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 
 static constexpr float kConnectionPanelX = 1400.f;
@@ -305,7 +304,8 @@ MainMenuScene::MainMenuScene(
             try {
                 switchToScene(SceneManager::IN_GAME);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Game Menu: ") + e.what());
+                LOG_ERROR(std::string("Error switching to Game Menu: ") +
+                          e.what());
             }
         })));
     this->_listEntity.push_back(EntityFactory::createButton(
@@ -320,7 +320,8 @@ MainMenuScene::MainMenuScene(
             try {
                 switchToScene(SceneManager::SETTINGS_MENU);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Settings Menu: ") + e.what());
+                LOG_ERROR(std::string("Error switching to Settings Menu: ") +
+                          e.what());
             }
         })));
     this->_listEntity.push_back(EntityFactory::createButton(

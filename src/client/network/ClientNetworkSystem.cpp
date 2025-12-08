@@ -79,13 +79,13 @@ std::optional<ECS::Entity> ClientNetworkSystem::findEntityByNetworkId(
 bool ClientNetworkSystem::isConnected() const { return client_->isConnected(); }
 
 void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
-    LOG_DEBUG("[ClientNetworkSystem] Entity spawn received: entityId=" +
-              std::to_string(event.entityId) + " type=" +
-              std::to_string(static_cast<int>(event.type)) + " pos=(" +
-              std::to_string(event.x) + ", " + std::to_string(event.y) +
-              ") localUserId=" +
-              (localUserId_.has_value() ? std::to_string(*localUserId_)
-                                        : "none"));
+    LOG_DEBUG(
+        "[ClientNetworkSystem] Entity spawn received: entityId=" +
+        std::to_string(event.entityId) +
+        " type=" + std::to_string(static_cast<int>(event.type)) + " pos=(" +
+        std::to_string(event.x) + ", " + std::to_string(event.y) +
+        ") localUserId=" +
+        (localUserId_.has_value() ? std::to_string(*localUserId_) : "none"));
 
     if (networkIdToEntity_.find(event.entityId) != networkIdToEntity_.end()) {
         LOG_DEBUG("[ClientNetworkSystem] Entity already exists, skipping");

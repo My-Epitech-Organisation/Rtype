@@ -486,8 +486,7 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
     ECS::Entity playerEntity = _registry->spawnEntity();
     size_t playerCount = _readyPlayers.size();
     float spawnX = 100.0F;
-    float spawnY =
-        150.0F + static_cast<float>(playerCount) * 100.0F;
+    float spawnY = 150.0F + static_cast<float>(playerCount) * 100.0F;
     _registry->emplaceComponent<Position>(playerEntity, spawnX, spawnY);
     _registry->emplaceComponent<Velocity>(playerEntity, 0.0F, 0.0F);
     std::uint32_t networkId = userId;
@@ -624,8 +623,7 @@ void ServerApp::updatePlayerMovement(float deltaTime) noexcept {
     constexpr float minX = 0.0F;
     constexpr float maxX = 1920.0F - 64.0F;
     constexpr float minY = 0.0F;
-    constexpr float maxY =
-        1080.0F - 64.0F;
+    constexpr float maxY = 1080.0F - 64.0F;
 
     auto view = _registry->view<Position, Velocity>();
     view.each([this, deltaTime, minX, maxX, minY, maxY](

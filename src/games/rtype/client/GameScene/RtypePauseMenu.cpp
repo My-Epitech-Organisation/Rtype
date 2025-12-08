@@ -8,9 +8,9 @@
 #include "RtypePauseMenu.hpp"
 
 #include "AllComponents.hpp"
-#include "Logger/Macros.hpp"
 #include "Graphic.hpp"
 #include "Graphic/EntityFactory/EntityFactory.hpp"
+#include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 
 namespace rtype::games::rtype::client {

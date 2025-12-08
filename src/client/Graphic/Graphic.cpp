@@ -10,9 +10,8 @@
 #include <optional>
 #include <utility>
 
-#include "Logger/Macros.hpp"
-
 #include "AssetManager/AssetManager.hpp"
+#include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "games/rtype/client/AllComponents.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
@@ -89,9 +88,9 @@ void Graphic::_setupNetworkEntityFactory() {
             ECS::Registry& reg,
             const rtype::client::EntitySpawnEvent& event) -> ECS::Entity {
             LOG_DEBUG("[Graphic::entityFactory] Creating entity type=" +
-                      std::to_string(static_cast<int>(event.type)) +
-                      " pos=(" + std::to_string(event.x) + ", " +
-                      std::to_string(event.y) + ")");
+                      std::to_string(static_cast<int>(event.type)) + " pos=(" +
+                      std::to_string(event.x) + ", " + std::to_string(event.y) +
+                      ")");
 
             auto entity = reg.spawnEntity();
             reg.emplaceComponent<rs::Position>(entity, event.x, event.y);
@@ -131,13 +130,13 @@ void Graphic::_setupNetworkEntityFactory() {
 
             return entity;
         });
-    _networkSystem->onLocalPlayerAssigned([registry](std::uint32_t /*userId*/,
-                                                     ECS::Entity entity) {
-        if (registry->isAlive(entity)) {
-            registry->emplaceComponent<rc::ControllableTag>(entity);
-            LOG_DEBUG("[Graphic] Local player entity assigned");
-        }
-    });
+    _networkSystem->onLocalPlayerAssigned(
+        [registry](std::uint32_t /*userId*/, ECS::Entity entity) {
+            if (registry->isAlive(entity)) {
+                registry->emplaceComponent<rc::ControllableTag>(entity);
+                LOG_DEBUG("[Graphic] Local player entity assigned");
+            }
+        });
 }
 
 void Graphic::_initializeSystems() {

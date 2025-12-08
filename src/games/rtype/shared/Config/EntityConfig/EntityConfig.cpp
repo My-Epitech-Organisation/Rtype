@@ -130,11 +130,11 @@ bool EntityConfigRegistry::loadEnemies(const std::string& filepath) {
         }
 
         LOG_INFO("[EntityConfig] Loaded " << m_enemies.size()
-                 << " enemies from " << filepath);
+                                          << " enemies from " << filepath);
         return true;
     } catch (const toml::parse_error& err) {
         LOG_ERROR("[EntityConfig] Failed to parse " << filepath << ": "
-                  << err.what());
+                                                    << err.what());
         return false;
     }
 }
@@ -171,11 +171,11 @@ bool EntityConfigRegistry::loadProjectiles(const std::string& filepath) {
         }
 
         LOG_INFO("[EntityConfig] Loaded " << m_projectiles.size()
-                 << " projectiles from " << filepath);
+                                          << " projectiles from " << filepath);
         return true;
     } catch (const toml::parse_error& err) {
         LOG_ERROR("[EntityConfig] Failed to parse " << filepath << ": "
-                  << err.what());
+                                                    << err.what());
         return false;
     }
 }
@@ -214,11 +214,11 @@ bool EntityConfigRegistry::loadPlayers(const std::string& filepath) {
         }
 
         LOG_INFO("[EntityConfig] Loaded " << m_players.size()
-                 << " players from " << filepath);
+                                          << " players from " << filepath);
         return true;
     } catch (const toml::parse_error& err) {
         LOG_ERROR("[EntityConfig] Failed to parse " << filepath << ": "
-                  << err.what());
+                                                    << err.what());
         return false;
     }
 }
@@ -253,11 +253,11 @@ bool EntityConfigRegistry::loadPowerUps(const std::string& filepath) {
         }
 
         LOG_INFO("[EntityConfig] Loaded " << m_powerUps.size()
-                 << " power-ups from " << filepath);
+                                          << " power-ups from " << filepath);
         return true;
     } catch (const toml::parse_error& err) {
         LOG_ERROR("[EntityConfig] Failed to parse " << filepath << ": "
-                  << err.what());
+                                                    << err.what());
         return false;
     }
 }
@@ -313,7 +313,7 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
         return false;
     } catch (const toml::parse_error& err) {
         LOG_ERROR("[EntityConfig] Failed to parse level " << filepath << ": "
-                  << err.what());
+                                                          << err.what());
         return false;
     }
 }

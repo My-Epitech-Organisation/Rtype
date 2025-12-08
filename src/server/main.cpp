@@ -17,7 +17,6 @@
 #include <rtype/common.hpp>
 
 #include "Logger/Macros.hpp"
-
 #include "ServerApp.hpp"
 #include "games/rtype/server/RTypeGameConfig.hpp"
 
@@ -112,19 +111,19 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
  * @param config The server configuration to display
  */
 static void printBanner(const ServerConfig& config) {
-    LOG_INFO("==================================\n"
-             << "    R-Type Server\n"
-             << "==================================\n"
-             << std::format("  Config Dir:  {}\n", config.configPath)
-             << std::format("  Port:        {}{}\n", config.port,
-                            config.portOverride ? " (override)" : "")
-             << std::format("  Max Players: {}{}\n", config.maxPlayers,
-                            config.maxPlayersOverride ? " (override)" : "")
-             << std::format("  Tick Rate:   {} Hz{}\n", config.tickRate,
-                            config.tickRateOverride ? " (override)" : "")
-             << std::format("  Verbose:     {}\n",
-                            config.verbose ? "yes" : "no")
-             << "==================================");
+    LOG_INFO(
+        "==================================\n"
+        << "    R-Type Server\n"
+        << "==================================\n"
+        << std::format("  Config Dir:  {}\n", config.configPath)
+        << std::format("  Port:        {}{}\n", config.port,
+                       config.portOverride ? " (override)" : "")
+        << std::format("  Max Players: {}{}\n", config.maxPlayers,
+                       config.maxPlayersOverride ? " (override)" : "")
+        << std::format("  Tick Rate:   {} Hz{}\n", config.tickRate,
+                       config.tickRateOverride ? " (override)" : "")
+        << std::format("  Verbose:     {}\n", config.verbose ? "yes" : "no")
+        << "==================================");
 }
 
 /**

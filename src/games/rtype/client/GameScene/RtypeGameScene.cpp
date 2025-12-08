@@ -10,8 +10,8 @@
 #include <utility>
 
 #include "AllComponents.hpp"
-#include "Logger/Macros.hpp"
 #include "Graphic/EntityFactory/EntityFactory.hpp"
+#include "Logger/Macros.hpp"
 #include "RtypeEntityFactory.hpp"
 #include "RtypeInputHandler.hpp"
 #include "RtypePauseMenu.hpp"
