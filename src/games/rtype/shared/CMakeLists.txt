@@ -1,4 +1,3 @@
-add_subdirectory(Components)
 add_subdirectory(Systems)
 
 # R-Type specific configuration library

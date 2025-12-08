@@ -96,7 +96,7 @@ else
     mkdir -p "$BUILD_DIR"
     cd "$BUILD_DIR"
 
-    CMAKE_ARGS="-G Ninja -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF"
+    CMAKE_ARGS="-G Ninja -DBUILD_GRAPHICAL_TESTS=OFF -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF"
 
     # Try to find vcpkg installation in order of preference:
     # 1. Cached vcpkg_installed from CI build
@@ -104,7 +104,8 @@ else
     # 3. VCPKG_ROOT environment variable
     if [[ -d "$PROJECT_ROOT/build/vcpkg_installed" ]]; then
         echo ">>> Using cached vcpkg installation from build..."
-        CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_PREFIX_PATH=$PROJECT_ROOT/build/vcpkg_installed/x64-linux -DUSE_SFML=ON"
+                CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=$PROJECT_ROOT/external/vcpkg/scripts/buildsystems/vcpkg.cmake"
+                CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_PREFIX_PATH=$PROJECT_ROOT/build/vcpkg_installed/x64-linux -DUSE_SFML=ON"
     elif [[ -d "$PROJECT_ROOT/external/vcpkg" ]]; then
         echo ">>> Using vcpkg submodule..."
         # Ensure submodule is initialized
@@ -146,7 +147,7 @@ echo ">>> Generating coverage data..."
 if $GENERATE_HTML; then
     mkdir -p "$COVERAGE_DIR"
 
-    LCOV_OPTS="--rc branch_coverage=1 --ignore-errors mismatch,gcov,inconsistent,negative,unused"
+    LCOV_OPTS="--rc branch_coverage=1 --ignore-errors mismatch,gcov,inconsistent,negative,unused,source"
 
     lcov --capture --directory . --output-file "$COVERAGE_DIR/coverage.info" $LCOV_OPTS
 

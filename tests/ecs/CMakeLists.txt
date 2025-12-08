@@ -22,6 +22,8 @@ set(ECS_TESTS
     storage/test_sparse_set
     # Traits tests
     traits/test_component_traits
+    # Signal tests
+    signal/test_signal_dispatcher
 )
 
 # Function to create a test executable with common configuration

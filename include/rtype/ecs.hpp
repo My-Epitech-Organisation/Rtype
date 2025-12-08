@@ -5,4 +5,4 @@
 
 #pragma once
 
-#include "../../lib/rtype_ecs/src/ecs/ECS.hpp"
+#include "../../lib/rtype_ecs/src/ECS.hpp"

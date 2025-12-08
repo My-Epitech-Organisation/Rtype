@@ -87,3 +87,18 @@ target_include_directories(test_systems PRIVATE
 )
 
 gtest_discover_tests(test_systems)
+
+# Engine base class tests (AGameEngine, ASystem)
+add_executable(test_engine test_engine.cpp)
+
+target_link_libraries(test_engine PRIVATE
+    rtype_engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_engine PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/rtype_engine/src
+)
+
+gtest_discover_tests(test_engine)
