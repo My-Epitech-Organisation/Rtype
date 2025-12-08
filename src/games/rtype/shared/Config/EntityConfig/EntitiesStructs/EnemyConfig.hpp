@@ -19,27 +19,23 @@ namespace rtype::games::rtype::shared {
  * @brief Configuration for an enemy type loaded from config files
  */
 struct EnemyConfig {
-    std::string id;    // Unique identifier (e.g., "basic_enemy", "boss_1")
-    std::string name;  // Display name
-    std::string spriteSheet;  // Path to sprite sheet
+    std::string id;
+    std::string name;
+    std::string spriteSheet;
 
-    // Stats
     int32_t health = 100;
     int32_t damage = 10;
     int32_t scoreValue = 100;
 
-    // Movement
     AIBehavior behavior = AIBehavior::MoveLeft;
     float speed = 100.0F;
 
-    // Hitbox
     float hitboxWidth = 32.0F;
     float hitboxHeight = 32.0F;
 
-    // Shooting (optional)
     bool canShoot = false;
-    float fireRate = 1.0F;       // Shots per second
-    std::string projectileType;  // Reference to projectile config
+    float fireRate = 1.0F;
+    std::string projectileType;
 
     /**
      * @brief Validate the enemy configuration
