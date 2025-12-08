@@ -82,33 +82,38 @@ void Graphic::_initializeSystems() {
             this->_window);
     this->_resetTriggersSystem =
         std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
-    this->_eventSystem = std::make_unique<::rtype::games::rtype::client::EventSystem>(
-        this->_window);
+    this->_eventSystem =
+        std::make_unique<::rtype::games::rtype::client::EventSystem>(
+            this->_window);
 
-    this->_systemScheduler = std::make_unique<ECS::SystemScheduler>(*this->_registry);
-
-    this->_systemScheduler->addSystem("reset_triggers", [this](ECS::Registry& reg) {
-        this->_resetTriggersSystem->update(reg, 0.f);
-    });
+    this->_systemScheduler =
+        std::make_unique<ECS::SystemScheduler>(*this->_registry);
 
     this->_systemScheduler->addSystem(
-        "button_update",
-        [this](ECS::Registry& reg) { this->_buttonUpdateSystem->update(reg, 0.f); },
-        {"reset_triggers"});
+        "reset_triggers", [this](ECS::Registry& reg) {
+            this->_resetTriggersSystem->update(reg, 0.f);
+        });
+
+    this->_systemScheduler->addSystem("button_update",
+                                      [this](ECS::Registry& reg) {
+                                          this->_buttonUpdateSystem->update(
+                                              reg, 0.f);
+                                      },
+                                      {"reset_triggers"});
 
     this->_systemScheduler->addSystem("parallax",
-                                [this](ECS::Registry& reg) {
-                                    this->_parallaxScrolling->update(
-                                        reg, this->_currentDeltaTime);
-                                },
-                                {"button_update"});
+                                      [this](ECS::Registry& reg) {
+                                          this->_parallaxScrolling->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"button_update"});
 
     this->_systemScheduler->addSystem("movement",
-                                [this](ECS::Registry& reg) {
-                                    this->_movementSystem->update(reg,
-                                                            this->_currentDeltaTime);
-                                },
-                                {"parallax"});
+                                      [this](ECS::Registry& reg) {
+                                          this->_movementSystem->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"parallax"});
 
     this->_systemScheduler->addSystem(
         "render",

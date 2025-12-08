@@ -174,7 +174,7 @@ GameScene::GameScene(
     this->_assetsManager->audioManager->load("main_game_music", gameMusic_mp3,
                                              gameMusic_mp3_len);
     auto bgMusic = this->_assetsManager->audioManager->get("main_game_music");
-    this->AScene::_audio->loadMusic(bgMusic);
-    this->AScene::_audio->setLoop(true);
-    this->AScene::_audio->play();
+    this->_audio->loadMusic(bgMusic);
+    this->_audio->setLoop(true);
+    this->_audio->play();
 }

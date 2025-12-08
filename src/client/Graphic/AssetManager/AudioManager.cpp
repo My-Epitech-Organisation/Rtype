@@ -7,17 +7,19 @@
 
 #include "AudioManager.hpp"
 
+#include "Macros.hpp"
+
 void AudioManager::load(const std::string& id, const std::string& filePath) {
     if (this->_assets.contains(id)) return;
     auto music = std::make_shared<sf::Music>();
 
     if (!music->openFromFile(filePath)) {
-        std::cerr << "Error unable to open music: " << filePath << std::endl;
+        LOG_ERROR("Error unable to open music: " + filePath);
         throw std::runtime_error("Error while loading music: " + filePath);
     }
 
     this->_assets[id] = std::move(music);
-    std::cout << "Audio saved with ID: " << id << std::endl;
+    LOG_INFO("Audio saved with ID: " + id);
 }
 
 void AudioManager::load(const std::string& id, unsigned char* fileData,
@@ -26,20 +28,20 @@ void AudioManager::load(const std::string& id, unsigned char* fileData,
     auto music = std::make_shared<sf::Music>();
 
     if (!music->openFromMemory(fileData, fileDataSize)) {
-        std::cerr << "Error unable to load music: " << id << std::endl;
+        LOG_ERROR("Error unable to load music: " + id);
         throw std::runtime_error("Error while loading music: " + id);
     }
 
     this->_assets[id] = std::move(music);
-    std::cout << "Audio saved with ID: " << id << std::endl;
+    LOG_INFO("Audio saved with ID: " + id);
 }
 
 std::shared_ptr<sf::Music> AudioManager::get(const std::string& id) {
     auto it = this->_assets.find(id);
 
     if (it == this->_assets.end()) {
-        std::cerr << "Error font not found: " << id << std::endl;
-        throw std::out_of_range("Error font not found: " + id);
+        LOG_ERROR("Error music not found: " + id);
+        throw std::out_of_range("Error music not found: " + id);
     }
 
     return it->second;

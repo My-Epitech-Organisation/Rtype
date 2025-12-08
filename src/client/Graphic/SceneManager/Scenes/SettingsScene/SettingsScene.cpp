@@ -164,7 +164,7 @@ SettingsScene::SettingsScene(
         "main_settings_music", settingsMusic_mp3, settingsMusic_mp3_len);
     auto settings =
         this->_assetsManager->audioManager->get("main_settings_music");
-    settings->setLooping(true);
     this->_audio->loadMusic(settings);
+    this->_audio->setLoop(true);
     this->_audio->play();
 }
