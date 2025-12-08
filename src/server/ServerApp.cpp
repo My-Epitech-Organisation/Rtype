@@ -344,8 +344,6 @@ void ServerApp::update() noexcept {
         return;
     }
     const float deltaTime = 1.0F / static_cast<float>(_tickRate);
-
-    // Apply movement based on velocity (server-authoritative)
     updatePlayerMovement(deltaTime);
 
     if (_gameEngine && _gameEngine->isRunning()) {
@@ -481,33 +479,21 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
                  << userId << " to signal ready (send START_GAME packet)");
     }
 
-    // Spawn player entity for this client
     using Position = rtype::games::rtype::shared::Position;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
     using EntityType = ServerNetworkSystem::EntityType;
 
-    // Create player entity in registry
     ECS::Entity playerEntity = _registry->spawnEntity();
-
-    // Calculate spawn position - spread players vertically
     size_t playerCount = _readyPlayers.size();
-    float spawnX = 100.0F;  // Left side of screen
+    float spawnX = 100.0F;
     float spawnY =
-        150.0F + static_cast<float>(playerCount) * 100.0F;  // Spread vertically
-
-    // Add components
+        150.0F + static_cast<float>(playerCount) * 100.0F;
     _registry->emplaceComponent<Position>(playerEntity, spawnX, spawnY);
     _registry->emplaceComponent<Velocity>(playerEntity, 0.0F, 0.0F);
-
-    // Use userId as networkId so client can identify its own player entity
     std::uint32_t networkId = userId;
-
-    // Register entity with network system (this sends S_ENTITY_SPAWN to all
-    // clients)
     _networkSystem->registerNetworkedEntity(playerEntity, networkId,
                                             EntityType::Player, spawnX, spawnY);
 
-    // Associate userId with player entity (for input routing)
     _networkSystem->setPlayerEntity(userId, playerEntity);
 
     LOG_INFO("[Server] Spawned player entity for userId="
@@ -522,17 +508,11 @@ void ServerApp::handleClientDisconnected(std::uint32_t userId) {
         transitionToState(GameState::Paused);
     }
 
-    // Handle player entity cleanup
     auto entityOpt = _networkSystem->getPlayerEntity(userId);
     if (entityOpt.has_value()) {
         ECS::Entity playerEntity = *entityOpt;
-
-        // Unregister from network (sends S_ENTITY_DESTROY to all clients)
         _networkSystem->unregisterNetworkedEntity(playerEntity);
-
-        // Destroy entity in registry
         _registry->killEntity(playerEntity);
-
         LOG_INFO("[Server] Destroyed player entity for userId=" << userId);
     }
 }
@@ -554,7 +534,6 @@ void ServerApp::handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
         return;
     }
 
-    // Apply input to player entity
     if (!entity.has_value()) {
         return;
     }
@@ -567,13 +546,11 @@ void ServerApp::handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
         return;
     }
 
-    // Get player speed from config or use default
     float playerSpeed = 250.0F;
     if (_gameConfig && _gameConfig->isInitialized()) {
         playerSpeed = _gameConfig->getGameplaySettings().playerSpeed;
     }
 
-    // Calculate velocity from input mask
     float vx = 0.0F;
     float vy = 0.0F;
 
@@ -589,14 +566,10 @@ void ServerApp::handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
     if (inputMask & rtype::network::InputMask::kRight) {
         vx += playerSpeed;
     }
-
-    // Apply velocity to player
     if (_registry->hasComponent<Velocity>(playerEntity)) {
         auto& vel = _registry->getComponent<Velocity>(playerEntity);
         vel.vx = vx;
         vel.vy = vy;
-
-        // Always update network when input changes (including when stopping)
         auto networkIdOpt = _networkSystem->getNetworkId(playerEntity);
         if (networkIdOpt.has_value() &&
             _registry->hasComponent<Position>(playerEntity)) {
@@ -648,31 +621,22 @@ void ServerApp::updatePlayerMovement(float deltaTime) noexcept {
     using Position = rtype::games::rtype::shared::Position;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
-    // Get world bounds for clamping
     constexpr float minX = 0.0F;
-    constexpr float maxX = 1920.0F - 64.0F;  // Screen width minus sprite width
+    constexpr float maxX = 1920.0F - 64.0F;
     constexpr float minY = 0.0F;
     constexpr float maxY =
-        1080.0F - 64.0F;  // Screen height minus sprite height
+        1080.0F - 64.0F;
 
-    // Update all entities with Position and Velocity
     auto view = _registry->view<Position, Velocity>();
     view.each([this, deltaTime, minX, maxX, minY, maxY](
                   ECS::Entity entity, Position& pos, Velocity& vel) {
-        // Skip if no velocity
         if (vel.vx == 0.0F && vel.vy == 0.0F) {
             return;
         }
-
-        // Update position
         pos.x += vel.vx * deltaTime;
         pos.y += vel.vy * deltaTime;
-
-        // Clamp to world bounds
         pos.x = std::clamp(pos.x, minX, maxX);
         pos.y = std::clamp(pos.y, minY, maxY);
-
-        // Mark entity as dirty for network sync
         auto networkIdOpt = _networkSystem->getNetworkId(entity);
         if (networkIdOpt.has_value()) {
             _networkSystem->updateEntityPosition(*networkIdOpt, pos.x, pos.y,
