@@ -7,6 +7,10 @@ add_library(rtype-graphic-scene-manager
     SceneException.hpp
 )
 
+target_include_directories(rtype-graphic-scene-manager PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/client
+)
+
 target_link_libraries(rtype-graphic-scene-manager
     PUBLIC
     SFML::Graphics
@@ -18,4 +22,5 @@ target_link_libraries(rtype-graphic-scene-manager
     rtype-graphic-main-menu-scene
     rtype-graphic-settings-scene
     rtype-graphic-game-scene
+    rtype_game_client
 )
