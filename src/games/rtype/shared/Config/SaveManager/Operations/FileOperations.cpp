@@ -9,55 +9,48 @@
 
 namespace rtype::game::config {
 
-bool FileOperations::writeToFile(const std::filesystem::path& filepath,
-                                 const std::vector<uint8_t>& data,
-                                 std::string& outError) {
+std::optional<std::string> FileOperations::writeToFile(
+    const std::filesystem::path& filepath, const std::vector<uint8_t>& data) {
     if (filepath.has_parent_path() &&
         !std::filesystem::exists(filepath.parent_path())) {
         try {
             std::filesystem::create_directories(filepath.parent_path());
         } catch (const std::exception& e) {
-            outError = std::string("Cannot create save directory: ") + e.what();
-            return false;
+            return std::string("Cannot create save directory: ") + e.what();
         }
     }
     auto tempPath = filepath.string() + ".tmp";
 
     std::ofstream file(tempPath, std::ios::binary);
     if (!file.is_open()) {
-        outError = "Cannot create save file: " + filepath.string();
-        return false;
+        return "Cannot create save file: " + filepath.string();
     }
     file.write(reinterpret_cast<const char*>(data.data()),
                static_cast<std::streamsize>(data.size()));
     file.close();
     if (!file) {
-        outError = "Failed to write save file";
         std::filesystem::remove(tempPath);
-        return false;
+        return std::string("Failed to write save file");
     }
     try {
         std::filesystem::rename(tempPath, filepath);
     } catch (const std::exception& e) {
-        outError = std::string("Failed to finalize save: ") + e.what();
         std::filesystem::remove(tempPath);
-        return false;
+        return std::string("Failed to finalize save: ") + e.what();
     }
 
-    return true;
+    return std::nullopt;
 }
 
-std::optional<std::vector<uint8_t>> FileOperations::readFromFile(
-    const std::filesystem::path& filepath, std::string& outError) {
+std::pair<std::optional<std::vector<uint8_t>>, std::optional<std::string>>
+FileOperations::readFromFile(const std::filesystem::path& filepath) {
     if (!std::filesystem::exists(filepath)) {
-        outError = "Save file not found: " + filepath.string();
-        return std::nullopt;
+        return {std::nullopt, "Save file not found: " + filepath.string()};
     }
 
     std::ifstream file(filepath, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
-        outError = "Cannot open save file: " + filepath.string();
-        return std::nullopt;
+        return {std::nullopt, "Cannot open save file: " + filepath.string()};
     }
 
     auto fileSize = file.tellg();
@@ -68,38 +61,34 @@ std::optional<std::vector<uint8_t>> FileOperations::readFromFile(
     file.close();
 
     if (!file) {
-        outError = "Failed to read save file";
-        return std::nullopt;
+        return {std::nullopt, std::string("Failed to read save file")};
     }
 
-    return data;
+    return {data, std::nullopt};
 }
 
-bool FileOperations::deleteFile(const std::filesystem::path& filepath,
-                                std::string& outError) {
+std::optional<std::string> FileOperations::deleteFile(
+    const std::filesystem::path& filepath) {
     try {
         if (std::filesystem::exists(filepath)) {
             std::filesystem::remove(filepath);
-            return true;
         }
-        return false;
+        return std::nullopt;
     } catch (const std::exception& e) {
-        outError = std::string("Failed to delete file: ") + e.what();
-        return false;
+        return std::string("Failed to delete file: ") + e.what();
     }
 }
 
-bool FileOperations::copyFile(const std::filesystem::path& source,
-                              const std::filesystem::path& destination,
-                              std::string& outError) {
+std::optional<std::string> FileOperations::copyFile(
+    const std::filesystem::path& source,
+    const std::filesystem::path& destination) {
     try {
         std::filesystem::copy_file(
             source, destination,
             std::filesystem::copy_options::overwrite_existing);
-        return true;
+        return std::nullopt;
     } catch (const std::exception& e) {
-        outError = std::string("Failed to copy file: ") + e.what();
-        return false;
+        return std::string("Failed to copy file: ") + e.what();
     }
 }
 

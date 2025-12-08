@@ -12,6 +12,7 @@
 #include <fstream>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace rtype::game::config {
@@ -26,41 +27,38 @@ class FileOperations {
      * @brief Write binary data to file with safe write pattern
      * @param filepath Path to the file
      * @param data Binary data to write
-     * @param outError Output error message on failure
-     * @return true if successful
+     * @return nullopt if successful, error message otherwise
      */
-    [[nodiscard]] static bool writeToFile(const std::filesystem::path& filepath,
-                                          const std::vector<uint8_t>& data,
-                                          std::string& outError);
+    [[nodiscard]] static std::optional<std::string> writeToFile(
+        const std::filesystem::path& filepath,
+        const std::vector<uint8_t>& data);
 
     /**
      * @brief Read binary data from file
      * @param filepath Path to the file
-     * @param outError Output error message on failure
-     * @return Binary data, or nullopt on failure
+     * @return Pair of optional data and optional error message
      */
-    [[nodiscard]] static std::optional<std::vector<uint8_t>> readFromFile(
-        const std::filesystem::path& filepath, std::string& outError);
+    [[nodiscard]] static std::pair<std::optional<std::vector<uint8_t>>,
+                                   std::optional<std::string>>
+    readFromFile(const std::filesystem::path& filepath);
 
     /**
      * @brief Delete a file
      * @param filepath Path to the file
-     * @param outError Output error message on failure
-     * @return true if successful
+     * @return nullopt if successful, error message otherwise
      */
-    [[nodiscard]] static bool deleteFile(const std::filesystem::path& filepath,
-                                         std::string& outError);
+    [[nodiscard]] static std::optional<std::string> deleteFile(
+        const std::filesystem::path& filepath);
 
     /**
      * @brief Copy a file
      * @param source Source path
      * @param destination Destination path
-     * @param outError Output error message on failure
-     * @return true if successful
+     * @return nullopt if successful, error message otherwise
      */
-    [[nodiscard]] static bool copyFile(const std::filesystem::path& source,
-                                       const std::filesystem::path& destination,
-                                       std::string& outError);
+    [[nodiscard]] static std::optional<std::string> copyFile(
+        const std::filesystem::path& source,
+        const std::filesystem::path& destination);
 
     /**
      * @brief Check if a file exists
