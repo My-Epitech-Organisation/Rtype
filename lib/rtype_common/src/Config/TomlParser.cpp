@@ -43,11 +43,11 @@ std::optional<toml::table> TomlParser::parseString(const std::string& content) {
         _lastResult.success = true;
         return table;
     } catch (const toml::parse_error& e) {
-        _lastResult.errorMessage = std::string("TOML parse error: ") + e.what();
+        _lastResult.errorMessage = std::string("TOML parse error: ") + std::string(e.what());
         reportError({"parser", "", _lastResult.errorMessage});
         return std::nullopt;
     } catch (const std::exception& e) {
-        _lastResult.errorMessage = std::string("Parse error: ") + e.what();
+        _lastResult.errorMessage = std::string("Parse error: ") + std::string(e.what());
         reportError({"parser", "", _lastResult.errorMessage});
         return std::nullopt;
     }
@@ -82,7 +82,7 @@ bool TomlParser::saveToFile(const toml::table& table,
         std::filesystem::rename(tempPath, filepath);
     } catch (const std::exception& e) {
         _lastResult.errorMessage =
-            std::string("Failed to save file: ") + e.what();
+            std::string("Failed to save file: ") + std::string(e.what());
         reportError({"file", "", _lastResult.errorMessage});
         std::filesystem::remove(tempPath);
         return false;
@@ -100,7 +100,7 @@ std::string TomlParser::getString(const toml::table& table,
             return *val;
         }
     } catch (const std::exception& e) {
-        reportError({std::string(section), std::string(key), e.what()});
+        reportError({std::string(section), std::string(key), std::string(e.what())});
     }
     return defaultValue;
 }
