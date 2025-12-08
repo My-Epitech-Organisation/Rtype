@@ -43,7 +43,6 @@ GameScene::GameScene(
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)),
       _gameScene(std::move(gameScene)) {
-    // Initialize game-specific entities
     if (_gameScene) {
         this->_listEntity = _gameScene->initialize();
     }
