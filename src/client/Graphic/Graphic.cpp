@@ -7,11 +7,15 @@
 
 #include "Graphic.hpp"
 
+#include <iostream>
 #include <optional>
 #include <utility>
 
 #include "AssetManager/AssetManager.hpp"
 #include "SceneManager/SceneException.hpp"
+#include "games/rtype/client/AllComponents.hpp"
+#include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/VelocityComponent.hpp"
 
 void Graphic::_pollEvents() {
     while (const std::optional event = this->_window->pollEvent()) {
@@ -76,6 +80,77 @@ void Graphic::loop() {
         this->_update();
         this->_display();
     }
+}
+
+void Graphic::_setupNetworkEntityFactory() {
+    namespace rc = rtype::games::rtype::client;
+    namespace rs = rtype::games::rtype::shared;
+
+    auto assetsManager = this->_assetsManager;
+    auto registry = this->_registry;
+
+    _networkSystem->setEntityFactory(
+        [assetsManager, registry](ECS::Registry& reg,
+                                  const rtype::client::EntitySpawnEvent& event)
+            -> ECS::Entity {
+            std::cout << "[Graphic::entityFactory] Creating entity type="
+                      << static_cast<int>(event.type) << " pos=(" << event.x
+                      << ", " << event.y << ")" << std::endl;
+
+            auto entity = reg.spawnEntity();
+
+            // Add Position component at spawn location
+            reg.emplaceComponent<rs::Position>(entity, event.x, event.y);
+
+            // Add Velocity component (initial velocity is 0)
+            reg.emplaceComponent<rs::VelocityComponent>(entity, 0.f, 0.f);
+
+            // Add graphics based on entity type
+            switch (event.type) {
+                case rtype::network::EntityType::Player:
+                    std::cout << "[Graphic::entityFactory] Adding Player "
+                                 "components"
+                              << std::endl;
+                    reg.emplaceComponent<rc::Image>(
+                        entity,
+                        assetsManager->textureManager->get("player_vessel"));
+                    reg.emplaceComponent<rc::TextureRect>(
+                        entity, std::pair<int, int>({0, 0}),
+                        std::pair<int, int>({33, 17}));
+                    reg.emplaceComponent<rc::Size>(entity, 4, 4);
+                    reg.emplaceComponent<rc::PlayerTag>(entity);
+                    reg.emplaceComponent<rc::ZIndex>(entity, 0);
+                    break;
+
+                case rtype::network::EntityType::Bydos:
+                    reg.emplaceComponent<rc::Image>(
+                        entity,
+                        assetsManager->textureManager->get("player_vessel"));
+                    reg.emplaceComponent<rc::TextureRect>(
+                        entity, std::pair<int, int>({0, 0}),
+                        std::pair<int, int>({33, 17}));
+                    reg.emplaceComponent<rc::Size>(entity, 3, 3);
+                    reg.emplaceComponent<rc::ZIndex>(entity, 0);
+                    break;
+
+                case rtype::network::EntityType::Missile:
+                    reg.emplaceComponent<rc::Size>(entity, 1, 1);
+                    reg.emplaceComponent<rc::ZIndex>(entity, 1);
+                    break;
+            }
+
+            return entity;
+        });
+
+    // Register callback to mark local player as controllable
+    _networkSystem->onLocalPlayerAssigned(
+        [registry](std::uint32_t /*userId*/, ECS::Entity entity) {
+            if (registry->isAlive(entity)) {
+                registry->emplaceComponent<rc::ControllableTag>(entity);
+                std::cout << "[Graphic] Local player entity assigned"
+                          << std::endl;
+            }
+        });
 }
 
 void Graphic::_initializeSystems() {
@@ -148,6 +223,14 @@ Graphic::Graphic(
         sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");
     this->_window->setView(*this->_view);
     this->_assetsManager = std::make_shared<AssetManager>();
+
+    // Configure network entity factory to create entities with graphics
+    // This must be done here (after _assetsManager is created) so that
+    // entities spawned before GameScene is created also have graphics
+    if (_networkSystem) {
+        _setupNetworkEntityFactory();
+    }
+
     this->_sceneManager = std::make_unique<SceneManager>(
         _registry, this->_assetsManager, this->_window, this->_keybinds,
         _networkClient, _networkSystem);
