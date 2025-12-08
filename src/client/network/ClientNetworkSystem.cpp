@@ -12,6 +12,7 @@
 
 #include "Components/PositionComponent.hpp"
 #include "Components/VelocityComponent.hpp"
+#include "Logger/Macros.hpp"
 
 namespace rtype::client {
 
@@ -78,41 +79,37 @@ std::optional<ECS::Entity> ClientNetworkSystem::findEntityByNetworkId(
 bool ClientNetworkSystem::isConnected() const { return client_->isConnected(); }
 
 void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
-    std::cout << "[ClientNetworkSystem] Entity spawn received: entityId="
-              << event.entityId << " type=" << static_cast<int>(event.type)
-              << " pos=(" << event.x << ", " << event.y << ")"
-              << " localUserId="
-              << (localUserId_.has_value() ? std::to_string(*localUserId_)
-                                           : "none")
-              << std::endl;
+    LOG_DEBUG("[ClientNetworkSystem] Entity spawn received: entityId=" +
+              std::to_string(event.entityId) + " type=" +
+              std::to_string(static_cast<int>(event.type)) + " pos=(" +
+              std::to_string(event.x) + ", " + std::to_string(event.y) +
+              ") localUserId=" +
+              (localUserId_.has_value() ? std::to_string(*localUserId_)
+                                        : "none"));
 
     if (networkIdToEntity_.find(event.entityId) != networkIdToEntity_.end()) {
-        std::cout << "[ClientNetworkSystem] Entity already exists, skipping"
-                  << std::endl;
+        LOG_DEBUG("[ClientNetworkSystem] Entity already exists, skipping");
         return;
     }
 
     ECS::Entity entity;
 
     if (entityFactory_) {
-        std::cout << "[ClientNetworkSystem] Using custom entityFactory"
-                  << std::endl;
+        LOG_DEBUG("[ClientNetworkSystem] Using custom entityFactory");
         entity = entityFactory_(*registry_, event);
     } else {
-        std::cout << "[ClientNetworkSystem] Using default entityFactory"
-                  << std::endl;
+        LOG_DEBUG("[ClientNetworkSystem] Using default entityFactory");
         entity = defaultEntityFactory(*registry_, event);
     }
 
     networkIdToEntity_[event.entityId] = entity;
-    std::cout << "[ClientNetworkSystem] Created entity id=" << entity.id
-              << std::endl;
+    LOG_DEBUG("[ClientNetworkSystem] Created entity id=" +
+              std::to_string(entity.id));
 
     if (localUserId_.has_value() && event.entityId == *localUserId_ &&
         event.type == network::EntityType::Player) {
         localPlayerEntity_ = entity;
-        std::cout << "[ClientNetworkSystem] This is our local player!"
-                  << std::endl;
+        LOG_DEBUG("[ClientNetworkSystem] This is our local player!");
 
         if (onLocalPlayerAssignedCallback_) {
             onLocalPlayerAssignedCallback_(*localUserId_, entity);
@@ -185,8 +182,8 @@ void ClientNetworkSystem::handlePositionCorrection(float x, float y) {
 }
 
 void ClientNetworkSystem::handleConnected(std::uint32_t userId) {
-    std::cout << "[ClientNetworkSystem] Connected with userId=" << userId
-              << std::endl;
+    LOG_INFO("[ClientNetworkSystem] Connected with userId=" +
+             std::to_string(userId));
     localUserId_ = userId;
 }
 

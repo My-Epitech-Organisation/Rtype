@@ -7,9 +7,10 @@
 
 #include "Graphic.hpp"
 
-#include <iostream>
 #include <optional>
 #include <utility>
+
+#include "Logger/Macros.hpp"
 
 #include "AssetManager/AssetManager.hpp"
 #include "SceneManager/SceneException.hpp"
@@ -87,9 +88,10 @@ void Graphic::_setupNetworkEntityFactory() {
         [assetsManager, registry](
             ECS::Registry& reg,
             const rtype::client::EntitySpawnEvent& event) -> ECS::Entity {
-            std::cout << "[Graphic::entityFactory] Creating entity type="
-                      << static_cast<int>(event.type) << " pos=(" << event.x
-                      << ", " << event.y << ")" << std::endl;
+            LOG_DEBUG("[Graphic::entityFactory] Creating entity type=" +
+                      std::to_string(static_cast<int>(event.type)) +
+                      " pos=(" + std::to_string(event.x) + ", " +
+                      std::to_string(event.y) + ")");
 
             auto entity = reg.spawnEntity();
             reg.emplaceComponent<rs::Position>(entity, event.x, event.y);
@@ -97,9 +99,8 @@ void Graphic::_setupNetworkEntityFactory() {
 
             switch (event.type) {
                 case rtype::network::EntityType::Player:
-                    std::cout << "[Graphic::entityFactory] Adding Player "
-                                 "components"
-                              << std::endl;
+                    LOG_DEBUG(
+                        "[Graphic::entityFactory] Adding Player components");
                     reg.emplaceComponent<rc::Image>(
                         entity,
                         assetsManager->textureManager->get("player_vessel"));
@@ -134,7 +135,7 @@ void Graphic::_setupNetworkEntityFactory() {
                                                      ECS::Entity entity) {
         if (registry->isAlive(entity)) {
             registry->emplaceComponent<rc::ControllableTag>(entity);
-            std::cout << "[Graphic] Local player entity assigned" << std::endl;
+            LOG_DEBUG("[Graphic] Local player entity assigned");
         }
     });
 }

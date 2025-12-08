@@ -10,11 +10,12 @@
 #include <cstdlib>
 #include <ctime>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <random>
 #include <string>
 #include <utility>
+
+#include "Logger/Macros.hpp"
 
 #include <SFML/Graphics/Text.hpp>
 
@@ -164,12 +165,12 @@ void MainMenuScene::_onConnectClicked(
     _updateStatus("Connecting to " + ip + ":" + std::to_string(port) + "...",
                   sf::Color::Yellow);
     _networkClient->onConnected([this, switchToScene](std::uint32_t userId) {
-        std::cout << "[Client] Connected with user ID: " << userId << std::endl;
+        LOG_INFO("[Client] Connected with user ID: " + std::to_string(userId));
         _updateStatus("Connected! Starting game...", sf::Color::Green);
         try {
             switchToScene(SceneManager::IN_GAME);
         } catch (SceneNotFound& e) {
-            std::cerr << "Error switching to Game: " << e.what() << std::endl;
+            LOG_ERROR(std::string("Error switching to Game: ") + e.what());
         }
     });
 
@@ -304,8 +305,7 @@ MainMenuScene::MainMenuScene(
             try {
                 switchToScene(SceneManager::IN_GAME);
             } catch (SceneNotFound& e) {
-                std::cerr << "Error switching to Game Menu: " << e.what()
-                          << std::endl;
+                LOG_ERROR(std::string("Error switching to Game Menu: ") + e.what());
             }
         })));
     this->_listEntity.push_back(EntityFactory::createButton(
@@ -320,8 +320,7 @@ MainMenuScene::MainMenuScene(
             try {
                 switchToScene(SceneManager::SETTINGS_MENU);
             } catch (SceneNotFound& e) {
-                std::cerr << "Error switching to Settings Menu: " << e.what()
-                          << std::endl;
+                LOG_ERROR(std::string("Error switching to Settings Menu: ") + e.what());
             }
         })));
     this->_listEntity.push_back(EntityFactory::createButton(

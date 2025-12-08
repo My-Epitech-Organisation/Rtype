@@ -11,11 +11,12 @@
 #include <csignal>
 #include <exception>
 #include <format>
-#include <iostream>
 #include <memory>
 #include <vector>
 
 #include <rtype/common.hpp>
+
+#include "Logger/Macros.hpp"
 
 #include "ServerApp.hpp"
 #include "games/rtype/server/RTypeGameConfig.hpp"
@@ -26,13 +27,12 @@
  */
 static void signalHandler(int signal) {
     if (signal == SIGINT || signal == SIGTERM) {
-        std::cout << "\n[Main] Received shutdown signal" << std::endl;
+        LOG_INFO("\n[Main] Received shutdown signal");
         ServerSignals::shutdown()->store(true);
     }
 #ifndef _WIN32
     if (signal == SIGHUP) {
-        std::cout << "\n[Main] Received SIGHUP - config reload requested"
-                  << std::endl;
+        LOG_INFO("\n[Main] Received SIGHUP - config reload requested");
         ServerSignals::reloadConfig()->store(true);
     }
 #endif
@@ -112,19 +112,19 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
  * @param config The server configuration to display
  */
 static void printBanner(const ServerConfig& config) {
-    std::cout << "==================================\n"
-              << "    R-Type Server\n"
-              << "==================================\n"
-              << std::format("  Config Dir:  {}\n", config.configPath)
-              << std::format("  Port:        {}{}\n", config.port,
-                             config.portOverride ? " (override)" : "")
-              << std::format("  Max Players: {}{}\n", config.maxPlayers,
-                             config.maxPlayersOverride ? " (override)" : "")
-              << std::format("  Tick Rate:   {} Hz{}\n", config.tickRate,
-                             config.tickRateOverride ? " (override)" : "")
-              << std::format("  Verbose:     {}\n",
-                             config.verbose ? "yes" : "no")
-              << "==================================" << std::endl;
+    LOG_INFO("==================================\n"
+             << "    R-Type Server\n"
+             << "==================================\n"
+             << std::format("  Config Dir:  {}\n", config.configPath)
+             << std::format("  Port:        {}{}\n", config.port,
+                            config.portOverride ? " (override)" : "")
+             << std::format("  Max Players: {}{}\n", config.maxPlayers,
+                            config.maxPlayersOverride ? " (override)" : "")
+             << std::format("  Tick Rate:   {} Hz{}\n", config.tickRate,
+                            config.tickRateOverride ? " (override)" : "")
+             << std::format("  Verbose:     {}\n",
+                            config.verbose ? "yes" : "no")
+             << "==================================");
 }
 
 /**
@@ -140,8 +140,8 @@ static int runServer(const ServerConfig& config,
     auto gameConfig = rtype::games::rtype::server::createRTypeGameConfig();
 
     if (!gameConfig->initialize(config.configPath)) {
-        std::cerr << "[Main] Failed to initialize game configuration: "
-                  << gameConfig->getLastError() << std::endl;
+        LOG_ERROR("[Main] Failed to initialize game configuration: "
+                  << gameConfig->getLastError());
         return 1;
     }
 
@@ -152,11 +152,11 @@ static int runServer(const ServerConfig& config,
     (void)reloadConfigFlag;
 
     if (!server.run()) {
-        std::cerr << "[Main] Server failed to start." << std::endl;
+        LOG_ERROR("[Main] Server failed to start.");
         return 1;
     }
 
-    std::cout << "[Main] Server terminated." << std::endl;
+    LOG_INFO("[Main] Server terminated.");
     return 0;
 }
 
@@ -180,10 +180,10 @@ int main(int argc, char** argv) {
         return runServer(*config, ServerSignals::shutdown(),
                          ServerSignals::reloadConfig());
     } catch (const std::exception& e) {
-        std::cerr << "[Main] Fatal error: " << e.what() << std::endl;
+        LOG_ERROR("[Main] Fatal error: " << e.what());
         return 1;
     } catch (...) {
-        std::cerr << "[Main] Unknown fatal error occurred" << std::endl;
+        LOG_ERROR("[Main] Unknown fatal error occurred");
         return 1;
     }
 }

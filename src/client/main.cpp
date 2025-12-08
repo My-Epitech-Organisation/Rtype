@@ -6,9 +6,9 @@
 */
 
 #include <exception>
-#include <iostream>
 
 #include "ClientApp.hpp"
+#include "Logger/Macros.hpp"
 
 auto main(int argc, char** argv) -> int {
     (void)argc;
@@ -23,7 +23,7 @@ auto main(int argc, char** argv) -> int {
         ClientApp client(config);
         client.run();
     } catch (const std::exception& e) {
-        std::cerr << "Program exited with an error: " << e.what() << std::endl;
+        LOG_ERROR(std::string("Program exited with an error: ") + e.what());
         return 1;
     }
     return 0;

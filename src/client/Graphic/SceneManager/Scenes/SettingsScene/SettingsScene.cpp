@@ -10,6 +10,7 @@
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
+#include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 
 void SettingsScene::_initKeybindSection() {
@@ -153,8 +154,7 @@ SettingsScene::SettingsScene(
             try {
                 switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
-                std::cerr << "Error switching to Main Menu: " << e.what()
-                          << std::endl;
+                LOG_ERROR(std::string("Error switching to Main Menu: ") + e.what());
             }
         })));
 }
