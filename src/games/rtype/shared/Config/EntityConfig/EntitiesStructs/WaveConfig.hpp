@@ -19,14 +19,14 @@ namespace rtype::games::rtype::shared {
  */
 struct WaveConfig {
     int32_t waveNumber = 1;
-    float spawnDelay = 0.5F;  // Delay between spawns
+    float spawnDelay = 0.5F;
 
     struct SpawnEntry {
-        std::string enemyId;  // Reference to EnemyConfig
-        float x = 800.0F;     // Spawn X position
-        float y = 300.0F;     // Spawn Y position
-        float delay = 0.0F;   // Delay from wave start
-        int32_t count = 1;    // Number to spawn
+        std::string enemyId;
+        float x = 800.0F;
+        float y = 300.0F;
+        float delay = 0.0F;
+        int32_t count = 1;
     };
 
     std::vector<SpawnEntry> spawns;
