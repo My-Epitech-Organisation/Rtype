@@ -8,6 +8,8 @@
 #ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_GAMESCENE_GAMESCENE_HPP_
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_GAMESCENE_GAMESCENE_HPP_
 
+#include "../../../../network/ClientNetworkSystem.hpp"
+#include "../../../../network/NetworkClient.hpp"
 #include "../AScene.hpp"
 #include "SceneManager/SceneManager.hpp"
 
@@ -22,6 +24,12 @@ class GameScene : public AScene {
    private:
     std::shared_ptr<KeyboardActions> _keybinds;
 
+    /// @brief Network client for server communication
+    std::shared_ptr<rtype::client::NetworkClient> _networkClient;
+
+    /// @brief Network system for ECS synchronization
+    std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
+
     void _updateUserMovementUp();
     void _updateUserMovementDown();
     void _updateUserMovementLeft();
@@ -34,11 +42,15 @@ class GameScene : public AScene {
     void render(std::shared_ptr<sf::RenderWindow> window) override;
     void pollEvents(const sf::Event& e) override;
 
-    GameScene(std::shared_ptr<ECS::Registry> ecs,
-              std::shared_ptr<AssetManager> textureManager,
-              std::shared_ptr<sf::RenderWindow> window,
-              std::shared_ptr<KeyboardActions> keybinds,
-              std::function<void(const SceneManager::Scene&)> switchToScene);
+    GameScene(
+        std::shared_ptr<ECS::Registry> ecs,
+        std::shared_ptr<AssetManager> textureManager,
+        std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<KeyboardActions> keybinds,
+        std::function<void(const SceneManager::Scene&)> switchToScene,
+        std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,
+        std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =
+            nullptr);
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_GAMESCENE_GAMESCENE_HPP_

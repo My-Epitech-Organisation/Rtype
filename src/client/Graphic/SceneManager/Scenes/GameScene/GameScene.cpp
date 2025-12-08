@@ -7,6 +7,10 @@
 
 #include "GameScene.hpp"
 
+#include <iostream>
+#include <memory>
+#include <utility>
+
 #include "Components/HiddenComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/VelocityComponent.hpp"
@@ -114,8 +118,13 @@ GameScene::GameScene(
     std::shared_ptr<AssetManager> textureManager,
     std::shared_ptr<sf::RenderWindow> window,
     std::shared_ptr<KeyboardActions> keybinds,
-    std::function<void(const SceneManager::Scene&)> switchToScene)
-    : AScene(ecs, textureManager, window), _keybinds(keybinds) {
+    std::function<void(const SceneManager::Scene&)> switchToScene,
+    std::shared_ptr<rtype::client::NetworkClient> networkClient,
+    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem)
+    : AScene(ecs, textureManager, window),
+      _keybinds(keybinds),
+      _networkClient(std::move(networkClient)),
+      _networkSystem(std::move(networkSystem)) {
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, ""));
     auto fakePlayer = EntityFactory::createPlayer(
