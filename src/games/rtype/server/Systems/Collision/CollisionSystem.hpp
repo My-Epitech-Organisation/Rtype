@@ -11,9 +11,13 @@
 
 namespace rtype::games::rtype::server {
 
+/**
+ * @brief Detects projectile collisions against enemies and players using AABB and marks entities for destruction.
+ */
 class CollisionSystem : public ::rtype::engine::ASystem {
    public:
     CollisionSystem();
+
     void update(ECS::Registry& registry, float deltaTime) override;
 };
 

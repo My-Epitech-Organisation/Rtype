@@ -25,7 +25,6 @@ using shared::collision::overlaps;
 CollisionSystem::CollisionSystem() : ASystem("CollisionSystem") {}
 
 void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
-    // Collect projectiles
     std::vector<ECS::Entity> projectiles;
     auto projView = registry.view<TransformComponent, BoundingBoxComponent,
                                   ProjectileTag>();
@@ -33,7 +32,6 @@ void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
         projectiles.push_back(entity);
     });
 
-    // Enemy and player views for collision checks
     auto enemyView = registry.view<TransformComponent, BoundingBoxComponent,
                                    EnemyTag>();
     auto playerView = registry.view<TransformComponent, BoundingBoxComponent,
@@ -43,7 +41,6 @@ void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
         auto& projTransform = registry.getComponent<TransformComponent>(projectile);
         auto& projBox = registry.getComponent<BoundingBoxComponent>(projectile);
 
-        // Skip already marked projectiles
         const bool projectileDestroyed =
             registry.hasComponent<DestroyTag>(projectile);
 
@@ -59,7 +56,6 @@ void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
             });
         }
 
-        // Re-check projectile status to avoid double marking
         if (registry.hasComponent<DestroyTag>(projectile)) {
             continue;
         }

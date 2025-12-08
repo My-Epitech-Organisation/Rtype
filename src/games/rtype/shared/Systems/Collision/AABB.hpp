@@ -12,6 +12,10 @@
 
 namespace rtype::games::rtype::shared::collision {
 
+/**
+ * @brief Checks overlap between two axis-aligned bounding boxes given their transforms.
+ * @return true if the boxes intersect, false otherwise.
+ */
 inline bool overlaps(const TransformComponent& aTransform,
                      const BoundingBoxComponent& aBox,
                      const TransformComponent& bTransform,
