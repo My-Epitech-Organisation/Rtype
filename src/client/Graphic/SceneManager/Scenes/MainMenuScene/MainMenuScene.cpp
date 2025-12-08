@@ -134,4 +134,9 @@ MainMenuScene::MainMenuScene(
         std::function<void()>([this]() { this->_window->close(); })
 
             ));
+    auto bgMusicVolume =
+        this->_assetsManager->audioManager->get("main_menu_music");
+    this->_audio.loadMusic(bgMusicVolume);
+    this->_audio.setLoop(true);
+    this->_audio.play();
 }
