@@ -8,6 +8,7 @@
 #include "TextureManager.hpp"
 
 void TextureManager::load(const std::string& id, const std::string& filePath) {
+    if (this->_assets.contains(id)) return;
     auto texture = std::make_unique<sf::Texture>();
 
     if (!texture->loadFromFile(filePath)) {
@@ -21,6 +22,7 @@ void TextureManager::load(const std::string& id, const std::string& filePath) {
 
 void TextureManager::load(const std::string& id, unsigned char* fileData,
                           unsigned int fileDataSize) {
+    if (this->_assets.contains(id)) return;
     auto texture = std::make_unique<sf::Texture>();
 
     if (!texture->loadFromMemory(fileData, fileDataSize)) {

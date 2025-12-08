@@ -5,19 +5,18 @@
 ** AudioLib.hpp
 */
 
-#ifndef R_TYPE_AUDIOLIB_HPP
-#define R_TYPE_AUDIOLIB_HPP
+#ifndef SRC_CLIENT_GRAPHIC_AUDIOLIB_AUDIOLIB_HPP_
+#define SRC_CLIENT_GRAPHIC_AUDIOLIB_AUDIOLIB_HPP_
 
 #include "SFML/Audio.hpp"
 
 class AudioLib {
-private:
+   private:
     std::shared_ptr<sf::Music> _currentMusic;
 
     float _volume = 50;
 
-public:
-
+   public:
     void setLoop(const bool& loop) const;
     void setMusicVolume(const float& volume);
     [[nodiscard]] float getMusicVolume() const;
@@ -31,5 +30,4 @@ public:
     ~AudioLib();
 };
 
-
-#endif //R_TYPE_AUDIOLIB_HPP
+#endif  // SRC_CLIENT_GRAPHIC_AUDIOLIB_AUDIOLIB_HPP_

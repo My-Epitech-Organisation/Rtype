@@ -26,7 +26,6 @@ AssetManager::AssetManager() {
     this->textureManager->load("player_vessel", playerVessel_gif,
                                playerVessel_gif_len);
 
-
     this->textureManager->get("bg_menu").setRepeated(true);
     this->textureManager->get("bg_planet_1").setRepeated(true);
     this->textureManager->get("bg_planet_2").setRepeated(true);

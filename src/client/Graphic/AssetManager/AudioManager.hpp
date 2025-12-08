@@ -5,17 +5,17 @@
 ** AudioManager.hpp
 */
 
-#ifndef SRC_CLIENT_GRAPHIC_AUDIOMANAGER_FONTMANAGER_HPP_
-#define SRC_CLIENT_GRAPHIC_AUDIOMANAGER_FONTMANAGER_HPP_
+#ifndef SRC_CLIENT_GRAPHIC_ASSETMANAGER_AUDIOMANAGER_HPP_
+#define SRC_CLIENT_GRAPHIC_ASSETMANAGER_AUDIOMANAGER_HPP_
 
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <SFML/Audio/Music.hpp>
 
 #include <SFML/Audio.hpp>
+#include <SFML/Audio/Music.hpp>
 
 class AudioManager {
    private:
@@ -35,4 +35,4 @@ class AudioManager {
     AudioManager() = default;
 };
 
-#endif  // SRC_CLIENT_GRAPHIC_AUDIOMANAGER_FONTMANAGER_HPP_
+#endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_AUDIOMANAGER_HPP_

@@ -8,6 +8,7 @@
 #include "FontManager.hpp"
 
 void FontManager::load(const std::string& id, const std::string& filePath) {
+    if (this->_assets.contains(id)) return;
     auto font = std::make_unique<sf::Font>();
 
     if (!font->openFromFile(filePath)) {
@@ -21,6 +22,7 @@ void FontManager::load(const std::string& id, const std::string& filePath) {
 
 void FontManager::load(const std::string& id, unsigned char* fileData,
                        unsigned int fileDataSize) {
+    if (this->_assets.contains(id)) return;
     auto font = std::make_unique<sf::Font>();
 
     if (!font->openFromMemory(fileData, fileDataSize)) {

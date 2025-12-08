@@ -8,6 +8,7 @@
 #include "AudioManager.hpp"
 
 void AudioManager::load(const std::string& id, const std::string& filePath) {
+    if (this->_assets.contains(id)) return;
     auto music = std::make_shared<sf::Music>();
 
     if (!music->openFromFile(filePath)) {
@@ -20,7 +21,8 @@ void AudioManager::load(const std::string& id, const std::string& filePath) {
 }
 
 void AudioManager::load(const std::string& id, unsigned char* fileData,
-                       unsigned int fileDataSize) {
+                        unsigned int fileDataSize) {
+    if (this->_assets.contains(id)) return;
     auto music = std::make_shared<sf::Music>();
 
     if (!music->openFromMemory(fileData, fileDataSize)) {
