@@ -18,6 +18,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "../Logger/Macros.hpp"
@@ -136,10 +137,11 @@ class ArgParser {
         while (iter != args.end()) {
             const std::string key(*iter);
             if (!key.empty() && key[0] == '-') {
-                ParseResult result = parseOption(key, iter, args.end());
+                auto [result, consumed] = parseOption(key, iter, args.end());
                 if (result != ParseResult::Success) {
                     return result;
                 }
+                iter += consumed;
             } else {
                 positionalValues.push_back(*iter);
             }
@@ -171,27 +173,28 @@ class ArgParser {
    private:
     /**
      * @brief Parse a single option
+     * @return Pair of (ParseResult, number of additional arguments consumed)
      */
-    [[nodiscard]] ParseResult parseOption(
+    [[nodiscard]] std::pair<ParseResult, int> parseOption(
         const std::string& key,
-        std::vector<std::string_view>::const_iterator& iter,
+        std::vector<std::string_view>::const_iterator iter,
         std::vector<std::string_view>::const_iterator end) const {
         if (auto handlerIt = _flagHandlers.find(key);
             handlerIt != _flagHandlers.end()) {
-            return (*handlerIt->second)();
+            return {(*handlerIt->second)(), 0};
         }
         if (auto handlerIt = _valueHandlers.find(key);
             handlerIt != _valueHandlers.end()) {
-            iter++;
+            ++iter;
             if (iter == end) {
                 LOG_ERROR(std::format("Option {} requires an argument", key));
-                return ParseResult::Error;
+                return {ParseResult::Error, 0};
             }
-            return (*handlerIt->second)(*iter);
+            return {(*handlerIt->second)(*iter), 1};
         }
         LOG_ERROR(std::format("Unknown option: {}", key));
         printUsage();
-        return ParseResult::Error;
+        return {ParseResult::Error, 0};
     }
 
     /**
