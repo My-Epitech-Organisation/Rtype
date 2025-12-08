@@ -21,8 +21,9 @@
  * @brief Generic GameScene that delegates game-specific logic to IGameScene
  *
  * This class provides the shell for a game scene, delegating all game-specific
- * logic (entity creation, input handling, etc.) to an IGameScene implementation.
- * This allows different games to be plugged in without modifying this class.
+ * logic (entity creation, input handling, etc.) to an IGameScene
+ * implementation. This allows different games to be plugged in without
+ * modifying this class.
  */
 class GameScene : public AScene {
    private:

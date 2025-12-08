@@ -47,4 +47,3 @@ GameScene::GameScene(
         this->_listEntity = _gameScene->initialize();
     }
 }
-

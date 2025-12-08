@@ -34,8 +34,8 @@ RtypeGameScene::RtypeGameScene(
 std::vector<ECS::Entity> RtypeGameScene::initialize() {
     std::vector<ECS::Entity> entities;
 
-    auto bgEntities = EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "");
+    auto bgEntities = EntityFactory::createBackground(this->_registry,
+                                                      this->_assetsManager, "");
     entities.insert(entities.end(), bgEntities.begin(), bgEntities.end());
     if (_networkSystem) {
         setupEntityFactory();

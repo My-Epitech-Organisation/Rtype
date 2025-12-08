@@ -13,8 +13,8 @@
 #include <utility>
 #include <vector>
 
-#include "IGameScene.hpp"
 #include "Graphic/KeyboardActions.hpp"
+#include "IGameScene.hpp"
 #include "SceneManager/SceneManager.hpp"
 
 // Forward declarations
