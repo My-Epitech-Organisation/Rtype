@@ -21,6 +21,8 @@
 #include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
+#include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
+#include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
@@ -53,6 +55,9 @@ class Graphic {
     /// @brief Background scroll speed from centralized config
     static constexpr float scrollSpeed =
         ::rtype::games::rtype::client::GraphicsConfig::SCROLL_SPEED;
+
+    static constexpr float ProjectileSpeed =
+        ::rtype::games::rtype::client::GraphicsConfig::PROJECTILE_SPEED_LASER;
 
     // ========================================================================
     // Shared resources (owned by Graphic, shared with subsystems)
@@ -98,6 +103,10 @@ class Graphic {
     std::unique_ptr<::rtype::games::rtype::client::ResetTriggersSystem>
         _resetTriggersSystem;
     std::unique_ptr<::rtype::games::rtype::client::EventSystem> _eventSystem;
+    std::unique_ptr<::rtype::games::rtype::shared::ProjectileSystem>
+        _projectileSystem;
+    std::unique_ptr<::rtype::games::rtype::shared::LifetimeSystem>
+        _lifetimeSystem;
 
     // ========================================================================
     // Runtime state

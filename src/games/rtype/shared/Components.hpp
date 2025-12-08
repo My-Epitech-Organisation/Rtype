@@ -20,3 +20,6 @@
 // Entity Types and Tags
 #include "Components/EntityType.hpp"
 #include "Components/Tags.hpp"
+
+// Projectile Components
+#include "Components/LifetimeComponent.hpp"

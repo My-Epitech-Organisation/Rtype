@@ -28,9 +28,13 @@ class GameScene : public AScene {
     void _updateUserMovementRight();
 
     void _handleKeyReleasedEvent(const sf::Event& event);
+    void _handleKeyPressedEvent(const sf::Event& event);
+    void _handleShoot();
+
+    void _updateUserShoot(float deltaTime);
 
    public:
-    void update() override;
+    void update(float dt) override;
     void render(std::shared_ptr<sf::RenderWindow> window) override;
     void pollEvents(const sf::Event& e) override;
 

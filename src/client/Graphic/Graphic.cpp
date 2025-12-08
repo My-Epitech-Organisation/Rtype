@@ -19,38 +19,38 @@ void Graphic::_pollEvents() {
         if (event->is<sf::Event::Closed>()) {
             this->_window->close();
         }
-        _eventSystem->setEvent(*event);
-        _eventSystem->update(*this->_registry, 0.f);
+        this->_eventSystem->setEvent(*event);
+        this->_eventSystem->update(*this->_registry, 0.f);
         this->_sceneManager->pollEvents(*event);
     }
 }
 
 void Graphic::_updateDeltaTime() {
-    _currentDeltaTime = this->_mainClock.getElapsedTime().asSeconds();
+    this->_currentDeltaTime = this->_mainClock.getElapsedTime().asSeconds();
     this->_mainClock.restart();
 }
 
 void Graphic::_updateViewScrolling() {
     sf::Vector2f center = this->_view->getCenter();
-    float newX = center.x + (scrollSpeed * _currentDeltaTime);
+    float newX = center.x + (scrollSpeed * this->_currentDeltaTime);
     this->_view->setCenter({newX, center.y});
 }
 
 void Graphic::_update() {
-    _updateDeltaTime();
-    _updateViewScrolling();
+    this->_updateDeltaTime();
+    this->_updateViewScrolling();
 
-    _systemScheduler->runSystem("button_update");
-    _systemScheduler->runSystem("parallax");
-    _systemScheduler->runSystem("movement");
-    this->_sceneManager->update();
+    this->_systemScheduler->runSystem("button_update");
+    this->_systemScheduler->runSystem("parallax");
+    this->_systemScheduler->runSystem("movement");
+    this->_sceneManager->update(this->_currentDeltaTime);
 }
 
 void Graphic::_display() {
     this->_window->clear();
 
-    _systemScheduler->runSystem("render");
-    _systemScheduler->runSystem("boxing");
+    this->_systemScheduler->runSystem("render");
+    this->_systemScheduler->runSystem("boxing");
 
     this->_sceneManager->draw();
     this->_window->display();
@@ -58,7 +58,7 @@ void Graphic::_display() {
 
 void Graphic::loop() {
     while (this->_window->isOpen()) {
-        _systemScheduler->runSystem("reset_triggers");
+        this->_systemScheduler->runSystem("reset_triggers");
         this->_pollEvents();
         this->_update();
         this->_display();
@@ -84,6 +84,10 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
     _eventSystem = std::make_unique<::rtype::games::rtype::client::EventSystem>(
         this->_window);
+    _projectileSystem =
+        std::make_unique<::rtype::games::rtype::shared::ProjectileSystem>();
+    _lifetimeSystem =
+        std::make_unique<::rtype::games::rtype::shared::LifetimeSystem>();
 
     _systemScheduler = std::make_unique<ECS::SystemScheduler>(*this->_registry);
 
@@ -110,10 +114,24 @@ void Graphic::_initializeSystems() {
                                 },
                                 {"parallax"});
 
+    _systemScheduler->addSystem("projectile",
+                                [this](ECS::Registry& reg) {
+                                    _projectileSystem->update(
+                                        reg, _currentDeltaTime);
+                                },
+                                {"movement"});
+
+    _systemScheduler->addSystem("lifetime",
+                                [this](ECS::Registry& reg) {
+                                    _lifetimeSystem->update(reg,
+                                                            _currentDeltaTime);
+                                },
+                                {"projectile"});
+
     _systemScheduler->addSystem(
         "render",
         [this](ECS::Registry& reg) { _renderSystem->update(reg, 0.f); },
-        {"movement"});
+        {"lifetime"});
 
     _systemScheduler->addSystem(
         "boxing",

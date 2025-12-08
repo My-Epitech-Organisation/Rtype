@@ -7,12 +7,19 @@
 
 #include "GameScene.hpp"
 
+#include "Components/CountdownComponent.hpp"
 #include "Components/HiddenComponent.hpp"
+#include "Components/ImageComponent.hpp"
+#include "Components/LifetimeComponent.hpp"
+#include "Components/PositionComponent.hpp"
+#include "Components/SizeComponent.hpp"
 #include "Components/TagComponent.hpp"
+#include "Components/Tags.hpp"
 #include "Components/VelocityComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "Graphic.hpp"
 #include "SceneManager/SceneException.hpp"
+#include "assets/img/missileLaser.h"
 
 void GameScene::_updateUserMovementUp() {
     auto keyMoveUp = this->_keybinds->getKeyBinding(GameAction::MOVE_UP);
@@ -74,6 +81,20 @@ void GameScene::_updateUserMovementRight() {
     }
 }
 
+void GameScene::_handleShoot() {
+    auto playerView =
+        this->_registry->view<rtype::games::rtype::shared::Position,
+                              rtype::games::rtype::client::ControllableTag>();
+
+    playerView.each([this](auto, auto& pos, auto) {
+        auto projectile = EntityFactory::createProjectile(
+            this->_registry, this->_assetsManager,
+            sf::Vector2f(pos.x + 80, pos.y));
+
+        this->_listEntity.push_back(projectile);
+    });
+}
+
 void GameScene::_handleKeyReleasedEvent(const sf::Event& event) {
     auto eventKeyRelease = event.getIf<sf::Event::KeyReleased>();
     auto keyPause = this->_keybinds->getKeyBinding(GameAction::PAUSE);
@@ -87,7 +108,23 @@ void GameScene::_handleKeyReleasedEvent(const sf::Event& event) {
     }
 }
 
-void GameScene::update() {
+void GameScene::_updateUserShoot(float deltaTime) {
+    this->_registry
+        ->view<rtype::games::rtype::client::CountdownPlayer,
+               rtype::games::rtype::client::ControllableTag>()
+        .each([this, deltaTime](auto, auto& cd, auto) {
+            cd.laserCD -= deltaTime;
+            if (cd.laserCD > 0) return;
+            if (isKeyPressed(
+                    *this->_keybinds->getKeyBinding(GameAction::SHOOT))) {
+                cd.laserCD =
+                    rtype::games::rtype::client::GraphicsConfig::PROJECTILE_CD;
+                this->_handleShoot();
+            }
+        });
+}
+
+void GameScene::update(float deltaTime) {
     this->_registry
         ->view<rtype::games::rtype::shared::VelocityComponent,
                rtype::games::rtype::client::ControllableTag>()
@@ -95,10 +132,19 @@ void GameScene::update() {
             velocity.vx = 0;
             velocity.vy = 0;
         });
+    this->_registry
+        ->view<rtype::games::rtype::shared::VelocityComponent,
+               rtype::games::rtype::shared::ProjectileTag,
+               rtype::games::rtype::client::ControllableTag>()
+        .each([](auto, auto& velocity, auto, auto) {
+            velocity.vx = 0;
+            velocity.vy = 0;
+        });
     this->_updateUserMovementUp();
     this->_updateUserMovementDown();
     this->_updateUserMovementLeft();
     this->_updateUserMovementRight();
+    this->_updateUserShoot(deltaTime);
 }
 
 void GameScene::render(std::shared_ptr<sf::RenderWindow> window) {}
@@ -170,4 +216,6 @@ GameScene::GameScene(
     }
     this->_listEntity.insert(this->_listEntity.end(), pauseEntities.begin(),
                              pauseEntities.end());
+    this->_assetsManager->textureManager->load(
+        "projectile_player_laser", missileLaser_gif, missileLaser_gif_len);
 }

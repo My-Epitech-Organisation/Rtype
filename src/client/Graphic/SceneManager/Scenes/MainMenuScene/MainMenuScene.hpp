@@ -19,7 +19,7 @@ class MainMenuScene : public AScene {
     void _createFakePlayer();
 
    public:
-    void update() override;
+    void update(float dt) override;
     void render(std::shared_ptr<sf::RenderWindow> window) override;
     void pollEvents(const sf::Event& e) override;
 

@@ -13,7 +13,7 @@
 class IScene {
    public:
     virtual void pollEvents(const sf::Event& e) = 0;
-    virtual void update() = 0;
+    virtual void update(float dt) = 0;
     virtual void render(std::shared_ptr<sf::RenderWindow> window) = 0;
 
     virtual ~IScene() = default;

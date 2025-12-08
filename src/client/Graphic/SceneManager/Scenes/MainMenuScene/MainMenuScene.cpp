@@ -65,7 +65,7 @@ void MainMenuScene::_createFakePlayer() {
     }
 }
 
-void MainMenuScene::update() {}
+void MainMenuScene::update(float dt) {}
 
 void MainMenuScene::render(std::shared_ptr<sf::RenderWindow> window) {}
 
