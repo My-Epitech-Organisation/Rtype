@@ -63,6 +63,19 @@
         "VCPKG_TARGET_TRIPLET": "x64-linux",
         "BUILD_GRAPHICAL_TESTS": "OFF"
       }
+    },
+    {
+      "name": "window-linux-debug",
+      "displayName": "Windows (MinGW) on Linux",
+      "description": "Cross-compilation pour Windows depuis Linux via MinGW",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_SYSTEM_NAME": "Windows",
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic",
+        "VCPKG_HOST_TRIPLET": "x64-linux",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/toolchain-mingw.cmake"
+      }
     }
   ],
   "buildPresets": [
@@ -81,6 +94,10 @@
     {
       "name": "windows-release",
       "configurePreset": "windows-release"
+    },
+    {
+      "name": "window-linux-debug",
+      "configurePreset": "window-linux-debug"
     }
   ]
 }

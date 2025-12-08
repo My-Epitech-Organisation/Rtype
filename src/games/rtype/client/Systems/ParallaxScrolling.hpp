@@ -13,7 +13,7 @@
 #include <SFML/Graphics/View.hpp>
 
 #include "ASystem.hpp"
-#include "ecs/ECS.hpp"
+#include "ECS.hpp"
 
 namespace rtype::games::rtype::client {
 

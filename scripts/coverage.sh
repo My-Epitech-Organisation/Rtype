@@ -147,7 +147,7 @@ echo ">>> Generating coverage data..."
 if $GENERATE_HTML; then
     mkdir -p "$COVERAGE_DIR"
 
-    LCOV_OPTS="--rc branch_coverage=1 --ignore-errors mismatch,gcov,inconsistent,negative,unused"
+    LCOV_OPTS="--rc branch_coverage=1 --ignore-errors mismatch,gcov,inconsistent,negative,unused,source"
 
     lcov --capture --directory . --output-file "$COVERAGE_DIR/coverage.info" $LCOV_OPTS
 

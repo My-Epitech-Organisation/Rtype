@@ -9,7 +9,7 @@
 
 #include "../../../src/games/rtype/shared/Components.hpp"
 #include "../../../src/games/rtype/shared/Systems/Movements/MovementSystem.hpp"
-#include "../../../../lib/rtype_ecs/src/ecs/ECS.hpp"
+#include "../../../../lib/rtype_ecs/src/ECS.hpp"
 
 using namespace rtype::games::rtype::shared;
 

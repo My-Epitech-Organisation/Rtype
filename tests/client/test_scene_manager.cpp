@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <SFML/Graphics.hpp>
-#include <ecs/ECS.hpp>
+#include <ECS.hpp>
 #include "../src/client/Graphic/SceneManager/SceneManager.hpp"
 #include "../src/client/Graphic/AssetManager/AssetManager.hpp"
 
