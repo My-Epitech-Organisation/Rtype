@@ -10,6 +10,8 @@
 
 #include <functional>
 #include <string>
+#include <cstddef>
+#include <cctype>
 
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Font.hpp>
@@ -60,7 +62,7 @@ struct TextInput {
               const std::string& initialValue = "", std::size_t maxLength = 0,
               bool isNumericOnly = false)
         : font(font),
-          text(font, initialValue.empty() ? placeholder : initialValue),
+          text(font),
           background({width, height}),
           content(initialValue),
           placeholder(placeholder),
@@ -75,6 +77,7 @@ struct TextInput {
         background.setFillColor(backgroundColor);
         background.setOutlineThickness(2.f);
         background.setOutlineColor(unfocusedBorderColor);
+        text.setString(initialValue.empty() ? placeholder : initialValue);
         text.setCharacterSize(fontSize);
         text.setFillColor(content.empty() ? sf::Color(150, 150, 150)
                                           : textColor);

@@ -79,58 +79,13 @@ void Graphic::loop() {
 
 void Graphic::_setupNetworkEntityFactory() {
     namespace rc = rtype::games::rtype::client;
-    namespace rs = rtype::games::rtype::shared;
 
     auto assetsManager = this->_assetsManager;
     auto registry = this->_registry;
 
     _networkSystem->setEntityFactory(
-        [assetsManager, registry](
-            ECS::Registry& reg,
-            const rtype::client::EntitySpawnEvent& event) -> ECS::Entity {
-            LOG_DEBUG("[Graphic::entityFactory] Creating entity type=" +
-                      std::to_string(static_cast<int>(event.type)) + " pos=(" +
-                      std::to_string(event.x) + ", " + std::to_string(event.y) +
-                      ")");
-
-            auto entity = reg.spawnEntity();
-            reg.emplaceComponent<rs::Position>(entity, event.x, event.y);
-            reg.emplaceComponent<rs::VelocityComponent>(entity, 0.f, 0.f);
-
-            switch (event.type) {
-                case rtype::network::EntityType::Player:
-                    LOG_DEBUG(
-                        "[Graphic::entityFactory] Adding Player components");
-                    reg.emplaceComponent<rc::Image>(
-                        entity,
-                        assetsManager->textureManager->get("player_vessel"));
-                    reg.emplaceComponent<rc::TextureRect>(
-                        entity, std::pair<int, int>({0, 0}),
-                        std::pair<int, int>({33, 17}));
-                    reg.emplaceComponent<rc::Size>(entity, 4, 4);
-                    reg.emplaceComponent<rc::PlayerTag>(entity);
-                    reg.emplaceComponent<rc::ZIndex>(entity, 0);
-                    break;
-
-                case rtype::network::EntityType::Bydos:
-                    reg.emplaceComponent<rc::Image>(
-                        entity,
-                        assetsManager->textureManager->get("player_vessel"));
-                    reg.emplaceComponent<rc::TextureRect>(
-                        entity, std::pair<int, int>({0, 0}),
-                        std::pair<int, int>({33, 17}));
-                    reg.emplaceComponent<rc::Size>(entity, 3, 3);
-                    reg.emplaceComponent<rc::ZIndex>(entity, 0);
-                    break;
-
-                case rtype::network::EntityType::Missile:
-                    reg.emplaceComponent<rc::Size>(entity, 1, 1);
-                    reg.emplaceComponent<rc::ZIndex>(entity, 1);
-                    break;
-            }
-
-            return entity;
-        });
+        rc::RtypeEntityFactory::createNetworkEntityFactory(registry,
+                                                          assetsManager));
     _networkSystem->onLocalPlayerAssigned(
         [registry](std::uint32_t /*userId*/, ECS::Entity entity) {
             if (registry->isAlive(entity)) {

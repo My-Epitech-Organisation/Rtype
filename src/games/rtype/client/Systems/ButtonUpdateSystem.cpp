@@ -29,7 +29,7 @@ void ButtonUpdateSystem::update(ECS::Registry& registry, float /*dt*/) {
                 } catch (SceneNotFound& e) {
                     ::rtype::Logger::instance().error(
                         std::string("Error executing button callback: ") +
-                        e.what());
+                        std::string(e.what()));
                 }
             }
         });

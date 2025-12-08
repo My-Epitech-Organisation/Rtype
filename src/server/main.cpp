@@ -179,7 +179,7 @@ int main(int argc, char** argv) {
         return runServer(*config, ServerSignals::shutdown(),
                          ServerSignals::reloadConfig());
     } catch (const std::exception& e) {
-        LOG_ERROR("[Main] Fatal error: " << e.what());
+        LOG_ERROR("[Main] Fatal error: " << std::string(e.what()));
         return 1;
     } catch (...) {
         LOG_ERROR("[Main] Unknown fatal error occurred");

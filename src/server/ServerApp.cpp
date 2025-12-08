@@ -411,7 +411,7 @@ std::optional<rtype::network::Packet> ServerApp::extractPacketFromData(
         return packet;
     } catch (const std::exception& e) {
         LOG_ERROR("[Server] Exception extracting packet from "
-                  << endpoint << ": " << e.what());
+                  << endpoint << ": " << std::string(e.what()));
         _metrics->packetsDropped.fetch_add(1, std::memory_order_relaxed);
         return std::nullopt;
     } catch (...) {
@@ -444,7 +444,7 @@ bool ServerApp::startNetworkThread() {
         LOG_DEBUG("[Server] Network thread started");
         return true;
     } catch (const std::exception& e) {
-        LOG_ERROR("[Server] Failed to start network thread: " << e.what());
+        LOG_ERROR("[Server] Failed to start network thread: " << std::string(e.what()));
         _networkThreadRunning.store(false, std::memory_order_release);
         return false;
     }

@@ -169,7 +169,7 @@ void MainMenuScene::_onConnectClicked(
         try {
             switchToScene(SceneManager::IN_GAME);
         } catch (SceneNotFound& e) {
-            LOG_ERROR(std::string("Error switching to Game: ") + e.what());
+            LOG_ERROR(std::string("Error switching to Game: ") + std::string(e.what()));
         }
     });
 
@@ -305,7 +305,7 @@ MainMenuScene::MainMenuScene(
                 switchToScene(SceneManager::IN_GAME);
             } catch (SceneNotFound& e) {
                 LOG_ERROR(std::string("Error switching to Game Menu: ") +
-                          e.what());
+                          std::string(e.what()));
             }
         })));
     this->_listEntity.push_back(EntityFactory::createButton(
@@ -321,7 +321,7 @@ MainMenuScene::MainMenuScene(
                 switchToScene(SceneManager::SETTINGS_MENU);
             } catch (SceneNotFound& e) {
                 LOG_ERROR(std::string("Error switching to Settings Menu: ") +
-                          e.what());
+                          std::string(e.what()));
             }
         })));
     this->_listEntity.push_back(EntityFactory::createButton(

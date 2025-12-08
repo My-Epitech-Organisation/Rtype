@@ -155,7 +155,7 @@ SettingsScene::SettingsScene(
                 switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
                 LOG_ERROR(std::string("Error switching to Main Menu: ") +
-                          e.what());
+                          std::string(e.what()));
             }
         })));
 }
