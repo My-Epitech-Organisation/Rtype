@@ -8,6 +8,8 @@
 #ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_GAMESCENE_GAMESCENE_HPP_
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_GAMESCENE_GAMESCENE_HPP_
 
+#include <cstdint>
+
 #include "../../../../network/ClientNetworkSystem.hpp"
 #include "../../../../network/NetworkClient.hpp"
 #include "../AScene.hpp"
@@ -17,8 +19,6 @@ static constexpr int SizeXPauseMenu = 600;
 static constexpr int SizeYPauseMenu = 600;
 static constexpr int SizeFontPauseMenu = 40;
 static constexpr std::string PauseMenuTitle = "Pause";
-
-static constexpr float PlayerMovementSpeed = 300.0f;
 
 class GameScene : public AScene {
    private:
@@ -30,10 +30,8 @@ class GameScene : public AScene {
     /// @brief Network system for ECS synchronization
     std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
 
-    void _updateUserMovementUp();
-    void _updateUserMovementDown();
-    void _updateUserMovementLeft();
-    void _updateUserMovementRight();
+    /// @brief Last input mask sent to server (to avoid flooding)
+    std::uint8_t _lastInputMask = 0;
 
     void _handleKeyReleasedEvent(const sf::Event& event);
 
