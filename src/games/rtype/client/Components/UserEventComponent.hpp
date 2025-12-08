@@ -23,10 +23,10 @@ namespace rtype::games::rtype::client {
  * - isReleased triggers button callbacks, then resets to idle
  */
 struct UserEvent {
-    bool idle = true;         ///< No interaction occurring
-    bool isHovered = false;   ///< Mouse is over the element
-    bool isClicked = false;   ///< Mouse button is pressed on element
-    bool isReleased = false;  ///< Mouse button was released (triggers action)
+    bool idle = true;
+    bool isHovered = false;
+    bool isClicked = false;
+    bool isReleased = false;
 };
 
 }  // namespace rtype::games::rtype::client

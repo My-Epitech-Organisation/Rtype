@@ -23,11 +23,11 @@ namespace rtype::games::rtype::client {
  * Stores both the SFML text object and the raw string content.
  */
 struct Text {
-    sf::Font font;            ///< Font used for rendering
-    sf::Text text;            ///< SFML text object for rendering
-    std::string textContent;  ///< Raw text string
-    sf::Color color;          ///< Text color
-    unsigned int size;        ///< Font size in pixels
+    sf::Font font;
+    sf::Text text;
+    std::string textContent;
+    sf::Color color;
+    unsigned int size;
 
     /**
      * @brief Construct a new Text component.

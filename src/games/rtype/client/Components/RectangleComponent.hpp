@@ -21,13 +21,13 @@ namespace rtype::games::rtype::client {
  * Supports hover state with different colors.
  */
 struct Rectangle {
-    std::pair<float, float> size;        ///< Width and height of the rectangle
-    sf::Color mainColor;                 ///< Default color when not hovered
-    sf::Color hoveredColor;              ///< Color when mouse is hovering
-    sf::Color currentColor = mainColor;  ///< Current display color
-    float outlineThickness = 0;          ///< Border thickness (0 = no border)
-    sf::Color outlineColor = sf::Color::Black;  ///< Border color
-    sf::RectangleShape rectangle;               ///< SFML shape for rendering
+    std::pair<float, float> size;
+    sf::Color mainColor;
+    sf::Color hoveredColor;
+    sf::Color currentColor = mainColor;
+    float outlineThickness = 0;
+    sf::Color outlineColor = sf::Color::Black;
+    sf::RectangleShape rectangle;
 
     /**
      * @brief Construct a new Rectangle component.

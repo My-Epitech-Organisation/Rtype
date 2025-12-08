@@ -1,4 +1,3 @@
 add_subdirectory(MainMenuScene)
 add_subdirectory(SettingsScene)
 add_subdirectory(GameScene)
-add_subdirectory(StressTestScene)

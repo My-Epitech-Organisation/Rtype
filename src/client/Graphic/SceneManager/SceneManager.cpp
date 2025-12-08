@@ -12,7 +12,6 @@
 #include "Scenes/GameScene/GameScene.hpp"
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
 #include "Scenes/SettingsScene/SettingsScene.hpp"
-#include "Scenes/StressTestScene/StressTestScene.hpp"
 
 void SceneManager::_applySceneChange() {
     if (this->_nextScene.has_value()) {
@@ -83,10 +82,6 @@ SceneManager::SceneManager(std::shared_ptr<ECS::Registry> ecs,
     this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
         return std::make_unique<GameScene>(
             ecs, texture, this->_window, this->_keybinds, this->_switchToScene);
-    });
-    this->_sceneList.emplace(STRESS_TEST, [ecs, texture, this]() {
-        return std::make_unique<StressTestScene>(ecs, texture, this->_window,
-                                                 this->_switchToScene);
     });
     this->setCurrentScene(MAIN_MENU);
 }

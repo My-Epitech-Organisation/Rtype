@@ -22,8 +22,8 @@ namespace rtype::games::rtype::shared {
  * - Y increases downward
  */
 struct Position {
-    float x = 0.0f;  ///< X coordinate in pixels
-    float y = 0.0f;  ///< Y coordinate in pixels
+    float x = 0.0f;
+    float y = 0.0f;
 };
 
 }  // namespace rtype::games::rtype::shared
