@@ -1,0 +1,158 @@
+# =============================================================================
+# R-Type Enemy Configuration
+# =============================================================================
+# This file defines all enemy types in the game.
+# Each [[enemy]] block creates a new enemy type that can be referenced
+# in level files by its 'id'.
+
+# -----------------------------------------------------------------------------
+# Basic Enemy - Simple left-moving enemy
+# -----------------------------------------------------------------------------
+[[enemy]]
+id = "basic"
+name = "Basic Enemy"
+sprite_sheet = "assets/sprites/enemies/basic.png"
+
+# Stats
+health = 50
+damage = 10
+score_value = 100
+
+# Movement
+behavior = "move_left"
+speed = 100.0
+
+# Hitbox
+hitbox_width = 32.0
+hitbox_height = 32.0
+
+# Shooting
+can_shoot = false
+
+# -----------------------------------------------------------------------------
+# Wave Enemy - Moves in a sine wave pattern
+# -----------------------------------------------------------------------------
+[[enemy]]
+id = "wave"
+name = "Wave Enemy"
+sprite_sheet = "assets/sprites/enemies/wave.png"
+
+health = 75
+damage = 15
+score_value = 150
+
+behavior = "sine_wave"
+speed = 200.0
+
+hitbox_width = 36.0
+hitbox_height = 36.0
+
+can_shoot = false
+
+# -----------------------------------------------------------------------------
+# Shooter Enemy - Stationary enemy that shoots
+# -----------------------------------------------------------------------------
+[[enemy]]
+id = "shooter"
+name = "Shooter Enemy"
+sprite_sheet = "assets/sprites/enemies/shooter.png"
+
+health = 100
+damage = 20
+score_value = 200
+
+behavior = "stationary"
+speed = 0.0
+
+hitbox_width = 48.0
+hitbox_height = 48.0
+
+can_shoot = true
+fire_rate = 1.5
+projectile_type = "enemy_bullet"
+
+# -----------------------------------------------------------------------------
+# Chaser Enemy - Follows the player
+# -----------------------------------------------------------------------------
+[[enemy]]
+id = "chaser"
+name = "Chaser Enemy"
+sprite_sheet = "assets/sprites/enemies/chaser.png"
+
+health = 60
+damage = 25
+score_value = 250
+
+behavior = "chase"
+speed = 120.0
+
+hitbox_width = 28.0
+hitbox_height = 28.0
+
+can_shoot = false
+
+# -----------------------------------------------------------------------------
+# Patrol Enemy - Moves between patrol points
+# -----------------------------------------------------------------------------
+[[enemy]]
+id = "patrol"
+name = "Patrol Enemy"
+sprite_sheet = "assets/sprites/enemies/patrol.png"
+
+health = 80
+damage = 15
+score_value = 175
+
+behavior = "patrol"
+speed = 600.0
+
+hitbox_width = 40.0
+hitbox_height = 32.0
+
+can_shoot = true
+fire_rate = 0.5
+projectile_type = "enemy_bullet"
+
+# -----------------------------------------------------------------------------
+# Heavy Enemy - Slow but tanky
+# -----------------------------------------------------------------------------
+[[enemy]]
+id = "heavy"
+name = "Heavy Enemy"
+sprite_sheet = "assets/sprites/enemies/heavy.png"
+
+health = 300
+damage = 40
+score_value = 500
+
+behavior = "move_left"
+speed = 40.0
+
+hitbox_width = 64.0
+hitbox_height = 64.0
+
+can_shoot = true
+fire_rate = 0.8
+projectile_type = "heavy_bullet"
+
+# -----------------------------------------------------------------------------
+# Boss - Level 1 Boss
+# -----------------------------------------------------------------------------
+[[enemy]]
+id = "boss_1"
+name = "Stage 1 Boss"
+sprite_sheet = "assets/sprites/enemies/boss_1.png"
+
+health = 2000
+damage = 50
+score_value = 5000
+
+behavior = "patrol"
+speed = 60.0
+
+hitbox_width = 128.0
+hitbox_height = 96.0
+
+can_shoot = true
+fire_rate = 2.0
+projectile_type = "boss_bullet"

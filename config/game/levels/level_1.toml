@@ -1,0 +1,193 @@
+# =============================================================================
+# R-Type Level 1 - Space Station
+# =============================================================================
+# First level configuration with waves and boss
+
+[level]
+id = "level_1"
+name = "Space Station"
+background = "assets/backgrounds/space_station.png"
+scroll_speed = 50.0
+boss = "boss_1"
+
+# -----------------------------------------------------------------------------
+# Wave 1 - Introduction (Basic enemies only)
+# -----------------------------------------------------------------------------
+[[wave]]
+number = 1
+spawn_delay = 0.8
+
+[[wave.spawn]]
+enemy = "basic"
+x = 850.0
+y = 100.0
+delay = 0.0
+count = 1
+
+[[wave.spawn]]
+enemy = "basic"
+x = 850.0
+y = 200.0
+delay = 1.0
+count = 1
+
+[[wave.spawn]]
+enemy = "basic"
+x = 850.0
+y = 300.0
+delay = 2.0
+count = 1
+
+[[wave.spawn]]
+enemy = "basic"
+x = 850.0
+y = 400.0
+delay = 3.0
+count = 1
+
+[[wave.spawn]]
+enemy = "basic"
+x = 850.0
+y = 500.0
+delay = 4.0
+count = 1
+
+# -----------------------------------------------------------------------------
+# Wave 2 - Wave enemies
+# -----------------------------------------------------------------------------
+[[wave]]
+number = 2
+spawn_delay = 0.5
+
+[[wave.spawn]]
+enemy = "wave"
+x = 850.0
+y = 150.0
+delay = 0.0
+count = 3
+
+[[wave.spawn]]
+enemy = "wave"
+x = 850.0
+y = 350.0
+delay = 2.0
+count = 3
+
+[[wave.spawn]]
+enemy = "basic"
+x = 850.0
+y = 250.0
+delay = 4.0
+count = 2
+
+# -----------------------------------------------------------------------------
+# Wave 3 - Mixed enemies with first shooter
+# -----------------------------------------------------------------------------
+[[wave]]
+number = 3
+spawn_delay = 0.6
+
+[[wave.spawn]]
+enemy = "basic"
+x = 850.0
+y = 100.0
+delay = 0.0
+count = 2
+
+[[wave.spawn]]
+enemy = "shooter"
+x = 750.0
+y = 300.0
+delay = 1.5
+count = 1
+
+[[wave.spawn]]
+enemy = "wave"
+x = 850.0
+y = 450.0
+delay = 2.5
+count = 2
+
+[[wave.spawn]]
+enemy = "basic"
+x = 850.0
+y = 200.0
+delay = 4.0
+count = 3
+
+# -----------------------------------------------------------------------------
+# Wave 4 - Chasers introduced
+# -----------------------------------------------------------------------------
+[[wave]]
+number = 4
+spawn_delay = 0.4
+
+[[wave.spawn]]
+enemy = "chaser"
+x = 850.0
+y = 200.0
+delay = 0.0
+count = 2
+
+[[wave.spawn]]
+enemy = "shooter"
+x = 700.0
+y = 100.0
+delay = 1.0
+count = 1
+
+[[wave.spawn]]
+enemy = "shooter"
+x = 700.0
+y = 500.0
+delay = 1.0
+count = 1
+
+[[wave.spawn]]
+enemy = "wave"
+x = 850.0
+y = 300.0
+delay = 3.0
+count = 4
+
+# -----------------------------------------------------------------------------
+# Wave 5 - Pre-boss wave (challenging)
+# -----------------------------------------------------------------------------
+[[wave]]
+number = 5
+spawn_delay = 0.3
+
+[[wave.spawn]]
+enemy = "heavy"
+x = 850.0
+y = 300.0
+delay = 0.0
+count = 1
+
+[[wave.spawn]]
+enemy = "patrol"
+x = 850.0
+y = 100.0
+delay = 1.0
+count = 2
+
+[[wave.spawn]]
+enemy = "patrol"
+x = 850.0
+y = 500.0
+delay = 1.0
+count = 2
+
+[[wave.spawn]]
+enemy = "chaser"
+x = 850.0
+y = 250.0
+delay = 3.0
+count = 3
+
+[[wave.spawn]]
+enemy = "shooter"
+x = 650.0
+y = 300.0
+delay = 5.0
+count = 2

@@ -14,6 +14,7 @@
 #include <format>
 #include <iostream>
 #include <memory>
+#include <string>
 
 /**
  * @brief Encapsulates server signal flags for thread-safe access
@@ -46,6 +47,11 @@ struct ServerConfig {
     size_t maxPlayers = 4;
     uint32_t tickRate = 60;
     bool verbose = false;
+    std::string configPath = "config/server";
+
+    bool portOverride = false;
+    bool maxPlayersOverride = false;
+    bool tickRateOverride = false;
 };
 
 #endif  // SRC_SERVER_MAIN_HPP_
