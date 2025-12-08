@@ -424,6 +424,12 @@ class ServerApp {
     void update() noexcept;
 
     /**
+     * @brief Update player movement based on velocity
+     * @param deltaTime Time since last update in seconds
+     */
+    void updatePlayerMovement(float deltaTime) noexcept;
+
+    /**
      * @brief Send game state updates to all clients
      */
     void broadcastGameState() noexcept;
