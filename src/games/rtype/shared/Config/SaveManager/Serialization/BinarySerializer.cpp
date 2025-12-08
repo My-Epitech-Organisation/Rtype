@@ -124,10 +124,9 @@ std::string BinarySerializer::readString(
     if (*offset + length > buffer->size()) {
         throw std::out_of_range("Buffer overflow reading string");
     }
-    std::string value(
-        buffer->begin() + static_cast<std::ptrdiff_t>(*offset),
-        buffer->begin() + static_cast<std::ptrdiff_t>(*offset) +
-            static_cast<std::ptrdiff_t>(length));
+    std::string value(buffer->begin() + static_cast<std::ptrdiff_t>(*offset),
+                      buffer->begin() + static_cast<std::ptrdiff_t>(*offset) +
+                          static_cast<std::ptrdiff_t>(length));
     *offset += length;
     return value;
 }

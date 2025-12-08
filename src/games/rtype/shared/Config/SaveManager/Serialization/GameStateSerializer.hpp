@@ -44,20 +44,17 @@ class GameStateSerializer {
     deserialize(const std::vector<uint8_t>& data);
 
    private:
-    static void serializePlayers(
-        std::shared_ptr<std::vector<uint8_t>> data,
-        const std::vector<PlayerState>& players);
+    static void serializePlayers(std::shared_ptr<std::vector<uint8_t>> data,
+                                 const std::vector<PlayerState>& players);
 
     static void serializeEnemies(std::shared_ptr<std::vector<uint8_t>> data,
                                  const std::vector<EnemyState>& enemies);
 
-    static void serializeProgression(
-        std::shared_ptr<std::vector<uint8_t>> data,
-        const ProgressionData& progression);
+    static void serializeProgression(std::shared_ptr<std::vector<uint8_t>> data,
+                                     const ProgressionData& progression);
 
-    static void serializeDifficulty(
-        std::shared_ptr<std::vector<uint8_t>> data,
-        const DifficultySnapshot& difficulty);
+    static void serializeDifficulty(std::shared_ptr<std::vector<uint8_t>> data,
+                                    const DifficultySnapshot& difficulty);
 
     static void deserializePlayers(
         std::shared_ptr<const std::vector<uint8_t>> data,
