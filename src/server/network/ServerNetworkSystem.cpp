@@ -133,6 +133,10 @@ void ServerNetworkSystem::broadcastEntityUpdates() {
     }
 }
 
+void ServerNetworkSystem::broadcastGameStart() {
+    server_->updateGameState(NetworkServer::GameState::Running);
+}
+
 void ServerNetworkSystem::update() {
     server_->poll();
 
