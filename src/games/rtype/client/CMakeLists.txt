@@ -11,10 +11,12 @@ find_package(SFML
 
 add_subdirectory(Components)
 add_subdirectory(Systems)
+add_subdirectory(GameScene)
 
 add_library(rtype_game_client STATIC
     $<TARGET_OBJECTS:rtype_game_client_systems>
     $<TARGET_OBJECTS:rtype_game_client_components>
+    $<TARGET_OBJECTS:rtype_game_client_gamescene>
 )
 
 target_include_directories(rtype_game_client PUBLIC
