@@ -450,17 +450,14 @@ class ServerApp {
 
     rtype::network::SecurityContext _securityContext;
 
-    // Game engine and network integration
     std::unique_ptr<engine::IGameEngine> _gameEngine;
     std::shared_ptr<NetworkServer> _networkServer;
     std::unique_ptr<ServerNetworkSystem> _networkSystem;
     std::shared_ptr<ECS::Registry> _registry;
 
-    // Game state management
     GameState _gameState{GameState::WaitingForPlayers};
-    std::set<std::uint32_t> _readyPlayers;  ///< Players who signaled ready
-    static constexpr size_t MIN_PLAYERS_TO_START =
-        1;  ///< Minimum ready players to start
+    std::set<std::uint32_t> _readyPlayers;
+    static constexpr size_t MIN_PLAYERS_TO_START = 1;
 
     /**
      * @brief Handle a new client connection

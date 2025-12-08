@@ -579,7 +579,7 @@ void ServerApp::handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
         }
     }
 
-    // TODO(Noa): Handle shoot input (inputMask & kShoot)
+    // TODO(Paul-Antoine): Handle shoot input (inputMask & kShoot)
 }
 
 void ServerApp::processGameEvents() {
