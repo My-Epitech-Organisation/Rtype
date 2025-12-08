@@ -13,6 +13,7 @@ add_library(rtype_game_client_systems STATIC
     BoxingSystem.hpp
     ResetTriggersSystem.cpp
     ResetTriggersSystem.hpp
+    TextInputSystem.hpp
 )
 
 target_link_libraries(rtype_game_client_systems
