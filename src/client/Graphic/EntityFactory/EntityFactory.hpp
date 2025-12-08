@@ -78,14 +78,13 @@ ECS::Entity createPlayer(std::shared_ptr<ECS::Registry> registry,
 
 std::vector<ECS::Entity> createSection(std::shared_ptr<ECS::Registry> registry,
                                        std::shared_ptr<AssetManager> assets,
-                                       std::string_view title, float x,
-                                       float y, float width, float height);
+                                       std::string_view title, float x, float y,
+                                       float width, float height);
 
 ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
                              std::shared_ptr<AssetManager> assets,
-                             std::string_view title,
-                             std::string_view fontId, float posX, float posY,
-                             float size);
+                             std::string_view title, std::string_view fontId,
+                             float posX, float posY, float size);
 };  // namespace EntityFactory
 
 #endif  // SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_

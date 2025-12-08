@@ -159,9 +159,8 @@ ECS::Entity EntityFactory::createStaticText(
 ECS::Entity EntityFactory::createTextInput(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assetManager, float x, float y, float width,
-    float height, std::string_view placeholder,
-    std::string_view initialValue, std::size_t maxLength,
-    bool isNumericOnly) {
+    float height, std::string_view placeholder, std::string_view initialValue,
+    std::size_t maxLength, bool isNumericOnly) {
     auto entity = registry->spawnEntity();
 
     registry->emplaceComponent<rtype::games::rtype::client::TextInput>(
