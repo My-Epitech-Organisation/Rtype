@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <functional>
 #include <string>
+#include <string_view>
 
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Font.hpp>
@@ -40,11 +41,7 @@ struct TextInput {
     std::size_t maxLength;
     bool isFocused;
     bool isNumericOnly;
-
-    /// Callback when content changes
     std::function<void(const std::string&)> onChanged;
-
-    /// Callback when Enter is pressed
     std::function<void(const std::string&)> onSubmit;
 
     /**
@@ -58,8 +55,8 @@ struct TextInput {
      * @param isNumericOnly Only allow numeric input
      */
     TextInput(const sf::Font& font, float width, float height,
-              const std::string& placeholder = "",
-              const std::string& initialValue = "", std::size_t maxLength = 0,
+              std::string_view placeholder = "",
+              std::string_view initialValue = "", std::size_t maxLength = 0,
               bool isNumericOnly = false)
         : font(font),
           text(font),
@@ -77,7 +74,8 @@ struct TextInput {
         background.setFillColor(backgroundColor);
         background.setOutlineThickness(2.f);
         background.setOutlineColor(unfocusedBorderColor);
-        text.setString(initialValue.empty() ? placeholder : initialValue);
+        text.setString(std::string(initialValue.empty() ? placeholder
+                                                        : initialValue));
         text.setCharacterSize(fontSize);
         text.setFillColor(content.empty() ? sf::Color(150, 150, 150)
                                           : textColor);
