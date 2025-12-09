@@ -68,6 +68,22 @@ inline constexpr int ZINDEX_ENTITIES = 0;
 /// @brief Z-index for UI elements
 inline constexpr int ZINDEX_UI = 10;
 
+/// @brief Default Z-index
+inline constexpr int ZINDEX_DEFAULT = 0;
+
+// ==========================================================================
+// Map Element Z-Index Layers
+// ==========================================================================
+
+/// @brief Z-index for map decorations (behind obstacles)
+inline constexpr int ZINDEX_MAP_DECORATIONS = -1;
+
+/// @brief Z-index for map obstacles (walls, platforms)
+inline constexpr int ZINDEX_MAP_OBSTACLES = 1;
+
+/// @brief Z-index for destroyable map tiles
+inline constexpr int ZINDEX_MAP_TILES = 1;
+
 // ==========================================================================
 // UI Configuration
 // ==========================================================================
