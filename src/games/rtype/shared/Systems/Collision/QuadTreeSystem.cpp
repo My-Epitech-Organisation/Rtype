@@ -43,9 +43,9 @@ std::vector<CollisionPair> QuadTreeSystem::queryCollisionPairs(
 
     auto view = registry.view<TransformComponent, BoundingBoxComponent>();
 
-    view.each([this, &pairs, &checkedPairs](
-                  ECS::Entity entity, const TransformComponent& transform,
-                  const BoundingBoxComponent& bbox) {
+    view.each([this, &pairs, &checkedPairs](ECS::Entity entity,
+                                            const TransformComponent& transform,
+                                            const BoundingBoxComponent& bbox) {
         collision::Rect bounds = createRectFromComponents(transform, bbox);
 
         std::vector<collision::QuadTreeObject<uint32_t>> nearby;
