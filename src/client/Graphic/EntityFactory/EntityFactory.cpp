@@ -145,10 +145,10 @@ std::vector<ECS::Entity> EntityFactory::createSection(
 ECS::Entity EntityFactory::createStaticText(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assets, std::string_view title,
-    std::string_view fontId, float posX, float posY, float size) {
+    std::string_view fontId, const sf::Vector2f& position, float size) {
     auto titleEnt = registry->spawnEntity();
     registry->emplaceComponent<rtype::games::rtype::shared::Position>(
-        titleEnt, posX, posY);
+        titleEnt, position.x, position.y);
     registry->emplaceComponent<rtype::games::rtype::client::Text>(
         titleEnt, assets->fontManager->get(std::string(fontId)),
         sf::Color::White, size, title);

@@ -83,7 +83,7 @@ std::vector<ECS::Entity> createSection(std::shared_ptr<ECS::Registry> registry,
 ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
                              std::shared_ptr<AssetManager> assets,
                              std::string_view title, std::string_view fontId,
-                             float posX, float posY, float size);
+                             const sf::Vector2f& position, float size);
 };  // namespace EntityFactory
 
 #endif  // SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_

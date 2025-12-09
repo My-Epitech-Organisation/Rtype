@@ -31,9 +31,9 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
 
     auto titleEntity = EntityFactory::createStaticText(
         registry, assetsManager, kPauseMenuTitle, "title_font",
-        (sectionX + kSizeXPauseMenu / 2) -
-            ((kPauseMenuTitle.length() - 2) * (kSizeFontPauseMenu / 2)),
-        sectionY, kSizeFontPauseMenu);
+        sf::Vector2f((sectionX + kSizeXPauseMenu / 2) -
+                     ((kPauseMenuTitle.length() - 2) * (kSizeFontPauseMenu / 2)),
+                     sectionY), kSizeFontPauseMenu);
 
     auto& titleText = registry->getComponent<Text>(titleEntity);
     sf::FloatRect bounds = titleText.text.getLocalBounds();
