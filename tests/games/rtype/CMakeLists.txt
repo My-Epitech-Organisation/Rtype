@@ -102,3 +102,19 @@ target_include_directories(test_engine PRIVATE
 )
 
 gtest_discover_tests(test_engine)
+
+# Level Loader tests (LevelLoader, MapElementConfig, ScrollingSystem)
+add_executable(test_level_loader test_level_loader.cpp)
+
+target_link_libraries(test_level_loader PRIVATE
+    rtype_game_shared
+    rtype_engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_level_loader PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_level_loader)
