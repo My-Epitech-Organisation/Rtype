@@ -83,6 +83,25 @@ class GameEngine : public engine::AGameEngine {
     ECS::Registry& getRegistry() { return _registry; }
     const ECS::Registry& getRegistry() const { return _registry; }
 
+    /**
+     * @brief Load a level by ID
+     * @param levelId Level identifier from config
+     * @return true if level was loaded successfully
+     */
+    bool loadLevel(const std::string& levelId);
+
+    /**
+     * @brief Get the current scroll state (for network synchronization)
+     * @return Const reference to the level scroll state
+     */
+    [[nodiscard]] const shared::LevelScrollState& getScrollState() const;
+
+    /**
+     * @brief Pause or resume level scrolling
+     * @param paused Whether scrolling should be paused
+     */
+    void setLevelPaused(bool paused);
+
    private:
     /**
      * @brief Emit a game event
@@ -100,6 +119,10 @@ class GameEngine : public engine::AGameEngine {
     std::unique_ptr<shared::MovementSystem> _movementSystem;
     std::unique_ptr<CleanupSystem> _cleanupSystem;
     std::unique_ptr<DestroySystem> _destroySystem;
+
+    // Level/Map systems
+    std::unique_ptr<shared::LevelLoader> _levelLoader;
+    std::unique_ptr<shared::MapScrollingSystem> _mapScrollingSystem;
 
     EventCallback _eventCallback;
     std::vector<engine::GameEvent> _pendingEvents;

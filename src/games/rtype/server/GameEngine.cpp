@@ -7,9 +7,13 @@
 
 #include "GameEngine.hpp"
 
+#include "../shared/Config/EntityConfig/EntityConfig.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 
 namespace rtype::games::rtype::server {
+
+// Default scroll state for when no level is loaded
+static shared::LevelScrollState s_defaultScrollState;
 
 GameEngine::GameEngine() : _systemScheduler(_registry) {}
 
@@ -51,6 +55,11 @@ bool GameEngine::initialize() {
     auto enemyDecrementer = [this]() { _spawnerSystem->decrementEnemyCount(); };
     _destroySystem =
         std::make_unique<DestroySystem>(eventEmitter, enemyDecrementer);
+
+    // Initialize level/map systems
+    _levelLoader = std::make_unique<shared::LevelLoader>();
+    _mapScrollingSystem = std::make_unique<shared::MapScrollingSystem>();
+
     _running = true;
     return true;
 }
@@ -58,6 +67,12 @@ bool GameEngine::initialize() {
 void GameEngine::update(float deltaTime) {
     if (!_running) {
         return;
+    }
+
+    // Update level scrolling and map element spawning
+    if (_levelLoader && _levelLoader->isLoaded()) {
+        _levelLoader->update(_registry, deltaTime);
+        _mapScrollingSystem->update(_registry, deltaTime);
     }
 
     _spawnerSystem->update(_registry, deltaTime);
@@ -78,9 +93,45 @@ void GameEngine::shutdown() {
     _movementSystem.reset();
     _cleanupSystem.reset();
     _destroySystem.reset();
+    _levelLoader.reset();
+    _mapScrollingSystem.reset();
     {
         std::lock_guard<std::mutex> lock(_eventMutex);
         _pendingEvents.clear();
+    }
+}
+
+bool GameEngine::loadLevel(const std::string& levelId) {
+    if (!_levelLoader) {
+        return false;
+    }
+
+    // Reset existing level if any
+    if (_levelLoader->isLoaded()) {
+        _levelLoader->reset(_registry);
+    }
+
+    // Load the new level
+    if (!_levelLoader->loadLevel(levelId)) {
+        return false;
+    }
+
+    // Connect scroll state to the scrolling system
+    _mapScrollingSystem->setScrollState(&_levelLoader->getScrollState());
+
+    return true;
+}
+
+const shared::LevelScrollState& GameEngine::getScrollState() const {
+    if (_levelLoader && _levelLoader->isLoaded()) {
+        return _levelLoader->getScrollState();
+    }
+    return s_defaultScrollState;
+}
+
+void GameEngine::setLevelPaused(bool paused) {
+    if (_levelLoader) {
+        _levelLoader->setPaused(paused);
     }
 }
 
