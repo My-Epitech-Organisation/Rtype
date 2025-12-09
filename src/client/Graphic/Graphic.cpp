@@ -52,9 +52,9 @@ void Graphic::_update() {
     _updateNetwork();
     _updateViewScrolling();
 
-    _systemScheduler->runSystem("button_update");
-    _systemScheduler->runSystem("parallax");
     _systemScheduler->runSystem("movement");
+    _systemScheduler->runSystem("parallax");
+    _systemScheduler->runSystem("button_update");
     this->_sceneManager->update();
 }
 
@@ -121,24 +121,24 @@ void Graphic::_initializeSystems() {
         _resetTriggersSystem->update(reg, 0.f);
     });
 
-    _systemScheduler->addSystem(
-        "button_update",
-        [this](ECS::Registry& reg) { _buttonUpdateSystem->update(reg, 0.f); },
-        {"reset_triggers"});
+    _systemScheduler->addSystem("movement",
+                                [this](ECS::Registry& reg) {
+                                    _movementSystem->update(reg,
+                                                            _currentDeltaTime);
+                                },
+                                {"reset_triggers"});
 
     _systemScheduler->addSystem("parallax",
                                 [this](ECS::Registry& reg) {
                                     _parallaxScrolling->update(
                                         reg, _currentDeltaTime);
                                 },
-                                {"button_update"});
+                                {"movement"});
 
-    _systemScheduler->addSystem("movement",
-                                [this](ECS::Registry& reg) {
-                                    _movementSystem->update(reg,
-                                                            _currentDeltaTime);
-                                },
-                                {"parallax"});
+    _systemScheduler->addSystem(
+        "button_update",
+        [this](ECS::Registry& reg) { _buttonUpdateSystem->update(reg, 0.f); },
+        {"parallax"});
 
     _systemScheduler->addSystem(
         "render",

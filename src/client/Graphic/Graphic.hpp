@@ -37,11 +37,11 @@
  * System execution order:
  * 1. ResetTriggers - Resets input states
  * 2. Network - Polls network and processes incoming packets
- * 3. ButtonUpdate - Updates button states (depends on ResetTriggers)
- * 4. Parallax - Updates parallax backgrounds (depends on ButtonUpdate)
- * 5. Movement - Updates entity positions (depends on Parallax)
- * 6. Render - Draws all entities (depends on Movement)
- * 7. Boxing - Draws debug boxes (depends on Render)
+ * 3. Movement - Updates entity positions (depends on ResetTriggers)
+ * 4. Parallax - Updates parallax backgrounds (depends on Movement)
+ * 5. ButtonUpdate - Updates button states (depends on Parallax, for UI/menus)
+ * 6. Render - Draws all entities (depends on ButtonUpdate)
+ * 7. Boxing - Draws debug boxes on top (drawn after Render for visibility)
  */
 class Graphic {
    public:
