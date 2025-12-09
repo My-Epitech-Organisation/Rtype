@@ -19,7 +19,6 @@
 #include "EntityFactory/EntityFactory.hpp"
 #include "Graphic.hpp"
 #include "SceneManager/SceneException.hpp"
-#include "assets/img/missileLaser.h"
 
 void GameScene::_updateUserMovementUp() {
     auto keyMoveUp = this->_keybinds->getKeyBinding(GameAction::MOVE_UP);
@@ -216,6 +215,6 @@ GameScene::GameScene(
     }
     this->_listEntity.insert(this->_listEntity.end(), pauseEntities.begin(),
                              pauseEntities.end());
-    this->_assetsManager->textureManager->load(
-        "projectile_player_laser", missileLaser_gif, missileLaser_gif_len);
+    this->_assetsManager->textureManager->load("projectile_player_laser",
+                                               "./assets/missileLaser.gif");
 }

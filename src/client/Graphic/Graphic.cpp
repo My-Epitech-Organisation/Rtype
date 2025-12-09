@@ -66,76 +66,81 @@ void Graphic::loop() {
 }
 
 void Graphic::_initializeSystems() {
-    _movementSystem =
+    this->_movementSystem =
         std::make_unique<::rtype::games::rtype::client::MovementSystem>();
-    _buttonUpdateSystem =
+    this->_buttonUpdateSystem =
         std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(
             this->_window);
-    _parallaxScrolling =
+    this->_parallaxScrolling =
         std::make_unique<::rtype::games::rtype::client::ParallaxScrolling>(
             this->_view);
-    _renderSystem =
+    this->_renderSystem =
         std::make_unique<::rtype::games::rtype::client::RenderSystem>(
             this->_window);
-    _boxingSystem =
+    this->_boxingSystem =
         std::make_unique<::rtype::games::rtype::client::BoxingSystem>(
             this->_window);
-    _resetTriggersSystem =
+    this->_resetTriggersSystem =
         std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
-    _eventSystem = std::make_unique<::rtype::games::rtype::client::EventSystem>(
-        this->_window);
-    _projectileSystem =
+    this->_eventSystem =
+        std::make_unique<::rtype::games::rtype::client::EventSystem>(
+            this->_window);
+    this->_projectileSystem =
         std::make_unique<::rtype::games::rtype::shared::ProjectileSystem>();
-    _lifetimeSystem =
+    this->_lifetimeSystem =
         std::make_unique<::rtype::games::rtype::shared::LifetimeSystem>();
 
-    _systemScheduler = std::make_unique<ECS::SystemScheduler>(*this->_registry);
+    this->_systemScheduler =
+        std::make_unique<ECS::SystemScheduler>(*this->_registry);
 
-    _systemScheduler->addSystem("reset_triggers", [this](ECS::Registry& reg) {
-        _resetTriggersSystem->update(reg, 0.f);
-    });
+    this->_systemScheduler->addSystem(
+        "reset_triggers", [this](ECS::Registry& reg) {
+            this->_resetTriggersSystem->update(reg, 0.f);
+        });
 
-    _systemScheduler->addSystem(
-        "button_update",
-        [this](ECS::Registry& reg) { _buttonUpdateSystem->update(reg, 0.f); },
-        {"reset_triggers"});
+    this->_systemScheduler->addSystem("button_update",
+                                      [this](ECS::Registry& reg) {
+                                          this->_buttonUpdateSystem->update(
+                                              reg, 0.f);
+                                      },
+                                      {"reset_triggers"});
 
-    _systemScheduler->addSystem("parallax",
-                                [this](ECS::Registry& reg) {
-                                    _parallaxScrolling->update(
-                                        reg, _currentDeltaTime);
-                                },
-                                {"button_update"});
+    this->_systemScheduler->addSystem("parallax",
+                                      [this](ECS::Registry& reg) {
+                                          this->_parallaxScrolling->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"button_update"});
 
-    _systemScheduler->addSystem("movement",
-                                [this](ECS::Registry& reg) {
-                                    _movementSystem->update(reg,
-                                                            _currentDeltaTime);
-                                },
-                                {"parallax"});
+    this->_systemScheduler->addSystem("movement",
+                                      [this](ECS::Registry& reg) {
+                                          this->_movementSystem->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"parallax"});
 
-    _systemScheduler->addSystem("projectile",
-                                [this](ECS::Registry& reg) {
-                                    _projectileSystem->update(
-                                        reg, _currentDeltaTime);
-                                },
-                                {"movement"});
+    this->_systemScheduler->addSystem("projectile",
+                                      [this](ECS::Registry& reg) {
+                                          this->_projectileSystem->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"movement"});
 
-    _systemScheduler->addSystem("lifetime",
-                                [this](ECS::Registry& reg) {
-                                    _lifetimeSystem->update(reg,
-                                                            _currentDeltaTime);
-                                },
-                                {"projectile"});
+    this->_systemScheduler->addSystem("lifetime",
+                                      [this](ECS::Registry& reg) {
+                                          this->_lifetimeSystem->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"projectile"});
 
-    _systemScheduler->addSystem(
+    this->_systemScheduler->addSystem(
         "render",
-        [this](ECS::Registry& reg) { _renderSystem->update(reg, 0.f); },
+        [this](ECS::Registry& reg) { this->_renderSystem->update(reg, 0.f); },
         {"lifetime"});
 
-    _systemScheduler->addSystem(
+    this->_systemScheduler->addSystem(
         "boxing",
-        [this](ECS::Registry& reg) { _boxingSystem->update(reg, 0.f); },
+        [this](ECS::Registry& reg) { this->_boxingSystem->update(reg, 0.f); },
         {"render"});
 }
 
@@ -150,6 +155,6 @@ Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
     this->_assetsManager = std::make_shared<AssetManager>();
     this->_sceneManager = std::make_unique<SceneManager>(
         registry, this->_assetsManager, this->_window, this->_keybinds);
-    _initializeSystems();
+    this->_initializeSystems();
     this->_mainClock.start();
 }
