@@ -63,7 +63,6 @@ struct NetworkConfig {
  * @brief Fonts configuration section
  */
 struct FontsConfig {
-
     std::string MainFont;
     // std::string TitleFont;
 
@@ -74,7 +73,6 @@ struct FontsConfig {
  * @brief Textures configuration section
  */
 struct TexturesConfig {
-
     std::string Player;
     // std::string Enemy;
     std::string background;
@@ -88,10 +86,9 @@ struct TexturesConfig {
 };
 
 /**
-* @brief Music configuration section
-*/
+ * @brief Music configuration section
+ */
 struct MusicConfig {
-
     std::string mainMenu;
     std::string game;
     std::string settings;
@@ -100,17 +97,15 @@ struct MusicConfig {
 };
 
 /**
-* @brief Assets configuration section
-*/
+ * @brief Assets configuration section
+ */
 struct AssetsConfig {
-
     MusicConfig music;
     TexturesConfig textures;
     FontsConfig fonts;
 
     bool operator==(const AssetsConfig&) const = default;
 };
-
 
 /**
  * @brief Server-specific configuration section

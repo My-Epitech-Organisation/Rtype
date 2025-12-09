@@ -27,9 +27,6 @@ class AudioManager {
 
     void load(const std::string& id, const std::string& filePath);
 
-    void load(const std::string& id, unsigned char* fileData,
-              unsigned int fileDataSize);
-
     std::shared_ptr<sf::Music> get(const std::string& id);
 
     AudioManager() = default;

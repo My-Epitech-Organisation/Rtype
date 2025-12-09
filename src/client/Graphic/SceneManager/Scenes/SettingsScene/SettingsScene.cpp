@@ -161,7 +161,8 @@ SettingsScene::SettingsScene(
         })));
 
     this->_assetsManager->audioManager->load(
-        "main_settings_music", this->_assetsManager->configGameAssets.assets.music.settings);
+        "main_settings_music",
+        this->_assetsManager->configGameAssets.assets.music.settings);
     auto settings =
         this->_assetsManager->audioManager->get("main_settings_music");
     this->_audio->loadMusic(settings);

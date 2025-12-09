@@ -127,7 +127,8 @@ MainMenuScene::MainMenuScene(
 
             ));
     this->_assetsManager->audioManager->load(
-        "main_menu_music", this->_assetsManager->configGameAssets.assets.music.mainMenu);
+        "main_menu_music",
+        this->_assetsManager->configGameAssets.assets.music.mainMenu);
     auto bgMusic = this->_assetsManager->audioManager->get("main_menu_music");
     this->_audio->loadMusic(bgMusic);
     this->_audio->setLoop(true);

@@ -26,9 +26,6 @@ class FontManager {
 
     void load(const std::string& id, const std::string& filePath);
 
-    void load(const std::string& id, unsigned char* fileData,
-              unsigned int fileDataSize);
-
     sf::Font& get(const std::string& id);
 
     /**

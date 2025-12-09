@@ -170,7 +170,9 @@ GameScene::GameScene(
     }
     this->_listEntity.insert(this->_listEntity.end(), pauseEntities.begin(),
                              pauseEntities.end());
-    this->_assetsManager->audioManager->load("main_game_music", this->_assetsManager->configGameAssets.assets.music.game);
+    this->_assetsManager->audioManager->load(
+        "main_game_music",
+        this->_assetsManager->configGameAssets.assets.music.game);
     auto bgMusic = this->_assetsManager->audioManager->get("main_game_music");
     this->_audio->loadMusic(bgMusic);
     this->_audio->setLoop(true);

@@ -133,8 +133,7 @@ Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
           sf::FloatRect({0, 0}, {WINDOW_WIDTH, WINDOW_HEIGHT}))) {
     rtype::game::config::RTypeConfigParser parser;
     auto assetsConfig = parser.loadFromFile("./assets/config.toml");
-    if (!assetsConfig.has_value())
-        throw std::exception();
+    if (!assetsConfig.has_value()) throw std::exception();
     this->_keybinds = std::make_shared<KeyboardActions>();
     this->_window = std::make_shared<sf::RenderWindow>(
         sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");

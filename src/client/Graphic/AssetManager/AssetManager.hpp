@@ -20,7 +20,8 @@ class AssetManager {
     std::shared_ptr<FontManager> fontManager = std::make_shared<FontManager>();
     std::shared_ptr<AudioManager> audioManager =
         std::make_shared<AudioManager>();
-    AssetManager(const rtype::game::config::RTypeGameConfig& configGameAssets);
+    explicit AssetManager(
+        const rtype::game::config::RTypeGameConfig& configGameAssets);
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_ASSETMANAGER_HPP_
