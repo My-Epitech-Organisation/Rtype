@@ -10,9 +10,9 @@
 #include <utility>
 
 #include "AllComponents.hpp"
-#include "GraphicsConstants.hpp"
 #include "Components/LifetimeComponent.hpp"
 #include "Components/Tags.hpp"
+#include "GraphicsConstants.hpp"
 #include "Logger/Macros.hpp"
 #include "protocol/Payloads.hpp"
 
@@ -85,12 +85,11 @@ void RtypeEntityFactory::setupMissileEntity(
     ECS::Entity entity) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Missile components");
     reg.emplaceComponent<Image>(
-    entity, assetsManager->textureManager->get("projectile_player_laser"));
-    reg.emplaceComponent<TextureRect>(
-        entity, std::pair<int, int>({0, 0}), std::pair<int, int>({33, 34}));
+        entity, assetsManager->textureManager->get("projectile_player_laser"));
+    reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
+                                      std::pair<int, int>({33, 34}));
     reg.emplaceComponent<Size>(entity, 2, 2);
-    reg.emplaceComponent<shared::ProjectileTag>(
-        entity);
+    reg.emplaceComponent<shared::ProjectileTag>(entity);
     reg.emplaceComponent<ZIndex>(entity, 1);
     reg.emplaceComponent<shared::LifetimeComponent>(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);

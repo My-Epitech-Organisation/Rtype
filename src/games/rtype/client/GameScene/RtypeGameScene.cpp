@@ -10,13 +10,13 @@
 #include <utility>
 
 #include "AllComponents.hpp"
-#include "GraphicsConstants.hpp"
+#include "Components/CountdownComponent.hpp"
 #include "Graphic/EntityFactory/EntityFactory.hpp"
+#include "GraphicsConstants.hpp"
 #include "Logger/Macros.hpp"
 #include "RtypeEntityFactory.hpp"
 #include "RtypeInputHandler.hpp"
 #include "RtypePauseMenu.hpp"
-#include "Components/CountdownComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
