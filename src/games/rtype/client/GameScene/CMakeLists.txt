@@ -8,12 +8,16 @@ add_library(rtype_game_client_gamescene
     RtypePauseMenu.hpp
     RtypeInputHandler.cpp
     RtypeInputHandler.hpp
+    ClientLevelRenderer.cpp
+    ClientLevelRenderer.hpp
 )
 
 target_include_directories(rtype_game_client_gamescene PUBLIC
     ${CMAKE_SOURCE_DIR}/src/client
     ${CMAKE_SOURCE_DIR}/src/client/Graphic
     ${CMAKE_SOURCE_DIR}/src/games/rtype/client
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/lib/rtype_engine/src
     ${CMAKE_SOURCE_DIR}/lib/rtype_ecs/src
     ${CMAKE_SOURCE_DIR}/lib/rtype_common/src
