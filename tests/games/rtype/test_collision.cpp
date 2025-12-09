@@ -1,3 +1,10 @@
+/*
+** EPITECH PROJECT, 2025
+** Rtype
+** File description:
+** test_collision
+*/
+
 #include <gtest/gtest.h>
 
 #include "ECS.hpp"
