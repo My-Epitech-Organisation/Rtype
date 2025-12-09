@@ -25,7 +25,8 @@ RtypeGameScene::RtypeGameScene(
     std::shared_ptr<KeyboardActions> keybinds,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::shared_ptr<::rtype::client::NetworkClient> networkClient,
-    std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem)
+    std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem,
+    std::shared_ptr<AudioLib> audioLib)
     : AGameScene(std::move(registry), std::move(assetsManager),
                  std::move(window), std::move(keybinds),
                  std::move(switchToScene), std::move(networkClient),

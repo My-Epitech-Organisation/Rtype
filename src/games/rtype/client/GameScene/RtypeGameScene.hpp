@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "AudioLib/AudioLib.hpp"
 #include "Graphic/SceneManager/Scenes/GameScene/AGameScene.hpp"
 
 namespace rtype::games::rtype::client {
@@ -40,7 +41,8 @@ class RtypeGameScene : public AGameScene {
         std::shared_ptr<KeyboardActions> keybinds,
         std::function<void(const SceneManager::Scene&)> switchToScene,
         std::shared_ptr<::rtype::client::NetworkClient> networkClient,
-        std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem);
+        std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem,
+        std::shared_ptr<AudioLib> audioLib = nullptr);
 
     ~RtypeGameScene() override = default;
 
