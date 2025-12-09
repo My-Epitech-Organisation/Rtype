@@ -16,6 +16,7 @@
 #include "Components/AIComponent.hpp"
 #include "Components/BoundingBoxComponent.hpp"
 #include "Components/HealthComponent.hpp"
+#include "Components/ScrollComponent.hpp"
 
 // Entity Types and Tags
 #include "Components/EntityType.hpp"
