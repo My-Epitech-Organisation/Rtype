@@ -50,4 +50,4 @@ R-Type/
 
 ## Contributing
 
-We welcome contributions! Please read our contributing guidelines before submitting pull requests.
+We welcome contributions! Please read our [contributing guidelines](./contributing) before submitting pull requests.

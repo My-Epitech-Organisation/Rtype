@@ -10,6 +10,8 @@ add_executable(test_integration
     ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
     ${CMAKE_SOURCE_DIR}/src/server/ServerApp.cpp
     ${CMAKE_SOURCE_DIR}/src/server/ClientManager.cpp
+    test_network_disconnects.cpp
+    test_network_packet_loss.cpp
 )
 
 target_link_libraries(test_integration
@@ -22,6 +24,8 @@ target_link_libraries(test_integration
         rtype_engine
         rtype_game_shared
         rtype_game_server
+    rtype_client_network
+    rtype_server_network
 )
 
 target_include_directories(test_integration

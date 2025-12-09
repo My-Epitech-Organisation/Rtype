@@ -15,6 +15,7 @@
 #include "../../../../network/NetworkClient.hpp"
 #include "../AScene.hpp"
 #include "IGameScene.hpp"
+#include "AudioLib/AudioLib.hpp"
 #include "SceneManager/SceneManager.hpp"
 
 /**
@@ -67,7 +68,8 @@ class GameScene : public AScene {
         std::unique_ptr<IGameScene> gameScene,
         std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,
         std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =
-            nullptr);
+            nullptr),
+        std::shared_ptr<AudioLib> audio;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_GAMESCENE_GAMESCENE_HPP_

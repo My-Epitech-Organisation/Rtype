@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <format>
+#include <utility>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -48,6 +49,22 @@ namespace rtype {
  */
 class ArgParser {
    public:
+    /**
+     * @brief Destructor - clears handler maps to avoid keeping lambdas alive
+     */
+    ~ArgParser() { clear(); }
+
+    /**
+     * @brief Clear all handlers and options
+     */
+    void clear() {
+        _flagHandlers.clear();
+        _valueHandlers.clear();
+        _positionalHandlers.clear();
+        _options.clear();
+        _positionalArgs.clear();
+    }
+
     /**
      * @brief Add a flag option (no argument)
      * @param shortOpt Short option (e.g., "-h")

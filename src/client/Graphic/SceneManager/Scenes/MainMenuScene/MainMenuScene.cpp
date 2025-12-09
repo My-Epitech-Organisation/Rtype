@@ -299,8 +299,9 @@ MainMenuScene::MainMenuScene(
     std::shared_ptr<sf::RenderWindow> window,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,
-    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem)
-    : AScene(ecs, assetsManager, window),
+    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem),
+    std::shared_ptr<AudioLib> audioLib
+    : AScene(ecs, assetsManager, window, audioLib),
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)) {
     this->_listEntity = (EntityFactory::createBackground(
@@ -348,5 +349,14 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::shared::Position(100, 570),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
-        std::function<void()>([this]() { this->_window->close(); })));
+        std::function<void()>([this]() { this->_window->close(); })
+
+            ));
+    this->_assetsManager->audioManager->load(
+        "main_menu_music",
+        this->_assetsManager->configGameAssets.assets.music.mainMenu);
+    auto bgMusic = this->_assetsManager->audioManager->get("main_menu_music");
+    this->_audio->loadMusic(bgMusic);
+    this->_audio->setLoop(true);
+    this->_audio->play();
 }

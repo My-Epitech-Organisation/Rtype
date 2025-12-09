@@ -1,4 +1,5 @@
 add_library(rtype_game_server_systems OBJECT
+    Collision/CollisionSystem.cpp
     Spawner/SpawnerSystem.cpp
     Cleanup/CleanupSystem.cpp
     Destroy/DestroySystem.cpp

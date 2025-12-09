@@ -36,8 +36,9 @@ GameScene::GameScene(
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::unique_ptr<IGameScene> gameScene,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,
-    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem)
-    : AScene(ecs, textureManager, window),
+    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem),
+    std::shared_ptr<AudioLib> audio
+    : AScene(ecs, textureManager, window, audio),
       _keybinds(std::move(keybinds)),
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)),
@@ -45,4 +46,11 @@ GameScene::GameScene(
     if (_gameScene) {
         this->_listEntity = _gameScene->initialize();
     }
+    this->_assetsManager->audioManager->load(
+        "main_game_music",
+        this->_assetsManager->configGameAssets.assets.music.game);
+    auto bgMusic = this->_assetsManager->audioManager->get("main_game_music");
+    this->_audio->loadMusic(bgMusic);
+    this->_audio->setLoop(true);
+    this->_audio->play();
 }

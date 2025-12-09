@@ -41,6 +41,7 @@ bool GameEngine::initialize() {
     shared::registerDefaultBehaviors();
     _aiSystem = std::make_unique<shared::AISystem>();
     _movementSystem = std::make_unique<shared::MovementSystem>();
+    _collisionSystem = std::make_unique<CollisionSystem>();
     CleanupConfig cleanupConfig{};
     cleanupConfig.leftBoundary = GameConfig::CLEANUP_LEFT;
     cleanupConfig.rightBoundary = GameConfig::CLEANUP_RIGHT;
@@ -63,6 +64,7 @@ void GameEngine::update(float deltaTime) {
     _spawnerSystem->update(_registry, deltaTime);
     _aiSystem->update(_registry, deltaTime);
     _movementSystem->update(_registry, deltaTime);
+    _collisionSystem->update(_registry, deltaTime);
     _cleanupSystem->update(_registry, deltaTime);
     _destroySystem->update(_registry, deltaTime);
 }

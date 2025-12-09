@@ -71,33 +71,36 @@ SceneManager::SceneManager(
     std::shared_ptr<sf::RenderWindow> window,
     std::shared_ptr<KeyboardActions> keybinds,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,
-    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem)
+    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem,
+    std::shared_ptr<AudioLib> audioLib)
     : _window(window),
       _keybinds(keybinds),
       _networkClient(std::move(networkClient)),
-      _networkSystem(std::move(networkSystem)) {
+      _networkSystem(std::move(networkSystem)),
+      _audio(audioLib){
     this->_switchToScene = [this](const Scene& scene) {
         this->setCurrentScene(scene);
     };
     this->_sceneList.emplace(MAIN_MENU, [ecs, texture, this]() {
         return std::make_unique<MainMenuScene>(
             ecs, texture, this->_window, this->_switchToScene,
-            this->_networkClient, this->_networkSystem);
+            this->_networkClient, this->_networkSystem, this->_audio);
     });
     this->_sceneList.emplace(SETTINGS_MENU, [ecs, texture, this]() {
-        return std::make_unique<SettingsScene>(
-            ecs, texture, this->_window, this->_switchToScene, this->_keybinds);
+        return std::make_unique<SettingsScene>(ecs, texture, this->_window,
+                                               this->_keybinds, this->_audio,
+                                               this->_switchToScene);
     });
     this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
         auto rtypeGameScene =
             std::make_unique<rtype::games::rtype::client::RtypeGameScene>(
                 ecs, texture, this->_window, this->_keybinds,
                 this->_switchToScene, this->_networkClient,
-                this->_networkSystem);
+                this->_networkSystem, this->_audio);
         return std::make_unique<GameScene>(
             ecs, texture, this->_window, this->_keybinds, this->_switchToScene,
             std::move(rtypeGameScene), this->_networkClient,
-            this->_networkSystem);
+            this->_networkSystem, this->_audio);
     });
     this->setCurrentScene(MAIN_MENU);
     this->_applySceneChange();

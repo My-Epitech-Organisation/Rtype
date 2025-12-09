@@ -12,6 +12,7 @@ target_link_libraries(rtype-graphic-main-menu-scene
     SFML::System
     rtype_engine
     rtype_network
+    rtype-graphic-audio
 )
 
 target_link_libraries(rtype-graphic-main-menu-scene

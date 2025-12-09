@@ -247,7 +247,7 @@ add_compile_options(-Wall -Wextra -Wconversion -Wsign-conversion)
 - [ ] Copy `.clang-tidy` to repo root
 - [ ] Copy `.clang-format` to repo root
 - [ ] Add compiler warnings to CMakeLists.txt
-- [ ] Document in CONTRIBUTION_GUIDELINES.md
+- [ ] Document in CONTRIBUTING.md
 - [ ] VS Code "format on save" settings
 - [ ] Pre-commit hooks (Phase 2)
 - [ ] CI/CD linting jobs (Phase 2)

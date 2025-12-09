@@ -26,9 +26,6 @@ class TextureManager {
 
     void load(const std::string& id, const std::string& filePath);
 
-    void load(const std::string& id, unsigned char* fileData,
-              unsigned int fileDataSize);
-
     sf::Texture& get(const std::string& id);
 
     /**

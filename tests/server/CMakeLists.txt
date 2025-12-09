@@ -127,7 +127,27 @@ target_link_libraries(test_server_app_unit PRIVATE
     rtype_game_shared
 )
 
+add_executable(test_server_network_messages test_server_network_messages.cpp)
+
+target_include_directories(test_server_network_messages PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/common
+)
+
+target_compile_features(test_server_network_messages PRIVATE cxx_std_20)
+
+target_link_libraries(test_server_network_messages PRIVATE
+    GTest::gtest_main
+    rtype_common
+    rtype_toml_parser
+    rtype_network
+    rtype_client_network
+    rtype_server_network
+)
+
 include(GoogleTest)
+gtest_discover_tests(test_server_network_messages)
 gtest_discover_tests(test_client_manager)
 gtest_discover_tests(test_server_app)
 gtest_discover_tests(test_server_app_gameconfig)
