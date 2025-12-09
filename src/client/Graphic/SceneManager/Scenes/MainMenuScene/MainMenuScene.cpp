@@ -82,8 +82,9 @@ void MainMenuScene::_createFakePlayer() {
 void MainMenuScene::_createConnectionPanel(
     std::function<void(const SceneManager::Scene&)> switchToScene) {
     auto panelEntities = EntityFactory::createSection(
-        this->_registry, this->_assetsManager, "", kConnectionPanelX,
-        kConnectionPanelY, kConnectionPanelWidth, kConnectionPanelHeight);
+        this->_registry, this->_assetsManager, "",
+        sf::FloatRect(kConnectionPanelX, kConnectionPanelY,
+                      kConnectionPanelWidth, kConnectionPanelHeight));
     this->_listEntity.insert(this->_listEntity.end(), panelEntities.begin(),
                              panelEntities.end());
 
@@ -97,8 +98,9 @@ void MainMenuScene::_createConnectionPanel(
     this->_listEntity.push_back(ipLabel);
     _ipInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
-        kConnectionPanelX + kInputOffsetX, kConnectionPanelY + 85.f,
-        kInputWidth, kInputHeight, "127.0.0.1", "127.0.0.1", 15, false);
+        sf::FloatRect(kConnectionPanelX + kInputOffsetX,
+                      kConnectionPanelY + 85.f, kInputWidth, kInputHeight),
+        "127.0.0.1", "127.0.0.1", 15, false);
     this->_listEntity.push_back(_ipInputEntity);
     auto portLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Port:", "title_font",
@@ -106,8 +108,9 @@ void MainMenuScene::_createConnectionPanel(
     this->_listEntity.push_back(portLabel);
     _portInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
-        kConnectionPanelX + kInputOffsetX, kConnectionPanelY + 145.f,
-        kInputWidth, kInputHeight, "4242", "4242", 5, true);
+        sf::FloatRect(kConnectionPanelX + kInputOffsetX,
+                      kConnectionPanelY + 145.f, kInputWidth, kInputHeight),
+        "4242", "4242", 5, true);
     this->_listEntity.push_back(_portInputEntity);
     _statusEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "title_font",
@@ -297,7 +300,7 @@ MainMenuScene::MainMenuScene(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("title_font"),
-            sf::Color::White, 36, "Solo (Offline)"),
+            sf::Color::White, 36, "Play"),
         rtype::games::rtype::shared::Position(100, 350),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),

@@ -13,6 +13,7 @@
 #include <string_view>
 #include <vector>
 
+#include <SFML/Graphics/Rect.hpp>
 #include <SFML/System/Vector2.hpp>
 
 #include "AssetManager/AssetManager.hpp"
@@ -50,9 +51,7 @@ static ECS::Entity createButton(
  * @brief Create a text input field entity
  * @param registry ECS registry
  * @param assetManager Asset manager for fonts
- * @param position Position of the input field
- * @param width Width of the input field
- * @param height Height of the input field
+ * @param bounds Bounding rectangle (position and size) of the input field
  * @param placeholder Placeholder text
  * @param initialValue Initial text value
  * @param maxLength Maximum number of characters (0 = unlimited)
@@ -60,8 +59,8 @@ static ECS::Entity createButton(
  * @return Created entity
  */
 ECS::Entity createTextInput(std::shared_ptr<ECS::Registry> registry,
-                            std::shared_ptr<AssetManager> assetManager, float x,
-                            float y, float width, float height,
+                            std::shared_ptr<AssetManager> assetManager,
+                            const sf::FloatRect& bounds,
                             std::string_view placeholder = "",
                             std::string_view initialValue = "",
                             std::size_t maxLength = 0,
@@ -78,8 +77,8 @@ ECS::Entity createPlayer(std::shared_ptr<ECS::Registry> registry,
 
 std::vector<ECS::Entity> createSection(std::shared_ptr<ECS::Registry> registry,
                                        std::shared_ptr<AssetManager> assets,
-                                       std::string_view title, float x, float y,
-                                       float width, float height);
+                                       std::string_view title,
+                                       const sf::FloatRect& bounds);
 
 ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
                              std::shared_ptr<AssetManager> assets,

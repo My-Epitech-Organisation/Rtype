@@ -108,14 +108,15 @@ ECS::Entity EntityFactory::createPlayer(
 
 std::vector<ECS::Entity> EntityFactory::createSection(
     std::shared_ptr<ECS::Registry> registry,
-    std::shared_ptr<AssetManager> assets, std::string_view title, float x,
-    float y, float width, float height) {
+    std::shared_ptr<AssetManager> assets, std::string_view title,
+    const sf::FloatRect& bounds) {
     std::vector<ECS::Entity> entities;
     auto bg = registry->spawnEntity();
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(bg, x, y);
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+        bg, bounds.position.x, bounds.position.y);
     registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
-        bg, std::pair<float, float>{width, height}, sf::Color(0, 0, 0, 150),
-        sf::Color(0, 0, 0, 150));
+        bg, std::pair<float, float>{bounds.size.x, bounds.size.y},
+        sf::Color(0, 0, 0, 150), sf::Color(0, 0, 0, 150));
 
     if (registry->hasComponent<rtype::games::rtype::client::Rectangle>(bg)) {
         auto& rect =
@@ -130,8 +131,8 @@ std::vector<ECS::Entity> EntityFactory::createSection(
 
     auto titleEnt = registry->spawnEntity();
     registry->emplaceComponent<rtype::games::rtype::shared::Position>(
-        titleEnt, x + cfg::SECTION_TITLE_OFFSET_X,
-        y + cfg::SECTION_TITLE_OFFSET_Y);
+        titleEnt, bounds.position.x + cfg::SECTION_TITLE_OFFSET_X,
+        bounds.position.y + cfg::SECTION_TITLE_OFFSET_Y);
     registry->emplaceComponent<rtype::games::rtype::client::Text>(
         titleEnt, assets->fontManager->get("title_font"), sf::Color::White,
         cfg::SECTION_TITLE_FONT_SIZE, title);
@@ -158,17 +159,17 @@ ECS::Entity EntityFactory::createStaticText(
 
 ECS::Entity EntityFactory::createTextInput(
     std::shared_ptr<ECS::Registry> registry,
-    std::shared_ptr<AssetManager> assetManager, float x, float y, float width,
-    float height, std::string_view placeholder, std::string_view initialValue,
+    std::shared_ptr<AssetManager> assetManager, const sf::FloatRect& bounds,
+    std::string_view placeholder, std::string_view initialValue,
     std::size_t maxLength, bool isNumericOnly) {
     auto entity = registry->spawnEntity();
 
     registry->emplaceComponent<rtype::games::rtype::client::TextInput>(
-        entity, assetManager->fontManager->get("title_font"), width, height,
-        placeholder, initialValue, maxLength, isNumericOnly);
+        entity, assetManager->fontManager->get("title_font"), bounds.size.x,
+        bounds.size.y, placeholder, initialValue, maxLength, isNumericOnly);
 
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(entity, x,
-                                                                      y);
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+        entity, bounds.position.x, bounds.position.y);
 
     registry->emplaceComponent<rtype::games::rtype::client::TextInputTag>(
         entity);

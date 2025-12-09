@@ -23,8 +23,9 @@ void SettingsScene::_initKeybindSection() {
     float sectionW = 600;
     float sectionH = 600;
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
-        this->_registry, this->_assetsManager, "Keyboard Assignment", sectionX,
-        sectionY, sectionW, sectionH);
+        this->_registry, this->_assetsManager, "Keyboard Assignment",
+        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
+                      sf::Vector2f(sectionW, sectionH)));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
@@ -77,8 +78,9 @@ void SettingsScene::_initAudioSection() {
     float sectionH = 200;
 
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
-        this->_registry, this->_assetsManager, "Audio", sectionX, sectionY,
-        sectionW, sectionH);
+        this->_registry, this->_assetsManager, "Audio",
+        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
+                      sf::Vector2f(sectionW, sectionH)));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 }
@@ -90,8 +92,9 @@ void SettingsScene::_initWindowSection() {
     float sectionH = 385;
 
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
-        this->_registry, this->_assetsManager, "Window", sectionX, sectionY,
-        sectionW, sectionH);
+        this->_registry, this->_assetsManager, "Window",
+        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
+                      sf::Vector2f(sectionW, sectionH)));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 }
