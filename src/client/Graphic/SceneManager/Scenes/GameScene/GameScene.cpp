@@ -20,6 +20,8 @@
 #include "Graphic.hpp"
 #include "SceneManager/SceneException.hpp"
 
+namespace cfg = ::rtype::games::rtype::client::GraphicsConfig;
+
 void GameScene::_updateUserMovementUp() {
     auto keyMoveUp = this->_keybinds->getKeyBinding(GameAction::MOVE_UP);
     if (!keyMoveUp.has_value()) {
@@ -88,7 +90,7 @@ void GameScene::_handleShoot() {
     playerView.each([this](auto, auto& pos, auto) {
         auto projectile = EntityFactory::createProjectile(
             this->_registry, this->_assetsManager,
-            sf::Vector2f(pos.x + 80, pos.y));
+            sf::Vector2f(pos.x + cfg::PROJECTILE_SPAWN_OFFSET_X, pos.y));
 
         this->_listEntity.push_back(projectile);
     });

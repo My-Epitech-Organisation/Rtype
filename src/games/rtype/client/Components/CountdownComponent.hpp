@@ -21,7 +21,7 @@ struct CountdownPlayer {
      * @brief Remaining cooldown time in seconds before the player can shoot
      * again.
      */
-    float laserCD;
+    float laserCD = 0.0f;
 };
 };  // namespace rtype::games::rtype::client
 
