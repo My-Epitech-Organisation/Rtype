@@ -299,8 +299,8 @@ MainMenuScene::MainMenuScene(
     std::shared_ptr<sf::RenderWindow> window,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,
-    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem),
-    std::shared_ptr<AudioLib> audioLib
+    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem,
+    std::shared_ptr<AudioLib> audioLib)
     : AScene(ecs, assetsManager, window, audioLib),
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)) {

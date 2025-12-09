@@ -71,8 +71,11 @@ class MainMenuScene : public AScene {
         std::function<void(const SceneManager::Scene&)> switchToScene,
         std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,
         std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =
-            nullptr),
-        std::shared_ptr<AudioLib> audioLib;
+            nullptr,
+        std::shared_ptr<AudioLib> audioLib = nullptr);
+
+   private:
+        std::shared_ptr<AudioLib> _audioLib;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_MAINMENUSCENE_MAINMENUSCENE_HPP_
