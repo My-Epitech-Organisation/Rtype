@@ -90,7 +90,7 @@ class SceneManager {
         std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,
         std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =
             nullptr,
-        std::shared_ptr<AudioLib> audioLib);
+        std::shared_ptr<AudioLib> audioLib = nullptr);
     ~SceneManager() = default;
 };
 
