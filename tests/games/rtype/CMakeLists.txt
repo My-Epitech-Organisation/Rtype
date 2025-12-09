@@ -102,3 +102,19 @@ target_include_directories(test_engine PRIVATE
 )
 
 gtest_discover_tests(test_engine)
+
+# ProjectileSystem tests
+add_executable(test_projectile_system test_ProjectileSystem.cpp)
+
+target_link_libraries(test_projectile_system PRIVATE
+    rtype_game_shared
+    rtype_engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_projectile_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_projectile_system)
