@@ -7,6 +7,7 @@
 
 #include "SettingsScene.hpp"
 
+#include "AudioLib/AudioLib.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
@@ -15,7 +16,8 @@
 void SettingsScene::_initKeybindSection() {
     std::vector<GameAction> actions = {
         GameAction::MOVE_UP,    GameAction::MOVE_DOWN, GameAction::MOVE_LEFT,
-        GameAction::MOVE_RIGHT, GameAction::SHOOT,     GameAction::PAUSE};
+        GameAction::MOVE_RIGHT, GameAction::SHOOT,     GameAction::CHANGE_AMMO,
+        GameAction::PAUSE};
 
     float sectionX = 50;
     float sectionY = 225;
@@ -65,7 +67,7 @@ void SettingsScene::_initKeybindSection() {
             }));
         this->_actionButtons[action] = btn;
         this->_listEntity.push_back(btn);
-        y += 80;
+        y += 65;
     }
 }
 
@@ -131,9 +133,9 @@ SettingsScene::SettingsScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> textureManager,
     std::shared_ptr<sf::RenderWindow> window,
-    std::function<void(const SceneManager::Scene&)> switchToScene,
-    std::shared_ptr<KeyboardActions> keybinds)
-    : AScene(ecs, textureManager, window), _keybinds(keybinds) {
+    std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
+    std::function<void(const SceneManager::Scene&)> switchToScene)
+    : AScene(ecs, textureManager, window, audio), _keybinds(keybinds) {
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "Settings"));
 
@@ -157,4 +159,13 @@ SettingsScene::SettingsScene(
                           << std::endl;
             }
         })));
+
+    this->_assetsManager->audioManager->load(
+        "main_settings_music",
+        this->_assetsManager->configGameAssets.assets.music.settings);
+    auto settings =
+        this->_assetsManager->audioManager->get("main_settings_music");
+    this->_audio->loadMusic(settings);
+    this->_audio->setLoop(true);
+    this->_audio->play();
 }

@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "AssetManager/AssetManager.hpp"
+#include "Config/Parser/RTypeConfigParser.hpp"
 #include "SceneManager/SceneException.hpp"
 
 void Graphic::_pollEvents() {
@@ -148,13 +149,18 @@ Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
     : _registry(registry),
       _view(std::make_shared<sf::View>(
           sf::FloatRect({0, 0}, {WINDOW_WIDTH, WINDOW_HEIGHT}))) {
+    rtype::game::config::RTypeConfigParser parser;
+    auto assetsConfig = parser.loadFromFile("./assets/config.toml");
+    if (!assetsConfig.has_value()) throw std::exception();
     this->_keybinds = std::make_shared<KeyboardActions>();
     this->_window = std::make_shared<sf::RenderWindow>(
         sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");
     this->_window->setView(*this->_view);
-    this->_assetsManager = std::make_shared<AssetManager>();
+    this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value());
+    this->_audioLib = std::make_shared<AudioLib>();
     this->_sceneManager = std::make_unique<SceneManager>(
-        registry, this->_assetsManager, this->_window, this->_keybinds);
+        registry, this->_assetsManager, this->_window, this->_keybinds,
+        this->_audioLib);
     this->_initializeSystems();
     this->_mainClock.start();
 }

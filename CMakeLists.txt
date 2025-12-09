@@ -11,9 +11,15 @@ if(NOT DEFINED CMAKE_CXX_COMPILER AND NOT DEFINED ENV{CXX})
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Build Debug détecté : Activation de AddressSanitizer")
-    add_compile_options(-fsanitize=address -g -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address)
+    # Only enable AddressSanitizer if not using Valgrind for profiling
+    if (NOT DISABLE_ASAN)
+        message(STATUS "Build Debug détecté : Activation de AddressSanitizer")
+        add_compile_options(-fsanitize=address -g -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=address)
+    else()
+        message(STATUS "Build Debug détecté : AddressSanitizer disabled (Valgrind profiling)")
+        add_compile_options(-g -fno-omit-frame-pointer)
+    endif()
 endif()
 
 project(r-type LANGUAGES CXX)

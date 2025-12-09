@@ -7,6 +7,7 @@
 
 #ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_MAINMENUSCENE_MAINMENUSCENE_HPP_
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_MAINMENUSCENE_MAINMENUSCENE_HPP_
+#include "AudioLib/AudioLib.hpp"
 
 static constexpr int nbr_vessels = 7;
 
@@ -27,6 +28,7 @@ class MainMenuScene : public AScene {
         std::shared_ptr<ECS::Registry> ecs,
         std::shared_ptr<AssetManager> textureManager,
         std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<AudioLib> audioLib,
         std::function<void(const SceneManager::Scene&)> switchToScene);
 };
 

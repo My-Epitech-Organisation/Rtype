@@ -24,6 +24,7 @@
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
 #include "AssetManager/AssetManager.hpp"
+#include "AudioLib/AudioLib.hpp"
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
 
@@ -74,6 +75,9 @@ class Graphic {
 
     /// @brief SFML window shared with rendering systems and SceneManager
     std::shared_ptr<sf::RenderWindow> _window;
+
+    /// @brief Audio lib shared with SceneManager
+    std::shared_ptr<AudioLib> _audioLib;
 
     /// @brief Camera view shared with ParallaxScrolling system
     std::shared_ptr<sf::View> _view;

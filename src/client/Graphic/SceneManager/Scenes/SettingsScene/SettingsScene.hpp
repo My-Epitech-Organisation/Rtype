@@ -34,11 +34,13 @@ class SettingsScene : public AScene {
     void render(std::shared_ptr<sf::RenderWindow> window) override;
     void pollEvents(const sf::Event& e) override;
 
-    SettingsScene(std::shared_ptr<ECS::Registry> ecs,
-                  std::shared_ptr<AssetManager> textureManager,
-                  std::shared_ptr<sf::RenderWindow> window,
-                  std::function<void(const SceneManager::Scene&)> switchToScene,
-                  std::shared_ptr<KeyboardActions> keybinds);
+    SettingsScene(
+        std::shared_ptr<ECS::Registry> ecs,
+        std::shared_ptr<AssetManager> textureManager,
+        std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<KeyboardActions> keybinds,
+        std::shared_ptr<AudioLib> audio,
+        std::function<void(const SceneManager::Scene&)> switchToScene);
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENE_HPP_

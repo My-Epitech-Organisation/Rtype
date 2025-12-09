@@ -67,22 +67,25 @@ void SceneManager::draw() {
 SceneManager::SceneManager(std::shared_ptr<ECS::Registry> ecs,
                            std::shared_ptr<AssetManager> texture,
                            std::shared_ptr<sf::RenderWindow> window,
-                           std::shared_ptr<KeyboardActions> keybinds)
-    : _window(window), _keybinds(keybinds) {
+                           std::shared_ptr<KeyboardActions> keybinds,
+                           std::shared_ptr<AudioLib> audioLib)
+    : _window(window), _keybinds(keybinds), _audio(audioLib) {
     this->_switchToScene = [this](const Scene& scene) {
         this->setCurrentScene(scene);
     };
     this->_sceneList.emplace(MAIN_MENU, [ecs, texture, this]() {
-        return std::make_unique<MainMenuScene>(ecs, texture, this->_window,
-                                               this->_switchToScene);
+        return std::make_unique<MainMenuScene>(
+            ecs, texture, this->_window, this->_audio, this->_switchToScene);
     });
     this->_sceneList.emplace(SETTINGS_MENU, [ecs, texture, this]() {
-        return std::make_unique<SettingsScene>(
-            ecs, texture, this->_window, this->_switchToScene, this->_keybinds);
+        return std::make_unique<SettingsScene>(ecs, texture, this->_window,
+                                               this->_keybinds, this->_audio,
+                                               this->_switchToScene);
     });
     this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
-        return std::make_unique<GameScene>(
-            ecs, texture, this->_window, this->_keybinds, this->_switchToScene);
+        return std::make_unique<GameScene>(ecs, texture, this->_window,
+                                           this->_keybinds, this->_audio,
+                                           this->_switchToScene);
     });
     this->setCurrentScene(MAIN_MENU);
     this->_applySceneChange();

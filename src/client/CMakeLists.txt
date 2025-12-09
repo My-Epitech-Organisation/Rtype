@@ -16,12 +16,27 @@ find_package(unofficial-brotli CONFIG QUIET)
 
 add_subdirectory(Graphic)
 
+add_library(rtype_client_network STATIC
+    network/NetworkClient.cpp
+    network/ClientNetworkSystem.cpp
+)
+
+target_compile_features(rtype_client_network PRIVATE cxx_std_20)
+target_include_directories(rtype_client_network PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_link_libraries(rtype_client_network
+    PRIVATE
+    rtype_network
+    rtype_common
+    rtype_game_client
+)
+
 add_executable(r-type_client
-        main.cpp
-        ClientApp.cpp
-        GameAction.hpp
-        network/NetworkClient.cpp
-        network/ClientNetworkSystem.cpp
+    main.cpp
+    ClientApp.cpp
+    GameAction.hpp
 )
 
 target_compile_features(r-type_client PRIVATE cxx_std_20)
@@ -37,6 +52,7 @@ target_link_libraries(r-type_client PUBLIC
     rtype_game_client
     rtype-graphic-SFML
     rtype_game_client
+    rtype_client_network
 )
 
 if(PNG_FOUND)

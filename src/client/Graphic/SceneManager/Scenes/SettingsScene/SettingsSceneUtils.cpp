@@ -228,6 +228,8 @@ std::string SettingsSceneUtils::actionToString(GameAction action) {
             return "Move Right";
         case GameAction::SHOOT:
             return "Shoot";
+        case GameAction::CHANGE_AMMO:
+            return "Change Ammo";
         case GameAction::PAUSE:
             return "Pause";
         default:

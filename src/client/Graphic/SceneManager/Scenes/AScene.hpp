@@ -13,6 +13,7 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
+#include "AudioLib/AudioLib.hpp"
 #include "ECS.hpp"
 #include "Graphic/AssetManager/AssetManager.hpp"
 #include "IScene.hpp"
@@ -22,6 +23,7 @@ class AScene : public IScene {
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<AssetManager> _assetsManager;
     std::shared_ptr<sf::RenderWindow> _window;
+    std::shared_ptr<AudioLib> _audio;
     std::vector<ECS::Entity> _listEntity;
 
    public:
@@ -31,8 +33,12 @@ class AScene : public IScene {
 
     explicit AScene(std::shared_ptr<ECS::Registry> registry,
                     std::shared_ptr<AssetManager> assetsManager,
-                    std::shared_ptr<sf::RenderWindow> window)
-        : _registry(registry), _assetsManager(assetsManager), _window(window) {}
+                    std::shared_ptr<sf::RenderWindow> window,
+                    std::shared_ptr<AudioLib> audio)
+        : _registry(registry),
+          _assetsManager(assetsManager),
+          _window(window),
+          _audio(audio) {}
     ~AScene() override {
         for (auto& entity : this->_listEntity) {
             this->_registry->killEntity(entity);
