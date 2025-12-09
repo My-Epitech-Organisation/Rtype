@@ -10,4 +10,5 @@
 #include <rtype/engine.hpp>
 
 #include "AISystem/AISystem.hpp"
+#include "Collision/QuadTreeSystem.hpp"
 #include "Movements/MovementSystem.hpp"
