@@ -211,11 +211,15 @@ GameScene::GameScene(
                              pauseEntities.end());
     this->_assetsManager->textureManager->load("projectile_player_laser",
                                                "./assets/missileLaser.gif");
-    this->_assetsManager->audioManager->load(
-        "main_game_music",
-        this->_assetsManager->configGameAssets.assets.music.game);
-    auto bgMusic = this->_assetsManager->audioManager->get("main_game_music");
-    this->_audio->loadMusic(bgMusic);
-    this->_audio->setLoop(true);
-    this->_audio->play();
+    if (this->_audio && this->_assetsManager && this->_assetsManager->audioManager) {
+        this->_assetsManager->audioManager->load(
+            "main_game_music",
+            this->_assetsManager->configGameAssets.assets.music.game);
+        auto bgMusic = this->_assetsManager->audioManager->get("main_game_music");
+        if (bgMusic) {
+            this->_audio->loadMusic(bgMusic);
+            this->_audio->setLoop(true);
+            this->_audio->play();
+        }
+    }
 }
