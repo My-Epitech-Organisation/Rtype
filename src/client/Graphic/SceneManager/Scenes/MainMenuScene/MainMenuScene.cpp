@@ -17,7 +17,6 @@
 #include "AllComponents.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneManager/SceneException.hpp"
-#include "assets/audio/mainMenuMusic.h"
 
 void MainMenuScene::_createAstroneerVessel() {
     auto astroneerVessel = this->_registry->spawnEntity();
@@ -128,7 +127,7 @@ MainMenuScene::MainMenuScene(
 
             ));
     this->_assetsManager->audioManager->load(
-        "main_menu_music", mainMenuMusic_mp3, mainMenuMusic_mp3_len);
+        "main_menu_music", this->_assetsManager->configGameAssets.assets.music.mainMenu);
     auto bgMusic = this->_assetsManager->audioManager->get("main_menu_music");
     this->_audio->loadMusic(bgMusic);
     this->_audio->setLoop(true);

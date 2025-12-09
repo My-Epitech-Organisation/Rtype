@@ -206,6 +206,29 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.paths.configPath = _parser.getString(table, "paths", "configPath",
                                                 defaults.paths.configPath);
 
+    // Assets
+    config.assets.fonts.MainFont = "assets/" + _parser.getString(
+        table, "Fonts", "MainFont", defaults.assets.fonts.MainFont);
+    std::cout << "Main font path: " << config.assets.fonts.MainFont << std::endl;
+    config.assets.textures.background = "assets/" + _parser.getString(
+        table, "Textures", "Background", defaults.assets.textures.background);
+    config.assets.textures.planet1 = "assets/" + _parser.getString(
+        table, "Textures", "Planet1", defaults.assets.textures.planet1);
+    config.assets.textures.planet2 = "assets/" + _parser.getString(
+        table, "Textures", "Planet2", defaults.assets.textures.planet2);
+    config.assets.textures.planet3 = "assets/" + _parser.getString(
+        table, "Textures", "Planet3", defaults.assets.textures.planet3);
+    config.assets.textures.astroVessel = "assets/" + _parser.getString(
+        table, "Textures", "AstroVessel", defaults.assets.textures.astroVessel);
+    config.assets.textures.Player = "assets/" + _parser.getString(
+        table, "Textures", "Player", defaults.assets.textures.Player);
+    config.assets.music.mainMenu = "assets/" + _parser.getString(
+        table, "Music", "MainMenu", defaults.assets.music.mainMenu);
+    config.assets.music.game = "assets/" + _parser.getString(
+        table, "Music", "Game", defaults.assets.music.game);
+    config.assets.music.settings = "assets/" + _parser.getString(
+            table, "Music", "Settings", defaults.assets.music.settings);
+
     return config;
 }
 

@@ -12,7 +12,6 @@
 #include "Components/TextComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneManager/SceneException.hpp"
-#include "assets/audio/settingsMusic.h"
 
 void SettingsScene::_initKeybindSection() {
     std::vector<GameAction> actions = {
@@ -160,8 +159,9 @@ SettingsScene::SettingsScene(
                           << std::endl;
             }
         })));
+
     this->_assetsManager->audioManager->load(
-        "main_settings_music", settingsMusic_mp3, settingsMusic_mp3_len);
+        "main_settings_music", this->_assetsManager->configGameAssets.assets.music.settings);
     auto settings =
         this->_assetsManager->audioManager->get("main_settings_music");
     this->_audio->loadMusic(settings);

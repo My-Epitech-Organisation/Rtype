@@ -13,7 +13,6 @@
 #include "EntityFactory/EntityFactory.hpp"
 #include "Graphic.hpp"
 #include "SceneManager/SceneException.hpp"
-#include "assets/audio/gameMusic.h"
 
 void GameScene::_updateUserMovementUp() {
     auto keyMoveUp = this->_keybinds->getKeyBinding(GameAction::MOVE_UP);
@@ -171,8 +170,7 @@ GameScene::GameScene(
     }
     this->_listEntity.insert(this->_listEntity.end(), pauseEntities.begin(),
                              pauseEntities.end());
-    this->_assetsManager->audioManager->load("main_game_music", gameMusic_mp3,
-                                             gameMusic_mp3_len);
+    this->_assetsManager->audioManager->load("main_game_music", this->_assetsManager->configGameAssets.assets.music.game);
     auto bgMusic = this->_assetsManager->audioManager->get("main_game_music");
     this->_audio->loadMusic(bgMusic);
     this->_audio->setLoop(true);
