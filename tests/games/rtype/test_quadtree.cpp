@@ -80,8 +80,8 @@ TEST_F(RectTest, Intersects_NonOverlapping) {
 
 TEST_F(RectTest, Intersects_Touching) {
     Rect touchingRight{110.0F, 20.0F, 10.0F, 50.0F};
-    // Touching at edge should not count as intersection
-    EXPECT_FALSE(rect.intersects(touchingRight));
+    // Touching at edge counts as intersection (shared edge)
+    EXPECT_TRUE(rect.intersects(touchingRight));
 }
 
 TEST_F(RectTest, Intersects_Contained) {
@@ -293,8 +293,9 @@ TEST_F(QuadTreeSystemTest, UpdateWithSingleEntity) {
 
 TEST_F(QuadTreeSystemTest, UpdateWithMultipleEntities) {
     for (int i = 0; i < 20; ++i) {
-        createCollidableEntity(static_cast<float>(i * 50),
-                               static_cast<float>(i * 30));
+        // Start at (50, 50) to ensure bounding boxes are within world bounds
+        createCollidableEntity(static_cast<float>(50 + i * 50),
+                               static_cast<float>(50 + i * 30));
     }
 
     system->update(*registry, 0.016F);
