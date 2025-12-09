@@ -44,6 +44,8 @@ void Graphic::_update() {
     this->_systemScheduler->runSystem("button_update");
     this->_systemScheduler->runSystem("parallax");
     this->_systemScheduler->runSystem("movement");
+    this->_systemScheduler->runSystem("projectile");
+    this->_systemScheduler->runSystem("lifetime");
     this->_sceneManager->update(this->_currentDeltaTime);
 }
 

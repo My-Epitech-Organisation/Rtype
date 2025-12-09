@@ -118,3 +118,19 @@ target_include_directories(test_projectile_system PRIVATE
 )
 
 gtest_discover_tests(test_projectile_system)
+
+# LifetimeSystem tests
+add_executable(test_lifetime_system test_LifetimeSystem.cpp)
+
+target_link_libraries(test_lifetime_system PRIVATE
+    rtype_game_shared
+    rtype_engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_lifetime_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_lifetime_system)

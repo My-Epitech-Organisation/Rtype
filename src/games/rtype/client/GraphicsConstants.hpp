@@ -62,6 +62,9 @@ inline constexpr float PROJECTILE_SPEED_LASER = 800.0f;
 /// @brief Projectile laser cooldown in seconds
 inline constexpr float PROJECTILE_CD = 0.175f;
 
+/// @brief Projectile lifeline in seconds
+inline constexpr float LIFETIME_PROJECTILE = 5.0f;
+
 // ==========================================================================
 // Z-Index Layers
 // ==========================================================================

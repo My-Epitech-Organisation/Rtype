@@ -10,6 +10,9 @@
 namespace rtype::games::rtype::shared {
 
 void LifetimeSystem::update(ECS::Registry& registry, float deltaTime) {
+    if (deltaTime < 0) {
+        return;
+    }
     auto view = registry.view<LifetimeComponent>();
 
     view.each([deltaTime, &registry](auto entity, LifetimeComponent& lifetime) {

@@ -30,7 +30,7 @@ bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
 
 void RenderSystem::_renderImages(ECS::Registry& registry) {
     std::vector<ECS::Entity> drawableEntities;
-    registry.view<Image, shared::Position, ZIndex>().each(
+    registry.view<Image, rs::Position, ZIndex>().each(
         [&drawableEntities](auto entt, auto, auto, auto) {
             drawableEntities.push_back(entt);
         });

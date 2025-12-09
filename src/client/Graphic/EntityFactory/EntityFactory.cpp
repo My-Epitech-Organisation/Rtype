@@ -126,7 +126,7 @@ ECS::Entity EntityFactory::createProjectile(
         entt);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entt, 1);
     registry->emplaceComponent<rtype::games::rtype::shared::LifetimeComponent>(
-        entt, 10.0f);
+        entt, cfg::LIFETIME_PROJECTILE);
     return entt;
 }
 
