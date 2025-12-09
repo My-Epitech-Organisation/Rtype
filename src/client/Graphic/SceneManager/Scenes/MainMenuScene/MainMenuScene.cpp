@@ -31,6 +31,8 @@ static constexpr float kInputWidth = 300.f;
 static constexpr float kInputHeight = 40.f;
 static constexpr float kLabelOffsetX = 30.f;
 static constexpr float kInputOffsetX = 120.f;
+static constexpr std::string kIp = "127.0.0.1";
+static constexpr std::uint16_t kPort = 4242;
 
 void MainMenuScene::_createAstroneerVessel() {
     auto astroneerVessel = this->_registry->spawnEntity();
@@ -146,8 +148,8 @@ void MainMenuScene::_onConnectClicked(
         _updateStatus("Error: Network not available", sf::Color::Red);
         return;
     }
-    std::string ip = "127.0.0.1";
-    std::uint16_t port = 4242;
+    std::string ip = kIp;
+    std::uint16_t port = kPort;
 
     if (_registry->hasComponent<rtype::games::rtype::client::TextInput>(
             _ipInputEntity)) {
