@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "MapElementConfig.hpp"
 #include "WaveConfig.hpp"
 
 namespace rtype::games::rtype::shared {
@@ -26,6 +27,9 @@ struct LevelConfig {
 
     float scrollSpeed = 50.0F;
     std::vector<WaveConfig> waves;
+
+    // Map configuration (obstacles, tiles, starfield)
+    MapConfig map;
 
     // Boss (optional)
     std::optional<std::string> bossId;

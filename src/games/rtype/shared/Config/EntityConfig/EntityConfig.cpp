@@ -276,6 +276,115 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
             config.bossId = *boss;
         }
 
+        // Parse map configuration
+        if (auto* mapTbl = tbl["map"].as_table()) {
+            config.map.levelWidth =
+                (*mapTbl)["level_width"].value_or(10000.0F);
+            config.map.viewportWidth =
+                (*mapTbl)["viewport_width"].value_or(1920.0F);
+            config.map.viewportHeight =
+                (*mapTbl)["viewport_height"].value_or(1080.0F);
+        }
+
+        // Parse starfield layers
+        if (auto* starfieldLayers = tbl["starfield"].as_array()) {
+            for (const auto& layerElem : *starfieldLayers) {
+                if (auto* layerTbl = layerElem.as_table()) {
+                    StarfieldLayerConfig layer;
+                    layer.id = (*layerTbl)["id"].value_or("");
+                    layer.texturePath = (*layerTbl)["texture"].value_or("");
+                    layer.scrollFactor =
+                        (*layerTbl)["scroll_factor"].value_or(0.0F);
+                    layer.zIndex = (*layerTbl)["z_index"].value_or(0);
+                    layer.isRepeating =
+                        (*layerTbl)["repeating"].value_or(true);
+                    layer.scale = (*layerTbl)["scale"].value_or(1.0F);
+
+                    if (layer.isValid()) {
+                        config.map.starfieldLayers.push_back(std::move(layer));
+                    }
+                }
+            }
+        }
+
+        // Parse obstacles
+        if (auto* obstacles = tbl["obstacle"].as_array()) {
+            for (const auto& obstacleElem : *obstacles) {
+                if (auto* obstacleTbl = obstacleElem.as_table()) {
+                    MapElementConfig element;
+                    element.id = (*obstacleTbl)["id"].value_or("");
+                    element.type = MapElementType::Obstacle;
+                    element.spriteSheet =
+                        (*obstacleTbl)["sprite"].value_or("");
+                    element.x = (*obstacleTbl)["x"].value_or(0.0F);
+                    element.y = (*obstacleTbl)["y"].value_or(0.0F);
+                    element.rotation =
+                        (*obstacleTbl)["rotation"].value_or(0.0F);
+                    element.width = (*obstacleTbl)["width"].value_or(32.0F);
+                    element.height = (*obstacleTbl)["height"].value_or(32.0F);
+                    element.hitboxWidth =
+                        (*obstacleTbl)["hitbox_width"].value_or(0.0F);
+                    element.hitboxHeight =
+                        (*obstacleTbl)["hitbox_height"].value_or(0.0F);
+
+                    if (element.isValid()) {
+                        config.map.obstacles.push_back(std::move(element));
+                    }
+                }
+            }
+        }
+
+        // Parse destroyable tiles
+        if (auto* tiles = tbl["destroyable_tile"].as_array()) {
+            for (const auto& tileElem : *tiles) {
+                if (auto* tileTbl = tileElem.as_table()) {
+                    MapElementConfig element;
+                    element.id = (*tileTbl)["id"].value_or("");
+                    element.type = MapElementType::DestroyableTile;
+                    element.spriteSheet = (*tileTbl)["sprite"].value_or("");
+                    element.x = (*tileTbl)["x"].value_or(0.0F);
+                    element.y = (*tileTbl)["y"].value_or(0.0F);
+                    element.rotation = (*tileTbl)["rotation"].value_or(0.0F);
+                    element.width = (*tileTbl)["width"].value_or(32.0F);
+                    element.height = (*tileTbl)["height"].value_or(32.0F);
+                    element.hitboxWidth =
+                        (*tileTbl)["hitbox_width"].value_or(0.0F);
+                    element.hitboxHeight =
+                        (*tileTbl)["hitbox_height"].value_or(0.0F);
+                    element.health = (*tileTbl)["health"].value_or(1);
+                    element.scoreValue =
+                        (*tileTbl)["score_value"].value_or(10);
+
+                    if (element.isValid()) {
+                        config.map.destroyableTiles.push_back(
+                            std::move(element));
+                    }
+                }
+            }
+        }
+
+        // Parse decorations
+        if (auto* decorations = tbl["decoration"].as_array()) {
+            for (const auto& decoElem : *decorations) {
+                if (auto* decoTbl = decoElem.as_table()) {
+                    MapElementConfig element;
+                    element.id = (*decoTbl)["id"].value_or("");
+                    element.type = MapElementType::Decoration;
+                    element.spriteSheet = (*decoTbl)["sprite"].value_or("");
+                    element.x = (*decoTbl)["x"].value_or(0.0F);
+                    element.y = (*decoTbl)["y"].value_or(0.0F);
+                    element.rotation = (*decoTbl)["rotation"].value_or(0.0F);
+                    element.width = (*decoTbl)["width"].value_or(32.0F);
+                    element.height = (*decoTbl)["height"].value_or(32.0F);
+
+                    if (element.isValid()) {
+                        config.map.decorations.push_back(std::move(element));
+                    }
+                }
+            }
+        }
+
+        // Parse waves
         if (auto* waves = tbl["wave"].as_array()) {
             for (const auto& waveElem : *waves) {
                 if (auto* waveTbl = waveElem.as_table()) {
@@ -306,8 +415,14 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
         }
 
         if (config.isValid()) {
+            LOG_INFO("[EntityConfig] Loaded level: "
+                     << config.id << " with "
+                     << config.map.obstacles.size() << " obstacles, "
+                     << config.map.destroyableTiles.size()
+                     << " destroyable tiles, "
+                     << config.map.starfieldLayers.size()
+                     << " starfield layers");
             m_levels[config.id] = std::move(config);
-            LOG_INFO("[EntityConfig] Loaded level: " << config.id);
             return true;
         }
         return false;
