@@ -114,7 +114,7 @@ void GameScene::_updateUserShoot(float deltaTime) {
         .each([this, deltaTime](auto, auto& cd, auto) {
             cd.laserCD -= deltaTime;
             if (cd.laserCD > 0) return;
-            if (isKeyPressed(
+            if (sf::Keyboard::isKeyPressed(
                     *this->_keybinds->getKeyBinding(GameAction::SHOOT))) {
                 cd.laserCD =
                     rtype::games::rtype::client::GraphicsConfig::PROJECTILE_CD;
@@ -128,14 +128,6 @@ void GameScene::update(float deltaTime) {
         ->view<rtype::games::rtype::shared::VelocityComponent,
                rtype::games::rtype::client::ControllableTag>()
         .each([](auto, auto& velocity, auto) {
-            velocity.vx = 0;
-            velocity.vy = 0;
-        });
-    this->_registry
-        ->view<rtype::games::rtype::shared::VelocityComponent,
-               rtype::games::rtype::shared::ProjectileTag,
-               rtype::games::rtype::client::ControllableTag>()
-        .each([](auto, auto& velocity, auto, auto) {
             velocity.vx = 0;
             velocity.vy = 0;
         });

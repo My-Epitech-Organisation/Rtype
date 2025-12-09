@@ -59,8 +59,7 @@ inline constexpr float SCROLL_SPEED = 50.0f;
 /// @brief Projectile speed in pixels per second
 inline constexpr float PROJECTILE_SPEED_LASER = 800.0f;
 
-/// @brief Projectile laser countdown in sec
-
+/// @brief Projectile laser cooldown in seconds
 inline constexpr float PROJECTILE_CD = 0.175f;
 
 // ==========================================================================

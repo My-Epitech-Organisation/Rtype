@@ -10,6 +10,7 @@
 #include "../../games/rtype/client/GraphicsConstants.hpp"
 #include "Components/CountdownComponent.hpp"
 #include "Components/ImageComponent.hpp"
+#include "Components/LifetimeComponent.hpp"
 #include "Components/ParallaxComponent.hpp"
 #include "Components/PositionComponent.hpp"
 #include "Components/SizeComponent.hpp"
@@ -115,9 +116,7 @@ ECS::Entity EntityFactory::createProjectile(
     registry->emplaceComponent<rtype::games::rtype::client::Image>(
         entt, assetManager->textureManager->get("projectile_player_laser"));
     registry->emplaceComponent<rtype::games::rtype::client::TextureRect>(
-        entt, std::pair<int, int>({0, 0}), std::pair<int, int>({33.25, 34}));
-    // registry->emplaceComponent<rtype::games::rtype::client::AnimatedComponent>(entt,
-    // 4);
+        entt, std::pair<int, int>({0, 0}), std::pair<int, int>({33, 34}));
     registry->emplaceComponent<rtype::games::rtype::shared::Position>(
         entt, position.x, position.y);
     registry->emplaceComponent<rtype::games::rtype::client::Size>(entt, 2, 2);
@@ -126,6 +125,8 @@ ECS::Entity EntityFactory::createProjectile(
     registry->emplaceComponent<rtype::games::rtype::shared::ProjectileTag>(
         entt);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entt, 1);
+    registry->emplaceComponent<rtype::games::rtype::shared::LifetimeComponent>(
+        entt, 10.0f);
     return entt;
 }
 
