@@ -96,4 +96,48 @@ struct ControllableTag {};
  */
 struct StaticTextTag {};
 
+// =============================================================================
+// Map Element Tags
+// =============================================================================
+
+/**
+ * @struct ObstacleTag
+ * @brief Tag component for static map obstacles (indestructible)
+ *
+ * Used for walls, platforms, and other solid objects that block movement.
+ */
+struct ObstacleTag {};
+
+/**
+ * @struct DestroyableTileTag
+ * @brief Tag component for destroyable map tiles
+ *
+ * These tiles can be destroyed by player projectiles.
+ */
+struct DestroyableTileTag {};
+
+/**
+ * @struct DecorationTag
+ * @brief Tag component for visual decorations (no collision)
+ *
+ * Used for non-interactive visual elements in the map.
+ */
+struct DecorationTag {};
+
+/**
+ * @struct StarfieldTag
+ * @brief Tag component for starfield background layers
+ *
+ * Used for parallax scrolling background elements.
+ */
+struct StarfieldTag {};
+
+/**
+ * @struct MapElementTag
+ * @brief Base tag for all map elements (obstacles, tiles, decorations)
+ *
+ * Useful for querying all scrollable map elements at once.
+ */
+struct MapElementTag {};
+
 }  // namespace rtype::games::rtype::shared
