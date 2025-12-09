@@ -10,4 +10,6 @@
 #include <rtype/engine.hpp>
 
 #include "AISystem/AISystem.hpp"
+#include "LevelLoader/LevelLoader.hpp"
+#include "MapScrolling/MapScrollingSystem.hpp"
 #include "Movements/MovementSystem.hpp"
