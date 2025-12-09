@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "AssetManager/AssetManager.hpp"
+#include "Config/Parser/RTypeConfigParser.hpp"
 #include "SceneManager/SceneException.hpp"
 
 void Graphic::_pollEvents() {
@@ -19,8 +20,8 @@ void Graphic::_pollEvents() {
         if (event->is<sf::Event::Closed>()) {
             this->_window->close();
         }
-        _eventSystem->setEvent(*event);
-        _eventSystem->update(*this->_registry, 0.f);
+        this->_eventSystem->setEvent(*event);
+        this->_eventSystem->update(*this->_registry, 0.f);
         this->_sceneManager->pollEvents(*event);
     }
 }
@@ -37,20 +38,20 @@ void Graphic::_updateViewScrolling() {
 }
 
 void Graphic::_update() {
-    _updateDeltaTime();
-    _updateViewScrolling();
+    this->_updateDeltaTime();
+    this->_updateViewScrolling();
 
-    _systemScheduler->runSystem("button_update");
-    _systemScheduler->runSystem("parallax");
-    _systemScheduler->runSystem("movement");
+    this->_systemScheduler->runSystem("button_update");
+    this->_systemScheduler->runSystem("parallax");
+    this->_systemScheduler->runSystem("movement");
     this->_sceneManager->update();
 }
 
 void Graphic::_display() {
     this->_window->clear();
 
-    _systemScheduler->runSystem("render");
-    _systemScheduler->runSystem("boxing");
+    this->_systemScheduler->runSystem("render");
+    this->_systemScheduler->runSystem("boxing");
 
     this->_sceneManager->draw();
     this->_window->display();
@@ -58,7 +59,7 @@ void Graphic::_display() {
 
 void Graphic::loop() {
     while (this->_window->isOpen()) {
-        _systemScheduler->runSystem("reset_triggers");
+        this->_systemScheduler->runSystem("reset_triggers");
         this->_pollEvents();
         this->_update();
         this->_display();
@@ -66,58 +67,63 @@ void Graphic::loop() {
 }
 
 void Graphic::_initializeSystems() {
-    _movementSystem =
+    this->_movementSystem =
         std::make_unique<::rtype::games::rtype::client::MovementSystem>();
-    _buttonUpdateSystem =
+    this->_buttonUpdateSystem =
         std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(
             this->_window);
-    _parallaxScrolling =
+    this->_parallaxScrolling =
         std::make_unique<::rtype::games::rtype::client::ParallaxScrolling>(
             this->_view);
-    _renderSystem =
+    this->_renderSystem =
         std::make_unique<::rtype::games::rtype::client::RenderSystem>(
             this->_window);
-    _boxingSystem =
+    this->_boxingSystem =
         std::make_unique<::rtype::games::rtype::client::BoxingSystem>(
             this->_window);
-    _resetTriggersSystem =
+    this->_resetTriggersSystem =
         std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
-    _eventSystem = std::make_unique<::rtype::games::rtype::client::EventSystem>(
-        this->_window);
+    this->_eventSystem =
+        std::make_unique<::rtype::games::rtype::client::EventSystem>(
+            this->_window);
 
-    _systemScheduler = std::make_unique<ECS::SystemScheduler>(*this->_registry);
+    this->_systemScheduler =
+        std::make_unique<ECS::SystemScheduler>(*this->_registry);
 
-    _systemScheduler->addSystem("reset_triggers", [this](ECS::Registry& reg) {
-        _resetTriggersSystem->update(reg, 0.f);
-    });
+    this->_systemScheduler->addSystem(
+        "reset_triggers", [this](ECS::Registry& reg) {
+            this->_resetTriggersSystem->update(reg, 0.f);
+        });
 
-    _systemScheduler->addSystem(
-        "button_update",
-        [this](ECS::Registry& reg) { _buttonUpdateSystem->update(reg, 0.f); },
-        {"reset_triggers"});
+    this->_systemScheduler->addSystem("button_update",
+                                      [this](ECS::Registry& reg) {
+                                          this->_buttonUpdateSystem->update(
+                                              reg, 0.f);
+                                      },
+                                      {"reset_triggers"});
 
-    _systemScheduler->addSystem("parallax",
-                                [this](ECS::Registry& reg) {
-                                    _parallaxScrolling->update(
-                                        reg, _currentDeltaTime);
-                                },
-                                {"button_update"});
+    this->_systemScheduler->addSystem("parallax",
+                                      [this](ECS::Registry& reg) {
+                                          this->_parallaxScrolling->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"button_update"});
 
-    _systemScheduler->addSystem("movement",
-                                [this](ECS::Registry& reg) {
-                                    _movementSystem->update(reg,
-                                                            _currentDeltaTime);
-                                },
-                                {"parallax"});
+    this->_systemScheduler->addSystem("movement",
+                                      [this](ECS::Registry& reg) {
+                                          this->_movementSystem->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"parallax"});
 
-    _systemScheduler->addSystem(
+    this->_systemScheduler->addSystem(
         "render",
-        [this](ECS::Registry& reg) { _renderSystem->update(reg, 0.f); },
+        [this](ECS::Registry& reg) { this->_renderSystem->update(reg, 0.f); },
         {"movement"});
 
-    _systemScheduler->addSystem(
+    this->_systemScheduler->addSystem(
         "boxing",
-        [this](ECS::Registry& reg) { _boxingSystem->update(reg, 0.f); },
+        [this](ECS::Registry& reg) { this->_boxingSystem->update(reg, 0.f); },
         {"render"});
 }
 
@@ -125,13 +131,18 @@ Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
     : _registry(registry),
       _view(std::make_shared<sf::View>(
           sf::FloatRect({0, 0}, {WINDOW_WIDTH, WINDOW_HEIGHT}))) {
+    rtype::game::config::RTypeConfigParser parser;
+    auto assetsConfig = parser.loadFromFile("./assets/config.toml");
+    if (!assetsConfig.has_value()) throw std::exception();
     this->_keybinds = std::make_shared<KeyboardActions>();
     this->_window = std::make_shared<sf::RenderWindow>(
         sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");
     this->_window->setView(*this->_view);
-    this->_assetsManager = std::make_shared<AssetManager>();
+    this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value());
+    this->_audioLib = std::make_shared<AudioLib>();
     this->_sceneManager = std::make_unique<SceneManager>(
-        registry, this->_assetsManager, this->_window, this->_keybinds);
-    _initializeSystems();
+        registry, this->_assetsManager, this->_window, this->_keybinds,
+        this->_audioLib);
+    this->_initializeSystems();
     this->_mainClock.start();
 }

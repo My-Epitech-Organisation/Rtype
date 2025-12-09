@@ -9,6 +9,7 @@
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_GAMESCENE_GAMESCENE_HPP_
 
 #include "../AScene.hpp"
+#include "AudioLib/AudioLib.hpp"
 #include "SceneManager/SceneManager.hpp"
 
 static constexpr int SizeXPauseMenu = 600;
@@ -38,6 +39,7 @@ class GameScene : public AScene {
               std::shared_ptr<AssetManager> textureManager,
               std::shared_ptr<sf::RenderWindow> window,
               std::shared_ptr<KeyboardActions> keybinds,
+              std::shared_ptr<AudioLib> audio,
               std::function<void(const SceneManager::Scene&)> switchToScene);
 };
 

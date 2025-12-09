@@ -1,0 +1,22 @@
+# Music Réferences
+[Music]
+MainMenu = "audio/mainMenuMusic.mp3"
+Game = "audio/gameMusic.mp3"
+Settings = "audio/settingsMusic.mp3"
+
+# Textures Réferences
+[Textures]
+Player = "img/playerTexture.gif"
+#Enemy = "img/enemyTexture.gif"
+# Backougrnd assets
+Background = "img/bgMainMenu.png"
+Planet1 = "img/planet1.png"
+Planet2 = "img/planet2.png"
+Planet3 = "img/planet3.png"
+AstroVessel = "img/astroVessel.png"
+# Projectile assets
+MissileLaser = "img/missileLaser.gif"
+
+[Fonts]
+MainFont = "fonts/Audiowide-Regular.ttf"
+#TitleFont = "fonts/Orbitron-VariableFont_wght.ttf"

@@ -113,9 +113,9 @@ GameScene::GameScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> textureManager,
     std::shared_ptr<sf::RenderWindow> window,
-    std::shared_ptr<KeyboardActions> keybinds,
+    std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
     std::function<void(const SceneManager::Scene&)> switchToScene)
-    : AScene(ecs, textureManager, window), _keybinds(keybinds) {
+    : AScene(ecs, textureManager, window, audio), _keybinds(keybinds) {
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, ""));
     auto fakePlayer = EntityFactory::createPlayer(
@@ -170,4 +170,11 @@ GameScene::GameScene(
     }
     this->_listEntity.insert(this->_listEntity.end(), pauseEntities.begin(),
                              pauseEntities.end());
+    this->_assetsManager->audioManager->load(
+        "main_game_music",
+        this->_assetsManager->configGameAssets.assets.music.game);
+    auto bgMusic = this->_assetsManager->audioManager->get("main_game_music");
+    this->_audio->loadMusic(bgMusic);
+    this->_audio->setLoop(true);
+    this->_audio->play();
 }
