@@ -241,24 +241,24 @@ class QuadTree {
         float x = _bounds.x;
         float y = _bounds.y;
 
-        _northwest = std::make_unique<QuadTree>(Rect{x, y, halfW, halfH},
-                                                _maxObjects, _maxDepth,
-                                                _depth + 1);
-        _northeast = std::make_unique<QuadTree>(Rect{x + halfW, y, halfW, halfH},
-                                                _maxObjects, _maxDepth,
-                                                _depth + 1);
-        _southwest = std::make_unique<QuadTree>(Rect{x, y + halfH, halfW, halfH},
-                                                _maxObjects, _maxDepth,
-                                                _depth + 1);
-        _southeast = std::make_unique<QuadTree>(
-            Rect{x + halfW, y + halfH, halfW, halfH}, _maxObjects, _maxDepth,
-            _depth + 1);
+        _northwest = std::make_unique<QuadTree>(
+            Rect{x, y, halfW, halfH}, _maxObjects, _maxDepth, _depth + 1);
+        _northeast =
+            std::make_unique<QuadTree>(Rect{x + halfW, y, halfW, halfH},
+                                       _maxObjects, _maxDepth, _depth + 1);
+        _southwest =
+            std::make_unique<QuadTree>(Rect{x, y + halfH, halfW, halfH},
+                                       _maxObjects, _maxDepth, _depth + 1);
+        _southeast =
+            std::make_unique<QuadTree>(Rect{x + halfW, y + halfH, halfW, halfH},
+                                       _maxObjects, _maxDepth, _depth + 1);
 
         _divided = true;
 
         std::vector<QuadTreeObject<T>> remaining;
         for (const auto& obj : _objects) {
-            bool inserted = _northwest->insert(obj) || _northeast->insert(obj) ||
+            bool inserted = _northwest->insert(obj) ||
+                            _northeast->insert(obj) ||
                             _southwest->insert(obj) || _southeast->insert(obj);
 
             if (!inserted) {
@@ -283,4 +283,3 @@ class QuadTree {
 };
 
 }  // namespace rtype::games::rtype::shared::collision
-

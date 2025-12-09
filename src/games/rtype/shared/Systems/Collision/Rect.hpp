@@ -131,4 +131,3 @@ struct Rect {
 };
 
 }  // namespace rtype::games::rtype::shared::collision
-

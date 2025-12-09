@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include <rtype/engine.hpp>
 #include <vector>
+
+#include <rtype/engine.hpp>
 
 #include "../../Components/BoundingBoxComponent.hpp"
 #include "../../Components/TransformComponent.hpp"
@@ -153,4 +154,3 @@ class QuadTreeSystem : public ::rtype::engine::ASystem {
 };
 
 }  // namespace rtype::games::rtype::shared
-

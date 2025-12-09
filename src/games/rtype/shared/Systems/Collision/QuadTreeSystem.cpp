@@ -106,4 +106,3 @@ collision::Rect QuadTreeSystem::createRectFromComponents(
 }
 
 }  // namespace rtype::games::rtype::shared
-
