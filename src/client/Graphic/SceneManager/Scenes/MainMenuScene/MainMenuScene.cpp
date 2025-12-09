@@ -83,18 +83,22 @@ void MainMenuScene::_createConnectionPanel(
     std::function<void(const SceneManager::Scene&)> switchToScene) {
     auto panelEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "",
-        sf::FloatRect(sf::Vector2f(kConnectionPanelX, kConnectionPanelY),
-                      sf::Vector2f(kConnectionPanelWidth, kConnectionPanelHeight)));
+        sf::FloatRect(
+            sf::Vector2f(kConnectionPanelX, kConnectionPanelY),
+            sf::Vector2f(kConnectionPanelWidth, kConnectionPanelHeight)));
     this->_listEntity.insert(this->_listEntity.end(), panelEntities.begin(),
                              panelEntities.end());
 
     auto title = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Connect to Server",
-        "title_font", sf::Vector2f(kConnectionPanelX + 50.f, kConnectionPanelY + 20.f), 32);
+        "title_font",
+        sf::Vector2f(kConnectionPanelX + 50.f, kConnectionPanelY + 20.f), 32);
     this->_listEntity.push_back(title);
     auto ipLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "IP:", "title_font",
-        sf::Vector2f(kConnectionPanelX + kLabelOffsetX, kConnectionPanelY + 90.f), 24);
+        sf::Vector2f(kConnectionPanelX + kLabelOffsetX,
+                     kConnectionPanelY + 90.f),
+        24);
     this->_listEntity.push_back(ipLabel);
     _ipInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
@@ -105,7 +109,9 @@ void MainMenuScene::_createConnectionPanel(
     this->_listEntity.push_back(_ipInputEntity);
     auto portLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Port:", "title_font",
-        sf::Vector2f(kConnectionPanelX + kLabelOffsetX, kConnectionPanelY + 150.f), 24);
+        sf::Vector2f(kConnectionPanelX + kLabelOffsetX,
+                     kConnectionPanelY + 150.f),
+        24);
     this->_listEntity.push_back(portLabel);
     _portInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
@@ -116,7 +122,9 @@ void MainMenuScene::_createConnectionPanel(
     this->_listEntity.push_back(_portInputEntity);
     _statusEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "title_font",
-        sf::Vector2f(kConnectionPanelX + kLabelOffsetX, kConnectionPanelY + 200.f), 18);
+        sf::Vector2f(kConnectionPanelX + kLabelOffsetX,
+                     kConnectionPanelY + 200.f),
+        18);
     this->_listEntity.push_back(_statusEntity);
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
