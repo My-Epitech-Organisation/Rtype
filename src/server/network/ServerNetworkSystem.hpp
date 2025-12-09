@@ -203,6 +203,13 @@ class ServerNetworkSystem {
     void broadcastEntityUpdates();
 
     /**
+     * @brief Broadcast game start signal to all clients
+     *
+     * Called when the server transitions to Playing state.
+     */
+    void broadcastGameStart();
+
+    /**
      * @brief Update the network system
      *
      * Polls the network server and processes any pending events.

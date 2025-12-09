@@ -98,6 +98,7 @@ class GameEngine : public engine::AGameEngine {
     std::unique_ptr<SpawnerSystem> _spawnerSystem;
     std::unique_ptr<shared::AISystem> _aiSystem;
     std::unique_ptr<shared::MovementSystem> _movementSystem;
+    std::unique_ptr<CollisionSystem> _collisionSystem;
     std::unique_ptr<CleanupSystem> _cleanupSystem;
     std::unique_ptr<DestroySystem> _destroySystem;
 

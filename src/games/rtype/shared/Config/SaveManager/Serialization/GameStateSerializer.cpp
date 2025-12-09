@@ -80,8 +80,8 @@ GameStateSerializer::deserialize(const std::vector<uint8_t>& data) {
 
         return {state, std::nullopt};
     } catch (const std::exception& e) {
-        return {std::nullopt,
-                std::string("Failed to deserialize save: ") + e.what()};
+        return {std::nullopt, std::string("Failed to deserialize save: ") +
+                                  std::string(e.what())};
     }
 }
 

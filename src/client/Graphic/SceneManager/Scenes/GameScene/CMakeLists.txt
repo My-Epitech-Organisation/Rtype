@@ -2,6 +2,8 @@ add_library(rtype-graphic-game-scene
         STATIC
         GameScene.cpp
         GameScene.hpp
+        IGameScene.hpp
+        AGameScene.hpp
 )
 
 target_link_libraries(rtype-graphic-game-scene
@@ -11,6 +13,7 @@ target_link_libraries(rtype-graphic-game-scene
         SFML::Audio
         SFML::System
         rtype_engine
+        rtype_network
 )
 
 target_link_libraries(rtype-graphic-game-scene

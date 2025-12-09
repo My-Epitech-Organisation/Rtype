@@ -9,6 +9,7 @@
 #define SRC_GAMES_RTYPE_CLIENT_COMPONENTS_TEXTCOMPONENT_HPP_
 
 #include <string>
+#include <string_view>
 
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Font.hpp>
@@ -37,12 +38,14 @@ struct Text {
      * @param textContent Initial text string (default: empty)
      */
     Text(const sf::Font& font, const sf::Color& color, unsigned int size = 30,
-         const std::string& textContent = "")
+         std::string_view textContent = "")
         : font(font),
-          text(font, textContent),
+          text(font),
           textContent(textContent),
           color(color),
-          size(size) {}
+          size(size) {
+        text.setString(std::string(textContent));
+    }
 
     Text(const Text& other) = default;
     Text(Text&& other) noexcept = default;

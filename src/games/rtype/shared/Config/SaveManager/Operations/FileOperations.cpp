@@ -16,7 +16,8 @@ std::optional<std::string> FileOperations::writeToFile(
         try {
             std::filesystem::create_directories(filepath.parent_path());
         } catch (const std::exception& e) {
-            return std::string("Cannot create save directory: ") + e.what();
+            return std::string("Cannot create save directory: ") +
+                   std::string(e.what());
         }
     }
     auto tempPath = filepath.string() + ".tmp";
@@ -36,7 +37,7 @@ std::optional<std::string> FileOperations::writeToFile(
         std::filesystem::rename(tempPath, filepath);
     } catch (const std::exception& e) {
         std::filesystem::remove(tempPath);
-        return std::string("Failed to finalize save: ") + e.what();
+        return std::string("Failed to finalize save: ") + std::string(e.what());
     }
 
     return std::nullopt;
@@ -75,7 +76,7 @@ std::optional<std::string> FileOperations::deleteFile(
         }
         return std::nullopt;
     } catch (const std::exception& e) {
-        return std::string("Failed to delete file: ") + e.what();
+        return std::string("Failed to delete file: ") + std::string(e.what());
     }
 }
 
@@ -88,7 +89,7 @@ std::optional<std::string> FileOperations::copyFile(
             std::filesystem::copy_options::overwrite_existing);
         return std::nullopt;
     } catch (const std::exception& e) {
-        return std::string("Failed to copy file: ") + e.what();
+        return std::string("Failed to copy file: ") + std::string(e.what());
     }
 }
 

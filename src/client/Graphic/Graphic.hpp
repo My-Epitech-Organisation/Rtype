@@ -23,6 +23,8 @@
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
+#include "../network/ClientNetworkSystem.hpp"
+#include "../network/NetworkClient.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "KeyboardActions.hpp"
@@ -37,11 +39,12 @@
  *
  * System execution order:
  * 1. ResetTriggers - Resets input states
- * 2. ButtonUpdate - Updates button states (depends on ResetTriggers)
- * 3. Parallax - Updates parallax backgrounds (depends on ButtonUpdate)
- * 4. Movement - Updates entity positions (depends on Parallax)
- * 5. Render - Draws all entities (depends on Movement)
- * 6. Boxing - Draws debug boxes (depends on Render)
+ * 2. Network - Polls network and processes incoming packets
+ * 3. Movement - Updates entity positions (depends on ResetTriggers)
+ * 4. Parallax - Updates parallax backgrounds (depends on Movement)
+ * 5. ButtonUpdate - Updates button states (depends on Parallax, for UI/menus)
+ * 6. Render - Draws all entities (depends on ButtonUpdate)
+ * 7. Boxing - Draws debug boxes on top (drawn after Render for visibility)
  */
 class Graphic {
    public:
@@ -66,6 +69,12 @@ class Graphic {
 
     /// @brief ECS registry shared with SceneManager and all systems
     std::shared_ptr<ECS::Registry> _registry;
+
+    /// @brief Network client for server communication (shared with scenes)
+    std::shared_ptr<rtype::client::NetworkClient> _networkClient;
+
+    /// @brief Network system bridging network events to ECS
+    std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
 
     /// @brief Asset manager shared with SceneManager for texture/font loading
     std::shared_ptr<AssetManager> _assetsManager;
@@ -135,6 +144,9 @@ class Graphic {
     /// @brief Update camera/view scrolling based on delta time
     void _updateViewScrolling();
 
+    /// @brief Poll network and process incoming packets
+    void _updateNetwork();
+
     /// @brief Run update phase systems and scene logic
     void _update();
 
@@ -144,10 +156,40 @@ class Graphic {
     /// @brief Initialize and register all systems with the scheduler
     void _initializeSystems();
 
+    /// @brief Configure network entity factory for creating entities with
+    /// graphics
+    void _setupNetworkEntityFactory();
+
    public:
     void loop();
 
-    explicit Graphic(std::shared_ptr<ECS::Registry> registry);
+    /**
+     * @brief Get the network client for server communication
+     * @return Shared pointer to the network client
+     */
+    [[nodiscard]] std::shared_ptr<rtype::client::NetworkClient>
+    getNetworkClient() const {
+        return _networkClient;
+    }
+
+    /**
+     * @brief Get the network system for entity synchronization
+     * @return Shared pointer to the network system
+     */
+    [[nodiscard]] std::shared_ptr<rtype::client::ClientNetworkSystem>
+    getNetworkSystem() const {
+        return _networkSystem;
+    }
+
+    /**
+     * @brief Construct Graphic with network integration
+     * @param registry ECS registry
+     * @param networkClient Network client for server communication
+     * @param networkSystem Network system for ECS synchronization
+     */
+    Graphic(std::shared_ptr<ECS::Registry> registry,
+            std::shared_ptr<rtype::client::NetworkClient> networkClient,
+            std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem);
     ~Graphic() = default;
 
     Graphic(const Graphic&) = delete;

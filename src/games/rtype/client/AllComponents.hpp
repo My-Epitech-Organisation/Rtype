@@ -17,6 +17,7 @@
 #include "Components/SizeComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
+#include "Components/TextInputComponent.hpp"
 #include "Components/TextureRectComponent.hpp"
 #include "Components/UserEventComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
@@ -58,6 +59,10 @@ using ControllableTag = ::rtype::games::rtype::client::ControllableTag;
 using ButtonTag = ::rtype::games::rtype::client::ButtonTag;
 using StaticTextTag = ::rtype::games::rtype::client::StaticTextTag;
 using PauseMenuTag = ::rtype::games::rtype::client::PauseMenuTag;
+using TextInputTag = ::rtype::games::rtype::client::TextInputTag;
+
+// Text input component
+using TextInput = ::rtype::games::rtype::client::TextInput;
 
 // Position and movement (from shared)
 using Position = ::rtype::games::rtype::shared::Position;

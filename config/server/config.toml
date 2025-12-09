@@ -2,14 +2,14 @@
 # Schema version: 1
 
 [server]
-port = 4000
-max_players = 8
+port = 4242
+max_players = 4
 tickrate = 60
 mapName = "default"
 
 [network]
 serverAddress = "0.0.0.0"
-serverPort = 4000
+serverPort = 4242
 connectionTimeout = 10000
 maxRetries = 5
 tickrate = 60

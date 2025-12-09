@@ -10,7 +10,14 @@
 #include <memory>
 #include <utility>
 
+#include "Components/PositionComponent.hpp"
+#include "Components/VelocityComponent.hpp"
+#include "Logger/Macros.hpp"
+
 namespace rtype::client {
+
+using Position = rtype::games::rtype::shared::Position;
+using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
 ClientNetworkSystem::ClientNetworkSystem(
     std::shared_ptr<ECS::Registry> registry,
@@ -71,23 +78,37 @@ std::optional<ECS::Entity> ClientNetworkSystem::findEntityByNetworkId(
 bool ClientNetworkSystem::isConnected() const { return client_->isConnected(); }
 
 void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
+    LOG_DEBUG(
+        "[ClientNetworkSystem] Entity spawn received: entityId=" +
+        std::to_string(event.entityId) +
+        " type=" + std::to_string(static_cast<int>(event.type)) + " pos=(" +
+        std::to_string(event.x) + ", " + std::to_string(event.y) +
+        ") localUserId=" +
+        (localUserId_.has_value() ? std::to_string(*localUserId_) : "none"));
+
     if (networkIdToEntity_.find(event.entityId) != networkIdToEntity_.end()) {
+        LOG_DEBUG("[ClientNetworkSystem] Entity already exists, skipping");
         return;
     }
 
     ECS::Entity entity;
 
     if (entityFactory_) {
+        LOG_DEBUG("[ClientNetworkSystem] Using custom entityFactory");
         entity = entityFactory_(*registry_, event);
     } else {
+        LOG_DEBUG("[ClientNetworkSystem] Using default entityFactory");
         entity = defaultEntityFactory(*registry_, event);
     }
 
     networkIdToEntity_[event.entityId] = entity;
+    LOG_DEBUG("[ClientNetworkSystem] Created entity id=" +
+              std::to_string(entity.id));
 
     if (localUserId_.has_value() && event.entityId == *localUserId_ &&
         event.type == network::EntityType::Player) {
         localPlayerEntity_ = entity;
+        LOG_DEBUG("[ClientNetworkSystem] This is our local player!");
 
         if (onLocalPlayerAssignedCallback_) {
             onLocalPlayerAssignedCallback_(*localUserId_, entity);
@@ -108,9 +129,17 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
         return;
     }
 
-    // TODO(SamTess): Implement component updates for entity movement.
-    // The EntityFactory should set up TransformComponent and VelocityComponent.
-    // Update them here using event.x, event.y, event.vx, event.vy.
+    if (registry_->hasComponent<Position>(entity)) {
+        auto& pos = registry_->getComponent<Position>(entity);
+        pos.x = event.x;
+        pos.y = event.y;
+    }
+
+    if (registry_->hasComponent<Velocity>(entity)) {
+        auto& vel = registry_->getComponent<Velocity>(entity);
+        vel.vx = event.vx;
+        vel.vy = event.vy;
+    }
 }
 
 void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
@@ -144,12 +173,16 @@ void ClientNetworkSystem::handlePositionCorrection(float x, float y) {
         return;
     }
 
-    // TODO(SamTess): Implement position correction/reconciliation using x, y.
-    (void)x;
-    (void)y;
+    if (registry_->hasComponent<Position>(entity)) {
+        auto& pos = registry_->getComponent<Position>(entity);
+        pos.x = x;
+        pos.y = y;
+    }
 }
 
 void ClientNetworkSystem::handleConnected(std::uint32_t userId) {
+    LOG_INFO("[ClientNetworkSystem] Connected with userId=" +
+             std::to_string(userId));
     localUserId_ = userId;
 }
 
