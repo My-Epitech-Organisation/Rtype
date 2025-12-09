@@ -1,0 +1,293 @@
+# =============================================================================
+# R-Type Test Level - For Map/Level System Testing
+# =============================================================================
+# A test level demonstrating the data-driven map/level system
+#
+# NOTE: Texture names must match textures loaded in AssetManager:
+#   - "bg_menu", "bg_planet_1", "bg_planet_2", "bg_planet_3"
+#   - "astro_vessel", "player_vessel"
+# For obstacles/tiles, leave sprite empty or use existing textures as placeholders
+# until dedicated textures are added to assets/
+
+[level]
+id = "test_level"
+name = "Test Level"
+background = "bg_menu"
+scroll_speed = 100.0
+
+# Map configuration
+[map]
+level_width = 5000.0
+viewport_width = 1920.0
+viewport_height = 1080.0
+
+# -----------------------------------------------------------------------------
+# Starfield Background Layers (for parallax effect)
+# -----------------------------------------------------------------------------
+# Layers are rendered back-to-front based on z_index (lower = further back)
+# Using existing textures: "bg_planet_1", "bg_planet_2", "bg_planet_3"
+
+[[starfield]]
+id = "stars_far"
+texture = "bg_planet_1"
+scroll_factor = 0.2
+z_index = -100
+repeating = true
+scale = 1.0
+
+[[starfield]]
+id = "stars_medium"
+texture = "bg_planet_2"
+scroll_factor = 0.5
+z_index = -50
+repeating = true
+scale = 1.0
+
+[[starfield]]
+id = "nebula"
+texture = "bg_planet_3"
+scroll_factor = 0.8
+z_index = -25
+repeating = true
+scale = 1.0
+
+# -----------------------------------------------------------------------------
+# Static Obstacles (Indestructible walls/platforms)
+# -----------------------------------------------------------------------------
+# Obstacles block player and enemy movement
+# sprite = "" means no texture (collision only, or use default if available)
+
+[[obstacle]]
+id = "wall_top_1"
+sprite = ""
+x = 500.0
+y = 0.0
+width = 200.0
+height = 64.0
+hitbox_width = 200.0
+hitbox_height = 64.0
+
+[[obstacle]]
+id = "wall_bottom_1"
+sprite = ""
+x = 500.0
+y = 1016.0
+width = 200.0
+height = 64.0
+
+[[obstacle]]
+id = "platform_1"
+sprite = ""
+x = 1000.0
+y = 300.0
+width = 128.0
+height = 32.0
+
+[[obstacle]]
+id = "platform_2"
+sprite = ""
+x = 1000.0
+y = 700.0
+width = 128.0
+height = 32.0
+
+[[obstacle]]
+id = "pillar_1"
+sprite = ""
+x = 1500.0
+y = 0.0
+width = 64.0
+height = 400.0
+
+[[obstacle]]
+id = "pillar_2"
+sprite = ""
+x = 1500.0
+y = 680.0
+width = 64.0
+height = 400.0
+
+[[obstacle]]
+id = "wall_narrow"
+sprite = ""
+x = 2000.0
+y = 400.0
+width = 32.0
+height = 280.0
+
+[[obstacle]]
+id = "corridor_top"
+sprite = ""
+x = 2500.0
+y = 0.0
+width = 400.0
+height = 350.0
+
+[[obstacle]]
+id = "corridor_bottom"
+sprite = ""
+x = 2500.0
+y = 730.0
+width = 400.0
+height = 350.0
+
+# -----------------------------------------------------------------------------
+# Destroyable Tiles
+# -----------------------------------------------------------------------------
+# These can be destroyed by player projectiles
+# sprite = "" means no texture (collision only, or use default if available)
+
+[[destroyable_tile]]
+id = "block_1"
+sprite = ""
+x = 800.0
+y = 500.0
+width = 32.0
+height = 32.0
+health = 3
+score_value = 50
+
+[[destroyable_tile]]
+id = "block_2"
+sprite = ""
+x = 832.0
+y = 500.0
+width = 32.0
+height = 32.0
+health = 3
+score_value = 50
+
+[[destroyable_tile]]
+id = "block_3"
+sprite = ""
+x = 864.0
+y = 500.0
+width = 32.0
+height = 32.0
+health = 3
+score_value = 50
+
+[[destroyable_tile]]
+id = "block_4"
+sprite = ""
+x = 800.0
+y = 532.0
+width = 32.0
+height = 32.0
+health = 3
+score_value = 50
+
+[[destroyable_tile]]
+id = "block_5"
+sprite = ""
+x = 832.0
+y = 532.0
+width = 32.0
+height = 32.0
+health = 3
+score_value = 50
+
+[[destroyable_tile]]
+id = "block_6"
+sprite = ""
+x = 864.0
+y = 532.0
+width = 32.0
+height = 32.0
+health = 3
+score_value = 50
+
+[[destroyable_tile]]
+id = "weak_wall"
+sprite = ""
+x = 1800.0
+y = 450.0
+width = 32.0
+height = 180.0
+health = 10
+score_value = 200
+
+# -----------------------------------------------------------------------------
+# Decorations (Visual only, no collision)
+# -----------------------------------------------------------------------------
+
+[[decoration]]
+id = "asteroid_1"
+sprite = "assets/decorations/asteroid_small.png"
+x = 300.0
+y = 150.0
+width = 48.0
+height = 48.0
+rotation = 45.0
+
+[[decoration]]
+id = "asteroid_2"
+sprite = "assets/decorations/asteroid_medium.png"
+x = 600.0
+y = 800.0
+width = 64.0
+height = 64.0
+rotation = 120.0
+
+[[decoration]]
+id = "debris_1"
+sprite = "assets/decorations/debris.png"
+x = 1200.0
+y = 200.0
+width = 32.0
+height = 32.0
+
+[[decoration]]
+id = "sign_danger"
+sprite = "assets/decorations/warning_sign.png"
+x = 450.0
+y = 100.0
+width = 64.0
+height = 64.0
+
+# -----------------------------------------------------------------------------
+# Enemy Waves (existing system)
+# -----------------------------------------------------------------------------
+
+[[wave]]
+number = 1
+spawn_delay = 1.0
+
+[[wave.spawn]]
+enemy = "basic"
+x = 1920.0
+y = 200.0
+delay = 0.0
+count = 1
+
+[[wave.spawn]]
+enemy = "basic"
+x = 1920.0
+y = 400.0
+delay = 0.5
+count = 1
+
+[[wave.spawn]]
+enemy = "basic"
+x = 1920.0
+y = 600.0
+delay = 1.0
+count = 1
+
+[[wave]]
+number = 2
+spawn_delay = 0.8
+
+[[wave.spawn]]
+enemy = "wave"
+x = 1920.0
+y = 300.0
+delay = 0.0
+count = 3
+
+[[wave.spawn]]
+enemy = "shooter"
+x = 1800.0
+y = 500.0
+delay = 2.0
+count = 1
