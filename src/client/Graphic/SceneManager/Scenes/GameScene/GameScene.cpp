@@ -36,8 +36,8 @@ GameScene::GameScene(
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::unique_ptr<IGameScene> gameScene,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,
-    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem),
-    std::shared_ptr<AudioLib> audio
+    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem,
+    std::shared_ptr<AudioLib> audio)
     : AScene(ecs, textureManager, window, audio),
       _keybinds(std::move(keybinds)),
       _networkClient(std::move(networkClient)),
