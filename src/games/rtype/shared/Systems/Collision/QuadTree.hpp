@@ -115,6 +115,8 @@ class QuadTree {
      * @brief Queries objects within a range.
      *
      * Returns all objects whose bounding boxes intersect with the query range.
+     * Uses a non-const reference output parameter to efficiently accumulate
+     * results across recursive calls without repeated vector allocations.
      *
      * @param range The query range
      * @param found Vector to store found objects (output parameter)
@@ -140,6 +142,9 @@ class QuadTree {
 
     /**
      * @brief Queries all objects in the QuadTree.
+     *
+     * Uses a non-const reference output parameter to efficiently accumulate
+     * results across recursive calls without repeated vector allocations.
      *
      * @param found Vector to store all objects (output parameter)
      */
