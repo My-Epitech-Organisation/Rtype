@@ -71,6 +71,8 @@ class GameScene : public AScene {
             nullptr,
         std::shared_ptr<AudioLib> audio = nullptr);
 
+    ~GameScene();
+
    private:
     std::shared_ptr<AudioLib> _audio;
 };

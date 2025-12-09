@@ -10,6 +10,8 @@
 #include <memory>
 #include <utility>
 
+#include "Components/TagComponent.hpp"
+
 void GameScene::update(float dt) {
     if (_gameScene) {
         _gameScene->update();
@@ -60,5 +62,16 @@ GameScene::GameScene(
             this->_audio->setLoop(true);
             this->_audio->play();
         }
+    }
+}
+
+GameScene::~GameScene() {
+    this->_registry->view<rtype::games::rtype::client::GameTag>().each(
+        [this](ECS::Entity entity,
+               rtype::games::rtype::client::GameTag& /*tag*/) {
+            this->_registry->killEntity(entity);
+        });
+    if (this->_audio) {
+        this->_audio->pauseMusic();
     }
 }

@@ -65,6 +65,7 @@ void RtypeEntityFactory::setupPlayerEntity(
     reg.emplaceComponent<Size>(entity, 4, 4);
     reg.emplaceComponent<PlayerTag>(entity);
     reg.emplaceComponent<ZIndex>(entity, 0);
+    reg.emplaceComponent<GameTag>(entity);
 }
 
 void RtypeEntityFactory::setupBydosEntity(
@@ -78,6 +79,7 @@ void RtypeEntityFactory::setupBydosEntity(
                                       std::pair<int, int>({33, 17}));
     reg.emplaceComponent<Size>(entity, 3, 3);
     reg.emplaceComponent<ZIndex>(entity, 0);
+    reg.emplaceComponent<GameTag>(entity);
 }
 
 void RtypeEntityFactory::setupMissileEntity(
@@ -95,6 +97,7 @@ void RtypeEntityFactory::setupMissileEntity(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
     reg.emplaceComponent<Size>(entity, 1, 1);
     reg.emplaceComponent<ZIndex>(entity, 1);
+    reg.emplaceComponent<GameTag>(entity);
 }
 
 }  // namespace rtype::games::rtype::client
