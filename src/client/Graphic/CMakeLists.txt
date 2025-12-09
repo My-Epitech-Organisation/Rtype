@@ -1,5 +1,6 @@
 add_subdirectory(SceneManager)
 add_subdirectory(AssetManager)
+add_subdirectory(AudioLib)
 add_subdirectory(EntityFactory)
 
 add_library(rtype-graphic-SFML

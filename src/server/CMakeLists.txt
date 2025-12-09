@@ -1,9 +1,25 @@
+
+add_library(rtype_server_network STATIC
+    network/NetworkServer.cpp
+    network/ServerNetworkSystem.cpp
+)
+
+target_compile_features(rtype_server_network PRIVATE cxx_std_20)
+target_include_directories(rtype_server_network PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_link_libraries(rtype_server_network
+    PRIVATE
+    rtype_network
+    rtype_common
+    rtype_game_server
+)
+
 add_executable(r-type_server
     main.cpp
     ServerApp.cpp
     ClientManager.cpp
-    network/NetworkServer.cpp
-    network/ServerNetworkSystem.cpp
 )
 
 target_compile_features(r-type_server PRIVATE cxx_std_20)
@@ -18,4 +34,5 @@ target_link_libraries(r-type_server PRIVATE
     rtype_network
     rtype_game_shared
     rtype_game_server
+    rtype_server_network
 )

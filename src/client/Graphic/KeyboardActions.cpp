@@ -16,6 +16,7 @@ KeyboardActions::KeyboardActions() {
     this->_keyBindings.emplace(GameAction::MOVE_LEFT, sf::Keyboard::Key::Left);
     this->_keyBindings.emplace(GameAction::SHOOT, sf::Keyboard::Key::Space);
     this->_keyBindings.emplace(GameAction::PAUSE, sf::Keyboard::Key::Escape);
+    this->_keyBindings.emplace(GameAction::CHANGE_AMMO, sf::Keyboard::Key::Tab);
 }
 
 auto KeyboardActions::getKeyBinding(const GameAction& action)

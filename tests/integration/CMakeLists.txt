@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 3.20)
 add_executable(test_integration
     test_integration.cpp
     test_network_api.cpp
-    ${CMAKE_SOURCE_DIR}/src/client/network/NetworkClient.cpp
-    ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
+    test_network_disconnects.cpp
+    test_network_packet_loss.cpp
 )
 
 target_link_libraries(test_integration
@@ -16,6 +16,8 @@ target_link_libraries(test_integration
         rtype_network
         rtype_ecs
         rtype_game_shared
+    rtype_client_network
+    rtype_server_network
 )
 
 target_include_directories(test_integration

@@ -11,6 +11,7 @@
 #include "Logger/Macros.hpp"
 
 void FontManager::load(const std::string& id, const std::string& filePath) {
+    if (this->_assets.contains(id)) return;
     auto font = std::make_unique<sf::Font>();
 
     if (!font->openFromFile(filePath)) {
@@ -20,19 +21,6 @@ void FontManager::load(const std::string& id, const std::string& filePath) {
 
     this->_assets[id] = std::move(font);
     LOG_DEBUG("Font loaded with ID: " << id);
-}
-
-void FontManager::load(const std::string& id, unsigned char* fileData,
-                       unsigned int fileDataSize) {
-    auto font = std::make_unique<sf::Font>();
-
-    if (!font->openFromMemory(fileData, fileDataSize)) {
-        LOG_ERROR("Unable to load font from memory: " << id);
-        throw std::runtime_error("Error while loading font: " + id);
-    }
-
-    this->_assets[id] = std::move(font);
-    LOG_DEBUG("Font loaded from memory with ID: " << id);
 }
 
 sf::Font& FontManager::get(const std::string& id) {
