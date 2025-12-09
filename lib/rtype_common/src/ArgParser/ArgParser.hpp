@@ -185,7 +185,7 @@ class ArgParser {
         }
         if (auto handlerIt = _valueHandlers.find(key);
             handlerIt != _valueHandlers.end()) {
-            ++iter;
+            iter++;
             if (iter == end) {
                 LOG_ERROR(std::format("Option {} requires an argument", key));
                 return {ParseResult::Error, 0};
