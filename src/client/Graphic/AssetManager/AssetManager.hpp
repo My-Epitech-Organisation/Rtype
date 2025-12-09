@@ -10,7 +10,7 @@
 #include "AudioManager.hpp"
 #include "FontManager.hpp"
 #include "TextureManager.hpp"
-#include "src/games/rtype/shared/Config/Parser/RTypeConfigParser.hpp"
+#include "Config/Parser/RTypeConfigParser.hpp"
 
 class AssetManager {
    public:
