@@ -11,8 +11,8 @@
 #include <utility>
 
 #include "AssetManager/AssetManager.hpp"
-#include "Logger/Macros.hpp"
 #include "Config/Parser/RTypeConfigParser.hpp"
+#include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "games/rtype/client/AllComponents.hpp"
 #include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"

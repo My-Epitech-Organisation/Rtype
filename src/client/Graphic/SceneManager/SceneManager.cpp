@@ -77,7 +77,7 @@ SceneManager::SceneManager(
       _keybinds(keybinds),
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)),
-      _audio(audioLib){
+      _audio(audioLib) {
     this->_switchToScene = [this](const Scene& scene) {
         this->setCurrentScene(scene);
     };

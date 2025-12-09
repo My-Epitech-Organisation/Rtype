@@ -75,7 +75,7 @@ class MainMenuScene : public AScene {
         std::shared_ptr<AudioLib> audioLib = nullptr);
 
    private:
-        std::shared_ptr<AudioLib> _audioLib;
+    std::shared_ptr<AudioLib> _audioLib;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_MAINMENUSCENE_MAINMENUSCENE_HPP_
