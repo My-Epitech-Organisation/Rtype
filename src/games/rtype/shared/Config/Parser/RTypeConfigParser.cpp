@@ -78,7 +78,8 @@ bool RTypeConfigParser::saveToFile(const RTypeGameConfig& config,
         std::filesystem::rename(tempPath, filepath);
     } catch (const std::exception& e) {
         _parser.reportError(
-            {"file", "", std::string("Failed to save file: ") + e.what()});
+            {"file", "",
+             std::string("Failed to save file: ") + std::string(e.what())});
         std::filesystem::remove(tempPath);
         return false;
     }

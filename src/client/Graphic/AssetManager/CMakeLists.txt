@@ -21,4 +21,5 @@ target_link_libraries(rtype-graphic-asset-manager
 target_include_directories(rtype-graphic-asset-manager
     PUBLIC
     ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
 )

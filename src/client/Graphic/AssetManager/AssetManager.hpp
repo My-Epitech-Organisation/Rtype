@@ -8,9 +8,9 @@
 #ifndef SRC_CLIENT_GRAPHIC_ASSETMANAGER_ASSETMANAGER_HPP_
 #define SRC_CLIENT_GRAPHIC_ASSETMANAGER_ASSETMANAGER_HPP_
 #include "AudioManager.hpp"
+#include "Config/Parser/RTypeConfigParser.hpp"
 #include "FontManager.hpp"
 #include "TextureManager.hpp"
-#include "src/games/rtype/shared/Config/Parser/RTypeConfigParser.hpp"
 
 class AssetManager {
    public:

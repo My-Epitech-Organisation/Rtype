@@ -159,8 +159,8 @@ bool RTypeGameConfig::initializeSaveManager() {
             LOG_INFO("[RTypeConfig] Created saves directory: "
                      << savesPath.string());
         } catch (const std::exception& e) {
-            _lastError =
-                "Failed to create saves directory: " + std::string(e.what());
+            _lastError = "Failed to create saves directory: " +
+                         std::string(std::string(e.what()));
             LOG_ERROR("[RTypeConfig] " << _lastError);
             return false;
         }

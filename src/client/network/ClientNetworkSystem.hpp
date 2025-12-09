@@ -83,11 +83,8 @@ class ClientNetworkSystem {
      */
     ~ClientNetworkSystem() = default;
 
-    // Non-copyable
     ClientNetworkSystem(const ClientNetworkSystem&) = delete;
     ClientNetworkSystem& operator=(const ClientNetworkSystem&) = delete;
-
-    // Non-movable
     ClientNetworkSystem(ClientNetworkSystem&&) = delete;
     ClientNetworkSystem& operator=(ClientNetworkSystem&&) = delete;
 

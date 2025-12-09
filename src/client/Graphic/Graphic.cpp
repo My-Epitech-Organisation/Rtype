@@ -12,7 +12,12 @@
 
 #include "AssetManager/AssetManager.hpp"
 #include "Config/Parser/RTypeConfigParser.hpp"
+#include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
+#include "games/rtype/client/AllComponents.hpp"
+#include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"
+#include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/VelocityComponent.hpp"
 
 void Graphic::_pollEvents() {
     while (const std::optional event = this->_window->pollEvent()) {
@@ -37,13 +42,20 @@ void Graphic::_updateViewScrolling() {
     this->_view->setCenter({newX, center.y});
 }
 
-void Graphic::_update() {
-    this->_updateDeltaTime();
-    this->_updateViewScrolling();
+void Graphic::_updateNetwork() {
+    if (_networkSystem) {
+        _networkSystem->update();
+    }
+}
 
-    this->_systemScheduler->runSystem("button_update");
-    this->_systemScheduler->runSystem("parallax");
-    this->_systemScheduler->runSystem("movement");
+void Graphic::_update() {
+    _updateDeltaTime();
+    _updateNetwork();
+    _updateViewScrolling();
+
+    _systemScheduler->runSystem("movement");
+    _systemScheduler->runSystem("parallax");
+    _systemScheduler->runSystem("button_update");
     this->_sceneManager->update();
 }
 
@@ -66,6 +78,24 @@ void Graphic::loop() {
     }
 }
 
+void Graphic::_setupNetworkEntityFactory() {
+    namespace rc = rtype::games::rtype::client;
+
+    auto assetsManager = this->_assetsManager;
+    auto registry = this->_registry;
+
+    _networkSystem->setEntityFactory(
+        rc::RtypeEntityFactory::createNetworkEntityFactory(registry,
+                                                           assetsManager));
+    _networkSystem->onLocalPlayerAssigned(
+        [registry](std::uint32_t /*userId*/, ECS::Entity entity) {
+            if (registry->isAlive(entity)) {
+                registry->emplaceComponent<rc::ControllableTag>(entity);
+                LOG_DEBUG("[Graphic] Local player entity assigned");
+            }
+        });
+}
+
 void Graphic::_initializeSystems() {
     this->_movementSystem =
         std::make_unique<::rtype::games::rtype::client::MovementSystem>();
@@ -83,40 +113,35 @@ void Graphic::_initializeSystems() {
             this->_window);
     this->_resetTriggersSystem =
         std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
-    this->_eventSystem =
-        std::make_unique<::rtype::games::rtype::client::EventSystem>(
-            this->_window);
+    _eventSystem = std::make_unique<::rtype::games::rtype::client::EventSystem>(
+        this->_window);
 
-    this->_systemScheduler =
-        std::make_unique<ECS::SystemScheduler>(*this->_registry);
+    _systemScheduler = std::make_unique<ECS::SystemScheduler>(*this->_registry);
 
-    this->_systemScheduler->addSystem(
-        "reset_triggers", [this](ECS::Registry& reg) {
-            this->_resetTriggersSystem->update(reg, 0.f);
-        });
+    _systemScheduler->addSystem("reset_triggers", [this](ECS::Registry& reg) {
+        _resetTriggersSystem->update(reg, 0.f);
+    });
 
-    this->_systemScheduler->addSystem("button_update",
-                                      [this](ECS::Registry& reg) {
-                                          this->_buttonUpdateSystem->update(
-                                              reg, 0.f);
-                                      },
-                                      {"reset_triggers"});
+    _systemScheduler->addSystem("movement",
+                                [this](ECS::Registry& reg) {
+                                    _movementSystem->update(reg,
+                                                            _currentDeltaTime);
+                                },
+                                {"reset_triggers"});
 
-    this->_systemScheduler->addSystem("parallax",
-                                      [this](ECS::Registry& reg) {
-                                          this->_parallaxScrolling->update(
-                                              reg, this->_currentDeltaTime);
-                                      },
-                                      {"button_update"});
+    _systemScheduler->addSystem("parallax",
+                                [this](ECS::Registry& reg) {
+                                    _parallaxScrolling->update(
+                                        reg, _currentDeltaTime);
+                                },
+                                {"movement"});
 
-    this->_systemScheduler->addSystem("movement",
-                                      [this](ECS::Registry& reg) {
-                                          this->_movementSystem->update(
-                                              reg, this->_currentDeltaTime);
-                                      },
-                                      {"parallax"});
+    _systemScheduler->addSystem(
+        "button_update",
+        [this](ECS::Registry& reg) { _buttonUpdateSystem->update(reg, 0.f); },
+        {"parallax"});
 
-    this->_systemScheduler->addSystem(
+    _systemScheduler->addSystem(
         "render",
         [this](ECS::Registry& reg) { this->_renderSystem->update(reg, 0.f); },
         {"movement"});
@@ -127,8 +152,13 @@ void Graphic::_initializeSystems() {
         {"render"});
 }
 
-Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
-    : _registry(registry),
+Graphic::Graphic(
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<rtype::client::NetworkClient> networkClient,
+    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem)
+    : _registry(std::move(registry)),
+      _networkClient(std::move(networkClient)),
+      _networkSystem(std::move(networkSystem)),
       _view(std::make_shared<sf::View>(
           sf::FloatRect({0, 0}, {WINDOW_WIDTH, WINDOW_HEIGHT}))) {
     rtype::game::config::RTypeConfigParser parser;
@@ -139,10 +169,13 @@ Graphic::Graphic(std::shared_ptr<ECS::Registry> registry)
         sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");
     this->_window->setView(*this->_view);
     this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value());
+    if (_networkSystem) {
+        _setupNetworkEntityFactory();
+    }
     this->_audioLib = std::make_shared<AudioLib>();
     this->_sceneManager = std::make_unique<SceneManager>(
-        registry, this->_assetsManager, this->_window, this->_keybinds,
-        this->_audioLib);
-    this->_initializeSystems();
+        _registry, this->_assetsManager, this->_window, this->_keybinds,
+        _networkClient, _networkSystem, this->_audioLib);
+    _initializeSystems();
     this->_mainClock.start();
 }

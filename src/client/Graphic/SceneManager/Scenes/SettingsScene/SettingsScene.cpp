@@ -11,6 +11,7 @@
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
+#include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 
 void SettingsScene::_initKeybindSection() {
@@ -24,8 +25,9 @@ void SettingsScene::_initKeybindSection() {
     float sectionW = 600;
     float sectionH = 600;
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
-        this->_registry, this->_assetsManager, "Keyboard Assignment", sectionX,
-        sectionY, sectionW, sectionH);
+        this->_registry, this->_assetsManager, "Keyboard Assignment",
+        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
+                      sf::Vector2f(sectionW, sectionH)));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
@@ -78,8 +80,9 @@ void SettingsScene::_initAudioSection() {
     float sectionH = 200;
 
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
-        this->_registry, this->_assetsManager, "Audio", sectionX, sectionY,
-        sectionW, sectionH);
+        this->_registry, this->_assetsManager, "Audio",
+        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
+                      sf::Vector2f(sectionW, sectionH)));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 }
@@ -91,8 +94,9 @@ void SettingsScene::_initWindowSection() {
     float sectionH = 385;
 
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
-        this->_registry, this->_assetsManager, "Window", sectionX, sectionY,
-        sectionW, sectionH);
+        this->_registry, this->_assetsManager, "Window",
+        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
+                      sf::Vector2f(sectionW, sectionH)));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 }
@@ -155,8 +159,8 @@ SettingsScene::SettingsScene(
             try {
                 switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
-                std::cerr << "Error switching to Main Menu: " << e.what()
-                          << std::endl;
+                LOG_ERROR(std::string("Error switching to Main Menu: ") +
+                          std::string(e.what()));
             }
         })));
 

@@ -7,7 +7,16 @@
 
 #include "ClientApp.hpp"
 
-ClientApp::ClientApp(std::shared_ptr<ECS::Registry> registry)
-    : _graphic(registry) {}
+#include <memory>
+#include <utility>
 
-void ClientApp::run() { this->_graphic.loop(); }
+ClientApp::ClientApp(const Config& config)
+    : _config(config),
+      _registry(std::make_shared<ECS::Registry>()),
+      _networkClient(std::make_shared<rtype::client::NetworkClient>()),
+      _networkSystem(std::make_shared<rtype::client::ClientNetworkSystem>(
+          _registry, _networkClient)),
+      _graphic(std::make_unique<Graphic>(_registry, _networkClient,
+                                         _networkSystem)) {}
+
+void ClientApp::run() { _graphic->loop(); }

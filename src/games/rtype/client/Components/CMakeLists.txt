@@ -3,6 +3,7 @@ add_library(rtype_game_client_components STATIC
     ImageComponent.hpp
     RectangleComponent.hpp
     TextComponent.hpp
+    TextInputComponent.hpp
     ButtonComponent.hpp
     UserEventComponent.hpp
     TagComponent.hpp
@@ -11,6 +12,7 @@ add_library(rtype_game_client_components STATIC
     BoxingComponent.hpp
     HiddenComponent.hpp
     ZIndexComponent.hpp
+    SizeComponent.hpp
 )
 
 set_target_properties(rtype_game_client_components PROPERTIES LINKER_LANGUAGE CXX)

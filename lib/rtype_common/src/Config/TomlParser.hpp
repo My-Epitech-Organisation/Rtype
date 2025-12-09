@@ -129,7 +129,7 @@ class TomlParser {
                 }
             }
         } catch (const std::exception& e) {
-            reportError({std::string(section), std::string(key), e.what()});
+            reportError({std::string(section), std::string(key), std::string(e.what())});
         }
         return defaultValue;
     }
