@@ -9,8 +9,11 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <cmath>
+#include <numbers>
 #include <random>
 
+#include "../../../lib/rtype_common/src/Logger/Macros.hpp"
 #include "../../../lib/rtype_ecs/src/ECS.hpp"
 #include "../../../src/games/rtype/shared/Components.hpp"
 #include "../../../src/games/rtype/shared/Systems/Collision/AABB.hpp"
@@ -120,18 +123,24 @@ TEST_F(QuadTreeCollisionIntegrationTest, ProjectileMissesEnemy) {
 }
 
 TEST_F(QuadTreeCollisionIntegrationTest, MultipleProjectilesMultipleEnemies) {
+    // Test assumptions:
+    // - Projectiles: 10x10 bounding boxes (from createProjectile)
+    // - Enemies: 32x32 bounding boxes (from createEnemy)
+    // - 10 unit offset between projectile and enemy centers ensures overlap
+    //   since combined half-widths (5 + 16 = 21) > offset (10)
+
     // Create a line of projectiles
     std::vector<ECS::Entity> projectiles;
     for (int i = 0; i < 5; ++i) {
         projectiles.push_back(
-            createProjectile(100.0F + i * 200.0F, 540.0F));
+            createProjectile(100.0F + static_cast<float>(i) * 200.0F, 540.0F));
     }
 
     // Create a line of enemies (some will collide)
     std::vector<ECS::Entity> enemies;
     for (int i = 0; i < 5; ++i) {
         enemies.push_back(
-            createEnemy(110.0F + i * 200.0F, 545.0F));  // Slightly offset
+            createEnemy(110.0F + static_cast<float>(i) * 200.0F, 545.0F));  // Slightly offset
     }
 
     quadTreeSystem->update(*registry, 0.016F);
@@ -155,7 +164,7 @@ TEST_F(QuadTreeCollisionIntegrationTest, PlayerAvoidsEnemies) {
     // Create enemies in a circle around the player (not touching)
     const float radius = 200.0F;
     for (int i = 0; i < 8; ++i) {
-        float angle = i * 3.14159F / 4.0F;
+        float angle = static_cast<float>(i) * std::numbers::pi_v<float> / 4.0F;
         float ex = 960.0F + radius * std::cos(angle);
         float ey = 540.0F + radius * std::sin(angle);
         createEnemy(ex, ey);
@@ -240,14 +249,15 @@ TEST_F(QuadTreeCollisionIntegrationTest, PerformanceWithManyEntities) {
     auto quadTreeTime =
         std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
-    // QuadTree should complete in reasonable time (< 50ms)
+    // QuadTree should complete in reasonable time (< 50ms for 200 entities)
+    // This threshold is conservative for CI environments with varying hardware
     EXPECT_LT(quadTreeTime.count(), 50000);
 
-    // Log for informational purposes
-    std::cout << "QuadTree collision detection with 200 entities: "
+    // Performance metrics for debugging purposes
+    LOG_DEBUG("QuadTree collision detection with 200 entities: "
               << quadTreeTime.count() << " microseconds, "
               << "pairs checked: " << pairs.size()
-              << ", actual collisions: " << collisions << std::endl;
+              << ", actual collisions: " << collisions);
 }
 
 TEST_F(QuadTreeCollisionIntegrationTest, QueryNearbyForTargeting) {

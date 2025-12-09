@@ -43,7 +43,7 @@ std::vector<CollisionPair> QuadTreeSystem::queryCollisionPairs(
 
     auto view = registry.view<TransformComponent, BoundingBoxComponent>();
 
-    view.each([this, &registry, &pairs, &checkedPairs](
+    view.each([this, &pairs, &checkedPairs](
                   ECS::Entity entity, const TransformComponent& transform,
                   const BoundingBoxComponent& bbox) {
         collision::Rect bounds = createRectFromComponents(transform, bbox);
@@ -63,8 +63,7 @@ std::vector<CollisionPair> QuadTreeSystem::queryCollisionPairs(
                 continue;
             }
             checkedPairs.insert(pairKey);
-            ECS::Entity otherEntity{other.data, 0};
-            pairs.emplace_back(entity, ECS::Entity{other.data, 0});
+            pairs.emplace_back(entity, ECS::Entity{other.data});
         }
     });
 
@@ -84,7 +83,7 @@ std::vector<ECS::Entity> QuadTreeSystem::queryNearby(
 
     result.reserve(found.size());
     for (const auto& obj : found) {
-        result.push_back(ECS::Entity{obj.data, 0});
+        result.push_back(ECS::Entity{obj.data});
     }
 
     return result;

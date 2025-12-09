@@ -95,8 +95,13 @@ struct Rect {
 
     /**
      * @brief Checks if this rectangle intersects with another.
+     *
+     * Note: Rectangles that touch exactly at an edge or corner are considered
+     * intersecting (uses strict inequality <, not <=). This is intentional
+     * for collision detection where shared boundaries should trigger checks.
+     *
      * @param other The other rectangle
-     * @return true if rectangles overlap
+     * @return true if rectangles overlap or touch at edges
      */
     [[nodiscard]] constexpr bool intersects(const Rect& other) const noexcept {
         return !(right() < other.left() || other.right() < left() ||

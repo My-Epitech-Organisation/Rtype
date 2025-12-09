@@ -84,6 +84,9 @@ class QuadTree {
      * The object will be placed in the deepest node that can fully contain it.
      * If a node exceeds its capacity, it will subdivide.
      *
+     * @pre obj.bounds should have positive dimensions (isValid() == true).
+     *      Invalid bounds will fail the contains() check and return false.
+     *
      * @param obj The object to insert
      * @return true if insertion was successful, false otherwise
      */

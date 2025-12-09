@@ -45,7 +45,7 @@ struct CollisionPair {
  *
  * Usage:
  * 1. Call update() each frame to rebuild the QuadTree
- * 2. Use queryCollisions() to get potential collision pairs
+ * 2. Use queryCollisionPairs() to get potential collision pairs
  * 3. Use queryNearby() to get entities near a specific point/area
  */
 class QuadTreeSystem : public ::rtype::engine::ASystem {
