@@ -50,6 +50,15 @@ struct EntityMoveEvent {
 };
 
 /**
+ * @brief Event data for entity health updates
+ */
+struct EntityHealthEvent {
+    std::uint32_t entityId;
+    std::int32_t current;
+    std::int32_t max;
+};
+
+/**
  * @brief Event data for game state change
  */
 struct GameStateEvent {
@@ -201,6 +210,12 @@ class NetworkClient {
     void onEntityDestroy(std::function<void(std::uint32_t entityId)> callback);
 
     /**
+     * @brief Register callback for entity health updates
+     * @param callback Function receiving the health event data
+     */
+    void onEntityHealth(std::function<void(EntityHealthEvent)> callback);
+
+    /**
      * @brief Register callback for server position correction
      *
      * Called when server's authoritative position differs from client
@@ -242,6 +257,8 @@ class NetworkClient {
                           const network::Buffer& payload);
     void handleEntityDestroy(const network::Header& header,
                              const network::Buffer& payload);
+    void handleEntityHealth(const network::Header& header,
+                            const network::Buffer& payload);
     void handleUpdatePos(const network::Header& header,
                          const network::Buffer& payload);
     void handleUpdateState(const network::Header& header,
@@ -271,6 +288,7 @@ class NetworkClient {
     std::function<void(EntitySpawnEvent)> onEntitySpawnCallback_;
     std::function<void(EntityMoveEvent)> onEntityMoveCallback_;
     std::function<void(std::uint32_t)> onEntityDestroyCallback_;
+    std::function<void(EntityHealthEvent)> onEntityHealthCallback_;
     std::function<void(float, float)> onPositionCorrectionCallback_;
     std::function<void(GameStateEvent)> onGameStateChangeCallback_;
 };

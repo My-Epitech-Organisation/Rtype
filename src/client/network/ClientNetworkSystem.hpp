@@ -111,6 +111,12 @@ class ClientNetworkSystem {
         std::function<void(std::uint32_t userId, ECS::Entity entity)> callback);
 
     /**
+     * @brief Register callback for health updates (after ECS sync)
+     * @param callback Function receiving the health event
+     */
+    void onHealthUpdate(std::function<void(const EntityHealthEvent&)> callback);
+
+    /**
      * @brief Update the network system
      *
      * Polls the network client and processes any pending events.
@@ -156,6 +162,7 @@ class ClientNetworkSystem {
     void handleEntityMove(const EntityMoveEvent& event);
     void handleEntityDestroy(std::uint32_t entityId);
     void handlePositionCorrection(float x, float y);
+    void handleEntityHealth(const EntityHealthEvent& event);
     void handleConnected(std::uint32_t userId);
     void handleDisconnected(network::DisconnectReason reason);
 
@@ -175,6 +182,7 @@ class ClientNetworkSystem {
 
     std::function<void(std::uint32_t, ECS::Entity)>
         onLocalPlayerAssignedCallback_;
+    std::function<void(const EntityHealthEvent&)> onHealthUpdateCallback_;
 };
 
 }  // namespace rtype::client
