@@ -43,7 +43,7 @@ class GameScene : public AScene {
     std::uint8_t _lastInputMask = 0;
 
    public:
-    void update() override;
+    void update(float dt) override;
     void render(std::shared_ptr<sf::RenderWindow> window) override;
     void pollEvents(const sf::Event& e) override;
 
@@ -70,6 +70,8 @@ class GameScene : public AScene {
         std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =
             nullptr,
         std::shared_ptr<AudioLib> audio = nullptr);
+
+    ~GameScene();
 
    private:
     std::shared_ptr<AudioLib> _audio;

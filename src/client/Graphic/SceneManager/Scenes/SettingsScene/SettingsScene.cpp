@@ -101,7 +101,7 @@ void SettingsScene::_initWindowSection() {
                              sectionEntities.end());
 }
 
-void SettingsScene::update() {}
+void SettingsScene::update(float dt) {}
 
 void SettingsScene::render(std::shared_ptr<sf::RenderWindow> window) {}
 

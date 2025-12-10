@@ -29,28 +29,18 @@ bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
 }
 
 void RenderSystem::_renderImages(ECS::Registry& registry) {
-    _cachedDrawableEntities.clear();
+    std::vector<ECS::Entity> drawableEntities;
     registry.view<Image, rs::Position, ZIndex>().each(
-        [this](auto entt, auto& /*img*/, auto& /*pos*/, auto& /*zindex*/) {
-            _cachedDrawableEntities.push_back(entt);
+        [&drawableEntities](auto entt, auto, auto, auto) {
+            drawableEntities.push_back(entt);
         });
-
-    const std::size_t currentCount = _cachedDrawableEntities.size();
-    if (currentCount != _lastDrawableCount) {
-        _needsResort = true;
-        _lastDrawableCount = currentCount;
-    }
-    if (_needsResort && !_cachedDrawableEntities.empty()) {
-        std::sort(_cachedDrawableEntities.begin(),
-                  _cachedDrawableEntities.end(),
-                  [&registry](ECS::Entity a, ECS::Entity b) {
-                      const auto& za = registry.getComponent<ZIndex>(a);
-                      const auto& zb = registry.getComponent<ZIndex>(b);
-                      return za.depth < zb.depth;
-                  });
-        _needsResort = false;
-    }
-    for (auto entt : _cachedDrawableEntities) {
+    std::sort(drawableEntities.begin(), drawableEntities.end(),
+              [&registry](ECS::Entity a, ECS::Entity b) {
+                  auto& za = registry.getComponent<ZIndex>(a);
+                  auto& zb = registry.getComponent<ZIndex>(b);
+                  return za.depth < zb.depth;
+              });
+    for (auto entt : drawableEntities) {
         if (isEntityHidden(registry, entt)) continue;
 
         auto& img = registry.getComponent<Image>(entt);

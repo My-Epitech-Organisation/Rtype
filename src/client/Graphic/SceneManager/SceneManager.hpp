@@ -56,7 +56,7 @@ class SceneManager {
     void setCurrentScene(Scene scene);
 
     void pollEvents(const sf::Event& e);
-    void update();
+    void update(float dt);
     void draw();
 
     bool operator==(const Scene& data) const {

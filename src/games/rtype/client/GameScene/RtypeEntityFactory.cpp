@@ -10,6 +10,9 @@
 #include <utility>
 
 #include "AllComponents.hpp"
+#include "Components/LifetimeComponent.hpp"
+#include "Components/Tags.hpp"
+#include "GraphicsConstants.hpp"
 #include "Logger/Macros.hpp"
 #include "protocol/Payloads.hpp"
 
@@ -43,7 +46,7 @@ RtypeEntityFactory::createNetworkEntityFactory(
                 break;
 
             case ::rtype::network::EntityType::Missile:
-                setupMissileEntity(reg, entity);
+                setupMissileEntity(reg, assetsManager, entity);
                 break;
         }
 
@@ -62,6 +65,7 @@ void RtypeEntityFactory::setupPlayerEntity(
     reg.emplaceComponent<Size>(entity, 4, 4);
     reg.emplaceComponent<PlayerTag>(entity);
     reg.emplaceComponent<ZIndex>(entity, 0);
+    reg.emplaceComponent<GameTag>(entity);
 }
 
 void RtypeEntityFactory::setupBydosEntity(
@@ -75,14 +79,24 @@ void RtypeEntityFactory::setupBydosEntity(
                                       std::pair<int, int>({33, 17}));
     reg.emplaceComponent<Size>(entity, 3, 3);
     reg.emplaceComponent<ZIndex>(entity, 0);
+    reg.emplaceComponent<GameTag>(entity);
 }
 
-void RtypeEntityFactory::setupMissileEntity(ECS::Registry& reg,
-                                            ECS::Entity entity) {
+void RtypeEntityFactory::setupMissileEntity(
+    ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
+    ECS::Entity entity) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Missile components");
-    // TODO(Noa): Add Missile sprite when available
-    reg.emplaceComponent<Size>(entity, 1, 1);
+    reg.emplaceComponent<Image>(
+        entity, assetsManager->textureManager->get("projectile_player_laser"));
+    reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
+                                      std::pair<int, int>({33, 34}));
+    reg.emplaceComponent<Size>(entity, 2, 2);
+    reg.emplaceComponent<shared::ProjectileTag>(entity);
     reg.emplaceComponent<ZIndex>(entity, 1);
+    reg.emplaceComponent<shared::LifetimeComponent>(
+        entity, GraphicsConfig::LIFETIME_PROJECTILE);
+    reg.emplaceComponent<Size>(entity, 1, 1);
+    reg.emplaceComponent<GameTag>(entity);
 }
 
 }  // namespace rtype::games::rtype::client

@@ -52,6 +52,10 @@ class RtypeGameScene : public AGameScene {
      */
     std::vector<ECS::Entity> initialize() override;
 
+    void _handleShoot();
+
+    void _updateUserShoot(float deltaTime);
+
     /**
      * @brief Update R-Type game logic
      */

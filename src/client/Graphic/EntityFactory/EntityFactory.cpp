@@ -11,11 +11,14 @@
 #include <string_view>
 
 #include "../../games/rtype/client/GraphicsConstants.hpp"
+#include "Components/CountdownComponent.hpp"
 #include "Components/ImageComponent.hpp"
+#include "Components/LifetimeComponent.hpp"
 #include "Components/ParallaxComponent.hpp"
 #include "Components/PositionComponent.hpp"
 #include "Components/SizeComponent.hpp"
 #include "Components/TagComponent.hpp"
+#include "Components/Tags.hpp"
 #include "Components/TextInputComponent.hpp"
 #include "Components/TextureRectComponent.hpp"
 #include "Components/VelocityComponent.hpp"
@@ -80,30 +83,6 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         appTitle);
     return {planet1, planet2, planet3, background, appTitle};
-}
-
-ECS::Entity EntityFactory::createPlayer(
-    std::shared_ptr<ECS::Registry> registry,
-    std::shared_ptr<AssetManager> assetsManager, sf::Vector2i scale,
-    bool isControllable) {
-    auto ent = registry->spawnEntity();
-    registry->emplaceComponent<rtype::games::rtype::client::Image>(
-        ent, assetsManager->textureManager->get("player_vessel"));
-    registry->emplaceComponent<rtype::games::rtype::client::TextureRect>(
-        ent, std::pair<int, int>({0, 0}), std::pair<int, int>({33, 17}));
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(ent, 0,
-                                                                      0);
-    registry->emplaceComponent<rtype::games::rtype::client::Size>(ent, scale.x,
-                                                                  scale.y);
-    registry->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(
-        ent, 0.f, 0.f);
-    registry->emplaceComponent<rtype::games::rtype::client::PlayerTag>(ent);
-    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(ent, 0);
-    if (isControllable)
-        registry
-            ->emplaceComponent<rtype::games::rtype::client::ControllableTag>(
-                ent);
-    return ent;
 }
 
 std::vector<ECS::Entity> EntityFactory::createSection(

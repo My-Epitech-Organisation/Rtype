@@ -32,13 +32,13 @@ void Graphic::_pollEvents() {
 }
 
 void Graphic::_updateDeltaTime() {
-    _currentDeltaTime = this->_mainClock.getElapsedTime().asSeconds();
+    this->_currentDeltaTime = this->_mainClock.getElapsedTime().asSeconds();
     this->_mainClock.restart();
 }
 
 void Graphic::_updateViewScrolling() {
     sf::Vector2f center = this->_view->getCenter();
-    float newX = center.x + (scrollSpeed * _currentDeltaTime);
+    float newX = center.x + (scrollSpeed * this->_currentDeltaTime);
     this->_view->setCenter({newX, center.y});
 }
 
@@ -53,10 +53,12 @@ void Graphic::_update() {
     _updateNetwork();
     _updateViewScrolling();
 
-    _systemScheduler->runSystem("movement");
-    _systemScheduler->runSystem("parallax");
-    _systemScheduler->runSystem("button_update");
-    this->_sceneManager->update();
+    this->_systemScheduler->runSystem("movement");
+    this->_systemScheduler->runSystem("parallax");
+    this->_systemScheduler->runSystem("button_update");
+    this->_systemScheduler->runSystem("projectile");
+    this->_systemScheduler->runSystem("lifetime");
+    this->_sceneManager->update(this->_currentDeltaTime);
 }
 
 void Graphic::_display() {
@@ -113,38 +115,59 @@ void Graphic::_initializeSystems() {
             this->_window);
     this->_resetTriggersSystem =
         std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
-    _eventSystem = std::make_unique<::rtype::games::rtype::client::EventSystem>(
-        this->_window);
+    this->_eventSystem =
+        std::make_unique<::rtype::games::rtype::client::EventSystem>(
+            this->_window);
+    this->_projectileSystem =
+        std::make_unique<::rtype::games::rtype::shared::ProjectileSystem>();
+    this->_lifetimeSystem =
+        std::make_unique<::rtype::games::rtype::shared::LifetimeSystem>();
 
-    _systemScheduler = std::make_unique<ECS::SystemScheduler>(*this->_registry);
+    this->_systemScheduler =
+        std::make_unique<ECS::SystemScheduler>(*this->_registry);
 
-    _systemScheduler->addSystem("reset_triggers", [this](ECS::Registry& reg) {
-        _resetTriggersSystem->update(reg, 0.f);
-    });
+    this->_systemScheduler->addSystem(
+        "reset_triggers", [this](ECS::Registry& reg) {
+            this->_resetTriggersSystem->update(reg, 0.f);
+        });
 
-    _systemScheduler->addSystem("movement",
-                                [this](ECS::Registry& reg) {
-                                    _movementSystem->update(reg,
-                                                            _currentDeltaTime);
-                                },
-                                {"reset_triggers"});
+    this->_systemScheduler->addSystem("movement",
+                                      [this](ECS::Registry& reg) {
+                                          _movementSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"reset_triggers"});
 
-    _systemScheduler->addSystem("parallax",
-                                [this](ECS::Registry& reg) {
-                                    _parallaxScrolling->update(
-                                        reg, _currentDeltaTime);
-                                },
-                                {"movement"});
+    this->_systemScheduler->addSystem("parallax",
+                                      [this](ECS::Registry& reg) {
+                                          _parallaxScrolling->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"movement"});
 
-    _systemScheduler->addSystem(
+    this->_systemScheduler->addSystem(
         "button_update",
         [this](ECS::Registry& reg) { _buttonUpdateSystem->update(reg, 0.f); },
         {"parallax"});
 
-    _systemScheduler->addSystem(
+    this->_systemScheduler->addSystem("projectile",
+                                      [this](ECS::Registry& reg) {
+                                          this->_projectileSystem->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"movement"});
+
+    this->_systemScheduler->addSystem("lifetime",
+                                      [this](ECS::Registry& reg) {
+                                          this->_lifetimeSystem->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"projectile"});
+
+    this->_systemScheduler->addSystem(
         "render",
         [this](ECS::Registry& reg) { this->_renderSystem->update(reg, 0.f); },
-        {"movement"});
+        {"lifetime"});
 
     this->_systemScheduler->addSystem(
         "boxing",

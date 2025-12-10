@@ -63,7 +63,9 @@ class RtypeEntityFactory {
      * @param reg ECS registry
      * @param entity Entity to configure
      */
-    static void setupMissileEntity(ECS::Registry& reg, ECS::Entity entity);
+    static void setupMissileEntity(ECS::Registry& reg,
+                                   std::shared_ptr<AssetManager> assetsManager,
+                                   ECS::Entity entity);
 };
 
 }  // namespace rtype::games::rtype::client

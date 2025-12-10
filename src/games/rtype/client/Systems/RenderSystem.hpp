@@ -80,12 +80,6 @@ class RenderSystem : public ::rtype::engine::ASystem {
     static bool isEntityHidden(ECS::Registry& registry, ECS::Entity entity);
 
     /**
-     * @brief Mark the drawable cache as needing a re-sort.
-     * Call this when ZIndex values change or entities are added/removed.
-     */
-    void invalidateCache() { _needsResort = true; }
-
-    /**
      * @brief Construct a new RenderSystem.
      * @param window Shared pointer to the SFML render window
      */

@@ -13,6 +13,7 @@ struct StaticTextTag {};
 struct ButtonTag {};
 struct RepeatingTag {};
 struct PlayerTag {};
+struct GameTag {};
 struct ControllableTag {};
 struct PauseMenuTag {};
 }  // namespace rtype::games::rtype::client

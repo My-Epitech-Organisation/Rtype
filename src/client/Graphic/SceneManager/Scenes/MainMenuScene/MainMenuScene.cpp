@@ -227,7 +227,7 @@ void MainMenuScene::_updateStatus(const std::string& message, sf::Color color) {
     }
 }
 
-void MainMenuScene::update() {
+void MainMenuScene::update(float dt) {
     if (_networkClient && !_networkClient->isConnected()) {
         _networkClient->poll();
     }

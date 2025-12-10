@@ -28,7 +28,7 @@ class AScene : public IScene {
 
    public:
     void pollEvents(const sf::Event& e) override = 0;
-    void update() override = 0;
+    void update(float dt) override = 0;
     void render(std::shared_ptr<sf::RenderWindow> window) override = 0;
 
     explicit AScene(std::shared_ptr<ECS::Registry> registry,

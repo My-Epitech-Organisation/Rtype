@@ -10,7 +10,9 @@
 #include <memory>
 #include <utility>
 
-void GameScene::update() {
+#include "Components/TagComponent.hpp"
+
+void GameScene::update(float dt) {
     if (_gameScene) {
         _gameScene->update();
     }
@@ -46,11 +48,30 @@ GameScene::GameScene(
     if (_gameScene) {
         this->_listEntity = _gameScene->initialize();
     }
-    this->_assetsManager->audioManager->load(
-        "main_game_music",
-        this->_assetsManager->configGameAssets.assets.music.game);
-    auto bgMusic = this->_assetsManager->audioManager->get("main_game_music");
-    this->_audio->loadMusic(bgMusic);
-    this->_audio->setLoop(true);
-    this->_audio->play();
+    this->_assetsManager->textureManager->load("projectile_player_laser",
+                                               "./assets/missileLaser.gif");
+    if (this->_audio && this->_assetsManager &&
+        this->_assetsManager->audioManager) {
+        this->_assetsManager->audioManager->load(
+            "main_game_music",
+            this->_assetsManager->configGameAssets.assets.music.game);
+        auto bgMusic =
+            this->_assetsManager->audioManager->get("main_game_music");
+        if (bgMusic) {
+            this->_audio->loadMusic(bgMusic);
+            this->_audio->setLoop(true);
+            this->_audio->play();
+        }
+    }
+}
+
+GameScene::~GameScene() {
+    this->_registry->view<rtype::games::rtype::client::GameTag>().each(
+        [this](ECS::Entity entity,
+               rtype::games::rtype::client::GameTag& /*tag*/) {
+            this->_registry->killEntity(entity);
+        });
+    if (this->_audio) {
+        this->_audio->pauseMusic();
+    }
 }

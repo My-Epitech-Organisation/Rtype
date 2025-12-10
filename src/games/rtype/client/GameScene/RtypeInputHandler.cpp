@@ -39,6 +39,11 @@ std::uint8_t RtypeInputHandler::getInputMask(
         inputMask |= ::rtype::network::InputMask::kRight;
     }
 
+    auto keyShoot = keybinds->getKeyBinding(GameAction::SHOOT);
+    if (keyShoot.has_value() && sf::Keyboard::isKeyPressed(*keyShoot)) {
+        inputMask |= ::rtype::network::InputMask::kShoot;
+    }
+
     return inputMask;
 }
 

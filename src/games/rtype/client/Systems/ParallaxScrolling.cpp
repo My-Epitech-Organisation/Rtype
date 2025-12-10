@@ -26,8 +26,6 @@ void ParallaxScrolling::_updateCache() {
     }
 }
 
-void ParallaxScrolling::invalidateCache() { _cacheValid = false; }
-
 void ParallaxScrolling::update(ECS::Registry& registry, float /*dt*/) {
     _updateCache();
 
