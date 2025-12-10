@@ -189,14 +189,13 @@ void ClientNetworkSystem::handlePositionCorrection(float x, float y) {
     }
 }
 
-void ClientNetworkSystem::handleEntityHealth(
-    const EntityHealthEvent& event) {
+void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
     auto it = networkIdToEntity_.find(event.entityId);
     if (it != networkIdToEntity_.end()) {
         ECS::Entity entity = it->second;
         if (registry_->isAlive(entity)) {
-            if (registry_->hasComponent<rtype::games::rtype::shared::HealthComponent>(
-                    entity)) {
+            if (registry_->hasComponent<
+                    rtype::games::rtype::shared::HealthComponent>(entity)) {
                 auto& health = registry_->getComponent<
                     rtype::games::rtype::shared::HealthComponent>(entity);
                 health.current = event.current;

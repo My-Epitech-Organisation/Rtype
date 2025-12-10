@@ -6,9 +6,10 @@
 */
 
 #include "GameEngine.hpp"
+
+#include <memory>
 #include <utility>
 #include <vector>
-#include <memory>
 
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 

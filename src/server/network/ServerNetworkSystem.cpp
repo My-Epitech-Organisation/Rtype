@@ -195,8 +195,9 @@ void ServerNetworkSystem::handleClientConnected(std::uint32_t userId) {
                                      info.lastY);
 
         if (registry_->isAlive(info.entity) &&
-            registry_->hasComponent<
-                rtype::games::rtype::shared::HealthComponent>(info.entity)) {
+            registry_
+                ->hasComponent<rtype::games::rtype::shared::HealthComponent>(
+                    info.entity)) {
             const auto& health = registry_->getComponent<
                 rtype::games::rtype::shared::HealthComponent>(info.entity);
             server_->updateEntityHealthToClient(userId, networkId,

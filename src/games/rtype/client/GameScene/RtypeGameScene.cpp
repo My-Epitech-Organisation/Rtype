@@ -7,21 +7,21 @@
 
 #include "RtypeGameScene.hpp"
 
+#include <memory>
 #include <string>
 #include <utility>
-#include <memory>
 #include <vector>
 
 #include "AllComponents.hpp"
 #include "Components/CountdownComponent.hpp"
+#include "Components/TextComponent.hpp"
+#include "Components/ZIndexComponent.hpp"
 #include "Graphic/EntityFactory/EntityFactory.hpp"
 #include "GraphicsConstants.hpp"
 #include "Logger/Macros.hpp"
 #include "RtypeEntityFactory.hpp"
 #include "RtypeInputHandler.hpp"
 #include "RtypePauseMenu.hpp"
-#include "Components/TextComponent.hpp"
-#include "Components/ZIndexComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -114,8 +114,7 @@ void RtypeGameScene::setupHud() {
     auto lives = EntityFactory::createStaticText(
         _registry, _assetsManager, "Lives: --", "title_font",
         sf::Vector2f{20.f, 20.f}, 28.f);
-    _registry->emplaceComponent<ZIndex>(lives,
-                                        GraphicsConfig::ZINDEX_UI);
+    _registry->emplaceComponent<ZIndex>(lives, GraphicsConfig::ZINDEX_UI);
     _livesTextEntity = lives;
 }
 
@@ -129,8 +128,8 @@ void RtypeGameScene::updateLivesDisplay(int current, int max) {
 
     if (_registry->hasComponent<Text>(ent)) {
         auto& text = _registry->getComponent<Text>(ent);
-        text.textContent = "Lives: " + std::to_string(current) + "/" +
-                           std::to_string(max);
+        text.textContent =
+            "Lives: " + std::to_string(current) + "/" + std::to_string(max);
     }
     _lastKnownLives = current;
     _lastKnownMaxLives = max;

@@ -8,8 +8,8 @@
 #include "CollisionSystem.hpp"
 
 #include <cstdint>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "../../../shared/Components.hpp"
 #include "../../../shared/Systems/Collision/AABB.hpp"
@@ -97,8 +97,7 @@ void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
                         registry.getComponent<NetworkIdComponent>(player);
                     if (netId.isValid()) {
                         engine::GameEvent event{};
-                        event.type =
-                            engine::GameEventType::EntityHealthChanged;
+                        event.type = engine::GameEventType::EntityHealthChanged;
                         event.entityNetworkId = netId.networkId;
                         event.entityType =
                             static_cast<uint8_t>(EntityType::Player);
@@ -109,8 +108,7 @@ void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
                 }
 
                 if (isDead) {
-                    registry.emplaceComponent<DestroyTag>(player,
-                                                          DestroyTag{});
+                    registry.emplaceComponent<DestroyTag>(player, DestroyTag{});
                 }
                 destroyedProjectile = true;
             } else {
@@ -119,8 +117,7 @@ void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
             }
 
             if (destroyedProjectile) {
-                registry.emplaceComponent<DestroyTag>(projectile,
-                                                      DestroyTag{});
+                registry.emplaceComponent<DestroyTag>(projectile, DestroyTag{});
             }
         });
     }

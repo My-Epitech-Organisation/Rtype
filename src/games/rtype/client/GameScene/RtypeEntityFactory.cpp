@@ -7,16 +7,16 @@
 
 #include "RtypeEntityFactory.hpp"
 
-#include <utility>
 #include <memory>
+#include <utility>
 
+#include "../shared/Components/HealthComponent.hpp"
 #include "AllComponents.hpp"
 #include "Components/LifetimeComponent.hpp"
 #include "Components/Tags.hpp"
 #include "GraphicsConstants.hpp"
 #include "Logger/Macros.hpp"
 #include "protocol/Payloads.hpp"
-#include "../shared/Components/HealthComponent.hpp"
 
 namespace rtype::games::rtype::client {
 

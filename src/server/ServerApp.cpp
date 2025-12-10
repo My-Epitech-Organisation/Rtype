@@ -512,8 +512,7 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
     _networkSystem->registerNetworkedEntity(playerEntity, networkId,
                                             EntityType::Player, spawnX, spawnY);
 
-    _networkSystem->updateEntityHealth(networkId, kPlayerLives,
-                                       kPlayerLives);
+    _networkSystem->updateEntityHealth(networkId, kPlayerLives, kPlayerLives);
 
     _networkSystem->setPlayerEntity(userId, playerEntity);
 
@@ -634,14 +633,13 @@ void ServerApp::processGameEvents() {
                 break;
             }
             case engine::GameEventType::EntityHealthChanged: {
-                _networkSystem->updateEntityHealth(
-                    event.entityNetworkId, event.healthCurrent,
-                    event.healthMax);
+                _networkSystem->updateEntityHealth(event.entityNetworkId,
+                                                   event.healthCurrent,
+                                                   event.healthMax);
                 if (_verbose) {
                     LOG_DEBUG("[Server] Entity health changed: networkId="
-                              << event.entityNetworkId
-                              << " health=" << event.healthCurrent << "/"
-                              << event.healthMax);
+                              << event.entityNetworkId << " health="
+                              << event.healthCurrent << "/" << event.healthMax);
                 }
                 break;
             }
