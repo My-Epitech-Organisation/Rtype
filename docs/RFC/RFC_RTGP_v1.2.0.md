@@ -202,8 +202,8 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 * **Description:** Synchronizes entity health state with clients. Sent when an entity takes damage or is healed. Critical for displaying health bars and handling death events.
 * **Payload:**
   * Entity ID (uint32) - The network ID of the entity
-  * Current Health (uint32) - The entity's remaining health points
-  * Max Health (uint32) - The entity's maximum health capacity
+  * Current Health (int32_t) - The entity's remaining health points
+  * Max Health (int32_t) - The entity's maximum health capacity
 
 ### **5.3. Input & Reconciliation**
 
