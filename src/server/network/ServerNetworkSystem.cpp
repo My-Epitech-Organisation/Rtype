@@ -69,8 +69,9 @@ void ServerNetworkSystem::unregisterNetworkedEntityById(
     if (it == networkedEntities_.end()) {
         return;
     }
-
-    entityToNetworkId_.erase(it->second.entity.id);
+    if (!it->second.entity.isNull()) {
+        entityToNetworkId_.erase(it->second.entity.id);
+    }
     networkedEntities_.erase(it);
 
     server_->destroyEntity(networkId);
@@ -133,6 +134,23 @@ void ServerNetworkSystem::broadcastEntityUpdates() {
     }
 }
 
+void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
+                                               EntityType type, float x,
+                                               float y) {
+    NetworkedEntity info;
+    info.entity = ECS::Entity{};
+    info.networkId = networkId;
+    info.type = type;
+    info.lastX = x;
+    info.lastY = y;
+    info.lastVx = 0;
+    info.lastVy = 0;
+    info.dirty = false;
+
+    networkedEntities_[networkId] = info;
+    server_->spawnEntity(networkId, type, x, y);
+}
+
 void ServerNetworkSystem::broadcastGameStart() {
     server_->updateGameState(NetworkServer::GameState::Running);
 }
@@ -144,7 +162,7 @@ void ServerNetworkSystem::update() {
 
     std::vector<std::uint32_t> toRemove;
     for (auto& [networkId, info] : networkedEntities_) {
-        if (!registry_->isAlive(info.entity)) {
+        if (!info.entity.isNull() && !registry_->isAlive(info.entity)) {
             toRemove.push_back(networkId);
         }
     }
