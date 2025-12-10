@@ -28,8 +28,8 @@ struct WeaponConfig {
     float hitboxHeight = 8.0F;
     bool piercing = false;
     int32_t maxHits = 1;
-    uint8_t projectileCount = 1;    ///< Number of projectiles per shot
-    float spreadAngle = 0.0F;       ///< Angle spread for multi-shot
+    uint8_t projectileCount = 1;  ///< Number of projectiles per shot
+    float spreadAngle = 0.0F;     ///< Angle spread for multi-shot
 };
 
 /**
@@ -171,11 +171,8 @@ inline constexpr std::size_t MAX_WEAPON_SLOTS = 4;
  */
 struct WeaponComponent {
     std::array<WeaponConfig, MAX_WEAPON_SLOTS> weapons = {
-        WeaponPresets::BasicBullet,
-        WeaponPresets::Missile,
-        WeaponPresets::LaserBeam,
-        WeaponPresets::SpreadShot
-    };
+        WeaponPresets::BasicBullet, WeaponPresets::Missile,
+        WeaponPresets::LaserBeam, WeaponPresets::SpreadShot};
     uint8_t currentSlot = 0;
     uint8_t unlockedSlots = 1;
 
@@ -200,8 +197,8 @@ struct WeaponComponent {
      * @brief Switch to previous weapon slot
      */
     void previousWeapon() noexcept {
-        currentSlot = static_cast<uint8_t>(
-            (currentSlot + unlockedSlots - 1) % unlockedSlots);
+        currentSlot = static_cast<uint8_t>((currentSlot + unlockedSlots - 1) %
+                                           unlockedSlots);
     }
 
     /**
@@ -225,4 +222,3 @@ struct WeaponComponent {
 };
 
 }  // namespace rtype::games::rtype::shared
-

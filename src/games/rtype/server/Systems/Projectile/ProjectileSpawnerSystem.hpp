@@ -66,8 +66,8 @@ class ProjectileSpawnerSystem : public ::rtype::engine::ASystem {
      * @return Network ID of spawned projectile
      */
     uint32_t spawnPlayerProjectile(ECS::Registry& registry,
-                                     uint32_t playerNetworkId, float playerX,
-                                     float playerY);
+                                   uint32_t playerNetworkId, float playerX,
+                                   float playerY);
     /**
      * @brief Spawn a projectile from an enemy
      * @param registry ECS registry
@@ -112,10 +112,11 @@ class ProjectileSpawnerSystem : public ::rtype::engine::ASystem {
      * @param ownerNetworkId Network ID of owner
      * @return Network ID of spawned projectile
      */
-    uint32_t spawnProjectileWithConfig(
-        ECS::Registry& registry, float x, float y, float vx, float vy,
-        const shared::WeaponConfig& config, shared::ProjectileOwner owner,
-        uint32_t ownerNetworkId);
+    uint32_t spawnProjectileWithConfig(ECS::Registry& registry, float x,
+                                       float y, float vx, float vy,
+                                       const shared::WeaponConfig& config,
+                                       shared::ProjectileOwner owner,
+                                       uint32_t ownerNetworkId);
 
     EventEmitter _emitEvent;
     ProjectileSpawnConfig _config;
@@ -126,4 +127,3 @@ class ProjectileSpawnerSystem : public ::rtype::engine::ASystem {
 };
 
 }  // namespace rtype::games::rtype::server
-

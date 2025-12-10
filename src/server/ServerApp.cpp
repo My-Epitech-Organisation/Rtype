@@ -505,7 +505,7 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
 
     _registry->emplaceComponent<Position>(playerEntity, spawnX, spawnY);
     _registry->emplaceComponent<TransformComponent>(playerEntity, spawnX,
-                                                     spawnY, 0.0F);
+                                                    spawnY, 0.0F);
     _registry->emplaceComponent<Velocity>(playerEntity, 0.0F, 0.0F);
     _registry->emplaceComponent<ShootCooldown>(playerEntity, 0.3F);
     Weapon weapon{};
@@ -639,14 +639,14 @@ void ServerApp::handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
                         *networkIdOpt, pos.x, pos.y);
                     if (projectileId != 0) {
                         cooldown.triggerCooldown();
-                        LOG_DEBUG("[Server] Player " << userId
-                                                     << " fired projectile "
-                                                     << projectileId
-                                                     << " cooldown set to "
-                                                     << cooldown.currentCooldown);
+                        LOG_DEBUG("[Server] Player "
+                                  << userId << " fired projectile "
+                                  << projectileId << " cooldown set to "
+                                  << cooldown.currentCooldown);
                     } else {
-                        LOG_DEBUG("[Server] Player " << userId
-                                                     << " spawnPlayerProjectile returned 0");
+                        LOG_DEBUG("[Server] Player "
+                                  << userId
+                                  << " spawnPlayerProjectile returned 0");
                     }
                 } else {
                     LOG_DEBUG("[Server] Failed to cast to GameEngine");
@@ -655,8 +655,9 @@ void ServerApp::handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
                 LOG_DEBUG("[Server] Player " << userId << " has no networkId");
             }
         } else {
-            LOG_DEBUG("[Server] Player " << userId
-                                         << " missing Position or ShootCooldown component");
+            LOG_DEBUG("[Server] Player "
+                      << userId
+                      << " missing Position or ShootCooldown component");
         }
     }
 }
@@ -681,11 +682,11 @@ void ServerApp::processGameEvents() {
         switch (processed.type) {
             case engine::GameEventType::EntitySpawned: {
                 network::EntityType networkType =
-                    static_cast<network::EntityType>(processed.networkEntityType);
+                    static_cast<network::EntityType>(
+                        processed.networkEntityType);
 
                 _networkSystem->broadcastEntitySpawn(
-                    processed.networkId, networkType,
-                    processed.x, processed.y);
+                    processed.networkId, networkType, processed.x, processed.y);
 
                 if (_verbose) {
                     LOG_DEBUG("[Server] Entity spawned & broadcast: networkId="
@@ -697,7 +698,8 @@ void ServerApp::processGameEvents() {
                 break;
             }
             case engine::GameEventType::EntityDestroyed: {
-                _networkSystem->unregisterNetworkedEntityById(processed.networkId);
+                _networkSystem->unregisterNetworkedEntityById(
+                    processed.networkId);
                 if (_verbose) {
                     LOG_DEBUG("[Server] Entity destroyed: networkId="
                               << processed.networkId);
@@ -706,8 +708,8 @@ void ServerApp::processGameEvents() {
             }
             case engine::GameEventType::EntityUpdated: {
                 _networkSystem->updateEntityPosition(
-                    processed.networkId, processed.x, processed.y,
-                    processed.vx, processed.vy);
+                    processed.networkId, processed.x, processed.y, processed.vx,
+                    processed.vy);
                 break;
             }
         }

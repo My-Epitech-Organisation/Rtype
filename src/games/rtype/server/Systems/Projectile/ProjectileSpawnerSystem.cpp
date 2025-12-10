@@ -7,8 +7,8 @@
 
 #include "ProjectileSpawnerSystem.hpp"
 
-#include <cmath>
 #include <numbers>
+#include <cmath>
 
 #include "../../../shared/Components.hpp"
 
@@ -49,8 +49,8 @@ void ProjectileSpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
 }
 
 uint32_t ProjectileSpawnerSystem::spawnPlayerProjectile(
-    ECS::Registry& registry,
-    uint32_t playerNetworkId, float playerX, float playerY) {
+    ECS::Registry& registry, uint32_t playerNetworkId, float playerX,
+    float playerY) {
     WeaponConfig weaponConfig = BasicBullet;
 
     float spawnX = playerX + _config.playerProjectileOffsetX;
@@ -105,7 +105,8 @@ uint32_t ProjectileSpawnerSystem::spawnEnemyProjectile(
 
 uint32_t ProjectileSpawnerSystem::spawnProjectileWithConfig(
     ECS::Registry& registry, float x, float y, float vx, float vy,
-    const WeaponConfig& config, ProjectileOwner owner, uint32_t ownerNetworkId) {
+    const WeaponConfig& config, ProjectileOwner owner,
+    uint32_t ownerNetworkId) {
     ECS::Entity projectile = registry.spawnEntity();
     registry.emplaceComponent<TransformComponent>(projectile, x, y, 0.0F);
     registry.emplaceComponent<VelocityComponent>(projectile, vx, vy);
@@ -144,4 +145,3 @@ uint32_t ProjectileSpawnerSystem::spawnProjectileWithConfig(
 }
 
 }  // namespace rtype::games::rtype::server
-

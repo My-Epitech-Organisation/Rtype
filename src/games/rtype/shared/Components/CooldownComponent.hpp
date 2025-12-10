@@ -86,11 +86,11 @@ struct ShootCooldownComponent {
  * powerful attack.
  */
 struct ChargeComponent {
-    float currentCharge = 0.0F;      ///< Current charge level (0.0 - 1.0)
-    float chargeRate = 0.5F;         ///< Charge rate per second
+    float currentCharge = 0.0F;  ///< Current charge level (0.0 - 1.0)
+    float chargeRate = 0.5F;     ///< Charge rate per second
     float maxCharge = 1.0F;
     bool isCharging = false;
-    float minChargeThreshold = 0.0F; ///< Minimum charge for powered shot
+    float minChargeThreshold = 0.0F;  ///< Minimum charge for powered shot
 
     ChargeComponent() = default;
 
@@ -147,4 +147,3 @@ struct ChargeComponent {
 };
 
 }  // namespace rtype::games::rtype::shared
-

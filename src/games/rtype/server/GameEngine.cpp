@@ -129,7 +129,8 @@ std::size_t GameEngine::getEntityCount() const {
 
 bool GameEngine::isRunning() const { return _running; }
 
-engine::ProcessedEvent GameEngine::processEvent(const engine::GameEvent& event) {
+engine::ProcessedEvent GameEngine::processEvent(
+    const engine::GameEvent& event) {
     engine::ProcessedEvent result{};
     result.type = event.type;
     result.networkId = event.entityNetworkId;
@@ -145,7 +146,8 @@ engine::ProcessedEvent GameEngine::processEvent(const engine::GameEvent& event) 
             bool found = false;
 
             auto view = _registry->view<shared::NetworkIdComponent>();
-            view.each([&](ECS::Entity entity, const shared::NetworkIdComponent& netId) {
+            view.each([&](ECS::Entity entity,
+                          const shared::NetworkIdComponent& netId) {
                 if (netId.networkId == event.entityNetworkId) {
                     foundEntity = entity;
                     found = true;
@@ -188,14 +190,17 @@ void GameEngine::syncEntityPositions(
         return;
     }
 
-    auto view = _registry->view<shared::TransformComponent, shared::NetworkIdComponent>();
+    auto view =
+        _registry
+            ->view<shared::TransformComponent, shared::NetworkIdComponent>();
     view.each([this, &callback](ECS::Entity entity,
                                 const shared::TransformComponent& transform,
                                 const shared::NetworkIdComponent& netId) {
         float vx = 0.0F;
         float vy = 0.0F;
         if (_registry->hasComponent<shared::VelocityComponent>(entity)) {
-            const auto& vel = _registry->getComponent<shared::VelocityComponent>(entity);
+            const auto& vel =
+                _registry->getComponent<shared::VelocityComponent>(entity);
             vx = vel.vx;
             vy = vel.vy;
         }
@@ -203,8 +208,7 @@ void GameEngine::syncEntityPositions(
     });
 }
 
-uint32_t GameEngine::spawnPlayerProjectile(
-                                           uint32_t playerNetworkId,
+uint32_t GameEngine::spawnPlayerProjectile(uint32_t playerNetworkId,
                                            float playerX, float playerY) {
     if (!_running || !_projectileSpawnerSystem) {
         return 0;
@@ -225,8 +229,10 @@ void GameEngine::emitEvent(const engine::GameEvent& event) {
 
 namespace rtype::engine {
 
-std::unique_ptr<IGameEngine> createGameEngine(std::shared_ptr<ECS::Registry> registry) {
-    return std::make_unique<games::rtype::server::GameEngine>(std::move(registry));
+std::unique_ptr<IGameEngine> createGameEngine(
+    std::shared_ptr<ECS::Registry> registry) {
+    return std::make_unique<games::rtype::server::GameEngine>(
+        std::move(registry));
 }
 
 }  // namespace rtype::engine

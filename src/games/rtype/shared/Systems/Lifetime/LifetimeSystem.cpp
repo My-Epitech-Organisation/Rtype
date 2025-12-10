@@ -22,7 +22,9 @@ void LifetimeSystem::update(ECS::Registry& registry, float deltaTime) {
         lifetime.remainingTime -= deltaTime;
         if (lifetime.remainingTime <= 0.0F) {
             if (!registry.hasComponent<DestroyTag>(entity)) {
-                LOG_DEBUG("[LifetimeSystem] Entity " + std::to_string(entity.id) + " expired (lifetime <= 0)");
+                LOG_DEBUG("[LifetimeSystem] Entity " +
+                          std::to_string(entity.id) +
+                          " expired (lifetime <= 0)");
                 registry.emplaceComponent<DestroyTag>(entity, DestroyTag{});
             }
         }

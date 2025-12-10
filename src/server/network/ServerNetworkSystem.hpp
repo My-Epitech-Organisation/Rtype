@@ -213,8 +213,8 @@ class ServerNetworkSystem {
      * @param x Initial X position
      * @param y Initial Y position
      */
-    void broadcastEntitySpawn(std::uint32_t networkId, EntityType type,
-                              float x, float y);
+    void broadcastEntitySpawn(std::uint32_t networkId, EntityType type, float x,
+                              float y);
 
     /**
      * @brief Broadcast game start signal to all clients

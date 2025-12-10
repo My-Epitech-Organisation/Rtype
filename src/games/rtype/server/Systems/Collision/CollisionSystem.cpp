@@ -122,28 +122,32 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
         return;
     }
 
-    LOG_DEBUG("[CollisionSystem] Collision detected! Projectile " << projectile.id
-              << " hit target " << target.id << " (isPlayer=" << isTargetPlayer << ")");
+    LOG_DEBUG("[CollisionSystem] Collision detected! Projectile "
+              << projectile.id << " hit target " << target.id
+              << " (isPlayer=" << isTargetPlayer << ")");
 
     if (registry.hasComponent<HealthComponent>(target)) {
         auto& health = registry.getComponent<HealthComponent>(target);
         health.takeDamage(damage);
         if (!health.isAlive()) {
-            LOG_DEBUG("[CollisionSystem] Target " << target.id << " destroyed (no health)");
+            LOG_DEBUG("[CollisionSystem] Target " << target.id
+                                                  << " destroyed (no health)");
             registry.emplaceComponent<DestroyTag>(target, DestroyTag{});
         }
     } else {
-        LOG_DEBUG("[CollisionSystem] Target " << target.id << " destroyed (no HealthComponent)");
+        LOG_DEBUG("[CollisionSystem] Target "
+                  << target.id << " destroyed (no HealthComponent)");
         registry.emplaceComponent<DestroyTag>(target, DestroyTag{});
     }
     if (!piercing) {
-        LOG_DEBUG("[CollisionSystem] Projectile " << projectile.id << " destroyed (non-piercing)");
+        LOG_DEBUG("[CollisionSystem] Projectile "
+                  << projectile.id << " destroyed (non-piercing)");
         registry.emplaceComponent<DestroyTag>(projectile, DestroyTag{});
     } else if (registry.hasComponent<ProjectileComponent>(projectile)) {
-        auto& projComp =
-            registry.getComponent<ProjectileComponent>(projectile);
+        auto& projComp = registry.getComponent<ProjectileComponent>(projectile);
         if (projComp.registerHit()) {
-            LOG_DEBUG("[CollisionSystem] Projectile " << projectile.id << " destroyed (max hits)");
+            LOG_DEBUG("[CollisionSystem] Projectile "
+                      << projectile.id << " destroyed (max hits)");
             registry.emplaceComponent<DestroyTag>(projectile, DestroyTag{});
         }
     }

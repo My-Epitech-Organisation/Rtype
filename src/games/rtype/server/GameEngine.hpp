@@ -79,9 +79,11 @@ class GameEngine : public engine::AGameEngine {
     void clearPendingEvents() override;
     std::size_t getEntityCount() const override;
     bool isRunning() const override;
-    engine::ProcessedEvent processEvent(const engine::GameEvent& event) override;
+    engine::ProcessedEvent processEvent(
+        const engine::GameEvent& event) override;
     void syncEntityPositions(
-        std::function<void(uint32_t, float, float, float, float)> callback) override;
+        std::function<void(uint32_t, float, float, float, float)> callback)
+        override;
 
     /**
      * @brief Get the ECS registry

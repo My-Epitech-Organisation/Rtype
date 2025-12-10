@@ -33,8 +33,9 @@ void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
                            transform.y > _config.bottomBoundary;
 
         if (outOfBounds && !registry.hasComponent<DestroyTag>(entity)) {
-            LOG_DEBUG("[CleanupSystem] Entity " << entity.id << " out of bounds at ("
-                      << transform.x << ", " << transform.y << ")");
+            LOG_DEBUG("[CleanupSystem] Entity "
+                      << entity.id << " out of bounds at (" << transform.x
+                      << ", " << transform.y << ")");
             registry.emplaceComponent<DestroyTag>(entity, DestroyTag{});
         }
     });

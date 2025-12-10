@@ -30,11 +30,7 @@ enum class ProjectileType : uint8_t {
  * @enum ProjectileOwner
  * @brief Identifies who fired the projectile
  */
-enum class ProjectileOwner : uint8_t {
-    Player = 0,
-    Enemy = 1,
-    Neutral = 2
-};
+enum class ProjectileOwner : uint8_t { Player = 0, Enemy = 1, Neutral = 2 };
 
 /**
  * @struct ProjectileComponent
@@ -61,7 +57,8 @@ struct ProjectileComponent {
      * @param ownerType Player or Enemy
      * @param projType Projectile type
      */
-    ProjectileComponent(int32_t dmg, uint32_t ownerId, ProjectileOwner ownerType,
+    ProjectileComponent(int32_t dmg, uint32_t ownerId,
+                        ProjectileOwner ownerType,
                         ProjectileType projType = ProjectileType::BasicBullet)
         : damage(dmg),
           ownerNetworkId(ownerId),
@@ -103,4 +100,3 @@ struct PlayerProjectileTag {};
 struct EnemyProjectileTag {};
 
 }  // namespace rtype::games::rtype::shared
-
