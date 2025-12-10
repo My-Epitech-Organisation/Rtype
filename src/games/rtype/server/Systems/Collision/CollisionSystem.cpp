@@ -7,6 +7,8 @@
 
 #include "CollisionSystem.hpp"
 
+#include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "../../../shared/Components.hpp"
@@ -17,12 +19,20 @@ namespace rtype::games::rtype::server {
 using shared::BoundingBoxComponent;
 using shared::DestroyTag;
 using shared::EnemyTag;
+using shared::EntityType;
+using shared::HealthComponent;
+using shared::NetworkIdComponent;
 using shared::PlayerTag;
 using shared::ProjectileTag;
 using shared::TransformComponent;
 using shared::collision::overlaps;
 
-CollisionSystem::CollisionSystem() : ASystem("CollisionSystem") {}
+namespace {
+constexpr int32_t kPlayerCollisionDamage = 1;
+}
+
+CollisionSystem::CollisionSystem(EventEmitter emitter)
+    : ASystem("CollisionSystem"), _emitEvent(std::move(emitter)) {}
 
 void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
     std::vector<ECS::Entity> projectiles;
@@ -68,8 +78,45 @@ void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
                             const TransformComponent& playerTransform,
                             const BoundingBoxComponent& playerBox, auto&) {
             if (registry.hasComponent<DestroyTag>(player)) return;
-            if (overlaps(projTransform, projBox, playerTransform, playerBox)) {
+            if (!overlaps(projTransform, projBox, playerTransform, playerBox)) {
+                return;
+            }
+
+            bool destroyedProjectile = false;
+            if (registry.hasComponent<HealthComponent>(player)) {
+                auto& health = registry.getComponent<HealthComponent>(player);
+                if (health.current > 0) {
+                    health.takeDamage(kPlayerCollisionDamage);
+                }
+
+                const bool isDead = !health.isAlive();
+
+                if (_emitEvent &&
+                    registry.hasComponent<NetworkIdComponent>(player)) {
+                    const auto& netId =
+                        registry.getComponent<NetworkIdComponent>(player);
+                    if (netId.isValid()) {
+                        engine::GameEvent event{};
+                        event.type = engine::GameEventType::EntityHealthChanged;
+                        event.entityNetworkId = netId.networkId;
+                        event.entityType =
+                            static_cast<uint8_t>(EntityType::Player);
+                        event.healthCurrent = health.current;
+                        event.healthMax = health.max;
+                        _emitEvent(event);
+                    }
+                }
+
+                if (isDead) {
+                    registry.emplaceComponent<DestroyTag>(player, DestroyTag{});
+                }
+                destroyedProjectile = true;
+            } else {
                 registry.emplaceComponent<DestroyTag>(player, DestroyTag{});
+                destroyedProjectile = true;
+            }
+
+            if (destroyedProjectile) {
                 registry.emplaceComponent<DestroyTag>(projectile, DestroyTag{});
             }
         });

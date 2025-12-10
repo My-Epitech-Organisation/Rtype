@@ -304,6 +304,8 @@ Buffer Connection::buildAckPacket(std::uint32_t userId) {
 Result<void> Connection::handleConnectAccept(const Header& header,
                                              const Buffer& payload,
                                              const Endpoint& sender) {
+    (void)header;  // Suppress unused parameter warning
+
     if (payload.size() < sizeof(AcceptPayload)) {
         return Err<void>(NetworkError::MalformedPacket);
     }
@@ -328,6 +330,8 @@ Result<void> Connection::handleConnectAccept(const Header& header,
 }
 
 Result<void> Connection::handleDisconnect(const Header& header) {
+    (void)header;  // Suppress unused parameter warning
+
     return stateMachine_.handleRemoteDisconnect();
 }
 

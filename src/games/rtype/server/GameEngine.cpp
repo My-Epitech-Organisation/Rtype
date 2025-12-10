@@ -7,6 +7,10 @@
 
 #include "GameEngine.hpp"
 
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 
 namespace rtype::games::rtype::server {
@@ -41,7 +45,7 @@ bool GameEngine::initialize() {
     shared::registerDefaultBehaviors();
     _aiSystem = std::make_unique<shared::AISystem>();
     _movementSystem = std::make_unique<shared::MovementSystem>();
-    _collisionSystem = std::make_unique<CollisionSystem>();
+    _collisionSystem = std::make_unique<CollisionSystem>(eventEmitter);
     CleanupConfig cleanupConfig{};
     cleanupConfig.leftBoundary = GameConfig::CLEANUP_LEFT;
     cleanupConfig.rightBoundary = GameConfig::CLEANUP_RIGHT;

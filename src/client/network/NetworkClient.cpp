@@ -7,10 +7,12 @@
 
 #include "NetworkClient.hpp"
 
+#include <chrono>
 #include <cstring>
 #include <memory>
 #include <queue>
 #include <string>
+#include <thread>
 #include <utility>
 
 #include "Serializer.hpp"
@@ -54,9 +56,17 @@ NetworkClient::NetworkClient(const Config& config)
     };
 
     connection_.setCallbacks(connCallbacks);
+
+    networkThreadRunning_.store(true, std::memory_order_release);
+    networkThread_ = std::thread([this]() { networkThreadLoop(); });
 }
 
 NetworkClient::~NetworkClient() {
+    networkThreadRunning_.store(false, std::memory_order_release);
+    if (networkThread_.joinable()) {
+        networkThread_.join();
+    }
+
     if (isConnected()) {
         disconnect();
     }
@@ -158,6 +168,11 @@ void NetworkClient::onEntityDestroy(
     onEntityDestroyCallback_ = std::move(callback);
 }
 
+void NetworkClient::onEntityHealth(
+    std::function<void(EntityHealthEvent)> callback) {
+    onEntityHealthCallback_ = std::move(callback);
+}
+
 void NetworkClient::onPositionCorrection(
     std::function<void(float x, float y)> callback) {
     onPositionCorrectionCallback_ = std::move(callback);
@@ -169,13 +184,19 @@ void NetworkClient::onGameStateChange(
 }
 
 void NetworkClient::poll() {
-    ioContext_.poll();
-
     connection_.update();
 
     flushOutgoing();
 
     dispatchCallbacks();
+}
+
+void NetworkClient::networkThreadLoop() {
+    while (networkThreadRunning_.load(std::memory_order_acquire)) {
+        ioContext_.poll();
+
+        std::this_thread::sleep_for(kNetworkThreadSleepDuration);
+    }
 }
 
 void NetworkClient::dispatchCallbacks() {
@@ -268,6 +289,10 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
             handleEntityDestroy(header, payload);
             break;
 
+        case network::OpCode::S_ENTITY_HEALTH:
+            handleEntityHealth(header, payload);
+            break;
+
         case network::OpCode::S_UPDATE_POS:
             handleUpdatePos(header, payload);
             break;
@@ -355,6 +380,33 @@ void NetworkClient::handleEntityDestroy(const network::Header& header,
         queueCallback([this, entityId]() {
             if (onEntityDestroyCallback_) {
                 onEntityDestroyCallback_(entityId);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
+void NetworkClient::handleEntityHealth(const network::Header& header,
+                                       const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::EntityHealthPayload)) {
+        return;
+    }
+
+    try {
+        auto deserialized = network::Serializer::deserializeFromNetwork<
+            network::EntityHealthPayload>(payload);
+
+        EntityHealthEvent event{};
+        event.entityId = deserialized.entityId;
+        event.current = deserialized.current;
+        event.max = deserialized.max;
+
+        queueCallback([this, event]() {
+            if (onEntityHealthCallback_) {
+                onEntityHealthCallback_(event);
             }
         });
     } catch (...) {

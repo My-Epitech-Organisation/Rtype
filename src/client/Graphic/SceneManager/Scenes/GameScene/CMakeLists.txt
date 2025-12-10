@@ -14,6 +14,7 @@ target_link_libraries(rtype-graphic-game-scene
         SFML::System
         rtype_engine
         rtype_network
+        rtype_client_network
 )
 
 target_link_libraries(rtype-graphic-game-scene

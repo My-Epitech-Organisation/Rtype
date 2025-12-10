@@ -11,6 +11,8 @@
 #include <utility>
 #include <vector>
 
+#include "games/rtype/shared/Components/HealthComponent.hpp"
+
 namespace rtype::server {
 
 ServerNetworkSystem::ServerNetworkSystem(
@@ -123,6 +125,12 @@ void ServerNetworkSystem::correctPlayerPosition(std::uint32_t userId, float x,
     server_->correctPosition(userId, x, y);
 }
 
+void ServerNetworkSystem::updateEntityHealth(std::uint32_t networkId,
+                                             std::int32_t current,
+                                             std::int32_t max) {
+    server_->updateEntityHealth(networkId, current, max);
+}
+
 void ServerNetworkSystem::broadcastEntityUpdates() {
     for (auto& [networkId, info] : networkedEntities_) {
         if (info.dirty) {
@@ -185,6 +193,16 @@ void ServerNetworkSystem::handleClientConnected(std::uint32_t userId) {
     for (const auto& [networkId, info] : networkedEntities_) {
         server_->spawnEntityToClient(userId, networkId, info.type, info.lastX,
                                      info.lastY);
+
+        if (registry_->isAlive(info.entity) &&
+            registry_
+                ->hasComponent<rtype::games::rtype::shared::HealthComponent>(
+                    info.entity)) {
+            const auto& health = registry_->getComponent<
+                rtype::games::rtype::shared::HealthComponent>(info.entity);
+            server_->updateEntityHealthToClient(userId, networkId,
+                                                health.current, health.max);
+        }
     }
 
     if (onClientConnectedCallback_) {

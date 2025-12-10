@@ -1,19 +1,19 @@
 Network Working Group                                R-Type Project Team
 Request for Comments: 0001                                     EPITECH
-Category: Experimental                                   November 2025
+Category: Experimental                                   December 2025
 
 
                      R-Type Game Protocol (RTGP)
-                    Version 1.1.0 (Reliability Update)
+                   Version 1.2.0 (Health Synchronization Update)
 
 Abstract
 
    This document specifies the binary application-layer protocol used
    for real-time communication between the R-Type Client and Server.
    It defines a lightweight datagram-oriented protocol prioritizing low
-   latency and bandwidth efficiency, and specifies a selective
-   reliability layer (RUDP) over UDP to ensure critical game events are
-   delivered.
+   latency and bandwidth efficiency, specifies a selective reliability
+   layer (RUDP) over UDP to ensure critical game events are delivered,
+   and introduces authoritative health synchronization for game entities.
 
 Status of This Memo
 
@@ -36,10 +36,10 @@ Table of Contents
      4.3.  Reliability Mechanism (Flags) . . . . . . . . . . . . . .   4
    5.  Protocol Operations (OpCodes) . . . . . . . . . . . . . . . .   4
      5.1.  Session Management  . . . . . . . . . . . . . . . . . . .   4
-     5.2.  Gameplay & Entity Management  . . . . . . . . . . . . . .   5
-     5.3.  Input & Reconciliation  . . . . . . . . . . . . . . . . .   6
-   6.  Security Considerations . . . . . . . . . . . . . . . . . . .   6
-   7.  Future Extensions . . . . . . . . . . . . . . . . . . . . . .   7
+       5.2.  Gameplay & Entity Management  . . . . . . . . . . . . . .   5
+       5.3.  Input & Reconciliation  . . . . . . . . . . . . . . . . .   6
+    6.  Security Considerations . . . . . . . . . . . . . . . . . . .   6
+    7.  Future Extensions . . . . . . . . . . . . . . . . . . . . . .   7
 
 1.  Introduction
 
@@ -219,6 +219,17 @@ Table of Contents
          Reliability: RELIABLE
          Description: Instructs clients to remove an entity.
          Payload: Entity ID (uint32).
+
+      0x13 - S_ENTITY_HEALTH
+         Sender: Server
+         Reliability: RELIABLE
+         Description: Synchronizes authoritative entity health (damage
+                      or heal). Critical for health bars and death
+                      handling on clients.
+         Payload:
+            Entity ID (uint32) - network identifier of the entity
+            Current Health (int32)
+            Max Health (int32)
 
    5.3.  Input & Reconciliation
 

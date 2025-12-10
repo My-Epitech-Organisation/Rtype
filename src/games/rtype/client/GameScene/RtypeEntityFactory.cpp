@@ -7,8 +7,10 @@
 
 #include "RtypeEntityFactory.hpp"
 
+#include <memory>
 #include <utility>
 
+#include "../shared/Components/HealthComponent.hpp"
 #include "AllComponents.hpp"
 #include "Components/LifetimeComponent.hpp"
 #include "Components/Tags.hpp"
@@ -63,6 +65,7 @@ void RtypeEntityFactory::setupPlayerEntity(
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 17}));
     reg.emplaceComponent<Size>(entity, 4, 4);
+    reg.emplaceComponent<shared::HealthComponent>(entity, 1, 1);
     reg.emplaceComponent<PlayerTag>(entity);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);

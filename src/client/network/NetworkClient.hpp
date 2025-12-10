@@ -50,6 +50,15 @@ struct EntityMoveEvent {
 };
 
 /**
+ * @brief Event data for entity health updates
+ */
+struct EntityHealthEvent {
+    std::uint32_t entityId;
+    std::int32_t current;
+    std::int32_t max;
+};
+
+/**
  * @brief Event data for game state change
  */
 struct GameStateEvent {
@@ -83,7 +92,7 @@ struct GameStateEvent {
  *
  * // In game loop:
  * while (running) {
- *     client.poll();  // Process incoming packets and callbacks
+ *     client.poll();  // Process callbacks and maintain connection
  *     client.sendInput(InputMask::kUp | InputMask::kShoot);
  * }
  *
@@ -91,8 +100,14 @@ struct GameStateEvent {
  * @endcode
  *
  * Thread-safety: Callbacks are queued and dispatched on the thread calling
- * poll(). The network I/O itself is handled via asio's polling model.
+ * poll(). Network I/O is handled by a dedicated background thread.
  */
+
+/**
+ * @brief Sleep duration for network thread polling loop (in milliseconds)
+ */
+static constexpr std::chrono::milliseconds kNetworkThreadSleepDuration{3};
+
 class NetworkClient {
    public:
     using DisconnectReason = network::DisconnectReason;
@@ -201,6 +216,12 @@ class NetworkClient {
     void onEntityDestroy(std::function<void(std::uint32_t entityId)> callback);
 
     /**
+     * @brief Register callback for entity health updates
+     * @param callback Function receiving the health event data
+     */
+    void onEntityHealth(std::function<void(EntityHealthEvent)> callback);
+
+    /**
      * @brief Register callback for server position correction
      *
      * Called when server's authoritative position differs from client
@@ -217,12 +238,15 @@ class NetworkClient {
     void onGameStateChange(std::function<void(GameStateEvent)> callback);
 
     /**
-     * @brief Process incoming packets and dispatch callbacks
+     * @brief Process network events and dispatch callbacks
      *
      * Must be called regularly (e.g., each game frame) to:
-     * - Receive and process server packets
-     * - Handle connection timeouts and retransmissions
+     * - Update connection state and handle timeouts/retransmissions
+     * - Send queued outgoing packets
      * - Dispatch queued callbacks to registered handlers
+     *
+     * Note: I/O polling is handled by a dedicated network thread.
+     * This method only handles connection maintenance and callback dispatch.
      *
      * Callbacks are executed on the calling thread.
      */
@@ -231,6 +255,8 @@ class NetworkClient {
    private:
     void dispatchCallbacks();
     void queueCallback(std::function<void()> callback);
+
+    void networkThreadLoop();
 
     void startReceive();
     void handleReceive(network::Result<std::size_t> result);
@@ -242,6 +268,8 @@ class NetworkClient {
                           const network::Buffer& payload);
     void handleEntityDestroy(const network::Header& header,
                              const network::Buffer& payload);
+    void handleEntityHealth(const network::Header& header,
+                            const network::Buffer& payload);
     void handleUpdatePos(const network::Header& header,
                          const network::Buffer& payload);
     void handleUpdateState(const network::Header& header,
@@ -271,8 +299,12 @@ class NetworkClient {
     std::function<void(EntitySpawnEvent)> onEntitySpawnCallback_;
     std::function<void(EntityMoveEvent)> onEntityMoveCallback_;
     std::function<void(std::uint32_t)> onEntityDestroyCallback_;
+    std::function<void(EntityHealthEvent)> onEntityHealthCallback_;
     std::function<void(float, float)> onPositionCorrectionCallback_;
     std::function<void(GameStateEvent)> onGameStateChangeCallback_;
+
+    std::thread networkThread_;
+    std::atomic<bool> networkThreadRunning_{false};
 };
 
 }  // namespace rtype::client

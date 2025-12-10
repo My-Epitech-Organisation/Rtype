@@ -11,6 +11,7 @@
 #include <ECS.hpp>
 #include "../src/client/Graphic/SceneManager/SceneManager.hpp"
 #include "../src/client/Graphic/AssetManager/AssetManager.hpp"
+#include "../src/games/rtype/shared/Config/RTypeConfig.hpp"
 
 class SceneManagerTest : public ::testing::Test {
 protected:
@@ -21,7 +22,8 @@ protected:
 
     void SetUp() override {
         registry = std::make_shared<ECS::Registry>();
-        assetManager = std::make_shared<AssetManager>();
+        auto config = rtype::game::config::RTypeGameConfig::createDefault();
+        assetManager = std::make_shared<AssetManager>(config);
         keyboardActions = std::make_shared<KeyboardActions>();
         window = std::make_shared<sf::RenderWindow>(sf::VideoMode({800, 600}), "Test");
     }
@@ -34,21 +36,21 @@ protected:
 TEST_F(SceneManagerTest, Constructor_InitializesWithMainMenuSceneAfterUpdate) {
     SceneManager manager(registry, assetManager, window, keyboardActions);
     // Scene is applied lazily during update/draw
-    manager.update();
+    manager.update(0.016f);
     EXPECT_EQ(manager.getCurrentScene(), SceneManager::Scene::MAIN_MENU);
 }
 
 TEST_F(SceneManagerTest, SetCurrentScene_ChangesScene) {
     SceneManager manager(registry, assetManager, window, keyboardActions);
-    manager.update();  // Apply initial scene
+    manager.update(0.016f);  // Apply initial scene
     manager.setCurrentScene(SceneManager::Scene::SETTINGS_MENU);
-    manager.update();  // Apply scene change
+    manager.update(0.016f);  // Apply scene change
     EXPECT_EQ(manager.getCurrentScene(), SceneManager::Scene::SETTINGS_MENU);
 }
 
 TEST_F(SceneManagerTest, Update_DoesNotThrow) {
     SceneManager manager(registry, assetManager, window, keyboardActions);
-    EXPECT_NO_THROW(manager.update());
+    EXPECT_NO_THROW(manager.update(0.016f));
 }
 
 TEST_F(SceneManagerTest, Draw_DoesNotThrow) {
