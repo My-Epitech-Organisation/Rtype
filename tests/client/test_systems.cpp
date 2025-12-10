@@ -28,8 +28,7 @@ protected:
 
     void SetUp() override {
         registry = std::make_shared<ECS::Registry>();
-        window = std::make_shared<sf::RenderWindow>();
-        window->create(sf::VideoMode({800, 600}), "Test");
+        window = std::make_shared<sf::RenderWindow>(sf::VideoMode({800, 600}), "Test");
     }
 
     void TearDown() override {
@@ -65,8 +64,7 @@ TEST_F(SystemsTest, RenderSystem_Draw_DoesNotThrow) {
     auto entity = registry->spawnEntity();
     // Add renderable components if needed
 
-    auto windowPtr = std::make_shared<sf::RenderWindow>(std::move(window));
-    RenderSystem renderSystem(windowPtr);
+    RenderSystem renderSystem(window);
     EXPECT_NO_THROW(renderSystem.update(*registry, 0.f));
 }
 

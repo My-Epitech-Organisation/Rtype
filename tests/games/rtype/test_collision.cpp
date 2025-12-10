@@ -96,8 +96,8 @@ TEST_F(CollisionFixture, ProjectileHitsPlayerMarksBothDestroyed) {
 TEST_F(CollisionFixture, ProjectileHitsPlayerWithHealthReducesHealth) {
     bool eventEmitted = false;
     uint32_t eventNetworkId = 0;
-    uint32_t eventHealthCurrent = 0;
-    uint32_t eventHealthMax = 0;
+    int32_t eventHealthCurrent = 0;
+    int32_t eventHealthMax = 0;
 
     server::CollisionSystem systemWithCallback(
         [&](const rtype::engine::GameEvent& event) {
@@ -143,7 +143,7 @@ TEST_F(CollisionFixture, ProjectileHitsPlayerWithHealthReducesHealth) {
 
 TEST_F(CollisionFixture, ProjectileKillsPlayerAtLowHealth) {
     bool eventEmitted = false;
-    uint32_t eventHealthCurrent = 0;
+    int32_t eventHealthCurrent = 0;
 
     server::CollisionSystem systemWithCallback(
         [&](const rtype::engine::GameEvent& event) {
