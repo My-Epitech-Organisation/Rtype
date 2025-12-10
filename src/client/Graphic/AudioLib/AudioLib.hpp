@@ -16,8 +16,8 @@ class AudioLib {
    private:
     std::shared_ptr<sf::Music> _currentMusic;
 
-    float _volumeMusic = 0;
-    float _volumeSFX = 100;
+    float _volumeMusic = 50;
+    float _volumeSFX = 25;
 
     std::list<sf::Sound> _sounds;
 

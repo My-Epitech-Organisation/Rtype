@@ -101,6 +101,8 @@ void RtypeEntityFactory::setupMissileEntity(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
     reg.emplaceComponent<Size>(entity, 1, 1);
     reg.emplaceComponent<GameTag>(entity);
+    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+    lib->playSFX(*assetsManager->soundManager->get("shoot_laser"));
 }
 
 }  // namespace rtype::games::rtype::client

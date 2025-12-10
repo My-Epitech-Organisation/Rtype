@@ -10,7 +10,9 @@
 #include <memory>
 #include <utility>
 
+#include "client/Graphic/AudioLib/AudioLib.hpp"
 #include "Components/PositionComponent.hpp"
+#include "Components/SoundComponent.hpp"
 #include "Components/VelocityComponent.hpp"
 #include "Logger/Macros.hpp"
 
@@ -143,21 +145,26 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
 }
 
 void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
-    auto it = networkIdToEntity_.find(entityId);
-    if (it == networkIdToEntity_.end()) {
+    auto it = this->networkIdToEntity_.find(entityId);
+    if (it == this->networkIdToEntity_.end()) {
         return;
     }
 
     ECS::Entity entity = it->second;
 
-    if (registry_->isAlive(entity)) {
-        registry_->killEntity(entity);
+    if (this->registry_->isAlive(entity)) {
+        if (this->registry_->hasComponent<games::rtype::client::EnemiesSoundComponent>(entity)) {
+            auto& soundComp = this->registry_->getComponent<games::rtype::client::EnemiesSoundComponent>(entity);
+            auto audioLib = this->registry_->getSingleton<std::shared_ptr<AudioLib>>();
+            audioLib->playSFX(*soundComp.deathSFX);
+        }
+        this->registry_->killEntity(entity);
     }
 
     networkIdToEntity_.erase(it);
 
-    if (localPlayerEntity_.has_value() && *localPlayerEntity_ == entity) {
-        localPlayerEntity_.reset();
+    if (this->localPlayerEntity_.has_value() && *this->localPlayerEntity_ == entity) {
+        this->localPlayerEntity_.reset();
     }
 }
 

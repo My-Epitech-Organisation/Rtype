@@ -34,7 +34,7 @@ void AudioLib::playSFX(const sf::SoundBuffer& sfx) {
         return s.getStatus() == sf::SoundSource::Status::Stopped;
     });
     this->_sounds.emplace_back(sfx);
-    this->_sounds.back().setVolume(100);
+    this->_sounds.back().setVolume(this->_volumeSFX);
     this->_sounds.back().play();
 }
 

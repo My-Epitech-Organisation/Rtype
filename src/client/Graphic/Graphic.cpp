@@ -195,7 +195,6 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.Player);
 
     manager->soundManager->load("hover_button", config.assets.sfx.hoverButton);
-    manager->soundManager->load("laser_sfx", config.assets.sfx.laser);
     manager->soundManager->load("click_button", config.assets.sfx.clickButton);
 
     manager->textureManager->get("bg_menu").setRepeated(true);
