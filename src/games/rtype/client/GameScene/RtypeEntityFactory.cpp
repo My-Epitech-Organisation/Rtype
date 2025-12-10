@@ -8,6 +8,7 @@
 #include "RtypeEntityFactory.hpp"
 
 #include <utility>
+#include <memory>
 
 #include "AllComponents.hpp"
 #include "Components/LifetimeComponent.hpp"
@@ -15,6 +16,7 @@
 #include "GraphicsConstants.hpp"
 #include "Logger/Macros.hpp"
 #include "protocol/Payloads.hpp"
+#include "../shared/Components/HealthComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -63,6 +65,7 @@ void RtypeEntityFactory::setupPlayerEntity(
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 17}));
     reg.emplaceComponent<Size>(entity, 4, 4);
+    reg.emplaceComponent<shared::HealthComponent>(entity, 0, 0);
     reg.emplaceComponent<PlayerTag>(entity);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
