@@ -18,15 +18,11 @@
 #include "games/rtype/shared/Components/BoundingBoxComponent.hpp"
 #include "games/rtype/shared/Components/CooldownComponent.hpp"
 #include "games/rtype/shared/Components/EntityType.hpp"
-#include "games/rtype/shared/Components/NetworkIdComponent.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
-#include "games/rtype/shared/Components/Tags.hpp"
-#include "games/rtype/shared/Components/TransformComponent.hpp"
-#include "games/rtype/shared/Components/BoundingBoxComponent.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 #include "games/rtype/shared/Components/WeaponComponent.hpp"
 
@@ -505,9 +501,6 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
     using PlayerTag = rtype::games::rtype::shared::PlayerTag;
     using NetworkIdComponent = rtype::games::rtype::shared::NetworkIdComponent;
     using Health = rtype::games::rtype::shared::HealthComponent;
-    using BoundingBox = rtype::games::rtype::shared::BoundingBoxComponent;
-    using PlayerTag = rtype::games::rtype::shared::PlayerTag;
-    using NetworkId = rtype::games::rtype::shared::NetworkIdComponent;
     using EntityType = ServerNetworkSystem::EntityType;
 
     constexpr int kPlayerLives = 3;
@@ -529,20 +522,14 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
     weapon.currentSlot = 0;
     weapon.unlockedSlots = 1;
     _registry->emplaceComponent<Weapon>(playerEntity, weapon);
-    _registry->emplaceComponent<BoundingBox>(playerEntity, PLAYER_WIDTH,
-                                             PLAYER_HEIGHT);
-    _registry->emplaceComponent<PlayerTag>(playerEntity);
-
-    std::uint32_t networkId = userId;
-    _registry->emplaceComponent<NetworkIdComponent>(playerEntity, networkId);
-
-    _registry->emplaceComponent<Health>(playerEntity, kPlayerLives,
-                                        kPlayerLives);
     _registry->emplaceComponent<BoundingBox>(playerEntity, kPlayerWidth,
                                              kPlayerHeight);
     _registry->emplaceComponent<PlayerTag>(playerEntity);
+    _registry->emplaceComponent<Health>(playerEntity, kPlayerLives,
+                                        kPlayerLives);
+
     std::uint32_t networkId = userId;
-    _registry->emplaceComponent<NetworkId>(playerEntity, networkId);
+    _registry->emplaceComponent<NetworkIdComponent>(playerEntity, networkId);
     _networkSystem->registerNetworkedEntity(playerEntity, networkId,
                                             EntityType::Player, spawnX, spawnY);
 

@@ -22,10 +22,10 @@ using shared::CollisionPair;
 using shared::DestroyTag;
 using shared::EnemyProjectileTag;
 using shared::EnemyTag;
-using shared::HealthComponent;
-using shared::PlayerProjectileTag;
 using shared::EntityType;
+using shared::HealthComponent;
 using shared::NetworkIdComponent;
+using shared::PlayerProjectileTag;
 using shared::PlayerTag;
 using shared::ProjectileComponent;
 using shared::ProjectileOwner;
@@ -35,8 +35,9 @@ using shared::TransformComponent;
 using shared::collision::overlaps;
 using shared::collision::Rect;
 
-CollisionSystem::CollisionSystem(float worldWidth, float worldHeight)
-    : ASystem("CollisionSystem") {
+CollisionSystem::CollisionSystem(EventEmitter emitter, float worldWidth,
+                                 float worldHeight)
+    : ASystem("CollisionSystem"), _emitEvent(std::move(emitter)) {
     Rect worldBounds(0, 0, worldWidth, worldHeight);
     _quadTreeSystem = std::make_unique<QuadTreeSystem>(worldBounds, 10, 5);
 }
@@ -44,6 +45,7 @@ CollisionSystem::CollisionSystem(float worldWidth, float worldHeight)
 void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
     _quadTreeSystem->update(registry, deltaTime);
     auto collisionPairs = _quadTreeSystem->queryCollisionPairs(registry);
+
     for (const auto& pair : collisionPairs) {
         ECS::Entity entityA = pair.entityA;
         ECS::Entity entityB = pair.entityB;
@@ -54,47 +56,6 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         if (registry.hasComponent<DestroyTag>(entityA) ||
             registry.hasComponent<DestroyTag>(entityB)) {
             continue;
-namespace {
-constexpr int32_t kPlayerCollisionDamage = 1;
-}
-
-CollisionSystem::CollisionSystem(EventEmitter emitter)
-    : ASystem("CollisionSystem"), _emitEvent(std::move(emitter)) {}
-
-void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
-    std::vector<ECS::Entity> projectiles;
-    auto projView =
-        registry
-            .view<TransformComponent, BoundingBoxComponent, ProjectileTag>();
-    projView.each([&projectiles](ECS::Entity entity, auto&, auto&, auto&) {
-        projectiles.push_back(entity);
-    });
-
-    auto enemyView =
-        registry.view<TransformComponent, BoundingBoxComponent, EnemyTag>();
-    auto playerView =
-        registry.view<TransformComponent, BoundingBoxComponent, PlayerTag>();
-
-    for (ECS::Entity projectile : projectiles) {
-        auto& projTransform =
-            registry.getComponent<TransformComponent>(projectile);
-        auto& projBox = registry.getComponent<BoundingBoxComponent>(projectile);
-
-        const bool projectileDestroyed =
-            registry.hasComponent<DestroyTag>(projectile);
-
-        if (!projectileDestroyed) {
-            enemyView.each([&](ECS::Entity enemy,
-                               const TransformComponent& enemyTransform,
-                               const BoundingBoxComponent& enemyBox, auto&) {
-                if (registry.hasComponent<DestroyTag>(enemy)) return;
-                if (overlaps(projTransform, projBox, enemyTransform,
-                             enemyBox)) {
-                    registry.emplaceComponent<DestroyTag>(enemy, DestroyTag{});
-                    registry.emplaceComponent<DestroyTag>(projectile,
-                                                          DestroyTag{});
-                }
-            });
         }
 
         if (!registry.hasComponent<TransformComponent>(entityA) ||
@@ -103,6 +64,7 @@ void CollisionSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
             !registry.hasComponent<BoundingBoxComponent>(entityB)) {
             continue;
         }
+
         const auto& transformA =
             registry.getComponent<TransformComponent>(entityA);
         const auto& transformB =
@@ -137,6 +99,7 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
         registry.hasComponent<DestroyTag>(target)) {
         return;
     }
+
     ProjectileOwner projOwner = ProjectileOwner::Neutral;
     int32_t damage = 25;
     bool piercing = false;
@@ -154,6 +117,7 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
             projOwner = ProjectileOwner::Enemy;
         }
     }
+
     bool canHit = false;
     if (projOwner == ProjectileOwner::Neutral) {
         canHit = true;
@@ -174,6 +138,23 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
     if (registry.hasComponent<HealthComponent>(target)) {
         auto& health = registry.getComponent<HealthComponent>(target);
         health.takeDamage(damage);
+
+        // Emit health changed event for players
+        if (isTargetPlayer && _emitEvent &&
+            registry.hasComponent<NetworkIdComponent>(target)) {
+            const auto& netId =
+                registry.getComponent<NetworkIdComponent>(target);
+            if (netId.isValid()) {
+                engine::GameEvent event{};
+                event.type = engine::GameEventType::EntityHealthChanged;
+                event.entityNetworkId = netId.networkId;
+                event.entityType = static_cast<uint8_t>(EntityType::Player);
+                event.healthCurrent = health.current;
+                event.healthMax = health.max;
+                _emitEvent(event);
+            }
+        }
+
         if (!health.isAlive()) {
             LOG_DEBUG("[CollisionSystem] Target " << target.id
                                                   << " destroyed (no health)");
@@ -184,6 +165,7 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
                   << target.id << " destroyed (no HealthComponent)");
         registry.emplaceComponent<DestroyTag>(target, DestroyTag{});
     }
+
     if (!piercing) {
         LOG_DEBUG("[CollisionSystem] Projectile "
                   << projectile.id << " destroyed (non-piercing)");
@@ -195,52 +177,6 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
                       << projectile.id << " destroyed (max hits)");
             registry.emplaceComponent<DestroyTag>(projectile, DestroyTag{});
         }
-        playerView.each([&](ECS::Entity player,
-                            const TransformComponent& playerTransform,
-                            const BoundingBoxComponent& playerBox, auto&) {
-            if (registry.hasComponent<DestroyTag>(player)) return;
-            if (!overlaps(projTransform, projBox, playerTransform, playerBox)) {
-                return;
-            }
-
-            bool destroyedProjectile = false;
-            if (registry.hasComponent<HealthComponent>(player)) {
-                auto& health = registry.getComponent<HealthComponent>(player);
-                if (health.current > 0) {
-                    health.takeDamage(kPlayerCollisionDamage);
-                }
-
-                const bool isDead = !health.isAlive();
-
-                if (_emitEvent &&
-                    registry.hasComponent<NetworkIdComponent>(player)) {
-                    const auto& netId =
-                        registry.getComponent<NetworkIdComponent>(player);
-                    if (netId.isValid()) {
-                        engine::GameEvent event{};
-                        event.type = engine::GameEventType::EntityHealthChanged;
-                        event.entityNetworkId = netId.networkId;
-                        event.entityType =
-                            static_cast<uint8_t>(EntityType::Player);
-                        event.healthCurrent = health.current;
-                        event.healthMax = health.max;
-                        _emitEvent(event);
-                    }
-                }
-
-                if (isDead) {
-                    registry.emplaceComponent<DestroyTag>(player, DestroyTag{});
-                }
-                destroyedProjectile = true;
-            } else {
-                registry.emplaceComponent<DestroyTag>(player, DestroyTag{});
-                destroyedProjectile = true;
-            }
-
-            if (destroyedProjectile) {
-                registry.emplaceComponent<DestroyTag>(projectile, DestroyTag{});
-            }
-        });
     }
 }
 

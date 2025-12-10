@@ -7,8 +7,9 @@
 
 #pragma once
 
-#include <memory>
 #include <functional>
+#include <memory>
+#include <utility>
 
 #include <rtype/engine.hpp>
 
@@ -25,16 +26,16 @@ namespace rtype::games::rtype::server {
  */
 class CollisionSystem : public ::rtype::engine::ASystem {
    public:
+    using EventEmitter = std::function<void(const engine::GameEvent&)>;
+
     /**
-     * @brief Construct CollisionSystem with world bounds
+     * @brief Construct CollisionSystem with event emitter and world bounds
+     * @param emitter Function to emit game events (e.g., health changes)
      * @param worldWidth Width of the game world (default: 1920)
      * @param worldHeight Height of the game world (default: 1080)
      */
-    explicit CollisionSystem(float worldWidth = 1920.0F,
+    explicit CollisionSystem(EventEmitter emitter, float worldWidth = 1920.0F,
                              float worldHeight = 1080.0F);
-    using EventEmitter = std::function<void(const engine::GameEvent&)>;
-
-    explicit CollisionSystem(EventEmitter emitter);
 
     void update(ECS::Registry& registry, float deltaTime) override;
 
@@ -50,8 +51,8 @@ class CollisionSystem : public ::rtype::engine::ASystem {
                                    ECS::Entity projectile, ECS::Entity target,
                                    bool isTargetPlayer);
 
-    std::unique_ptr<shared::QuadTreeSystem> _quadTreeSystem;
     EventEmitter _emitEvent;
+    std::unique_ptr<shared::QuadTreeSystem> _quadTreeSystem;
 };
 
 }  // namespace rtype::games::rtype::server

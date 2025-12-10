@@ -18,14 +18,14 @@ namespace {
 
 struct CollisionFixture : public ::testing::Test {
     CollisionFixture()
-        : system([](const rtype::engine::GameEvent&) {}) {}
+        : system([](const rtype::engine::GameEvent&) {}, 1920.0F, 1080.0F) {}
 
     void SetUp() override {
         registry = std::make_unique<ECS::Registry>();
     }
 
     std::unique_ptr<ECS::Registry> registry;
-    server::CollisionSystem system{1920.0F, 1080.0F};  // Default screen dimensions
+    server::CollisionSystem system;
 };
 
 }  // namespace
