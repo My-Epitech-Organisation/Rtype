@@ -17,7 +17,12 @@ struct ButtonSoundComponent {
     std::shared_ptr<sf::SoundBuffer> clickSFX;
 };
 
-struct EnemiesSoundComponent {
+struct EnemySoundComponent {
+    std::shared_ptr<sf::SoundBuffer> spawnSFX;
+    std::shared_ptr<sf::SoundBuffer> deathSFX;
+};
+
+struct PlayerSoundComponent {
     std::shared_ptr<sf::SoundBuffer> spawnSFX;
     std::shared_ptr<sf::SoundBuffer> deathSFX;
 };

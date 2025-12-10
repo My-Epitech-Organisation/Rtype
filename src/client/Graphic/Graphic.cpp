@@ -196,6 +196,11 @@ void Graphic::_initializeCommonAssets() {
 
     manager->soundManager->load("hover_button", config.assets.sfx.hoverButton);
     manager->soundManager->load("click_button", config.assets.sfx.clickButton);
+    manager->soundManager->load("player_spawn", config.assets.sfx.playerSpawn);
+    manager->soundManager->load("player_death", config.assets.sfx.playerDeath);
+    manager->soundManager->load("bydos_spawn", config.assets.sfx.enemySpawn);
+    manager->soundManager->load("bydos_death", config.assets.sfx.enemyDeath);
+    manager->soundManager->load("laser_sfx", config.assets.sfx.laser);
 
     manager->textureManager->get("bg_menu").setRepeated(true);
     manager->textureManager->get("bg_planet_1").setRepeated(true);

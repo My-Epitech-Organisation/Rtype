@@ -105,6 +105,8 @@ struct SfxConfig {
     std::string laser;
     std::string enemySpawn;
     std::string enemyDeath;
+    std::string playerSpawn;
+    std::string playerDeath;
 
     bool operator==(const SfxConfig&) const = default;
 };

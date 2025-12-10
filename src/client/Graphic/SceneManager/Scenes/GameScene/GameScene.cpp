@@ -67,17 +67,6 @@ GameScene::GameScene(
             this->_audio->play();
         }
     }
-    if (this->_assetsManager && this->_assetsManager->soundManager) {
-        this->_assetsManager->soundManager->load(
-            "bydos_spawn",
-            this->_assetsManager->configGameAssets.assets.sfx.enemySpawn);
-        this->_assetsManager->soundManager->load(
-            "bydos_death",
-            this->_assetsManager->configGameAssets.assets.sfx.enemyDeath);
-        this->_assetsManager->soundManager->load(
-            "laser_sfx",
-            this->_assetsManager->configGameAssets.assets.sfx.laser);
-    }
 }
 
 GameScene::~GameScene() {

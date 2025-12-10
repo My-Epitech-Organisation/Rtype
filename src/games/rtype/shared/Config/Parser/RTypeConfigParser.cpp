@@ -261,6 +261,12 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.sfx.laser =
         "assets/" +
         _parser.getString(table, "SFX", "Laser", defaults.assets.sfx.laser);
+    config.assets.sfx.playerSpawn =
+        "assets/" + _parser.getString(table, "SFX", "PlayerSpawn",
+                                      defaults.assets.sfx.playerSpawn);
+    config.assets.sfx.playerDeath =
+        "assets/" + _parser.getString(table, "SFX", "PlayerDeath",
+                                      defaults.assets.sfx.enemyDeath);
     config.assets.sfx.enemySpawn =
         "assets/" + _parser.getString(table, "SFX", "EnemySpawn",
                                       defaults.assets.sfx.enemySpawn);

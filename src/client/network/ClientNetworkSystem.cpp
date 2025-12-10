@@ -144,6 +144,25 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
     }
 }
 
+void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
+    if (registry_->hasComponent<games::rtype::client::EnemySoundComponent>(
+            entity)) {
+        auto& soundComp =
+            registry_->getComponent<games::rtype::client::EnemySoundComponent>(
+                entity);
+        auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
+        audioLib->playSFX(*soundComp.deathSFX);
+    }
+    if (registry_->hasComponent<games::rtype::client::PlayerSoundComponent>(
+            entity)) {
+        auto& soundComp =
+            registry_->getComponent<games::rtype::client::PlayerSoundComponent>(
+                entity);
+        auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
+        audioLib->playSFX(*soundComp.deathSFX);
+    }
+}
+
 void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
     auto it = this->networkIdToEntity_.find(entityId);
     if (it == this->networkIdToEntity_.end()) {
@@ -153,26 +172,17 @@ void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
     ECS::Entity entity = it->second;
 
     if (this->registry_->isAlive(entity)) {
-        if (this->registry_
-                ->hasComponent<games::rtype::client::EnemiesSoundComponent>(
-                    entity)) {
-            auto& soundComp =
-                this->registry_
-                    ->getComponent<games::rtype::client::EnemiesSoundComponent>(
-                        entity);
-            auto audioLib =
-                this->registry_->getSingleton<std::shared_ptr<AudioLib>>();
-            audioLib->playSFX(*soundComp.deathSFX);
-        }
-        this->registry_->killEntity(entity);
+        this->_playDeathSound(entity);
     }
+    this->registry_->killEntity(entity);
+}
 
-    networkIdToEntity_.erase(it);
+networkIdToEntity_.erase(it);
 
-    if (this->localPlayerEntity_.has_value() &&
-        *this->localPlayerEntity_ == entity) {
-        this->localPlayerEntity_.reset();
-    }
+if (this->localPlayerEntity_.has_value() &&
+    *this->localPlayerEntity_ == entity) {
+    this->localPlayerEntity_.reset();
+}
 }
 
 void ClientNetworkSystem::handlePositionCorrection(float x, float y) {

@@ -8,6 +8,8 @@ Settings = "audio/settingsMusic.mp3"
 HoverButton = "audio/hoverButton.mp3"
 ClickButton = "audio/clickButton.mp3"
 Laser = "audio/laserSound.mp3"
+PlayerDeath = "audio/playerDeath.mp3"
+PlayerSpawn = "audio/playerSpawn.mp3"
 EnemyDeath = "audio/enemyDeath.mp3"
 EnemySpawn = "audio/enemySpawn.mp3"
 

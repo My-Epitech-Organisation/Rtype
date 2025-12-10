@@ -68,6 +68,11 @@ void RtypeEntityFactory::setupPlayerEntity(
     reg.emplaceComponent<PlayerTag>(entity);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
+    reg.emplaceComponent<PlayerSoundComponent>(
+        entity, assetsManager->soundManager->get("player_spawn"),
+        assetsManager->soundManager->get("player_death"));
+    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+    lib->playSFX(*assetsManager->soundManager->get("player_spawn"));
 }
 
 void RtypeEntityFactory::setupBydosEntity(
@@ -81,7 +86,7 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.emplaceComponent<Size>(entity, 2, 2);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
-    reg.emplaceComponent<EnemiesSoundComponent>(
+    reg.emplaceComponent<EnemySoundComponent>(
         entity, assetsManager->soundManager->get("bydos_spawn"),
         assetsManager->soundManager->get("bydos_death"));
     auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();

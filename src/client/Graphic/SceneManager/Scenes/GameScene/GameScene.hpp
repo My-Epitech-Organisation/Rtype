@@ -72,9 +72,6 @@ class GameScene : public AScene {
         std::shared_ptr<AudioLib> audio = nullptr);
 
     ~GameScene();
-
-   private:
-    std::shared_ptr<AudioLib> _audio;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_GAMESCENE_GAMESCENE_HPP_
