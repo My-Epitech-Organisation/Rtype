@@ -25,6 +25,9 @@
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 #include "games/rtype/shared/Components/WeaponComponent.hpp"
 
+static constexpr float PLAYER_WIDTH = 64.0F;
+static constexpr float PLAYER_HEIGHT = 64.0F;
+
 namespace rtype::server {
 
 ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
@@ -513,8 +516,6 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
     weapon.currentSlot = 0;
     weapon.unlockedSlots = 1;
     _registry->emplaceComponent<Weapon>(playerEntity, weapon);
-    constexpr float PLAYER_WIDTH = 64.0F;
-    constexpr float PLAYER_HEIGHT = 64.0F;
     _registry->emplaceComponent<BoundingBox>(playerEntity, PLAYER_WIDTH,
                                              PLAYER_HEIGHT);
     _registry->emplaceComponent<PlayerTag>(playerEntity);

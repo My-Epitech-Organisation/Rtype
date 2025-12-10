@@ -8,18 +8,15 @@
 #include "ProjectileSpawnerSystem.hpp"
 
 #include <cmath>
+#include <number>
 #include <utility>
 
 #include "../../../shared/Components.hpp"
 
 namespace rtype::games::rtype::server {
+namespace
 
-namespace {
-/// @brief Pi constant for angle calculations (cross-platform)
-constexpr float kPi = 3.14159265358979323846F;
-}  // namespace
-
-using shared::BoundingBoxComponent;
+    using shared::BoundingBoxComponent;
 using shared::EnemyProjectileTag;
 using shared::EntityType;
 using shared::LifetimeComponent;
@@ -70,7 +67,7 @@ uint32_t ProjectileSpawnerSystem::spawnPlayerProjectile(
         uint32_t firstId = 0;
         for (uint8_t i = 0; i < weaponConfig.projectileCount; ++i) {
             float angle = startAngle + angleStep * static_cast<float>(i);
-            float radians = angle * kPi / 180.0F;
+            float radians = angle * std::numbers::pi_v<float> / 180.0F;
 
             float vx = weaponConfig.speed * std::cos(radians);
             float vy = weaponConfig.speed * std::sin(radians);

@@ -161,7 +161,7 @@ inline constexpr WeaponConfig HeavyBullet{
 /**
  * @brief Maximum number of weapon slots per player
  */
-inline constexpr std::size_t MAX_WEAPON_SLOTS = 4;
+inline constexpr std::size_t MAX_WEAPON_SLOTS = 5;
 
 /**
  * @struct WeaponComponent
