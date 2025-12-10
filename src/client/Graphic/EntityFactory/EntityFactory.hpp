@@ -22,6 +22,7 @@
 #include "Components/RectangleComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
+#include "Components/SoundComponent.hpp"
 #include "Components/TextInputComponent.hpp"
 #include "Components/UserEventComponent.hpp"
 #include "ECS.hpp"
@@ -33,6 +34,7 @@ static ECS::Entity createButton(
     const rtype::games::rtype::client::Text& text,
     const rtype::games::rtype::shared::Position& position,
     const rtype::games::rtype::client::Rectangle& rectangle,
+    std::shared_ptr<AssetManager> assetsManager,
     std::function<void(Args...)> onClick) {
     auto entity = registry->spawnEntity();
     registry->emplaceComponent<rtype::games::rtype::client::Text>(entity, text);
@@ -44,6 +46,8 @@ static ECS::Entity createButton(
         entity, onClick);
     registry->emplaceComponent<rtype::games::rtype::client::UserEvent>(entity);
     registry->emplaceComponent<rtype::games::rtype::client::ButtonTag>(entity);
+    if (assetsManager)
+        registry->emplaceComponent<rtype::games::rtype::client::ButtonSoundComponent>(entity, assetsManager->soundManager->get("hover_button"), assetsManager->soundManager->get("click_button"));
     return entity;
 }
 

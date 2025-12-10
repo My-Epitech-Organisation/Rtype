@@ -14,11 +14,11 @@ void AudioLib::setLoop(const bool& loop) const {
 }
 
 void AudioLib::setMusicVolume(const float& volume) {
-    this->_volume = volume;
-    if (this->_currentMusic) this->_currentMusic->setVolume(this->_volume);
+    this->_volumeMusic = volume;
+    if (this->_currentMusic) this->_currentMusic->setVolume(this->_volumeMusic);
 }
 
-float AudioLib::getMusicVolume() const { return this->_volume; }
+float AudioLib::getMusicVolume() const { return this->_volumeMusic; }
 
 void AudioLib::pauseMusic() const {
     if (this->_currentMusic) this->_currentMusic->pause();
@@ -29,9 +29,16 @@ void AudioLib::play() const {
     this->_currentMusic->play();
 }
 
+void AudioLib::playSFX(sf::SoundBuffer sfx) {
+    auto sfxSound = sf::Sound(sfx);
+    sfxSound.setVolume(100);
+    sfxSound.play();
+}
+
 void AudioLib::loadMusic(std::shared_ptr<sf::Music> music) {
     if (this->_currentMusic) this->_currentMusic->stop();
     this->_currentMusic = music;
+    this->_currentMusic->setVolume(this->_volumeMusic);
 }
 
 AudioLib::~AudioLib() {

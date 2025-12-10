@@ -194,9 +194,9 @@ void Graphic::_initializeCommonAssets() {
     manager->textureManager->load("player_vessel",
                                   config.assets.textures.Player);
 
-    manager->audioManager->load("hover_button", config.assets.sfx.hoverButton);
-    manager->audioManager->load("laser_sfx", config.assets.sfx.laser);
-    manager->audioManager->load("click_button", config.assets.sfx.clickButton);
+    manager->soundManager->load("hover_button", config.assets.sfx.hoverButton);
+    manager->soundManager->load("laser_sfx", config.assets.sfx.laser);
+    manager->soundManager->load("click_button", config.assets.sfx.clickButton);
 
     manager->textureManager->get("bg_menu").setRepeated(true);
     manager->textureManager->get("bg_planet_1").setRepeated(true);

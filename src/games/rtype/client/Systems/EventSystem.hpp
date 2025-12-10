@@ -43,10 +43,10 @@ class EventSystem : public ::rtype::engine::ASystem {
 
     void _mouseMoved(
         ::rtype::games::rtype::client::UserEvent& actionType,
-        const ::rtype::games::rtype::client::Rectangle& rect) const;
+        const ::rtype::games::rtype::client::Rectangle& rect, ECS::Registry& registry, const ECS::Entity entt) const;
     void _mousePressed(
         ::rtype::games::rtype::client::UserEvent& actionType,
-        const ::rtype::games::rtype::client::Rectangle& rect) const;
+        const ::rtype::games::rtype::client::Rectangle& rect, ECS::Registry& registry, const ECS::Entity entt) const;
     void _mouseReleased(
         ::rtype::games::rtype::client::UserEvent& actionType,
         const ::rtype::games::rtype::client::Rectangle& rect) const;

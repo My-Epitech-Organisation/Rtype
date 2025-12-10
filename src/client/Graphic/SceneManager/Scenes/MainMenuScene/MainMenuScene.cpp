@@ -137,6 +137,7 @@ void MainMenuScene::_createConnectionPanel(
                                               kConnectionPanelY + 260.f),
         rtype::games::rtype::client::Rectangle({200, 60}, sf::Color(0, 150, 0),
                                                sf::Color(0, 200, 0)),
+        this->_assetsManager,
         std::function<void()>([this, switchToScene]() {
             this->_onConnectClicked(switchToScene);
         })));
@@ -317,6 +318,7 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::shared::Position(100, 350),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
+                                               this->_assetsManager,
         std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::IN_GAME);
@@ -333,6 +335,7 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::shared::Position(100, 460),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
+                                               this->_assetsManager,
         std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::SETTINGS_MENU);
@@ -349,6 +352,7 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::shared::Position(100, 570),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
+                                               this->_assetsManager,
         std::function<void()>([this]() { this->_window->close(); })
 
             ));

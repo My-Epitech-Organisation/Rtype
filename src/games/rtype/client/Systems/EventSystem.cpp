@@ -7,9 +7,12 @@
 
 #include "EventSystem.hpp"
 
+#include <iostream>
 #include <utility>
 
 #include "../AllComponents.hpp"
+#include "AudioLib/AudioLib.hpp"
+#include "Components/SoundComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -43,16 +46,24 @@ void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
                     registry.getComponent<HiddenComponent>(entity);
                 if (hidden.isHidden) return;
             }
-            this->_mouseMoved(actionType, rect);
-            this->_mousePressed(actionType, rect);
+            this->_mouseMoved(actionType, rect, registry, entity);
+            this->_mousePressed(actionType, rect, registry, entity);
             this->_mouseReleased(actionType, rect);
         });
 }
 
 void EventSystem::_mouseMoved(UserEvent& actionType,
-                              const Rectangle& rect) const {
+                              const Rectangle& rect, ECS::Registry& reg, const ECS::Entity entt) const {
     if (const auto* mouseMove = _event->getIf<sf::Event::MouseMoved>()) {
         bool isInside = _isPointInRect(mouseMove->position, rect);
+        if (!actionType.isHovered && isInside) {
+            if (reg.hasComponent<ButtonSoundComponent>(entt)) {
+                auto data = reg.getComponent<ButtonSoundComponent>(entt);
+                std::cout << "SOUND HOVER TRIGGER" << std::endl;
+                AudioLib::playSFX(data.hoverSFX);
+            }
+        }
+
         actionType.isHovered = isInside;
         if (!isInside) {
             actionType.isClicked = false;
@@ -61,7 +72,7 @@ void EventSystem::_mouseMoved(UserEvent& actionType,
 }
 
 void EventSystem::_mousePressed(UserEvent& actionType,
-                                const Rectangle& rect) const {
+                                const Rectangle& rect, ECS::Registry& reg, const ECS::Entity entt) const {
     if (const auto* mousePress =
             _event->getIf<sf::Event::MouseButtonPressed>()) {
         if (mousePress->button == sf::Mouse::Button::Left &&

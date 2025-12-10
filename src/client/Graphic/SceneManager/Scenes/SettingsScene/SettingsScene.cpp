@@ -49,6 +49,7 @@ void SettingsScene::_initKeybindSection() {
             rtype::games::rtype::shared::Position(x, y),
             rtype::games::rtype::client::Rectangle({500, 50}, sf::Color::Blue,
                                                    sf::Color::Red),
+                                                   this->_assetsManager,
             std::function<void()>([this, action]() {
                 if (this->_actionToRebind.has_value()) return;
                 this->_actionToRebind = action;
@@ -155,6 +156,7 @@ SettingsScene::SettingsScene(
         rtype::games::rtype::shared::Position(100, 900),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
+                                               this->_assetsManager,
         std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::MAIN_MENU);

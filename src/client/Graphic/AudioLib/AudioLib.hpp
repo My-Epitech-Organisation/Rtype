@@ -14,7 +14,8 @@ class AudioLib {
    private:
     std::shared_ptr<sf::Music> _currentMusic;
 
-    float _volume = 50;
+    float _volumeMusic = 0;
+    float _volumeSFX = 100;
 
    public:
     void setLoop(const bool& loop) const;
@@ -23,6 +24,8 @@ class AudioLib {
 
     void pauseMusic() const;
     void play() const;
+
+    static void playSFX(sf::SoundBuffer sfx);
 
     void loadMusic(std::shared_ptr<sf::Music> music);
 
