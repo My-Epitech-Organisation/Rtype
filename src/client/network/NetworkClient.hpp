@@ -102,6 +102,12 @@ struct GameStateEvent {
  * Thread-safety: Callbacks are queued and dispatched on the thread calling
  * poll(). Network I/O is handled by a dedicated background thread.
  */
+
+/**
+ * @brief Sleep duration for network thread polling loop (in milliseconds)
+ */
+static constexpr std::chrono::milliseconds kNetworkThreadSleepDuration{3};
+
 class NetworkClient {
    public:
     using DisconnectReason = network::DisconnectReason;

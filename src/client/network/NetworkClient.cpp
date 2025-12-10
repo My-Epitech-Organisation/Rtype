@@ -184,9 +184,6 @@ void NetworkClient::onGameStateChange(
 }
 
 void NetworkClient::poll() {
-    // Note: ioContext_.poll() is now handled by the network thread
-    // This method now only handles connection maintenance and callback dispatch
-
     connection_.update();
 
     flushOutgoing();
@@ -198,7 +195,7 @@ void NetworkClient::networkThreadLoop() {
     while (networkThreadRunning_.load(std::memory_order_acquire)) {
         ioContext_.poll();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(kNetworkThreadSleepDuration);
     }
 }
 
