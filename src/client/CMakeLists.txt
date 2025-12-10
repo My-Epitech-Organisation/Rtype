@@ -14,8 +14,6 @@ find_package(ZLIB QUIET)
 find_package(BZip2 QUIET)
 find_package(unofficial-brotli CONFIG QUIET)
 
-add_subdirectory(Graphic)
-
 add_library(rtype_client_network STATIC
     network/NetworkClient.cpp
     network/ClientNetworkSystem.cpp
@@ -32,6 +30,8 @@ target_link_libraries(rtype_client_network
     rtype_common
     rtype_game_client
 )
+
+add_subdirectory(Graphic)
 
 add_executable(r-type_client
     main.cpp
