@@ -44,7 +44,7 @@ void SettingsScene::_initKeybindSection() {
         auto btn = EntityFactory::createButton(
             this->_registry,
             rtype::games::rtype::client::Text(
-                this->_assetsManager->fontManager->get("title_font"),
+                this->_assetsManager->fontManager->get("main_font"),
                 sf::Color::White, 24, textStr),
             rtype::games::rtype::shared::Position(x, y),
             rtype::games::rtype::client::Rectangle({500, 50}, sf::Color::Blue,
@@ -150,7 +150,7 @@ SettingsScene::SettingsScene(
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("title_font"),
+            this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Back"),
         rtype::games::rtype::shared::Position(100, 900),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,

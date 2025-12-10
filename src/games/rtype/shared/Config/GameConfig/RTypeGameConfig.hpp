@@ -64,7 +64,7 @@ struct NetworkConfig {
  */
 struct FontsConfig {
     std::string MainFont;
-    // std::string TitleFont;
+    std::string TitleFont;
 
     bool operator==(const FontsConfig&) const = default;
 };
@@ -97,10 +97,22 @@ struct MusicConfig {
 };
 
 /**
+* @brief Sfx configuration section
+*/
+struct SfxConfig {
+    std::string hoverButton;
+    std::string clickButton;
+    std::string laser;
+
+    bool operator==(const SfxConfig&) const = default;
+};
+
+/**
  * @brief Assets configuration section
  */
 struct AssetsConfig {
     MusicConfig music;
+    SfxConfig sfx;
     TexturesConfig textures;
     FontsConfig fonts;
 

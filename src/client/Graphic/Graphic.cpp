@@ -175,6 +175,38 @@ void Graphic::_initializeSystems() {
         {"render"});
 }
 
+void Graphic::_initializeCommonAssets() {
+    auto manager = this->_assetsManager;
+    auto config = manager->configGameAssets;
+
+    manager->fontManager->load("title_font",
+                            config.assets.fonts.TitleFont);
+    manager->fontManager->load("main_font",
+                            config.assets.fonts.MainFont);
+
+    manager->textureManager->load("bg_menu",
+                               config.assets.textures.background);
+    manager->textureManager->load("bg_planet_1",
+                               config.assets.textures.planet1);
+    manager->textureManager->load("bg_planet_2",
+                               config.assets.textures.planet2);
+    manager->textureManager->load("bg_planet_3",
+                               config.assets.textures.planet3);
+    manager->textureManager->load("astro_vessel",
+                               config.assets.textures.astroVessel);
+    manager->textureManager->load("player_vessel",
+                                config.assets.textures.Player);
+
+    manager->audioManager->load("hover_button", config.assets.sfx.hoverButton);
+    manager->audioManager->load("laser_sfx", config.assets.sfx.laser);
+    manager->audioManager->load("click_button", config.assets.sfx.clickButton);
+
+    manager->textureManager->get("bg_menu").setRepeated(true);
+    manager->textureManager->get("bg_planet_1").setRepeated(true);
+    manager->textureManager->get("bg_planet_2").setRepeated(true);
+    manager->textureManager->get("bg_planet_3").setRepeated(true);
+}
+
 Graphic::Graphic(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,
@@ -196,6 +228,7 @@ Graphic::Graphic(
         _setupNetworkEntityFactory();
     }
     this->_audioLib = std::make_shared<AudioLib>();
+    this->_initializeCommonAssets();
     this->_sceneManager = std::make_unique<SceneManager>(
         _registry, this->_assetsManager, this->_window, this->_keybinds,
         _networkClient, _networkSystem, this->_audioLib);

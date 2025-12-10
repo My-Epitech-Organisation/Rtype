@@ -211,8 +211,11 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.fonts.MainFont =
         "assets/" + _parser.getString(table, "Fonts", "MainFont",
                                       defaults.assets.fonts.MainFont);
-    std::cout << "Main font path: " << config.assets.fonts.MainFont
-              << std::endl;
+    config.assets.fonts.TitleFont =
+    "assets/" + _parser.getString(table, "Fonts", "TitleFont",
+                                  defaults.assets.fonts.MainFont);
+
+    // Textures
     config.assets.textures.background =
         "assets/" + _parser.getString(table, "Textures", "Background",
                                       defaults.assets.textures.background);
@@ -231,6 +234,7 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.textures.Player =
         "assets/" + _parser.getString(table, "Textures", "Player",
                                       defaults.assets.textures.Player);
+    // Music
     config.assets.music.mainMenu =
         "assets/" + _parser.getString(table, "Music", "MainMenu",
                                       defaults.assets.music.mainMenu);
@@ -240,6 +244,14 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.music.settings =
         "assets/" + _parser.getString(table, "Music", "Settings",
                                       defaults.assets.music.settings);
+
+    // SFX
+    config.assets.sfx.clickButton = "assets/" + _parser.getString(table, "SFX", "ClickButton",
+                                      defaults.assets.sfx.clickButton);
+    config.assets.sfx.hoverButton = "assets/" + _parser.getString(table, "SFX", "HoverButton",
+                                      defaults.assets.sfx.hoverButton);
+    config.assets.sfx.laser =  "assets/" + _parser.getString(table, "SFX", "Laser",
+                                      defaults.assets.sfx.laser);
 
     return config;
 }
