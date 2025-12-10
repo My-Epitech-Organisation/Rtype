@@ -14,7 +14,11 @@
 #include <utility>
 #include <vector>
 
+#include "games/rtype/shared/Components/BoundingBoxComponent.hpp"
+#include "games/rtype/shared/Components/HealthComponent.hpp"
+#include "games/rtype/shared/Components/NetworkIdComponent.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 
 namespace rtype::server {
@@ -482,7 +486,15 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
 
     using Position = rtype::games::rtype::shared::Position;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
+    using Health = rtype::games::rtype::shared::HealthComponent;
+    using BoundingBox = rtype::games::rtype::shared::BoundingBoxComponent;
+    using PlayerTag = rtype::games::rtype::shared::PlayerTag;
+    using NetworkId = rtype::games::rtype::shared::NetworkIdComponent;
     using EntityType = ServerNetworkSystem::EntityType;
+
+    constexpr int kPlayerLives = 3;
+    constexpr float kPlayerWidth = 33.0F;
+    constexpr float kPlayerHeight = 17.0F;
 
     ECS::Entity playerEntity = _registry->spawnEntity();
     size_t playerCount = _readyPlayers.size();
@@ -490,9 +502,17 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
     float spawnY = 150.0F + static_cast<float>(playerCount) * 100.0F;
     _registry->emplaceComponent<Position>(playerEntity, spawnX, spawnY);
     _registry->emplaceComponent<Velocity>(playerEntity, 0.0F, 0.0F);
+    _registry->emplaceComponent<Health>(playerEntity, kPlayerLives,
+                                        kPlayerLives);
+    _registry->emplaceComponent<BoundingBox>(playerEntity, kPlayerWidth,
+                                             kPlayerHeight);
+    _registry->emplaceComponent<PlayerTag>(playerEntity);
     std::uint32_t networkId = userId;
+    _registry->emplaceComponent<NetworkId>(playerEntity, networkId);
     _networkSystem->registerNetworkedEntity(playerEntity, networkId,
                                             EntityType::Player, spawnX, spawnY);
+
+    _networkSystem->updateEntityHealth(networkId, kPlayerLives, kPlayerLives);
 
     _networkSystem->setPlayerEntity(userId, playerEntity);
 
@@ -610,6 +630,17 @@ void ServerApp::processGameEvents() {
             case engine::GameEventType::EntityUpdated: {
                 _networkSystem->updateEntityPosition(
                     event.entityNetworkId, event.x, event.y, 0.0F, 0.0F);
+                break;
+            }
+            case engine::GameEventType::EntityHealthChanged: {
+                _networkSystem->updateEntityHealth(event.entityNetworkId,
+                                                   event.healthCurrent,
+                                                   event.healthMax);
+                if (_verbose) {
+                    LOG_DEBUG("[Server] Entity health changed: networkId="
+                              << event.entityNetworkId << " health="
+                              << event.healthCurrent << "/" << event.healthMax);
+                }
                 break;
             }
         }

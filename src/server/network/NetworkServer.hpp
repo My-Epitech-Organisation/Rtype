@@ -169,6 +169,15 @@ class NetworkServer {
     void destroyEntity(std::uint32_t id);
 
     /**
+     * @brief Broadcast entity health/lives to all clients
+     * @param id Entity ID
+     * @param current Current health value
+     * @param max Maximum health value
+     */
+    void updateEntityHealth(std::uint32_t id, std::int32_t current,
+                            std::int32_t max);
+
+    /**
      * @brief Update game state on all clients
      *
      * Sent reliably - guaranteed delivery.
@@ -211,6 +220,16 @@ class NetworkServer {
      * @param id Entity ID to destroy
      */
     void destroyEntityToClient(std::uint32_t userId, std::uint32_t id);
+
+    /**
+     * @brief Send health/lives update to a specific client
+     * @param userId Target client's user ID
+     * @param id Entity ID
+     * @param current Current health value
+     * @param max Maximum health value
+     */
+    void updateEntityHealthToClient(std::uint32_t userId, std::uint32_t id,
+                                    std::int32_t current, std::int32_t max);
 
     /**
      * @brief Update game state on a specific client

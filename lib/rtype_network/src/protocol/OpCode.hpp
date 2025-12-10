@@ -50,6 +50,9 @@ enum class OpCode : std::uint8_t {
     /// Server destroys entity (RELIABLE)
     S_ENTITY_DESTROY = 0x12,
 
+    /// Server updates entity health/lives (RELIABLE)
+    S_ENTITY_HEALTH = 0x13,
+
     /// Client sends input state (UNRELIABLE)
     C_INPUT = 0x20,
 
@@ -94,6 +97,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_UPDATE_STATE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_DESTROY:
+        case OpCode::S_ENTITY_HEALTH:
             return true;
 
         case OpCode::S_ENTITY_MOVE:
@@ -140,6 +144,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_DESTROY:
+        case OpCode::S_ENTITY_HEALTH:
         case OpCode::S_UPDATE_POS:
         case OpCode::PONG:
             return true;
@@ -168,6 +173,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_DESTROY:
+        case OpCode::S_ENTITY_HEALTH:
         case OpCode::C_INPUT:
         case OpCode::S_UPDATE_POS:
         case OpCode::PING:
@@ -225,6 +231,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "S_ENTITY_MOVE";
         case OpCode::S_ENTITY_DESTROY:
             return "S_ENTITY_DESTROY";
+        case OpCode::S_ENTITY_HEALTH:
+            return "S_ENTITY_HEALTH";
         case OpCode::C_INPUT:
             return "C_INPUT";
         case OpCode::S_UPDATE_POS:

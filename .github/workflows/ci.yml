@@ -292,22 +292,24 @@ jobs:
             -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF \
             -DUSE_SFML=ON
 
-      - name: Build tests
+      - name: Build tests (Windows only)
+        if: matrix.os == 'windows-latest'
         run: cmake --build --preset ${{ matrix.preset }} --target all
 
-      - name: Run tests
+      - name: Run tests (Windows only)
+        if: matrix.os == 'windows-latest'
         run: |
           cd build
           ctest --output-on-failure --timeout 120
 
       - name: Run Coverage Analysis (Linux only)
-        if: matrix.coverage
+        if: matrix.os == 'ubuntu-latest'
         run: |
           chmod +x scripts/coverage.sh
           ./scripts/coverage.sh --html
 
       - name: Upload Coverage Report (Linux only)
-        if: matrix.coverage && always()
+        if: matrix.os == 'ubuntu-latest' && always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
@@ -391,7 +393,7 @@ jobs:
             -DUSE_SFML=ON
 
       - name: Build
-        run: cmake --build --preset ${{ matrix.preset }} --target all
+        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server
 
       - name: Prepare Windows dist (exe + DLLs only)
         if: matrix.os == 'windows-latest'

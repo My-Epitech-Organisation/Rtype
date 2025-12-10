@@ -25,6 +25,6 @@ protected:
 
 TEST_F(ClientAppTest, Constructor_InitializesGraphic) {
     EXPECT_NO_THROW({
-        ClientApp app(registry);
+        ClientApp app;
     });
 }

@@ -10,6 +10,7 @@
 #include <memory>
 #include <utility>
 
+#include "Components/HealthComponent.hpp"
 #include "Components/PositionComponent.hpp"
 #include "Components/SoundComponent.hpp"
 #include "Components/VelocityComponent.hpp"
@@ -41,6 +42,9 @@ ClientNetworkSystem::ClientNetworkSystem(
     client_->onEntityDestroy(
         [this](std::uint32_t entityId) { handleEntityDestroy(entityId); });
 
+    client_->onEntityHealth(
+        [this](EntityHealthEvent event) { handleEntityHealth(event); });
+
     client_->onPositionCorrection(
         [this](float x, float y) { handlePositionCorrection(x, y); });
 }
@@ -52,6 +56,11 @@ void ClientNetworkSystem::setEntityFactory(EntityFactory factory) {
 void ClientNetworkSystem::onLocalPlayerAssigned(
     std::function<void(std::uint32_t userId, ECS::Entity entity)> callback) {
     onLocalPlayerAssignedCallback_ = std::move(callback);
+}
+
+void ClientNetworkSystem::onHealthUpdate(
+    std::function<void(const EntityHealthEvent&)> callback) {
+    onHealthUpdateCallback_ = std::move(callback);
 }
 
 void ClientNetworkSystem::update() { client_->poll(); }
@@ -200,6 +209,30 @@ void ClientNetworkSystem::handlePositionCorrection(float x, float y) {
         auto& pos = registry_->getComponent<Position>(entity);
         pos.x = x;
         pos.y = y;
+    }
+}
+
+void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
+    auto it = networkIdToEntity_.find(event.entityId);
+    if (it != networkIdToEntity_.end()) {
+        ECS::Entity entity = it->second;
+        if (registry_->isAlive(entity)) {
+            if (registry_->hasComponent<
+                    rtype::games::rtype::shared::HealthComponent>(entity)) {
+                auto& health = registry_->getComponent<
+                    rtype::games::rtype::shared::HealthComponent>(entity);
+                health.current = event.current;
+                health.max = event.max;
+            } else {
+                registry_->emplaceComponent<
+                    rtype::games::rtype::shared::HealthComponent>(
+                    entity, event.current, event.max);
+            }
+        }
+    }
+
+    if (onHealthUpdateCallback_) {
+        onHealthUpdateCallback_(event);
     }
 }
 

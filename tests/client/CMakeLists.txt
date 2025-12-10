@@ -8,6 +8,7 @@ if(BUILD_GRAPHICAL_TESTS)
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
+        rtype_client_network
     )
 
     target_include_directories(test_client_app PRIVATE
@@ -26,6 +27,7 @@ if(BUILD_GRAPHICAL_TESTS)
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
+        rtype_client_network
     )
 
     target_include_directories(test_graphic PRIVATE
@@ -44,6 +46,7 @@ if(BUILD_GRAPHICAL_TESTS)
         rtype_game_client
         rtype-graphic-SFML
         rtype_game_client_systems
+        rtype_client_network
     )
 
     target_include_directories(test_graphic_systems PRIVATE
@@ -61,6 +64,7 @@ if(BUILD_GRAPHICAL_TESTS)
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
+        rtype_client_network
     )
 
     target_include_directories(test_scene_manager PRIVATE
@@ -84,6 +88,7 @@ if(BUILD_GRAPHICAL_TESTS)
         rtype_game_client
         rtype-graphic-SFML
         rtype_game_client_systems
+        rtype_client_network
     )
 
     target_include_directories(test_stress_rendering PRIVATE
@@ -102,6 +107,7 @@ if(BUILD_GRAPHICAL_TESTS)
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
+        rtype_client_network
     )
 
     target_include_directories(test_stress_ecs PRIVATE
@@ -121,6 +127,7 @@ if(BUILD_GRAPHICAL_TESTS)
         rtype_game_client
         rtype-graphic-SFML
         rtype_game_client_systems
+        rtype_client_network
     )
 
     target_include_directories(test_stress_events PRIVATE
@@ -140,6 +147,7 @@ target_link_libraries(test_entity_factory PRIVATE
     rtype_game_shared
     rtype_game_client
     rtype-graphic-SFML
+    rtype_client_network
 )
 
 target_include_directories(test_entity_factory PRIVATE

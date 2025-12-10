@@ -328,6 +328,21 @@ TEST(SerializationTest, NetworkByteOrderComplexStruct) {
     EXPECT_EQ(restored.team, original.team);
 }
 
+TEST(SerializationTest, NetworkByteOrderEntityHealthPayloadRoundTrip) {
+    EntityHealthPayload payload{};
+    payload.entityId = 99;
+    payload.current = 2;
+    payload.max = 3;
+
+    auto bytes = Serializer::serializeForNetwork(payload);
+    auto restored =
+        Serializer::deserializeFromNetwork<EntityHealthPayload>(bytes);
+
+    EXPECT_EQ(restored.entityId, 99u);
+    EXPECT_EQ(restored.current, 2);
+    EXPECT_EQ(restored.max, 3);
+}
+
 TEST(SerializationTest, NetworkByteOrderInvalidBufferSize) {
     // Test error handling for buffer size mismatch
     std::vector<uint8_t> invalidBuffer = {1, 2, 3};  // Wrong size

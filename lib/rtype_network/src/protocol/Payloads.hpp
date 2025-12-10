@@ -150,6 +150,17 @@ struct EntityDestroyPayload {
 };
 
 /**
+ * @brief Payload for S_ENTITY_HEALTH (0x13)
+ *
+ * Server broadcasts authoritative health/lives for an entity.
+ */
+struct EntityHealthPayload {
+    std::uint32_t entityId;
+    std::int32_t current;
+    std::int32_t max;
+};
+
+/**
  * @brief Payload for C_INPUT (0x20)
  *
  * Client sends current input state to server.
@@ -226,6 +237,8 @@ static_assert(sizeof(EntityMovePayload) == 20,
               "EntityMovePayload must be 20 bytes (4+4+4+4+4)");
 static_assert(sizeof(EntityDestroyPayload) == 4,
               "EntityDestroyPayload must be 4 bytes");
+static_assert(sizeof(EntityHealthPayload) == 12,
+              "EntityHealthPayload must be 12 bytes (4+4+4)");
 static_assert(sizeof(InputPayload) == 1, "InputPayload must be 1 byte");
 static_assert(sizeof(UpdatePosPayload) == 8,
               "UpdatePosPayload must be 8 bytes (4+4)");
@@ -235,6 +248,7 @@ static_assert(std::is_trivially_copyable_v<UpdateStatePayload>);
 static_assert(std::is_trivially_copyable_v<EntitySpawnPayload>);
 static_assert(std::is_trivially_copyable_v<EntityMovePayload>);
 static_assert(std::is_trivially_copyable_v<EntityDestroyPayload>);
+static_assert(std::is_trivially_copyable_v<EntityHealthPayload>);
 static_assert(std::is_trivially_copyable_v<InputPayload>);
 static_assert(std::is_trivially_copyable_v<UpdatePosPayload>);
 
@@ -243,6 +257,7 @@ static_assert(std::is_standard_layout_v<UpdateStatePayload>);
 static_assert(std::is_standard_layout_v<EntitySpawnPayload>);
 static_assert(std::is_standard_layout_v<EntityMovePayload>);
 static_assert(std::is_standard_layout_v<EntityDestroyPayload>);
+static_assert(std::is_standard_layout_v<EntityHealthPayload>);
 static_assert(std::is_standard_layout_v<InputPayload>);
 static_assert(std::is_standard_layout_v<UpdatePosPayload>);
 
@@ -275,6 +290,8 @@ static_assert(std::is_standard_layout_v<UpdatePosPayload>);
             return sizeof(EntityMovePayload);
         case OpCode::S_ENTITY_DESTROY:
             return sizeof(EntityDestroyPayload);
+        case OpCode::S_ENTITY_HEALTH:
+            return sizeof(EntityHealthPayload);
 
         case OpCode::C_INPUT:
             return sizeof(InputPayload);

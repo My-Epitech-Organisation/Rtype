@@ -13,6 +13,7 @@ target_link_libraries(rtype-graphic-main-menu-scene
     rtype_engine
     rtype_network
     rtype-graphic-audio
+    rtype_client_network
 )
 
 target_link_libraries(rtype-graphic-main-menu-scene
