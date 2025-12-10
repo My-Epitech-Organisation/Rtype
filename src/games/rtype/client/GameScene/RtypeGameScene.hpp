@@ -91,8 +91,23 @@ class RtypeGameScene : public AGameScene {
     void setupLocalPlayerCallback() override;
 
    private:
+    /**
+     * @brief Initialize the HUD with lives display text
+     */
     void setupHud();
+
+    /**
+     * @brief Update the lives display text with current health values
+     * @param current Current lives/health
+     * @param max Maximum lives/health
+     */
     void updateLivesDisplay(int current, int max);
+
+    /**
+     * @brief Handle entity health update events from the network
+     * @param event Health update event containing entity ID and health values
+     * @note Only updates display for the local player
+     */
     void handleHealthUpdate(const ::rtype::client::EntityHealthEvent& event);
 
     std::optional<ECS::Entity> _livesTextEntity;
