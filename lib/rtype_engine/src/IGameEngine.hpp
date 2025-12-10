@@ -34,7 +34,27 @@ struct GameEvent {
     float x;
     float y;
     float rotation;
-    uint8_t entityType;  // Entity type identifier (e.g., Enemy, Player, etc.)
+    uint8_t entityType;
+    uint8_t subType = 0;
+    float velocityX = 0.0F;
+    float velocityY = 0.0F;
+};
+
+/**
+ * @brief Result of processing a game event
+ *
+ * Contains information needed by the server to handle the event
+ * (e.g., register/unregister entities from network system)
+ */
+struct ProcessedEvent {
+    GameEventType type;
+    uint32_t networkId;
+    uint8_t networkEntityType;
+    float x;
+    float y;
+    float vx;
+    float vy;
+    bool valid;
 };
 
 /**
@@ -54,7 +74,8 @@ struct GameEvent {
  *
  * Example usage:
  * @code
- * auto engine = createGameEngine();
+ * auto registry = std::make_shared<ECS::Registry>();
+ * auto engine = createGameEngine(registry);
  * engine->setEventCallback([](const GameEvent& event) {
  *     // Handle event (send to network, etc.)
  * });
@@ -112,7 +133,40 @@ class IGameEngine {
      * @return true if the engine is initialized and running
      */
     virtual bool isRunning() const = 0;
+
+    /**
+     * @brief Process a game event and return network-ready data
+     *
+     * This method allows each game engine to implement its own event
+     * processing logic, including finding entities by network ID and
+     * mapping game types to network types.
+     *
+     * @param event The game event to process
+     * @return ProcessedEvent with network-ready data
+     */
+    virtual ProcessedEvent processEvent(const GameEvent& event) = 0;
+
+    /**
+     * @brief Sync entity positions and mark them for network broadcast
+     *
+     * Called each frame to prepare entity position updates for network
+     * synchronization. The callback is invoked for each entity that needs
+     * to be synced.
+     *
+     * @param callback Function called with (networkId, x, y, vx, vy) for each entity
+     */
+    virtual void syncEntityPositions(
+        std::function<void(uint32_t, float, float, float, float)> callback) = 0;
 };
+
+}  // namespace rtype::engine
+
+// Forward declaration for ECS::Registry
+namespace ECS {
+class Registry;
+}
+
+namespace rtype::engine {
 
 /**
  * @brief Factory function to create a game engine instance
@@ -120,8 +174,9 @@ class IGameEngine {
  * This allows the server to create a game engine without knowing
  * the concrete implementation details.
  *
+ * @param registry Shared pointer to the ECS registry
  * @return Unique pointer to a new game engine instance
  */
-std::unique_ptr<IGameEngine> createGameEngine();
+std::unique_ptr<IGameEngine> createGameEngine(std::shared_ptr<ECS::Registry> registry);
 
 }  // namespace rtype::engine
