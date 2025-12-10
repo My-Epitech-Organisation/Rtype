@@ -179,23 +179,20 @@ void Graphic::_initializeCommonAssets() {
     auto manager = this->_assetsManager;
     auto config = manager->configGameAssets;
 
-    manager->fontManager->load("title_font",
-                            config.assets.fonts.TitleFont);
-    manager->fontManager->load("main_font",
-                            config.assets.fonts.MainFont);
+    manager->fontManager->load("title_font", config.assets.fonts.TitleFont);
+    manager->fontManager->load("main_font", config.assets.fonts.MainFont);
 
-    manager->textureManager->load("bg_menu",
-                               config.assets.textures.background);
+    manager->textureManager->load("bg_menu", config.assets.textures.background);
     manager->textureManager->load("bg_planet_1",
-                               config.assets.textures.planet1);
+                                  config.assets.textures.planet1);
     manager->textureManager->load("bg_planet_2",
-                               config.assets.textures.planet2);
+                                  config.assets.textures.planet2);
     manager->textureManager->load("bg_planet_3",
-                               config.assets.textures.planet3);
+                                  config.assets.textures.planet3);
     manager->textureManager->load("astro_vessel",
-                               config.assets.textures.astroVessel);
+                                  config.assets.textures.astroVessel);
     manager->textureManager->load("player_vessel",
-                                config.assets.textures.Player);
+                                  config.assets.textures.Player);
 
     manager->audioManager->load("hover_button", config.assets.sfx.hoverButton);
     manager->audioManager->load("laser_sfx", config.assets.sfx.laser);

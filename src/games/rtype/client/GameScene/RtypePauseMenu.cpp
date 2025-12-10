@@ -48,8 +48,8 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
 
     pauseEntities.push_back(EntityFactory::createButton(
         registry,
-        Text(assetsManager->fontManager->get("main_font"), sf::Color::White,
-             30, "Menu"),
+        Text(assetsManager->fontManager->get("main_font"), sf::Color::White, 30,
+             "Menu"),
         ::rtype::games::rtype::shared::Position(
             sectionX + ((kSizeXPauseMenu / 2) - (150 / 2)),
             sectionY + kSizeYPauseMenu - 75),

@@ -97,8 +97,8 @@ struct MusicConfig {
 };
 
 /**
-* @brief Sfx configuration section
-*/
+ * @brief Sfx configuration section
+ */
 struct SfxConfig {
     std::string hoverButton;
     std::string clickButton;
