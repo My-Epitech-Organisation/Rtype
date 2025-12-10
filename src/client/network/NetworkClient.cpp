@@ -184,7 +184,8 @@ void NetworkClient::onGameStateChange(
 }
 
 void NetworkClient::poll() {
-    ioContext_.poll();
+    // Note: ioContext_.poll() is now handled by the network thread
+    // This method now only handles connection maintenance and callback dispatch
 
     connection_.update();
 

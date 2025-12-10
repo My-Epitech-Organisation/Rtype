@@ -92,7 +92,7 @@ struct GameStateEvent {
  *
  * // In game loop:
  * while (running) {
- *     client.poll();  // Process incoming packets and callbacks
+ *     client.poll();  // Process callbacks and maintain connection
  *     client.sendInput(InputMask::kUp | InputMask::kShoot);
  * }
  *
@@ -100,7 +100,7 @@ struct GameStateEvent {
  * @endcode
  *
  * Thread-safety: Callbacks are queued and dispatched on the thread calling
- * poll(). The network I/O itself is handled via asio's polling model.
+ * poll(). Network I/O is handled by a dedicated background thread.
  */
 class NetworkClient {
    public:
@@ -232,12 +232,15 @@ class NetworkClient {
     void onGameStateChange(std::function<void(GameStateEvent)> callback);
 
     /**
-     * @brief Process incoming packets and dispatch callbacks
+     * @brief Process network events and dispatch callbacks
      *
      * Must be called regularly (e.g., each game frame) to:
-     * - Receive and process server packets
-     * - Handle connection timeouts and retransmissions
+     * - Update connection state and handle timeouts/retransmissions
+     * - Send queued outgoing packets
      * - Dispatch queued callbacks to registered handlers
+     *
+     * Note: I/O polling is handled by a dedicated network thread.
+     * This method only handles connection maintenance and callback dispatch.
      *
      * Callbacks are executed on the calling thread.
      */
