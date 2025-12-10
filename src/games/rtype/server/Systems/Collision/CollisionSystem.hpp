@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include <rtype/engine.hpp>
 
 namespace rtype::games::rtype::server {
@@ -17,9 +19,14 @@ namespace rtype::games::rtype::server {
  */
 class CollisionSystem : public ::rtype::engine::ASystem {
    public:
-    CollisionSystem();
+    using EventEmitter = std::function<void(const engine::GameEvent&)>;
+
+    explicit CollisionSystem(EventEmitter emitter);
 
     void update(ECS::Registry& registry, float deltaTime) override;
+
+   private:
+    EventEmitter _emitEvent;
 };
 
 }  // namespace rtype::games::rtype::server
