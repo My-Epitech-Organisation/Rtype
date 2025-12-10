@@ -84,6 +84,8 @@ struct is_rfc_type<EntityMovePayload> : std::true_type {};
 template <>
 struct is_rfc_type<EntityDestroyPayload> : std::true_type {};
 template <>
+struct is_rfc_type<EntityHealthPayload> : std::true_type {};
+template <>
 struct is_rfc_type<UpdatePosPayload> : std::true_type {};
 template <>
 struct is_rfc_type<UpdateStatePayload> : std::true_type {};
@@ -260,6 +262,24 @@ fromNetwork(const T& data) noexcept {
     const EntityDestroyPayload& p) noexcept {
     EntityDestroyPayload result;
     result.entityId = ByteOrder::fromNetwork(p.entityId);
+    return result;
+}
+
+[[nodiscard]] inline EntityHealthPayload toNetwork(
+    const EntityHealthPayload& p) noexcept {
+    EntityHealthPayload result;
+    result.entityId = ByteOrder::toNetwork(p.entityId);
+    result.current = ByteOrder::toNetwork(p.current);
+    result.max = ByteOrder::toNetwork(p.max);
+    return result;
+}
+
+[[nodiscard]] inline EntityHealthPayload fromNetwork(
+    const EntityHealthPayload& p) noexcept {
+    EntityHealthPayload result;
+    result.entityId = ByteOrder::fromNetwork(p.entityId);
+    result.current = ByteOrder::fromNetwork(p.current);
+    result.max = ByteOrder::fromNetwork(p.max);
     return result;
 }
 
