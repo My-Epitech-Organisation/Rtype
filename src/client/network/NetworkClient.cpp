@@ -7,10 +7,12 @@
 
 #include "NetworkClient.hpp"
 
+#include <chrono>
 #include <cstring>
 #include <memory>
 #include <queue>
 #include <string>
+#include <thread>
 #include <utility>
 
 #include "Serializer.hpp"
@@ -54,9 +56,17 @@ NetworkClient::NetworkClient(const Config& config)
     };
 
     connection_.setCallbacks(connCallbacks);
+
+    networkThreadRunning_.store(true, std::memory_order_release);
+    networkThread_ = std::thread([this]() { networkThreadLoop(); });
 }
 
 NetworkClient::~NetworkClient() {
+    networkThreadRunning_.store(false, std::memory_order_release);
+    if (networkThread_.joinable()) {
+        networkThread_.join();
+    }
+
     if (isConnected()) {
         disconnect();
     }
@@ -181,6 +191,14 @@ void NetworkClient::poll() {
     flushOutgoing();
 
     dispatchCallbacks();
+}
+
+void NetworkClient::networkThreadLoop() {
+    while (networkThreadRunning_.load(std::memory_order_acquire)) {
+        ioContext_.poll();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 }
 
 void NetworkClient::dispatchCallbacks() {

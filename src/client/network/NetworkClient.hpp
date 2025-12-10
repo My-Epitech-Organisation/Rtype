@@ -247,6 +247,8 @@ class NetworkClient {
     void dispatchCallbacks();
     void queueCallback(std::function<void()> callback);
 
+    void networkThreadLoop();
+
     void startReceive();
     void handleReceive(network::Result<std::size_t> result);
     void processIncomingPacket(const network::Buffer& data,
@@ -291,6 +293,9 @@ class NetworkClient {
     std::function<void(EntityHealthEvent)> onEntityHealthCallback_;
     std::function<void(float, float)> onPositionCorrectionCallback_;
     std::function<void(GameStateEvent)> onGameStateChangeCallback_;
+
+    std::thread networkThread_;
+    std::atomic<bool> networkThreadRunning_{false};
 };
 
 }  // namespace rtype::client
