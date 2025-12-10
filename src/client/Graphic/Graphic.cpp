@@ -20,6 +20,7 @@
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 
 void Graphic::_pollEvents() {
+    this->_resetTriggersSystem->update(*this->_registry, 0.f);
     while (const std::optional event = this->_window->pollEvent()) {
         if (!event) return;
         if (event->is<sf::Event::Closed>()) {
@@ -73,7 +74,6 @@ void Graphic::_display() {
 
 void Graphic::loop() {
     while (this->_window->isOpen()) {
-        this->_systemScheduler->runSystem("reset_triggers");
         this->_pollEvents();
         this->_update();
         this->_display();
@@ -126,10 +126,8 @@ void Graphic::_initializeSystems() {
     this->_systemScheduler =
         std::make_unique<ECS::SystemScheduler>(*this->_registry);
 
-    this->_systemScheduler->addSystem(
-        "reset_triggers", [this](ECS::Registry& reg) {
-            this->_resetTriggersSystem->update(reg, 0.f);
-        });
+    this->_systemScheduler->addSystem("reset_triggers",
+                                      [this](ECS::Registry& reg) {});
 
     this->_systemScheduler->addSystem("movement",
                                       [this](ECS::Registry& reg) {

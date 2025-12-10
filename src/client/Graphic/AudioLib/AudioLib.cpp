@@ -20,6 +20,15 @@ void AudioLib::setMusicVolume(const float& volume) {
 
 float AudioLib::getMusicVolume() const { return this->_volumeMusic; }
 
+void AudioLib::setSFXVolume(const float& volume) {
+    this->_volumeSFX = volume;
+    for (auto& sound : this->_sounds) {
+        sound.setVolume(this->_volumeSFX);
+    }
+}
+
+float AudioLib::getSFXVolume() const { return this->_volumeSFX; }
+
 void AudioLib::pauseMusic() const {
     if (this->_currentMusic) this->_currentMusic->pause();
 }

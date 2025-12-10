@@ -43,15 +43,14 @@ class EventSystem : public ::rtype::engine::ASystem {
         sf::Vector2i pixelPos,
         const ::rtype::games::rtype::client::Rectangle& rect) const;
 
-    void _mouseMoved(::rtype::games::rtype::client::UserEvent& actionType,
-                     const ::rtype::games::rtype::client::Rectangle& rect,
-                     ECS::Registry& registry, const ECS::Entity entt) const;
-    void _mousePressed(::rtype::games::rtype::client::UserEvent& actionType,
-                       const ::rtype::games::rtype::client::Rectangle& rect,
-                       ECS::Registry& registry, const ECS::Entity entt) const;
-    void _mouseReleased(
-        ::rtype::games::rtype::client::UserEvent& actionType,
-        const ::rtype::games::rtype::client::Rectangle& rect) const;
+    bool _handleMouseMoved(UserEvent& actionType, const Rectangle& rect,
+                           ECS::Registry& reg, ECS::Entity entt) const;
+
+    bool _handleMousePressed(UserEvent& actionType, const Rectangle& rect,
+                             ECS::Registry& reg, ECS::Entity entt) const;
+
+    bool _handleMouseReleased(UserEvent& actionType,
+                              const Rectangle& rect) const;
 
    public:
     /**

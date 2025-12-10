@@ -23,7 +23,8 @@ ButtonUpdateSystem::ButtonUpdateSystem(std::shared_ptr<sf::RenderWindow> window)
 void ButtonUpdateSystem::update(ECS::Registry& registry, float /*dt*/) {
     registry.view<Button<>, UserEvent>().each(
         [](auto /*entity*/, auto& buttonAct, auto& actionType) {
-            if (actionType.isClicked) {
+            if (!actionType.idle && actionType.isReleased &&
+                actionType.isHovered) {
                 try {
                     buttonAct.callback();
                 } catch (SceneNotFound& e) {

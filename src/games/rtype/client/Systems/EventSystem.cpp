@@ -15,8 +15,6 @@
 
 namespace rtype::games::rtype::client {
 
-namespace rc = ::rtype::games::rtype::client;
-
 EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window,
                          std::shared_ptr<AudioLib> audio)
     : ASystem("EventSystem"),
@@ -36,7 +34,8 @@ void EventSystem::setEvent(const sf::Event& event) { _event = event; }
 void EventSystem::clearEvent() { _event.reset(); }
 
 bool EventSystem::_isPointInRect(sf::Vector2i pixelPos,
-                                 const rc::Rectangle& rect) const {
+                                 const Rectangle& rect) const {
+    if (!_window) return false;
     sf::Vector2f worldPos = _window->mapPixelToCoords(pixelPos);
     return rect.rectangle.getGlobalBounds().contains(worldPos);
 }
@@ -45,65 +44,94 @@ void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
     if (!_event.has_value()) return;
 
     registry.view<Rectangle, UserEvent>().each(
-        [this, &registry](auto entity, const Rectangle& rect,
+        [this, &registry](ECS::Entity entity, const Rectangle& rect,
                           UserEvent& actionType) {
+            // Check for Hidden Component
             if (registry.hasComponent<HiddenComponent>(entity)) {
-                const auto& hidden =
-                    registry.getComponent<HiddenComponent>(entity);
-                if (hidden.isHidden) return;
+                if (registry.getComponent<HiddenComponent>(entity).isHidden) {
+                    return;  // Skip hidden entities
+                }
             }
-            this->_mouseMoved(actionType, rect, registry, entity);
-            this->_mousePressed(actionType, rect, registry, entity);
-            this->_mouseReleased(actionType, rect);
+
+            // Process inputs and track if any interaction occurred
+            bool interaction = false;
+            interaction |=
+                this->_handleMouseMoved(actionType, rect, registry, entity);
+            interaction |=
+                this->_handleMousePressed(actionType, rect, registry, entity);
+            interaction |= this->_handleMouseReleased(actionType, rect);
+
+            if (interaction || actionType.isHovered || actionType.isPressed) {
+                actionType.idle = false;
+            }
         });
 }
 
-void EventSystem::_mouseMoved(UserEvent& actionType, const Rectangle& rect,
-                              ECS::Registry& reg,
-                              const ECS::Entity entt) const {
-    if (const auto* mouseMove = _event->getIf<sf::Event::MouseMoved>()) {
-        bool isInside = _isPointInRect(mouseMove->position, rect);
-        if (!actionType.isHovered && isInside) {
-            if (reg.hasComponent<ButtonSoundComponent>(entt)) {
-                const auto& data = reg.getComponent<ButtonSoundComponent>(entt);
-                this->_audioLib->playSFX(*data.hoverSFX);
+bool EventSystem::_handleMouseMoved(UserEvent& actionType,
+                                    const Rectangle& rect, ECS::Registry& reg,
+                                    ECS::Entity entt) const {
+    const auto* mouseMove = _event->getIf<sf::Event::MouseMoved>();
+    if (!mouseMove) return false;
+
+    bool isInside = _isPointInRect(mouseMove->position, rect);
+    bool interacted = false;
+
+    // Handle Hover Enter
+    if (!actionType.isHovered && isInside) {
+        if (reg.hasComponent<ButtonSoundComponent>(entt)) {
+            const auto& data = reg.getComponent<ButtonSoundComponent>(entt);
+            if (_audioLib && data.hoverSFX) {
+                _audioLib->playSFX(*data.hoverSFX);
             }
         }
-
-        actionType.isHovered = isInside;
-        if (!isInside) {
-            actionType.isClicked = false;
-        }
+        interacted = true;
     }
+
+    if (!isInside && actionType.isPressed) {
+        actionType.isPressed = false;
+        interacted = true;
+    }
+
+    actionType.isHovered = isInside;
+    return interacted || isInside;
 }
 
-void EventSystem::_mousePressed(UserEvent& actionType, const Rectangle& rect,
-                                ECS::Registry& reg,
-                                const ECS::Entity entt) const {
-    if (const auto* mousePress =
-            _event->getIf<sf::Event::MouseButtonPressed>()) {
-        if (mousePress->button == sf::Mouse::Button::Left &&
-            _isPointInRect(mousePress->position, rect)) {
-            actionType.isClicked = true;
-            if (reg.hasComponent<ButtonSoundComponent>(entt)) {
-                const auto& data = reg.getComponent<ButtonSoundComponent>(entt);
-                this->_audioLib->playSFX(*data.clickSFX);
+bool EventSystem::_handleMousePressed(UserEvent& actionType,
+                                      const Rectangle& rect, ECS::Registry& reg,
+                                      ECS::Entity entt) const {
+    const auto* mousePress = _event->getIf<sf::Event::MouseButtonPressed>();
+    if (!mousePress) return false;
+
+    if (mousePress->button == sf::Mouse::Button::Left &&
+        _isPointInRect(mousePress->position, rect)) {
+        actionType.isPressed = true;
+
+        if (reg.hasComponent<ButtonSoundComponent>(entt)) {
+            const auto& data = reg.getComponent<ButtonSoundComponent>(entt);
+            if (_audioLib && data.clickSFX) {
+                _audioLib->playSFX(*data.clickSFX);
             }
         }
+        return true;
     }
+    return false;
 }
 
-void EventSystem::_mouseReleased(UserEvent& actionType,
-                                 const Rectangle& rect) const {
-    if (const auto* mouseRelease =
-            _event->getIf<sf::Event::MouseButtonReleased>()) {
-        if (mouseRelease->button == sf::Mouse::Button::Left) {
-            if (_isPointInRect(mouseRelease->position, rect) &&
-                actionType.isClicked) {
-                actionType.isReleased = true;
-            }
-            actionType.isClicked = false;
+bool EventSystem::_handleMouseReleased(UserEvent& actionType,
+                                       const Rectangle& rect) const {
+    const auto* mouseRelease = _event->getIf<sf::Event::MouseButtonReleased>();
+    if (!mouseRelease) return false;
+
+    if (mouseRelease->button == sf::Mouse::Button::Left) {
+        bool wasPressed = actionType.isPressed;
+        actionType.isPressed = false;
+
+        if (wasPressed && _isPointInRect(mouseRelease->position, rect)) {
+            actionType.isReleased = true;
+            return true;
         }
     }
+    return false;
 }
+
 }  // namespace rtype::games::rtype::client

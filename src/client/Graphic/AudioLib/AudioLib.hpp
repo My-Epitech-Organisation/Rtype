@@ -26,6 +26,9 @@ class AudioLib {
     void setMusicVolume(const float& volume);
     [[nodiscard]] float getMusicVolume() const;
 
+    void setSFXVolume(const float& volume);
+    [[nodiscard]] float getSFXVolume() const;
+
     void pauseMusic() const;
     void play() const;
 
