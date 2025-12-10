@@ -143,8 +143,12 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
 }
 
 void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
+    LOG_DEBUG("[ClientNetworkSystem] Entity destroy received: entityId=" +
+              std::to_string(entityId));
+
     auto it = networkIdToEntity_.find(entityId);
     if (it == networkIdToEntity_.end()) {
+        LOG_DEBUG("[ClientNetworkSystem] Entity not found in map, skipping");
         return;
     }
 
@@ -152,12 +156,14 @@ void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
 
     if (registry_->isAlive(entity)) {
         registry_->killEntity(entity);
+        LOG_DEBUG("[ClientNetworkSystem] Entity killed");
     }
 
     networkIdToEntity_.erase(it);
 
     if (localPlayerEntity_.has_value() && *localPlayerEntity_ == entity) {
         localPlayerEntity_.reset();
+        LOG_DEBUG("[ClientNetworkSystem] Local player entity reset!");
     }
 }
 
