@@ -209,7 +209,7 @@ jobs:
             echo "✅ Packaged Windows server"
           fi
 
-          # Package assets folder (excluding config.toml)
+          # Package assets folder
           if [ -d "assets" ]; then
             mkdir -p release-packages-temp/assets
             cp -r assets/* release-packages-temp/assets/
@@ -217,7 +217,7 @@ jobs:
             zip -r ../release-packages/r-type_assets.zip assets/
             cd ..
             rm -rf release-packages-temp
-            echo "✅ Packaged assets (without config.toml)"
+            echo "✅ Packaged assets"
           fi
 
           echo ""
