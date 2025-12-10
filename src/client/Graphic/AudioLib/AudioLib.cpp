@@ -29,10 +29,13 @@ void AudioLib::play() const {
     this->_currentMusic->play();
 }
 
-void AudioLib::playSFX(sf::SoundBuffer sfx) {
-    auto sfxSound = sf::Sound(sfx);
-    sfxSound.setVolume(100);
-    sfxSound.play();
+void AudioLib::playSFX(const sf::SoundBuffer& sfx) {
+    this->_sounds.remove_if([](const sf::Sound& s) {
+        return s.getStatus() == sf::SoundSource::Status::Stopped;
+    });
+    this->_sounds.emplace_back(sfx);
+    this->_sounds.back().setVolume(100);
+    this->_sounds.back().play();
 }
 
 void AudioLib::loadMusic(std::shared_ptr<sf::Music> music) {

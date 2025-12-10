@@ -18,12 +18,12 @@ namespace rtype::games::rtype::client {
 
 namespace rc = ::rtype::games::rtype::client;
 
-EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window)
-    : ASystem("EventSystem"), _window(std::move(window)) {}
+EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<AudioLib> audio)
+    : ASystem("EventSystem"), _window(std::move(window)), _audioLib(std::move(audio)) {}
 
-EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window,
+EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<AudioLib> audio,
                          const sf::Event& event)
-    : ASystem("EventSystem"), _event(event), _window(std::move(window)) {}
+    : ASystem("EventSystem"), _event(event), _window(std::move(window)), _audioLib(std::move(audio)) {}
 
 void EventSystem::setEvent(const sf::Event& event) { _event = event; }
 
@@ -58,9 +58,8 @@ void EventSystem::_mouseMoved(UserEvent& actionType,
         bool isInside = _isPointInRect(mouseMove->position, rect);
         if (!actionType.isHovered && isInside) {
             if (reg.hasComponent<ButtonSoundComponent>(entt)) {
-                auto data = reg.getComponent<ButtonSoundComponent>(entt);
-                std::cout << "SOUND HOVER TRIGGER" << std::endl;
-                AudioLib::playSFX(data.hoverSFX);
+                const auto& data = reg.getComponent<ButtonSoundComponent>(entt);
+                this->_audioLib->playSFX(*data.hoverSFX);
             }
         }
 
@@ -78,6 +77,11 @@ void EventSystem::_mousePressed(UserEvent& actionType,
         if (mousePress->button == sf::Mouse::Button::Left &&
             _isPointInRect(mousePress->position, rect)) {
             actionType.isClicked = true;
+            if (reg.hasComponent<ButtonSoundComponent>(entt)) {
+                std::cout << "SOUND CLICK TRIGGER" << std::endl;
+                const auto& data = reg.getComponent<ButtonSoundComponent>(entt);
+                this->_audioLib->playSFX(*data.clickSFX);
+            }
         }
     }
 }

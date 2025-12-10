@@ -18,7 +18,7 @@
 
 class SoundManager {
    private:
-    std::unordered_map<std::string, sf::SoundBuffer> _assets;
+    std::unordered_map<std::string, std::shared_ptr<sf::SoundBuffer>> _assets;
 
    public:
     SoundManager(const SoundManager&) = delete;
@@ -26,7 +26,7 @@ class SoundManager {
 
     void load(const std::string& id, const std::string& filePath);
 
-    sf::SoundBuffer get(const std::string& id);
+    std::shared_ptr<sf::SoundBuffer> get(const std::string& id);
 
     SoundManager() = default;
 };

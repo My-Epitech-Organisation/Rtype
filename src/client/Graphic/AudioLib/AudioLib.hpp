@@ -9,6 +9,7 @@
 #define SRC_CLIENT_GRAPHIC_AUDIOLIB_AUDIOLIB_HPP_
 
 #include "SFML/Audio.hpp"
+#include <list>
 
 class AudioLib {
    private:
@@ -16,6 +17,8 @@ class AudioLib {
 
     float _volumeMusic = 0;
     float _volumeSFX = 100;
+
+    std::list<sf::Sound> _sounds;
 
    public:
     void setLoop(const bool& loop) const;
@@ -25,7 +28,7 @@ class AudioLib {
     void pauseMusic() const;
     void play() const;
 
-    static void playSFX(sf::SoundBuffer sfx);
+    void playSFX(const sf::SoundBuffer& sfx);
 
     void loadMusic(std::shared_ptr<sf::Music> music);
 

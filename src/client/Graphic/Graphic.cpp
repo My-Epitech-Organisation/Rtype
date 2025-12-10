@@ -117,7 +117,7 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
     this->_eventSystem =
         std::make_unique<::rtype::games::rtype::client::EventSystem>(
-            this->_window);
+            this->_window, this->_audioLib);
     this->_projectileSystem =
         std::make_unique<::rtype::games::rtype::shared::ProjectileSystem>();
     this->_lifetimeSystem =
@@ -202,6 +202,7 @@ void Graphic::_initializeCommonAssets() {
     manager->textureManager->get("bg_planet_1").setRepeated(true);
     manager->textureManager->get("bg_planet_2").setRepeated(true);
     manager->textureManager->get("bg_planet_3").setRepeated(true);
+
 }
 
 Graphic::Graphic(

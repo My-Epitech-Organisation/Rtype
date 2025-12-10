@@ -13,6 +13,7 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 
+#include "AudioLib/AudioLib.hpp"
 #include "../Components/RectangleComponent.hpp"
 #include "../Components/UserEventComponent.hpp"
 #include "ASystem.hpp"
@@ -35,6 +36,7 @@ class EventSystem : public ::rtype::engine::ASystem {
    private:
     std::optional<sf::Event> _event;
     std::shared_ptr<sf::RenderWindow> _window;
+    std::shared_ptr<AudioLib> _audioLib;
 
     /// @brief Check if world position is within rectangle bounds
     [[nodiscard]] bool _isPointInRect(
@@ -55,16 +57,18 @@ class EventSystem : public ::rtype::engine::ASystem {
     /**
      * @brief Construct a new EventSystem (reusable version).
      * @param window Shared pointer to the SFML render window
+     * @param audioLib Shared pointer to the AudioLib
      */
-    explicit EventSystem(std::shared_ptr<sf::RenderWindow> window);
+    explicit EventSystem(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<AudioLib> audioLib);
 
     /**
      * @brief Legacy constructor for backward compatibility.
      * @param window Shared pointer to the SFML render window
+     * @param audioLib Shared pointer to the AudioLib
      * @param event The event to process
      * @deprecated Use the single-argument constructor and setEvent() instead
      */
-    EventSystem(std::shared_ptr<sf::RenderWindow> window,
+    EventSystem(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<AudioLib> audioLib,
                 const sf::Event& event);
 
     /**
