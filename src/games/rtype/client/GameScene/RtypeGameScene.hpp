@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -88,6 +89,17 @@ class RtypeGameScene : public AGameScene {
      * @brief Set up local player callback for R-Type
      */
     void setupLocalPlayerCallback() override;
+
+   private:
+    void setupHud();
+    void updateLivesDisplay(int current, int max);
+    void handleHealthUpdate(const ::rtype::client::EntityHealthEvent& event);
+
+    std::optional<ECS::Entity> _livesTextEntity;
+    std::optional<std::uint32_t> _localPlayerId;
+    std::optional<ECS::Entity> _localPlayerEntity;
+    int _lastKnownLives{0};
+    int _lastKnownMaxLives{0};
 };
 
 }  // namespace rtype::games::rtype::client
