@@ -170,7 +170,7 @@ When adding a new payload or opcode, keep in mind that the protocol is binary an
 1. If needed, add serialization/deserialization logic to `lib/rtype_network/src/Serializer.cpp`.
 1. Update `lib/rtype_network/src/protocol/Validator.hpp` if this opcode requires custom payload validation.
 1. Add handlers on the server (`src/server/network/NetworkServer.cpp`) and client (`src/client/network/NetworkClient.cpp`) to process or generate this message.
-1. Update the RFC & docs: `docs/RFC/RFC_RTGP_v1.1.0.md` and `docs/website/docs/protocol` (create the page if needed).
+1. Update the RFC & docs: `docs/RFC/RFC_RTGP_v1.2.0.md` and `docs/website/docs/protocol` (create the page if needed).
 1. Add unit tests for serialization and integration tests to ensure both sides interpret the payload correctly.
 
 ---

@@ -2,9 +2,9 @@
 
 | Metadata | Details |
 | :---- | :---- |
-| **Version** | 1.1.0 (Reliability Update) |
+| **Version** | 1.2.0 (Health Synchronization Update) |
 | **Status** | Draft / Experimental |
-| **Date** | 2025-11-25 |
+| **Date** | 2025-12-10 |
 | **Authors** | R-Type Project Team |
 | **Abstract** | This document specifies the binary application-layer protocol used for real-time communication between the R-Type Client and Server, including a reliability layer over UDP. |
 
