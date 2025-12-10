@@ -7,6 +7,9 @@
 
 #include "LifetimeSystem.hpp"
 
+#include "../../Components/Tags.hpp"
+#include "Logger/Macros.hpp"
+
 namespace rtype::games::rtype::shared {
 
 void LifetimeSystem::update(ECS::Registry& registry, float deltaTime) {
@@ -18,7 +21,10 @@ void LifetimeSystem::update(ECS::Registry& registry, float deltaTime) {
     view.each([deltaTime, &registry](auto entity, LifetimeComponent& lifetime) {
         lifetime.remainingTime -= deltaTime;
         if (lifetime.remainingTime <= 0.0F) {
-            registry.killEntity(entity);
+            if (!registry.hasComponent<DestroyTag>(entity)) {
+                LOG_DEBUG("[LifetimeSystem] Entity " + std::to_string(entity.id) + " expired (lifetime <= 0)");
+                registry.emplaceComponent<DestroyTag>(entity, DestroyTag{});
+            }
         }
     });
 }
