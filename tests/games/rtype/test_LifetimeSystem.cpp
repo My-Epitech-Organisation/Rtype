@@ -6,8 +6,9 @@
 */
 
 #include <gtest/gtest.h>
-#include "../../../src/games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../../src/games/rtype/shared/Components/LifetimeComponent.hpp"
+#include "../../../src/games/rtype/shared/Components/Tags.hpp"
+#include "../../../src/games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../../../lib/rtype_ecs/src/ECS.hpp"
 
 using namespace rtype::games::rtype::shared;
@@ -43,7 +44,8 @@ TEST_F(LifetimeSystemTest, UpdateDestroysEntityWhenLifetimeExpires) {
 
     lifetimeSystem.update(registry, 0.5f);
 
-    EXPECT_FALSE(registry.isAlive(entity));
+    // Entity should be marked for destruction with DestroyTag
+    EXPECT_TRUE(registry.hasComponent<DestroyTag>(entity));
 }
 
 TEST_F(LifetimeSystemTest, UpdateDestroysEntityWhenLifetimeBecomesNegative) {
@@ -51,7 +53,8 @@ TEST_F(LifetimeSystemTest, UpdateDestroysEntityWhenLifetimeBecomesNegative) {
 
     lifetimeSystem.update(registry, 1.0f);
 
-    EXPECT_FALSE(registry.isAlive(entity));
+    // Entity should be marked for destruction with DestroyTag
+    EXPECT_TRUE(registry.hasComponent<DestroyTag>(entity));
 }
 
 TEST_F(LifetimeSystemTest, UpdateDoesNotDestroyEntityWithPositiveLifetime) {
@@ -60,6 +63,7 @@ TEST_F(LifetimeSystemTest, UpdateDoesNotDestroyEntityWithPositiveLifetime) {
     lifetimeSystem.update(registry, 1.0f);
 
     EXPECT_TRUE(registry.isAlive(entity));
+    EXPECT_FALSE(registry.hasComponent<DestroyTag>(entity));
 }
 
 TEST_F(LifetimeSystemTest, UpdateWithZeroDeltaTime) {
