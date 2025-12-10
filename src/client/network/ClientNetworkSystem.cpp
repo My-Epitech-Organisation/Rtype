@@ -148,16 +148,18 @@ void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
     if (registry_->hasComponent<games::rtype::client::EnemySoundComponent>(
             entity)) {
         auto& soundComp =
-            registry_->getComponent<games::rtype::client::EnemySoundComponent>(
-                entity);
+            registry_
+                ->getComponent<games::rtype::client::EnemySoundComponent>(
+                    entity);
         auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
         audioLib->playSFX(*soundComp.deathSFX);
     }
     if (registry_->hasComponent<games::rtype::client::PlayerSoundComponent>(
             entity)) {
         auto& soundComp =
-            registry_->getComponent<games::rtype::client::PlayerSoundComponent>(
-                entity);
+                registry_
+                    ->getComponent<games::rtype::client::PlayerSoundComponent>(
+                        entity);
         auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
         audioLib->playSFX(*soundComp.deathSFX);
     }
@@ -173,16 +175,15 @@ void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
 
     if (this->registry_->isAlive(entity)) {
         this->_playDeathSound(entity);
+        this->registry_->killEntity(entity);
     }
-    this->registry_->killEntity(entity);
-}
 
-networkIdToEntity_.erase(it);
+    this->networkIdToEntity_.erase(it);
 
-if (this->localPlayerEntity_.has_value() &&
-    *this->localPlayerEntity_ == entity) {
-    this->localPlayerEntity_.reset();
-}
+    if (this->localPlayerEntity_.has_value() &&
+        *this->localPlayerEntity_ == entity) {
+        this->localPlayerEntity_.reset();
+    }
 }
 
 void ClientNetworkSystem::handlePositionCorrection(float x, float y) {

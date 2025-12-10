@@ -46,11 +46,12 @@ static ECS::Entity createButton(
         entity, onClick);
     registry->emplaceComponent<rtype::games::rtype::client::UserEvent>(entity);
     registry->emplaceComponent<rtype::games::rtype::client::ButtonTag>(entity);
-    if (assetsManager)
+    if (assetsManager) {
         registry->emplaceComponent<
             rtype::games::rtype::client::ButtonSoundComponent>(
             entity, assetsManager->soundManager->get("hover_button"),
             assetsManager->soundManager->get("click_button"));
+    }
     return entity;
 }
 

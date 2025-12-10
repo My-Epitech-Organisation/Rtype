@@ -266,7 +266,7 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
                                       defaults.assets.sfx.playerSpawn);
     config.assets.sfx.playerDeath =
         "assets/" + _parser.getString(table, "SFX", "PlayerDeath",
-                                      defaults.assets.sfx.enemyDeath);
+                                      defaults.assets.sfx.playerDeath);
     config.assets.sfx.enemySpawn =
         "assets/" + _parser.getString(table, "SFX", "EnemySpawn",
                                       defaults.assets.sfx.enemySpawn);
