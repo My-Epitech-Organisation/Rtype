@@ -7,7 +7,7 @@ Settings = "audio/settingsMusic.mp3"
 # Textures Réferences
 [Textures]
 Player = "img/playerTexture.gif"
-#Enemy = "img/enemyTexture.gif"
+Enemy = "img/bdosTexture.gif"
 # Backougrnd assets
 Background = "img/bgMainMenu.png"
 Planet1 = "img/planet1.png"

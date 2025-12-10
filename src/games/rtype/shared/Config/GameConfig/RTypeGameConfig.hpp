@@ -74,7 +74,7 @@ struct FontsConfig {
  */
 struct TexturesConfig {
     std::string Player;
-    // std::string Enemy;
+    std::string Enemy;
     std::string background;
     std::string planet1;
     std::string planet2;
