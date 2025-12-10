@@ -148,18 +148,16 @@ void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
     if (registry_->hasComponent<games::rtype::client::EnemySoundComponent>(
             entity)) {
         auto& soundComp =
-            registry_
-                ->getComponent<games::rtype::client::EnemySoundComponent>(
-                    entity);
+            registry_->getComponent<games::rtype::client::EnemySoundComponent>(
+                entity);
         auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
         audioLib->playSFX(*soundComp.deathSFX);
     }
     if (registry_->hasComponent<games::rtype::client::PlayerSoundComponent>(
             entity)) {
         auto& soundComp =
-                registry_
-                    ->getComponent<games::rtype::client::PlayerSoundComponent>(
-                        entity);
+            registry_->getComponent<games::rtype::client::PlayerSoundComponent>(
+                entity);
         auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
         audioLib->playSFX(*soundComp.deathSFX);
     }
