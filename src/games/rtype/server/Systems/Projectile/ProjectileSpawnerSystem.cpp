@@ -7,8 +7,8 @@
 
 #include "ProjectileSpawnerSystem.hpp"
 
-#include <numbers>
 #include <cmath>
+#include <utility>
 
 #include "../../../shared/Components.hpp"
 
@@ -65,7 +65,7 @@ uint32_t ProjectileSpawnerSystem::spawnPlayerProjectile(
         uint32_t firstId = 0;
         for (uint8_t i = 0; i < weaponConfig.projectileCount; ++i) {
             float angle = startAngle + angleStep * static_cast<float>(i);
-            float radians = angle * std::numbers::pi_v<float> / 180.0F;
+            float radians = angle * M_PI / 180.0F;
 
             float vx = weaponConfig.speed * std::cos(radians);
             float vy = weaponConfig.speed * std::sin(radians);
