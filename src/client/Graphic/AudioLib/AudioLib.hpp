@@ -8,8 +8,9 @@
 #ifndef SRC_CLIENT_GRAPHIC_AUDIOLIB_AUDIOLIB_HPP_
 #define SRC_CLIENT_GRAPHIC_AUDIOLIB_AUDIOLIB_HPP_
 
-#include "SFML/Audio.hpp"
 #include <list>
+
+#include "SFML/Audio.hpp"
 
 class AudioLib {
    private:

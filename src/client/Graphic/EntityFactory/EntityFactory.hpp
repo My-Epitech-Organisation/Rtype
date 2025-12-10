@@ -20,9 +20,9 @@
 #include "Components/ButtonComponent.hpp"
 #include "Components/PositionComponent.hpp"
 #include "Components/RectangleComponent.hpp"
+#include "Components/SoundComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
-#include "Components/SoundComponent.hpp"
 #include "Components/TextInputComponent.hpp"
 #include "Components/UserEventComponent.hpp"
 #include "ECS.hpp"
@@ -47,9 +47,9 @@ static ECS::Entity createButton(
     registry->emplaceComponent<rtype::games::rtype::client::UserEvent>(entity);
     registry->emplaceComponent<rtype::games::rtype::client::ButtonTag>(entity);
     if (assetsManager)
-        registry->emplaceComponent<rtype::games::rtype::client::ButtonSoundComponent>(
-            entity,
-            assetsManager->soundManager->get("hover_button"),
+        registry->emplaceComponent<
+            rtype::games::rtype::client::ButtonSoundComponent>(
+            entity, assetsManager->soundManager->get("hover_button"),
             assetsManager->soundManager->get("click_button"));
     return entity;
 }

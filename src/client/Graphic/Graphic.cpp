@@ -202,7 +202,6 @@ void Graphic::_initializeCommonAssets() {
     manager->textureManager->get("bg_planet_1").setRepeated(true);
     manager->textureManager->get("bg_planet_2").setRepeated(true);
     manager->textureManager->get("bg_planet_3").setRepeated(true);
-
 }
 
 Graphic::Graphic(

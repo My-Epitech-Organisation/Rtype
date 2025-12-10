@@ -13,10 +13,10 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 
-#include "AudioLib/AudioLib.hpp"
 #include "../Components/RectangleComponent.hpp"
 #include "../Components/UserEventComponent.hpp"
 #include "ASystem.hpp"
+#include "AudioLib/AudioLib.hpp"
 #include "ECS.hpp"
 
 namespace rtype::games::rtype::client {
@@ -43,12 +43,12 @@ class EventSystem : public ::rtype::engine::ASystem {
         sf::Vector2i pixelPos,
         const ::rtype::games::rtype::client::Rectangle& rect) const;
 
-    void _mouseMoved(
-        ::rtype::games::rtype::client::UserEvent& actionType,
-        const ::rtype::games::rtype::client::Rectangle& rect, ECS::Registry& registry, const ECS::Entity entt) const;
-    void _mousePressed(
-        ::rtype::games::rtype::client::UserEvent& actionType,
-        const ::rtype::games::rtype::client::Rectangle& rect, ECS::Registry& registry, const ECS::Entity entt) const;
+    void _mouseMoved(::rtype::games::rtype::client::UserEvent& actionType,
+                     const ::rtype::games::rtype::client::Rectangle& rect,
+                     ECS::Registry& registry, const ECS::Entity entt) const;
+    void _mousePressed(::rtype::games::rtype::client::UserEvent& actionType,
+                       const ::rtype::games::rtype::client::Rectangle& rect,
+                       ECS::Registry& registry, const ECS::Entity entt) const;
     void _mouseReleased(
         ::rtype::games::rtype::client::UserEvent& actionType,
         const ::rtype::games::rtype::client::Rectangle& rect) const;
@@ -59,7 +59,8 @@ class EventSystem : public ::rtype::engine::ASystem {
      * @param window Shared pointer to the SFML render window
      * @param audioLib Shared pointer to the AudioLib
      */
-    explicit EventSystem(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<AudioLib> audioLib);
+    explicit EventSystem(std::shared_ptr<sf::RenderWindow> window,
+                         std::shared_ptr<AudioLib> audioLib);
 
     /**
      * @brief Legacy constructor for backward compatibility.
@@ -68,8 +69,8 @@ class EventSystem : public ::rtype::engine::ASystem {
      * @param event The event to process
      * @deprecated Use the single-argument constructor and setEvent() instead
      */
-    EventSystem(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<AudioLib> audioLib,
-                const sf::Event& event);
+    EventSystem(std::shared_ptr<sf::RenderWindow> window,
+                std::shared_ptr<AudioLib> audioLib, const sf::Event& event);
 
     /**
      * @brief Set the current event to process.

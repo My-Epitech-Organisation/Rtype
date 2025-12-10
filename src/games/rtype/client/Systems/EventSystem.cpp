@@ -18,12 +18,19 @@ namespace rtype::games::rtype::client {
 
 namespace rc = ::rtype::games::rtype::client;
 
-EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<AudioLib> audio)
-    : ASystem("EventSystem"), _window(std::move(window)), _audioLib(std::move(audio)) {}
+EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window,
+                         std::shared_ptr<AudioLib> audio)
+    : ASystem("EventSystem"),
+      _window(std::move(window)),
+      _audioLib(std::move(audio)) {}
 
-EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<AudioLib> audio,
+EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window,
+                         std::shared_ptr<AudioLib> audio,
                          const sf::Event& event)
-    : ASystem("EventSystem"), _event(event), _window(std::move(window)), _audioLib(std::move(audio)) {}
+    : ASystem("EventSystem"),
+      _event(event),
+      _window(std::move(window)),
+      _audioLib(std::move(audio)) {}
 
 void EventSystem::setEvent(const sf::Event& event) { _event = event; }
 
@@ -52,8 +59,9 @@ void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
         });
 }
 
-void EventSystem::_mouseMoved(UserEvent& actionType,
-                              const Rectangle& rect, ECS::Registry& reg, const ECS::Entity entt) const {
+void EventSystem::_mouseMoved(UserEvent& actionType, const Rectangle& rect,
+                              ECS::Registry& reg,
+                              const ECS::Entity entt) const {
     if (const auto* mouseMove = _event->getIf<sf::Event::MouseMoved>()) {
         bool isInside = _isPointInRect(mouseMove->position, rect);
         if (!actionType.isHovered && isInside) {
@@ -70,8 +78,9 @@ void EventSystem::_mouseMoved(UserEvent& actionType,
     }
 }
 
-void EventSystem::_mousePressed(UserEvent& actionType,
-                                const Rectangle& rect, ECS::Registry& reg, const ECS::Entity entt) const {
+void EventSystem::_mousePressed(UserEvent& actionType, const Rectangle& rect,
+                                ECS::Registry& reg,
+                                const ECS::Entity entt) const {
     if (const auto* mousePress =
             _event->getIf<sf::Event::MouseButtonPressed>()) {
         if (mousePress->button == sf::Mouse::Button::Left &&
