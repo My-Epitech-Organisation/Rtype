@@ -119,3 +119,37 @@ target_include_directories(test_engine PRIVATE
 )
 
 gtest_discover_tests(test_engine)
+
+# QuadTree unit tests
+add_executable(test_quadtree test_quadtree.cpp)
+
+target_link_libraries(test_quadtree PRIVATE
+    rtype_game_shared
+    rtype_engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_quadtree PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib/rtype_ecs/src
+)
+
+gtest_discover_tests(test_quadtree)
+
+# QuadTree integration tests
+add_executable(test_quadtree_integration test_quadtree_integration.cpp)
+
+target_link_libraries(test_quadtree_integration PRIVATE
+    rtype_game_shared
+    rtype_engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_quadtree_integration PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib/rtype_ecs/src
+)
+
+gtest_discover_tests(test_quadtree_integration)
