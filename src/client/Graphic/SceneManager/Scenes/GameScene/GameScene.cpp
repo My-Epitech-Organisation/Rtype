@@ -48,9 +48,11 @@ GameScene::GameScene(
     if (_gameScene) {
         this->_listEntity = _gameScene->initialize();
     }
-    this->_assetsManager->textureManager->load("bdos_enemy",
+    this->_assetsManager->textureManager->load(
+        "bdos_enemy",
         this->_assetsManager->configGameAssets.assets.textures.Enemy);
-    this->_assetsManager->textureManager->load("projectile_player_laser",
+    this->_assetsManager->textureManager->load(
+        "projectile_player_laser",
         this->_assetsManager->configGameAssets.assets.textures.missileLaser);
     if (this->_audio && this->_assetsManager &&
         this->_assetsManager->audioManager) {

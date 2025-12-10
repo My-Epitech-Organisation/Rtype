@@ -22,7 +22,7 @@ AssetManager::AssetManager(
     this->textureManager->load("astro_vessel",
                                configGameAssets.assets.textures.astroVessel);
     this->textureManager->load("player_vessel",
-x²                                    configGameAssets.assets.textures.Player);
+                               x² configGameAssets.assets.textures.Player);
     this->textureManager->get("bg_menu").setRepeated(true);
     this->textureManager->get("bg_planet_1").setRepeated(true);
     this->textureManager->get("bg_planet_2").setRepeated(true);

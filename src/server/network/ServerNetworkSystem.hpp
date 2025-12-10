@@ -269,7 +269,8 @@ class ServerNetworkSystem {
     std::function<void(std::uint32_t)> onClientConnectedCallback_;
     std::function<void(std::uint32_t)> onClientDisconnectedCallback_;
 
-    static constexpr std::chrono::milliseconds kDisconnectGracePeriod{1000}; // TODO(NOA) : A MODIFIÉ
+    static constexpr std::chrono::milliseconds kDisconnectGracePeriod{
+        1000};  // TODO(NOA) : A MODIFIÉ
 
     struct PendingDisconnection {
         std::chrono::steady_clock::time_point disconnectTime;

@@ -232,11 +232,11 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
         "assets/" + _parser.getString(table, "Textures", "Player",
                                       defaults.assets.textures.Player);
     config.assets.textures.Enemy =
-    "assets/" + _parser.getString(table, "Textures", "Enemy",
-                                  defaults.assets.textures.Enemy);
+        "assets/" + _parser.getString(table, "Textures", "Enemy",
+                                      defaults.assets.textures.Enemy);
     config.assets.textures.missileLaser =
-    "assets/" + _parser.getString(table, "Textures", "MissileLaser",
-                                  defaults.assets.textures.missileLaser);
+        "assets/" + _parser.getString(table, "Textures", "MissileLaser",
+                                      defaults.assets.textures.missileLaser);
     config.assets.music.mainMenu =
         "assets/" + _parser.getString(table, "Music", "MainMenu",
                                       defaults.assets.music.mainMenu);

@@ -74,7 +74,7 @@ void RtypeEntityFactory::setupBydosEntity(
     LOG_DEBUG("[RtypeEntityFactory] Adding Bydos components");
     // TODO(Noa): Add Bydos enemy sprite when available
     reg.emplaceComponent<Image>(
-    entity, assetsManager->textureManager->get("bdos_enemy"));
+        entity, assetsManager->textureManager->get("bdos_enemy"));
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 34}));
     reg.emplaceComponent<Size>(entity, 2, 2);
