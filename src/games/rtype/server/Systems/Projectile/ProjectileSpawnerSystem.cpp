@@ -8,15 +8,13 @@
 #include "ProjectileSpawnerSystem.hpp"
 
 #include <cmath>
-#include <number>
+#include <numbers>
 #include <utility>
 
 #include "../../../shared/Components.hpp"
 
 namespace rtype::games::rtype::server {
-namespace
-
-    using shared::BoundingBoxComponent;
+using shared::BoundingBoxComponent;
 using shared::EnemyProjectileTag;
 using shared::EntityType;
 using shared::LifetimeComponent;
