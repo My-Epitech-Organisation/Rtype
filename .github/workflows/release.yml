@@ -213,7 +213,6 @@ jobs:
           if [ -d "assets" ]; then
             mkdir -p release-packages-temp/assets
             cp -r assets/* release-packages-temp/assets/
-            rm -f release-packages-temp/assets/config.toml
             cd release-packages-temp
             zip -r ../release-packages/r-type_assets.zip assets/
             cd ..
