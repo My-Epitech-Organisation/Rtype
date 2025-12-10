@@ -9,6 +9,7 @@ add_library(rtype_game_shared_systems OBJECT
     AISystem/Behaviors/BehaviorRegistry.cpp
     Projectile/ProjectileSystem.cpp
     Lifetime/LifetimeSystem.cpp
+    Collision/QuadTreeSystem.cpp
 )
 
 target_include_directories(rtype_game_shared_systems PUBLIC
