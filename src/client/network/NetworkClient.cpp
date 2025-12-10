@@ -6,6 +6,7 @@
 */
 
 #include "NetworkClient.hpp"
+#include "Logger/Macros.hpp"
 
 #include <cstring>
 #include <memory>
@@ -285,13 +286,22 @@ void NetworkClient::handleEntitySpawn(const network::Header& header,
                                       const network::Buffer& payload) {
     (void)header;
 
+    LOG_DEBUG("[NetworkClient] handleEntitySpawn called, payload size="
+              + std::to_string(payload.size()));
+
     if (payload.size() < sizeof(network::EntitySpawnPayload)) {
+        LOG_DEBUG("[NetworkClient] Payload too small for EntitySpawnPayload");
         return;
     }
 
     try {
         auto deserialized = network::Serializer::deserializeFromNetwork<
             network::EntitySpawnPayload>(payload);
+
+        LOG_DEBUG("[NetworkClient] Deserialized spawn: entityId="
+                  + std::to_string(deserialized.entityId)
+                  + " type=" + std::to_string(static_cast<int>(deserialized.type))
+                  + " pos=(" + std::to_string(deserialized.posX) + ", " + std::to_string(deserialized.posY) + ")");
 
         EntitySpawnEvent event;
         event.entityId = deserialized.entityId;
