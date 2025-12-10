@@ -15,7 +15,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
-#include <ecs/ECS.hpp>
+#include <rtype/ecs.hpp>
 
 #include "../../src/games/rtype/client/AllComponents.hpp"
 #include "../../src/games/rtype/client/Systems/ButtonUpdateSystem.hpp"

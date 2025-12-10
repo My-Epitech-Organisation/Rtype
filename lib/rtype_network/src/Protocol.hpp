@@ -24,7 +24,7 @@
  * @note Serialization logic (PacketWriter, PacketReader, Packet class)
  *       is implemented separately in issue #161.
  *
- * @see RFC RTGP v1.1.0 in docs/RFC/RFC_RTGP_v1.1.0.md
+ * @see RFC RTGP v1.2.0 in docs/RFC/RFC_RTGP_v1.2.0.md
  */
 
 #include "protocol/Header.hpp"

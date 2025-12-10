@@ -2,9 +2,9 @@
 
 | Metadata | Details |
 | :---- | :---- |
-| **Version** | 1.1.0 (Reliability Update) |
+| **Version** | 1.2.0 (Health Synchronization Update) |
 | **Status** | Draft / Experimental |
-| **Date** | 2025-11-25 |
+| **Date** | 2025-12-10 |
 | **Authors** | R-Type Project Team |
 | **Abstract** | This document specifies the binary application-layer protocol used for real-time communication between the R-Type Client and Server, including a reliability layer over UDP. |
 
@@ -194,6 +194,16 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 * **Description:** Instructs clients to remove an entity.
 * **Payload:**
   * Entity ID (uint32)
+
+#### **0x13 - S\_ENTITY\_HEALTH**
+
+* **Sender:** Server
+* **Reliability:** **RELIABLE**
+* **Description:** Synchronizes entity health state with clients. Sent when an entity takes damage or is healed. Critical for displaying health bars and handling death events.
+* **Payload:**
+  * Entity ID (uint32) - The network ID of the entity
+  * Current Health (int32_t) - The entity's remaining health points
+  * Max Health (int32_t) - The entity's maximum health capacity
 
 ### **5.3. Input & Reconciliation**
 

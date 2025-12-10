@@ -20,7 +20,8 @@ namespace rtype::engine {
 enum class GameEventType : uint8_t {
     EntitySpawned = 0,
     EntityDestroyed,
-    EntityUpdated
+    EntityUpdated,
+    EntityHealthChanged
 };
 
 /**
@@ -38,6 +39,8 @@ struct GameEvent {
     uint8_t subType = 0;
     float velocityX = 0.0F;
     float velocityY = 0.0F;
+    int32_t healthCurrent{0};
+    int32_t healthMax{0};
 };
 
 /**

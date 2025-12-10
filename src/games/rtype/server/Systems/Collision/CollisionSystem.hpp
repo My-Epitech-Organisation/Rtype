@@ -8,6 +8,7 @@
 #pragma once
 
 #include <memory>
+#include <functional>
 
 #include <rtype/engine.hpp>
 
@@ -31,6 +32,9 @@ class CollisionSystem : public ::rtype::engine::ASystem {
      */
     explicit CollisionSystem(float worldWidth = 1920.0F,
                              float worldHeight = 1080.0F);
+    using EventEmitter = std::function<void(const engine::GameEvent&)>;
+
+    explicit CollisionSystem(EventEmitter emitter);
 
     void update(ECS::Registry& registry, float deltaTime) override;
 
@@ -47,6 +51,7 @@ class CollisionSystem : public ::rtype::engine::ASystem {
                                    bool isTargetPlayer);
 
     std::unique_ptr<shared::QuadTreeSystem> _quadTreeSystem;
+    EventEmitter _emitEvent;
 };
 
 }  // namespace rtype::games::rtype::server

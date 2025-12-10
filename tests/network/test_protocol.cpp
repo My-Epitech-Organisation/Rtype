@@ -33,6 +33,7 @@ TEST_F(OpCodeTest, OpCodeValuesMatchRFC) {
     EXPECT_EQ(static_cast<uint8_t>(OpCode::S_ENTITY_SPAWN), 0x10);
     EXPECT_EQ(static_cast<uint8_t>(OpCode::S_ENTITY_MOVE), 0x11);
     EXPECT_EQ(static_cast<uint8_t>(OpCode::S_ENTITY_DESTROY), 0x12);
+    EXPECT_EQ(static_cast<uint8_t>(OpCode::S_ENTITY_HEALTH), 0x13);
 
     // RFC Section 5.3 - Input & Reconciliation
     EXPECT_EQ(static_cast<uint8_t>(OpCode::C_INPUT), 0x20);
@@ -53,6 +54,7 @@ TEST_F(OpCodeTest, IsReliableMatchesRFC) {
     EXPECT_TRUE(isReliable(OpCode::S_UPDATE_STATE));
     EXPECT_TRUE(isReliable(OpCode::S_ENTITY_SPAWN));
     EXPECT_TRUE(isReliable(OpCode::S_ENTITY_DESTROY));
+    EXPECT_TRUE(isReliable(OpCode::S_ENTITY_HEALTH));
 
     // Unreliable opcodes (no ACK needed)
     EXPECT_FALSE(isReliable(OpCode::S_ENTITY_MOVE));
@@ -79,6 +81,7 @@ TEST_F(OpCodeTest, IsServerOpCode) {
     EXPECT_TRUE(isServerOpCode(OpCode::S_ENTITY_SPAWN));
     EXPECT_TRUE(isServerOpCode(OpCode::S_ENTITY_MOVE));
     EXPECT_TRUE(isServerOpCode(OpCode::S_ENTITY_DESTROY));
+    EXPECT_TRUE(isServerOpCode(OpCode::S_ENTITY_HEALTH));
     EXPECT_TRUE(isServerOpCode(OpCode::S_UPDATE_POS));
     EXPECT_TRUE(isServerOpCode(OpCode::DISCONNECT));  // Can be either
 
@@ -90,13 +93,13 @@ TEST_F(OpCodeTest, IsValidOpCode) {
     // Valid opcodes
     EXPECT_TRUE(isValidOpCode(0x01));
     EXPECT_TRUE(isValidOpCode(0x10));
+    EXPECT_TRUE(isValidOpCode(0x13));
     EXPECT_TRUE(isValidOpCode(0x20));
     EXPECT_TRUE(isValidOpCode(0xF0));
 
     // Invalid opcodes
     EXPECT_FALSE(isValidOpCode(0x00));
     EXPECT_FALSE(isValidOpCode(0x07));
-    EXPECT_FALSE(isValidOpCode(0x13));
     EXPECT_FALSE(isValidOpCode(0x30));
     EXPECT_FALSE(isValidOpCode(0xFF));  // Not defined
 }

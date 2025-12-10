@@ -185,6 +185,15 @@ class ServerNetworkSystem {
                               float vx, float vy);
 
     /**
+     * @brief Broadcast entity health to all clients
+     * @param networkId The entity's network ID
+     * @param current Current health/lives value
+     * @param max Maximum health/lives value
+     */
+    void updateEntityHealth(std::uint32_t networkId, std::int32_t current,
+                            std::int32_t max);
+
+    /**
      * @brief Send position correction to a specific player
      *
      * Used for server-authoritative reconciliation.

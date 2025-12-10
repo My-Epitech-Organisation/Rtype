@@ -10,6 +10,10 @@
 #include "../shared/Components/EntityType.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
+#include <memory>
+#include <utility>
+#include <vector>
+
 
 namespace rtype::games::rtype::server {
 
@@ -51,7 +55,7 @@ bool GameEngine::initialize() {
     _movementSystem = std::make_unique<shared::MovementSystem>();
     _lifetimeSystem = std::make_unique<shared::LifetimeSystem>();
     _collisionSystem = std::make_unique<CollisionSystem>(
-        GameConfig::SCREEN_WIDTH, GameConfig::SCREEN_HEIGHT);
+        GameConfig::SCREEN_WIDTH, GameConfig::SCREEN_HEIGHT, eventEmitter);
     CleanupConfig cleanupConfig{};
     cleanupConfig.leftBoundary = GameConfig::CLEANUP_LEFT;
     cleanupConfig.rightBoundary = GameConfig::CLEANUP_RIGHT;
