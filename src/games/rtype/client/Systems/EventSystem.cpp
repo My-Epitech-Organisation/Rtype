@@ -46,14 +46,12 @@ void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
     registry.view<Rectangle, UserEvent>().each(
         [this, &registry](ECS::Entity entity, const Rectangle& rect,
                           UserEvent& actionType) {
-            // Check for Hidden Component
             if (registry.hasComponent<HiddenComponent>(entity)) {
                 if (registry.getComponent<HiddenComponent>(entity).isHidden) {
-                    return;  // Skip hidden entities
+                    return;
                 }
             }
 
-            // Process inputs and track if any interaction occurred
             bool interaction = false;
             interaction |=
                 this->_handleMouseMoved(actionType, rect, registry, entity);
@@ -76,7 +74,6 @@ bool EventSystem::_handleMouseMoved(UserEvent& actionType,
     bool isInside = _isPointInRect(mouseMove->position, rect);
     bool interacted = false;
 
-    // Handle Hover Enter
     if (!actionType.isHovered && isInside) {
         if (reg.hasComponent<ButtonSoundComponent>(entt)) {
             const auto& data = reg.getComponent<ButtonSoundComponent>(entt);
