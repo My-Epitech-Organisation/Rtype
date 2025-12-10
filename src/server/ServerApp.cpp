@@ -14,8 +14,16 @@
 #include <utility>
 #include <vector>
 
+#include "games/rtype/server/GameEngine.hpp"
+#include "games/rtype/shared/Components/BoundingBoxComponent.hpp"
+#include "games/rtype/shared/Components/CooldownComponent.hpp"
+#include "games/rtype/shared/Components/EntityType.hpp"
+#include "games/rtype/shared/Components/NetworkIdComponent.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/Tags.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
+#include "games/rtype/shared/Components/WeaponComponent.hpp"
 
 namespace rtype::server {
 
@@ -236,7 +244,7 @@ std::optional<Client> ServerApp::getClientInfo(ClientId clientId) const {
 
 bool ServerApp::initialize() {
     _registry = std::make_shared<ECS::Registry>();
-    _gameEngine = engine::createGameEngine();
+    _gameEngine = engine::createGameEngine(_registry);
     if (!_gameEngine) {
         LOG_ERROR("[Server] Failed to create game engine");
         return false;
@@ -481,16 +489,39 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
     }
 
     using Position = rtype::games::rtype::shared::Position;
+    using TransformComponent = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
+    using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
+    using Weapon = rtype::games::rtype::shared::WeaponComponent;
+    using BoundingBox = rtype::games::rtype::shared::BoundingBoxComponent;
+    using PlayerTag = rtype::games::rtype::shared::PlayerTag;
+    using NetworkIdComponent = rtype::games::rtype::shared::NetworkIdComponent;
     using EntityType = ServerNetworkSystem::EntityType;
 
     ECS::Entity playerEntity = _registry->spawnEntity();
     size_t playerCount = _readyPlayers.size();
     float spawnX = 100.0F;
     float spawnY = 150.0F + static_cast<float>(playerCount) * 100.0F;
+
     _registry->emplaceComponent<Position>(playerEntity, spawnX, spawnY);
+    _registry->emplaceComponent<TransformComponent>(playerEntity, spawnX,
+                                                     spawnY, 0.0F);
     _registry->emplaceComponent<Velocity>(playerEntity, 0.0F, 0.0F);
+    _registry->emplaceComponent<ShootCooldown>(playerEntity, 0.3F);
+    Weapon weapon{};
+    weapon.weapons[0] = rtype::games::rtype::shared::WeaponPresets::LaserBeam;
+    weapon.currentSlot = 0;
+    weapon.unlockedSlots = 1;
+    _registry->emplaceComponent<Weapon>(playerEntity, weapon);
+    constexpr float PLAYER_WIDTH = 64.0F;
+    constexpr float PLAYER_HEIGHT = 64.0F;
+    _registry->emplaceComponent<BoundingBox>(playerEntity, PLAYER_WIDTH,
+                                             PLAYER_HEIGHT);
+    _registry->emplaceComponent<PlayerTag>(playerEntity);
+
     std::uint32_t networkId = userId;
+    _registry->emplaceComponent<NetworkIdComponent>(playerEntity, networkId);
+
     _networkSystem->registerNetworkedEntity(playerEntity, networkId,
                                             EntityType::Player, spawnX, spawnY);
 
@@ -540,6 +571,8 @@ void ServerApp::handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
 
     using Position = rtype::games::rtype::shared::Position;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
+    using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
+    using Weapon = rtype::games::rtype::shared::WeaponComponent;
 
     ECS::Entity playerEntity = *entity;
     if (!_registry->isAlive(playerEntity)) {
@@ -579,7 +612,53 @@ void ServerApp::handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
         }
     }
 
-    // TODO(Paul-Antoine): Handle shoot input (inputMask & kShoot)
+    if (inputMask & rtype::network::InputMask::kShoot) {
+        if (_registry->hasComponent<Position>(playerEntity) &&
+            _registry->hasComponent<ShootCooldown>(playerEntity)) {
+            auto& cooldown =
+                _registry->getComponent<ShootCooldown>(playerEntity);
+
+            if (!cooldown.canShoot()) {
+                if (_verbose) {
+                    LOG_DEBUG("[Server] Player " << userId
+                                                 << " cooldown not ready: "
+                                                 << cooldown.currentCooldown);
+                }
+                return;
+            }
+
+            auto& pos = _registry->getComponent<Position>(playerEntity);
+            auto networkIdOpt = _networkSystem->getNetworkId(playerEntity);
+
+            if (networkIdOpt.has_value()) {
+                auto* rtypeEngine =
+                    dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                        _gameEngine.get());
+                if (rtypeEngine) {
+                    uint32_t projectileId = rtypeEngine->spawnPlayerProjectile(
+                        *networkIdOpt, pos.x, pos.y);
+                    if (projectileId != 0) {
+                        cooldown.triggerCooldown();
+                        LOG_DEBUG("[Server] Player " << userId
+                                                     << " fired projectile "
+                                                     << projectileId
+                                                     << " cooldown set to "
+                                                     << cooldown.currentCooldown);
+                    } else {
+                        LOG_DEBUG("[Server] Player " << userId
+                                                     << " spawnPlayerProjectile returned 0");
+                    }
+                } else {
+                    LOG_DEBUG("[Server] Failed to cast to GameEngine");
+                }
+            } else {
+                LOG_DEBUG("[Server] Player " << userId << " has no networkId");
+            }
+        } else {
+            LOG_DEBUG("[Server] Player " << userId
+                                         << " missing Position or ShootCooldown component");
+        }
+    }
 }
 
 void ServerApp::processGameEvents() {
@@ -589,27 +668,46 @@ void ServerApp::processGameEvents() {
     auto events = _gameEngine->getPendingEvents();
 
     for (const auto& event : events) {
-        switch (event.type) {
+        auto processed = _gameEngine->processEvent(event);
+
+        if (!processed.valid) {
+            if (_verbose) {
+                LOG_DEBUG("[Server] Event not processed: type="
+                          << static_cast<int>(event.type)
+                          << " networkId=" << event.entityNetworkId);
+            }
+            continue;
+        }
+        switch (processed.type) {
             case engine::GameEventType::EntitySpawned: {
+                network::EntityType networkType =
+                    static_cast<network::EntityType>(processed.networkEntityType);
+
+                _networkSystem->broadcastEntitySpawn(
+                    processed.networkId, networkType,
+                    processed.x, processed.y);
+
                 if (_verbose) {
-                    LOG_DEBUG("[Server] Entity spawned: networkId="
-                              << event.entityNetworkId << " pos=(" << event.x
-                              << ", " << event.y << ")");
+                    LOG_DEBUG("[Server] Entity spawned & broadcast: networkId="
+                              << processed.networkId << " type="
+                              << static_cast<int>(processed.networkEntityType)
+                              << " pos=(" << processed.x << ", " << processed.y
+                              << ")");
                 }
                 break;
             }
             case engine::GameEventType::EntityDestroyed: {
-                _networkSystem->unregisterNetworkedEntityById(
-                    event.entityNetworkId);
+                _networkSystem->unregisterNetworkedEntityById(processed.networkId);
                 if (_verbose) {
                     LOG_DEBUG("[Server] Entity destroyed: networkId="
-                              << event.entityNetworkId);
+                              << processed.networkId);
                 }
                 break;
             }
             case engine::GameEventType::EntityUpdated: {
                 _networkSystem->updateEntityPosition(
-                    event.entityNetworkId, event.x, event.y, 0.0F, 0.0F);
+                    processed.networkId, processed.x, processed.y,
+                    processed.vx, processed.vy);
                 break;
             }
         }
@@ -619,6 +717,7 @@ void ServerApp::processGameEvents() {
 
 void ServerApp::updatePlayerMovement(float deltaTime) noexcept {
     using Position = rtype::games::rtype::shared::Position;
+    using TransformComponent = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
     constexpr float minX = 0.0F;
@@ -636,6 +735,14 @@ void ServerApp::updatePlayerMovement(float deltaTime) noexcept {
         pos.y += vel.vy * deltaTime;
         pos.x = std::clamp(pos.x, minX, maxX);
         pos.y = std::clamp(pos.y, minY, maxY);
+
+        if (_registry->hasComponent<TransformComponent>(entity)) {
+            auto& transform =
+                _registry->getComponent<TransformComponent>(entity);
+            transform.x = pos.x;
+            transform.y = pos.y;
+        }
+
         auto networkIdOpt = _networkSystem->getNetworkId(entity);
         if (networkIdOpt.has_value()) {
             _networkSystem->updateEntityPosition(*networkIdOpt, pos.x, pos.y,
@@ -645,9 +752,15 @@ void ServerApp::updatePlayerMovement(float deltaTime) noexcept {
 }
 
 void ServerApp::syncEntityPositions() {
-    if (_networkSystem) {
-        _networkSystem->broadcastEntityUpdates();
+    if (!_networkSystem || !_gameEngine) {
+        return;
     }
+    _gameEngine->syncEntityPositions(
+        [this](uint32_t networkId, float x, float y, float vx, float vy) {
+            _networkSystem->updateEntityPosition(networkId, x, y, vx, vy);
+        });
+
+    _networkSystem->broadcastEntityUpdates();
 }
 
 void ServerApp::playerReady(std::uint32_t userId) { handlePlayerReady(userId); }
