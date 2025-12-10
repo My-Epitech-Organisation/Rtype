@@ -51,7 +51,7 @@ echo ""
 
 # Step 3: Build
 echo "→ Step 3/4: Building project..."
-cmake --build --preset "linux-release" -- -j$(nproc 2>/dev/null || echo 4) --target r-type_client r-type_server
+cmake --build --preset linux-release --target r-type_client r-type_server -- -j$(nproc 2>/dev/null || echo 4)
 echo "✓ Build complete"
 echo ""
 
