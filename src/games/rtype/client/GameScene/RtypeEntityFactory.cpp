@@ -96,7 +96,6 @@ void RtypeEntityFactory::setupMissileEntity(
     reg.emplaceComponent<shared::LifetimeComponent>(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
     reg.emplaceComponent<Size>(entity, 1, 1);
-    reg.emplaceComponent<ZIndex>(entity, 1);
     reg.emplaceComponent<GameTag>(entity);
 }
 

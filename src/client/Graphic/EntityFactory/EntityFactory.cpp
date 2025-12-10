@@ -85,27 +85,6 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     return {planet1, planet2, planet3, background, appTitle};
 }
 
-ECS::Entity EntityFactory::createProjectile(
-    std::shared_ptr<ECS::Registry> registry,
-    std::shared_ptr<AssetManager> assetManager, sf::Vector2f position) {
-    auto entt = registry->spawnEntity();
-    registry->emplaceComponent<rtype::games::rtype::client::Image>(
-        entt, assetManager->textureManager->get("projectile_player_laser"));
-    registry->emplaceComponent<rtype::games::rtype::client::TextureRect>(
-        entt, std::pair<int, int>({0, 0}), std::pair<int, int>({33, 34}));
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
-        entt, position.x, position.y);
-    registry->emplaceComponent<rtype::games::rtype::client::Size>(entt, 2, 2);
-    registry->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(
-        entt, cfg::PROJECTILE_SPEED_LASER, 0.f);
-    registry->emplaceComponent<rtype::games::rtype::shared::ProjectileTag>(
-        entt);
-    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entt, 1);
-    registry->emplaceComponent<rtype::games::rtype::shared::LifetimeComponent>(
-        entt, cfg::LIFETIME_PROJECTILE);
-    return entt;
-}
-
 std::vector<ECS::Entity> EntityFactory::createSection(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assets, std::string_view title,

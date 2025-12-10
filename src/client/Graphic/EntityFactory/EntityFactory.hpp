@@ -80,10 +80,6 @@ std::vector<ECS::Entity> createSection(std::shared_ptr<ECS::Registry> registry,
                                        std::string_view title,
                                        const sf::FloatRect& bounds);
 
-ECS::Entity createProjectile(std::shared_ptr<ECS::Registry> registry,
-                             std::shared_ptr<AssetManager> assetManager,
-                             sf::Vector2f position);
-
 ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
                              std::shared_ptr<AssetManager> assets,
                              std::string_view title, std::string_view fontId,
