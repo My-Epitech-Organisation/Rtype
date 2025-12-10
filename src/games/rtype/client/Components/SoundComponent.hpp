@@ -16,6 +16,11 @@ struct ButtonSoundComponent {
     std::shared_ptr<sf::SoundBuffer> hoverSFX;
     std::shared_ptr<sf::SoundBuffer> clickSFX;
 };
+
+struct EnemiesSoundComponent {
+    std::shared_ptr<sf::SoundBuffer> spawnSFX;
+    std::shared_ptr<sf::SoundBuffer> deathSFX;
+};
 }  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_SOUNDCOMPONENT_HPP_

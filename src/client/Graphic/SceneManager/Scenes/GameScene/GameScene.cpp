@@ -56,6 +56,12 @@ GameScene::GameScene(
         this->_assetsManager->configGameAssets.assets.textures.missileLaser);
     if (this->_audio && this->_assetsManager &&
         this->_assetsManager->audioManager) {
+        this->_assetsManager->textureManager->load(
+            "bydos_spawn",
+            this->_assetsManager->configGameAssets.assets.sfx.enemySpawn);
+        this->_assetsManager->textureManager->load(
+            "bydos_death",
+            this->_assetsManager->configGameAssets.assets.sfx.enemyDeath);
         this->_assetsManager->audioManager->load(
             "main_game_music",
             this->_assetsManager->configGameAssets.assets.music.game);

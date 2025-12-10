@@ -225,6 +225,7 @@ Graphic::Graphic(
         _setupNetworkEntityFactory();
     }
     this->_audioLib = std::make_shared<AudioLib>();
+    this->_registry->setSingleton<std::shared_ptr<AudioLib>>(this->_audioLib);
     this->_initializeCommonAssets();
     this->_sceneManager = std::make_unique<SceneManager>(
         _registry, this->_assetsManager, this->_window, this->_keybinds,

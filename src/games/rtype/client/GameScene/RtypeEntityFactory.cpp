@@ -13,6 +13,8 @@
 #include "Components/LifetimeComponent.hpp"
 #include "Components/Tags.hpp"
 #include "GraphicsConstants.hpp"
+#include "AudioLib/AudioLib.hpp"
+#include "Components/SoundComponent.hpp"
 #include "Logger/Macros.hpp"
 #include "protocol/Payloads.hpp"
 
@@ -79,6 +81,9 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.emplaceComponent<Size>(entity, 2, 2);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
+    reg.emplaceComponent<EnemiesSoundComponent>(entity, assetsManager->soundManager->get("bydos_spawn"),  assetsManager->soundManager->get("bydos_death"));
+    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+    lib->playSFX(*assetsManager->soundManager->get("bydos_spawn"));
 }
 
 void RtypeEntityFactory::setupMissileEntity(

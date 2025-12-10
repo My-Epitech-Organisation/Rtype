@@ -103,6 +103,8 @@ struct SfxConfig {
     std::string hoverButton;
     std::string clickButton;
     std::string laser;
+    std::string enemySpawn;
+    std::string enemyDeath;
 
     bool operator==(const SfxConfig&) const = default;
 };

@@ -53,7 +53,7 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
         ::rtype::games::rtype::shared::Position(
             sectionX + ((kSizeXPauseMenu / 2) - (150 / 2)),
             sectionY + kSizeYPauseMenu - 75),
-        Rectangle({150, 55}, sf::Color::Blue, sf::Color::Red), nullptr,
+        Rectangle({150, 55}, sf::Color::Blue, sf::Color::Red), assetsManager,
         std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::MAIN_MENU);

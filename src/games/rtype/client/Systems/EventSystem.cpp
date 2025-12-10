@@ -87,7 +87,6 @@ void EventSystem::_mousePressed(UserEvent& actionType, const Rectangle& rect,
             _isPointInRect(mousePress->position, rect)) {
             actionType.isClicked = true;
             if (reg.hasComponent<ButtonSoundComponent>(entt)) {
-                std::cout << "SOUND CLICK TRIGGER" << std::endl;
                 const auto& data = reg.getComponent<ButtonSoundComponent>(entt);
                 this->_audioLib->playSFX(*data.clickSFX);
             }
