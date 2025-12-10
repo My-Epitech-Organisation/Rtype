@@ -213,7 +213,7 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
                                       defaults.assets.fonts.MainFont);
     config.assets.fonts.TitleFont =
         "assets/" + _parser.getString(table, "Fonts", "TitleFont",
-                                      defaults.assets.fonts.MainFont);
+                                      defaults.assets.fonts.TitleFont);
 
     // Textures
     config.assets.textures.background =
