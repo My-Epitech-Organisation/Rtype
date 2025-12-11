@@ -18,6 +18,7 @@
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
 #include "../shared/Components/WeaponComponent.hpp"
+#include "GameEngine.hpp"  // For dynamic_cast to RType-specific GameEngine
 #include "GameEngine.hpp"
 #include "server/serverApp/game/entitySpawnerFactory/EntitySpawnerFactory.hpp"
 
@@ -104,6 +105,28 @@ void RTypeEntitySpawner::destroyPlayer(ECS::Entity entity) {
     _registry->killEntity(entity);
 }
 
+bool RTypeEntitySpawner::destroyPlayerByUserId(std::uint32_t userId) {
+    if (!_networkSystem) {
+        return false;
+    }
+
+    auto entityOpt = _networkSystem->getPlayerEntity(userId);
+    if (!entityOpt.has_value()) {
+        return false;
+    }
+
+    destroyPlayer(*entityOpt);
+    return true;
+}
+
+std::optional<ECS::Entity> RTypeEntitySpawner::getPlayerEntity(
+    std::uint32_t userId) const {
+    if (!_networkSystem) {
+        return std::nullopt;
+    }
+    return _networkSystem->getPlayerEntity(userId);
+}
+
 float RTypeEntitySpawner::getPlayerSpeed() const noexcept {
     if (_gameConfig && _gameConfig->get().isInitialized()) {
         return _gameConfig->get().getGameplaySettings().playerSpeed;
@@ -126,8 +149,12 @@ std::uint32_t RTypeEntitySpawner::handlePlayerShoot(
         return 0;
     }
 
-    return _gameEngine->get().spawnProjectile(playerNetworkId, posOpt->x,
-                                              posOpt->y);
+    auto* rtypeEngine = dynamic_cast<GameEngine*>(&_gameEngine->get());
+    if (rtypeEngine == nullptr) {
+        return 0;
+    }
+
+    return rtypeEngine->spawnProjectile(playerNetworkId, posOpt->x, posOpt->y);
 }
 
 bool RTypeEntitySpawner::canPlayerShoot(ECS::Entity playerEntity) const {

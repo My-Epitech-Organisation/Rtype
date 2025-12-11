@@ -10,6 +10,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <string>
 
 #include <rtype/ecs.hpp>
 #include <rtype/engine.hpp>
@@ -58,17 +59,33 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
     RTypeEntitySpawner(RTypeEntitySpawner&&) = delete;
     RTypeEntitySpawner& operator=(RTypeEntitySpawner&&) = delete;
 
+    // ==================== IEntitySpawner Interface ====================
+
     [[nodiscard]] ::rtype::server::PlayerSpawnResult spawnPlayer(
         const ::rtype::server::PlayerSpawnConfig& config) override;
 
     void destroyPlayer(ECS::Entity entity) override;
 
+    [[nodiscard]] bool destroyPlayerByUserId(std::uint32_t userId) override;
+
+    [[nodiscard]] std::optional<ECS::Entity> getPlayerEntity(
+        std::uint32_t userId) const override;
+
     [[nodiscard]] float getPlayerSpeed() const noexcept override;
+
+    [[nodiscard]] ::rtype::server::WorldBounds getWorldBounds()
+        const noexcept override;
+
+    [[nodiscard]] std::string getGameId() const noexcept override {
+        return "rtype";
+    }
 
     [[nodiscard]] std::uint32_t handlePlayerShoot(
         ECS::Entity playerEntity, std::uint32_t playerNetworkId) override;
 
     [[nodiscard]] bool canPlayerShoot(ECS::Entity playerEntity) const override;
+
+    void triggerShootCooldown(ECS::Entity entity) override;
 
     [[nodiscard]] std::optional<std::uint32_t> getEntityNetworkId(
         ECS::Entity entity) const override;
@@ -78,13 +95,8 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
 
     void updatePlayerVelocity(ECS::Entity entity, float vx, float vy) override;
 
-    void triggerShootCooldown(ECS::Entity entity) override;
-
     void updateAllPlayersMovement(
         float deltaTime, const PositionUpdateCallback& callback) override;
-
-    [[nodiscard]] ::rtype::server::WorldBounds getWorldBounds()
-        const noexcept override;
 
    private:
     std::shared_ptr<ECS::Registry> _registry;
