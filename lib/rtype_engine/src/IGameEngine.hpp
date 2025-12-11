@@ -161,8 +161,6 @@ class IGameEngine {
     virtual void syncEntityPositions(
         std::function<void(uint32_t, float, float, float, float)> callback) = 0;
 
-    // ==================== Player Actions ====================
-
     /**
      * @brief Spawn a projectile for a player
      *
@@ -176,8 +174,6 @@ class IGameEngine {
      */
     virtual uint32_t spawnProjectile(uint32_t playerNetworkId, float playerX,
                                      float playerY) = 0;
-
-    // ==================== Entity Movement ====================
 
     /**
      * @brief Update player movement based on velocity
