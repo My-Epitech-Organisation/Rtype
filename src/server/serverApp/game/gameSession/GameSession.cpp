@@ -142,11 +142,10 @@ void GameSession::handleClientInput(std::uint32_t userId,
 
     auto networkIdOpt = _entitySpawner->getEntityNetworkId(playerEntity);
     if (networkIdOpt.has_value() && _networkSystem) {
-        float posX = 0.0F;
-        float posY = 0.0F;
-        if (_entitySpawner->getEntityPosition(playerEntity, posX, posY)) {
-            _networkSystem->updateEntityPosition(*networkIdOpt, posX, posY, vx,
-                                                 vy);
+        auto posOpt = _entitySpawner->getEntityPosition(playerEntity);
+        if (posOpt.has_value()) {
+            _networkSystem->updateEntityPosition(*networkIdOpt, posOpt->x,
+                                                 posOpt->y, vx, vy);
         }
     }
 
