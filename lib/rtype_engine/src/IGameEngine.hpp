@@ -11,6 +11,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace rtype::engine {
@@ -62,16 +63,6 @@ struct ProcessedEvent {
 };
 
 /**
- * @brief Player state information (position and velocity)
- */
-struct PlayerState {
-    float x{0.0F};   ///< X position
-    float y{0.0F};   ///< Y position
-    float vx{0.0F};  ///< X velocity
-    float vy{0.0F};  ///< Y velocity
-};
-
-/**
  * @brief Pure interface for the game engine
  *
  * This interface allows the server to interact with the game engine
@@ -82,6 +73,7 @@ struct PlayerState {
  * - Complete decoupling from network/server implementation
  * - Event-based communication for state changes
  * - Deterministic update with fixed delta time
+ * - Game-agnostic: no player/projectile-specific methods
  *
  * @note Concrete game engines should inherit from AGameEngine rather
  * than this interface directly.
@@ -89,7 +81,7 @@ struct PlayerState {
  * Example usage:
  * @code
  * auto registry = std::make_shared<ECS::Registry>();
- * auto engine = createGameEngine(registry);
+ * auto engine = GameEngineFactory::create("rtype", registry);
  * engine->setEventCallback([](const GameEvent& event) {
  *     // Handle event (send to network, etc.)
  * });
@@ -101,6 +93,8 @@ class IGameEngine {
     using EventCallback = std::function<void(const GameEvent&)>;
 
     virtual ~IGameEngine() = default;
+
+    // ==================== Lifecycle ====================
 
     /**
      * @brief Initialize the game engine
@@ -119,6 +113,8 @@ class IGameEngine {
      */
     virtual void shutdown() = 0;
 
+    // ==================== Event System ====================
+
     /**
      * @brief Set the callback for game events
      * @param callback Function to call when events occur
@@ -136,6 +132,8 @@ class IGameEngine {
      */
     virtual void clearPendingEvents() = 0;
 
+    // ==================== State Queries ====================
+
     /**
      * @brief Get the current entity count
      * @return Number of active entities
@@ -147,6 +145,14 @@ class IGameEngine {
      * @return true if the engine is initialized and running
      */
     virtual bool isRunning() const = 0;
+
+    /**
+     * @brief Get the game identifier
+     * @return Game identifier string (e.g., "rtype", "spaceinvaders")
+     */
+    [[nodiscard]] virtual std::string getGameId() const = 0;
+
+    // ==================== Event Processing ====================
 
     /**
      * @brief Process a game event and return network-ready data
@@ -171,54 +177,6 @@ class IGameEngine {
      */
     virtual void syncEntityPositions(
         std::function<void(uint32_t, float, float, float, float)> callback) = 0;
-
-    /**
-     * @brief Spawn a projectile for a player
-     *
-     * This method allows the server to request projectile spawning without
-     * knowing the game-specific implementation details.
-     *
-     * @param playerNetworkId Network ID of the player shooting
-     * @param playerX Player X position
-     * @param playerY Player Y position
-     * @return Network ID of the spawned projectile (0 if failed)
-     */
-    virtual uint32_t spawnProjectile(uint32_t playerNetworkId, float playerX,
-                                     float playerY) = 0;
-
-    /**
-     * @brief Update player movement based on velocity
-     *
-     * Processes all player entities and updates their positions based on
-     * velocity components. Handles boundary clamping.
-     *
-     * @param deltaTime Time elapsed since last update
-     * @param positionCallback Called for each updated entity with
-     *                         (networkId, x, y, vx, vy)
-     */
-    virtual void updatePlayerPositions(
-        float deltaTime,
-        std::function<void(uint32_t, float, float, float, float)>
-            positionCallback) = 0;
-
-    /**
-     * @brief Set velocity for a player entity by network ID
-     *
-     * @param networkId Network ID of the player
-     * @param vx X velocity
-     * @param vy Y velocity
-     * @return true if player was found and velocity was set
-     */
-    virtual bool setPlayerVelocity(uint32_t networkId, float vx, float vy) = 0;
-
-    /**
-     * @brief Get position and velocity of a player by network ID
-     *
-     * @param networkId Network ID of the player
-     * @return PlayerState if player was found, std::nullopt otherwise
-     */
-    [[nodiscard]] virtual std::optional<PlayerState> getPlayerPosition(
-        uint32_t networkId) const = 0;
 };
 
 }  // namespace rtype::engine
@@ -234,7 +192,7 @@ namespace rtype::engine {
  * @brief Factory function to create a game engine instance
  *
  * This allows the server to create a game engine without knowing
- * the concrete implementation details.
+ * the concrete implementation details. Uses the default registered game.
  *
  * @param registry Shared pointer to the ECS registry
  * @return Unique pointer to a new game engine instance

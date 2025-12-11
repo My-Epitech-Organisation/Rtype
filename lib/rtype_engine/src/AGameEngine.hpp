@@ -26,6 +26,7 @@ namespace rtype::engine {
  *     bool initialize() override { ... }
  *     void update(float deltaTime) override { ... }
  *     void shutdown() override { ... }
+ *     std::string getGameId() const override { return "rtype"; }
  * };
  * @endcode
  */
@@ -65,41 +66,6 @@ class AGameEngine : public IGameEngine {
      * @return true if the engine is initialized and running
      */
     bool isRunning() const override { return _isRunning; }
-
-    /**
-     * @brief Default implementation - must be overridden by game engines
-     * @return 0 (failure) by default
-     */
-    uint32_t spawnProjectile(uint32_t /*playerNetworkId*/, float /*playerX*/,
-                             float /*playerY*/) override {
-        return 0;
-    }
-
-    /**
-     * @brief Default implementation - must be overridden by game engines
-     */
-    void updatePlayerPositions(
-        float /*deltaTime*/,
-        std::function<void(uint32_t, float, float, float, float)>
-        /*positionCallback*/) override { }
-
-    /**
-     * @brief Default implementation - must be overridden by game engines
-     * @return false by default
-     */
-    bool setPlayerVelocity(uint32_t /*networkId*/, float /*vx*/,
-                           float /*vy*/) override {
-        return false;
-    }
-
-    /**
-     * @brief Default implementation - must be overridden by game engines
-     * @return std::nullopt by default
-     */
-    [[nodiscard]] std::optional<PlayerState> getPlayerPosition(
-        uint32_t /*networkId*/) const override {
-        return std::nullopt;
-    }
 
    protected:
     AGameEngine() = default;
