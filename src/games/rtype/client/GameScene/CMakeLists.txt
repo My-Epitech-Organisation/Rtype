@@ -8,6 +8,8 @@ add_library(rtype_game_client_gamescene
     RtypePauseMenu.hpp
     RtypeInputHandler.cpp
     RtypeInputHandler.hpp
+    VisualCueFactory.cpp
+    VisualCueFactory.hpp
 )
 
 target_include_directories(rtype_game_client_gamescene PUBLIC
