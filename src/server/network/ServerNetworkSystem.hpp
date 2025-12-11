@@ -212,6 +212,20 @@ class ServerNetworkSystem {
     void broadcastEntityUpdates();
 
     /**
+     * @brief Broadcast entity spawn to all clients
+     *
+     * Called when a new entity is spawned by the game engine.
+     * This broadcasts directly without requiring an ECS entity.
+     *
+     * @param networkId The entity's network ID
+     * @param type Entity type for rendering
+     * @param x Initial X position
+     * @param y Initial Y position
+     */
+    void broadcastEntitySpawn(std::uint32_t networkId, EntityType type, float x,
+                              float y);
+
+    /**
      * @brief Broadcast game start signal to all clients
      *
      * Called when the server transitions to Playing state.

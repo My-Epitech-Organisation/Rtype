@@ -397,3 +397,79 @@ TEST_F(QuadTreeCollisionIntegrationTest, VerifyNoFalseNegatives) {
     }
 }
 
+// =============================================================================
+// Edge Case Tests: QuadTree not initialized
+// =============================================================================
+
+TEST_F(QuadTreeCollisionIntegrationTest, QueryCollisionPairsBeforeUpdate) {
+    // Query pairs without calling update first (QuadTree is null)
+    auto pairs = quadTreeSystem->queryCollisionPairs(*registry);
+    EXPECT_TRUE(pairs.empty());
+}
+
+TEST_F(QuadTreeCollisionIntegrationTest, QueryNearbyRectBeforeUpdate) {
+    // Query nearby without calling update first (QuadTree is null)
+    auto nearby = quadTreeSystem->queryNearby(Rect{0, 0, 100, 100});
+    EXPECT_TRUE(nearby.empty());
+}
+
+TEST_F(QuadTreeCollisionIntegrationTest, QueryNearbyRadiusBeforeUpdate) {
+    // Query nearby with radius without calling update first (QuadTree is null)
+    auto nearby = quadTreeSystem->queryNearby(500.0F, 500.0F, 100.0F);
+    EXPECT_TRUE(nearby.empty());
+}
+
+TEST_F(QuadTreeCollisionIntegrationTest, QueryNearbyWithRadius) {
+    // Create entities at known positions
+    auto e1 = createEnemy(500.0F, 500.0F);
+    auto e2 = createEnemy(550.0F, 500.0F);  // 50 units away
+    auto e3 = createEnemy(1000.0F, 1000.0F);  // Far away
+
+    quadTreeSystem->update(*registry, 0.016F);
+
+    // Query with radius that should include e1 and e2
+    auto nearby = quadTreeSystem->queryNearby(500.0F, 500.0F, 100.0F);
+
+    // Should find at least e1 (at center) and possibly e2
+    EXPECT_GE(nearby.size(), 1U);
+
+    bool foundE1 = false;
+    bool foundE3 = false;
+    for (const auto& entity : nearby) {
+        if (entity.id == e1.id) foundE1 = true;
+        if (entity.id == e3.id) foundE3 = true;
+    }
+    EXPECT_TRUE(foundE1);
+    EXPECT_FALSE(foundE3);  // e3 should not be found (too far)
+}
+
+TEST_F(QuadTreeCollisionIntegrationTest, SelfCollisionSkipped) {
+    // Create a single entity
+    auto entity = createEnemy(500.0F, 500.0F);
+
+    quadTreeSystem->update(*registry, 0.016F);
+    auto pairs = quadTreeSystem->queryCollisionPairs(*registry);
+
+    // No pairs should be found (self-collision should be skipped)
+    EXPECT_TRUE(pairs.empty());
+}
+
+TEST_F(QuadTreeCollisionIntegrationTest, DuplicatePairsAvoided) {
+    // Create two overlapping entities
+    auto e1 = createEnemy(500.0F, 500.0F);
+    auto e2 = createEnemy(510.0F, 510.0F);
+
+    quadTreeSystem->update(*registry, 0.016F);
+    auto pairs = quadTreeSystem->queryCollisionPairs(*registry);
+
+    // Should have exactly one pair (not two)
+    int pairCount = 0;
+    for (const auto& pair : pairs) {
+        if ((pair.entityA.id == e1.id && pair.entityB.id == e2.id) ||
+            (pair.entityA.id == e2.id && pair.entityB.id == e1.id)) {
+            pairCount++;
+        }
+    }
+    EXPECT_EQ(pairCount, 1);
+}
+
