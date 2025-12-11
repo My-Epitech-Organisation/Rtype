@@ -251,23 +251,17 @@ void GameEngine::updatePlayerPositions(
             return;
         }
 
-        // Update position
         pos.x += vel.vx * deltaTime;
         pos.y += vel.vy * deltaTime;
-
-        // Clamp to boundaries
         pos.x = std::clamp(pos.x, minX, maxX);
         pos.y = std::clamp(pos.y, minY, maxY);
 
-        // Sync TransformComponent if present
         if (_registry->hasComponent<shared::TransformComponent>(entity)) {
             auto& transform =
                 _registry->getComponent<shared::TransformComponent>(entity);
             transform.x = pos.x;
             transform.y = pos.y;
         }
-
-        // Callback with updated position
         positionCallback(netId.networkId, pos.x, pos.y, vel.vx, vel.vy);
     });
 }
