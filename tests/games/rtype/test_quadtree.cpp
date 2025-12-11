@@ -120,6 +120,50 @@ TEST_F(RectTest, ContainsPoint_Outside) {
     EXPECT_FALSE(rect.containsPoint(200.0F, 200.0F));
 }
 
+TEST_F(RectTest, ContainsPoint_JustOutsideEachEdge) {
+    // Test point just outside left edge (fails first condition: px >= left())
+    EXPECT_FALSE(rect.containsPoint(9.9F, 45.0F));
+    // Test point just outside right edge (fails second condition: px <= right())
+    EXPECT_FALSE(rect.containsPoint(110.1F, 45.0F));
+    // Test point just outside top edge (fails third condition: py >= top())
+    EXPECT_FALSE(rect.containsPoint(60.0F, 19.9F));
+    // Test point just outside bottom edge (fails fourth condition: py <= bottom())
+    EXPECT_FALSE(rect.containsPoint(60.0F, 70.1F));
+}
+
+TEST_F(RectTest, Intersects_NonOverlappingAllDirections) {
+    // Test rect completely to the left (fails: right() < other.left())
+    Rect toTheLeft{0.0F, 20.0F, 5.0F, 50.0F};
+    EXPECT_FALSE(rect.intersects(toTheLeft));
+    // Test rect completely to the right (fails: other.right() < left())
+    Rect toTheRight{120.0F, 20.0F, 10.0F, 50.0F};
+    EXPECT_FALSE(rect.intersects(toTheRight));
+    // Test rect completely above (fails: bottom() < other.top())
+    Rect above{10.0F, 0.0F, 100.0F, 10.0F};
+    EXPECT_FALSE(rect.intersects(above));
+    // Test rect completely below (fails: other.bottom() < top())
+    Rect below{10.0F, 80.0F, 100.0F, 10.0F};
+    EXPECT_FALSE(rect.intersects(below));
+}
+
+TEST_F(RectTest, Contains_EdgeCases) {
+    // Test contained rect touching all edges (exact fit)
+    Rect exactFit{10.0F, 20.0F, 100.0F, 50.0F};
+    EXPECT_TRUE(rect.contains(exactFit));
+    // Test rect that exceeds on left
+    Rect exceedsLeft{5.0F, 30.0F, 50.0F, 20.0F};
+    EXPECT_FALSE(rect.contains(exceedsLeft));
+    // Test rect that exceeds on right
+    Rect exceedsRight{50.0F, 30.0F, 70.0F, 20.0F};
+    EXPECT_FALSE(rect.contains(exceedsRight));
+    // Test rect that exceeds on top
+    Rect exceedsTop{30.0F, 15.0F, 50.0F, 20.0F};
+    EXPECT_FALSE(rect.contains(exceedsTop));
+    // Test rect that exceeds on bottom
+    Rect exceedsBottom{30.0F, 50.0F, 50.0F, 30.0F};
+    EXPECT_FALSE(rect.contains(exceedsBottom));
+}
+
 // =============================================================================
 // QuadTree Unit Tests
 // =============================================================================

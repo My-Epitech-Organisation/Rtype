@@ -173,23 +173,28 @@ void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
 }
 
 void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
-    auto it = this->networkIdToEntity_.find(entityId);
-    if (it == this->networkIdToEntity_.end()) {
+    LOG_DEBUG("[ClientNetworkSystem] Entity destroy received: entityId=" +
+              std::to_string(entityId));
+
+    auto it = networkIdToEntity_.find(entityId);
+    if (it == networkIdToEntity_.end()) {
+        LOG_DEBUG("[ClientNetworkSystem] Entity not found in map, skipping");
         return;
     }
 
     ECS::Entity entity = it->second;
 
-    if (this->registry_->isAlive(entity)) {
-        this->_playDeathSound(entity);
-        this->registry_->killEntity(entity);
+    if (registry_->isAlive(entity)) {
+        _playDeathSound(entity);
+        registry_->killEntity(entity);
+        LOG_DEBUG("[ClientNetworkSystem] Entity killed");
     }
 
     this->networkIdToEntity_.erase(it);
 
-    if (this->localPlayerEntity_.has_value() &&
-        *this->localPlayerEntity_ == entity) {
-        this->localPlayerEntity_.reset();
+    if (localPlayerEntity_.has_value() && *localPlayerEntity_ == entity) {
+        localPlayerEntity_.reset();
+        LOG_DEBUG("[ClientNetworkSystem] Local player entity reset!");
     }
 }
 

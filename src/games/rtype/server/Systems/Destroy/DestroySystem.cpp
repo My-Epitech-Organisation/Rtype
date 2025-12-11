@@ -19,6 +19,7 @@ using shared::DestroyTag;
 using shared::EnemyTag;
 using shared::EntityType;
 using shared::NetworkIdComponent;
+using shared::ProjectileTag;
 
 DestroySystem::DestroySystem(EventEmitter emitter,
                              EnemyCountUpdater enemyCountDecrementer)
@@ -38,6 +39,7 @@ void DestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {
         NetworkIdComponent netIdComp{};
         bool hasNetworkId = false;
         bool isEnemy = false;
+        bool isProjectile = false;
 
         if (registry.hasComponent<NetworkIdComponent>(entity)) {
             netIdComp = registry.getComponent<NetworkIdComponent>(entity);
@@ -46,6 +48,9 @@ void DestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {
         if (registry.hasComponent<EnemyTag>(entity)) {
             isEnemy = true;
         }
+        if (registry.hasComponent<ProjectileTag>(entity)) {
+            isProjectile = true;
+        }
         if (isEnemy) {
             _decrementEnemyCount();
         }
@@ -53,9 +58,13 @@ void DestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {
             engine::GameEvent event{};
             event.type = engine::GameEventType::EntityDestroyed;
             event.entityNetworkId = netIdComp.networkId;
-            event.entityType = isEnemy
-                                   ? static_cast<uint8_t>(EntityType::Enemy)
-                                   : static_cast<uint8_t>(EntityType::Player);
+            if (isEnemy) {
+                event.entityType = static_cast<uint8_t>(EntityType::Enemy);
+            } else if (isProjectile) {
+                event.entityType = static_cast<uint8_t>(EntityType::Projectile);
+            } else {
+                event.entityType = static_cast<uint8_t>(EntityType::Player);
+            }
             _emitEvent(event);
         } else {
             ::rtype::Logger::instance().warning(

@@ -105,3 +105,57 @@ TEST_F(MovementSystemTest, UpdateMovement_HighPrecision) {
     EXPECT_NEAR(transform.x, 0.024f, 0.001f);
     EXPECT_NEAR(transform.y, -0.036f, 0.001f);
 }
+
+TEST_F(MovementSystemTest, UpdateMovement_MultipleEntities) {
+    auto entity2 = registry.spawnEntity();
+    auto entity3 = registry.spawnEntity();
+    
+    registry.emplaceComponent<TransformComponent>(entity, 0.0f, 0.0f, 0.0f);
+    registry.emplaceComponent<VelocityComponent>(entity, 10.0f, 0.0f);
+    
+    registry.emplaceComponent<TransformComponent>(entity2, 100.0f, 100.0f, 0.0f);
+    registry.emplaceComponent<VelocityComponent>(entity2, -5.0f, 5.0f);
+    
+    registry.emplaceComponent<TransformComponent>(entity3, 50.0f, 50.0f, 0.0f);
+    registry.emplaceComponent<VelocityComponent>(entity3, 0.0f, -10.0f);
+
+    movementSystem.update(registry, 1.0f);
+
+    auto& t1 = registry.getComponent<TransformComponent>(entity);
+    auto& t2 = registry.getComponent<TransformComponent>(entity2);
+    auto& t3 = registry.getComponent<TransformComponent>(entity3);
+    
+    EXPECT_FLOAT_EQ(t1.x, 10.0f);
+    EXPECT_FLOAT_EQ(t1.y, 0.0f);
+    EXPECT_FLOAT_EQ(t2.x, 95.0f);
+    EXPECT_FLOAT_EQ(t2.y, 105.0f);
+    EXPECT_FLOAT_EQ(t3.x, 50.0f);
+    EXPECT_FLOAT_EQ(t3.y, 40.0f);
+    
+    registry.killEntity(entity2);
+    registry.killEntity(entity3);
+}
+
+TEST_F(MovementSystemTest, UpdateMovement_EntityWithoutVelocity) {
+    registry.emplaceComponent<TransformComponent>(entity, 10.0f, 20.0f, 0.0f);
+    // No velocity component
+
+    movementSystem.update(registry, 1.0f);
+
+    // Entity should not be affected
+    auto& transform = registry.getComponent<TransformComponent>(entity);
+    EXPECT_FLOAT_EQ(transform.x, 10.0f);
+    EXPECT_FLOAT_EQ(transform.y, 20.0f);
+}
+
+TEST_F(MovementSystemTest, UpdateMovement_NegativeDeltaTime) {
+    registry.emplaceComponent<TransformComponent>(entity, 0.0f, 0.0f, 0.0f);
+    registry.emplaceComponent<VelocityComponent>(entity, 10.0f, 10.0f);
+
+    movementSystem.update(registry, -1.0f);
+
+    // Movement system doesn't guard against negative delta, so position will decrease
+    auto& transform = registry.getComponent<TransformComponent>(entity);
+    EXPECT_FLOAT_EQ(transform.x, -10.0f);
+    EXPECT_FLOAT_EQ(transform.y, -10.0f);
+}
