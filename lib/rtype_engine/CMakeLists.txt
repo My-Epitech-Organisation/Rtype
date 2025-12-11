@@ -2,12 +2,17 @@
 # Engine Library (Static) - Aggregates ECS and Core
 # ============================================================================
 
-add_library(rtype_engine STATIC)
+add_library(rtype_engine STATIC
+    src/GameEngineFactory.cpp
+)
 
-# Engine itself has no sources, it's purely an aggregator
-# But we need to add at least one dummy source to create the library
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/engine_dummy.cpp" "// Engine aggregation library")
-target_sources(rtype_engine PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/engine_dummy.cpp")
+target_sources(rtype_engine PRIVATE
+    src/GameEngineFactory.hpp
+    src/IGameEngine.hpp
+    src/AGameEngine.hpp
+    src/ISystem.hpp
+    src/ASystem.hpp
+)
 
 target_link_libraries(rtype_engine PUBLIC
     rtype_ecs
