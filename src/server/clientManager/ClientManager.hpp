@@ -5,8 +5,8 @@
 ** ClientManager - Manages client connections and state
 */
 
-#ifndef SRC_SERVER_CLIENTMANAGER_HPP_
-#define SRC_SERVER_CLIENTMANAGER_HPP_
+#ifndef SRC_SERVER_CLIENTMANAGER_CLIENTMANAGER_HPP_
+#define SRC_SERVER_CLIENTMANAGER_CLIENTMANAGER_HPP_
 
 #include <cstdint>
 #include <memory>
@@ -253,4 +253,4 @@ class ClientManager {
 
 }  // namespace rtype::server
 
-#endif  // SRC_SERVER_CLIENTMANAGER_HPP_
+#endif  // SRC_SERVER_CLIENTMANAGER_CLIENTMANAGER_HPP_
