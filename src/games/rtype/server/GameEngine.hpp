@@ -85,8 +85,6 @@ class GameEngine : public engine::AGameEngine {
         std::function<void(uint32_t, float, float, float, float)> callback)
         override;
 
-    // ==================== IGameEngine Player Actions ====================
-
     /**
      * @brief Spawn a projectile for a player (IGameEngine interface)
      */
