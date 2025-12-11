@@ -34,11 +34,7 @@ class ServerNetworkSystem;
  * - Playing: Full game simulation running
  * - Paused: Game paused (all clients disconnected during game)
  */
-enum class GameState {
-    WaitingForPlayers,
-    Playing,
-    Paused
-};
+enum class GameState { WaitingForPlayers, Playing, Paused };
 
 /**
  * @brief Converts GameState to string representation

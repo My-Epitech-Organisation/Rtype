@@ -10,8 +10,8 @@
 
 #include <cstdint>
 #include <functional>
-#include <string>
 #include <set>
+#include <string>
 
 namespace rtype::server {
 
