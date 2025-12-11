@@ -28,8 +28,8 @@
 #include "server/serverApp/game/gameStateManager/GameStateManager.hpp"
 #include "server/serverApp/packetProcessor/PacketProcessor.hpp"
 #include "server/serverApp/player/playerInputHandler/PlayerInputHandler.hpp"
-#include "server/serverApp/player/playerSpawner/PlayerSpawner.hpp"
 #include "server/shared/Client.hpp"
+#include "server/shared/IEntitySpawner.hpp"
 #include "server/shared/IGameConfig.hpp"
 #include "server/shared/ServerMetrics.hpp"
 
@@ -46,7 +46,7 @@ using rtype::Endpoint;
  * - PacketProcessor: Packet validation
  * - PlayerInputHandler: Input processing
  * - GameEventProcessor: Event routing
- * - PlayerSpawner: Entity spawning
+ * - IEntitySpawner: Entity spawning (game-specific)
  * - ServerLoop: Main loop timing
  */
 class ServerApp {
@@ -170,7 +170,7 @@ class ServerApp {
     PacketProcessor _packetProcessor;
     std::unique_ptr<PlayerInputHandler> _inputHandler;
     std::unique_ptr<GameEventProcessor> _eventProcessor;
-    std::unique_ptr<PlayerSpawner> _playerSpawner;
+    std::unique_ptr<IEntitySpawner> _entitySpawner;
 
     SafeQueue<std::pair<Endpoint, std::vector<uint8_t>>> _rawNetworkData;
     SafeQueue<std::pair<Endpoint, rtype::network::Packet>> _incomingPackets;

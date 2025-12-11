@@ -11,6 +11,8 @@
 #include <memory>
 #include <span>
 
+#include "server/serverApp/game/entitySpawnerFactory/EntitySpawnerFactory.hpp"
+
 namespace rtype::server {
 
 ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
@@ -196,15 +198,43 @@ bool ServerApp::initialize() {
     _networkSystem->onClientDisconnected(
         [this](std::uint32_t userId) { handleClientDisconnected(userId); });
 
-    _playerSpawner =
-        std::make_unique<PlayerSpawner>(_registry, _networkSystem.get());
+    std::string gameId = _gameConfig && _gameConfig->isInitialized()
+                             ? _gameConfig->getGameId()
+                             : "rtype";
+
+    GameEngineOpt gameEngineOpt = std::nullopt;
+    if (_gameEngine) {
+        gameEngineOpt = std::ref(*_gameEngine);
+    }
+    GameConfigOpt gameConfigOpt = std::nullopt;
+    if (_gameConfig && _gameConfig->isInitialized()) {
+        gameConfigOpt = std::cref(*_gameConfig);
+    }
+
+    _entitySpawner = EntitySpawnerFactory::create(
+        gameId, _registry, _networkSystem, gameEngineOpt, gameConfigOpt);
+
+    if (!_entitySpawner) {
+        LOG_ERROR(
+            "[Server] Failed to create entity spawner for game: " << gameId);
+        return false;
+    }
+    LOG_INFO("[Server] Entity spawner created for game: " << gameId);
+
     _inputHandler = std::make_unique<PlayerInputHandler>(
         _registry, _networkSystem, _stateManager, _gameConfig, _verbose);
     _eventProcessor = std::make_unique<GameEventProcessor>(
         _gameEngine, _networkSystem, _verbose);
     _inputHandler->setShootCallback(
         [this](std::uint32_t networkId, float x, float y) {
-            return _gameEngine->spawnProjectile(networkId, x, y);
+            if (!_entitySpawner) {
+                return 0u;
+            }
+            auto entityOpt = _networkSystem->findEntityByNetworkId(networkId);
+            if (!entityOpt.has_value()) {
+                return 0u;
+            }
+            return _entitySpawner->handlePlayerShoot(*entityOpt, networkId);
         });
     _networkSystem->setInputHandler([this](std::uint32_t userId,
                                            std::uint8_t inputMask,
@@ -269,9 +299,9 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
                                                 << " to signal ready");
     }
 
-    if (_playerSpawner) {
-        auto result = _playerSpawner->spawnPlayer(
-            userId, _stateManager->getReadyPlayerCount());
+    if (_entitySpawner) {
+        PlayerSpawnConfig config{userId, _stateManager->getReadyPlayerCount()};
+        auto result = _entitySpawner->spawnPlayer(config);
         if (!result.success) {
             LOG_ERROR("[Server] Failed to spawn player for userId=" << userId);
         }
@@ -282,8 +312,8 @@ void ServerApp::handleClientDisconnected(std::uint32_t userId) {
     LOG_INFO("[Server] Client disconnected: userId=" << userId);
     _stateManager->playerLeft(userId);
 
-    if (_playerSpawner) {
-        _playerSpawner->destroyPlayer(userId);
+    if (_entitySpawner) {
+        _entitySpawner->destroyPlayerByUserId(userId);
     }
 }
 
@@ -377,10 +407,10 @@ void ServerApp::networkThreadFunction() noexcept {
 }
 
 void ServerApp::updatePlayerMovement(float deltaTime) noexcept {
-    if (!_gameEngine || !_gameEngine->isRunning()) {
+    if (!_entitySpawner) {
         return;
     }
-    _gameEngine->updatePlayerPositions(
+    _entitySpawner->updateAllPlayersMovement(
         deltaTime,
         [this](uint32_t networkId, float x, float y, float vx, float vy) {
             if (_networkSystem) {
