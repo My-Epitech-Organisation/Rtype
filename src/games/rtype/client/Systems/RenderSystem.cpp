@@ -99,6 +99,10 @@ void RenderSystem::_renderButtons(ECS::Registry& registry) {
             float rectWidth = rectData.size.first;
             float rectHeight = rectData.size.second;
 
+            textData.text.setCharacterSize(textData.size);
+            textData.text.setFillColor(textData.color);
+            textData.text.setString(textData.textContent);
+
             sf::FloatRect textBounds = textData.text.getLocalBounds();
             float textWidth = textBounds.size.x;
             float textHeight = textBounds.size.y;
@@ -109,9 +113,6 @@ void RenderSystem::_renderButtons(ECS::Registry& registry) {
                 rectY + (rectHeight / 2.0f) - (textHeight / 2.0f) - textTop;
 
             textData.text.setPosition({centerX, centerY});
-            textData.text.setCharacterSize(textData.size);
-            textData.text.setFillColor(textData.color);
-            textData.text.setString(textData.textContent);
 
             _window->draw(rectData.rectangle);
             _window->draw(textData.text);

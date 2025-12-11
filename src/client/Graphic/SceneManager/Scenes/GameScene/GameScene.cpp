@@ -54,8 +54,8 @@ GameScene::GameScene(
     this->_assetsManager->textureManager->load(
         "projectile_player_laser",
         this->_assetsManager->configGameAssets.assets.textures.missileLaser);
-    if (this->_audio && this->_assetsManager &&
-        this->_assetsManager->audioManager) {
+    if (!this->_audio) return;
+    if (this->_assetsManager && this->_assetsManager->audioManager) {
         this->_assetsManager->audioManager->load(
             "main_game_music",
             this->_assetsManager->configGameAssets.assets.music.game);

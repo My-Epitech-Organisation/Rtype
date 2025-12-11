@@ -12,7 +12,9 @@
 
 #include "../shared/Components/HealthComponent.hpp"
 #include "AllComponents.hpp"
+#include "AudioLib/AudioLib.hpp"
 #include "Components/LifetimeComponent.hpp"
+#include "Components/SoundComponent.hpp"
 #include "Components/Tags.hpp"
 #include "GraphicsConstants.hpp"
 #include "Logger/Macros.hpp"
@@ -69,6 +71,11 @@ void RtypeEntityFactory::setupPlayerEntity(
     reg.emplaceComponent<PlayerTag>(entity);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
+    reg.emplaceComponent<PlayerSoundComponent>(
+        entity, assetsManager->soundManager->get("player_spawn"),
+        assetsManager->soundManager->get("player_death"));
+    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+    lib->playSFX(*assetsManager->soundManager->get("player_spawn"));
 }
 
 void RtypeEntityFactory::setupBydosEntity(
@@ -82,6 +89,11 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.emplaceComponent<Size>(entity, 2, 2);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
+    reg.emplaceComponent<EnemySoundComponent>(
+        entity, assetsManager->soundManager->get("bydos_spawn"),
+        assetsManager->soundManager->get("bydos_death"));
+    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+    lib->playSFX(*assetsManager->soundManager->get("bydos_spawn"));
 }
 
 void RtypeEntityFactory::setupMissileEntity(
@@ -99,6 +111,8 @@ void RtypeEntityFactory::setupMissileEntity(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
     reg.emplaceComponent<Size>(entity, 1, 1);
     reg.emplaceComponent<GameTag>(entity);
+    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+    lib->playSFX(*assetsManager->soundManager->get("laser_sfx"));
 }
 
 }  // namespace rtype::games::rtype::client

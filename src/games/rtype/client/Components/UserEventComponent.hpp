@@ -25,7 +25,7 @@ namespace rtype::games::rtype::client {
 struct UserEvent {
     bool idle = true;
     bool isHovered = false;
-    bool isClicked = false;
+    bool isPressed = false;
     bool isReleased = false;
 };
 

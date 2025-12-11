@@ -23,7 +23,7 @@ TEST(EntityFactoryTest, CreateButton_AddsComponents) {
     rtype::games::rtype::client::Rectangle rect{{100.0f, 50.0f}, sf::Color::Blue, sf::Color::Red};
     std::function<void()> onClick = []() {};
 
-    auto entity = EntityFactory::createButton(registry, text, pos, rect, onClick);
+    auto entity = EntityFactory::createButton(registry, text, pos, rect, nullptr, onClick);
 
     EXPECT_TRUE(registry->hasComponent<rtype::games::rtype::client::Text>(entity));
     EXPECT_TRUE(registry->hasComponent<rtype::games::rtype::shared::Position>(entity));
@@ -41,7 +41,7 @@ TEST(EntityFactoryTest, CreateButton_ReturnsValidEntity) {
     rtype::games::rtype::client::Rectangle rect{{100.0f, 50.0f}, sf::Color::Blue, sf::Color::Red};
     std::function<void()> onClick = []() {};
 
-    auto entity =  EntityFactory::createButton(registry, text, pos, rect, onClick);
+    auto entity =  EntityFactory::createButton(registry, text, pos, rect, nullptr, onClick);
 
     EXPECT_NE(entity, ECS::Entity{});
 }

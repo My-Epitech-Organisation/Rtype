@@ -20,6 +20,7 @@
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 
 void Graphic::_pollEvents() {
+    this->_systemScheduler->runSystem("reset_triggers");
     while (const std::optional event = this->_window->pollEvent()) {
         if (!event) return;
         if (event->is<sf::Event::Closed>()) {
@@ -73,7 +74,6 @@ void Graphic::_display() {
 
 void Graphic::loop() {
     while (this->_window->isOpen()) {
-        this->_systemScheduler->runSystem("reset_triggers");
         this->_pollEvents();
         this->_update();
         this->_display();
@@ -117,7 +117,7 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
     this->_eventSystem =
         std::make_unique<::rtype::games::rtype::client::EventSystem>(
-            this->_window);
+            this->_window, this->_audioLib);
     this->_projectileSystem =
         std::make_unique<::rtype::games::rtype::shared::ProjectileSystem>();
     this->_lifetimeSystem =
@@ -175,6 +175,39 @@ void Graphic::_initializeSystems() {
         {"render"});
 }
 
+void Graphic::_initializeCommonAssets() {
+    auto manager = this->_assetsManager;
+    auto config = manager->configGameAssets;
+
+    manager->fontManager->load("title_font", config.assets.fonts.TitleFont);
+    manager->fontManager->load("main_font", config.assets.fonts.MainFont);
+
+    manager->textureManager->load("bg_menu", config.assets.textures.background);
+    manager->textureManager->load("bg_planet_1",
+                                  config.assets.textures.planet1);
+    manager->textureManager->load("bg_planet_2",
+                                  config.assets.textures.planet2);
+    manager->textureManager->load("bg_planet_3",
+                                  config.assets.textures.planet3);
+    manager->textureManager->load("astro_vessel",
+                                  config.assets.textures.astroVessel);
+    manager->textureManager->load("player_vessel",
+                                  config.assets.textures.Player);
+
+    manager->soundManager->load("hover_button", config.assets.sfx.hoverButton);
+    manager->soundManager->load("click_button", config.assets.sfx.clickButton);
+    manager->soundManager->load("player_spawn", config.assets.sfx.playerSpawn);
+    manager->soundManager->load("player_death", config.assets.sfx.playerDeath);
+    manager->soundManager->load("bydos_spawn", config.assets.sfx.enemySpawn);
+    manager->soundManager->load("bydos_death", config.assets.sfx.enemyDeath);
+    manager->soundManager->load("laser_sfx", config.assets.sfx.laser);
+
+    manager->textureManager->get("bg_menu").setRepeated(true);
+    manager->textureManager->get("bg_planet_1").setRepeated(true);
+    manager->textureManager->get("bg_planet_2").setRepeated(true);
+    manager->textureManager->get("bg_planet_3").setRepeated(true);
+}
+
 Graphic::Graphic(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,
@@ -196,6 +229,8 @@ Graphic::Graphic(
         _setupNetworkEntityFactory();
     }
     this->_audioLib = std::make_shared<AudioLib>();
+    this->_registry->setSingleton<std::shared_ptr<AudioLib>>(this->_audioLib);
+    this->_initializeCommonAssets();
     this->_sceneManager = std::make_unique<SceneManager>(
         _registry, this->_assetsManager, this->_window, this->_keybinds,
         _networkClient, _networkSystem, this->_audioLib);

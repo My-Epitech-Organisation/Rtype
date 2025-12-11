@@ -15,8 +15,10 @@ ResetTriggersSystem::ResetTriggersSystem()
     : ::rtype::engine::ASystem("ResetTriggersSystem") {}
 
 void ResetTriggersSystem::update(ECS::Registry& registry, float /*dt*/) {
-    registry.view<UserEvent>().each(
-        [](auto /*entity*/, UserEvent& event) { event.isReleased = false; });
+    registry.view<UserEvent>().each([](auto /*entity*/, UserEvent& event) {
+        event.idle = true;
+        event.isReleased = false;
+    });
 }
 
 }  // namespace rtype::games::rtype::client
