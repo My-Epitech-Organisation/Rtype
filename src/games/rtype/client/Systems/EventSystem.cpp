@@ -7,6 +7,7 @@
 
 #include "EventSystem.hpp"
 
+#include <map>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -64,10 +65,22 @@ void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
         } else if (const auto& joyEvent =
                        _event->getIf<sf::Event::JoystickMoved>()) {
             if (joyEvent->axis == sf::Joystick::Axis::Y) {
+                static std::map<unsigned int, bool> lastUpPressed;
+                static std::map<unsigned int, bool> lastDownPressed;
+
                 if (joyEvent->position > 95.0f) {
-                    _handleMenuNavigation(registry, buttonEntities, true);
+                    if (!lastUpPressed[joyEvent->joystickId]) {
+                        _handleMenuNavigation(registry, buttonEntities, true);
+                        lastUpPressed[joyEvent->joystickId] = true;
+                    }
                 } else if (joyEvent->position < -95.0f) {
-                    _handleMenuNavigation(registry, buttonEntities, false);
+                    if (!lastDownPressed[joyEvent->joystickId]) {
+                        _handleMenuNavigation(registry, buttonEntities, false);
+                        lastDownPressed[joyEvent->joystickId] = true;
+                    }
+                } else {
+                    lastUpPressed[joyEvent->joystickId] = false;
+                    lastDownPressed[joyEvent->joystickId] = false;
                 }
             }
         } else if (const auto& joyBtnEvent =
