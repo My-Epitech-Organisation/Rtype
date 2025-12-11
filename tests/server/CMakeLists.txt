@@ -330,6 +330,7 @@ target_compile_features(test_game_state_manager PRIVATE cxx_std_20)
 target_link_libraries(test_game_state_manager PRIVATE
     GTest::gtest_main
     rtype_common
+    rtype_toml_parser
 )
 
 include(GoogleTest)
