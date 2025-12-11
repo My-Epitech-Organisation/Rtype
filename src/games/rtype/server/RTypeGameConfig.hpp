@@ -18,7 +18,7 @@
 #include "games/rtype/shared/Config/GameState/RTypeGameState.hpp"
 #include "games/rtype/shared/Config/Parser/RTypeConfigParser.hpp"
 #include "games/rtype/shared/Config/SaveManager/RTypeSaveManager.hpp"
-#include "server/IGameConfig.hpp"
+#include "server/shared/IGameConfig.hpp"
 
 namespace rtype::games::rtype::server {
 
