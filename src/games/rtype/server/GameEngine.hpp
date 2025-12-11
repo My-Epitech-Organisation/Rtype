@@ -85,23 +85,39 @@ class GameEngine : public engine::AGameEngine {
         std::function<void(uint32_t, float, float, float, float)> callback)
         override;
 
+    // ==================== IGameEngine Player Actions ====================
+
+    /**
+     * @brief Spawn a projectile for a player (IGameEngine interface)
+     */
+    uint32_t spawnProjectile(uint32_t playerNetworkId, float playerX,
+                             float playerY) override;
+
+    /**
+     * @brief Update player positions based on velocity (IGameEngine interface)
+     */
+    void updatePlayerPositions(
+        float deltaTime,
+        std::function<void(uint32_t, float, float, float, float)>
+            positionCallback) override;
+
+    /**
+     * @brief Set velocity for a player entity (IGameEngine interface)
+     */
+    bool setPlayerVelocity(uint32_t networkId, float vx, float vy) override;
+
+    /**
+     * @brief Get position and velocity of a player (IGameEngine interface)
+     */
+    bool getPlayerPosition(uint32_t networkId, float& outX, float& outY,
+                           float& outVx, float& outVy) const override;
+
     /**
      * @brief Get the ECS registry
      * @return Reference to the ECS registry
      */
     ECS::Registry& getRegistry() { return *_registry; }
     const ECS::Registry& getRegistry() const { return *_registry; }
-
-    /**
-     * @brief Spawn a player projectile
-     * @param playerEntity The player entity that is shooting
-     * @param playerNetworkId Network ID of the player
-     * @param playerX Player X position
-     * @param playerY Player Y position
-     * @return Network ID of the spawned projectile (0 if failed)
-     */
-    uint32_t spawnPlayerProjectile(uint32_t playerNetworkId, float playerX,
-                                   float playerY);
 
     /**
      * @brief Get projectile spawner system (for advanced configuration)

@@ -160,6 +160,62 @@ class IGameEngine {
      */
     virtual void syncEntityPositions(
         std::function<void(uint32_t, float, float, float, float)> callback) = 0;
+
+    // ==================== Player Actions ====================
+
+    /**
+     * @brief Spawn a projectile for a player
+     *
+     * This method allows the server to request projectile spawning without
+     * knowing the game-specific implementation details.
+     *
+     * @param playerNetworkId Network ID of the player shooting
+     * @param playerX Player X position
+     * @param playerY Player Y position
+     * @return Network ID of the spawned projectile (0 if failed)
+     */
+    virtual uint32_t spawnProjectile(uint32_t playerNetworkId, float playerX,
+                                     float playerY) = 0;
+
+    // ==================== Entity Movement ====================
+
+    /**
+     * @brief Update player movement based on velocity
+     *
+     * Processes all player entities and updates their positions based on
+     * velocity components. Handles boundary clamping.
+     *
+     * @param deltaTime Time elapsed since last update
+     * @param positionCallback Called for each updated entity with
+     *                         (networkId, x, y, vx, vy)
+     */
+    virtual void updatePlayerPositions(
+        float deltaTime,
+        std::function<void(uint32_t, float, float, float, float)>
+            positionCallback) = 0;
+
+    /**
+     * @brief Set velocity for a player entity by network ID
+     *
+     * @param networkId Network ID of the player
+     * @param vx X velocity
+     * @param vy Y velocity
+     * @return true if player was found and velocity was set
+     */
+    virtual bool setPlayerVelocity(uint32_t networkId, float vx, float vy) = 0;
+
+    /**
+     * @brief Get position and velocity of a player by network ID
+     *
+     * @param networkId Network ID of the player
+     * @param outX Output X position
+     * @param outY Output Y position
+     * @param outVx Output X velocity
+     * @param outVy Output Y velocity
+     * @return true if player was found
+     */
+    virtual bool getPlayerPosition(uint32_t networkId, float& outX, float& outY,
+                                   float& outVx, float& outVy) const = 0;
 };
 
 }  // namespace rtype::engine

@@ -66,6 +66,46 @@ class AGameEngine : public IGameEngine {
      */
     bool isRunning() const override { return _isRunning; }
 
+    // ==================== Default Player Action Implementations ====================
+
+    /**
+     * @brief Default implementation - must be overridden by game engines
+     * @return 0 (failure) by default
+     */
+    uint32_t spawnProjectile(uint32_t /*playerNetworkId*/, float /*playerX*/,
+                             float /*playerY*/) override {
+        return 0;  // Default: not implemented
+    }
+
+    /**
+     * @brief Default implementation - must be overridden by game engines
+     */
+    void updatePlayerPositions(
+        float /*deltaTime*/,
+        std::function<void(uint32_t, float, float, float, float)>
+        /*positionCallback*/) override {
+        // Default: no-op
+    }
+
+    /**
+     * @brief Default implementation - must be overridden by game engines
+     * @return false by default
+     */
+    bool setPlayerVelocity(uint32_t /*networkId*/, float /*vx*/,
+                           float /*vy*/) override {
+        return false;  // Default: not implemented
+    }
+
+    /**
+     * @brief Default implementation - must be overridden by game engines
+     * @return false by default
+     */
+    bool getPlayerPosition(uint32_t /*networkId*/, float& /*outX*/,
+                           float& /*outY*/, float& /*outVx*/,
+                           float& /*outVy*/) const override {
+        return false;  // Default: not implemented
+    }
+
    protected:
     AGameEngine() = default;
 

@@ -7,12 +7,17 @@
 
 #include "GameEngine.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
 
 #include "../shared/Components/EntityType.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
+#include "../shared/Components/PositionComponent.hpp"
+#include "../shared/Components/Tags.hpp"
+#include "../shared/Components/TransformComponent.hpp"
+#include "../shared/Components/VelocityComponent.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 
 namespace rtype::games::rtype::server {
@@ -213,13 +218,106 @@ void GameEngine::syncEntityPositions(
     });
 }
 
-uint32_t GameEngine::spawnPlayerProjectile(uint32_t playerNetworkId,
-                                           float playerX, float playerY) {
+uint32_t GameEngine::spawnProjectile(uint32_t playerNetworkId,
+                                     float playerX, float playerY) {
     if (!_running || !_projectileSpawnerSystem) {
         return 0;
     }
     return _projectileSpawnerSystem->spawnPlayerProjectile(
         *_registry, playerNetworkId, playerX, playerY);
+}
+
+void GameEngine::updatePlayerPositions(
+    float deltaTime,
+    std::function<void(uint32_t, float, float, float, float)> positionCallback) {
+    if (!_running || !positionCallback) {
+        return;
+    }
+
+    constexpr float minX = 0.0F;
+    constexpr float maxX = GameConfig::SCREEN_WIDTH - 64.0F;
+    constexpr float minY = 0.0F;
+    constexpr float maxY = GameConfig::SCREEN_HEIGHT - 64.0F;
+
+    auto view = _registry->view<shared::PlayerTag, shared::Position,
+                                 shared::VelocityComponent,
+                                 shared::NetworkIdComponent>();
+
+    view.each([&](ECS::Entity entity, const shared::PlayerTag& /*tag*/,
+                  shared::Position& pos, shared::VelocityComponent& vel,
+                  const shared::NetworkIdComponent& netId) {
+        if (vel.vx == 0.0F && vel.vy == 0.0F) {
+            return;
+        }
+
+        // Update position
+        pos.x += vel.vx * deltaTime;
+        pos.y += vel.vy * deltaTime;
+
+        // Clamp to boundaries
+        pos.x = std::clamp(pos.x, minX, maxX);
+        pos.y = std::clamp(pos.y, minY, maxY);
+
+        // Sync TransformComponent if present
+        if (_registry->hasComponent<shared::TransformComponent>(entity)) {
+            auto& transform =
+                _registry->getComponent<shared::TransformComponent>(entity);
+            transform.x = pos.x;
+            transform.y = pos.y;
+        }
+
+        // Callback with updated position
+        positionCallback(netId.networkId, pos.x, pos.y, vel.vx, vel.vy);
+    });
+}
+
+bool GameEngine::setPlayerVelocity(uint32_t networkId, float vx, float vy) {
+    if (!_running) {
+        return false;
+    }
+
+    auto view = _registry->view<shared::PlayerTag, shared::VelocityComponent,
+                                 shared::NetworkIdComponent>();
+
+    bool found = false;
+    view.each([&](ECS::Entity /*entity*/, const shared::PlayerTag& /*tag*/,
+                  shared::VelocityComponent& vel,
+                  const shared::NetworkIdComponent& netId) {
+        if (netId.networkId == networkId) {
+            vel.vx = vx;
+            vel.vy = vy;
+            found = true;
+        }
+    });
+
+    return found;
+}
+
+bool GameEngine::getPlayerPosition(uint32_t networkId, float& outX, float& outY,
+                                   float& outVx, float& outVy) const {
+    if (!_running) {
+        return false;
+    }
+
+    auto view = _registry->view<shared::PlayerTag, shared::Position,
+                                 shared::VelocityComponent,
+                                 shared::NetworkIdComponent>();
+
+    bool found = false;
+    view.each([&](ECS::Entity /*entity*/, const shared::PlayerTag& /*tag*/,
+                  const shared::Position& pos,
+                  const shared::VelocityComponent& vel,
+                  const shared::NetworkIdComponent& netId) {
+        if (netId.networkId == networkId) {
+            outX = pos.x;
+            outY = pos.y;
+            outVx = vel.vx;
+            outVy = vel.vy;
+            found = true;
+        }
+    });
+
+    return found;
 }
 
 void GameEngine::emitEvent(const engine::GameEvent& event) {
