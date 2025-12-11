@@ -144,13 +144,11 @@ std::unique_ptr<IGameEngine> createGameEngine(
         return GameEngineFactory::create(defaultGame, std::move(registry));
     }
 
-    // If no default game is set, try to use the first registered game
     auto registeredGames = GameEngineFactory::getRegisteredGames();
     if (!registeredGames.empty()) {
         return GameEngineFactory::create(registeredGames[0], std::move(registry));
     }
 
-    // No games registered - return nullptr
     return nullptr;
 }
 
