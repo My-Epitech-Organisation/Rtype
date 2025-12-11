@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <mutex>
+#include <string>
 #include <vector>
 
 #include <rtype/ecs.hpp>
@@ -71,6 +72,8 @@ class GameEngine : public engine::AGameEngine {
     GameEngine(GameEngine&&) = delete;
     GameEngine& operator=(GameEngine&&) = delete;
 
+    // ==================== IGameEngine Interface ====================
+
     bool initialize() override;
     void update(float deltaTime) override;
     void shutdown() override;
@@ -79,36 +82,24 @@ class GameEngine : public engine::AGameEngine {
     void clearPendingEvents() override;
     std::size_t getEntityCount() const override;
     bool isRunning() const override;
+    [[nodiscard]] std::string getGameId() const override { return "rtype"; }
     engine::ProcessedEvent processEvent(
         const engine::GameEvent& event) override;
     void syncEntityPositions(
         std::function<void(uint32_t, float, float, float, float)> callback)
         override;
 
+    // ==================== R-Type Specific Methods ====================
+
     /**
-     * @brief Spawn a projectile for a player (IGameEngine interface)
+     * @brief Spawn a projectile for a player
+     * @param playerNetworkId Network ID of the player shooting
+     * @param playerX Player X position
+     * @param playerY Player Y position
+     * @return Network ID of the spawned projectile (0 if failed)
      */
     uint32_t spawnProjectile(uint32_t playerNetworkId, float playerX,
-                             float playerY) override;
-
-    /**
-     * @brief Update player positions based on velocity (IGameEngine interface)
-     */
-    void updatePlayerPositions(
-        float deltaTime,
-        std::function<void(uint32_t, float, float, float, float)>
-            positionCallback) override;
-
-    /**
-     * @brief Set velocity for a player entity (IGameEngine interface)
-     */
-    bool setPlayerVelocity(uint32_t networkId, float vx, float vy) override;
-
-    /**
-     * @brief Get position and velocity of a player (IGameEngine interface)
-     */
-    [[nodiscard]] std::optional<engine::PlayerState> getPlayerPosition(
-        uint32_t networkId) const override;
+                             float playerY);
 
     /**
      * @brief Get the ECS registry
