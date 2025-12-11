@@ -7,15 +7,19 @@
 
 #include "Graphic.hpp"
 
+#include <algorithm>
+#include <array>
 #include <optional>
 #include <utility>
 
+#include "Accessibility.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "Config/Parser/RTypeConfigParser.hpp"
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "games/rtype/client/AllComponents.hpp"
 #include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"
+#include "games/rtype/client/PauseState.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 
@@ -50,30 +54,126 @@ void Graphic::_updateNetwork() {
 }
 
 void Graphic::_update() {
+    static int updateCount = 0;
+    updateCount++;
+    if (updateCount % 60 == 0) {
+        LOG_DEBUG("[Graphic] Update count: " << updateCount);
+    }
+
     _updateDeltaTime();
     _updateNetwork();
-    _updateViewScrolling();
-
-    this->_systemScheduler->runSystem("movement");
-    this->_systemScheduler->runSystem("parallax");
     this->_systemScheduler->runSystem("button_update");
-    this->_systemScheduler->runSystem("projectile");
+
+    bool isPaused = false;
+    if (this->_registry &&
+        this->_registry
+            ->hasSingleton<rtype::games::rtype::client::PauseState>()) {
+        try {
+            isPaused =
+                this->_registry
+                    ->getSingleton<rtype::games::rtype::client::PauseState>()
+                    .isPaused;
+        } catch (const std::exception& e) {
+            LOG_ERROR("[Graphic] Exception accessing PauseState: " << e.what());
+        } catch (...) {
+            LOG_ERROR("[Graphic] Unknown exception accessing PauseState");
+        }
+    }
+
+    if (!isPaused) {
+        _updateViewScrolling();
+        this->_systemScheduler->runSystem("movement");
+        this->_systemScheduler->runSystem("parallax");
+        this->_systemScheduler->runSystem("projectile");
+    }
+
     this->_systemScheduler->runSystem("lifetime");
     this->_sceneManager->update(this->_currentDeltaTime);
 }
 
 void Graphic::_display() {
-    this->_window->clear();
+    this->_sceneTexture.clear();
 
     this->_systemScheduler->runSystem("render");
     this->_systemScheduler->runSystem("boxing");
 
+    this->_sceneTexture.display();
+
+    this->_window->clear();
+
+    sf::Sprite composed(this->_sceneTexture.getTexture());
+
+    sf::Shader* shader = nullptr;
+    if (this->_colorShader &&
+        this->_registry->hasSingleton<AccessibilitySettings>()) {
+        const auto& acc =
+            this->_registry->getSingleton<AccessibilitySettings>();
+        auto makeMat3 = [](std::initializer_list<float> values) {
+            std::array<float, 9> data{};
+            std::copy(values.begin(), values.end(), data.begin());
+            return sf::Glsl::Mat3(data.data());
+        };
+
+        auto mat = makeMat3({1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f});
+        float contrast = 1.0f;
+        float intensity = std::clamp(acc.intensity, 0.0f, 1.5f);
+        switch (acc.colorMode) {
+            case ColorBlindMode::Protanopia:
+                mat = makeMat3({0.566f, 0.433f, 0.0f, 0.558f, 0.442f, 0.0f,
+                                0.0f, 0.242f, 0.758f});
+                break;
+            case ColorBlindMode::Deuteranopia:
+                mat = makeMat3(
+                    {0.625f, 0.375f, 0.0f, 0.7f, 0.3f, 0.0f, 0.0f, 0.3f, 0.7f});
+                break;
+            case ColorBlindMode::Tritanopia:
+                mat = makeMat3({0.95f, 0.05f, 0.0f, 0.0f, 0.433f, 0.567f, 0.0f,
+                                0.475f, 0.525f});
+                break;
+            case ColorBlindMode::Achromatopsia:
+                mat = makeMat3({0.2126f, 0.2126f, 0.2126f, 0.7152f, 0.7152f,
+                                0.7152f, 0.0722f, 0.0722f, 0.0722f});
+                contrast = 1.3f;
+                break;
+            case ColorBlindMode::HighContrast:
+                mat = makeMat3({0.299f, 0.299f, 0.299f, 0.587f, 0.587f, 0.587f,
+                                0.114f, 0.114f, 0.114f});
+                contrast = 1.6f;
+                break;
+            case ColorBlindMode::None:
+            default:
+                break;
+        }
+        if (acc.colorMode != ColorBlindMode::None) {
+            this->_colorShader->setUniform("texture",
+                                           sf::Shader::CurrentTexture);
+            this->_colorShader->setUniform("colorMatrix", mat);
+            this->_colorShader->setUniform("contrast", contrast);
+            this->_colorShader->setUniform("intensity", intensity);
+            shader = this->_colorShader.get();
+        }
+    }
+
+    this->_window->draw(composed, shader);
+
+    // UI / scene specific rendering (menus) stays unfiltered for clarity
     this->_sceneManager->draw();
     this->_window->display();
 }
 
 void Graphic::loop() {
+    // Limit to 60 FPS to prevent infinite loop
+    this->_window->setFramerateLimit(60);
+    LOG_DEBUG("[Graphic] Frame rate limited to 60 FPS");
+
+    int frameCount = 0;
     while (this->_window->isOpen()) {
+        frameCount++;
+        if (frameCount % 300 == 0) {  // Log every 5 seconds at 60 FPS
+            LOG_DEBUG("[Graphic] Main loop frame "
+                      << frameCount
+                      << " - Window open: " << this->_window->isOpen());
+        }
         this->_pollEvents();
         this->_update();
         this->_display();
@@ -107,12 +207,14 @@ void Graphic::_initializeSystems() {
     this->_parallaxScrolling =
         std::make_unique<::rtype::games::rtype::client::ParallaxScrolling>(
             this->_view);
+    auto targetPtr = std::shared_ptr<sf::RenderTarget>(
+        &_sceneTexture, [](sf::RenderTarget*) {});
     this->_renderSystem =
         std::make_unique<::rtype::games::rtype::client::RenderSystem>(
-            this->_window);
+            targetPtr);
     this->_boxingSystem =
         std::make_unique<::rtype::games::rtype::client::BoxingSystem>(
-            this->_window);
+            targetPtr);
     this->_resetTriggersSystem =
         std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
     this->_eventSystem =
@@ -224,12 +326,28 @@ Graphic::Graphic(
     this->_window = std::make_shared<sf::RenderWindow>(
         sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");
     this->_window->setView(*this->_view);
+
+    sf::RenderTexture sceneTexture({WINDOW_WIDTH, WINDOW_HEIGHT});
+    this->_sceneTexture = std::move(sceneTexture);
+
+    if (sf::Shader::isAvailable()) {
+        auto shader = std::make_shared<sf::Shader>();
+        if (shader->loadFromFile("assets/shaders/colorblind.frag",
+                                 sf::Shader::Type::Fragment)) {
+            this->_colorShader = shader;
+        }
+    }
     this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value());
     if (_networkSystem) {
         _setupNetworkEntityFactory();
     }
     this->_audioLib = std::make_shared<AudioLib>();
     this->_registry->setSingleton<std::shared_ptr<AudioLib>>(this->_audioLib);
+    this->_registry->setSingleton<AccessibilitySettings>(
+        AccessibilitySettings{ColorBlindMode::None});
+    // Initialize pause state early to prevent any issues
+    this->_registry->setSingleton<rtype::games::rtype::client::PauseState>(
+        rtype::games::rtype::client::PauseState{false});
     this->_initializeCommonAssets();
     this->_sceneManager = std::make_unique<SceneManager>(
         _registry, this->_assetsManager, this->_window, this->_keybinds,
