@@ -185,3 +185,21 @@ target_include_directories(test_quadtree_integration PRIVATE
 )
 
 gtest_discover_tests(test_quadtree_integration)
+
+# ProjectileSpawnerSystem tests
+add_executable(test_projectile_spawner_system test_ProjectileSpawnerSystem.cpp)
+
+target_link_libraries(test_projectile_spawner_system PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    rtype_engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_projectile_spawner_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib/rtype_ecs/src
+)
+
+gtest_discover_tests(test_projectile_spawner_system)
