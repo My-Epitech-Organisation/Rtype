@@ -51,13 +51,11 @@ PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
     ECS::Entity playerEntity = _registry->spawnEntity();
     result.entity = playerEntity;
 
-    // Position and Transform
     _registry->emplaceComponent<Position>(playerEntity, result.x, result.y);
     _registry->emplaceComponent<TransformComponent>(playerEntity, result.x,
                                                     result.y, 0.0F);
     _registry->emplaceComponent<Velocity>(playerEntity, 0.0F, 0.0F);
 
-    // Combat components
     _registry->emplaceComponent<ShootCooldown>(playerEntity,
                                                _config.shootCooldown);
     Weapon weapon{};
@@ -66,18 +64,15 @@ PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
     weapon.unlockedSlots = 1;
     _registry->emplaceComponent<Weapon>(playerEntity, weapon);
 
-    // Collision
     _registry->emplaceComponent<BoundingBox>(playerEntity, _config.playerWidth,
                                              _config.playerHeight);
 
-    // Tags and identification
     _registry->emplaceComponent<PlayerTag>(playerEntity);
     _registry->emplaceComponent<Health>(playerEntity, _config.playerLives,
                                         _config.playerLives);
     _registry->emplaceComponent<NetworkIdComponent>(playerEntity,
                                                     result.networkId);
 
-    // Register with network
     if (_networkSystem) {
         _networkSystem->registerNetworkedEntity(playerEntity, result.networkId,
                                                 EntityType::Player, result.x,

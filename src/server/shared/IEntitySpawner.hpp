@@ -24,13 +24,13 @@ class ServerNetworkSystem;
  * @brief Result of spawning a player entity
  */
 struct PlayerSpawnResult {
-    ECS::Entity entity;       ///< The spawned entity
-    std::uint32_t networkId;  ///< Network ID assigned to the player
-    float x;                  ///< Spawn X position
-    float y;                  ///< Spawn Y position
-    std::int32_t health;      ///< Initial health
-    std::int32_t maxHealth;   ///< Maximum health
-    bool success{false};      ///< Whether spawn succeeded
+    ECS::Entity entity;
+    std::uint32_t networkId;
+    float x;
+    float y;
+    std::int32_t health;
+    std::int32_t maxHealth;
+    bool success{false};
 };
 
 /**
@@ -55,8 +55,8 @@ struct WorldBounds {
  * @brief Configuration for player spawning
  */
 struct PlayerSpawnConfig {
-    std::uint32_t userId;     ///< User ID of the connecting player
-    std::size_t playerIndex;  ///< Index for calculating spawn position
+    std::uint32_t userId;
+    std::size_t playerIndex;
 };
 
 /**
