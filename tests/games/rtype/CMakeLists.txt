@@ -203,3 +203,19 @@ target_include_directories(test_projectile_spawner_system PRIVATE
 )
 
 gtest_discover_tests(test_projectile_spawner_system)
+
+# AABB collision tests
+add_executable(test_aabb test_aabb.cpp)
+
+target_link_libraries(test_aabb PRIVATE
+    rtype_game_shared
+    rtype_engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_aabb PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_aabb)
