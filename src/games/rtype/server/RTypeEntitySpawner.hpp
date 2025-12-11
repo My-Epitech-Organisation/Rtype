@@ -81,8 +81,7 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
     void triggerShootCooldown(ECS::Entity entity) override;
 
     void updateAllPlayersMovement(
-        float deltaTime,
-        const PositionUpdateCallback& callback) override;
+        float deltaTime, const PositionUpdateCallback& callback) override;
 
     [[nodiscard]] ::rtype::server::WorldBounds getWorldBounds()
         const noexcept override;

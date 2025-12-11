@@ -177,9 +177,8 @@ class IEntitySpawner {
      * @param vx X velocity
      * @param vy Y velocity
      */
-    using PositionUpdateCallback =
-        std::function<void(std::uint32_t networkId, float x, float y, float vx,
-                           float vy)>;
+    using PositionUpdateCallback = std::function<void(
+        std::uint32_t networkId, float x, float y, float vx, float vy)>;
 
     /**
      * @brief Update movement for all player entities

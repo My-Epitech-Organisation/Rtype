@@ -204,8 +204,7 @@ void RTypeEntitySpawner::updateAllPlayersMovement(
         return;
     }
 
-    auto view =
-        _registry->view<shared::Position, shared::VelocityComponent>();
+    auto view = _registry->view<shared::Position, shared::VelocityComponent>();
     view.each([this, deltaTime, &callback](ECS::Entity entity,
                                            shared::Position& pos,
                                            shared::VelocityComponent& vel) {
