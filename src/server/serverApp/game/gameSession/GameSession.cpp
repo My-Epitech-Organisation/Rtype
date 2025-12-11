@@ -13,12 +13,6 @@
 
 #include "network/ServerNetworkSystem.hpp"
 
-// Include shared components for movement (these are game-agnostic concepts)
-// TODO(Sam): Abstract these behind interfaces in a future refactor
-#include "games/rtype/shared/Components/PositionComponent.hpp"
-#include "games/rtype/shared/Components/TransformComponent.hpp"
-#include "games/rtype/shared/Components/VelocityComponent.hpp"
-
 namespace rtype::server {
 
 namespace InputMask {
@@ -238,42 +232,15 @@ void GameSession::checkGameStart() {
 }
 
 void GameSession::updatePlayerMovement(float deltaTime) {
-    using Position = rtype::games::rtype::shared::Position;
-    using TransformComponent = rtype::games::rtype::shared::TransformComponent;
-    using Velocity = rtype::games::rtype::shared::VelocityComponent;
+    if (!_entitySpawner || !_networkSystem) {
+        return;
+    }
 
-    constexpr float minX = 0.0F;
-    constexpr float maxX = 1920.0F - 64.0F;
-    constexpr float minY = 0.0F;
-    constexpr float maxY = 1080.0F - 64.0F;
-
-    auto view = _registry->view<Position, Velocity>();
-    view.each([this, deltaTime, minX, maxX, minY, maxY](
-                  ECS::Entity entity, Position& pos, Velocity& vel) {
-        if (vel.vx == 0.0F && vel.vy == 0.0F) {
-            return;
-        }
-
-        pos.x += vel.vx * deltaTime;
-        pos.y += vel.vy * deltaTime;
-        pos.x = std::clamp(pos.x, minX, maxX);
-        pos.y = std::clamp(pos.y, minY, maxY);
-
-        if (_registry->hasComponent<TransformComponent>(entity)) {
-            auto& transform =
-                _registry->getComponent<TransformComponent>(entity);
-            transform.x = pos.x;
-            transform.y = pos.y;
-        }
-
-        if (_networkSystem && _entitySpawner) {
-            auto networkIdOpt = _entitySpawner->getEntityNetworkId(entity);
-            if (networkIdOpt.has_value()) {
-                _networkSystem->updateEntityPosition(*networkIdOpt, pos.x,
-                                                     pos.y, vel.vx, vel.vy);
-            }
-        }
-    });
+    _entitySpawner->updateAllPlayersMovement(
+        deltaTime,
+        [this](std::uint32_t networkId, float x, float y, float vx, float vy) {
+            _networkSystem->updateEntityPosition(networkId, x, y, vx, vy);
+        });
 }
 
 void GameSession::processGameEvents() {
