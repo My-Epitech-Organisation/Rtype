@@ -13,6 +13,7 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <string>
 
 #include <rtype/ecs.hpp>
 #include <rtype/engine.hpp>
@@ -42,7 +43,7 @@ enum class GameState {
 /**
  * @brief Converts GameState to string representation
  */
-[[nodiscard]] constexpr const char* toString(GameState state) noexcept {
+[[nodiscard]] constexpr const std::string toString(GameState state) noexcept {
     switch (state) {
         case GameState::WaitingForPlayers:
             return "WaitingForPlayers";
