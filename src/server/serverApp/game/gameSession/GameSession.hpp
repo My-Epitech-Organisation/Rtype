@@ -34,9 +34,9 @@ class ServerNetworkSystem;
  * - Paused: Game paused (all clients disconnected during game)
  */
 enum class GameState {
-    WaitingForPlayers,  ///< Waiting for at least one player to be ready
-    Playing,            ///< Game is actively running
-    Paused              ///< Game paused (no players connected)
+    WaitingForPlayers,
+    Playing,
+    Paused
 };
 
 /**
@@ -59,8 +59,8 @@ enum class GameState {
  * @brief Configuration for GameSession
  */
 struct GameSessionConfig {
-    std::size_t minPlayersToStart = 1;  ///< Minimum players to start the game
-    bool verbose = false;               ///< Enable verbose logging
+    std::size_t minPlayersToStart = 1;
+    bool verbose = false;
 };
 
 /**
