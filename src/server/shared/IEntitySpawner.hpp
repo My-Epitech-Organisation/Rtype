@@ -12,6 +12,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <string>
 
 #include <rtype/ecs.hpp>
 
@@ -106,11 +107,42 @@ class IEntitySpawner {
     virtual void destroyPlayer(ECS::Entity entity) = 0;
 
     /**
+     * @brief Destroy a player entity by user ID
+     *
+     * @param userId The user ID of the player to destroy
+     * @return true if the player was found and destroyed
+     */
+    virtual bool destroyPlayerByUserId(std::uint32_t userId) = 0;
+
+    /**
+     * @brief Get the player entity for a user ID
+     *
+     * @param userId The user ID
+     * @return The player entity if found, std::nullopt otherwise
+     */
+    [[nodiscard]] virtual std::optional<ECS::Entity> getPlayerEntity(
+        std::uint32_t userId) const = 0;
+
+    /**
      * @brief Get player speed from game configuration
      *
      * @return Player movement speed
      */
     [[nodiscard]] virtual float getPlayerSpeed() const noexcept = 0;
+
+    /**
+     * @brief Get game-specific world bounds
+     *
+     * @return WorldBounds containing min/max coordinates
+     */
+    [[nodiscard]] virtual WorldBounds getWorldBounds() const noexcept = 0;
+
+    /**
+     * @brief Get the game identifier
+     *
+     * @return Game identifier string (e.g., "rtype", "spaceinvaders")
+     */
+    [[nodiscard]] virtual std::string getGameId() const noexcept = 0;
 
     /**
      * @brief Handle player shooting
@@ -132,6 +164,13 @@ class IEntitySpawner {
      */
     [[nodiscard]] virtual bool canPlayerShoot(
         ECS::Entity playerEntity) const = 0;
+
+    /**
+     * @brief Trigger player shoot cooldown
+     *
+     * @param entity The player entity
+     */
+    virtual void triggerShootCooldown(ECS::Entity entity) = 0;
 
     /**
      * @brief Get the network ID for an entity
@@ -162,13 +201,6 @@ class IEntitySpawner {
                                       float vy) = 0;
 
     /**
-     * @brief Trigger player shoot cooldown
-     *
-     * @param entity The player entity
-     */
-    virtual void triggerShootCooldown(ECS::Entity entity) = 0;
-
-    /**
      * @brief Callback type for position updates during movement
      *
      * @param networkId Network ID of the entity
@@ -193,13 +225,6 @@ class IEntitySpawner {
      */
     virtual void updateAllPlayersMovement(
         float deltaTime, const PositionUpdateCallback& callback) = 0;
-
-    /**
-     * @brief Get game-specific world bounds
-     *
-     * @return WorldBounds containing min/max coordinates
-     */
-    [[nodiscard]] virtual WorldBounds getWorldBounds() const noexcept = 0;
 };
 
 }  // namespace rtype::server
