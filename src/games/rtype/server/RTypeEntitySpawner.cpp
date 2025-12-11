@@ -18,7 +18,6 @@
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
 #include "../shared/Components/WeaponComponent.hpp"
-#include "GameEngine.hpp"  // For dynamic_cast to RType-specific GameEngine
 #include "GameEngine.hpp"
 #include "server/serverApp/game/entitySpawnerFactory/EntitySpawnerFactory.hpp"
 
