@@ -288,10 +288,10 @@ bool GameEngine::setPlayerVelocity(uint32_t networkId, float vx, float vy) {
     return found;
 }
 
-bool GameEngine::getPlayerPosition(uint32_t networkId, float& outX, float& outY,
-                                   float& outVx, float& outVy) const {
+std::optional<engine::PlayerState> GameEngine::getPlayerPosition(
+    uint32_t networkId) const {
     if (!_running) {
-        return false;
+        return std::nullopt;
     }
 
     auto view =
@@ -299,21 +299,17 @@ bool GameEngine::getPlayerPosition(uint32_t networkId, float& outX, float& outY,
             ->view<shared::PlayerTag, shared::Position,
                    shared::VelocityComponent, shared::NetworkIdComponent>();
 
-    bool found = false;
+    std::optional<engine::PlayerState> result;
     view.each([&](ECS::Entity /*entity*/, const shared::PlayerTag& /*tag*/,
                   const shared::Position& pos,
                   const shared::VelocityComponent& vel,
                   const shared::NetworkIdComponent& netId) {
         if (netId.networkId == networkId) {
-            outX = pos.x;
-            outY = pos.y;
-            outVx = vel.vx;
-            outVy = vel.vy;
-            found = true;
+            result = engine::PlayerState{pos.x, pos.y, vel.vx, vel.vy};
         }
     });
 
-    return found;
+    return result;
 }
 
 void GameEngine::emitEvent(const engine::GameEvent& event) {

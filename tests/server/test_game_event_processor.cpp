@@ -86,10 +86,9 @@ class MockGameEngine : public IGameEngine {
         return false;  // Mock: not implemented
     }
 
-    bool getPlayerPosition(uint32_t /*networkId*/, float& /*outX*/,
-                           float& /*outY*/, float& /*outVx*/,
-                           float& /*outVy*/) const override {
-        return false;  // Mock: not implemented
+    [[nodiscard]] std::optional<PlayerState> getPlayerPosition(
+        uint32_t /*networkId*/) const override {
+        return std::nullopt;  // Mock: not implemented
     }
 
     // Test helpers

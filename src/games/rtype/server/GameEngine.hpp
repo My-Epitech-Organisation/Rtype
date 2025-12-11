@@ -107,8 +107,8 @@ class GameEngine : public engine::AGameEngine {
     /**
      * @brief Get position and velocity of a player (IGameEngine interface)
      */
-    bool getPlayerPosition(uint32_t networkId, float& outX, float& outY,
-                           float& outVx, float& outVy) const override;
+    [[nodiscard]] std::optional<engine::PlayerState> getPlayerPosition(
+        uint32_t networkId) const override;
 
     /**
      * @brief Get the ECS registry

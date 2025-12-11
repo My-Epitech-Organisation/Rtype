@@ -94,12 +94,11 @@ class AGameEngine : public IGameEngine {
 
     /**
      * @brief Default implementation - must be overridden by game engines
-     * @return false by default
+     * @return std::nullopt by default
      */
-    bool getPlayerPosition(uint32_t /*networkId*/, float& /*outX*/,
-                           float& /*outY*/, float& /*outVx*/,
-                           float& /*outVy*/) const override {
-        return false;
+    [[nodiscard]] std::optional<PlayerState> getPlayerPosition(
+        uint32_t /*networkId*/) const override {
+        return std::nullopt;
     }
 
    protected:

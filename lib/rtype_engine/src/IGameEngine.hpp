@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace rtype::engine {
@@ -58,6 +59,16 @@ struct ProcessedEvent {
     float vx;
     float vy;
     bool valid;
+};
+
+/**
+ * @brief Player state information (position and velocity)
+ */
+struct PlayerState {
+    float x{0.0F};   ///< X position
+    float y{0.0F};   ///< Y position
+    float vx{0.0F};  ///< X velocity
+    float vy{0.0F};  ///< Y velocity
 };
 
 /**
@@ -204,14 +215,10 @@ class IGameEngine {
      * @brief Get position and velocity of a player by network ID
      *
      * @param networkId Network ID of the player
-     * @param outX Output X position
-     * @param outY Output Y position
-     * @param outVx Output X velocity
-     * @param outVy Output Y velocity
-     * @return true if player was found
+     * @return PlayerState if player was found, std::nullopt otherwise
      */
-    virtual bool getPlayerPosition(uint32_t networkId, float& outX, float& outY,
-                                   float& outVx, float& outVy) const = 0;
+    [[nodiscard]] virtual std::optional<PlayerState> getPlayerPosition(
+        uint32_t networkId) const = 0;
 };
 
 }  // namespace rtype::engine
