@@ -1,10 +1,12 @@
 add_executable(test_client_manager test_ClientManager.cpp
-    ${CMAKE_SOURCE_DIR}/src/server/ClientManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/clientManager/ClientManager.cpp
 )
 
 target_include_directories(test_client_manager PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/clientManager
+    ${CMAKE_SOURCE_DIR}/src/server/shared
     ${CMAKE_SOURCE_DIR}/src/common
     ${CMAKE_SOURCE_DIR}/include
 )
@@ -24,8 +26,8 @@ if(NOT WIN32)
 endif()
 
 add_executable(test_server_app ${SERVER_APP_TEST_SRCS}
-    ${CMAKE_SOURCE_DIR}/src/server/ServerApp.cpp
-    ${CMAKE_SOURCE_DIR}/src/server/ClientManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/ServerApp.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/clientManager/ClientManager.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
 )
@@ -33,6 +35,17 @@ add_executable(test_server_app ${SERVER_APP_TEST_SRCS}
 target_include_directories(test_server_app PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/entitySpawnerFactory
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameEvent
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameSession
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/packetProcessor
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player/playerInputHandler
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player/playerSpawner
+    ${CMAKE_SOURCE_DIR}/src/server/clientManager
+    ${CMAKE_SOURCE_DIR}/src/server/shared
     ${CMAKE_SOURCE_DIR}/src/common
     ${CMAKE_SOURCE_DIR}/include
 )
@@ -47,12 +60,13 @@ target_link_libraries(test_server_app PRIVATE
     rtype_engine
     rtype_game_server
     rtype_game_shared
+    rtype_server_core
 )
 
 # ServerApp GameConfig integration tests
 add_executable(test_server_app_gameconfig test_server_app_gameconfig.cpp
-    ${CMAKE_SOURCE_DIR}/src/server/ServerApp.cpp
-    ${CMAKE_SOURCE_DIR}/src/server/ClientManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/ServerApp.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/clientManager/ClientManager.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
 )
@@ -60,6 +74,17 @@ add_executable(test_server_app_gameconfig test_server_app_gameconfig.cpp
 target_include_directories(test_server_app_gameconfig PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/entitySpawnerFactory
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameEvent
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameSession
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/packetProcessor
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player/playerInputHandler
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player/playerSpawner
+    ${CMAKE_SOURCE_DIR}/src/server/clientManager
+    ${CMAKE_SOURCE_DIR}/src/server/shared
     ${CMAKE_SOURCE_DIR}/src/common
 )
 
@@ -73,6 +98,7 @@ target_link_libraries(test_server_app_gameconfig PRIVATE
     rtype_engine
     rtype_game_server
     rtype_game_shared
+    rtype_server_core
 )
 
 # ServerNetworkSystem unit tests
@@ -84,6 +110,7 @@ add_executable(test_server_network_system test_ServerNetworkSystem.cpp
 target_include_directories(test_server_network_system PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/shared
     ${CMAKE_SOURCE_DIR}/src/common
     ${CMAKE_SOURCE_DIR}/include
 )
@@ -102,8 +129,8 @@ target_link_libraries(test_server_network_system PRIVATE
 # Unit tests for ServerApp
 add_executable(test_server_app_unit
     ${CMAKE_CURRENT_SOURCE_DIR}/test_server_app_unit.cpp
-    ${CMAKE_SOURCE_DIR}/src/server/ServerApp.cpp
-    ${CMAKE_SOURCE_DIR}/src/server/ClientManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/ServerApp.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/clientManager/ClientManager.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
 )
@@ -111,6 +138,17 @@ add_executable(test_server_app_unit
 target_include_directories(test_server_app_unit PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/entitySpawnerFactory
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameEvent
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameSession
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/packetProcessor
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player/playerInputHandler
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player/playerSpawner
+    ${CMAKE_SOURCE_DIR}/src/server/clientManager
+    ${CMAKE_SOURCE_DIR}/src/server/shared
     ${CMAKE_SOURCE_DIR}/src/common
     ${CMAKE_SOURCE_DIR}/include
 )
@@ -125,6 +163,7 @@ target_link_libraries(test_server_app_unit PRIVATE
     rtype_engine
     rtype_game_server
     rtype_game_shared
+    rtype_server_core
 )
 
 add_executable(test_server_network_messages test_server_network_messages.cpp)
@@ -146,6 +185,24 @@ target_link_libraries(test_server_network_messages PRIVATE
     rtype_server_network
 )
 
+# ServerLoop unit tests
+add_executable(test_server_loop test_ServerLoop.cpp)
+
+target_include_directories(test_server_loop PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_server_loop PRIVATE cxx_std_20)
+
+target_link_libraries(test_server_loop PRIVATE
+    GTest::gtest_main
+    rtype_server_core
+    rtype_common
+)
+
 include(GoogleTest)
 gtest_discover_tests(test_server_network_messages)
 gtest_discover_tests(test_client_manager)
@@ -153,3 +210,4 @@ gtest_discover_tests(test_server_app)
 gtest_discover_tests(test_server_app_gameconfig)
 gtest_discover_tests(test_server_network_system)
 gtest_discover_tests(test_server_app_unit)
+gtest_discover_tests(test_server_loop)

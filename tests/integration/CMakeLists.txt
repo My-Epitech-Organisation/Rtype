@@ -8,24 +8,25 @@ add_executable(test_integration
     ${CMAKE_SOURCE_DIR}/src/client/network/NetworkClient.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
-    ${CMAKE_SOURCE_DIR}/src/server/ServerApp.cpp
-    ${CMAKE_SOURCE_DIR}/src/server/ClientManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/ServerApp.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/clientManager/ClientManager.cpp
     test_network_disconnects.cpp
     test_network_packet_loss.cpp
 )
 
 target_link_libraries(test_integration
     PRIVATE
-        gtest_main
-        rtype_common
-        rtype_toml_parser
-        rtype_network
-        rtype_ecs
-        rtype_engine
-        rtype_game_shared
-        rtype_game_server
+    gtest_main
+    rtype_common
+    rtype_toml_parser
+    rtype_network
+    rtype_ecs
+    rtype_engine
+    rtype_game_shared
+    rtype_game_server
     rtype_client_network
     rtype_server_network
+    rtype_server_core
 )
 
 target_include_directories(test_integration
@@ -33,6 +34,17 @@ target_include_directories(test_integration
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/client
         ${CMAKE_SOURCE_DIR}/src/server
+        ${CMAKE_SOURCE_DIR}/src/server/serverApp
+        ${CMAKE_SOURCE_DIR}/src/server/serverApp/game
+        ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/entitySpawnerFactory
+        ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameEvent
+        ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameSession
+        ${CMAKE_SOURCE_DIR}/src/server/serverApp/packetProcessor
+        ${CMAKE_SOURCE_DIR}/src/server/serverApp/player
+        ${CMAKE_SOURCE_DIR}/src/server/serverApp/player/playerInputHandler
+        ${CMAKE_SOURCE_DIR}/src/server/serverApp/player/playerSpawner
+        ${CMAKE_SOURCE_DIR}/src/server/clientManager
+        ${CMAKE_SOURCE_DIR}/src/server/shared
         ${CMAKE_SOURCE_DIR}/tests
         ${CMAKE_SOURCE_DIR}/src/network
         ${CMAKE_SOURCE_DIR}/src/common

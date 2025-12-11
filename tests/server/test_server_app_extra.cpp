@@ -4,7 +4,7 @@
 #include <memory>
 #include <thread>
 
-#include "../../../src/server/ServerApp.hpp"
+#include "server/serverApp/ServerApp.hpp"
 
 using namespace rtype::server;
 
