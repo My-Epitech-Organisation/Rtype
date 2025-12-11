@@ -80,6 +80,13 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
 
     void triggerShootCooldown(ECS::Entity entity) override;
 
+    void updateAllPlayersMovement(
+        float deltaTime,
+        const PositionUpdateCallback& callback) override;
+
+    void getWorldBounds(float& minX, float& maxX, float& minY,
+                        float& maxY) const noexcept override;
+
    private:
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<::rtype::server::ServerNetworkSystem> _networkSystem;
@@ -94,6 +101,10 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
     static constexpr float kSpawnBaseY = 150.0F;
     static constexpr float kSpawnYOffset = 100.0F;
     static constexpr float kShootCooldown = 0.3F;
+    static constexpr float kWorldMinX = 0.0F;
+    static constexpr float kWorldMaxX = 1920.0F - 64.0F;
+    static constexpr float kWorldMinY = 0.0F;
+    static constexpr float kWorldMaxY = 1080.0F - 64.0F;
 };
 
 /**

@@ -7,6 +7,8 @@
 
 #include "RTypeEntitySpawner.hpp"
 
+#include <algorithm>
+
 #include "../shared/Components/BoundingBoxComponent.hpp"
 #include "../shared/Components/CooldownComponent.hpp"
 #include "../shared/Components/HealthComponent.hpp"
@@ -121,7 +123,6 @@ std::uint32_t RTypeEntitySpawner::handlePlayerShoot(
         return 0;
     }
 
-    // Use the IGameEngine interface directly (no dynamic_cast needed)
     if (!_gameEngine.has_value()) {
         return 0;
     }
@@ -198,6 +199,48 @@ void RTypeEntitySpawner::triggerShootCooldown(ECS::Entity entity) {
             _registry->getComponent<shared::ShootCooldownComponent>(entity);
         cooldown.triggerCooldown();
     }
+}
+
+void RTypeEntitySpawner::updateAllPlayersMovement(
+    float deltaTime, const PositionUpdateCallback& callback) {
+    if (!_registry) {
+        return;
+    }
+
+    auto view =
+        _registry->view<shared::Position, shared::VelocityComponent>();
+    view.each([this, deltaTime, &callback](ECS::Entity entity,
+                                           shared::Position& pos,
+                                           shared::VelocityComponent& vel) {
+        if (vel.vx == 0.0F && vel.vy == 0.0F) {
+            return;
+        }
+
+        pos.x += vel.vx * deltaTime;
+        pos.y += vel.vy * deltaTime;
+        pos.x = std::clamp(pos.x, kWorldMinX, kWorldMaxX);
+        pos.y = std::clamp(pos.y, kWorldMinY, kWorldMaxY);
+
+        if (_registry->hasComponent<shared::TransformComponent>(entity)) {
+            auto& transform =
+                _registry->getComponent<shared::TransformComponent>(entity);
+            transform.x = pos.x;
+            transform.y = pos.y;
+        }
+
+        auto networkIdOpt = getEntityNetworkId(entity);
+        if (networkIdOpt.has_value() && callback) {
+            callback(*networkIdOpt, pos.x, pos.y, vel.vx, vel.vy);
+        }
+    });
+}
+
+void RTypeEntitySpawner::getWorldBounds(float& minX, float& maxX, float& minY,
+                                        float& maxY) const noexcept {
+    minX = kWorldMinX;
+    maxX = kWorldMaxX;
+    minY = kWorldMinY;
+    maxY = kWorldMaxY;
 }
 
 std::unique_ptr<::rtype::server::IEntitySpawner> createRTypeEntitySpawner(
