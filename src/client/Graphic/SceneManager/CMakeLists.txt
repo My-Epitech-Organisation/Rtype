@@ -22,5 +22,6 @@ target_link_libraries(rtype-graphic-scene-manager
     rtype-graphic-main-menu-scene
     rtype-graphic-settings-scene
     rtype-graphic-game-scene
+    rtype-graphic-how-to-play-scene
     rtype_game_client
 )
