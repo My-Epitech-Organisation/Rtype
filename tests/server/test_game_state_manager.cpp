@@ -140,19 +140,18 @@ TEST_F(GameStateManagerTest, PlayerLeft_LastPlayer_PausesGame) {
 }
 
 TEST_F(GameStateManagerTest, PlayerLeft_NotLastPlayer_ContinuesGame) {
-    GameStateManager manager(1);
+    GameStateManager manager(2);
 
-    manager.playerReady(1);
-    manager.playerReady(2);  // Won't increase count, game already started
-    EXPECT_TRUE(manager.isPlaying());
-
-    // Add player 2 manually to ready set via reset/re-add
-    manager.reset();
     manager.playerReady(1);
     manager.playerReady(2);
+    EXPECT_TRUE(manager.isPlaying());
 
+    // Leave player 1, player 2 still in ready set
     manager.playerLeft(1);
+    
+    // Game continues because there's still one player
     EXPECT_TRUE(manager.isPlaying());  // Still playing because 1 player remains
+    EXPECT_EQ(manager.getReadyPlayerCount(), 1u);
 }
 
 // ============================================================================
