@@ -136,5 +136,23 @@ bool GameEngineFactory::setDefaultGame(const std::string& gameId) {
     return true;
 }
 
+std::unique_ptr<IGameEngine> createGameEngine(
+    std::shared_ptr<ECS::Registry> registry) {
+    auto defaultGame = GameEngineFactory::getDefaultGame();
+
+    if (!defaultGame.empty()) {
+        return GameEngineFactory::create(defaultGame, std::move(registry));
+    }
+
+    // If no default game is set, try to use the first registered game
+    auto registeredGames = GameEngineFactory::getRegisteredGames();
+    if (!registeredGames.empty()) {
+        return GameEngineFactory::create(registeredGames[0], std::move(registry));
+    }
+
+    // No games registered - return nullptr
+    return nullptr;
+}
+
 }  // namespace rtype::engine
 
