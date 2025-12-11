@@ -8,14 +8,16 @@
 
 // Include game registration to ensure games are available
 #include "games/rtype/server/GameEngine.hpp"
+#include "games/rtype/server/RTypeEntitySpawner.hpp"
 
 using namespace rtype::server;
 
 class ServerAppExtraTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Ensure R-Type game engine is registered before tests
+        // Ensure R-Type game engine and entity spawner are registered before tests
         rtype::games::rtype::server::registerRTypeGameEngine();
+        rtype::games::rtype::server::registerRTypeEntitySpawner();
         shutdownFlag_ = std::make_shared<std::atomic<bool>>(false);
     }
 

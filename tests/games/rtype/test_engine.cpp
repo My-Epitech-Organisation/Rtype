@@ -73,6 +73,8 @@ class TestGameEngine : public AGameEngine {
         // No-op for test implementation
     }
 
+    [[nodiscard]] std::string getGameId() const override { return "test_game"; }
+
     // Expose protected methods for testing
     void testEmitEvent(const GameEvent& event) { emitEvent(event); }
 

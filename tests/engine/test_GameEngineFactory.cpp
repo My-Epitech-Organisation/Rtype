@@ -42,6 +42,8 @@ class MockGameEngine : public AGameEngine {
         std::function<void(uint32_t, float, float, float, float)>
         /*callback*/) override {}
 
+    [[nodiscard]] std::string getGameId() const override { return "mock_game"; }
+
    private:
     std::shared_ptr<ECS::Registry> _registry;
 };
@@ -62,6 +64,7 @@ class AnotherMockGameEngine : public AGameEngine {
     void syncEntityPositions(
         std::function<void(uint32_t, float, float, float, float)>
         /*callback*/) override {}
+    [[nodiscard]] std::string getGameId() const override { return "another_mock"; }
 };
 
 class GameEngineFactoryTest : public ::testing::Test {

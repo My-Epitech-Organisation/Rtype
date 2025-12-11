@@ -397,13 +397,13 @@ TEST_F(GameStateManagerTest, CheckAutoStart_FromPlaying_NoTransition) {
 // ============================================================================
 
 TEST_F(GameStateManagerTest, ToString_WaitingForPlayers) {
-    EXPECT_STREQ(toString(GameState::WaitingForPlayers), "WaitingForPlayers");
+    EXPECT_EQ(toString(GameState::WaitingForPlayers), "WaitingForPlayers");
 }
 
 TEST_F(GameStateManagerTest, ToString_Playing) {
-    EXPECT_STREQ(toString(GameState::Playing), "Playing");
+    EXPECT_EQ(toString(GameState::Playing), "Playing");
 }
 
 TEST_F(GameStateManagerTest, ToString_Paused) {
-    EXPECT_STREQ(toString(GameState::Paused), "Paused");
+    EXPECT_EQ(toString(GameState::Paused), "Paused");
 }
