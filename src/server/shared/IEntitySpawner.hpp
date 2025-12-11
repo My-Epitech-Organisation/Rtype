@@ -9,6 +9,7 @@
 #define SRC_SERVER_SHARED_IENTITYSPAWNER_HPP_
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 
@@ -151,6 +152,44 @@ class IEntitySpawner {
      * @param entity The player entity
      */
     virtual void triggerShootCooldown(ECS::Entity entity) = 0;
+
+    /**
+     * @brief Callback type for position updates during movement
+     *
+     * @param networkId Network ID of the entity
+     * @param x New X position
+     * @param y New Y position
+     * @param vx X velocity
+     * @param vy Y velocity
+     */
+    using PositionUpdateCallback =
+        std::function<void(std::uint32_t networkId, float x, float y, float vx,
+                           float vy)>;
+
+    /**
+     * @brief Update movement for all player entities
+     *
+     * This method handles game-specific movement logic including:
+     * - Applying velocity to position
+     * - Boundary clamping
+     * - Synchronizing transform components
+     *
+     * @param deltaTime Time since last update in seconds
+     * @param callback Called for each entity that moved, to sync with network
+     */
+    virtual void updateAllPlayersMovement(
+        float deltaTime, const PositionUpdateCallback& callback) = 0;
+
+    /**
+     * @brief Get game-specific world bounds
+     *
+     * @param minX Output minimum X coordinate
+     * @param maxX Output maximum X coordinate
+     * @param minY Output minimum Y coordinate
+     * @param maxY Output maximum Y coordinate
+     */
+    virtual void getWorldBounds(float& minX, float& maxX, float& minY,
+                                float& maxY) const noexcept = 0;
 };
 
 }  // namespace rtype::server
