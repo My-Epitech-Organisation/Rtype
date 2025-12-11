@@ -541,7 +541,7 @@ TEST_F(EventStressTest, ButtonCallbacks_ClickSimulation) {
     // Simulate clicking all buttons
     for (auto entity : entities) {
         auto& event = registry->getComponent<rc::UserEvent>(entity);
-        event.isClicked = true;
+        event.isPressed = true;
     }
 
     double time = measureTime([this]() {

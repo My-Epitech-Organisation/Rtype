@@ -16,6 +16,7 @@
 #include "../Components/RectangleComponent.hpp"
 #include "../Components/UserEventComponent.hpp"
 #include "ASystem.hpp"
+#include "AudioLib/AudioLib.hpp"
 #include "ECS.hpp"
 
 namespace rtype::games::rtype::client {
@@ -35,37 +36,40 @@ class EventSystem : public ::rtype::engine::ASystem {
    private:
     std::optional<sf::Event> _event;
     std::shared_ptr<sf::RenderWindow> _window;
+    std::shared_ptr<AudioLib> _audioLib;
 
     /// @brief Check if world position is within rectangle bounds
     [[nodiscard]] bool _isPointInRect(
         sf::Vector2i pixelPos,
         const ::rtype::games::rtype::client::Rectangle& rect) const;
 
-    void _mouseMoved(
-        ::rtype::games::rtype::client::UserEvent& actionType,
-        const ::rtype::games::rtype::client::Rectangle& rect) const;
-    void _mousePressed(
-        ::rtype::games::rtype::client::UserEvent& actionType,
-        const ::rtype::games::rtype::client::Rectangle& rect) const;
-    void _mouseReleased(
-        ::rtype::games::rtype::client::UserEvent& actionType,
-        const ::rtype::games::rtype::client::Rectangle& rect) const;
+    bool _handleMouseMoved(UserEvent& actionType, const Rectangle& rect,
+                           ECS::Registry& reg, ECS::Entity entt) const;
+
+    bool _handleMousePressed(UserEvent& actionType, const Rectangle& rect,
+                             ECS::Registry& reg, ECS::Entity entt) const;
+
+    bool _handleMouseReleased(UserEvent& actionType,
+                              const Rectangle& rect) const;
 
    public:
     /**
      * @brief Construct a new EventSystem (reusable version).
      * @param window Shared pointer to the SFML render window
+     * @param audioLib Shared pointer to the AudioLib
      */
-    explicit EventSystem(std::shared_ptr<sf::RenderWindow> window);
+    explicit EventSystem(std::shared_ptr<sf::RenderWindow> window,
+                         std::shared_ptr<AudioLib> audioLib);
 
     /**
      * @brief Legacy constructor for backward compatibility.
      * @param window Shared pointer to the SFML render window
+     * @param audioLib Shared pointer to the AudioLib
      * @param event The event to process
      * @deprecated Use the single-argument constructor and setEvent() instead
      */
     EventSystem(std::shared_ptr<sf::RenderWindow> window,
-                const sf::Event& event);
+                std::shared_ptr<AudioLib> audioLib, const sf::Event& event);
 
     /**
      * @brief Set the current event to process.

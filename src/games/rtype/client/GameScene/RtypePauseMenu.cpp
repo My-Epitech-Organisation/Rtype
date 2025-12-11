@@ -30,7 +30,7 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
                       sf::Vector2f(kSizeXPauseMenu, kSizeYPauseMenu)));
 
     auto titleEntity = EntityFactory::createStaticText(
-        registry, assetsManager, kPauseMenuTitle, "title_font",
+        registry, assetsManager, kPauseMenuTitle, "main_font",
         sf::Vector2f(
             (sectionX + kSizeXPauseMenu / 2) -
                 ((kPauseMenuTitle.length() - 2) * (kSizeFontPauseMenu / 2)),
@@ -48,12 +48,12 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
 
     pauseEntities.push_back(EntityFactory::createButton(
         registry,
-        Text(assetsManager->fontManager->get("title_font"), sf::Color::White,
-             30, "Menu"),
+        Text(assetsManager->fontManager->get("main_font"), sf::Color::White, 30,
+             "Menu"),
         ::rtype::games::rtype::shared::Position(
             sectionX + ((kSizeXPauseMenu / 2) - (150 / 2)),
             sectionY + kSizeYPauseMenu - 75),
-        Rectangle({150, 55}, sf::Color::Blue, sf::Color::Red),
+        Rectangle({150, 55}, sf::Color::Blue, sf::Color::Red), assetsManager,
         std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::MAIN_MENU);

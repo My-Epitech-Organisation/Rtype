@@ -12,8 +12,10 @@
 
 #include "Components/HealthComponent.hpp"
 #include "Components/PositionComponent.hpp"
+#include "Components/SoundComponent.hpp"
 #include "Components/VelocityComponent.hpp"
 #include "Logger/Macros.hpp"
+#include "client/Graphic/AudioLib/AudioLib.hpp"
 
 namespace rtype::client {
 
@@ -151,6 +153,25 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
     }
 }
 
+void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
+    if (registry_->hasComponent<games::rtype::client::EnemySoundComponent>(
+            entity)) {
+        auto& soundComp =
+            registry_->getComponent<games::rtype::client::EnemySoundComponent>(
+                entity);
+        auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
+        audioLib->playSFX(*soundComp.deathSFX);
+    }
+    if (registry_->hasComponent<games::rtype::client::PlayerSoundComponent>(
+            entity)) {
+        auto& soundComp =
+            registry_->getComponent<games::rtype::client::PlayerSoundComponent>(
+                entity);
+        auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
+        audioLib->playSFX(*soundComp.deathSFX);
+    }
+}
+
 void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
     LOG_DEBUG("[ClientNetworkSystem] Entity destroy received: entityId=" +
               std::to_string(entityId));
@@ -164,11 +185,12 @@ void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
     ECS::Entity entity = it->second;
 
     if (registry_->isAlive(entity)) {
+        _playDeathSound(entity);
         registry_->killEntity(entity);
         LOG_DEBUG("[ClientNetworkSystem] Entity killed");
     }
 
-    networkIdToEntity_.erase(it);
+    this->networkIdToEntity_.erase(it);
 
     if (localPlayerEntity_.has_value() && *localPlayerEntity_ == entity) {
         localPlayerEntity_.reset();

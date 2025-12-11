@@ -160,6 +160,9 @@ class ClientNetworkSystem {
    private:
     void handleEntitySpawn(const EntitySpawnEvent& event);
     void handleEntityMove(const EntityMoveEvent& event);
+
+    void _playDeathSound(ECS::Entity entity);
+
     void handleEntityDestroy(std::uint32_t entityId);
     void handlePositionCorrection(float x, float y);
     void handleEntityHealth(const EntityHealthEvent& event);

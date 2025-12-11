@@ -28,6 +28,7 @@ class SettingsScene : public AScene {
     void _initKeybindSection();
     void _initAudioSection();
     void _initWindowSection();
+    void _initAccessibilitySection();
 
    public:
     void update(float dt) override;

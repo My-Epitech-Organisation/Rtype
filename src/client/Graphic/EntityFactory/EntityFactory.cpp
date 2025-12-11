@@ -144,7 +144,7 @@ ECS::Entity EntityFactory::createTextInput(
     auto entity = registry->spawnEntity();
 
     registry->emplaceComponent<rtype::games::rtype::client::TextInput>(
-        entity, assetManager->fontManager->get("title_font"), bounds.size.x,
+        entity, assetManager->fontManager->get("main_font"), bounds.size.x,
         bounds.size.y, placeholder, initialValue, maxLength, isNumericOnly);
 
     registry->emplaceComponent<rtype::games::rtype::shared::Position>(

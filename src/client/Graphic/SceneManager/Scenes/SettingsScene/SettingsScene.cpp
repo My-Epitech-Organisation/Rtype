@@ -44,12 +44,12 @@ void SettingsScene::_initKeybindSection() {
         auto btn = EntityFactory::createButton(
             this->_registry,
             rtype::games::rtype::client::Text(
-                this->_assetsManager->fontManager->get("title_font"),
+                this->_assetsManager->fontManager->get("main_font"),
                 sf::Color::White, 24, textStr),
             rtype::games::rtype::shared::Position(x, y),
             rtype::games::rtype::client::Rectangle({500, 50}, sf::Color::Blue,
                                                    sf::Color::Red),
-            std::function<void()>([this, action]() {
+            this->_assetsManager, std::function<void()>([this, action]() {
                 if (this->_actionToRebind.has_value()) return;
                 this->_actionToRebind = action;
                 ECS::Entity entity = this->_actionButtons[action];
@@ -85,6 +85,100 @@ void SettingsScene::_initAudioSection() {
                       sf::Vector2f(sectionW, sectionH)));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
+
+    auto& font = this->_assetsManager->fontManager->get("main_font");
+    float startY = sectionY + 70;
+    float gapY = 60;
+
+    auto createVolumeControl = [&](std::string label, float y, bool isMusic) {
+        float labelX = sectionX + 30;
+        float minusX = sectionX + 250;
+        float valueX = sectionX + 320;
+        float plusX = sectionX + 400;
+
+        auto valueEntity = this->_registry->spawnEntity();
+        float currentVol = isMusic ? this->_audio->getMusicVolume()
+                                   : this->_audio->getSFXVolume();
+        std::string textStr =
+            label + ": " + std::to_string(static_cast<int>(currentVol));
+
+        this->_registry->emplaceComponent<rtype::games::rtype::client::Text>(
+            valueEntity, rtype::games::rtype::client::Text(
+                             font, sf::Color::White, 24, textStr));
+        this->_registry
+            ->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
+                valueEntity);
+        this->_registry
+            ->emplaceComponent<rtype::games::rtype::shared::Position>(
+                valueEntity,
+                rtype::games::rtype::shared::Position(labelX, y + 10));
+        this->_listEntity.push_back(valueEntity);
+
+        auto minusBtn = EntityFactory::createButton(
+            this->_registry,
+            rtype::games::rtype::client::Text(font, sf::Color::White, 24, "-"),
+            rtype::games::rtype::shared::Position(minusX, y),
+            rtype::games::rtype::client::Rectangle({50, 50}, sf::Color::Blue,
+                                                   sf::Color::Red),
+            this->_assetsManager,
+            std::function<void()>([this, valueEntity, isMusic, label]() {
+                float vol = isMusic ? this->_audio->getMusicVolume()
+                                    : this->_audio->getSFXVolume();
+                vol = std::max(0.0f, vol - 5.0f);
+                if (isMusic)
+                    this->_audio->setMusicVolume(vol);
+                else
+                    this->_audio->setSFXVolume(vol);
+
+                if (this->_registry
+                        ->hasComponent<rtype::games::rtype::client::Text>(
+                            valueEntity)) {
+                    auto& textComp =
+                        this->_registry
+                            ->getComponent<rtype::games::rtype::client::Text>(
+                                valueEntity);
+                    std::string s =
+                        label + ": " + std::to_string(static_cast<int>(vol));
+                    textComp.textContent = s;
+                    textComp.text.setString(s);
+                }
+            }));
+        this->_listEntity.push_back(minusBtn);
+
+        auto plusBtn = EntityFactory::createButton(
+            this->_registry,
+            rtype::games::rtype::client::Text(font, sf::Color::White, 24, "+"),
+            rtype::games::rtype::shared::Position(plusX, y),
+            rtype::games::rtype::client::Rectangle({50, 50}, sf::Color::Blue,
+                                                   sf::Color::Red),
+            this->_assetsManager,
+            std::function<void()>([this, valueEntity, isMusic, label]() {
+                float vol = isMusic ? this->_audio->getMusicVolume()
+                                    : this->_audio->getSFXVolume();
+                vol = std::min(100.0f, vol + 5.0f);
+                if (isMusic)
+                    this->_audio->setMusicVolume(vol);
+                else
+                    this->_audio->setSFXVolume(vol);
+
+                if (this->_registry
+                        ->hasComponent<rtype::games::rtype::client::Text>(
+                            valueEntity)) {
+                    auto& textComp =
+                        this->_registry
+                            ->getComponent<rtype::games::rtype::client::Text>(
+                                valueEntity);
+                    std::string s =
+                        label + ": " + std::to_string(static_cast<int>(vol));
+                    textComp.textContent = s;
+                    textComp.text.setString(s);
+                }
+            }));
+        this->_listEntity.push_back(plusBtn);
+    };
+
+    createVolumeControl("Music", startY, true);
+    createVolumeControl("SFX", startY + gapY, false);
 }
 
 void SettingsScene::_initWindowSection() {
@@ -95,6 +189,20 @@ void SettingsScene::_initWindowSection() {
 
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Window",
+        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
+                      sf::Vector2f(sectionW, sectionH)));
+    this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
+                             sectionEntities.end());
+}
+
+void SettingsScene::_initAccessibilitySection() {
+    float sectionX = 1180;
+    float sectionY = 225;
+    float sectionW = 600;
+    float sectionH = 600;
+
+    std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
+        this->_registry, this->_assetsManager, "Accessibility",
         sf::FloatRect(sf::Vector2f(sectionX, sectionY),
                       sf::Vector2f(sectionW, sectionH)));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
@@ -146,16 +254,17 @@ SettingsScene::SettingsScene(
     this->_initKeybindSection();
     this->_initAudioSection();
     this->_initWindowSection();
+    this->_initAccessibilitySection();
 
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("title_font"),
+            this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Back"),
         rtype::games::rtype::shared::Position(100, 900),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
-        std::function<void()>([switchToScene]() {
+        this->_assetsManager, std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {

@@ -156,6 +156,9 @@ class Graphic {
     /// @brief Initialize and register all systems with the scheduler
     void _initializeSystems();
 
+    /// @brief Initialize all common assets (textures, sound, fonts)
+    void _initializeCommonAssets();
+
     /// @brief Configure network entity factory for creating entities with
     /// graphics
     void _setupNetworkEntityFactory();
