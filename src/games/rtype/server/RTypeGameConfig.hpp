@@ -22,7 +22,6 @@
 
 namespace rtype::games::rtype::server {
 
-// Namespace aliases for cleaner code
 namespace server_ns = ::rtype::server;
 
 /**
@@ -128,7 +127,7 @@ class RTypeGameConfig : public server_ns::IGameConfig {
     std::unique_ptr<game::config::RTypeSaveManager> _saveManager;
     std::string _lastError;
 
-    static constexpr const char* AUTOSAVE_SLOT = "autosave";
+    static constexpr const std::string AUTOSAVE_SLOT = "autosave";
     static constexpr uint32_t MAX_AUTOSAVES = 3;
 };
 
