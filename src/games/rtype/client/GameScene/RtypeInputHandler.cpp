@@ -8,6 +8,7 @@
 #include "RtypeInputHandler.hpp"
 
 #include <algorithm>
+#include <map>
 #include <memory>
 
 #include <SFML/Window/Joystick.hpp>
@@ -98,17 +99,23 @@ std::uint8_t RtypeInputHandler::getInputMask(
                 inputMask |= ::rtype::network::InputMask::kShoot;
             }
 
-            static bool lastShootState = false;
-            static auto lastRumbleTime = std::chrono::steady_clock::now();
+            static std::map<unsigned int, bool> lastShootStates;
+            static std::map<unsigned int, std::chrono::steady_clock::time_point> lastRumbleTimes;
+
+            if (lastShootStates.find(*jid) == lastShootStates.end()) {
+                lastShootStates[*jid] = false;
+                lastRumbleTimes[*jid] = std::chrono::steady_clock::now();
+            }
+
             const auto minRumbleInterval = std::chrono::milliseconds(200);
 
             auto now = std::chrono::steady_clock::now();
-            if (shootPressed && !lastShootState &&
-                (now - lastRumbleTime) >= minRumbleInterval) {
+            if (shootPressed && !lastShootStates[*jid] &&
+                (now - lastRumbleTimes[*jid]) >= minRumbleInterval) {
                 ControllerRumble::shootPulse(*jid);
-                lastRumbleTime = now;
+                lastRumbleTimes[*jid] = now;
             }
-            lastShootState = shootPressed;
+            lastShootStates[*jid] = shootPressed;
         }
     }
 
