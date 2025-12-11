@@ -351,19 +351,3 @@ struct RTypeAutoRegistrar {
 }  // namespace
 
 }  // namespace rtype::games::rtype::server
-
-namespace rtype::engine {
-
-std::unique_ptr<IGameEngine> createGameEngine(
-    std::shared_ptr<ECS::Registry> registry) {
-    games::rtype::server::registerRTypeGameEngine();
-    auto defaultGame = GameEngineFactory::getDefaultGame();
-
-    if (!defaultGame.empty()) {
-        return GameEngineFactory::create(defaultGame, std::move(registry));
-    }
-    return std::make_unique<games::rtype::server::GameEngine>(
-        std::move(registry));
-}
-
-}  // namespace rtype::engine
