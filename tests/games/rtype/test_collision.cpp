@@ -132,14 +132,20 @@ TEST_F(CollisionFixture, ProjectileHitsPlayerWithHealthReducesHealth) {
         });
 
     auto projectile = registry->spawnEntity();
-    registry->emplaceComponent<shared::TransformComponent>(projectile, 0.0F,
-                                                            0.0F, 0.0F);
+    // Use positions well within world bounds (0,0 to 1920,1080)
+    registry->emplaceComponent<shared::TransformComponent>(projectile, 200.0F,
+                                                            200.0F, 0.0F);
     registry->emplaceComponent<shared::BoundingBoxComponent>(projectile, 10.0F,
                                                               10.0F);
     registry->emplaceComponent<shared::ProjectileTag>(projectile);
+    // Add ProjectileComponent with Enemy owner (damage=1) so it can hit players
+    registry->emplaceComponent<shared::ProjectileComponent>(
+        projectile, 1, 0U, shared::ProjectileOwner::Enemy,
+        shared::ProjectileType::EnemyBullet);
 
     auto player = registry->spawnEntity();
-    registry->emplaceComponent<shared::TransformComponent>(player, 2.0F, 0.0F,
+    // Position player overlapping with projectile
+    registry->emplaceComponent<shared::TransformComponent>(player, 202.0F, 200.0F,
                                                            0.0F);
     registry->emplaceComponent<shared::BoundingBoxComponent>(player, 10.0F,
                                                               10.0F);
@@ -176,14 +182,20 @@ TEST_F(CollisionFixture, ProjectileKillsPlayerAtLowHealth) {
         });
 
     auto projectile = registry->spawnEntity();
-    registry->emplaceComponent<shared::TransformComponent>(projectile, 0.0F,
-                                                            0.0F, 0.0F);
+    // Use positions well within world bounds (0,0 to 1920,1080)
+    registry->emplaceComponent<shared::TransformComponent>(projectile, 200.0F,
+                                                            200.0F, 0.0F);
     registry->emplaceComponent<shared::BoundingBoxComponent>(projectile, 10.0F,
                                                               10.0F);
     registry->emplaceComponent<shared::ProjectileTag>(projectile);
+    // Add ProjectileComponent with Enemy owner (damage=1) so it can hit players
+    registry->emplaceComponent<shared::ProjectileComponent>(
+        projectile, 1, 0U, shared::ProjectileOwner::Enemy,
+        shared::ProjectileType::EnemyBullet);
 
     auto player = registry->spawnEntity();
-    registry->emplaceComponent<shared::TransformComponent>(player, 2.0F, 0.0F,
+    // Position player overlapping with projectile
+    registry->emplaceComponent<shared::TransformComponent>(player, 202.0F, 200.0F,
                                                            0.0F);
     registry->emplaceComponent<shared::BoundingBoxComponent>(player, 10.0F,
                                                               10.0F);
