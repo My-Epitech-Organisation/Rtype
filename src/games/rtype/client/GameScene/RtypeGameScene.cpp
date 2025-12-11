@@ -22,6 +22,7 @@
 #include "RtypeEntityFactory.hpp"
 #include "RtypeInputHandler.hpp"
 #include "RtypePauseMenu.hpp"
+#include "games/rtype/client/PauseState.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -40,30 +41,62 @@ RtypeGameScene::RtypeGameScene(
                  std::move(networkSystem)) {}
 
 std::vector<ECS::Entity> RtypeGameScene::initialize() {
+    LOG_DEBUG("[RtypeGameScene] Initialize called");
     std::vector<ECS::Entity> entities;
 
     auto bgEntities = EntityFactory::createBackground(this->_registry,
                                                       this->_assetsManager, "");
     entities.insert(entities.end(), bgEntities.begin(), bgEntities.end());
+    LOG_DEBUG("[RtypeGameScene] Background created with " << bgEntities.size()
+                                                          << " entities");
+
     if (_networkSystem) {
+        LOG_DEBUG("[RtypeGameScene] Setting up entity factory");
         setupEntityFactory();
+        LOG_DEBUG("[RtypeGameScene] Setting up local player callback");
         setupLocalPlayerCallback();
+        LOG_DEBUG("[RtypeGameScene] Setting up health update callback");
         _networkSystem->onHealthUpdate(
             [this](const ::rtype::client::EntityHealthEvent& event) {
                 handleHealthUpdate(event);
             });
+        LOG_DEBUG("[RtypeGameScene] Network callbacks configured");
     }
+
+    LOG_DEBUG("[RtypeGameScene] Setting up HUD");
     setupHud();
+    LOG_DEBUG("[RtypeGameScene] HUD setup complete");
     auto pauseEntities = RtypePauseMenu::createPauseMenu(
         _registry, _assetsManager, _switchToScene);
     entities.insert(entities.end(), pauseEntities.begin(), pauseEntities.end());
+    LOG_DEBUG("[RtypeGameScene] Pause menu created with "
+              << pauseEntities.size() << " entities");
 
+    if (!_registry->hasSingleton<PauseState>()) {
+        _registry->setSingleton<PauseState>(PauseState{false});
+        LOG_DEBUG("[RtypeGameScene] PauseState singleton created");
+    } else {
+        _registry->getSingleton<PauseState>().isPaused = false;
+        LOG_DEBUG("[RtypeGameScene] PauseState reset to unpaused");
+    }
+
+    LOG_DEBUG("[RtypeGameScene] Initialize completed, total entities: "
+              << entities.size());
     return entities;
 }
 
 void RtypeGameScene::update() {
     if (_networkSystem) {
         _networkSystem->update();
+    }
+
+    bool isPaused = false;
+    if (_registry->hasSingleton<PauseState>()) {
+        isPaused = _registry->getSingleton<PauseState>().isPaused;
+    }
+
+    if (isPaused) {
+        return;
     }
 
     std::uint8_t inputMask = getInputMask();
@@ -81,7 +114,8 @@ void RtypeGameScene::render(std::shared_ptr<sf::RenderWindow> window) {
 }
 
 void RtypeGameScene::pollEvents(const sf::Event& event) {
-    if (event.is<sf::Event::KeyReleased>()) {
+    if (event.is<sf::Event::KeyReleased>() ||
+        event.is<sf::Event::JoystickButtonReleased>()) {
         RtypeInputHandler::handleKeyReleasedEvent(event, _keybinds, _registry);
     }
 }
