@@ -164,8 +164,6 @@ static int runServer(const ServerConfig& config,
 }
 
 int main(int argc, char** argv) {
-    // Register the RType game engine and entity spawner with their factories
-    // before any server initialization (static auto-registration isn't reliable)
     rtype::games::rtype::server::registerRTypeGameEngine();
     rtype::games::rtype::server::registerRTypeEntitySpawner();
 
