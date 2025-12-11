@@ -203,6 +203,135 @@ target_link_libraries(test_server_loop PRIVATE
     rtype_common
 )
 
+# PlayerInputHandler unit tests
+add_executable(test_player_input_handler test_player_input_handler.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player/playerInputHandler/PlayerInputHandler.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameStateManager/GameStateManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
+)
+
+target_include_directories(test_player_input_handler PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameStateManager
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player/playerInputHandler
+    ${CMAKE_SOURCE_DIR}/src/server/shared
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_player_input_handler PRIVATE cxx_std_20)
+
+target_link_libraries(test_player_input_handler PRIVATE
+    GTest::gtest_main
+    rtype_common
+    rtype_network
+    rtype_ecs
+    rtype_game_shared
+)
+
+# PlayerSpawner unit tests
+add_executable(test_player_spawner test_player_spawner.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player/playerSpawner/PlayerSpawner.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
+)
+
+target_include_directories(test_player_spawner PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/player/playerSpawner
+    ${CMAKE_SOURCE_DIR}/src/server/shared
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_player_spawner PRIVATE cxx_std_20)
+
+target_link_libraries(test_player_spawner PRIVATE
+    GTest::gtest_main
+    rtype_common
+    rtype_network
+    rtype_ecs
+    rtype_game_shared
+)
+
+# GameEventProcessor unit tests
+add_executable(test_game_event_processor test_game_event_processor.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameEvent/GameEventProcessor.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
+)
+
+target_include_directories(test_game_event_processor PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameEvent
+    ${CMAKE_SOURCE_DIR}/src/server/shared
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_game_event_processor PRIVATE cxx_std_20)
+
+target_link_libraries(test_game_event_processor PRIVATE
+    GTest::gtest_main
+    rtype_common
+    rtype_network
+    rtype_ecs
+    rtype_engine
+    rtype_game_shared
+)
+
+# PacketProcessor unit tests
+add_executable(test_packet_processor test_packet_processor.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/packetProcessor/PacketProcessor.cpp
+)
+
+target_include_directories(test_packet_processor PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/packetProcessor
+    ${CMAKE_SOURCE_DIR}/src/server/shared
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_packet_processor PRIVATE cxx_std_20)
+
+target_link_libraries(test_packet_processor PRIVATE
+    GTest::gtest_main
+    rtype_common
+    rtype_network
+)
+
+# GameStateManager unit tests
+add_executable(test_game_state_manager test_game_state_manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameStateManager/GameStateManager.cpp
+)
+
+target_include_directories(test_game_state_manager PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameStateManager
+    ${CMAKE_SOURCE_DIR}/src/server/shared
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_game_state_manager PRIVATE cxx_std_20)
+
+target_link_libraries(test_game_state_manager PRIVATE
+    GTest::gtest_main
+    rtype_common
+)
+
 include(GoogleTest)
 gtest_discover_tests(test_server_network_messages)
 gtest_discover_tests(test_client_manager)
@@ -211,3 +340,8 @@ gtest_discover_tests(test_server_app_gameconfig)
 gtest_discover_tests(test_server_network_system)
 gtest_discover_tests(test_server_app_unit)
 gtest_discover_tests(test_server_loop)
+gtest_discover_tests(test_player_input_handler)
+gtest_discover_tests(test_player_spawner)
+gtest_discover_tests(test_game_event_processor)
+gtest_discover_tests(test_packet_processor)
+gtest_discover_tests(test_game_state_manager)
