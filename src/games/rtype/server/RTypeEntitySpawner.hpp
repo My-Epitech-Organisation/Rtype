@@ -73,8 +73,8 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
     [[nodiscard]] std::optional<std::uint32_t> getEntityNetworkId(
         ECS::Entity entity) const override;
 
-    [[nodiscard]] bool getEntityPosition(ECS::Entity entity, float& outX,
-                                         float& outY) const override;
+    [[nodiscard]] std::optional<::rtype::server::EntityPosition>
+    getEntityPosition(ECS::Entity entity) const override;
 
     void updatePlayerVelocity(ECS::Entity entity, float vx, float vy) override;
 
@@ -84,8 +84,8 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
         float deltaTime,
         const PositionUpdateCallback& callback) override;
 
-    void getWorldBounds(float& minX, float& maxX, float& minY,
-                        float& maxY) const noexcept override;
+    [[nodiscard]] ::rtype::server::WorldBounds getWorldBounds()
+        const noexcept override;
 
    private:
     std::shared_ptr<ECS::Registry> _registry;

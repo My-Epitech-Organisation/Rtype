@@ -117,9 +117,8 @@ std::uint32_t RTypeEntitySpawner::handlePlayerShoot(
         return 0;
     }
 
-    float playerX = 0.0F;
-    float playerY = 0.0F;
-    if (!getEntityPosition(playerEntity, playerX, playerY)) {
+    auto posOpt = getEntityPosition(playerEntity);
+    if (!posOpt.has_value()) {
         return 0;
     }
 
@@ -127,8 +126,8 @@ std::uint32_t RTypeEntitySpawner::handlePlayerShoot(
         return 0;
     }
 
-    return _gameEngine->get().spawnProjectile(playerNetworkId, playerX,
-                                              playerY);
+    return _gameEngine->get().spawnProjectile(playerNetworkId, posOpt->x,
+                                              posOpt->y);
 }
 
 bool RTypeEntitySpawner::canPlayerShoot(ECS::Entity playerEntity) const {
@@ -160,20 +159,18 @@ std::optional<std::uint32_t> RTypeEntitySpawner::getEntityNetworkId(
         .networkId;
 }
 
-bool RTypeEntitySpawner::getEntityPosition(ECS::Entity entity, float& outX,
-                                           float& outY) const {
+std::optional<::rtype::server::EntityPosition>
+RTypeEntitySpawner::getEntityPosition(ECS::Entity entity) const {
     if (!_registry) {
-        return false;
+        return std::nullopt;
     }
 
     if (!_registry->hasComponent<shared::Position>(entity)) {
-        return false;
+        return std::nullopt;
     }
 
     const auto& pos = _registry->getComponent<shared::Position>(entity);
-    outX = pos.x;
-    outY = pos.y;
-    return true;
+    return ::rtype::server::EntityPosition{pos.x, pos.y};
 }
 
 void RTypeEntitySpawner::updatePlayerVelocity(ECS::Entity entity, float vx,
@@ -235,12 +232,9 @@ void RTypeEntitySpawner::updateAllPlayersMovement(
     });
 }
 
-void RTypeEntitySpawner::getWorldBounds(float& minX, float& maxX, float& minY,
-                                        float& maxY) const noexcept {
-    minX = kWorldMinX;
-    maxX = kWorldMaxX;
-    minY = kWorldMinY;
-    maxY = kWorldMaxY;
+::rtype::server::WorldBounds RTypeEntitySpawner::getWorldBounds()
+    const noexcept {
+    return {kWorldMinX, kWorldMaxX, kWorldMinY, kWorldMaxY};
 }
 
 std::unique_ptr<::rtype::server::IEntitySpawner> createRTypeEntitySpawner(
