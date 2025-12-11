@@ -463,30 +463,6 @@ void SettingsScene::_refreshIntensityLabel() {
 }
 
 void SettingsScene::update(float dt) {
-    static int frameCounter = 0;
-    if (++frameCounter % 10 == 0) {
-        sf::Joystick::update();
-
-        for (unsigned int i = 0; i < sf::Joystick::Count; ++i) {
-            if (sf::Joystick::isConnected(i)) {
-                float x =
-                    sf::Joystick::getAxisPosition(i, sf::Joystick::Axis::X);
-                float y =
-                    sf::Joystick::getAxisPosition(i, sf::Joystick::Axis::Y);
-
-                LOG_DEBUG("[SettingsScene] Joystick " << i << " - X: " << x
-                                                      << " Y: " << y);
-
-                for (unsigned int btn = 0;
-                     btn < sf::Joystick::getButtonCount(i); ++btn) {
-                    if (sf::Joystick::isButtonPressed(i, btn)) {
-                        LOG_DEBUG("[SettingsScene] Joystick "
-                                  << i << " Button " << btn << " PRESSED");
-                    }
-                }
-            }
-        }
-    }
 }
 
 void SettingsScene::render(std::shared_ptr<sf::RenderWindow> window) {}
