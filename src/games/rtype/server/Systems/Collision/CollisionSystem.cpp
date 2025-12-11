@@ -139,7 +139,6 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
         auto& health = registry.getComponent<HealthComponent>(target);
         health.takeDamage(damage);
 
-        // Emit health changed event for players
         if (isTargetPlayer && _emitEvent &&
             registry.hasComponent<NetworkIdComponent>(target)) {
             const auto& netId =
