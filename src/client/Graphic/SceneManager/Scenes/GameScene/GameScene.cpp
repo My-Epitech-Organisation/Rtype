@@ -10,7 +10,10 @@
 #include <memory>
 #include <utility>
 
+#include "Accessibility.hpp"
 #include "Components/TagComponent.hpp"
+#include "Logger/Macros.hpp"
+#include "games/rtype/client/PauseState.hpp"
 
 void GameScene::update(float dt) {
     if (_gameScene) {
@@ -45,16 +48,26 @@ GameScene::GameScene(
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)),
       _gameScene(std::move(gameScene)) {
+    LOG_DEBUG("[GameScene] Constructor started");
     if (_gameScene) {
+        LOG_DEBUG("[GameScene] Calling initialize on game scene");
         this->_listEntity = _gameScene->initialize();
+        LOG_DEBUG("[GameScene] Game scene initialized, entities created: "
+                  << this->_listEntity.size());
     }
+    LOG_DEBUG("[GameScene] Loading game textures");
     this->_assetsManager->textureManager->load(
         "bdos_enemy",
         this->_assetsManager->configGameAssets.assets.textures.Enemy);
     this->_assetsManager->textureManager->load(
         "projectile_player_laser",
         this->_assetsManager->configGameAssets.assets.textures.missileLaser);
-    if (!this->_audio) return;
+    LOG_DEBUG("[GameScene] Game textures loaded");
+    LOG_DEBUG("[GameScene] Setting up audio");
+    if (!this->_audio) {
+        LOG_DEBUG("[GameScene] No audio library available");
+        return;
+    }
     if (this->_assetsManager && this->_assetsManager->audioManager) {
         this->_assetsManager->audioManager->load(
             "main_game_music",
@@ -62,20 +75,56 @@ GameScene::GameScene(
         auto bgMusic =
             this->_assetsManager->audioManager->get("main_game_music");
         if (bgMusic) {
+            LOG_DEBUG("[GameScene] Playing game music");
             this->_audio->loadMusic(bgMusic);
             this->_audio->setLoop(true);
             this->_audio->play();
         }
     }
+    LOG_DEBUG("[GameScene] Constructor completed successfully");
 }
 
 GameScene::~GameScene() {
+    LOG_DEBUG("[GameScene] Destructor called");
+
+    // Gracefully disconnect from server so the server receives a voluntary
+    // disconnect packet instead of timing out the client.
+    if (_networkClient && _networkClient->isConnected()) {
+        LOG_DEBUG("[GameScene] Disconnecting from server");
+        _networkClient->disconnect();
+    }
+
     this->_registry->view<rtype::games::rtype::client::GameTag>().each(
         [this](ECS::Entity entity,
                rtype::games::rtype::client::GameTag& /*tag*/) {
             this->_registry->killEntity(entity);
         });
+
+    // Clean up pause menu entities
+    LOG_DEBUG("[GameScene] Cleaning up pause menu entities");
+    this->_registry->view<rtype::games::rtype::client::PauseMenuTag>().each(
+        [this](ECS::Entity entity,
+               rtype::games::rtype::client::PauseMenuTag& /*tag*/) {
+            this->_registry->killEntity(entity);
+        });
+
+    // Remove PauseState singleton to avoid stale state in main menu
+    if (this->_registry
+            ->hasSingleton<rtype::games::rtype::client::PauseState>()) {
+        LOG_DEBUG("[GameScene] Removing PauseState singleton");
+        this->_registry
+            ->removeSingleton<rtype::games::rtype::client::PauseState>();
+    }
+
+    // Remove AccessibilitySettings singleton if it exists (created during game)
+    if (this->_registry->hasSingleton<AccessibilitySettings>()) {
+        LOG_DEBUG("[GameScene] Removing AccessibilitySettings singleton");
+        this->_registry->removeSingleton<AccessibilitySettings>();
+    }
+
     if (this->_audio) {
+        LOG_DEBUG("[GameScene] Pausing music");
         this->_audio->pauseMusic();
     }
+    LOG_DEBUG("[GameScene] Destructor completed");
 }
