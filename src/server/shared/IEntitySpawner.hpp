@@ -34,6 +34,24 @@ struct PlayerSpawnResult {
 };
 
 /**
+ * @brief Result of getting an entity's position
+ */
+struct EntityPosition {
+    float x{0.0F};
+    float y{0.0F};
+};
+
+/**
+ * @brief World bounds for the game area
+ */
+struct WorldBounds {
+    float minX{0.0F};
+    float maxX{0.0F};
+    float minY{0.0F};
+    float maxY{0.0F};
+};
+
+/**
  * @brief Configuration for player spawning
  */
 struct PlayerSpawnConfig {
@@ -128,13 +146,10 @@ class IEntitySpawner {
      * @brief Get the position of an entity
      *
      * @param entity The entity to query
-     * @param outX Output X position
-     * @param outY Output Y position
-     * @return true if entity has position, false otherwise
+     * @return EntityPosition if entity has position, std::nullopt otherwise
      */
-    [[nodiscard]] virtual bool getEntityPosition(ECS::Entity entity,
-                                                 float& outX,
-                                                 float& outY) const = 0;
+    [[nodiscard]] virtual std::optional<EntityPosition> getEntityPosition(
+        ECS::Entity entity) const = 0;
 
     /**
      * @brief Update player velocity
@@ -183,13 +198,9 @@ class IEntitySpawner {
     /**
      * @brief Get game-specific world bounds
      *
-     * @param minX Output minimum X coordinate
-     * @param maxX Output maximum X coordinate
-     * @param minY Output minimum Y coordinate
-     * @param maxY Output maximum Y coordinate
+     * @return WorldBounds containing min/max coordinates
      */
-    virtual void getWorldBounds(float& minX, float& maxX, float& minY,
-                                float& maxY) const noexcept = 0;
+    [[nodiscard]] virtual WorldBounds getWorldBounds() const noexcept = 0;
 };
 
 }  // namespace rtype::server
