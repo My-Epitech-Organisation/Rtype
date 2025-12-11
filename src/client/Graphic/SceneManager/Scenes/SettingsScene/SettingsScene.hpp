@@ -15,6 +15,7 @@
 
 #include "../AScene.hpp"
 #include "GameAction.hpp"
+#include "Graphic/Accessibility.hpp"
 #include "Graphic/KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
 #include "SettingsSceneUtils.hpp"
@@ -24,11 +25,21 @@ class SettingsScene : public AScene {
     std::shared_ptr<KeyboardActions> _keybinds;
     std::optional<GameAction> _actionToRebind;
     std::map<GameAction, ECS::Entity> _actionButtons;
+    std::optional<ECS::Entity> _intensityLabel;
+    ECS::Entity _inputModeLabel;
+    std::vector<ECS::Entity>
+        _keybindSectionEntities;  // Track keybind UI to refresh
 
     void _initKeybindSection();
     void _initAudioSection();
     void _initWindowSection();
     void _initAccessibilitySection();
+    void _initInputModeSection();
+    void _refreshKeybindSection();  // Refresh when input mode changes
+    void _setColorMode(ColorBlindMode mode);
+    void _adjustColorIntensity(float delta);
+    void _refreshIntensityLabel();
+    void _refreshInputModeLabel();
 
    public:
     void update(float dt) override;
