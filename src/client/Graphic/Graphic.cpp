@@ -92,16 +92,16 @@ void Graphic::_update() {
 }
 
 void Graphic::_display() {
-    this->_sceneTexture.clear();
+    this->_sceneTexture->clear();
 
     this->_systemScheduler->runSystem("render");
     this->_systemScheduler->runSystem("boxing");
 
-    this->_sceneTexture.display();
+    this->_sceneTexture->display();
 
     this->_window->clear();
 
-    sf::Sprite composed(this->_sceneTexture.getTexture());
+    sf::Sprite composed(this->_sceneTexture->getTexture());
 
     sf::Shader* shader = nullptr;
     if (this->_colorShader &&
@@ -156,24 +156,14 @@ void Graphic::_display() {
 
     this->_window->draw(composed, shader);
 
-    // UI / scene specific rendering (menus) stays unfiltered for clarity
     this->_sceneManager->draw();
     this->_window->display();
 }
 
 void Graphic::loop() {
-    // Limit to 60 FPS to prevent infinite loop
     this->_window->setFramerateLimit(60);
-    LOG_DEBUG("[Graphic] Frame rate limited to 60 FPS");
 
-    int frameCount = 0;
     while (this->_window->isOpen()) {
-        frameCount++;
-        if (frameCount % 300 == 0) {  // Log every 5 seconds at 60 FPS
-            LOG_DEBUG("[Graphic] Main loop frame "
-                      << frameCount
-                      << " - Window open: " << this->_window->isOpen());
-        }
         this->_pollEvents();
         this->_update();
         this->_display();
@@ -207,8 +197,7 @@ void Graphic::_initializeSystems() {
     this->_parallaxScrolling =
         std::make_unique<::rtype::games::rtype::client::ParallaxScrolling>(
             this->_view);
-    auto targetPtr = std::shared_ptr<sf::RenderTarget>(
-        &_sceneTexture, [](sf::RenderTarget*) {});
+    std::shared_ptr<sf::RenderTarget> targetPtr = this->_sceneTexture;
     this->_renderSystem =
         std::make_unique<::rtype::games::rtype::client::RenderSystem>(
             targetPtr);
@@ -327,14 +316,15 @@ Graphic::Graphic(
         sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");
     this->_window->setView(*this->_view);
 
-    sf::RenderTexture sceneTexture({WINDOW_WIDTH, WINDOW_HEIGHT});
-    this->_sceneTexture = std::move(sceneTexture);
+    this->_sceneTexture = std::make_shared<sf::RenderTexture>(sf::Vector2u{WINDOW_WIDTH, WINDOW_HEIGHT});
 
     if (sf::Shader::isAvailable()) {
         auto shader = std::make_shared<sf::Shader>();
         if (shader->loadFromFile("assets/shaders/colorblind.frag",
                                  sf::Shader::Type::Fragment)) {
             this->_colorShader = shader;
+        } else {
+            LOG_ERROR("Failed to load shader: assets/shaders/colorblind.frag");
         }
     }
     this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value());
@@ -345,7 +335,6 @@ Graphic::Graphic(
     this->_registry->setSingleton<std::shared_ptr<AudioLib>>(this->_audioLib);
     this->_registry->setSingleton<AccessibilitySettings>(
         AccessibilitySettings{ColorBlindMode::None});
-    // Initialize pause state early to prevent any issues
     this->_registry->setSingleton<rtype::games::rtype::client::PauseState>(
         rtype::games::rtype::client::PauseState{false});
     this->_initializeCommonAssets();

@@ -90,7 +90,7 @@ class Graphic {
     std::shared_ptr<AudioLib> _audioLib;
 
     /// @brief Render texture for post-processing
-    sf::RenderTexture _sceneTexture;
+    std::shared_ptr<sf::RenderTexture> _sceneTexture;
 
     /// @brief Optional colorblind shader
     std::shared_ptr<sf::Shader> _colorShader;
