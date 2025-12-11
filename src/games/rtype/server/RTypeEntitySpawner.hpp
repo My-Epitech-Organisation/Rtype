@@ -59,8 +59,6 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
     RTypeEntitySpawner(RTypeEntitySpawner&&) = delete;
     RTypeEntitySpawner& operator=(RTypeEntitySpawner&&) = delete;
 
-    // ==================== IEntitySpawner Interface ====================
-
     [[nodiscard]] ::rtype::server::PlayerSpawnResult spawnPlayer(
         const ::rtype::server::PlayerSpawnConfig& config) override;
 

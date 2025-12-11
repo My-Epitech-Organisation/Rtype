@@ -72,8 +72,6 @@ class GameEngine : public engine::AGameEngine {
     GameEngine(GameEngine&&) = delete;
     GameEngine& operator=(GameEngine&&) = delete;
 
-    // ==================== IGameEngine Interface ====================
-
     bool initialize() override;
     void update(float deltaTime) override;
     void shutdown() override;
@@ -88,8 +86,6 @@ class GameEngine : public engine::AGameEngine {
     void syncEntityPositions(
         std::function<void(uint32_t, float, float, float, float)> callback)
         override;
-
-    // ==================== R-Type Specific Methods ====================
 
     /**
      * @brief Spawn a projectile for a player

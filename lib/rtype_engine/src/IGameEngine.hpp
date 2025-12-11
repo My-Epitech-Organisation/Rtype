@@ -94,8 +94,6 @@ class IGameEngine {
 
     virtual ~IGameEngine() = default;
 
-    // ==================== Lifecycle ====================
-
     /**
      * @brief Initialize the game engine
      * @return true if initialization succeeded
@@ -112,8 +110,6 @@ class IGameEngine {
      * @brief Shutdown the game engine and release resources
      */
     virtual void shutdown() = 0;
-
-    // ==================== Event System ====================
 
     /**
      * @brief Set the callback for game events
@@ -132,8 +128,6 @@ class IGameEngine {
      */
     virtual void clearPendingEvents() = 0;
 
-    // ==================== State Queries ====================
-
     /**
      * @brief Get the current entity count
      * @return Number of active entities
@@ -151,8 +145,6 @@ class IGameEngine {
      * @return Game identifier string (e.g., "rtype", "spaceinvaders")
      */
     [[nodiscard]] virtual std::string getGameId() const = 0;
-
-    // ==================== Event Processing ====================
 
     /**
      * @brief Process a game event and return network-ready data
