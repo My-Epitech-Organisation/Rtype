@@ -8,10 +8,10 @@
 #   4. Copies executables to repository root
 #
 # Usage:
-#   ./build.sh              # Incremental build (client and server only)
-#   ./build.sh -t           # Incremental build with tests
-#   ./build.sh -r           # Full rebuild (clean + build)
-#   ./build.sh -r -t        # Full rebuild with tests
+#   ./build.sh              # Full rebuild (clean + build, client and server only)
+#   ./build.sh -t           # Full rebuild with tests
+#   ./build.sh -r           # Incremental build (reuse existing build)
+#   ./build.sh -r -t        # Incremental build with tests
 
 set -e
 
@@ -20,21 +20,21 @@ PROJECT_ROOT="$SCRIPT_DIR"
 
 # Parse arguments
 BUILD_TESTS=false
-FULL_REBUILD=false
+INCREMENTAL_BUILD=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         -t|--tests)
             BUILD_TESTS=true
             shift
             ;;
-        -r|--rebuild)
-            FULL_REBUILD=true
+        -r|--reuse)
+            INCREMENTAL_BUILD=true
             shift
             ;;
         -h|--help)
-            echo "Usage: $0 [-t|--tests] [-r|--rebuild]"
+            echo "Usage: $0 [-t|--tests] [-r|--reuse]"
             echo "  -t, --tests    Build with unit tests"
-            echo "  -r, --rebuild  Full rebuild (clean build directory)"
+            echo "  -r, --reuse    Incremental build (reuse existing build directory)"
             echo "  -h, --help     Show this help message"
             exit 0
             ;;
@@ -51,15 +51,15 @@ echo "║           R-Type - Release Build Script (Linux)          ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-if [ "$FULL_REBUILD" = true ]; then
-    echo "→ Build type: Full rebuild"
-else
-    echo "→ Build type: Incremental"
-fi
 if [ "$BUILD_TESTS" = true ]; then
     echo "→ Build mode: Client + Server + Tests"
 else
     echo "→ Build mode: Client + Server"
+fi
+if [ "$INCREMENTAL_BUILD" = true ]; then
+    echo "→ Build type: Incremental"
+else
+    echo "→ Build type: Full rebuild"
 fi
 echo ""
 
@@ -83,7 +83,7 @@ echo ""
 echo "→ Step 2/4: Configuring CMake (linux-release preset)..."
 cd "$PROJECT_ROOT"
 
-if [ "$FULL_REBUILD" = true ] && [ -d "build" ]; then
+if [ "$INCREMENTAL_BUILD" = false ] && [ -d "build" ]; then
     echo "  Cleaning existing build directory..."
     rm -rf build
 fi
