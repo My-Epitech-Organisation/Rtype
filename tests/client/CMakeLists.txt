@@ -173,3 +173,21 @@ target_include_directories(test_ui_components PRIVATE
 )
 
 gtest_discover_tests(test_ui_components)
+
+add_executable(test_accessibility_and_input test_accessibility_and_input.cpp)
+
+target_link_libraries(test_accessibility_and_input PRIVATE
+    GTest::gtest_main
+    rtype_engine
+    rtype_network
+    rtype_game_shared
+    rtype_game_client
+    rtype-graphic-SFML
+    rtype_game_client_systems
+)
+
+target_include_directories(test_accessibility_and_input PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_accessibility_and_input)
