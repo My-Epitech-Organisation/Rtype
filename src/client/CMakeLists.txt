@@ -26,8 +26,8 @@ target_include_directories(rtype_client_network PRIVATE
 )
 target_link_libraries(rtype_client_network
     PRIVATE
-    rtype_network
-    rtype_common
+    network
+    common
     rtype_game_client
 )
 
@@ -46,8 +46,8 @@ target_include_directories(r-type_client PRIVATE
 )
 
 target_link_libraries(r-type_client PUBLIC
-    rtype_engine
-    rtype_network
+    engine
+    network
     rtype_game_shared
     rtype_game_client
     rtype-graphic-SFML
@@ -75,7 +75,7 @@ target_include_directories(rtype-graphic-main-menu-scene
 
 target_link_libraries(rtype-graphic-SFML
     PRIVATE
-    rtype_engine
+    engine
     rtype_game_client_systems
 )
 

@@ -24,7 +24,7 @@ target_link_libraries(rtype_game_client_systems
     SFML::Window
     SFML::Audio
     SFML::System
-    rtype_engine
+    engine
     rtype-graphic-scene-manager
     rtype_game_shared
     rtype_game_client_components

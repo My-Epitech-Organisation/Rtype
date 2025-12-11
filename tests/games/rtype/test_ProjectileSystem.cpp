@@ -10,7 +10,7 @@
 #include "../../../src/games/rtype/shared/Components/PositionComponent.hpp"
 #include "../../../src/games/rtype/shared/Components/VelocityComponent.hpp"
 #include "../../../src/games/rtype/shared/Components/Tags.hpp"
-#include "../../../../lib/rtype_ecs/src/ECS.hpp"
+#include "../../../../lib/ecs/src/ECS.hpp"
 
 using namespace rtype::games::rtype::shared;
 

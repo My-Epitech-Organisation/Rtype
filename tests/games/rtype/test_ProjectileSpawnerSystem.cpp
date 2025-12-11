@@ -9,7 +9,7 @@
 
 #include "../../../src/games/rtype/server/Systems/Projectile/ProjectileSpawnerSystem.hpp"
 #include "../../../src/games/rtype/shared/Components.hpp"
-#include "../../../../lib/rtype_ecs/src/ECS.hpp"
+#include "../../../../lib/ecs/src/ECS.hpp"
 
 using namespace rtype::games::rtype;
 

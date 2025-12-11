@@ -17,11 +17,11 @@ add_executable(test_integration
 target_link_libraries(test_integration
     PRIVATE
         gtest_main
-        rtype_common
+        common
         rtype_toml_parser
-        rtype_network
-        rtype_ecs
-        rtype_engine
+        network
+        ecs
+        engine
         rtype_game_shared
         rtype_game_server
     rtype_client_network
@@ -37,8 +37,8 @@ target_include_directories(test_integration
         ${CMAKE_SOURCE_DIR}/src/network
         ${CMAKE_SOURCE_DIR}/src/common
         ${CMAKE_SOURCE_DIR}/src/games
-        ${CMAKE_SOURCE_DIR}/lib/rtype_network/src
-        ${CMAKE_SOURCE_DIR}/lib/rtype_ecs/src
+        ${CMAKE_SOURCE_DIR}/lib/network/src
+        ${CMAKE_SOURCE_DIR}/lib/ecs/src
 )
 
 add_test(NAME IntegrationTests COMMAND test_integration)

@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <set>
 
-#include "../../../lib/rtype_ecs/src/ECS.hpp"
+#include "../../../lib/ecs/src/ECS.hpp"
 #include "../../../src/games/rtype/shared/Components.hpp"
 #include "../../../src/games/rtype/shared/Systems/Collision/QuadTree.hpp"
 #include "../../../src/games/rtype/shared/Systems/Collision/QuadTreeSystem.hpp"

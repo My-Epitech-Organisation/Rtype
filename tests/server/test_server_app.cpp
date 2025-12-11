@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "../../../src/server/ServerApp.hpp"
-#include "../../../lib/rtype_network/src/Packet.hpp"
+#include "../../../lib/network/src/Packet.hpp"
 
 using namespace rtype::server;
 using namespace rtype::network;

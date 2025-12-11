@@ -10,8 +10,8 @@ target_link_libraries(rtype-graphic-main-menu-scene
     SFML::Window
     SFML::Audio
     SFML::System
-    rtype_engine
-    rtype_network
+    engine
+    network
     rtype-graphic-audio
     rtype_client_network
 )

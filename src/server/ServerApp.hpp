@@ -63,7 +63,7 @@ using rtype::Endpoint;
  * - Automatic notification to other clients when a client disconnects
  * - Thread-safe client management using shared_mutex for read-heavy workloads
  *
- * @note Network functionality is stubbed until rtype_network is fully
+ * @note Network functionality is stubbed until network is fully
  * implemented.
  *
  * Usage:

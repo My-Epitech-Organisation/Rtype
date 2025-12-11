@@ -3,7 +3,7 @@
 add_executable(test_protocol test_protocol.cpp)
 
 target_link_libraries(test_protocol PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -11,7 +11,7 @@ target_link_libraries(test_protocol PRIVATE
 add_executable(test_serialization test_serialization.cpp)
 
 target_link_libraries(test_serialization PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -19,7 +19,7 @@ target_link_libraries(test_serialization PRIVATE
 add_executable(test_error test_error.cpp)
 
 target_link_libraries(test_error PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -27,7 +27,7 @@ target_link_libraries(test_error PRIVATE
 add_executable(test_asio_socket test_asio_socket.cpp)
 
 target_link_libraries(test_asio_socket PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -35,7 +35,7 @@ target_link_libraries(test_asio_socket PRIVATE
 add_executable(test_reliable_channel test_reliable_channel.cpp)
 
 target_link_libraries(test_reliable_channel PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -43,7 +43,7 @@ target_link_libraries(test_reliable_channel PRIVATE
 add_executable(test_connection_state test_connection_state.cpp)
 
 target_link_libraries(test_connection_state PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -51,7 +51,7 @@ target_link_libraries(test_connection_state PRIVATE
 add_executable(test_connection test_connection.cpp)
 
 target_link_libraries(test_connection PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -59,7 +59,7 @@ target_link_libraries(test_connection PRIVATE
 add_executable(test_packet_validation test_packet_validation.cpp)
 
 target_link_libraries(test_packet_validation PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 

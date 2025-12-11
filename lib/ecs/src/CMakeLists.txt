@@ -28,40 +28,40 @@ set(ECS_HEADERS
 
 # Header-only library (no .cpp files yet or all are commented)
 if(NOT ECS_SOURCES)
-    add_library(rtype_ecs INTERFACE)
-    target_include_directories(rtype_ecs INTERFACE
+    add_library(ecs INTERFACE)
+    target_include_directories(ecs INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/..
     )
 
     # C++20 standard requirement
-    target_compile_features(rtype_ecs INTERFACE cxx_std_20)
+    target_compile_features(ecs INTERFACE cxx_std_20)
 
     # Threading support
     find_package(Threads REQUIRED)
-    target_link_libraries(rtype_ecs INTERFACE Threads::Threads)
+    target_link_libraries(ecs INTERFACE Threads::Threads)
 
     # Alias
-    add_library(RType::ECS ALIAS rtype_ecs)
+    add_library(RType::ECS ALIAS ecs)
 else()
     # Static library
-    add_library(rtype_ecs STATIC ${ECS_SOURCES})
-    target_include_directories(rtype_ecs PUBLIC
+    add_library(ecs STATIC ${ECS_SOURCES})
+    target_include_directories(ecs PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/..
     )
 
     # C++20 standard requirement
-    target_compile_features(rtype_ecs PUBLIC cxx_std_20)
+    target_compile_features(ecs PUBLIC cxx_std_20)
 
     # Threading support
     find_package(Threads REQUIRED)
-    target_link_libraries(rtype_ecs PUBLIC Threads::Threads)
+    target_link_libraries(ecs PUBLIC Threads::Threads)
 
     # Compiler warnings
-    target_compile_options(rtype_ecs PRIVATE
+    target_compile_options(ecs PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:/W4>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
     )
 
     # Alias
-    add_library(RType::ECS ALIAS rtype_ecs)
+    add_library(RType::ECS ALIAS ecs)
 endif()

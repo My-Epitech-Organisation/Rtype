@@ -11,8 +11,8 @@ target_include_directories(rtype_server_network PRIVATE
 )
 target_link_libraries(rtype_server_network
     PRIVATE
-    rtype_network
-    rtype_common
+    network
+    common
     rtype_game_server
 )
 
@@ -30,8 +30,8 @@ target_include_directories(r-type_server PRIVATE
 
 # Server executable depends on all server-side modules
 target_link_libraries(r-type_server PRIVATE
-    rtype_engine
-    rtype_network
+    engine
+    network
     rtype_game_shared
     rtype_game_server
     rtype_server_network
