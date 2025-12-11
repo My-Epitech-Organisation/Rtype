@@ -15,8 +15,7 @@ namespace rtype::server {
 
 GameEventProcessor::GameEventProcessor(
     std::shared_ptr<engine::IGameEngine> gameEngine,
-    std::shared_ptr<ServerNetworkSystem> networkSystem,
-    bool verbose)
+    std::shared_ptr<ServerNetworkSystem> networkSystem, bool verbose)
     : _gameEngine(std::move(gameEngine)),
       _networkSystem(std::move(networkSystem)),
       _verbose(verbose) {}

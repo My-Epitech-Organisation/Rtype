@@ -24,8 +24,7 @@ namespace rtype::games::rtype::server {
 RTypeEntitySpawner::RTypeEntitySpawner(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<::rtype::server::ServerNetworkSystem> networkSystem,
-    GameEngineOpt gameEngine,
-    GameConfigOpt gameConfig)
+    GameEngineOpt gameEngine, GameConfigOpt gameConfig)
     : _registry(std::move(registry)),
       _networkSystem(std::move(networkSystem)),
       _gameEngine(gameEngine),
@@ -204,8 +203,7 @@ void RTypeEntitySpawner::triggerShootCooldown(ECS::Entity entity) {
 std::unique_ptr<::rtype::server::IEntitySpawner> createRTypeEntitySpawner(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<::rtype::server::ServerNetworkSystem> networkSystem,
-    GameEngineOpt gameEngine,
-    GameConfigOpt gameConfig) {
+    GameEngineOpt gameEngine, GameConfigOpt gameConfig) {
     return std::make_unique<RTypeEntitySpawner>(
         std::move(registry), std::move(networkSystem), gameEngine, gameConfig);
 }

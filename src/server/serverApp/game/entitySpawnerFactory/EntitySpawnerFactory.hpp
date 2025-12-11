@@ -33,8 +33,7 @@ namespace rtype::server {
 using GameEngineOpt =
     std::optional<std::reference_wrapper<engine::IGameEngine>>;
 /// @brief Optional reference to a game config
-using GameConfigOpt =
-    std::optional<std::reference_wrapper<const IGameConfig>>;
+using GameConfigOpt = std::optional<std::reference_wrapper<const IGameConfig>>;
 
 /**
  * @brief Factory for creating game-specific entity spawners

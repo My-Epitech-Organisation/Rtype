@@ -25,8 +25,7 @@ PlayerInputHandler::PlayerInputHandler(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<ServerNetworkSystem> networkSystem,
     std::shared_ptr<GameStateManager> stateManager,
-    std::shared_ptr<const IGameConfig> gameConfig,
-    bool verbose)
+    std::shared_ptr<const IGameConfig> gameConfig, bool verbose)
     : _registry(std::move(registry)),
       _networkSystem(std::move(networkSystem)),
       _stateManager(std::move(stateManager)),

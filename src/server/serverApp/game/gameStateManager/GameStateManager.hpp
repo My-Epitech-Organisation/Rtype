@@ -17,11 +17,7 @@ namespace rtype::server {
 /**
  * @brief Server game state
  */
-enum class GameState {
-    WaitingForPlayers,
-    Playing,
-    Paused
-};
+enum class GameState { WaitingForPlayers, Playing, Paused };
 
 /**
  * @brief Convert GameState to string for logging

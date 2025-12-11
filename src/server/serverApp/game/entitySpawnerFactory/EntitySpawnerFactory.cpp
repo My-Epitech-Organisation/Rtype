@@ -64,8 +64,8 @@ std::unique_ptr<IEntitySpawner> EntitySpawnerFactory::create(
         return nullptr;
     }
 
-    return it->second(std::move(registry), std::move(networkSystem),
-                      gameEngine, gameConfig);
+    return it->second(std::move(registry), std::move(networkSystem), gameEngine,
+                      gameConfig);
 }
 
 bool EntitySpawnerFactory::isRegistered(const std::string& gameId) {

@@ -46,10 +46,10 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
      * @param gameEngine Optional reference to the game engine
      * @param gameConfig Optional reference to the game config
      */
-    RTypeEntitySpawner(std::shared_ptr<ECS::Registry> registry,
-                       std::shared_ptr<::rtype::server::ServerNetworkSystem> networkSystem,
-                       GameEngineOpt gameEngine,
-                       GameConfigOpt gameConfig);
+    RTypeEntitySpawner(
+        std::shared_ptr<ECS::Registry> registry,
+        std::shared_ptr<::rtype::server::ServerNetworkSystem> networkSystem,
+        GameEngineOpt gameEngine, GameConfigOpt gameConfig);
 
     ~RTypeEntitySpawner() override = default;
 
@@ -108,8 +108,7 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
 std::unique_ptr<::rtype::server::IEntitySpawner> createRTypeEntitySpawner(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<::rtype::server::ServerNetworkSystem> networkSystem,
-    GameEngineOpt gameEngine,
-    GameConfigOpt gameConfig);
+    GameEngineOpt gameEngine, GameConfigOpt gameConfig);
 
 /**
  * @brief Register RType entity spawner with the factory
