@@ -137,4 +137,14 @@ class GameEngine : public engine::AGameEngine {
     mutable std::mutex _eventMutex;
 };
 
+/**
+ * @brief Register RType game engine with the factory
+ *
+ * This function must be called once during application startup
+ * to register the RType game engine with the GameEngineFactory.
+ * This is typically done automatically via static initialization,
+ * but can be called explicitly if needed.
+ */
+void registerRTypeGameEngine();
+
 }  // namespace rtype::games::rtype::server

@@ -181,6 +181,7 @@ engine::ProcessedEvent GameEngine::processEvent(
         }
         case engine::GameEventType::EntityDestroyed:
         case engine::GameEventType::EntityUpdated:
+        case engine::GameEventType::EntityHealthChanged:
             result.valid = true;
             break;
     }
@@ -229,12 +230,38 @@ void GameEngine::emitEvent(const engine::GameEvent& event) {
     }
 }
 
+void registerRTypeGameEngine() {
+    static bool registered = false;
+    if (registered) {
+        return;
+    }
+    registered = true;
+
+    engine::GameEngineFactory::registerGame(
+        "rtype", [](std::shared_ptr<ECS::Registry> registry) {
+            return std::make_unique<GameEngine>(std::move(registry));
+        });
+    engine::GameEngineFactory::setDefaultGame("rtype");
+}
+
+namespace {
+struct RTypeAutoRegistrar {
+    RTypeAutoRegistrar() { registerRTypeGameEngine(); }
+} rtypeAutoRegistrar;
+}  // namespace
+
 }  // namespace rtype::games::rtype::server
 
 namespace rtype::engine {
 
 std::unique_ptr<IGameEngine> createGameEngine(
     std::shared_ptr<ECS::Registry> registry) {
+    games::rtype::server::registerRTypeGameEngine();
+    auto defaultGame = GameEngineFactory::getDefaultGame();
+
+    if (!defaultGame.empty()) {
+        return GameEngineFactory::create(defaultGame, std::move(registry));
+    }
     return std::make_unique<games::rtype::server::GameEngine>(
         std::move(registry));
 }
