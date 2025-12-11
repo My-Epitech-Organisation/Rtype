@@ -18,6 +18,8 @@
 
 #include "Logger/Macros.hpp"
 #include "ServerApp.hpp"
+#include "games/rtype/server/GameEngine.hpp"
+#include "games/rtype/server/RTypeEntitySpawner.hpp"
 #include "games/rtype/server/RTypeGameConfig.hpp"
 
 /**
@@ -162,6 +164,11 @@ static int runServer(const ServerConfig& config,
 }
 
 int main(int argc, char** argv) {
+    // Register the RType game engine and entity spawner with their factories
+    // before any server initialization (static auto-registration isn't reliable)
+    rtype::games::rtype::server::registerRTypeGameEngine();
+    rtype::games::rtype::server::registerRTypeEntitySpawner();
+
     try {
         auto config = std::make_shared<ServerConfig>();
         std::vector<std::string_view> args(argv + 1, argv + argc);
@@ -176,9 +183,7 @@ int main(int argc, char** argv) {
             if (parseResult == rtype::ParseResult::Exit) {
                 return 0;
             }
-            // Explicitly clear handlers to release lambda captures
             parser->clear();
-            // parser goes out of scope and is destroyed here
         }
 
         printBanner(*config);
