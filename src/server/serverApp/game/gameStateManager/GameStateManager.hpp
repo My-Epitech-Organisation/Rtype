@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <string>
 #include <set>
 
 namespace rtype::server {
@@ -22,7 +23,7 @@ enum class GameState { WaitingForPlayers, Playing, Paused };
 /**
  * @brief Convert GameState to string for logging
  */
-[[nodiscard]] inline const char* toString(GameState state) noexcept {
+[[nodiscard]] inline const std::string toString(GameState state) noexcept {
     switch (state) {
         case GameState::WaitingForPlayers:
             return "WaitingForPlayers";
