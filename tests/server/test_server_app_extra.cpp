@@ -6,11 +6,16 @@
 
 #include "server/serverApp/ServerApp.hpp"
 
+// Include game registration to ensure games are available
+#include "games/rtype/server/GameEngine.hpp"
+
 using namespace rtype::server;
 
 class ServerAppExtraTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        // Ensure R-Type game engine is registered before tests
+        rtype::games::rtype::server::registerRTypeGameEngine();
         shutdownFlag_ = std::make_shared<std::atomic<bool>>(false);
     }
 
