@@ -7,7 +7,10 @@
 
 #include "ControllerRumble.hpp"
 
+#include <algorithm>
 #include <vector>
+#include <string>
+#include <map>
 
 #include <SFML/Window/Joystick.hpp>
 
@@ -31,7 +34,6 @@ void ControllerRumble::triggerRumble(unsigned int joystickId, float intensity,
         return;
     }
 
-    // Get controller handle
     SDL_GameController* controller = nullptr;
     if (_controllers.find(joystickId) != _controllers.end()) {
         controller = _controllers[joystickId];
@@ -45,20 +47,19 @@ void ControllerRumble::triggerRumble(unsigned int joystickId, float intensity,
         return;
     }
 
-    // Store when rumble should end
     auto endTime = std::chrono::steady_clock::now() +
-                   std::chrono::milliseconds(durationMs);
+                   std::chrono::milliseconds(std::max(0, durationMs));
     _rumbleEndTimes[joystickId] = endTime;
 
-    // Trigger SDL2 rumble
-    Uint16 rumbleStrength = static_cast<Uint16>(intensity * 65535);
+    float clampedIntensity = std::clamp(intensity, 0.0f, 1.0f);
+    Uint16 rumbleStrength = static_cast<Uint16>(clampedIntensity * 65535);
     LOG_INFO("[ControllerRumble] Calling SDL_GameControllerRumble(id=" +
              std::to_string(joystickId) +
              ", strength=" + std::to_string(rumbleStrength) +
-             ", duration=" + std::to_string(durationMs) + "ms)");
+             ", duration=" + std::to_string(std::max(0, durationMs)) + "ms)");
 
     int result = SDL_GameControllerRumble(controller, rumbleStrength,
-                                          rumbleStrength, durationMs);
+                                          rumbleStrength, std::max(0, durationMs));
     if (result == 0) {
         LOG_INFO("[ControllerRumble] ✓ Rumble triggered successfully!");
     } else {
@@ -71,7 +72,6 @@ void ControllerRumble::stopRumble(unsigned int joystickId) {
     if (_rumbleEndTimes.find(joystickId) != _rumbleEndTimes.end()) {
         _rumbleEndTimes.erase(joystickId);
 
-        // Stop SDL rumble
         if (_controllers.find(joystickId) != _controllers.end()) {
             SDL_GameController* controller = _controllers[joystickId];
             if (controller) {
@@ -146,7 +146,6 @@ void ControllerRumble::initialize() {
         "[ControllerRumble] SDL2 initialized successfully for Xbox controller "
         "rumble!");
 
-    // Try to open all connected game controllers
     int numJoysticks = SDL_NumJoysticks();
     LOG_INFO("[ControllerRumble] Found " + std::to_string(numJoysticks) +
              " joystick(s)");
@@ -173,7 +172,6 @@ void ControllerRumble::initialize() {
 }
 
 void ControllerRumble::cleanup() {
-    // Stop all rumbles and close controllers
     for (auto& pair : _controllers) {
         if (pair.second) {
             SDL_GameControllerRumble(pair.second, 0, 0, 0);
