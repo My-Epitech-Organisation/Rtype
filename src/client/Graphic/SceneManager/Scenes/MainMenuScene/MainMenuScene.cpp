@@ -329,8 +329,24 @@ MainMenuScene::MainMenuScene(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
+            sf::Color::White, 36, "How to Play"),
+        rtype::games::rtype::shared::Position(100, 470),
+        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
+                                               sf::Color::Red),
+        this->_assetsManager, std::function<void()>([switchToScene]() {
+            try {
+                switchToScene(SceneManager::HOW_TO_PLAY);
+            } catch (SceneNotFound& e) {
+                LOG_ERROR(std::string("Error switching to How To Play: ") +
+                          std::string(e.what()));
+            }
+        })));
+    this->_listEntity.push_back(EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text(
+            this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Settings"),
-        rtype::games::rtype::shared::Position(100, 460),
+        rtype::games::rtype::shared::Position(100, 590),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager, std::function<void()>([switchToScene]() {
@@ -346,7 +362,7 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Quit"),
-        rtype::games::rtype::shared::Position(100, 570),
+        rtype::games::rtype::shared::Position(100, 710),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager,
@@ -360,4 +376,11 @@ MainMenuScene::MainMenuScene(
     this->_audio->loadMusic(bgMusic);
     this->_audio->setLoop(true);
     this->_audio->play();
+}
+
+MainMenuScene::~MainMenuScene() {
+    if (_networkClient) {
+        _networkClient->onConnected([](std::uint32_t) {});
+        _networkClient->onDisconnected([](rtype::network::DisconnectReason) {});
+    }
 }
