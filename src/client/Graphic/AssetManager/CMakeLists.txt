@@ -17,7 +17,7 @@ target_link_libraries(rtype-graphic-asset-manager
         SFML::Network
         SFML::Graphics
         SFML::Audio
-        rtype_common
+        common
 )
 
 target_include_directories(rtype-graphic-asset-manager

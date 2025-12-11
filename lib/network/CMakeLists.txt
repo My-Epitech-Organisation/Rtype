@@ -12,35 +12,35 @@ set(NETWORK_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Serializer.cpp
 )
 
-add_library(rtype_network STATIC ${NETWORK_SOURCES})
+add_library(network STATIC ${NETWORK_SOURCES})
 
-target_include_directories(rtype_network PUBLIC
+target_include_directories(network PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../rtype_engine/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../rtype_engine_core/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../rtype_common/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../rtype_common/src/Logger
+    ${CMAKE_CURRENT_SOURCE_DIR}/../engine/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../engine_core/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../common/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../common/src/Logger
     ${CMAKE_SOURCE_DIR}/include
 )
 
-target_compile_features(rtype_network PUBLIC cxx_std_20)
+target_compile_features(network PUBLIC cxx_std_20)
 
 find_package(asio CONFIG REQUIRED)
 
-target_link_libraries(rtype_network PUBLIC
-    rtype_engine
-    rtype_common
+target_link_libraries(network PUBLIC
+    engine
+    common
     asio::asio
 )
 
 if(WIN32)
-    target_link_libraries(rtype_network PUBLIC ws2_32)
+    target_link_libraries(network PUBLIC ws2_32)
 endif()
 
 if(MSVC)
-    target_compile_options(rtype_network PRIVATE /W4)
+    target_compile_options(network PRIVATE /W4)
 else()
-    target_compile_options(rtype_network PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(network PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-add_library(RType::Network ALIAS rtype_network)
+add_library(RType::Network ALIAS network)

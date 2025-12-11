@@ -12,8 +12,8 @@ target_link_libraries(rtype-graphic-game-scene
         SFML::Window
         SFML::Audio
         SFML::System
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_client_network
 )
 
