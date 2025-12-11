@@ -69,6 +69,29 @@ class MockGameEngine : public IGameEngine {
         }
     }
 
+    uint32_t spawnProjectile(uint32_t /*playerNetworkId*/, float /*playerX*/,
+                             float /*playerY*/) override {
+        return 0;  // Mock: not implemented
+    }
+
+    void updatePlayerPositions(
+        float /*deltaTime*/,
+        std::function<void(uint32_t, float, float, float, float)>
+        /*positionCallback*/) override {
+        // Mock: no-op
+    }
+
+    bool setPlayerVelocity(uint32_t /*networkId*/, float /*vx*/,
+                           float /*vy*/) override {
+        return false;  // Mock: not implemented
+    }
+
+    bool getPlayerPosition(uint32_t /*networkId*/, float& /*outX*/,
+                           float& /*outY*/, float& /*outVx*/,
+                           float& /*outVy*/) const override {
+        return false;  // Mock: not implemented
+    }
+
     // Test helpers
     void addPendingEvent(const GameEvent& event) {
         _pendingEvents.push_back(event);
