@@ -23,11 +23,11 @@ namespace rtype::games::rtype::server {
 
 RTypeEntitySpawner::RTypeEntitySpawner(
     std::shared_ptr<ECS::Registry> registry,
-    ::rtype::server::ServerNetworkSystem& networkSystem,
+    std::shared_ptr<::rtype::server::ServerNetworkSystem> networkSystem,
     GameEngineOpt gameEngine,
     GameConfigOpt gameConfig)
     : _registry(std::move(registry)),
-      _networkSystem(networkSystem),
+      _networkSystem(std::move(networkSystem)),
       _gameEngine(gameEngine),
       _gameConfig(gameConfig) {}
 
@@ -77,11 +77,11 @@ RTypeEntitySpawner::RTypeEntitySpawner(
     std::uint32_t networkId = config.userId;
     _registry->emplaceComponent<NetworkIdComponent>(playerEntity, networkId);
 
-    _networkSystem.get().registerNetworkedEntity(playerEntity, networkId,
+    _networkSystem->registerNetworkedEntity(playerEntity, networkId,
                                             EntityType::Player, spawnX, spawnY);
-    _networkSystem.get().updateEntityHealth(networkId, kDefaultPlayerLives,
+    _networkSystem->updateEntityHealth(networkId, kDefaultPlayerLives,
                                        kDefaultPlayerLives);
-    _networkSystem.get().setPlayerEntity(config.userId, playerEntity);
+    _networkSystem->setPlayerEntity(config.userId, playerEntity);
 
     result.entity = playerEntity;
     result.networkId = networkId;
@@ -99,7 +99,7 @@ void RTypeEntitySpawner::destroyPlayer(ECS::Entity entity) {
         return;
     }
 
-    _networkSystem.get().unregisterNetworkedEntity(entity);
+    _networkSystem->unregisterNetworkedEntity(entity);
     _registry->killEntity(entity);
 }
 
@@ -203,11 +203,11 @@ void RTypeEntitySpawner::triggerShootCooldown(ECS::Entity entity) {
 
 std::unique_ptr<::rtype::server::IEntitySpawner> createRTypeEntitySpawner(
     std::shared_ptr<ECS::Registry> registry,
-    ::rtype::server::ServerNetworkSystem& networkSystem,
+    std::shared_ptr<::rtype::server::ServerNetworkSystem> networkSystem,
     GameEngineOpt gameEngine,
     GameConfigOpt gameConfig) {
     return std::make_unique<RTypeEntitySpawner>(
-        std::move(registry), networkSystem, gameEngine, gameConfig);
+        std::move(registry), std::move(networkSystem), gameEngine, gameConfig);
 }
 
 void registerRTypeEntitySpawner() {
@@ -218,11 +218,13 @@ void registerRTypeEntitySpawner() {
     registered = true;
 
     ::rtype::server::EntitySpawnerFactory::registerSpawner(
-        "rtype", [](std::shared_ptr<ECS::Registry> registry,
-                    ::rtype::server::ServerNetworkSystem& networkSystem,
-                    ::rtype::server::GameEngineOpt gameEngine,
-                    ::rtype::server::GameConfigOpt gameConfig) {
-            return createRTypeEntitySpawner(std::move(registry), networkSystem,
+        "rtype",
+        [](std::shared_ptr<ECS::Registry> registry,
+           std::shared_ptr<::rtype::server::ServerNetworkSystem> networkSystem,
+           ::rtype::server::GameEngineOpt gameEngine,
+           ::rtype::server::GameConfigOpt gameConfig) {
+            return createRTypeEntitySpawner(std::move(registry),
+                                            std::move(networkSystem),
                                             gameEngine, gameConfig);
         });
 }

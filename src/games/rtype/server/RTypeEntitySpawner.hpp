@@ -42,12 +42,12 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
      * @brief Construct an RTypeEntitySpawner
      *
      * @param registry Shared pointer to the ECS registry
-     * @param networkSystem Reference to the network system
+     * @param networkSystem Shared pointer to the network system
      * @param gameEngine Optional reference to the game engine
      * @param gameConfig Optional reference to the game config
      */
     RTypeEntitySpawner(std::shared_ptr<ECS::Registry> registry,
-                       ::rtype::server::ServerNetworkSystem& networkSystem,
+                       std::shared_ptr<::rtype::server::ServerNetworkSystem> networkSystem,
                        GameEngineOpt gameEngine,
                        GameConfigOpt gameConfig);
 
@@ -81,11 +81,8 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
     void triggerShootCooldown(ECS::Entity entity) override;
 
    private:
-    using NetworkSystemRef =
-        std::reference_wrapper<::rtype::server::ServerNetworkSystem>;
-
     std::shared_ptr<ECS::Registry> _registry;
-    NetworkSystemRef _networkSystem;
+    std::shared_ptr<::rtype::server::ServerNetworkSystem> _networkSystem;
     GameEngineOpt _gameEngine;
     GameConfigOpt _gameConfig;
 
@@ -103,14 +100,14 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
  * @brief Factory function to create an RType entity spawner
  *
  * @param registry Shared pointer to the ECS registry
- * @param networkSystem Reference to the network system
+ * @param networkSystem Shared pointer to the network system
  * @param gameEngine Optional reference to the game engine
  * @param gameConfig Optional reference to the game config
  * @return Unique pointer to the spawner
  */
 std::unique_ptr<::rtype::server::IEntitySpawner> createRTypeEntitySpawner(
     std::shared_ptr<ECS::Registry> registry,
-    ::rtype::server::ServerNetworkSystem& networkSystem,
+    std::shared_ptr<::rtype::server::ServerNetworkSystem> networkSystem,
     GameEngineOpt gameEngine,
     GameConfigOpt gameConfig);
 
