@@ -97,7 +97,7 @@ void MainMenuScene::_createConnectionPanel(
         sf::Vector2f(kConnectionPanelX + 50.f, kConnectionPanelY + 20.f), 32);
     this->_listEntity.push_back(title);
     auto ipLabel = EntityFactory::createStaticText(
-        this->_registry, this->_assetsManager, "IP:", "title_font",
+        this->_registry, this->_assetsManager, "IP:", "main_font",
         sf::Vector2f(kConnectionPanelX + kLabelOffsetX,
                      kConnectionPanelY + 90.f),
         24);
@@ -110,7 +110,7 @@ void MainMenuScene::_createConnectionPanel(
         "127.0.0.1", "127.0.0.1", 15, false);
     this->_listEntity.push_back(_ipInputEntity);
     auto portLabel = EntityFactory::createStaticText(
-        this->_registry, this->_assetsManager, "Port:", "title_font",
+        this->_registry, this->_assetsManager, "Port:", "main_font",
         sf::Vector2f(kConnectionPanelX + kLabelOffsetX,
                      kConnectionPanelY + 150.f),
         24);
@@ -123,7 +123,7 @@ void MainMenuScene::_createConnectionPanel(
         "4242", "4242", 5, true);
     this->_listEntity.push_back(_portInputEntity);
     _statusEntity = EntityFactory::createStaticText(
-        this->_registry, this->_assetsManager, "", "title_font",
+        this->_registry, this->_assetsManager, "", "main_font",
         sf::Vector2f(kConnectionPanelX + kLabelOffsetX,
                      kConnectionPanelY + 200.f),
         18);
@@ -131,13 +131,13 @@ void MainMenuScene::_createConnectionPanel(
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("title_font"),
+            this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 28, "Connect"),
         rtype::games::rtype::shared::Position(kConnectionPanelX + 125.f,
                                               kConnectionPanelY + 260.f),
         rtype::games::rtype::client::Rectangle({200, 60}, sf::Color(0, 150, 0),
                                                sf::Color(0, 200, 0)),
-        std::function<void()>([this, switchToScene]() {
+        this->_assetsManager, std::function<void()>([this, switchToScene]() {
             this->_onConnectClicked(switchToScene);
         })));
 }
@@ -312,12 +312,12 @@ MainMenuScene::MainMenuScene(
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("title_font"),
+            this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Play"),
         rtype::games::rtype::shared::Position(100, 350),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
-        std::function<void()>([switchToScene]() {
+        this->_assetsManager, std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::IN_GAME);
             } catch (SceneNotFound& e) {
@@ -328,12 +328,12 @@ MainMenuScene::MainMenuScene(
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("title_font"),
+            this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Settings"),
         rtype::games::rtype::shared::Position(100, 460),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
-        std::function<void()>([switchToScene]() {
+        this->_assetsManager, std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::SETTINGS_MENU);
             } catch (SceneNotFound& e) {
@@ -344,11 +344,12 @@ MainMenuScene::MainMenuScene(
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("title_font"),
+            this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Quit"),
         rtype::games::rtype::shared::Position(100, 570),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
+        this->_assetsManager,
         std::function<void()>([this]() { this->_window->close(); })
 
             ));

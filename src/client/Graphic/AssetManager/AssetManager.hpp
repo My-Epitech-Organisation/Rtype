@@ -10,6 +10,7 @@
 #include "AudioManager.hpp"
 #include "Config/Parser/RTypeConfigParser.hpp"
 #include "FontManager.hpp"
+#include "SoundManager.hpp"
 #include "TextureManager.hpp"
 
 class AssetManager {
@@ -20,6 +21,8 @@ class AssetManager {
     std::shared_ptr<FontManager> fontManager = std::make_shared<FontManager>();
     std::shared_ptr<AudioManager> audioManager =
         std::make_shared<AudioManager>();
+    std::shared_ptr<SoundManager> soundManager =
+        std::make_shared<SoundManager>();
     explicit AssetManager(
         const rtype::game::config::RTypeGameConfig& configGameAssets);
 };

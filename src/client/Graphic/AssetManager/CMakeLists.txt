@@ -8,6 +8,8 @@ add_library(rtype-graphic-asset-manager
     AudioManager.cpp
     FontManager.cpp
     FontManager.hpp
+    SoundManager.cpp
+    SoundManager.hpp
 )
 
 target_link_libraries(rtype-graphic-asset-manager

@@ -4,6 +4,15 @@ MainMenu = "audio/mainMenuMusic.mp3"
 Game = "audio/gameMusic.mp3"
 Settings = "audio/settingsMusic.mp3"
 
+[SFX]
+HoverButton = "audio/hoverButton.mp3"
+ClickButton = "audio/clickButton.mp3"
+Laser = "audio/laserSound.mp3"
+PlayerDeath = "audio/playerDeath.mp3"
+PlayerSpawn = "audio/playerSpawn.mp3"
+EnemyDeath = "audio/enemyDeath.mp3"
+EnemySpawn = "audio/enemySpawn.mp3"
+
 # Textures Réferences
 [Textures]
 Player = "img/playerTexture.gif"
@@ -18,5 +27,5 @@ AstroVessel = "img/astroVessel.png"
 MissileLaser = "img/missileLaser.gif"
 
 [Fonts]
-MainFont = "fonts/Audiowide-Regular.ttf"
-#TitleFont = "fonts/Orbitron-VariableFont_wght.ttf"
+MainFont = "fonts/Orbitron-VariableFont_wght.ttf"
+TitleFont = "fonts/Audiowide-Regular.ttf"
