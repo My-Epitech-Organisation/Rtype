@@ -98,7 +98,8 @@ TEST(ComponentsTest, BoundingBoxComponentDefault) {
 class GameEngineTest : public ::testing::Test {
    protected:
     void SetUp() override {
-        engine = std::make_unique<GameEngine>();
+        registry = std::make_shared<ECS::Registry>();
+        engine = std::make_unique<GameEngine>(registry);
     }
 
     void TearDown() override {
@@ -107,6 +108,7 @@ class GameEngineTest : public ::testing::Test {
         }
     }
 
+    std::shared_ptr<ECS::Registry> registry;
     std::unique_ptr<GameEngine> engine;
 };
 
@@ -400,7 +402,8 @@ TEST_F(GameEngineTest, EventCallbackReceivesEvents) {
 // =============================================================================
 
 TEST(GameEngineFactoryTest, CreateGameEngineReturnsValidEngine) {
-    auto engine = rtype::engine::createGameEngine();
+    auto registry = std::make_shared<ECS::Registry>();
+    auto engine = rtype::engine::createGameEngine(registry);
     ASSERT_NE(engine, nullptr);
     EXPECT_TRUE(engine->initialize());
     EXPECT_TRUE(engine->isRunning());

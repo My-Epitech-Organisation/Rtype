@@ -30,12 +30,12 @@ public:
 
     void start() {
         running_ = true;
+        socket_.non_blocking(true);  // Set non-blocking mode
         thread_ = std::thread([this]() { this->run(); });
     }
 
     void stop() {
         running_ = false;
-        socket_.cancel();
         if (thread_.joinable()) thread_.join();
     }
 
@@ -52,7 +52,17 @@ private:
 
         while (running_) {
             try {
-                std::size_t len = socket_.receive_from(asio::buffer(buffer), remote);
+                asio::error_code ec;
+                std::size_t len = socket_.receive_from(asio::buffer(buffer), remote, 0, ec);
+
+                if (ec == asio::error::would_block) {
+                    std::this_thread::sleep_for(std::chrono::microseconds(100));
+                    continue;
+                }
+                if (ec) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+                }
 
                 // If the packet came from the real server, forward to the last known client endpoint.
                 bool fromServer = (remote.address() == serverEndpoint_.address() &&
@@ -112,11 +122,11 @@ public:
 
     void start() {
         running_ = true;
+        socket_.non_blocking(true);  // Set non-blocking mode
         thread_ = std::thread([this]() { this->run(); });
     }
     void stop() {
         running_ = false;
-        socket_.cancel();
         if (thread_.joinable()) thread_.join();
     }
     uint16_t local_port() const {
@@ -131,7 +141,17 @@ private:
 
         while (running_) {
             try {
-                std::size_t len = socket_.receive_from(asio::buffer(buffer), remote);
+                asio::error_code ec;
+                std::size_t len = socket_.receive_from(asio::buffer(buffer), remote, 0, ec);
+                
+                if (ec == asio::error::would_block) {
+                    std::this_thread::sleep_for(std::chrono::microseconds(100));
+                    continue;
+                }
+                if (ec) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+                }
 
                 bool fromServer = (remote.address() == serverEndpoint_.address() && remote.port() == serverEndpoint_.port());
                 udp::endpoint target;
