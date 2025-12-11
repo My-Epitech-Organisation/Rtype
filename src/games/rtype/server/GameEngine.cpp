@@ -218,8 +218,8 @@ void GameEngine::syncEntityPositions(
     });
 }
 
-uint32_t GameEngine::spawnProjectile(uint32_t playerNetworkId,
-                                     float playerX, float playerY) {
+uint32_t GameEngine::spawnProjectile(uint32_t playerNetworkId, float playerX,
+                                     float playerY) {
     if (!_running || !_projectileSpawnerSystem) {
         return 0;
     }
@@ -228,8 +228,8 @@ uint32_t GameEngine::spawnProjectile(uint32_t playerNetworkId,
 }
 
 void GameEngine::updatePlayerPositions(
-    float deltaTime,
-    std::function<void(uint32_t, float, float, float, float)> positionCallback) {
+    float deltaTime, std::function<void(uint32_t, float, float, float, float)>
+                         positionCallback) {
     if (!_running || !positionCallback) {
         return;
     }
@@ -239,9 +239,10 @@ void GameEngine::updatePlayerPositions(
     constexpr float minY = 0.0F;
     constexpr float maxY = GameConfig::SCREEN_HEIGHT - 64.0F;
 
-    auto view = _registry->view<shared::PlayerTag, shared::Position,
-                                 shared::VelocityComponent,
-                                 shared::NetworkIdComponent>();
+    auto view =
+        _registry
+            ->view<shared::PlayerTag, shared::Position,
+                   shared::VelocityComponent, shared::NetworkIdComponent>();
 
     view.each([&](ECS::Entity entity, const shared::PlayerTag& /*tag*/,
                   shared::Position& pos, shared::VelocityComponent& vel,
@@ -277,7 +278,7 @@ bool GameEngine::setPlayerVelocity(uint32_t networkId, float vx, float vy) {
     }
 
     auto view = _registry->view<shared::PlayerTag, shared::VelocityComponent,
-                                 shared::NetworkIdComponent>();
+                                shared::NetworkIdComponent>();
 
     bool found = false;
     view.each([&](ECS::Entity /*entity*/, const shared::PlayerTag& /*tag*/,
@@ -299,9 +300,10 @@ bool GameEngine::getPlayerPosition(uint32_t networkId, float& outX, float& outY,
         return false;
     }
 
-    auto view = _registry->view<shared::PlayerTag, shared::Position,
-                                 shared::VelocityComponent,
-                                 shared::NetworkIdComponent>();
+    auto view =
+        _registry
+            ->view<shared::PlayerTag, shared::Position,
+                   shared::VelocityComponent, shared::NetworkIdComponent>();
 
     bool found = false;
     view.each([&](ECS::Entity /*entity*/, const shared::PlayerTag& /*tag*/,
