@@ -121,12 +121,12 @@ std::uint32_t RTypeEntitySpawner::handlePlayerShoot(
         return 0;
     }
 
-    auto* rtypeEngine = dynamic_cast<GameEngine*>(&_gameEngine->get());
-    if (!rtypeEngine) {
+    // Use the IGameEngine interface directly (no dynamic_cast needed)
+    if (!_gameEngine.has_value()) {
         return 0;
     }
 
-    return rtypeEngine->spawnPlayerProjectile(playerNetworkId, playerX,
+    return _gameEngine->get().spawnProjectile(playerNetworkId, playerX,
                                               playerY);
 }
 

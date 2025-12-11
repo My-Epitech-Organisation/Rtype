@@ -11,11 +11,6 @@
 #include <memory>
 #include <span>
 
-#include "games/rtype/server/GameEngine.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
-#include "games/rtype/shared/Components/TransformComponent.hpp"
-#include "games/rtype/shared/Components/VelocityComponent.hpp"
-
 namespace rtype::server {
 
 ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
@@ -207,16 +202,10 @@ bool ServerApp::initialize() {
         _registry, _networkSystem, _stateManager, _gameConfig, _verbose);
     _eventProcessor = std::make_unique<GameEventProcessor>(
         _gameEngine, _networkSystem, _verbose);
-
-    auto* rtypeEngine = dynamic_cast<rtype::games::rtype::server::GameEngine*>(
-        _gameEngine.get());
-    if (rtypeEngine) {
-        _inputHandler->setShootCallback(
-            [rtypeEngine](std::uint32_t networkId, float x, float y) {
-                return rtypeEngine->spawnPlayerProjectile(networkId, x, y);
-            });
-    }
-
+    _inputHandler->setShootCallback(
+        [this](std::uint32_t networkId, float x, float y) {
+            return _gameEngine->spawnProjectile(networkId, x, y);
+        });
     _networkSystem->setInputHandler([this](std::uint32_t userId,
                                            std::uint8_t inputMask,
                                            std::optional<ECS::Entity> entity) {
@@ -388,41 +377,16 @@ void ServerApp::networkThreadFunction() noexcept {
 }
 
 void ServerApp::updatePlayerMovement(float deltaTime) noexcept {
-    using Position = rtype::games::rtype::shared::Position;
-    using TransformComponent = rtype::games::rtype::shared::TransformComponent;
-    using Velocity = rtype::games::rtype::shared::VelocityComponent;
-
-    constexpr float minX = 0.0F;
-    constexpr float maxX = 1920.0F - 64.0F;
-    constexpr float minY = 0.0F;
-    constexpr float maxY = 1080.0F - 64.0F;
-
-    auto view = _registry->view<Position, Velocity>();
-    view.each([this, deltaTime, minX, maxX, minY, maxY](
-                  ECS::Entity entity, Position& pos, Velocity& vel) {
-        if (vel.vx == 0.0F && vel.vy == 0.0F) {
-            return;
-        }
-        pos.x += vel.vx * deltaTime;
-        pos.y += vel.vy * deltaTime;
-        pos.x = std::clamp(pos.x, minX, maxX);
-        pos.y = std::clamp(pos.y, minY, maxY);
-
-        if (_registry->hasComponent<TransformComponent>(entity)) {
-            auto& transform =
-                _registry->getComponent<TransformComponent>(entity);
-            transform.x = pos.x;
-            transform.y = pos.y;
-        }
-
-        if (_networkSystem) {
-            auto networkIdOpt = _networkSystem->getNetworkId(entity);
-            if (networkIdOpt.has_value()) {
-                _networkSystem->updateEntityPosition(*networkIdOpt, pos.x,
-                                                     pos.y, vel.vx, vel.vy);
+    if (!_gameEngine || !_gameEngine->isRunning()) {
+        return;
+    }
+    _gameEngine->updatePlayerPositions(
+        deltaTime,
+        [this](uint32_t networkId, float x, float y, float vx, float vy) {
+            if (_networkSystem) {
+                _networkSystem->updateEntityPosition(networkId, x, y, vx, vy);
             }
-        }
-    });
+        });
 }
 
 }  // namespace rtype::server
