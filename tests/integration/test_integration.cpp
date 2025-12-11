@@ -10,11 +10,11 @@
 #include <thread>
 #include <chrono>
 
-#include "../../lib/rtype_common/src/SafeQueue/SafeQueue.hpp"
-#include "../../lib/rtype_common/src/Types.hpp"
+#include "../../lib/common/src/SafeQueue/SafeQueue.hpp"
+#include "../../lib/common/src/Types.hpp"
 #include "../../src/games/rtype/shared/Components.hpp"
 #include "../../src/games/rtype/shared/Systems/Movements/MovementSystem.hpp"
-#include "../../lib/rtype_ecs/src/ECS.hpp"
+#include "../../lib/ecs/src/ECS.hpp"
 
 using namespace rtype;
 using namespace rtype::games::rtype::shared;

@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "../../../lib/rtype_ecs/src/traits/ComponentTraits.hpp"
+#include "../../../lib/ecs/src/traits/ComponentTraits.hpp"
 
 using namespace ECS;
 

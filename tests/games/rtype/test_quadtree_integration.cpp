@@ -13,8 +13,8 @@
 #include <numbers>
 #include <random>
 
-#include "../../../lib/rtype_common/src/Logger/Macros.hpp"
-#include "../../../lib/rtype_ecs/src/ECS.hpp"
+#include "../../../lib/common/src/Logger/Macros.hpp"
+#include "../../../lib/ecs/src/ECS.hpp"
 #include "../../../src/games/rtype/shared/Components.hpp"
 #include "../../../src/games/rtype/shared/Systems/Collision/AABB.hpp"
 #include "../../../src/games/rtype/shared/Systems/Collision/QuadTreeSystem.hpp"
