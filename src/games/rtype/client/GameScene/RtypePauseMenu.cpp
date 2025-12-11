@@ -4,14 +4,18 @@
 ** File description:
 ** RtypePauseMenu.cpp
 */
-
 #include "RtypePauseMenu.hpp"
+
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "AllComponents.hpp"
 #include "Graphic.hpp"
 #include "Graphic/EntityFactory/EntityFactory.hpp"
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
+#include "games/rtype/client/PauseState.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -63,6 +67,18 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
             }
         })));
 
+    pauseEntities.push_back(EntityFactory::createButton(
+        registry,
+        Text(assetsManager->fontManager->get("main_font"), sf::Color::White, 30,
+             "Resume"),
+        ::rtype::games::rtype::shared::Position(
+            sectionX + ((kSizeXPauseMenu / 2) - (150 / 2)),
+            sectionY + kSizeYPauseMenu - 150),
+        Rectangle({150, 55}, sf::Color(0, 100, 200), sf::Color(0, 140, 255)),
+        assetsManager, std::function<void()>([registry]() {
+            RtypePauseMenu::togglePauseMenu(registry);
+        })));
+
     for (auto& entt : pauseEntities) {
         registry->emplaceComponent<HiddenComponent>(entt, true);
         registry->emplaceComponent<PauseMenuTag>(entt);
@@ -72,6 +88,13 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
 }
 
 void RtypePauseMenu::togglePauseMenu(std::shared_ptr<ECS::Registry> registry) {
+    if (!registry->hasSingleton<PauseState>()) {
+        registry->setSingleton<PauseState>(PauseState{false});
+    }
+
+    auto& pauseState = registry->getSingleton<PauseState>();
+    pauseState.isPaused = !pauseState.isPaused;
+
     registry->view<HiddenComponent, PauseMenuTag>().each(
         [](auto, HiddenComponent& hidden, auto) {
             hidden.isHidden = !hidden.isHidden;
