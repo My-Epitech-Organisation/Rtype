@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <vector>
+
 #include "protocol/ByteOrderSpec.hpp"
 
 using namespace rtype::network;

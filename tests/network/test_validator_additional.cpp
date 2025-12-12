@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <vector>
+
 #include "protocol/Validator.hpp"
 #include "protocol/ByteOrderSpec.hpp"
 #include "protocol/Header.hpp"

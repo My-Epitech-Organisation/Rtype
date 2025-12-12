@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <vector>
+
 #include "Serializer.hpp"
 #include "protocol/Validator.hpp"
 #include "protocol/ByteOrderSpec.hpp"
