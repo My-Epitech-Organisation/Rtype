@@ -100,7 +100,8 @@ std::uint8_t RtypeInputHandler::getInputMask(
             }
 
             static std::map<unsigned int, bool> lastShootStates;
-            static std::map<unsigned int, std::chrono::steady_clock::time_point> lastRumbleTimes;
+            static std::map<unsigned int, std::chrono::steady_clock::time_point>
+                lastRumbleTimes;
 
             if (lastShootStates.find(*jid) == lastShootStates.end()) {
                 lastShootStates[*jid] = false;
