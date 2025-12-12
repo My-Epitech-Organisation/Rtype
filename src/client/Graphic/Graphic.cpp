@@ -78,6 +78,7 @@ void Graphic::_update() {
         _updateViewScrolling();
         this->_systemScheduler->runSystem("movement");
         this->_systemScheduler->runSystem("player_animation");
+        this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("parallax");
         this->_systemScheduler->runSystem("projectile");
     }
@@ -133,6 +134,9 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::client::MovementSystem>();
     this->_playerAnimationSystem =
         std::make_unique<::rtype::games::rtype::client::PlayerAnimationSystem>();
+    this->_playerPowerUpVisualSystem =
+        std::make_unique<
+            ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_buttonUpdateSystem =
         std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(
             this->_window);
@@ -181,12 +185,19 @@ void Graphic::_initializeSystems() {
         },
         {"movement"});
 
+    this->_systemScheduler->addSystem(
+        "powerup_visuals",
+        [this](ECS::Registry& reg) {
+            _playerPowerUpVisualSystem->update(reg, _currentDeltaTime);
+        },
+        {"movement"});
+
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {
                                           _parallaxScrolling->update(
                                               reg, _currentDeltaTime);
                                       },
-                                      {"player_animation"});
+                                      {"player_animation", "powerup_visuals"});
 
     this->_systemScheduler->addSystem(
         "button_update",
@@ -243,6 +254,8 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.astroVessel);
     manager->textureManager->load("player_vessel",
                                   config.assets.textures.Player);
+    manager->textureManager->load("bdos_enemy",
+                                  config.assets.textures.Enemy);
     manager->textureManager->load("projectile_player_laser",
                                   config.assets.textures.missileLaser);
 
@@ -291,9 +304,7 @@ Graphic::Graphic(
     }
     this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value());
 
-    this->_assetsManager->textureManager->load(
-        "projectile_player_laser",
-        this->_assetsManager->configGameAssets.assets.textures.missileLaser);
+    this->_initializeCommonAssets();
 
     if (_networkSystem) {
         _setupNetworkEntityFactory();

@@ -31,6 +31,7 @@
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
 #include "Systems/ShaderRenderSystem.hpp"
+#include "../../games/rtype/client/Systems/PlayerPowerUpVisualSystem.hpp"
 #include "../../games/rtype/client/Systems/PlayerAnimationSystem.hpp"
 
 /**
@@ -45,10 +46,11 @@
  * 2. Network - Polls network and processes incoming packets
  * 3. Movement - Updates entity positions (depends on ResetTriggers)
  * 4. PlayerAnimation - Selects sprite frame by velocity/id (depends on Movement)
- * 5. Parallax - Updates parallax backgrounds (depends on Movement)
- * 6. ButtonUpdate - Updates button states (depends on Parallax, for UI/menus)
- * 7. Render - Draws all entities (depends on ButtonUpdate)
- * 8. Boxing - Draws debug boxes on top (drawn after Render for visibility)
+ * 5. PowerUpVisuals - Applies tint to players with active power-ups (depends on Movement)
+ * 6. Parallax - Updates parallax backgrounds (depends on Movement)
+ * 7. ButtonUpdate - Updates button states (depends on Parallax, for UI/menus)
+ * 8. Render - Draws all entities (depends on ButtonUpdate)
+ * 9. Boxing - Draws debug boxes on top (drawn after Render for visibility)
  */
 class Graphic {
    public:
@@ -119,6 +121,8 @@ class Graphic {
         _movementSystem;
     std::unique_ptr<::rtype::games::rtype::client::PlayerAnimationSystem>
         _playerAnimationSystem;
+    std::unique_ptr<::rtype::games::rtype::client::PlayerPowerUpVisualSystem>
+        _playerPowerUpVisualSystem;
     std::unique_ptr<::rtype::games::rtype::client::ButtonUpdateSystem>
         _buttonUpdateSystem;
     std::unique_ptr<::rtype::games::rtype::client::ParallaxScrolling>
