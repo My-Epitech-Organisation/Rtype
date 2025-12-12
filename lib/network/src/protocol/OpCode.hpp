@@ -41,6 +41,9 @@ enum class OpCode : std::uint8_t {
     /// Server notifies game state change (RELIABLE)
     S_UPDATE_STATE = 0x06,
 
+    /// Server notifies game over with final score (RELIABLE)
+    S_GAME_OVER = 0x07,
+
     /// Server spawns new entity (RELIABLE)
     S_ENTITY_SPAWN = 0x10,
 
@@ -95,6 +98,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::C_GET_USERS:
         case OpCode::R_GET_USERS:
         case OpCode::S_UPDATE_STATE:
+        case OpCode::S_GAME_OVER:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
@@ -141,6 +145,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_ACCEPT:
         case OpCode::R_GET_USERS:
         case OpCode::S_UPDATE_STATE:
+        case OpCode::S_GAME_OVER:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_DESTROY:
@@ -170,6 +175,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::C_GET_USERS:
         case OpCode::R_GET_USERS:
         case OpCode::S_UPDATE_STATE:
+        case OpCode::S_GAME_OVER:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_DESTROY:
@@ -225,6 +231,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "R_GET_USERS";
         case OpCode::S_UPDATE_STATE:
             return "S_UPDATE_STATE";
+        case OpCode::S_GAME_OVER:
+            return "S_GAME_OVER";
         case OpCode::S_ENTITY_SPAWN:
             return "S_ENTITY_SPAWN";
         case OpCode::S_ENTITY_MOVE:

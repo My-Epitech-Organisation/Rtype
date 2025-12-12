@@ -15,10 +15,12 @@ namespace rtype::server {
 
 GameEventProcessor::GameEventProcessor(
     std::shared_ptr<engine::IGameEngine> gameEngine,
-    std::shared_ptr<ServerNetworkSystem> networkSystem, bool verbose)
+        std::shared_ptr<ServerNetworkSystem> networkSystem, bool verbose,
+        std::function<void(const engine::GameEvent&)> eventObserver)
     : _gameEngine(std::move(gameEngine)),
       _networkSystem(std::move(networkSystem)),
-      _verbose(verbose) {}
+            _verbose(verbose),
+            _eventObserver(std::move(eventObserver)) {}
 
 void GameEventProcessor::processEvents() {
     if (!_gameEngine || !_networkSystem) {
@@ -37,6 +39,10 @@ void GameEventProcessor::processEvents() {
                           << " networkId=" << event.entityNetworkId);
             }
             continue;
+        }
+
+        if (_eventObserver) {
+            _eventObserver(event);
         }
 
         switch (processed.type) {

@@ -187,6 +187,15 @@ class NetworkServer {
     void updateGameState(GameState state);
 
     /**
+     * @brief Broadcast game over with final score
+     *
+     * Sent reliably to all clients so they can display the end-game screen.
+     *
+     * @param finalScore Final aggregated score for the session
+     */
+    void sendGameOver(std::uint32_t finalScore);
+
+    /**
      * @brief Spawn an entity on a specific client
      *
      * Useful for syncing existing entities to newly connected clients.

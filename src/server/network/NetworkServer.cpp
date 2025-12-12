@@ -139,6 +139,15 @@ void NetworkServer::updateGameState(GameState state) {
     broadcastToAll(network::OpCode::S_UPDATE_STATE, serialized);
 }
 
+void NetworkServer::sendGameOver(std::uint32_t finalScore) {
+    network::GameOverPayload payload;
+    payload.finalScore = finalScore;
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    broadcastToAll(network::OpCode::S_GAME_OVER, serialized);
+}
+
 void NetworkServer::spawnEntityToClient(std::uint32_t userId, std::uint32_t id,
                                         EntityType type, float x, float y) {
     auto client = findClientByUserId(userId);

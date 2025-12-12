@@ -163,6 +163,14 @@ void ServerNetworkSystem::broadcastGameStart() {
     server_->updateGameState(NetworkServer::GameState::Running);
 }
 
+void ServerNetworkSystem::broadcastGameState(NetworkServer::GameState state) {
+    server_->updateGameState(state);
+}
+
+void ServerNetworkSystem::broadcastGameOver(std::uint32_t finalScore) {
+    server_->sendGameOver(finalScore);
+}
+
 void ServerNetworkSystem::update() {
     server_->poll();
 

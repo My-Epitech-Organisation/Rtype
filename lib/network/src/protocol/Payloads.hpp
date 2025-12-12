@@ -111,6 +111,13 @@ struct UpdateStatePayload {
 };
 
 /**
+ * @brief Payload for S_GAME_OVER (0x07)
+ */
+struct GameOverPayload {
+    std::uint32_t finalScore{0};
+};
+
+/**
  * @brief Payload for S_ENTITY_SPAWN (0x10)
  *
  * Server instructs clients to create a new game entity.
@@ -231,6 +238,8 @@ static_assert(sizeof(GetUsersResponseHeader) == 1,
               "GetUsersResponseHeader must be 1 byte");
 static_assert(sizeof(UpdateStatePayload) == 1,
               "UpdateStatePayload must be 1 byte");
+static_assert(sizeof(GameOverPayload) == 4,
+              "GameOverPayload must be 4 bytes (uint32_t)");
 static_assert(sizeof(EntitySpawnPayload) == 13,
               "EntitySpawnPayload must be 13 bytes (4+1+4+4)");
 static_assert(sizeof(EntityMovePayload) == 20,
@@ -245,6 +254,7 @@ static_assert(sizeof(UpdatePosPayload) == 8,
 
 static_assert(std::is_trivially_copyable_v<AcceptPayload>);
 static_assert(std::is_trivially_copyable_v<UpdateStatePayload>);
+static_assert(std::is_trivially_copyable_v<GameOverPayload>);
 static_assert(std::is_trivially_copyable_v<EntitySpawnPayload>);
 static_assert(std::is_trivially_copyable_v<EntityMovePayload>);
 static_assert(std::is_trivially_copyable_v<EntityDestroyPayload>);
@@ -254,6 +264,7 @@ static_assert(std::is_trivially_copyable_v<UpdatePosPayload>);
 
 static_assert(std::is_standard_layout_v<AcceptPayload>);
 static_assert(std::is_standard_layout_v<UpdateStatePayload>);
+static_assert(std::is_standard_layout_v<GameOverPayload>);
 static_assert(std::is_standard_layout_v<EntitySpawnPayload>);
 static_assert(std::is_standard_layout_v<EntityMovePayload>);
 static_assert(std::is_standard_layout_v<EntityDestroyPayload>);
@@ -283,6 +294,8 @@ static_assert(std::is_standard_layout_v<UpdatePosPayload>);
             return 0;
         case OpCode::S_UPDATE_STATE:
             return sizeof(UpdateStatePayload);
+        case OpCode::S_GAME_OVER:
+            return sizeof(GameOverPayload);
 
         case OpCode::S_ENTITY_SPAWN:
             return sizeof(EntitySpawnPayload);

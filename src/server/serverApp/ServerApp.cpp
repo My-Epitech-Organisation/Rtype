@@ -12,6 +12,9 @@
 #include <span>
 
 #include "server/serverApp/game/entitySpawnerFactory/EntitySpawnerFactory.hpp"
+#include "games/rtype/shared/Components/EntityType.hpp"
+#include "games/rtype/shared/Components/HealthComponent.hpp"
+#include "games/rtype/shared/Components/Tags.hpp"
 
 namespace rtype::server {
 
@@ -100,6 +103,8 @@ void ServerApp::onUpdate(float deltaTime) {
     if (_eventProcessor) {
         _eventProcessor->processEvents();
     }
+
+    checkGameOverCondition();
 }
 
 void ServerApp::onPostUpdate() {
@@ -224,7 +229,8 @@ bool ServerApp::initialize() {
     _inputHandler = std::make_unique<PlayerInputHandler>(
         _registry, _networkSystem, _stateManager, _gameConfig, _verbose);
     _eventProcessor = std::make_unique<GameEventProcessor>(
-        _gameEngine, _networkSystem, _verbose);
+        _gameEngine, _networkSystem, _verbose,
+        [this](const engine::GameEvent& event) { onGameEvent(event); });
     _inputHandler->setShootCallback(
         [this](std::uint32_t networkId, float x, float y) {
             if (!_entitySpawner) {
@@ -320,6 +326,7 @@ void ServerApp::handleClientDisconnected(std::uint32_t userId) {
 void ServerApp::handleStateChange(GameState oldState, GameState newState) {
     switch (newState) {
         case GameState::Playing:
+            _score = 0;
             LOG_INFO("[Server] *** GAME STARTED *** ("
                      << _stateManager->getReadyPlayerCount() << " players)");
             if (_networkSystem) {
@@ -332,6 +339,17 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
         case GameState::WaitingForPlayers:
             if (oldState == GameState::Paused) {
                 LOG_INFO("[Server] Resuming wait for players");
+            }
+            break;
+        case GameState::GameOver:
+            LOG_INFO("[Server] *** GAME OVER *** Final score=" << _score);
+            if (_networkSystem) {
+                _networkSystem->broadcastGameState(
+                    NetworkServer::GameState::GameOver);
+                _networkSystem->broadcastGameOver(_score);
+            } else if (_networkServer) {
+                _networkServer->updateGameState(NetworkServer::GameState::GameOver);
+                _networkServer->sendGameOver(_score);
             }
             break;
     }
@@ -417,6 +435,58 @@ void ServerApp::updatePlayerMovement(float deltaTime) noexcept {
                 _networkSystem->updateEntityPosition(networkId, x, y, vx, vy);
             }
         });
+}
+
+void ServerApp::checkGameOverCondition() {
+    if (!_stateManager || !_stateManager->isPlaying()) {
+        return;
+    }
+
+    if (countAlivePlayers() > 0) {
+        return;
+    }
+
+    LOG_INFO("[Server] All players defeated - ending game");
+
+    if (_gameEngine && _gameEngine->isRunning()) {
+        _gameEngine->shutdown();
+    }
+
+    _stateManager->transitionTo(GameState::GameOver);
+}
+
+std::size_t ServerApp::countAlivePlayers() {
+    if (!_registry) {
+        return 0;
+    }
+
+    std::size_t aliveCount = 0;
+    auto view = _registry->view<games::rtype::shared::PlayerTag,
+                                games::rtype::shared::HealthComponent>();
+
+    view.each([this, &aliveCount](ECS::Entity entity,
+                                  const games::rtype::shared::PlayerTag&,
+                                  const games::rtype::shared::HealthComponent& health) {
+        bool markedForDestroy =
+            _registry->hasComponent<games::rtype::shared::DestroyTag>(entity);
+        if (health.isAlive() && !markedForDestroy) {
+            ++aliveCount;
+        }
+    });
+
+    return aliveCount;
+}
+
+void ServerApp::onGameEvent(const engine::GameEvent& event) {
+    if (!_stateManager || !_stateManager->isPlaying()) {
+        return;
+    }
+
+    if (event.type == engine::GameEventType::EntityDestroyed &&
+        event.entityType == static_cast<std::uint8_t>(
+                              games::rtype::shared::EntityType::Enemy)) {
+        _score += ENEMY_DESTRUCTION_SCORE;
+    }
 }
 
 }  // namespace rtype::server

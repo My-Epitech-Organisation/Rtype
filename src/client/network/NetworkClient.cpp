@@ -184,6 +184,10 @@ void NetworkClient::onGameStateChange(
     onGameStateChangeCallback_ = std::move(callback);
 }
 
+void NetworkClient::onGameOver(std::function<void(GameOverEvent)> callback) {
+    onGameOverCallback_ = std::move(callback);
+}
+
 void NetworkClient::poll() {
     connection_.update();
 
@@ -300,6 +304,10 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
 
         case network::OpCode::S_UPDATE_STATE:
             handleUpdateState(header, payload);
+            break;
+
+        case network::OpCode::S_GAME_OVER:
+            handleGameOver(header, payload);
             break;
 
         default:
@@ -468,6 +476,30 @@ void NetworkClient::handleUpdateState(const network::Header& header,
         queueCallback([this, event]() {
             if (onGameStateChangeCallback_) {
                 onGameStateChangeCallback_(event);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
+void NetworkClient::handleGameOver(const network::Header& header,
+                                   const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::GameOverPayload)) {
+        return;
+    }
+
+    try {
+        auto deserialized = network::Serializer::deserializeFromNetwork<
+            network::GameOverPayload>(payload);
+
+        GameOverEvent event{deserialized.finalScore};
+
+        queueCallback([this, event]() {
+            if (onGameOverCallback_) {
+                onGameOverCallback_(event);
             }
         });
     } catch (...) {

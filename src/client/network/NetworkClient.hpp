@@ -66,6 +66,13 @@ struct GameStateEvent {
 };
 
 /**
+ * @brief Event data for game over notification
+ */
+struct GameOverEvent {
+    std::uint32_t finalScore;
+};
+
+/**
  * @brief High-level client networking API
  *
  * Encapsulates all low-level networking details and provides a clean
@@ -236,6 +243,7 @@ class NetworkClient {
      * @param callback Function receiving the new game state
      */
     void onGameStateChange(std::function<void(GameStateEvent)> callback);
+    void onGameOver(std::function<void(GameOverEvent)> callback);
 
     /**
      * @brief Process network events and dispatch callbacks
@@ -274,6 +282,8 @@ class NetworkClient {
                          const network::Buffer& payload);
     void handleUpdateState(const network::Header& header,
                            const network::Buffer& payload);
+    void handleGameOver(const network::Header& header,
+                        const network::Buffer& payload);
 
     void flushOutgoing();
 
@@ -302,6 +312,7 @@ class NetworkClient {
     std::function<void(EntityHealthEvent)> onEntityHealthCallback_;
     std::function<void(float, float)> onPositionCorrectionCallback_;
     std::function<void(GameStateEvent)> onGameStateChangeCallback_;
+    std::function<void(GameOverEvent)> onGameOverCallback_;
 
     std::thread networkThread_;
     std::atomic<bool> networkThreadRunning_{false};

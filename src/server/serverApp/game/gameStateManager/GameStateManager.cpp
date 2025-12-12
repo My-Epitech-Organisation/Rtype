@@ -15,9 +15,10 @@ GameStateManager::GameStateManager(size_t minPlayersToStart)
     : _minPlayersToStart(minPlayersToStart) {}
 
 bool GameStateManager::playerReady(std::uint32_t userId) {
-    if (_state == GameState::Playing) {
+    if (_state == GameState::Playing || _state == GameState::GameOver) {
         LOG_DEBUG("[GameState] Player "
-                  << userId << " signaled ready but game already running");
+                  << userId
+                  << " signaled ready but game is already running or ended");
         return false;
     }
 

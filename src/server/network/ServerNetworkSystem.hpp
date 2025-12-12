@@ -233,6 +233,16 @@ class ServerNetworkSystem {
     void broadcastGameStart();
 
     /**
+     * @brief Broadcast a game state update to all clients
+     */
+    void broadcastGameState(NetworkServer::GameState state);
+
+    /**
+     * @brief Broadcast final score when the game ends
+     */
+    void broadcastGameOver(std::uint32_t finalScore);
+
+    /**
      * @brief Update the network system
      *
      * Polls the network server and processes any pending events.
