@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "../../../shared/Components.hpp"
+#include "protocol/Payloads.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -20,7 +21,6 @@ using shared::BoundingBoxComponent;
 using shared::BydosSlaveTag;
 using shared::DamageOnContactComponent;
 using shared::EnemyTag;
-using shared::EntityType;
 using shared::HealthComponent;
 using shared::NetworkIdComponent;
 using shared::ObstacleTag;
@@ -150,7 +150,7 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     event.x = spawnX;
     event.y = spawnY;
     event.rotation = 0.0F;
-    event.entityType = static_cast<uint8_t>(EntityType::Enemy);
+    event.entityType = static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
     _emitEvent(event);
 }
 
@@ -187,7 +187,7 @@ void SpawnerSystem::spawnObstacle(ECS::Registry& registry) {
     event.entityNetworkId = networkId;
     event.x = _config.spawnX;
     event.y = spawnY;
-    event.entityType = static_cast<uint8_t>(EntityType::Obstacle);
+    event.entityType = static_cast<uint8_t>(::rtype::network::EntityType::Obstacle);
     _emitEvent(event);
 }
 
@@ -215,7 +215,7 @@ void SpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
     event.entityNetworkId = networkId;
     event.x = _config.spawnX;
     event.y = spawnY;
-    event.entityType = static_cast<uint8_t>(EntityType::Pickup);
+    event.entityType = static_cast<uint8_t>(::rtype::network::EntityType::Pickup);
     _emitEvent(event);
 }
 

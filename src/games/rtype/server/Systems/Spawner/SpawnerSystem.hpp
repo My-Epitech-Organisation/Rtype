@@ -41,7 +41,7 @@ struct SpawnerConfig {
     float obstacleSpeed = 80.0F;
     float obstacleWidth = 64.0F;
     float obstacleHeight = 64.0F;
-    int32_t obstacleDamage = 15;
+    int32_t obstacleDamage = 20;
 
     float powerUpMinInterval = 8.0F;
     float powerUpMaxInterval = 14.0F;
