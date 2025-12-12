@@ -30,19 +30,20 @@ void EnemyShootingSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
     auto playerView =
         registry.view<PlayerTag, TransformComponent, NetworkIdComponent>();
     playerView.each([this](ECS::Entity /*entity*/, const PlayerTag& /*tag*/,
-                               const TransformComponent& transform,
-                               const NetworkIdComponent& net) {
-        _playerCache.push_back(PlayerInfo{net.networkId, transform.x, transform.y});
+                           const TransformComponent& transform,
+                           const NetworkIdComponent& net) {
+        _playerCache.push_back(
+            PlayerInfo{net.networkId, transform.x, transform.y});
     });
 
     auto enemyView =
         registry.view<EnemyTag, TransformComponent, NetworkIdComponent,
                       ShootCooldownComponent>();
     enemyView.each([this, &registry](ECS::Entity entity,
-                                               const EnemyTag& /*tag*/,
-                                               const TransformComponent& tf,
-                                               const NetworkIdComponent& net,
-                                               ShootCooldownComponent& cd) {
+                                     const EnemyTag& /*tag*/,
+                                     const TransformComponent& tf,
+                                     const NetworkIdComponent& net,
+                                     ShootCooldownComponent& cd) {
         if (!cd.canShoot()) {
             return;
         }

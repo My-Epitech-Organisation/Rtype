@@ -18,12 +18,12 @@ namespace rtype::games::rtype::client {
 /**
  * @class PlayerAnimationSystem
  * @brief Updates player sprite frames based on velocity and player ID
- * 
+ *
  * Sprite sheet layout:
  * - Each frame: 33x17 pixels
  * - 5 columns (states): strong down, ease down, neutral, ease up, strong up
  * - 5 rows: different player colors (selected by network ID % 5)
- * 
+ *
  * Velocity thresholds:
  * - High: ±140.0 pixels/sec (strong tilt animation)
  * - Low: ±40.0 pixels/sec (slight tilt animation)

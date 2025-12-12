@@ -15,6 +15,7 @@
 
 namespace rtype::games::rtype::server {
 
+using ::rtype::network::EntityType;
 using shared::AIBehavior;
 using shared::AIComponent;
 using shared::BoundingBoxComponent;
@@ -27,7 +28,6 @@ using shared::ObstacleTag;
 using shared::PowerUpComponent;
 using shared::TransformComponent;
 using shared::VelocityComponent;
-using ::rtype::network::EntityType;
 static constexpr float BYDOS_SLAVE_SIZE = 32.0F;
 static constexpr int BYDOS_SLAVE_HEALTH = 10;
 
@@ -151,8 +151,7 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     event.x = spawnX;
     event.y = spawnY;
     event.rotation = 0.0F;
-    event.entityType =
-        static_cast<uint8_t>(EntityType::Bydos);
+    event.entityType = static_cast<uint8_t>(EntityType::Bydos);
     _emitEvent(event);
 }
 
@@ -189,8 +188,7 @@ void SpawnerSystem::spawnObstacle(ECS::Registry& registry) {
     event.entityNetworkId = networkId;
     event.x = _config.spawnX;
     event.y = spawnY;
-    event.entityType =
-        static_cast<uint8_t>(EntityType::Obstacle);
+    event.entityType = static_cast<uint8_t>(EntityType::Obstacle);
     _emitEvent(event);
 }
 
@@ -218,8 +216,7 @@ void SpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
     event.entityNetworkId = networkId;
     event.x = _config.spawnX;
     event.y = spawnY;
-    event.entityType =
-        static_cast<uint8_t>(EntityType::Pickup);
+    event.entityType = static_cast<uint8_t>(EntityType::Pickup);
     _emitEvent(event);
 }
 

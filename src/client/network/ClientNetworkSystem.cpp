@@ -338,8 +338,9 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
 
     if (onHealthUpdateCallback_ && localUserId_.has_value() &&
         event.entityId == *localUserId_) {
-        LOG_DEBUG("[ClientNetworkSystem] Calling onHealthUpdateCallback_ for "
-                  "local player");
+        LOG_DEBUG(
+            "[ClientNetworkSystem] Calling onHealthUpdateCallback_ for "
+            "local player");
         onHealthUpdateCallback_(event);
     }
 }
