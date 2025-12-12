@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "../../../shared/Components.hpp"
+#include "protocol/Payloads.hpp"
 
 namespace rtype::games::rtype::server {
 using shared::ActivePowerUpComponent;
@@ -154,7 +155,7 @@ uint32_t ProjectileSpawnerSystem::spawnProjectileWithConfig(
     event.x = x;
     event.y = y;
     event.rotation = 0.0F;
-    event.entityType = static_cast<uint8_t>(EntityType::Projectile);
+    event.entityType = static_cast<uint8_t>(::rtype::network::EntityType::Missile);
     event.subType = static_cast<uint8_t>(config.projectileType);
     _emitEvent(event);
 
