@@ -6,6 +6,7 @@
 */
 #include "VisualCueFactory.hpp"
 
+#include <random>
 #include <utility>
 
 #include "AllComponents.hpp"
@@ -62,7 +63,10 @@ void VisualCueFactory::createDamagePopup(ECS::Registry& registry,
 
     registry.emplaceComponent<StaticTextTag>(entity);
 
-    float offsetX = static_cast<float>((rand() % 40) - 20);
+    static thread_local std::random_device rd;
+    static thread_local std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dist(-20, 20);
+    float offsetX = static_cast<float>(dist(gen));
     registry.emplaceComponent<::rtype::games::rtype::shared::Position>(
         entity, position.x + offsetX, position.y - 20.f);
 
