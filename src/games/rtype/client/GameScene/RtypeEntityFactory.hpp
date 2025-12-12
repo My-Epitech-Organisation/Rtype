@@ -41,10 +41,11 @@ class RtypeEntityFactory {
      * @param reg ECS registry
      * @param assetsManager Asset manager
      * @param entity Entity to configure
+     * @param userId User ID for the player (used to determine player color)
      */
     static void setupPlayerEntity(ECS::Registry& reg,
                                   std::shared_ptr<AssetManager> assetsManager,
-                                  ECS::Entity entity);
+                                  ECS::Entity entity, std::uint32_t userId = 0);
 
     /**
      * @brief Create a Bydos enemy entity with all components
