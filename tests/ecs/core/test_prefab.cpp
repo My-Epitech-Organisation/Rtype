@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
-#include "../../../lib/rtype_ecs/src/core/Prefab.hpp"
-#include "../../../lib/rtype_ecs/src/core/Registry/Registry.hpp"
+#include "../../../lib/ecs/src/core/Prefab.hpp"
+#include "../../../lib/ecs/src/core/Registry/Registry.hpp"
 
 using namespace ECS;
 

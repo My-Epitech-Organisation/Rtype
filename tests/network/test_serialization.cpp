@@ -9,8 +9,8 @@
 #include <vector>
 #include <string>
 #include <type_traits>
-#include "../../lib/rtype_network/src/Protocol.hpp"
-#include "../../lib/rtype_network/src/protocol/ByteOrderSpec.hpp"
+#include "../../lib/network/src/Protocol.hpp"
+#include "../../lib/network/src/protocol/ByteOrderSpec.hpp"
 
 #include "../../lib/network/src/Packet.hpp"
 #include "../../lib/network/src/Serializer.hpp"
