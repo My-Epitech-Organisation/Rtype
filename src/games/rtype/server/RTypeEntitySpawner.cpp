@@ -13,6 +13,7 @@
 #include "../shared/Components/CooldownComponent.hpp"
 #include "../shared/Components/HealthComponent.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
+#include "../shared/Components/PlayerIdComponent.hpp"
 #include "../shared/Components/PositionComponent.hpp"
 #include "../shared/Components/Tags.hpp"
 #include "../shared/Components/TransformComponent.hpp"
@@ -37,6 +38,7 @@ RTypeEntitySpawner::RTypeEntitySpawner(
     using shared::BoundingBoxComponent;
     using shared::HealthComponent;
     using shared::NetworkIdComponent;
+    using shared::PlayerIdComponent;
     using shared::PlayerTag;
     using shared::Position;
     using shared::ShootCooldownComponent;
@@ -77,6 +79,9 @@ RTypeEntitySpawner::RTypeEntitySpawner(
 
     std::uint32_t networkId = config.userId;
     _registry->emplaceComponent<NetworkIdComponent>(playerEntity, networkId);
+
+    _registry->emplaceComponent<PlayerIdComponent>(playerEntity,
+                                                   config.playerIndex + 1);
 
     _networkSystem->registerNetworkedEntity(playerEntity, networkId,
                                             EntityType::Player, spawnX, spawnY);
