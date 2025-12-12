@@ -56,6 +56,9 @@ enum class OpCode : std::uint8_t {
     /// Server updates entity health/lives (RELIABLE)
     S_ENTITY_HEALTH = 0x13,
 
+    /// Server notifies a power-up pickup (RELIABLE)
+    S_POWERUP_EVENT = 0x14,
+
     /// Client sends input state (UNRELIABLE)
     C_INPUT = 0x20,
 
@@ -102,6 +105,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
+        case OpCode::S_POWERUP_EVENT:
             return true;
 
         case OpCode::S_ENTITY_MOVE:
@@ -150,6 +154,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
+        case OpCode::S_POWERUP_EVENT:
         case OpCode::S_UPDATE_POS:
         case OpCode::PONG:
             return true;
@@ -180,6 +185,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
+        case OpCode::S_POWERUP_EVENT:
         case OpCode::C_INPUT:
         case OpCode::S_UPDATE_POS:
         case OpCode::PING:
@@ -241,6 +247,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "S_ENTITY_DESTROY";
         case OpCode::S_ENTITY_HEALTH:
             return "S_ENTITY_HEALTH";
+        case OpCode::S_POWERUP_EVENT:
+            return "S_POWERUP_EVENT";
         case OpCode::C_INPUT:
             return "C_INPUT";
         case OpCode::S_UPDATE_POS:
