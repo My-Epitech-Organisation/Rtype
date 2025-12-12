@@ -236,6 +236,14 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
     }
 
     const auto& powerUp = registry.getComponent<PowerUpComponent>(pickup);
+    
+    // Validate power-up type to prevent invalid configurations
+    if (powerUp.type == shared::PowerUpType::None) {
+        LOG_DEBUG("[CollisionSystem] Ignoring pickup with PowerUpType::None");
+        registry.emplaceComponent<DestroyTag>(pickup, DestroyTag{});
+        return;
+    }
+    
     ActivePowerUpComponent* activePtr = nullptr;
     if (registry.hasComponent<ActivePowerUpComponent>(player)) {
         auto& existing = registry.getComponent<ActivePowerUpComponent>(player);
