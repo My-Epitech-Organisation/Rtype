@@ -171,6 +171,18 @@ void ServerNetworkSystem::broadcastGameOver(std::uint32_t finalScore) {
     server_->sendGameOver(finalScore);
 }
 
+void ServerNetworkSystem::resetState() {
+    for (const auto& [networkId, _] : networkedEntities_) {
+        server_->destroyEntity(networkId);
+    }
+
+    networkedEntities_.clear();
+    entityToNetworkId_.clear();
+    userIdToEntity_.clear();
+    pendingDisconnections_.clear();
+    nextNetworkIdCounter_ = 1;
+}
+
 void ServerNetworkSystem::update() {
     server_->poll();
 

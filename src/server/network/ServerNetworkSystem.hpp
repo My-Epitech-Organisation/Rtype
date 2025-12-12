@@ -243,6 +243,14 @@ class ServerNetworkSystem {
     void broadcastGameOver(std::uint32_t finalScore);
 
     /**
+     * @brief Reset all tracked network state
+     *
+     * Clears entity/user mappings and resets network id counter.
+     * Use when returning to lobby between games.
+     */
+    void resetState();
+
+    /**
      * @brief Update the network system
      *
      * Polls the network server and processes any pending events.
