@@ -10,19 +10,26 @@
 #include <memory>
 
 #include <SFML/Graphics/RenderTexture.hpp>
+#include <SFML/Audio/SoundBuffer.hpp>
+#include <SFML/Audio/SoundChannel.hpp>
 #include <SFML/Window/Joystick.hpp>
 #include <SFML/Window/Keyboard.hpp>
+#include <SFML/Window/Mouse.hpp>
 
 #include "ECS.hpp"
 #include "client/GameAction.hpp"
 #include "client/Graphic/Accessibility.hpp"
 #include "client/Graphic/KeyboardActions.hpp"
 #include "games/rtype/client/Components/BoxingComponent.hpp"
+#include "games/rtype/client/Components/HiddenComponent.hpp"
 #include "games/rtype/client/Components/ImageComponent.hpp"
 #include "games/rtype/client/Components/RectangleComponent.hpp"
+#include "games/rtype/client/Components/SoundComponent.hpp"
 #include "games/rtype/client/Components/ZIndexComponent.hpp"
 #include "games/rtype/client/GameScene/VisualCueFactory.hpp"
 #include "games/rtype/client/Systems/BoxingSystem.hpp"
+#include "games/rtype/client/Systems/EventSystem.hpp"
+#include "AudioLib/AudioLib.hpp"
 #include "games/rtype/shared/Components/LifetimeComponent.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
 
@@ -476,6 +483,444 @@ TEST(AccessibilitySettingsTest, AllToggleCombinations) {
         }
     }
     EXPECT_EQ(count, 4);
+}
+
+
+// =============================================================================
+// EventSystem Tests (joystick debouncing neutral path)
+// =============================================================================
+
+TEST(EventSystemTest, JoystickNeutralResetsDebounceStates) {
+    // Prepare minimal window and audio lib
+    auto window = std::make_shared<sf::RenderWindow>(
+        sf::VideoMode({200u, 200u}), "TestWindow");
+    auto audio = std::make_shared<AudioLib>();
+
+    // Registry with simple buttons (Rectangle + UserEvent)
+    ECS::Registry registry;
+    std::vector<ECS::Entity> buttons;
+    for (int i = 0; i < 2; ++i) {
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<client::Rectangle>(e, client::Rectangle({100, 30}, sf::Color::Blue, sf::Color::Red));
+        registry.emplaceComponent<client::UserEvent>(e, client::UserEvent());
+        buttons.push_back(e);
+    }
+
+    // Create system and feed JoystickMoved events
+    client::EventSystem system(window, audio);
+
+    // First: move strongly down (>95) to trigger navigation
+    sf::Event::JoystickMoved jmDown;
+    jmDown.joystickId = 0;
+    jmDown.axis = sf::Joystick::Axis::Y;
+    jmDown.position = 96.0f;
+    sf::Event evDown(jmDown);
+    system.setEvent(evDown);
+    EXPECT_NO_THROW(system.update(registry, 0.0f));
+
+    // Then: return to neutral to hit the branch that resets debounced state
+    sf::Event::JoystickMoved jmNeutral;
+    jmNeutral.joystickId = 0;
+    jmNeutral.axis = sf::Joystick::Axis::Y;
+    jmNeutral.position = 0.0f;
+    sf::Event evNeutral(jmNeutral);
+    system.setEvent(evNeutral);
+    EXPECT_NO_THROW(system.update(registry, 0.0f));
+
+    // Finally: move strongly up (<-95) should trigger again (since neutral reset occurred)
+    sf::Event::JoystickMoved jmUp;
+    jmUp.joystickId = 0;
+    jmUp.axis = sf::Joystick::Axis::Y;
+    jmUp.position = -96.0f;
+    sf::Event evUp(jmUp);
+    system.setEvent(evUp);
+    EXPECT_NO_THROW(system.update(registry, 0.0f));
+
+    window->close();
+}
+
+TEST(EventSystemTest, JoystickButtonActivatesMenu) {
+    auto window = std::make_shared<sf::RenderWindow>(
+        sf::VideoMode({200u, 200u}), "TestWindow");
+    auto audio = std::make_shared<AudioLib>();
+
+    ECS::Registry registry;
+    std::vector<ECS::Entity> buttons;
+    for (int i = 0; i < 2; ++i) {
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<client::Rectangle>(e, client::Rectangle({100, 30}, sf::Color::Blue, sf::Color::Red));
+        registry.emplaceComponent<client::UserEvent>(e, client::UserEvent());
+        buttons.push_back(e);
+    }
+
+    client::EventSystem system(window, audio);
+
+    // Simulate joystick button 0 pressed to trigger activation branch
+    sf::Event::JoystickButtonPressed jb;
+    jb.joystickId = 0;
+    jb.button = 0;
+    sf::Event ev(jb);
+    system.setEvent(ev);
+    EXPECT_NO_THROW(system.update(registry, 0.0f));
+
+    window->close();
+}
+
+
+
+TEST(EventSystemTest, JoystickXAxisDebounceAndNeutralReset) {
+    auto window = std::make_shared<sf::RenderWindow>(
+        sf::VideoMode({200u, 200u}), "TestWindow");
+    auto audio = std::make_shared<AudioLib>();
+
+    ECS::Registry registry;
+    // Minimal interactive elements
+    for (int i = 0; i < 3; ++i) {
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<client::Rectangle>(e, client::Rectangle({80, 20}, sf::Color::Yellow, sf::Color::Black));
+        registry.emplaceComponent<client::UserEvent>(e, client::UserEvent());
+    }
+
+    client::EventSystem system(window, audio);
+
+    // Move strongly right (>95) to trigger X-axis navigation
+    sf::Event::JoystickMoved jmRight;
+    jmRight.joystickId = 0;
+    jmRight.axis = sf::Joystick::Axis::X;
+    jmRight.position = 97.0f;
+    sf::Event evRight(jmRight);
+    system.setEvent(evRight);
+    EXPECT_NO_THROW(system.update(registry, 0.0f));
+
+    // Return to neutral to reset debounce for X-axis
+    sf::Event::JoystickMoved jmNeutral;
+    jmNeutral.joystickId = 0;
+    jmNeutral.axis = sf::Joystick::Axis::X;
+    jmNeutral.position = 0.0f;
+    sf::Event evNeutral(jmNeutral);
+    system.setEvent(evNeutral);
+    EXPECT_NO_THROW(system.update(registry, 0.0f));
+
+    // Move strongly left (<-95) should be accepted after neutral
+    sf::Event::JoystickMoved jmLeft;
+    jmLeft.joystickId = 0;
+    jmLeft.axis = sf::Joystick::Axis::X;
+    jmLeft.position = -98.0f;
+    sf::Event evLeft(jmLeft);
+    system.setEvent(evLeft);
+    EXPECT_NO_THROW(system.update(registry, 0.0f));
+
+    window->close();
+}
+
+TEST(EventSystemTest, JoystickAxisSmallValuesDoNotTriggerNavigation) {
+    auto window = std::make_shared<sf::RenderWindow>(
+        sf::VideoMode({200u, 200u}), "TestWindow");
+    auto audio = std::make_shared<AudioLib>();
+
+    ECS::Registry registry;
+    auto e = registry.spawnEntity();
+    registry.emplaceComponent<client::Rectangle>(e, client::Rectangle({80, 20}, sf::Color::White, sf::Color::Black));
+    registry.emplaceComponent<client::UserEvent>(e, client::UserEvent());
+
+    client::EventSystem system(window, audio);
+
+    // Values within (-95, 95) should be ignored (no debounce trigger)
+    for (float pos : {5.0f, -10.0f, 20.0f, -30.0f, 0.0f}) {
+        sf::Event::JoystickMoved jm;
+        jm.joystickId = 0;
+        jm.axis = sf::Joystick::Axis::Y;
+        jm.position = pos;
+        sf::Event ev(jm);
+        system.setEvent(ev);
+        EXPECT_NO_THROW(system.update(registry, 0.0f));
+    }
+
+    window->close();
+}
+
+TEST(EventSystemTest, JoystickRepeatedLargeMovementWithoutNeutralIsDebounced) {
+    auto window = std::make_shared<sf::RenderWindow>(
+        sf::VideoMode({200u, 200u}), "TestWindow");
+    auto audio = std::make_shared<AudioLib>();
+
+    ECS::Registry registry;
+    for (int i = 0; i < 2; ++i) {
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<client::Rectangle>(e, client::Rectangle({80, 20}, sf::Color::Cyan, sf::Color::Black));
+        registry.emplaceComponent<client::UserEvent>(e, client::UserEvent());
+    }
+
+    client::EventSystem system(window, audio);
+
+    // First large movement triggers
+    sf::Event::JoystickMoved jm1;
+    jm1.joystickId = 0;
+    jm1.axis = sf::Joystick::Axis::Y;
+    jm1.position = 99.0f;
+    sf::Event ev1(jm1);
+    system.setEvent(ev1);
+    EXPECT_NO_THROW(system.update(registry, 0.0f));
+
+    // Subsequent large movement without neutral should be debounced (no repeat)
+    sf::Event::JoystickMoved jm2;
+    jm2.joystickId = 0;
+    jm2.axis = sf::Joystick::Axis::Y;
+    jm2.position = 98.0f;
+    sf::Event ev2(jm2);
+    system.setEvent(ev2);
+    EXPECT_NO_THROW(system.update(registry, 0.0f));
+
+    window->close();
+}
+
+
+TEST(EventSystemTest, MouseHoverPressReleaseFlow) {
+    auto window = std::make_shared<sf::RenderWindow>(
+        sf::VideoMode({200u, 200u}), "TestWindow");
+    auto audio = std::make_shared<AudioLib>();
+
+    ECS::Registry registry;
+    const auto entity = registry.spawnEntity();
+    registry.emplaceComponent<client::Rectangle>(
+        entity, client::Rectangle({80.f, 40.f}, sf::Color::White,
+                                  sf::Color::Yellow));
+    registry.emplaceComponent<client::UserEvent>(entity, client::UserEvent());
+
+    auto& rect = registry.getComponent<client::Rectangle>(entity);
+    rect.rectangle.setSize({80.f, 40.f});
+    rect.rectangle.setPosition({0.f, 0.f});
+
+    client::EventSystem system(window, audio);
+
+    sf::Event::MouseMoved moveInside;
+    moveInside.position = {10, 10};
+    sf::Event evMove(moveInside);
+    system.setEvent(evMove);
+    system.update(registry, 0.0f);
+
+    auto& state = registry.getComponent<client::UserEvent>(entity);
+    EXPECT_TRUE(state.isHovered);
+    EXPECT_FALSE(state.isPressed);
+    EXPECT_FALSE(state.isReleased);
+    EXPECT_FALSE(state.idle);
+
+    sf::Event::MouseButtonPressed press;
+    press.button = sf::Mouse::Button::Left;
+    press.position = {10, 10};
+    sf::Event evPress(press);
+    system.setEvent(evPress);
+    system.update(registry, 0.0f);
+    EXPECT_TRUE(state.isPressed);
+
+    sf::Event::MouseButtonReleased release;
+    release.button = sf::Mouse::Button::Left;
+    release.position = {10, 10};
+    sf::Event evRelease(release);
+    system.setEvent(evRelease);
+    system.update(registry, 0.0f);
+
+    EXPECT_TRUE(state.isReleased);
+    EXPECT_FALSE(state.isPressed);
+
+    window->close();
+}
+
+TEST(EventSystemTest, MouseLeaveWhilePressedResetsFlags) {
+    auto window = std::make_shared<sf::RenderWindow>(
+        sf::VideoMode({200u, 200u}), "TestWindow");
+    auto audio = std::make_shared<AudioLib>();
+
+    ECS::Registry registry;
+    const auto entity = registry.spawnEntity();
+    registry.emplaceComponent<client::Rectangle>(
+        entity, client::Rectangle({60.f, 30.f}, sf::Color::Red,
+                                  sf::Color::Blue));
+    registry.emplaceComponent<client::UserEvent>(entity, client::UserEvent());
+
+    auto& rect = registry.getComponent<client::Rectangle>(entity);
+    rect.rectangle.setSize({60.f, 30.f});
+    rect.rectangle.setPosition({0.f, 0.f});
+
+    client::EventSystem system(window, audio);
+
+    // Start with hover + pressed state
+    auto& state = registry.getComponent<client::UserEvent>(entity);
+    state.isHovered = true;
+    state.isPressed = true;
+
+    sf::Event::MouseMoved moveOutside;
+    moveOutside.position = {200, 200};
+    sf::Event evMove(moveOutside);
+    system.setEvent(evMove);
+    system.update(registry, 0.0f);
+
+    EXPECT_FALSE(state.isPressed);
+    EXPECT_FALSE(state.isHovered);
+
+    window->close();
+}
+
+TEST(EventSystemTest, HiddenComponentSkipsInteraction) {
+    auto window = std::make_shared<sf::RenderWindow>(
+        sf::VideoMode({200u, 200u}), "TestWindow");
+    auto audio = std::make_shared<AudioLib>();
+
+    ECS::Registry registry;
+    const auto entity = registry.spawnEntity();
+    registry.emplaceComponent<client::Rectangle>(
+        entity, client::Rectangle({50.f, 50.f}, sf::Color::Green,
+                                  sf::Color::Yellow));
+    registry.emplaceComponent<client::UserEvent>(entity, client::UserEvent());
+    registry.emplaceComponent<client::HiddenComponent>(
+        entity, client::HiddenComponent{true});
+
+    auto& rect = registry.getComponent<client::Rectangle>(entity);
+    rect.rectangle.setSize({50.f, 50.f});
+    rect.rectangle.setPosition({0.f, 0.f});
+
+    client::EventSystem system(window, audio);
+
+    sf::Event::MouseMoved moveInside;
+    moveInside.position = {10, 10};
+    sf::Event evMove(moveInside);
+    system.setEvent(evMove);
+    system.update(registry, 0.0f);
+
+    const auto& state = registry.getComponent<client::UserEvent>(entity);
+    EXPECT_FALSE(state.isHovered);
+    EXPECT_TRUE(state.idle);
+
+    window->close();
+}
+
+TEST(EventSystemTest, NullWindowPreventsPointCheck) {
+    std::shared_ptr<sf::RenderWindow> window;
+    auto audio = std::make_shared<AudioLib>();
+
+    ECS::Registry registry;
+    const auto entity = registry.spawnEntity();
+    registry.emplaceComponent<client::Rectangle>(
+        entity, client::Rectangle({40.f, 40.f}, sf::Color::Black,
+                                  sf::Color::White));
+    registry.emplaceComponent<client::UserEvent>(entity, client::UserEvent());
+
+    client::EventSystem system(window, audio);
+
+    sf::Event::MouseMoved moveInside;
+    moveInside.position = {5, 5};
+    sf::Event evMove(moveInside);
+    system.setEvent(evMove);
+    system.update(registry, 0.0f);
+
+    const auto& state = registry.getComponent<client::UserEvent>(entity);
+    EXPECT_FALSE(state.isHovered);
+    EXPECT_TRUE(state.idle);
+}
+
+TEST(EventSystemTest, KeyboardNavigationWrapsAndActivates) {
+    auto window = std::make_shared<sf::RenderWindow>(
+        sf::VideoMode({200u, 200u}), "TestWindow");
+    auto audio = std::make_shared<AudioLib>();
+
+    ECS::Registry registry;
+    std::vector<ECS::Entity> buttons;
+    for (int i = 0; i < 2; ++i) {
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<client::Rectangle>(
+            e, client::Rectangle({80, 20}, sf::Color::Magenta,
+                                 sf::Color::Cyan));
+        registry.emplaceComponent<client::UserEvent>(e, client::UserEvent());
+        buttons.push_back(e);
+    }
+
+    client::EventSystem system(window, audio);
+
+    // Down key should select the first button when none are hovered
+    sf::Event::KeyPressed down;
+    down.code = sf::Keyboard::Key::Down;
+    sf::Event evDown(down);
+    system.setEvent(evDown);
+    system.update(registry, 0.0f);
+    EXPECT_TRUE(registry.getComponent<client::UserEvent>(buttons[0]).isHovered);
+
+    // Up key should wrap to the last button
+    sf::Event::KeyPressed up;
+    up.code = sf::Keyboard::Key::Up;
+    sf::Event evUp(up);
+    system.setEvent(evUp);
+    system.update(registry, 0.0f);
+    EXPECT_FALSE(registry.getComponent<client::UserEvent>(buttons[0]).isHovered);
+    EXPECT_TRUE(registry.getComponent<client::UserEvent>(buttons[1]).isHovered);
+
+    // Enter triggers activation on the hovered button
+    sf::Event::KeyPressed enter;
+    enter.code = sf::Keyboard::Key::Enter;
+    sf::Event evEnter(enter);
+    system.setEvent(evEnter);
+    system.update(registry, 0.0f);
+
+    EXPECT_TRUE(registry.getComponent<client::UserEvent>(buttons[1]).isReleased);
+
+    window->close();
+}
+
+TEST(EventSystemTest, HoverAndClickPlaysSoundsWhenAvailable) {
+    auto window = std::make_shared<sf::RenderWindow>(
+        sf::VideoMode({200u, 200u}), "TestWindow");
+    auto audio = std::make_shared<AudioLib>();
+
+    ECS::Registry registry;
+    const auto entity = registry.spawnEntity();
+    registry.emplaceComponent<client::Rectangle>(
+        entity, client::Rectangle({40.f, 40.f}, sf::Color::White,
+                                  sf::Color::Yellow));
+    registry.emplaceComponent<client::UserEvent>(entity, client::UserEvent());
+
+    // Sound buffers with minimal sample data
+    auto buffer = std::make_shared<sf::SoundBuffer>();
+    std::int16_t sample = 0;
+    std::vector<sf::SoundChannel> channels = {sf::SoundChannel::Mono};
+    ASSERT_TRUE(buffer->loadFromSamples(&sample, 1, 1, 44100, channels));
+
+    registry.emplaceComponent<client::ButtonSoundComponent>(
+        entity, client::ButtonSoundComponent{buffer, buffer});
+
+    auto& rect = registry.getComponent<client::Rectangle>(entity);
+    rect.rectangle.setSize({40.f, 40.f});
+    rect.rectangle.setPosition({0.f, 0.f});
+
+    client::EventSystem system(window, audio);
+
+    // Hover triggers hover sound branch
+    sf::Event::MouseMoved moveInside;
+    moveInside.position = {5, 5};
+    sf::Event evMove(moveInside);
+    system.setEvent(evMove);
+    system.update(registry, 0.0f);
+
+    auto& state = registry.getComponent<client::UserEvent>(entity);
+    EXPECT_TRUE(state.isHovered);
+
+    // Click triggers click sound branch
+    sf::Event::MouseButtonPressed press;
+    press.button = sf::Mouse::Button::Left;
+    press.position = {5, 5};
+    sf::Event evPress(press);
+    system.setEvent(evPress);
+    system.update(registry, 0.0f);
+    EXPECT_TRUE(state.isPressed);
+
+    // Release should mark as released
+    sf::Event::MouseButtonReleased release;
+    release.button = sf::Mouse::Button::Left;
+    release.position = {5, 5};
+    sf::Event evRelease(release);
+    system.setEvent(evRelease);
+    system.update(registry, 0.0f);
+    EXPECT_TRUE(state.isReleased);
+
+    window->close();
 }
 
 
