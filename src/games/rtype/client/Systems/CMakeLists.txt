@@ -17,6 +17,8 @@ add_library(rtype_game_client_systems STATIC
     TextInputSystem.hpp
     PlayerAnimationSystem.cpp
     PlayerAnimationSystem.hpp
+    PlayerPowerUpVisualSystem.cpp
+    PlayerPowerUpVisualSystem.hpp
 )
 
 target_link_libraries(rtype_game_client_systems
