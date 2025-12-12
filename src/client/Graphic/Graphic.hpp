@@ -31,6 +31,7 @@
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
 #include "Systems/ShaderRenderSystem.hpp"
+#include "../../games/rtype/client/Systems/PlayerAnimationSystem.hpp"
 
 /**
  * @brief Main graphics class managing the game window and rendering pipeline.
@@ -43,10 +44,11 @@
  * 1. ResetTriggers - Resets input states
  * 2. Network - Polls network and processes incoming packets
  * 3. Movement - Updates entity positions (depends on ResetTriggers)
- * 4. Parallax - Updates parallax backgrounds (depends on Movement)
- * 5. ButtonUpdate - Updates button states (depends on Parallax, for UI/menus)
- * 6. Render - Draws all entities (depends on ButtonUpdate)
- * 7. Boxing - Draws debug boxes on top (drawn after Render for visibility)
+ * 4. PlayerAnimation - Selects sprite frame by velocity/id (depends on Movement)
+ * 5. Parallax - Updates parallax backgrounds (depends on Movement)
+ * 6. ButtonUpdate - Updates button states (depends on Parallax, for UI/menus)
+ * 7. Render - Draws all entities (depends on ButtonUpdate)
+ * 8. Boxing - Draws debug boxes on top (drawn after Render for visibility)
  */
 class Graphic {
    public:
@@ -115,6 +117,8 @@ class Graphic {
 
     std::unique_ptr<::rtype::games::rtype::client::MovementSystem>
         _movementSystem;
+    std::unique_ptr<::rtype::games::rtype::client::PlayerAnimationSystem>
+        _playerAnimationSystem;
     std::unique_ptr<::rtype::games::rtype::client::ButtonUpdateSystem>
         _buttonUpdateSystem;
     std::unique_ptr<::rtype::games::rtype::client::ParallaxScrolling>
