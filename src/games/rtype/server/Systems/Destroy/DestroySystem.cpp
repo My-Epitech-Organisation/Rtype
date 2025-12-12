@@ -66,16 +66,16 @@ void DestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {
             event.entityNetworkId = netIdComp.networkId;
             if (isEnemy) {
                 event.entityType =
-                    static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
+                    static_cast<uint8_t>(EntityType::Enemy);
             } else if (isProjectile) {
                 event.entityType =
-                    static_cast<uint8_t>(::rtype::network::EntityType::Missile);
+                    static_cast<uint8_t>(EntityType::Projectile);
             } else if (isObstacle) {
                 event.entityType = static_cast<uint8_t>(
-                    ::rtype::network::EntityType::Obstacle);
+                    EntityType::Obstacle);
             } else {
                 event.entityType =
-                    static_cast<uint8_t>(::rtype::network::EntityType::Player);
+                    static_cast<uint8_t>(EntityType::Player);
             }
             _emitEvent(event);
         } else {

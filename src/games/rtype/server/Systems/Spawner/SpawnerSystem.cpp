@@ -151,7 +151,7 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     event.y = spawnY;
     event.rotation = 0.0F;
     event.entityType =
-        static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
+        static_cast<uint8_t>(shared::EntityType::Enemy);
     _emitEvent(event);
 }
 

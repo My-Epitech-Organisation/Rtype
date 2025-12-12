@@ -156,7 +156,7 @@ uint32_t ProjectileSpawnerSystem::spawnProjectileWithConfig(
     event.y = y;
     event.rotation = 0.0F;
     event.entityType =
-        static_cast<uint8_t>(::rtype::network::EntityType::Missile);
+        static_cast<uint8_t>(EntityType::Projectile);
     event.subType = static_cast<uint8_t>(config.projectileType);
     _emitEvent(event);
 
