@@ -14,3 +14,4 @@
 #include "Lifetime/LifetimeSystem.hpp"
 #include "Movements/MovementSystem.hpp"
 #include "Projectile/ProjectileSystem.hpp"
+#include "PowerUp/PowerUpSystem.hpp"
