@@ -3,8 +3,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_client_app PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
@@ -22,8 +22,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_graphic PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
@@ -40,8 +40,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_graphic_systems PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
@@ -59,8 +59,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_scene_manager PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
@@ -82,8 +82,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_stress_rendering PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
@@ -102,8 +102,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_stress_ecs PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
@@ -121,8 +121,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_stress_events PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
@@ -140,8 +140,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_entity_factory PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
@@ -221,8 +221,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_ui_components PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML

@@ -17,8 +17,8 @@ target_link_libraries(rtype-graphic-scene-manager
     SFML::Window
     SFML::Audio
     SFML::System
-    rtype_engine
-    rtype_network
+    engine
+    network
     rtype-graphic-main-menu-scene
     rtype-graphic-settings-scene
     rtype-graphic-game-scene

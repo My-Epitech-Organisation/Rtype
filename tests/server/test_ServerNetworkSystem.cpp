@@ -17,7 +17,7 @@
 
 #include "../../src/server/network/ServerNetworkSystem.hpp"
 #include "../../src/server/network/NetworkServer.hpp"
-#include "../../lib/rtype_ecs/src/core/Registry/Registry.hpp"
+#include "../../lib/ecs/src/core/Registry/Registry.hpp"
 
 using namespace rtype::server;
 using namespace ECS;

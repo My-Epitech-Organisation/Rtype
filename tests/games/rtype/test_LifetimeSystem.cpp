@@ -9,7 +9,7 @@
 #include "../../../src/games/rtype/shared/Components/LifetimeComponent.hpp"
 #include "../../../src/games/rtype/shared/Components/Tags.hpp"
 #include "../../../src/games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
-#include "../../../../lib/rtype_ecs/src/ECS.hpp"
+#include "../../../../lib/ecs/src/ECS.hpp"
 
 using namespace rtype::games::rtype::shared;
 

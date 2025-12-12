@@ -13,7 +13,7 @@ target_compile_features(test_client_manager PRIVATE cxx_std_20)
 
 target_link_libraries(test_client_manager PRIVATE
     GTest::gtest_main
-    rtype_common
+    common
     rtype_toml_parser
 )
 
@@ -41,10 +41,10 @@ target_compile_features(test_server_app PRIVATE cxx_std_20)
 
 target_link_libraries(test_server_app PRIVATE
     GTest::gtest_main
-    rtype_common
+    common
     rtype_toml_parser
-    rtype_network
-    rtype_engine
+    network
+    engine
     rtype_game_server
     rtype_game_shared
 )
@@ -67,10 +67,10 @@ target_compile_features(test_server_app_gameconfig PRIVATE cxx_std_20)
 
 target_link_libraries(test_server_app_gameconfig PRIVATE
     GTest::gtest_main
-    rtype_common
+    common
     rtype_toml_parser
-    rtype_network
-    rtype_engine
+    network
+    engine
     rtype_game_server
     rtype_game_shared
 )
@@ -92,10 +92,10 @@ target_compile_features(test_server_network_system PRIVATE cxx_std_20)
 
 target_link_libraries(test_server_network_system PRIVATE
     GTest::gtest_main
-    rtype_common
+    common
     rtype_toml_parser
-    rtype_network
-    rtype_ecs
+    network
+    ecs
     rtype_game_shared
 )
 
@@ -119,10 +119,10 @@ target_compile_features(test_server_app_unit PRIVATE cxx_std_20)
 
 target_link_libraries(test_server_app_unit PRIVATE
     GTest::gtest_main
-    rtype_common
+    common
     rtype_toml_parser
-    rtype_network
-    rtype_engine
+    network
+    engine
     rtype_game_server
     rtype_game_shared
 )
@@ -139,9 +139,9 @@ target_compile_features(test_server_network_messages PRIVATE cxx_std_20)
 
 target_link_libraries(test_server_network_messages PRIVATE
     GTest::gtest_main
-    rtype_common
+    common
     rtype_toml_parser
-    rtype_network
+    network
     rtype_client_network
     rtype_server_network
 )

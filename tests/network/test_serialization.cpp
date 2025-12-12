@@ -12,8 +12,8 @@
 #include "../../lib/rtype_network/src/Protocol.hpp"
 #include "../../lib/rtype_network/src/protocol/ByteOrderSpec.hpp"
 
-#include "../../lib/rtype_network/src/Packet.hpp"
-#include "../../lib/rtype_network/src/Serializer.hpp"
+#include "../../lib/network/src/Packet.hpp"
+#include "../../lib/network/src/Serializer.hpp"
 
 using namespace rtype::network;
 

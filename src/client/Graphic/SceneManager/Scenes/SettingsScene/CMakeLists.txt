@@ -12,7 +12,7 @@ target_link_libraries(rtype-graphic-settings-scene
     SFML::Window
     SFML::Audio
     SFML::System
-    rtype_engine
+    engine
 )
 
 target_link_libraries(rtype-graphic-settings-scene

@@ -8,9 +8,9 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <vector>
-#include "../../../lib/rtype_ecs/src/core/Entity.hpp"
-#include "../../../lib/rtype_ecs/src/storage/ISparseSet.hpp"
-#include "../../../lib/rtype_ecs/src/storage/SparseSet.hpp"
+#include "../../../lib/ecs/src/core/Entity.hpp"
+#include "../../../lib/ecs/src/storage/ISparseSet.hpp"
+#include "../../../lib/ecs/src/storage/SparseSet.hpp"
 
 using namespace ECS;
 
