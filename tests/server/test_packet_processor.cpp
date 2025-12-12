@@ -11,11 +11,11 @@
 #include <memory>
 #include <vector>
 
-#include "../../src/server/serverApp/packetProcessor/PacketProcessor.hpp"
-#include "../../src/server/shared/ServerMetrics.hpp"
-#include "../../lib/rtype_network/src/Serializer.hpp"
-#include "../../lib/rtype_network/src/protocol/Header.hpp"
-#include "../../lib/rtype_network/src/protocol/OpCode.hpp"
+#include "serverApp/packetProcessor/PacketProcessor.hpp"
+#include "shared/ServerMetrics.hpp"
+#include "Serializer.hpp"
+#include "protocol/Header.hpp"
+#include "protocol/OpCode.hpp"
 
 using namespace rtype::server;
 using namespace rtype::network;

@@ -200,7 +200,7 @@ target_compile_features(test_server_loop PRIVATE cxx_std_20)
 target_link_libraries(test_server_loop PRIVATE
     GTest::gtest_main
     rtype_server_core
-    rtype_common
+    common
 )
 
 # PlayerInputHandler unit tests
@@ -227,9 +227,9 @@ target_compile_features(test_player_input_handler PRIVATE cxx_std_20)
 
 target_link_libraries(test_player_input_handler PRIVATE
     GTest::gtest_main
-    rtype_common
-    rtype_network
-    rtype_ecs
+    common
+    network
+    ecs
     rtype_game_shared
 )
 
@@ -254,9 +254,9 @@ target_compile_features(test_player_spawner PRIVATE cxx_std_20)
 
 target_link_libraries(test_player_spawner PRIVATE
     GTest::gtest_main
-    rtype_common
-    rtype_network
-    rtype_ecs
+    common
+    network
+    ecs
     rtype_game_shared
 )
 
@@ -281,10 +281,10 @@ target_compile_features(test_game_event_processor PRIVATE cxx_std_20)
 
 target_link_libraries(test_game_event_processor PRIVATE
     GTest::gtest_main
-    rtype_common
-    rtype_network
-    rtype_ecs
-    rtype_engine
+    common
+    network
+    ecs
+    engine
     rtype_game_shared
 )
 
@@ -306,8 +306,8 @@ target_compile_features(test_packet_processor PRIVATE cxx_std_20)
 
 target_link_libraries(test_packet_processor PRIVATE
     GTest::gtest_main
-    rtype_common
-    rtype_network
+    common
+    network
 )
 
 # GameStateManager unit tests
@@ -329,7 +329,7 @@ target_compile_features(test_game_state_manager PRIVATE cxx_std_20)
 
 target_link_libraries(test_game_state_manager PRIVATE
     GTest::gtest_main
-    rtype_common
+    common
     rtype_toml_parser
 )
 

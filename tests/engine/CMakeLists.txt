@@ -11,8 +11,8 @@ target_include_directories(test_engine_factory PRIVATE
 
 target_link_libraries(test_engine_factory PRIVATE
     GTest::gtest_main
-    rtype_engine
-    rtype_ecs
+    engine
+    ecs
     rtype_game_server
 )
 

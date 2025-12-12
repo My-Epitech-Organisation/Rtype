@@ -10,7 +10,7 @@
 #include <memory>
 #include <optional>
 
-#include "../../lib/rtype_ecs/src/core/Registry/Registry.hpp"
+#include "core/Registry/Registry.hpp"
 #include "../../src/server/network/ServerNetworkSystem.hpp"
 #include "../../src/server/network/NetworkServer.hpp"
 #include "../../src/server/serverApp/game/gameStateManager/GameStateManager.hpp"

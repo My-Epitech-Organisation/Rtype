@@ -10,11 +10,11 @@
 #include <memory>
 #include <vector>
 
-#include "../../lib/rtype_ecs/src/core/Registry/Registry.hpp"
-#include "../../lib/rtype_engine/src/IGameEngine.hpp"
-#include "../../src/server/network/ServerNetworkSystem.hpp"
-#include "../../src/server/network/NetworkServer.hpp"
-#include "../../src/server/serverApp/game/gameEvent/GameEventProcessor.hpp"
+#include "core/Registry/Registry.hpp"
+#include "IGameEngine.hpp"
+#include "network/ServerNetworkSystem.hpp"
+#include "network/NetworkServer.hpp"
+#include "serverApp/game/gameEvent/GameEventProcessor.hpp"
 
 using namespace rtype::server;
 using namespace rtype::engine;

@@ -10,10 +10,10 @@
 #include <memory>
 #include <optional>
 
-#include "../../lib/rtype_ecs/src/core/Registry/Registry.hpp"
-#include "../../src/server/network/ServerNetworkSystem.hpp"
-#include "../../src/server/network/NetworkServer.hpp"
-#include "../../src/server/serverApp/player/playerSpawner/PlayerSpawner.hpp"
+#include "core/Registry/Registry.hpp"
+#include "network/ServerNetworkSystem.hpp"
+#include "network/NetworkServer.hpp"
+#include "serverApp/player/playerSpawner/PlayerSpawner.hpp"
 #include "games/rtype/shared/Components/BoundingBoxComponent.hpp"
 #include "games/rtype/shared/Components/CooldownComponent.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
