@@ -31,6 +31,7 @@ struct GameConfig {
     static constexpr float SCREEN_WIDTH = 1920.0F;
     static constexpr float SCREEN_HEIGHT = 1080.0F;
     static constexpr float SPAWN_MARGIN = 50.0F;
+    static constexpr float STATIONARY_SPAWN_INSET = 150.0F;
 
     // Spawn parameters
     static constexpr float MIN_SPAWN_INTERVAL = 1.6F;

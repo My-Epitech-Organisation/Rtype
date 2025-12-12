@@ -49,6 +49,7 @@ bool GameEngine::initialize() {
     spawnerConfig.maxSpawnY =
         GameConfig::SCREEN_HEIGHT - GameConfig::SPAWN_MARGIN;
     spawnerConfig.bydosSlaveSpeed = GameConfig::BYDOS_SLAVE_SPEED;
+    spawnerConfig.stationarySpawnInset = GameConfig::STATIONARY_SPAWN_INSET;
     _spawnerSystem =
         std::make_unique<SpawnerSystem>(eventEmitter, spawnerConfig);
     ProjectileSpawnConfig projConfig{};
