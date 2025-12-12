@@ -14,6 +14,7 @@
 #include "SceneException.hpp"
 #include "Scenes/GameScene/GameScene.hpp"
 #include "Scenes/HowToPlayScene/HowToPlayScene.hpp"
+#include "Scenes/GameOverScene/GameOverScene.hpp"
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
 #include "Scenes/SettingsScene/SettingsScene.hpp"
 
@@ -105,6 +106,11 @@ SceneManager::SceneManager(
         return std::make_unique<HowToPlayScene>(ecs, texture, this->_window,
                                                 this->_keybinds, this->_audio,
                                                 this->_switchToScene);
+    });
+    this->_sceneList.emplace(GAME_OVER, [ecs, texture, this]() {
+        return std::make_unique<GameOverScene>(ecs, texture, this->_window,
+                                               this->_audio,
+                                               this->_switchToScene);
     });
     this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
         auto rtypeGameScene =
