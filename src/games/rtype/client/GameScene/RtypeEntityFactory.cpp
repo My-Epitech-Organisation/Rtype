@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "../shared/Components/HealthComponent.hpp"
+#include "../shared/Components/NetworkIdComponent.hpp"
 #include "AllComponents.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Components/LifetimeComponent.hpp"
@@ -21,6 +22,7 @@
 #include "Logger/Macros.hpp"
 #include "VisualCueFactory.hpp"
 #include "protocol/Payloads.hpp"
+#include "../Systems/PlayerAnimationSystem.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -41,6 +43,8 @@ RtypeEntityFactory::createNetworkEntityFactory(
             entity, event.x, event.y);
         reg.emplaceComponent<::rtype::games::rtype::shared::VelocityComponent>(
             entity, 0.f, 0.f);
+        reg.emplaceComponent<::rtype::games::rtype::shared::NetworkIdComponent>(
+            entity, event.entityId);
 
         switch (event.type) {
             case ::rtype::network::EntityType::Player:
@@ -64,10 +68,21 @@ void RtypeEntityFactory::setupPlayerEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Player components");
+    const auto networkId = reg.getComponent<shared::NetworkIdComponent>(entity).networkId;
+    const int colorRow = (PlayerAnimationSystem::kColorRows > 0)
+                             ? static_cast<int>(networkId % PlayerAnimationSystem::kColorRows)
+                             : 0;
+    constexpr int neutralColumn = 2;
+    constexpr int width = PlayerAnimationSystem::kFrameWidth;
+    constexpr int height = PlayerAnimationSystem::kFrameHeight;
+
+    const int left = neutralColumn * width;
+    const int top = colorRow * height;
+
     reg.emplaceComponent<Image>(
         entity, assetsManager->textureManager->get("player_vessel"));
-    reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
-                                      std::pair<int, int>({33, 17}));
+    reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({left, top}),
+                                      std::pair<int, int>({width, height}));
     reg.emplaceComponent<Size>(entity, 4, 4);
     reg.emplaceComponent<shared::HealthComponent>(entity, 1, 1);
     reg.emplaceComponent<PlayerTag>(entity);
@@ -101,6 +116,7 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.getComponent<BoxingComponent>(entity).fillColor =
         sf::Color(255, 120, 0, 40);
     reg.emplaceComponent<ZIndex>(entity, 0);
+    reg.emplaceComponent<shared::HealthComponent>(entity, 10, 10);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<EnemySoundComponent>(
         entity, assetsManager->soundManager->get("bydos_spawn"),
