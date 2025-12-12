@@ -162,7 +162,7 @@ jobs:
             libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
             libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
             libxinerama-dev libxext-dev \
-            autoconf autoconf-archive automake libtool
+            autoconf autoconf-archive automake libtool libltdl-dev
 
       - name: Configure CMake (install vcpkg packages)
         run: |
@@ -269,7 +269,7 @@ jobs:
             libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
             libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
             libxinerama-dev libxext-dev \
-            lcov jq
+            lcov jq libltdl-dev
 
       - name: Install Ninja (Windows)
         if: matrix.os == 'windows-latest'
@@ -369,7 +369,7 @@ jobs:
             libx11-dev libxrandr-dev libxcursor-dev libxi-dev \
             libudev-dev libgl1-mesa-dev libglu1-mesa-dev \
             libfreetype6-dev libflac-dev libogg-dev libvorbis-dev libopenal-dev \
-            libxinerama-dev libxext-dev
+            libxinerama-dev libxext-dev libltdl-dev
 
       - name: Install Ninja (Windows)
         if: matrix.os == 'windows-latest'
