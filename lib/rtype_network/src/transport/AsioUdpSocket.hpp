@@ -60,8 +60,9 @@ class AsioUdpSocket : public IAsyncSocket {
 
     void close() override;
 
-   private:
     static NetworkError fromAsioError(const asio::error_code& ec) noexcept;
+
+    private:
     static Endpoint fromAsioEndpoint(const asio::ip::udp::endpoint& ep);
     static asio::ip::udp::endpoint toAsioEndpoint(const Endpoint& ep);
 
