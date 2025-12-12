@@ -33,8 +33,10 @@ NetworkClient::NetworkClient(const Config& config)
 
     connCallbacks.onConnected = [this](std::uint32_t userId) {
         queueCallback([this, userId]() {
-            if (onConnectedCallback_) {
-                onConnectedCallback_(userId);
+            for (const auto& callback : onConnectedCallbacks_) {
+                if (callback) {
+                    callback(userId);
+                }
             }
         });
     };
@@ -146,7 +148,7 @@ bool NetworkClient::sendInput(std::uint8_t inputMask) {
 
 void NetworkClient::onConnected(
     std::function<void(std::uint32_t myUserId)> callback) {
-    onConnectedCallback_ = std::move(callback);
+    onConnectedCallbacks_.push_back(std::move(callback));
 }
 
 void NetworkClient::onDisconnected(

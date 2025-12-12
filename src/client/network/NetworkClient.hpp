@@ -15,6 +15,7 @@
 #include <optional>
 #include <queue>
 #include <string>
+#include <vector>
 
 #include <asio.hpp>
 
@@ -317,7 +318,7 @@ class NetworkClient {
     std::mutex callbackMutex_;
     std::queue<std::function<void()>> callbackQueue_;
 
-    std::function<void(std::uint32_t)> onConnectedCallback_;
+    std::vector<std::function<void(std::uint32_t)>> onConnectedCallbacks_;
     std::function<void(DisconnectReason)> onDisconnectedCallback_;
     std::function<void(EntitySpawnEvent)> onEntitySpawnCallback_;
     std::function<void(EntityMoveEvent)> onEntityMoveCallback_;

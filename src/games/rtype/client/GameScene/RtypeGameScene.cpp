@@ -240,30 +240,9 @@ void RtypeGameScene::updateLivesDisplay(int current, int max) {
 
 void RtypeGameScene::handleHealthUpdate(
     const ::rtype::client::EntityHealthEvent& event) {
-    LOG_DEBUG("[RtypeGameScene] Health update: entityId="
-              << event.entityId << " current=" << event.current
-              << " max=" << event.max);
-    if (!_localPlayerId.has_value()) {
-        LOG_DEBUG(
-            "[RtypeGameScene] No localPlayerId yet, checking networkSystem");
-        if (_networkSystem && _networkSystem->getLocalUserId().has_value() &&
-            *_networkSystem->getLocalUserId() == event.entityId) {
-            _localPlayerId = event.entityId;
-            LOG_DEBUG("[RtypeGameScene] Set localPlayerId from networkSystem: "
-                      << event.entityId);
-        } else {
-            LOG_DEBUG("[RtypeGameScene] Not our entity, ignoring");
-            return;
-        }
-    }
-    if (event.entityId != *_localPlayerId) {
-        LOG_DEBUG("[RtypeGameScene] entityId "
-                  << event.entityId << " != localPlayerId " << *_localPlayerId
-                  << ", ignoring");
-        return;
-    }
-    LOG_DEBUG("[RtypeGameScene] Updating HUD with HP " << event.current << "/"
-                                                       << event.max);
+    LOG_DEBUG("[RtypeGameScene] Health update for local player: current="
+              << event.current << " max=" << event.max);
+
     if (_lastKnownLives > event.current) {
         int damageAmount = _lastKnownLives - event.current;
         triggerDamageFlash(damageAmount);
