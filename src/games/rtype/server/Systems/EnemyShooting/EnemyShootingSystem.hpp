@@ -18,13 +18,19 @@ namespace rtype::games::rtype::server {
 /**
  * @class EnemyShootingSystem
  * @brief Server-only system that orders enemies to shoot at players.
+ * 
+ * Enemies with AI behavior Chase will target the nearest player.
+ * Other enemies shoot toward a default offset position to the left.
  */
 class EnemyShootingSystem : public ::rtype::engine::ASystem {
    public:
     using ShootCallback = std::function<uint32_t(
         ECS::Registry&, ECS::Entity, uint32_t, float, float, float, float)>;
 
-    explicit EnemyShootingSystem(ShootCallback shootCb, float defaultTargetOffset = 300.0F)
+    /// Default horizontal offset for non-tracking enemy projectiles (pixels left of enemy)
+    static constexpr float kDefaultTargetOffset = 300.0F;
+
+    explicit EnemyShootingSystem(ShootCallback shootCb, float defaultTargetOffset = kDefaultTargetOffset)
         : ASystem("EnemyShootingSystem"),
           _shootCb(std::move(shootCb)),
           _defaultTargetOffset(defaultTargetOffset) {}
