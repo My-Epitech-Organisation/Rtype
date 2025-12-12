@@ -8,9 +8,9 @@
 #include "ShaderRenderSystem.hpp"
 
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <utility>
-#include <array>
 
 namespace rtype::games::rtype::client {
 

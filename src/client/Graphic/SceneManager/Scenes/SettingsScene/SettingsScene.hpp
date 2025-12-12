@@ -8,8 +8,8 @@
 #ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENE_HPP_
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENE_HPP_
 #include <map>
-#include <optional>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -28,8 +28,7 @@ class SettingsScene : public AScene {
     std::map<GameAction, ECS::Entity> _actionButtons;
     std::optional<ECS::Entity> _intensityLabel;
     ECS::Entity _inputModeLabel;
-    std::vector<ECS::Entity>
-        _keybindSectionEntities;
+    std::vector<ECS::Entity> _keybindSectionEntities;
 
     void _initKeybindSection();
     void _initAudioSection();

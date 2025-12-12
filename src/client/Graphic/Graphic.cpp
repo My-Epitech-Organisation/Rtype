@@ -207,12 +207,12 @@ void Graphic::_initializeSystems() {
         [this](ECS::Registry& reg) { this->_boxingSystem->update(reg, 0.f); },
         {"render"});
 
-    this->_systemScheduler->addSystem(
-        "shader_render",
-        [this](ECS::Registry& reg) {
-            this->_shaderRenderSystem->update(reg, 0.f);
-        },
-        {"boxing"});
+    this->_systemScheduler->addSystem("shader_render",
+                                      [this](ECS::Registry& reg) {
+                                          this->_shaderRenderSystem->update(
+                                              reg, 0.f);
+                                      },
+                                      {"boxing"});
 }
 
 void Graphic::_initializeCommonAssets() {

@@ -22,7 +22,6 @@
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
-#include "Systems/ShaderRenderSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
 #include "../network/ClientNetworkSystem.hpp"
 #include "../network/NetworkClient.hpp"
@@ -31,6 +30,7 @@
 #include "AudioLib/AudioLib.hpp"
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
+#include "Systems/ShaderRenderSystem.hpp"
 
 /**
  * @brief Main graphics class managing the game window and rendering pipeline.

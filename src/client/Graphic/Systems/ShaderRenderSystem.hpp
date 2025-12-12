@@ -11,8 +11,8 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "Accessibility.hpp"
 #include "ASystem.hpp"
+#include "Accessibility.hpp"
 #include "ECS.hpp"
 
 namespace rtype::games::rtype::client {
