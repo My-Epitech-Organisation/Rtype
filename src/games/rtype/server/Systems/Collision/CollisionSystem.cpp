@@ -238,8 +238,16 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
     const auto& powerUp = registry.getComponent<PowerUpComponent>(pickup);
     ActivePowerUpComponent* activePtr = nullptr;
     if (registry.hasComponent<ActivePowerUpComponent>(player)) {
-        activePtr = &registry.getComponent<ActivePowerUpComponent>(player);
-        *activePtr = ActivePowerUpComponent{};
+        auto& existing = registry.getComponent<ActivePowerUpComponent>(player);
+        if (existing.shieldActive && registry.hasComponent<shared::InvincibleTag>(player)) {
+            registry.removeComponent<shared::InvincibleTag>(player);
+        }
+        if (existing.hasOriginalCooldown && registry.hasComponent<shared::ShootCooldownComponent>(player)) {
+            auto& cd = registry.getComponent<shared::ShootCooldownComponent>(player);
+            cd.setCooldownTime(existing.originalCooldown);
+        }
+        existing = ActivePowerUpComponent{};
+        activePtr = &existing;
     } else {
         activePtr = &registry.emplaceComponent<ActivePowerUpComponent>(
             player, ActivePowerUpComponent{});
@@ -280,11 +288,12 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
         case shared::PowerUpType::DoubleDamage:
             active.damageMultiplier = 1.0F + powerUp.magnitude;
             break;
-        case shared::PowerUpType::ExtraLife:
+        case shared::PowerUpType::HealthBoost:
+            // Adds health points based on magnitude, not a full extra life
             if (registry.hasComponent<HealthComponent>(player)) {
                 auto& health = registry.getComponent<HealthComponent>(player);
-                health.max += 1;
-                health.current = std::min(health.current + 1, health.max);
+                int32_t healthBoost = static_cast<int32_t>(powerUp.magnitude * 100.0F);
+                health.current = std::min(health.current + healthBoost, health.max);
             }
             break;
         case shared::PowerUpType::None:

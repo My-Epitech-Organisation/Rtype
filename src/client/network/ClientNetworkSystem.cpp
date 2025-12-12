@@ -396,7 +396,7 @@ void ClientNetworkSystem::handlePowerUpEvent(const PowerUpEvent& event) {
             case rtype::games::rtype::shared::PowerUpType::DoubleDamage:
                 cueColor = sf::Color(255, 150, 150);
                 break;
-            case rtype::games::rtype::shared::PowerUpType::ExtraLife:
+            case rtype::games::rtype::shared::PowerUpType::HealthBoost:
                 cueColor = sf::Color(220, 180, 255);
                 break;
             default:

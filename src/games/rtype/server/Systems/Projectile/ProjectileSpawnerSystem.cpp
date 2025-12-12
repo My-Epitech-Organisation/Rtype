@@ -18,7 +18,6 @@ namespace rtype::games::rtype::server {
 using shared::ActivePowerUpComponent;
 using shared::BoundingBoxComponent;
 using shared::EnemyProjectileTag;
-using shared::EntityType;
 using shared::LifetimeComponent;
 using shared::NetworkIdComponent;
 using shared::PlayerProjectileTag;
@@ -28,6 +27,7 @@ using shared::ProjectileOwner;
 using shared::ProjectileTag;
 using shared::ShootCooldownComponent;
 using shared::TransformComponent;
+using ::rtype::network::EntityType;
 using shared::VelocityComponent;
 using shared::WeaponComponent;
 using shared::WeaponConfig;
@@ -156,7 +156,7 @@ uint32_t ProjectileSpawnerSystem::spawnProjectileWithConfig(
     event.y = y;
     event.rotation = 0.0F;
     event.entityType =
-        static_cast<uint8_t>(EntityType::Projectile);
+        static_cast<uint8_t>(EntityType::Missile);
     event.subType = static_cast<uint8_t>(config.projectileType);
     _emitEvent(event);
 

@@ -44,8 +44,8 @@ PowerUpConfig::EffectType stringToEffect(const std::string& str) {
         return PowerUpConfig::EffectType::WeaponUpgrade;
     if (str == "shield" || str == "Shield")
         return PowerUpConfig::EffectType::Shield;
-    if (str == "extra_life" || str == "ExtraLife")
-        return PowerUpConfig::EffectType::ExtraLife;
+    if (str == "extra_life" || str == "ExtraLife" || str == "health_boost" || str == "HealthBoost")
+        return PowerUpConfig::EffectType::HealthBoost;
     return PowerUpConfig::EffectType::Health;
 }
 

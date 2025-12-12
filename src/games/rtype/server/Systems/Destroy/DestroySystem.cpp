@@ -18,10 +18,10 @@ namespace rtype::games::rtype::server {
 
 using shared::DestroyTag;
 using shared::EnemyTag;
-using shared::EntityType;
 using shared::NetworkIdComponent;
 using shared::ObstacleTag;
 using shared::ProjectileTag;
+using ::rtype::network::EntityType;
 
 DestroySystem::DestroySystem(EventEmitter emitter,
                              EnemyCountUpdater enemyCountDecrementer)
@@ -66,10 +66,10 @@ void DestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {
             event.entityNetworkId = netIdComp.networkId;
             if (isEnemy) {
                 event.entityType =
-                    static_cast<uint8_t>(EntityType::Enemy);
+                    static_cast<uint8_t>(EntityType::Bydos);
             } else if (isProjectile) {
                 event.entityType =
-                    static_cast<uint8_t>(EntityType::Projectile);
+                    static_cast<uint8_t>(EntityType::Missile);
             } else if (isObstacle) {
                 event.entityType = static_cast<uint8_t>(
                     EntityType::Obstacle);

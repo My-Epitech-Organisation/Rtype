@@ -36,7 +36,7 @@ void PlayerPowerUpVisualSystem::update(ECS::Registry& registry, float /*dt*/) {
                 case rs::PowerUpType::DoubleDamage:
                     tint = sf::Color(255, 120, 120, 220);
                     break;
-                case rs::PowerUpType::ExtraLife:
+                case rs::PowerUpType::HealthBoost:
                     tint = sf::Color(220, 180, 255, 220);
                     break;
                 default:
