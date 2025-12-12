@@ -87,8 +87,6 @@ GameScene::GameScene(
 GameScene::~GameScene() {
     LOG_DEBUG("[GameScene] Destructor called");
 
-    // Gracefully disconnect from server so the server receives a voluntary
-    // disconnect packet instead of timing out the client.
     if (_networkClient && _networkClient->isConnected()) {
         LOG_DEBUG("[GameScene] Disconnecting from server");
         _networkClient->disconnect();
@@ -100,7 +98,6 @@ GameScene::~GameScene() {
             this->_registry->killEntity(entity);
         });
 
-    // Clean up pause menu entities
     LOG_DEBUG("[GameScene] Cleaning up pause menu entities");
     this->_registry->view<rtype::games::rtype::client::PauseMenuTag>().each(
         [this](ECS::Entity entity,
@@ -108,7 +105,6 @@ GameScene::~GameScene() {
             this->_registry->killEntity(entity);
         });
 
-    // Remove PauseState singleton to avoid stale state in main menu
     if (this->_registry
             ->hasSingleton<rtype::games::rtype::client::PauseState>()) {
         LOG_DEBUG("[GameScene] Removing PauseState singleton");
@@ -116,7 +112,6 @@ GameScene::~GameScene() {
             ->removeSingleton<rtype::games::rtype::client::PauseState>();
     }
 
-    // Remove AccessibilitySettings singleton if it exists (created during game)
     if (this->_registry->hasSingleton<AccessibilitySettings>()) {
         LOG_DEBUG("[GameScene] Removing AccessibilitySettings singleton");
         this->_registry->removeSingleton<AccessibilitySettings>();
