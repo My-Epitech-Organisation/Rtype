@@ -146,17 +146,7 @@ bool NetworkClient::sendInput(std::uint8_t inputMask) {
 
 void NetworkClient::onConnected(
     std::function<void(std::uint32_t myUserId)> callback) {
-    if (onConnectedCallback_) {
-        auto previousCallback = std::move(onConnectedCallback_);
-        onConnectedCallback_ = [previousCallback = std::move(previousCallback),
-                                newCallback =
-                                    std::move(callback)](std::uint32_t userId) {
-            previousCallback(userId);
-            newCallback(userId);
-        };
-    } else {
-        onConnectedCallback_ = std::move(callback);
-    }
+    onConnectedCallback_ = std::move(callback);
 }
 
 void NetworkClient::onDisconnected(
