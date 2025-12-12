@@ -190,6 +190,42 @@ TEST_F(TomlParserBranchTest, SaveToFileNoParentPath) {
     EXPECT_TRUE(result);
 }
 
+#ifndef _WIN32
+TEST_F(TomlParserBranchTest, SaveToFileCreateFails) {
+    toml::table table;
+    table.insert("key", "value");
+
+    // Create a parent directory and remove write permissions
+    auto unwritableDir = testDir / "unwritable";
+    std::filesystem::create_directories(unwritableDir);
+    std::filesystem::permissions(unwritableDir, std::filesystem::perms::owner_all);
+    // Remove write permission
+    std::filesystem::permissions(unwritableDir, std::filesystem::perms::owner_read | std::filesystem::perms::owner_exec);
+
+    TomlParser parser;
+    auto filepath = unwritableDir / "out.toml";
+    bool result = parser.saveToFile(table, filepath);
+
+    // Restore permissions to allow cleanup
+    std::filesystem::permissions(unwritableDir, std::filesystem::perms::owner_all);
+    EXPECT_FALSE(result);
+}
+
+TEST_F(TomlParserBranchTest, SaveToFileRenameFailure_NoLastResult) {
+    toml::table table;
+    table.insert("key", "value");
+
+    // Create a directory using the target path so rename() will fail
+    auto dirPath = testDir / "rename_dir";
+    std::filesystem::create_directories(dirPath);
+
+    TomlParser parser;
+    bool result = parser.saveToFile(table, dirPath);
+
+    EXPECT_FALSE(result);
+}
+#endif
+
 // ============================================================================
 // TomlParser::getString() Branch Tests
 // ============================================================================
