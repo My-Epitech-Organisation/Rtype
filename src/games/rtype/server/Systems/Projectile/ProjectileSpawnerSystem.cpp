@@ -19,6 +19,7 @@ using shared::EnemyProjectileTag;
 using shared::EntityType;
 using shared::LifetimeComponent;
 using shared::NetworkIdComponent;
+using shared::ActivePowerUpComponent;
 using shared::PlayerProjectileTag;
 using shared::ProjectileComponent;
 using shared::ProjectileOwner;
@@ -30,6 +31,7 @@ using shared::WeaponComponent;
 using shared::WeaponConfig;
 using shared::WeaponPresets::BasicBullet;
 using shared::WeaponPresets::EnemyBullet;
+using shared::PlayerTag;
 
 ProjectileSpawnerSystem::ProjectileSpawnerSystem(EventEmitter emitter,
                                                  ProjectileSpawnConfig config)
@@ -52,6 +54,21 @@ uint32_t ProjectileSpawnerSystem::spawnPlayerProjectile(
     ECS::Registry& registry, uint32_t playerNetworkId, float playerX,
     float playerY) {
     WeaponConfig weaponConfig = BasicBullet;
+
+    float damageMultiplier = 1.0F;
+    auto powerView = registry.view<NetworkIdComponent, shared::PlayerTag,
+                                   shared::ActivePowerUpComponent>();
+    powerView.each([playerNetworkId, &damageMultiplier](
+                       ECS::Entity /*entity*/, const NetworkIdComponent& net,
+                       const shared::PlayerTag& /*player*/,
+                       const shared::ActivePowerUpComponent& active) {
+        if (net.networkId == playerNetworkId) {
+            damageMultiplier = active.damageMultiplier;
+        }
+    });
+
+    weaponConfig.damage = static_cast<int32_t>(
+        static_cast<float>(weaponConfig.damage) * damageMultiplier);
 
     float spawnX = playerX + _config.playerProjectileOffsetX;
     float spawnY = playerY + _config.playerProjectileOffsetY;
