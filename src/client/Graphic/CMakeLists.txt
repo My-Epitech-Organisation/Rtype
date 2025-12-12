@@ -9,6 +9,10 @@ add_library(rtype-graphic-SFML
     Graphic.hpp
     KeyboardActions.cpp
     KeyboardActions.hpp
+    ControllerRumble.cpp
+    ControllerRumble.hpp
+    Systems/ShaderRenderSystem.cpp
+    Systems/ShaderRenderSystem.hpp
 )
 
 target_include_directories(rtype-graphic-SFML PRIVATE
@@ -26,6 +30,8 @@ find_package(SFML
         REQUIRED
 )
 
+find_package(SDL2 CONFIG REQUIRED)
+
 target_link_libraries(rtype-graphic-SFML
     PUBLIC
     SFML::Network
@@ -33,6 +39,7 @@ target_link_libraries(rtype-graphic-SFML
     SFML::Window
     SFML::Audio
     SFML::System
+    SDL2::SDL2
     engine
     network
     rtype-graphic-scene-manager

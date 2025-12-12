@@ -11,7 +11,7 @@
 #include <memory>
 #include <vector>
 
-#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/RenderTarget.hpp>
 
 #include "../Components/HiddenComponent.hpp"
 #include "ASystem.hpp"
@@ -35,7 +35,7 @@ namespace rtype::games::rtype::client {
  */
 class RenderSystem : public ::rtype::engine::ASystem {
    private:
-    std::shared_ptr<sf::RenderWindow> _window;
+    std::shared_ptr<sf::RenderTarget> _target;
 
     /// @brief Cached vector for drawable entities (avoids per-frame allocation)
     mutable std::vector<ECS::Entity> _cachedDrawableEntities;
@@ -83,7 +83,7 @@ class RenderSystem : public ::rtype::engine::ASystem {
      * @brief Construct a new RenderSystem.
      * @param window Shared pointer to the SFML render window
      */
-    explicit RenderSystem(std::shared_ptr<sf::RenderWindow> window);
+    explicit RenderSystem(std::shared_ptr<sf::RenderTarget> target);
 
     /**
      * @brief Render all visible entities to the window.

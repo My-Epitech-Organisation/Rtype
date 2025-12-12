@@ -13,6 +13,7 @@
 #include "GameScene/RtypeGameScene.hpp"
 #include "SceneException.hpp"
 #include "Scenes/GameScene/GameScene.hpp"
+#include "Scenes/HowToPlayScene/HowToPlayScene.hpp"
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
 #include "Scenes/SettingsScene/SettingsScene.hpp"
 
@@ -21,12 +22,19 @@ void SceneManager::_applySceneChange() {
         Scene scene = this->_nextScene.value();
 
         if (this->_currentScene == scene) {
+            LOG_DEBUG(
+                "[SceneManager] Ignoring scene change - already on scene: "
+                << static_cast<int>(scene));
             this->_nextScene = std::nullopt;
             return;
         }
 
+        LOG_DEBUG("[SceneManager] Applying scene change from "
+                  << static_cast<int>(this->_currentScene) << " to "
+                  << static_cast<int>(scene));
         this->_currentScene = scene;
         this->_activeScene = this->_sceneList[this->_currentScene]();
+        LOG_DEBUG("[SceneManager] Scene change applied successfully");
 
         this->_nextScene = std::nullopt;
     }
@@ -36,6 +44,8 @@ void SceneManager::setCurrentScene(const Scene scene) {
     if (!this->_sceneList.contains(scene)) {
         throw SceneNotFound();
     }
+    LOG_DEBUG("[SceneManager] Scene change requested to: "
+              << static_cast<int>(scene));
     this->_nextScene = scene;
 }
 
@@ -90,6 +100,11 @@ SceneManager::SceneManager(
         return std::make_unique<SettingsScene>(ecs, texture, this->_window,
                                                this->_keybinds, this->_audio,
                                                this->_switchToScene);
+    });
+    this->_sceneList.emplace(HOW_TO_PLAY, [ecs, texture, this]() {
+        return std::make_unique<HowToPlayScene>(ecs, texture, this->_window,
+                                                this->_keybinds, this->_audio,
+                                                this->_switchToScene);
     });
     this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
         auto rtypeGameScene =

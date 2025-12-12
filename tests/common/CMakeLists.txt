@@ -100,6 +100,20 @@ target_include_directories(test_tomlparser_branches PRIVATE
 
 gtest_discover_tests(test_tomlparser_branches)
 
+add_executable(test_scene_exception test_scene_exception.cpp)
+
+target_link_libraries(test_scene_exception PRIVATE
+    GTest::gtest_main
+    common
+)
+
+target_include_directories(test_scene_exception PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib
+)
+
+gtest_discover_tests(test_scene_exception)
+
 # Branch coverage tests for SaveManager
 add_executable(test_savemanager_branches test_savemanager_branches.cpp)
 

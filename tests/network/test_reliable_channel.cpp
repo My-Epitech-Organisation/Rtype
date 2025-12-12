@@ -172,6 +172,24 @@ TEST_F(ReliableChannelTest, GetPacketsToRetransmit_RetryCountIncremented) {
     EXPECT_EQ(toRetransmit2[0].retryCount, 2);
 }
 
+TEST_F(ReliableChannelTest, GetPacketsToRetransmit_ImmediateRetransmit) {
+    ReliableChannel::Config config;
+    config.retransmitTimeout = std::chrono::milliseconds(0);
+    config.maxRetries = 2;
+    ReliableChannel channel{config};
+
+    channel.trackOutgoing(7, testData_);
+
+    // Immediate call should dequeue for retransmit when timeout == 0
+    auto first = channel.getPacketsToRetransmit();
+    EXPECT_EQ(first.size(), 1);
+    EXPECT_EQ(first[0].retryCount, 1);
+
+    auto second = channel.getPacketsToRetransmit();
+    EXPECT_EQ(second.size(), 1);
+    EXPECT_EQ(second[0].retryCount, 2);
+}
+
 // ============================================================================
 // Cleanup Tests
 // ============================================================================

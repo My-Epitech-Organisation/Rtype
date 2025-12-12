@@ -10,7 +10,7 @@
 
 #include <memory>
 
-#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/RenderTarget.hpp>
 
 #include "ASystem.hpp"
 #include "ECS.hpp"
@@ -18,10 +18,10 @@
 namespace rtype::games::rtype::client {
 class BoxingSystem : public ::rtype::engine::ASystem {
    private:
-    std::shared_ptr<sf::RenderWindow> _window;
+    std::shared_ptr<sf::RenderTarget> _target;
 
    public:
-    explicit BoxingSystem(std::shared_ptr<sf::RenderWindow> window);
+    explicit BoxingSystem(std::shared_ptr<sf::RenderTarget> target);
     void update(ECS::Registry& registry, float dt) override;
 };
 }  // namespace rtype::games::rtype::client

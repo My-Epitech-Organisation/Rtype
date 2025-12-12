@@ -25,10 +25,12 @@
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
 #include "../network/ClientNetworkSystem.hpp"
 #include "../network/NetworkClient.hpp"
+#include "Accessibility.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
+#include "Systems/ShaderRenderSystem.hpp"
 
 /**
  * @brief Main graphics class managing the game window and rendering pipeline.
@@ -88,6 +90,12 @@ class Graphic {
     /// @brief Audio lib shared with SceneManager
     std::shared_ptr<AudioLib> _audioLib;
 
+    /// @brief Render texture for post-processing
+    std::shared_ptr<sf::RenderTexture> _sceneTexture;
+
+    /// @brief Optional colorblind shader
+    std::shared_ptr<sf::Shader> _colorShader;
+
     /// @brief Camera view shared with ParallaxScrolling system
     std::shared_ptr<sf::View> _view;
 
@@ -120,6 +128,8 @@ class Graphic {
         _projectileSystem;
     std::unique_ptr<::rtype::games::rtype::shared::LifetimeSystem>
         _lifetimeSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ShaderRenderSystem>
+        _shaderRenderSystem;
 
     // ========================================================================
     // Runtime state

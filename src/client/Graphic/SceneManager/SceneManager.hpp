@@ -27,6 +27,7 @@ class SceneManager {
         MAIN_MENU,
         IN_GAME,
         SETTINGS_MENU,
+        HOW_TO_PLAY,
         NONE,
     };
 

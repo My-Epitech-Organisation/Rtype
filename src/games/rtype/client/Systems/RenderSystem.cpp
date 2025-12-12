@@ -8,6 +8,8 @@
 #include "RenderSystem.hpp"
 
 #include <algorithm>
+#include <utility>
+#include <vector>
 
 #include "../AllComponents.hpp"
 #include "ECS.hpp"
@@ -18,8 +20,8 @@ namespace rs = ::rtype::games::rtype::shared;
 
 namespace rtype::games::rtype::client {
 
-RenderSystem::RenderSystem(std::shared_ptr<sf::RenderWindow> window)
-    : ::rtype::engine::ASystem("RenderSystem"), _window(std::move(window)) {}
+RenderSystem::RenderSystem(std::shared_ptr<sf::RenderTarget> target)
+    : ::rtype::engine::ASystem("RenderSystem"), _target(std::move(target)) {}
 
 bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
     if (registry.hasComponent<HiddenComponent>(entity)) {
@@ -58,7 +60,7 @@ void RenderSystem::_renderImages(ECS::Registry& registry) {
             img.sprite.setTextureRect(texture.rect);
         }
 
-        _window->draw(img.sprite);
+        _target->draw(img.sprite);
     }
 }
 
@@ -76,7 +78,7 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry) {
             rectData.rectangle.setOutlineColor(rectData.outlineColor);
             rectData.rectangle.setFillColor(rectData.currentColor);
 
-            _window->draw(rectData.rectangle);
+            _target->draw(rectData.rectangle);
         });
 }
 
@@ -114,8 +116,8 @@ void RenderSystem::_renderButtons(ECS::Registry& registry) {
 
             textData.text.setPosition({centerX, centerY});
 
-            _window->draw(rectData.rectangle);
-            _window->draw(textData.text);
+            _target->draw(rectData.rectangle);
+            _target->draw(textData.text);
         });
 }
 
@@ -130,7 +132,7 @@ void RenderSystem::_renderStaticText(ECS::Registry& registry) {
             textData.text.setFillColor(textData.color);
             textData.text.setString(textData.textContent);
 
-            _window->draw(textData.text);
+            _target->draw(textData.text);
         });
 }
 

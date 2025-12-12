@@ -8,6 +8,9 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include <string>
+#include <type_traits>
+#include "../../lib/network/src/Protocol.hpp"
+#include "../../lib/network/src/protocol/ByteOrderSpec.hpp"
 
 #include "../../lib/network/src/Packet.hpp"
 #include "../../lib/network/src/Serializer.hpp"
@@ -201,6 +204,60 @@ TEST(SerializationTest, SerializeDeserializeMixedTypes) {
     EXPECT_FLOAT_EQ(deserialized.health, 85.7f);
     EXPECT_EQ(deserialized.alive, true);
     EXPECT_STREQ(deserialized.name, "PlayerOne");
+}
+
+TEST(ByteOrderSpecTest, EmptyTriviallyCopyableStructHasNoPayload) {
+    struct EmptyPayload {};
+
+    auto serialized = ByteOrderSpec::serializeToNetwork(EmptyPayload{});
+    EXPECT_TRUE(serialized.empty());
+
+    // Empty buffers deserialize cleanly, non-empty buffers must throw
+    EXPECT_NO_THROW({ (void)ByteOrderSpec::deserializeFromNetwork<EmptyPayload>(serialized); });
+    EXPECT_NO_THROW({ (void)ByteOrderSpec::deserializeFromNetwork<EmptyPayload>(std::span<const std::uint8_t>(serialized)); });
+
+    std::vector<std::uint8_t> unexpected = {0xFF};
+    EXPECT_THROW(static_cast<void>(ByteOrderSpec::deserializeFromNetwork<EmptyPayload>(unexpected)), std::runtime_error);
+    EXPECT_THROW(static_cast<void>(ByteOrderSpec::deserializeFromNetwork<EmptyPayload>(std::span<const std::uint8_t>(unexpected))), std::runtime_error);
+}
+
+TEST(ByteOrderSpecTest, GenericPackingCoversFourAndTwoByteSwaps) {
+    #pragma pack(push, 1)
+    struct ThreeShorts {
+        std::uint16_t first;
+        std::uint16_t second;
+        std::uint16_t third;
+    };
+    #pragma pack(pop)
+
+    ThreeShorts value{0x1122, 0x3344, 0x5566};
+
+    auto serialized = ByteOrderSpec::serializeToNetwork(value);
+    ASSERT_EQ(serialized.size(), sizeof(ThreeShorts));
+
+    auto roundTrip = ByteOrderSpec::deserializeFromNetwork<ThreeShorts>(serialized);
+    EXPECT_EQ(roundTrip.first, value.first);
+    EXPECT_EQ(roundTrip.second, value.second);
+    EXPECT_EQ(roundTrip.third, value.third);
+}
+
+TEST(ByteOrderSpecTest, GenericPackingHandlesNonAlignedTailBytes) {
+    #pragma pack(push, 1)
+    struct ShortAndFlag {
+        std::uint16_t code;
+        std::uint8_t flag;
+        std::uint16_t padding;
+    };
+    #pragma pack(pop)
+
+    ShortAndFlag value{0xABCD, 0x7F};
+
+    auto serialized = ByteOrderSpec::serializeToNetwork(value);
+    ASSERT_EQ(serialized.size(), sizeof(ShortAndFlag));
+
+    auto roundTrip = ByteOrderSpec::deserializeFromNetwork<ShortAndFlag>(serialized);
+    EXPECT_EQ(roundTrip.code, value.code);
+    EXPECT_EQ(roundTrip.flag, value.flag);
 }
 
 TEST(SerializationTest, RoundTripSerializationConsistency) {
@@ -825,4 +882,81 @@ TEST(SerializationTest, DeserializeSingleByteBuffer) {
 
     EXPECT_EQ(packet.type(), PacketType::PlayerInput);
     EXPECT_TRUE(packet.data().empty());
+}
+
+TEST(SerializerValidationPipeline, ValidateAndExtractAcceptsWellFormedPacket) {
+    constexpr std::uint16_t payloadSize = sizeof(InputPayload);
+    Header header = Header::create(OpCode::C_INPUT, kMinClientUserId, 10, payloadSize);
+    auto headerBytes = ByteOrderSpec::serializeToNetwork(header);
+
+    std::vector<std::uint8_t> rawData(headerBytes.begin(), headerBytes.end());
+    rawData.push_back(::rtype::network::InputMask::kShoot);
+
+    auto result = Serializer::validateAndExtractPacket(rawData, false);
+
+    ASSERT_TRUE(result.isOk()) << "error=" << static_cast<int>(result.error());
+    const auto& parsed = result.value();
+    EXPECT_EQ(parsed.first.getOpCode(), OpCode::C_INPUT);
+    ASSERT_EQ(parsed.second.size(), payloadSize);
+    EXPECT_EQ(parsed.second[0], ::rtype::network::InputMask::kShoot);
+}
+
+TEST(SerializerValidationPipeline, RejectsInvalidMagic) {
+    Header header = Header::create(OpCode::C_INPUT, kMinClientUserId, 1, 0);
+    header.magic = 0x00;  // invalid magic
+    auto rawData = ByteOrderSpec::serializeToNetwork(header);
+
+    auto result = Serializer::validateAndExtractPacket(rawData, false);
+
+    EXPECT_TRUE(result.isErr());
+    EXPECT_EQ(result.error(), NetworkError::InvalidMagic);
+}
+
+TEST(SerializerValidationPipeline, RejectsPayloadLargerThanMaximum) {
+    Header header{};
+    header.magic = kMagicByte;
+    header.opcode = static_cast<std::uint8_t>(OpCode::C_INPUT);
+    header.payloadSize = static_cast<std::uint16_t>(kMaxPayloadSize + 1);
+    header.userId = kMinClientUserId;
+    auto rawData = ByteOrderSpec::serializeToNetwork(header);
+
+    auto result = Serializer::validateAndExtractPacket(rawData, false);
+
+    EXPECT_TRUE(result.isErr());
+    EXPECT_EQ(result.error(), NetworkError::PacketTooLarge);
+}
+
+TEST(SerializerValidationPipeline, RejectsPayloadSizeMismatch) {
+    Header header = Header::create(OpCode::C_INPUT, kMinClientUserId, 1, 4);
+    auto rawData = ByteOrderSpec::serializeToNetwork(header);
+    rawData.push_back(0x01);  // only 1 byte instead of 4
+
+    auto result = Serializer::validateAndExtractPacket(rawData, false);
+
+    EXPECT_TRUE(result.isErr());
+    EXPECT_EQ(result.error(), NetworkError::MalformedPacket);
+}
+
+TEST(SerializerValidationPipeline, RejectsServerUserIdFromClient) {
+    constexpr std::uint16_t payloadSize = sizeof(InputPayload);
+    Header header = Header::create(OpCode::C_INPUT, kServerUserId, 1, payloadSize);
+    auto rawData = ByteOrderSpec::serializeToNetwork(header);
+    rawData.push_back(0x00);
+
+    auto result = Serializer::validateAndExtractPacket(rawData, false);
+
+    EXPECT_TRUE(result.isErr());
+    EXPECT_EQ(result.error(), NetworkError::InvalidUserId);
+}
+
+TEST(SerializerValidationPipeline, RejectsClientUserIdFromServer) {
+    constexpr std::uint16_t payloadSize = sizeof(EntityMovePayload);
+    Header header = Header::create(OpCode::S_ENTITY_MOVE, kMinClientUserId, 1, payloadSize);
+    auto rawData = ByteOrderSpec::serializeToNetwork(header);
+    rawData.insert(rawData.end(), payloadSize, 0x00);
+
+    auto result = Serializer::validateAndExtractPacket(rawData, true);
+
+    EXPECT_TRUE(result.isErr());
+    EXPECT_EQ(result.error(), NetworkError::InvalidUserId);
 }

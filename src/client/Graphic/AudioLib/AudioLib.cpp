@@ -34,7 +34,9 @@ void AudioLib::pauseMusic() const {
 }
 
 void AudioLib::play() const {
-    if (this->_currentMusic) this->_currentMusic->stop();
+    if (this->_currentMusic) {
+        this->_currentMusic->stop();
+    }
     this->_currentMusic->play();
 }
 
