@@ -8,8 +8,8 @@
 #include "BehaviorRegistry.hpp"
 
 #include "Chase/ChaseBehavior.hpp"
-#include "MoveLeft/MoveLeftBehavior.hpp"
 #include "DiveBomb/DiveBombBehavior.hpp"
+#include "MoveLeft/MoveLeftBehavior.hpp"
 #include "Patrol/PatrolBehavior.hpp"
 #include "SineWave/SineWaveBehavior.hpp"
 #include "Stationary/StationaryBehavior.hpp"

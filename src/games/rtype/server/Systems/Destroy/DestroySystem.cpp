@@ -19,8 +19,8 @@ using shared::DestroyTag;
 using shared::EnemyTag;
 using shared::EntityType;
 using shared::NetworkIdComponent;
-using shared::ProjectileTag;
 using shared::ObstacleTag;
+using shared::ProjectileTag;
 
 DestroySystem::DestroySystem(EventEmitter emitter,
                              EnemyCountUpdater enemyCountDecrementer)

@@ -13,9 +13,9 @@
 
 #include <rtype/engine.hpp>
 
-#include "../../../shared/Systems/Collision/QuadTreeSystem.hpp"
-#include "../../../shared/Components/PowerUpComponent.hpp"
 #include "../../../shared/Components/DamageOnContactComponent.hpp"
+#include "../../../shared/Components/PowerUpComponent.hpp"
+#include "../../../shared/Systems/Collision/QuadTreeSystem.hpp"
 
 namespace rtype::games::rtype::server {
 

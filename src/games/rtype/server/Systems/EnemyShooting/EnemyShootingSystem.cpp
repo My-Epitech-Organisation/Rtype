@@ -13,16 +13,15 @@
 
 namespace rtype::games::rtype::server {
 
-using shared::EnemyTag;
 using shared::AIBehavior;
 using shared::AIComponent;
+using shared::EnemyTag;
 using shared::NetworkIdComponent;
 using shared::PlayerTag;
 using shared::ShootCooldownComponent;
 using shared::TransformComponent;
 
-void EnemyShootingSystem::update(ECS::Registry& registry,
-                                 float /*deltaTime*/) {
+void EnemyShootingSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
     if (!_shootCb) {
         return;
     }
@@ -41,8 +40,9 @@ void EnemyShootingSystem::update(ECS::Registry& registry,
         players.push_back(PlayerInfo{net.networkId, transform.x, transform.y});
     });
 
-    auto enemyView = registry.view<EnemyTag, TransformComponent,
-                                   NetworkIdComponent, ShootCooldownComponent>();
+    auto enemyView =
+        registry.view<EnemyTag, TransformComponent, NetworkIdComponent,
+                      ShootCooldownComponent>();
     enemyView.each([this, &registry, &players](ECS::Entity entity,
                                                const EnemyTag& /*tag*/,
                                                const TransformComponent& tf,
@@ -71,8 +71,7 @@ void EnemyShootingSystem::update(ECS::Registry& registry,
             }
         }
 
-        _shootCb(registry, entity, net.networkId, tf.x, tf.y, targetX,
-                 targetY);
+        _shootCb(registry, entity, net.networkId, tf.x, tf.y, targetX, targetY);
         cd.triggerCooldown();
     });
 }

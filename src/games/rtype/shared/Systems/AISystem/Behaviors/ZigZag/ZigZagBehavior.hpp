@@ -17,7 +17,8 @@ namespace rtype::games::rtype::shared {
  */
 class ZigZagBehavior final : public IAIBehavior {
    public:
-    explicit ZigZagBehavior(float switchInterval = 0.8F, float stepSpeed = 80.0F)
+    explicit ZigZagBehavior(float switchInterval = 0.8F,
+                            float stepSpeed = 80.0F)
         : _switchInterval(switchInterval), _stepSpeed(stepSpeed) {}
 
     void apply(AIComponent& ai, const TransformComponent& transform,

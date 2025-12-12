@@ -18,25 +18,25 @@
 
 namespace rtype::games::rtype::server {
 
+using shared::ActivePowerUpComponent;
 using shared::BoundingBoxComponent;
 using shared::CollisionPair;
+using shared::DamageOnContactComponent;
 using shared::DestroyTag;
 using shared::EnemyProjectileTag;
 using shared::EnemyTag;
 using shared::EntityType;
 using shared::HealthComponent;
-using shared::NetworkIdComponent;
 using shared::InvincibleTag;
+using shared::NetworkIdComponent;
+using shared::ObstacleTag;
 using shared::PickupTag;
 using shared::PlayerProjectileTag;
 using shared::PlayerTag;
+using shared::PowerUpComponent;
 using shared::ProjectileComponent;
 using shared::ProjectileOwner;
 using shared::ProjectileTag;
-using shared::PowerUpComponent;
-using shared::ActivePowerUpComponent;
-using shared::DamageOnContactComponent;
-using shared::ObstacleTag;
 using shared::QuadTreeSystem;
 using shared::TransformComponent;
 using shared::collision::overlaps;
@@ -255,8 +255,9 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
         case shared::PowerUpType::RapidFire:
             active.fireRateMultiplier = 1.0F + powerUp.magnitude;
             if (registry.hasComponent<shared::ShootCooldownComponent>(player)) {
-                auto& cd = registry.getComponent<shared::ShootCooldownComponent>(
-                    player);
+                auto& cd =
+                    registry.getComponent<shared::ShootCooldownComponent>(
+                        player);
                 active.originalCooldown = cd.cooldownTime;
                 active.hasOriginalCooldown = true;
                 float factor = 1.0F / active.fireRateMultiplier;

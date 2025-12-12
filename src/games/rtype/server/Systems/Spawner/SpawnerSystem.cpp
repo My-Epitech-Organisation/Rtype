@@ -18,16 +18,15 @@ using shared::AIBehavior;
 using shared::AIComponent;
 using shared::BoundingBoxComponent;
 using shared::BydosSlaveTag;
+using shared::DamageOnContactComponent;
 using shared::EnemyTag;
 using shared::EntityType;
 using shared::HealthComponent;
 using shared::NetworkIdComponent;
-using shared::PowerUpComponent;
 using shared::ObstacleTag;
-using shared::DamageOnContactComponent;
+using shared::PowerUpComponent;
 using shared::TransformComponent;
 using shared::VelocityComponent;
-using shared::AIBehavior;
 static constexpr float BYDOS_SLAVE_SIZE = 32.0F;
 static constexpr int BYDOS_SLAVE_HEALTH = 10;
 
@@ -104,8 +103,7 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
         spawnX = std::max(0.0F, _config.spawnX - _config.stationarySpawnInset);
     }
 
-    registry.emplaceComponent<TransformComponent>(enemy, spawnX, spawnY,
-                                                  0.0F);
+    registry.emplaceComponent<TransformComponent>(enemy, spawnX, spawnY, 0.0F);
     registry.emplaceComponent<VelocityComponent>(
         enemy, -_config.bydosSlaveSpeed, 0.0F);
     AIComponent ai{};

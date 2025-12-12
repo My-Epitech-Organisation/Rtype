@@ -28,8 +28,7 @@ AIBehavior stringToBehavior(const std::string& str) {
     if (str == "stationary" || str == "Stationary")
         return AIBehavior::Stationary;
     if (str == "zigzag" || str == "ZigZag") return AIBehavior::ZigZag;
-    if (str == "divebomb" || str == "DiveBomb")
-        return AIBehavior::DiveBomb;
+    if (str == "divebomb" || str == "DiveBomb") return AIBehavior::DiveBomb;
     return AIBehavior::MoveLeft;
 }
 

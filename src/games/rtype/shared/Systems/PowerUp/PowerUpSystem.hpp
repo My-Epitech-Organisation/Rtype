@@ -9,8 +9,8 @@
 
 #include <rtype/engine.hpp>
 
-#include "../../Components/PowerUpComponent.hpp"
 #include "../../Components/CooldownComponent.hpp"
+#include "../../Components/PowerUpComponent.hpp"
 #include "../../Components/Tags.hpp"
 
 namespace rtype::games::rtype::shared {

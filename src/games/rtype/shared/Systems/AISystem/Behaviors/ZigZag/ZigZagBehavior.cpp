@@ -9,7 +9,8 @@
 
 namespace rtype::games::rtype::shared {
 
-void ZigZagBehavior::apply(AIComponent& ai, const TransformComponent& /*transform*/,
+void ZigZagBehavior::apply(AIComponent& ai,
+                           const TransformComponent& /*transform*/,
                            VelocityComponent& velocity, float deltaTime) {
     ai.stateTimer += deltaTime;
 

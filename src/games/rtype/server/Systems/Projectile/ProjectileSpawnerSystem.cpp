@@ -14,13 +14,14 @@
 #include "../../../shared/Components.hpp"
 
 namespace rtype::games::rtype::server {
+using shared::ActivePowerUpComponent;
 using shared::BoundingBoxComponent;
 using shared::EnemyProjectileTag;
 using shared::EntityType;
 using shared::LifetimeComponent;
 using shared::NetworkIdComponent;
-using shared::ActivePowerUpComponent;
 using shared::PlayerProjectileTag;
+using shared::PlayerTag;
 using shared::ProjectileComponent;
 using shared::ProjectileOwner;
 using shared::ProjectileTag;
@@ -31,7 +32,6 @@ using shared::WeaponComponent;
 using shared::WeaponConfig;
 using shared::WeaponPresets::BasicBullet;
 using shared::WeaponPresets::EnemyBullet;
-using shared::PlayerTag;
 
 ProjectileSpawnerSystem::ProjectileSpawnerSystem(EventEmitter emitter,
                                                  ProjectileSpawnConfig config)

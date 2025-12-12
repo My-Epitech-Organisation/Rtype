@@ -26,7 +26,8 @@ struct SpawnerConfig {
     float minSpawnY = 50.0F;         // Minimum Y spawn position
     float maxSpawnY = 550.0F;        // Maximum Y spawn position
     float bydosSlaveSpeed = 100.0F;  // Speed of Bydos slave enemies
-    float stationarySpawnInset = 120.0F;  // How far inside the screen to spawn stationary enemies
+    float stationarySpawnInset =
+        120.0F;  // How far inside the screen to spawn stationary enemies
 
     float weightMoveLeft = 0.2F;
     float weightSineWave = 0.1F;

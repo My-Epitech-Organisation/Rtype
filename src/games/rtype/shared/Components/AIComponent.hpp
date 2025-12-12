@@ -16,13 +16,13 @@ namespace rtype::games::rtype::shared {
  * @brief Available AI behavior patterns
  */
 enum class AIBehavior : uint8_t {
-    MoveLeft = 0,   // Simple left movement (basic enemies)
-    SineWave,       // Sine wave movement pattern
-    Chase,          // Chase nearest player
-    Patrol,         // Patrol between points
-    Stationary,     // Stay in place (turrets)
-    ZigZag,         // Left movement with vertical oscillation by steps
-    DiveBomb        // Dives toward a target Y while drifting left
+    MoveLeft = 0,  // Simple left movement (basic enemies)
+    SineWave,      // Sine wave movement pattern
+    Chase,         // Chase nearest player
+    Patrol,        // Patrol between points
+    Stationary,    // Stay in place (turrets)
+    ZigZag,        // Left movement with vertical oscillation by steps
+    DiveBomb       // Dives toward a target Y while drifting left
 };
 
 /**

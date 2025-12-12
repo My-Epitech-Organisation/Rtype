@@ -24,7 +24,8 @@ void PowerUpSystem::update(ECS::Registry& registry, float deltaTime) {
             return;
         }
 
-        if (active.shieldActive && registry.hasComponent<InvincibleTag>(entity)) {
+        if (active.shieldActive &&
+            registry.hasComponent<InvincibleTag>(entity)) {
             registry.removeComponent<InvincibleTag>(entity);
         }
         if (active.hasOriginalCooldown &&
@@ -33,8 +34,7 @@ void PowerUpSystem::update(ECS::Registry& registry, float deltaTime) {
             cd.setCooldownTime(active.originalCooldown);
         }
         LOG_DEBUG("[PowerUpSystem] Power-up expired for entity "
-                  << entity.id << " (" << static_cast<int>(active.type)
-                  << ")");
+                  << entity.id << " (" << static_cast<int>(active.type) << ")");
         registry.removeComponent<ActivePowerUpComponent>(entity);
     });
 }

@@ -11,7 +11,8 @@
 
 namespace rtype::games::rtype::shared {
 
-void DiveBombBehavior::apply(AIComponent& ai, const TransformComponent& transform,
+void DiveBombBehavior::apply(AIComponent& ai,
+                             const TransformComponent& transform,
                              VelocityComponent& velocity, float /*deltaTime*/) {
     velocity.vx = -ai.speed;
 
