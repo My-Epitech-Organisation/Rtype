@@ -18,6 +18,7 @@
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
 #include "../shared/Components/WeaponComponent.hpp"
+#include "../shared/Components/PowerUpComponent.hpp"
 #include "GameEngine.hpp"
 #include "server/serverApp/game/entitySpawnerFactory/EntitySpawnerFactory.hpp"
 
@@ -207,8 +208,15 @@ void RTypeEntitySpawner::updatePlayerVelocity(ECS::Entity entity, float vx,
 
     if (_registry->hasComponent<shared::VelocityComponent>(entity)) {
         auto& vel = _registry->getComponent<shared::VelocityComponent>(entity);
-        vel.vx = vx;
-        vel.vy = vy;
+        float speedMultiplier = 1.0F;
+        if (_registry->hasComponent<shared::ActivePowerUpComponent>(entity)) {
+            const auto& active =
+                _registry->getComponent<shared::ActivePowerUpComponent>(
+                    entity);
+            speedMultiplier = active.speedMultiplier;
+        }
+        vel.vx = vx * speedMultiplier;
+        vel.vy = vy * speedMultiplier;
     }
 }
 
