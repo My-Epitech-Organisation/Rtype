@@ -54,12 +54,6 @@ void Graphic::_updateNetwork() {
 }
 
 void Graphic::_update() {
-    static int updateCount = 0;
-    updateCount++;
-    if (updateCount % 60 == 0) {
-        LOG_DEBUG("[Graphic] Update count: " << updateCount);
-    }
-
     _updateDeltaTime();
     _updateNetwork();
     this->_systemScheduler->runSystem("button_update");
@@ -99,62 +93,7 @@ void Graphic::_display() {
 
     this->_sceneTexture->display();
 
-    this->_window->clear();
-
-    sf::Sprite composed(this->_sceneTexture->getTexture());
-
-    sf::Shader* shader = nullptr;
-    if (this->_colorShader &&
-        this->_registry->hasSingleton<AccessibilitySettings>()) {
-        const auto& acc =
-            this->_registry->getSingleton<AccessibilitySettings>();
-        auto makeMat3 = [](std::initializer_list<float> values) {
-            std::array<float, 9> data{};
-            std::copy(values.begin(), values.end(), data.begin());
-            return sf::Glsl::Mat3(data.data());
-        };
-
-        auto mat = makeMat3({1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f});
-        float contrast = 1.0f;
-        float intensity = std::clamp(acc.intensity, 0.0f, 1.5f);
-        switch (acc.colorMode) {
-            case ColorBlindMode::Protanopia:
-                mat = makeMat3({0.566f, 0.433f, 0.0f, 0.558f, 0.442f, 0.0f,
-                                0.0f, 0.242f, 0.758f});
-                break;
-            case ColorBlindMode::Deuteranopia:
-                mat = makeMat3(
-                    {0.625f, 0.375f, 0.0f, 0.7f, 0.3f, 0.0f, 0.0f, 0.3f, 0.7f});
-                break;
-            case ColorBlindMode::Tritanopia:
-                mat = makeMat3({0.95f, 0.05f, 0.0f, 0.0f, 0.433f, 0.567f, 0.0f,
-                                0.475f, 0.525f});
-                break;
-            case ColorBlindMode::Achromatopsia:
-                mat = makeMat3({0.2126f, 0.2126f, 0.2126f, 0.7152f, 0.7152f,
-                                0.7152f, 0.0722f, 0.0722f, 0.0722f});
-                contrast = 1.3f;
-                break;
-            case ColorBlindMode::HighContrast:
-                mat = makeMat3({0.299f, 0.299f, 0.299f, 0.587f, 0.587f, 0.587f,
-                                0.114f, 0.114f, 0.114f});
-                contrast = 1.6f;
-                break;
-            case ColorBlindMode::None:
-            default:
-                break;
-        }
-        if (acc.colorMode != ColorBlindMode::None) {
-            this->_colorShader->setUniform("texture",
-                                           sf::Shader::CurrentTexture);
-            this->_colorShader->setUniform("colorMatrix", mat);
-            this->_colorShader->setUniform("contrast", contrast);
-            this->_colorShader->setUniform("intensity", intensity);
-            shader = this->_colorShader.get();
-        }
-    }
-
-    this->_window->draw(composed, shader);
+    this->_systemScheduler->runSystem("shader_render");
 
     this->_sceneManager->draw();
     this->_window->display();
@@ -213,6 +152,9 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::shared::ProjectileSystem>();
     this->_lifetimeSystem =
         std::make_unique<::rtype::games::rtype::shared::LifetimeSystem>();
+    this->_shaderRenderSystem =
+        std::make_unique<::rtype::games::rtype::client::ShaderRenderSystem>(
+            this->_window, this->_sceneTexture, this->_colorShader);
 
     this->_systemScheduler =
         std::make_unique<ECS::SystemScheduler>(*this->_registry);
@@ -264,6 +206,13 @@ void Graphic::_initializeSystems() {
         "boxing",
         [this](ECS::Registry& reg) { this->_boxingSystem->update(reg, 0.f); },
         {"render"});
+
+    this->_systemScheduler->addSystem(
+        "shader_render",
+        [this](ECS::Registry& reg) {
+            this->_shaderRenderSystem->update(reg, 0.f);
+        },
+        {"boxing"});
 }
 
 void Graphic::_initializeCommonAssets() {

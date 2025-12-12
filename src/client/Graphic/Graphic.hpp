@@ -22,6 +22,7 @@
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
+#include "Systems/ShaderRenderSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
 #include "../network/ClientNetworkSystem.hpp"
 #include "../network/NetworkClient.hpp"
@@ -127,6 +128,8 @@ class Graphic {
         _projectileSystem;
     std::unique_ptr<::rtype::games::rtype::shared::LifetimeSystem>
         _lifetimeSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ShaderRenderSystem>
+        _shaderRenderSystem;
 
     // ========================================================================
     // Runtime state
