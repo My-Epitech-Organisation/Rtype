@@ -5,8 +5,8 @@
 ** Client - Client data structure for server-side tracking
 */
 
-#ifndef SRC_SERVER_CLIENT_HPP_
-#define SRC_SERVER_CLIENT_HPP_
+#ifndef SRC_SERVER_SHARED_CLIENT_HPP_
+#define SRC_SERVER_SHARED_CLIENT_HPP_
 
 #include <chrono>
 #include <cstdint>
@@ -35,4 +35,4 @@ struct Client {
 
 }  // namespace rtype::server
 
-#endif  // SRC_SERVER_CLIENT_HPP_
+#endif  // SRC_SERVER_SHARED_CLIENT_HPP_

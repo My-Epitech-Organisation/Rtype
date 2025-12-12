@@ -13,8 +13,8 @@
 #include <thread>
 #include <vector>
 
-#include "server/ClientManager.hpp"
-#include "server/ServerMetrics.hpp"
+#include "server/clientManager/ClientManager.hpp"
+#include "server/shared/ServerMetrics.hpp"
 
 using namespace rtype::server;
 using rtype::ClientId;

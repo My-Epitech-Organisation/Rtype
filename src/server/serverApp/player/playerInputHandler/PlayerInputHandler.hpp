@@ -1,0 +1,108 @@
+/*
+** EPITECH PROJECT, 2025
+** Rtype
+** File description:
+** PlayerInputHandler - Handles player input processing
+*/
+
+#ifndef SRC_SERVER_SERVERAPP_PLAYER_PLAYERINPUTHANDLER_PLAYERINPUTHANDLER_HPP_
+#define SRC_SERVER_SERVERAPP_PLAYER_PLAYERINPUTHANDLER_PLAYERINPUTHANDLER_HPP_
+
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <optional>
+
+#include <rtype/ecs.hpp>
+#include <rtype/engine.hpp>
+
+#include "GameStateManager.hpp"
+#include "IGameConfig.hpp"
+
+namespace rtype::server {
+
+class ServerNetworkSystem;
+
+/**
+ * @brief Callback for player shooting
+ * @param networkId Player's network ID
+ * @param x X position
+ * @param y Y position
+ * @return Projectile network ID (0 if failed)
+ */
+using ShootCallback =
+    std::function<std::uint32_t(std::uint32_t networkId, float x, float y)>;
+
+/**
+ * @brief Handles player input processing
+ *
+ * Processes movement and shooting inputs from players,
+ * updating velocity and triggering projectile spawning.
+ */
+class PlayerInputHandler {
+   public:
+    /**
+     * @brief Default player speed
+     */
+    static constexpr float DEFAULT_PLAYER_SPEED = 250.0F;
+
+    /**
+     * @brief Construct a PlayerInputHandler
+     * @param registry ECS registry
+     * @param networkSystem Network system for position updates
+     * @param stateManager Game state manager
+     * @param gameConfig Game configuration (optional)
+     * @param verbose Enable verbose logging
+     */
+    PlayerInputHandler(std::shared_ptr<ECS::Registry> registry,
+                       std::shared_ptr<ServerNetworkSystem> networkSystem,
+                       std::shared_ptr<GameStateManager> stateManager,
+                       std::shared_ptr<const IGameConfig> gameConfig = nullptr,
+                       bool verbose = false);
+
+    ~PlayerInputHandler() = default;
+
+    /**
+     * @brief Handle input from a player
+     * @param userId The player's user ID
+     * @param inputMask Input bitmask
+     * @param entity Player entity (if resolved)
+     */
+    void handleInput(std::uint32_t userId, std::uint8_t inputMask,
+                     std::optional<ECS::Entity> entity);
+
+    /**
+     * @brief Set callback for shooting
+     */
+    void setShootCallback(ShootCallback callback) {
+        _shootCallback = std::move(callback);
+    }
+
+    /**
+     * @brief Set player speed override
+     */
+    void setPlayerSpeed(float speed) { _playerSpeed = speed; }
+
+   private:
+    /**
+     * @brief Process movement input
+     */
+    void processMovement(ECS::Entity entity, std::uint8_t inputMask);
+
+    /**
+     * @brief Process shoot input
+     */
+    void processShoot(std::uint32_t userId, ECS::Entity entity);
+
+    std::shared_ptr<ECS::Registry> _registry;
+    std::shared_ptr<ServerNetworkSystem> _networkSystem;
+    std::shared_ptr<GameStateManager> _stateManager;
+    std::shared_ptr<const IGameConfig> _gameConfig;
+    ShootCallback _shootCallback;
+    float _playerSpeed{DEFAULT_PLAYER_SPEED};
+    bool _verbose;
+};
+
+}  // namespace rtype::server
+
+#endif  // SRC_SERVER_SERVERAPP_PLAYER_PLAYERINPUTHANDLER_PLAYERINPUTHANDLER_HPP_

@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
+#include <string>
 #include <vector>
 
 namespace rtype::engine {
@@ -71,6 +73,7 @@ struct ProcessedEvent {
  * - Complete decoupling from network/server implementation
  * - Event-based communication for state changes
  * - Deterministic update with fixed delta time
+ * - Game-agnostic: no player/projectile-specific methods
  *
  * @note Concrete game engines should inherit from AGameEngine rather
  * than this interface directly.
@@ -78,7 +81,7 @@ struct ProcessedEvent {
  * Example usage:
  * @code
  * auto registry = std::make_shared<ECS::Registry>();
- * auto engine = createGameEngine(registry);
+ * auto engine = GameEngineFactory::create("rtype", registry);
  * engine->setEventCallback([](const GameEvent& event) {
  *     // Handle event (send to network, etc.)
  * });
@@ -138,6 +141,12 @@ class IGameEngine {
     virtual bool isRunning() const = 0;
 
     /**
+     * @brief Get the game identifier
+     * @return Game identifier string (e.g., "rtype", "spaceinvaders")
+     */
+    [[nodiscard]] virtual std::string getGameId() const = 0;
+
+    /**
      * @brief Process a game event and return network-ready data
      *
      * This method allows each game engine to implement its own event
@@ -175,7 +184,7 @@ namespace rtype::engine {
  * @brief Factory function to create a game engine instance
  *
  * This allows the server to create a game engine without knowing
- * the concrete implementation details.
+ * the concrete implementation details. Uses the default registered game.
  *
  * @param registry Shared pointer to the ECS registry
  * @return Unique pointer to a new game engine instance
