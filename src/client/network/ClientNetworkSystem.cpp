@@ -10,10 +10,15 @@
 #include <memory>
 #include <utility>
 
+#include <SFML/Graphics/Color.hpp>
+
 #include "Components/HealthComponent.hpp"
 #include "Components/PositionComponent.hpp"
 #include "Components/SoundComponent.hpp"
 #include "Components/VelocityComponent.hpp"
+#include "games/rtype/client/Components/ImageComponent.hpp"
+#include "games/rtype/client/Components/BoxingComponent.hpp"
+#include "games/rtype/shared/Components/Tags.hpp"
 #include "Logger/Macros.hpp"
 #include "client/Graphic/AudioLib/AudioLib.hpp"
 #include "games/rtype/client/GameScene/VisualCueFactory.hpp"
@@ -151,6 +156,30 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
         auto& vel = registry_->getComponent<Velocity>(entity);
         vel.vx = event.vx;
         vel.vy = event.vy;
+
+        // Tint projectiles based on direction to distinguish enemy fire
+        if (registry_->hasComponent<games::rtype::shared::ProjectileTag>(
+                entity) &&
+            registry_->hasComponent<games::rtype::client::Image>(entity)) {
+            auto& img =
+                registry_->getComponent<games::rtype::client::Image>(entity);
+            // Enemy bullets typically travel left (negative vx)
+            const bool isEnemyShot = vel.vx < 0.0F;
+            img.sprite.setColor(
+                isEnemyShot ? sf::Color(255, 80, 80)  // reddish for enemy
+                            : sf::Color(80, 255, 240));  // cyan-ish for player
+
+            if (registry_->hasComponent<games::rtype::client::BoxingComponent>(
+                    entity)) {
+                auto& box = registry_->getComponent<
+                    games::rtype::client::BoxingComponent>(entity);
+                box.outlineColor =
+                    isEnemyShot ? sf::Color(255, 80, 80) : sf::Color(0, 220, 180);
+                box.fillColor = isEnemyShot
+                                    ? sf::Color(255, 80, 80, 40)
+                                    : sf::Color(0, 220, 180, 35);
+            }
+        }
     }
 }
 
