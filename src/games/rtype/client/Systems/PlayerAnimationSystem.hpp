@@ -15,6 +15,19 @@
 
 namespace rtype::games::rtype::client {
 
+/**
+ * @class PlayerAnimationSystem
+ * @brief Updates player sprite frames based on velocity and player ID
+ * 
+ * Sprite sheet layout:
+ * - Each frame: 33x17 pixels
+ * - 5 columns (states): strong down, ease down, neutral, ease up, strong up
+ * - 5 rows: different player colors (selected by network ID % 5)
+ * 
+ * Velocity thresholds:
+ * - High: ±140.0 pixels/sec (strong tilt animation)
+ * - Low: ±40.0 pixels/sec (slight tilt animation)
+ */
 class PlayerAnimationSystem : public ::rtype::engine::ASystem {
    public:
     PlayerAnimationSystem();
@@ -22,12 +35,17 @@ class PlayerAnimationSystem : public ::rtype::engine::ASystem {
 
     void update(ECS::Registry& registry, float dt) override;
 
-    // Sprite sheet layout (used by factory to set initial frame)
+    /// Width of each sprite frame in pixels
     static constexpr int kFrameWidth = 33;
+    /// Height of each sprite frame in pixels
     static constexpr int kFrameHeight = 17;
+    /// Number of animation states per row (columns)
     static constexpr int kStatesPerRow = 5;
+    /// Number of color variants (rows) in sprite sheet
     static constexpr int kColorRows = 5;
+    /// Velocity threshold for slight tilt animation (pixels/sec)
     static constexpr float kLowThreshold = 40.0F;
+    /// Velocity threshold for strong tilt animation (pixels/sec)
     static constexpr float kHighThreshold = 140.0F;
 
    private:
