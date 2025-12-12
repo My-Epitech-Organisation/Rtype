@@ -55,6 +55,8 @@ TEST_F(OpCodeTest, IsReliableMatchesRFC) {
     EXPECT_TRUE(isReliable(OpCode::S_ENTITY_SPAWN));
     EXPECT_TRUE(isReliable(OpCode::S_ENTITY_DESTROY));
     EXPECT_TRUE(isReliable(OpCode::S_ENTITY_HEALTH));
+    EXPECT_TRUE(isReliable(OpCode::S_GAME_OVER));
+    EXPECT_TRUE(isReliable(OpCode::S_POWERUP_EVENT));
 
     // Unreliable opcodes (no ACK needed)
     EXPECT_FALSE(isReliable(OpCode::S_ENTITY_MOVE));
