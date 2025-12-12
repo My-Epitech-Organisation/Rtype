@@ -18,6 +18,7 @@
 #include "../shared/Components/Tags.hpp"
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
+#include "protocol/Payloads.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 
 namespace rtype::games::rtype::server {
@@ -171,6 +172,7 @@ engine::ProcessedEvent GameEngine::processEvent(
     result.y = event.y;
     result.vx = event.velocityX;
     result.vy = event.velocityY;
+    result.duration = event.duration;
     result.valid = false;
 
     switch (event.type) {
@@ -190,19 +192,20 @@ engine::ProcessedEvent GameEngine::processEvent(
             if (!found) {
                 return result;
             }
-            auto gameType = static_cast<shared::EntityType>(event.entityType);
-            switch (gameType) {
-                case shared::EntityType::Player:
-                    result.networkEntityType = 0;  // Player
-                    break;
-                case shared::EntityType::Enemy:
-                    result.networkEntityType = 1;  // Bydos
-                    break;
-                case shared::EntityType::Projectile:
-                    result.networkEntityType = 2;  // Missile
+            auto protoType = static_cast<::rtype::network::EntityType>(
+                event.entityType);
+
+            switch (protoType) {
+                case ::rtype::network::EntityType::Player:
+                case ::rtype::network::EntityType::Bydos:
+                case ::rtype::network::EntityType::Missile:
+                case ::rtype::network::EntityType::Pickup:
+                case ::rtype::network::EntityType::Obstacle:
+                    result.networkEntityType = event.entityType;
                     break;
                 default:
-                    result.networkEntityType = 1;  // Default to Bydos
+                    result.networkEntityType =
+                        static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
                     break;
             }
             result.valid = true;
@@ -211,6 +214,7 @@ engine::ProcessedEvent GameEngine::processEvent(
         case engine::GameEventType::EntityDestroyed:
         case engine::GameEventType::EntityUpdated:
         case engine::GameEventType::EntityHealthChanged:
+        case engine::GameEventType::PowerUpApplied:
             result.valid = true;
             break;
     }
