@@ -45,7 +45,7 @@ void RenderSystem::_renderImages(ECS::Registry& registry) {
               });
     for (auto entt : drawableEntities) {
         if (isEntityHidden(registry, entt)) continue;
-            if (registry.hasComponent<rs::DestroyTag>(entt)) continue;
+        if (registry.hasComponent<rs::DestroyTag>(entt)) continue;
 
         auto& img = registry.getComponent<Image>(entt);
         const auto& pos = registry.getComponent<rs::Position>(entt);
@@ -77,9 +77,10 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry) {
     registry.view<Rectangle, rs::Position>().each(
         [this, &registry](auto entt, auto& rectData, auto& pos) {
             if (registry.hasComponent<ButtonTag>(entt)) return;
-            if (registry.hasComponent<ScreenSpaceTag>(entt)) return;  // Rendered separately
+            if (registry.hasComponent<ScreenSpaceTag>(entt))
+                return;  // Rendered separately
             if (isEntityHidden(registry, entt)) return;
-                if (registry.hasComponent<rs::DestroyTag>(entt)) return;
+            if (registry.hasComponent<rs::DestroyTag>(entt)) return;
 
             rectData.rectangle.setSize(
                 sf::Vector2f(rectData.size.first, rectData.size.second));
@@ -107,7 +108,7 @@ void RenderSystem::_renderScreenSpaceRectangles(ECS::Registry& registry) {
     registry.view<Rectangle, rs::Position, ScreenSpaceTag>().each(
         [this, &registry](auto entt, auto& rectData, auto& pos, auto /*tag*/) {
             if (isEntityHidden(registry, entt)) return;
-                if (registry.hasComponent<rs::DestroyTag>(entt)) return;
+            if (registry.hasComponent<rs::DestroyTag>(entt)) return;
 
             rectData.rectangle.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
@@ -128,7 +129,7 @@ void RenderSystem::_renderButtons(ECS::Registry& registry) {
         [this, &registry](auto entt, auto& rectData, auto& textData, auto& pos,
                           auto /*tag*/) {
             if (isEntityHidden(registry, entt)) return;
-                if (registry.hasComponent<rs::DestroyTag>(entt)) return;
+            if (registry.hasComponent<rs::DestroyTag>(entt)) return;
 
             rectData.rectangle.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});
@@ -167,7 +168,7 @@ void RenderSystem::_renderStaticText(ECS::Registry& registry) {
     registry.view<Text, rs::Position, StaticTextTag>().each(
         [this, &registry](auto entt, auto& textData, auto& pos, auto /*tag*/) {
             if (isEntityHidden(registry, entt)) return;
-                if (registry.hasComponent<rs::DestroyTag>(entt)) return;
+            if (registry.hasComponent<rs::DestroyTag>(entt)) return;
 
             textData.text.setPosition(
                 {static_cast<float>(pos.x), static_cast<float>(pos.y)});

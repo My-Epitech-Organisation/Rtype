@@ -149,7 +149,8 @@ void NetworkClient::onConnected(
     if (onConnectedCallback_) {
         auto previousCallback = std::move(onConnectedCallback_);
         onConnectedCallback_ = [previousCallback = std::move(previousCallback),
-                                newCallback = std::move(callback)](std::uint32_t userId) {
+                                newCallback =
+                                    std::move(callback)](std::uint32_t userId) {
             previousCallback(userId);
             newCallback(userId);
         };
@@ -440,8 +441,8 @@ void NetworkClient::handleEntityHealth(const network::Header& header,
             network::EntityHealthPayload>(payload);
 
         LOG_DEBUG("[NetworkClient] Deserialized health: entityId="
-                  << deserialized.entityId << " current=" << deserialized.current
-                  << " max=" << deserialized.max);
+                  << deserialized.entityId << " current="
+                  << deserialized.current << " max=" << deserialized.max);
 
         EntityHealthEvent event{};
         event.entityId = deserialized.entityId;

@@ -15,12 +15,12 @@ namespace rtype::server {
 
 GameEventProcessor::GameEventProcessor(
     std::shared_ptr<engine::IGameEngine> gameEngine,
-        std::shared_ptr<ServerNetworkSystem> networkSystem, bool verbose,
-        std::function<void(const engine::GameEvent&)> eventObserver)
+    std::shared_ptr<ServerNetworkSystem> networkSystem, bool verbose,
+    std::function<void(const engine::GameEvent&)> eventObserver)
     : _gameEngine(std::move(gameEngine)),
       _networkSystem(std::move(networkSystem)),
-            _verbose(verbose),
-            _eventObserver(std::move(eventObserver)) {}
+      _verbose(verbose),
+      _eventObserver(std::move(eventObserver)) {}
 
 void GameEventProcessor::processEvents() {
     if (!_gameEngine || !_networkSystem) {
@@ -80,9 +80,8 @@ void GameEventProcessor::processEvents() {
             }
             case engine::GameEventType::EntityHealthChanged: {
                 LOG_DEBUG("[EventProcessor] Processing EntityHealthChanged: "
-                          << "networkId=" << event.entityNetworkId
-                          << " health=" << event.healthCurrent << "/"
-                          << event.healthMax);
+                          << "networkId=" << event.entityNetworkId << " health="
+                          << event.healthCurrent << "/" << event.healthMax);
                 _networkSystem->updateEntityHealth(event.entityNetworkId,
                                                    event.healthCurrent,
                                                    event.healthMax);
@@ -90,8 +89,7 @@ void GameEventProcessor::processEvents() {
             }
             case engine::GameEventType::PowerUpApplied: {
                 _networkSystem->broadcastPowerUp(event.entityNetworkId,
-                                                 event.subType,
-                                                 event.duration);
+                                                 event.subType, event.duration);
                 if (_verbose) {
                     LOG_DEBUG("[EventProcessor] Power-up applied: playerId="
                               << event.entityNetworkId

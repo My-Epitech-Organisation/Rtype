@@ -2,7 +2,8 @@
 ** EPITECH PROJECT, 2025
 ** r-type
 ** File description:
-** PlayerAnimationSystem - Updates player sprite frame based on movement and player id
+** PlayerAnimationSystem - Updates player sprite frame based on movement and
+* player id
 */
 
 #include "PlayerAnimationSystem.hpp"
@@ -19,8 +20,8 @@ PlayerAnimationSystem::PlayerAnimationSystem()
 
 void PlayerAnimationSystem::update(ECS::Registry& registry, float /*dt*/) {
     registry
-        .view<rs::VelocityComponent, TextureRect, Image,
-              rs::NetworkIdComponent, PlayerTag>()
+        .view<rs::VelocityComponent, TextureRect, Image, rs::NetworkIdComponent,
+              PlayerTag>()
         .each([&](auto /*entity*/, const rs::VelocityComponent& vel,
                   TextureRect& tex, Image& img,
                   const rs::NetworkIdComponent& netId, PlayerTag& /*tag*/) {

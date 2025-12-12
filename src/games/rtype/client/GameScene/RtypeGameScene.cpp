@@ -14,12 +14,13 @@
 #include <utility>
 #include <vector>
 
+#include <SFML/System/Clock.hpp>
+
 #include "AllComponents.hpp"
 #include "Components/CountdownComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
-#include <SFML/System/Clock.hpp>
 #include "Graphic/EntityFactory/EntityFactory.hpp"
 #include "GraphicsConstants.hpp"
 #include "Logger/Macros.hpp"
@@ -28,8 +29,8 @@
 #include "RtypePauseMenu.hpp"
 #include "VisualCueFactory.hpp"
 #include "client/network/NetworkClient.hpp"
-#include "games/rtype/client/PauseState.hpp"
 #include "games/rtype/client/GameOverState.hpp"
+#include "games/rtype/client/PauseState.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 
 namespace rs = ::rtype::games::rtype::shared;
@@ -53,7 +54,8 @@ RtypeGameScene::RtypeGameScene(
         auto registry = _registry;
         auto switchToScene = _switchToScene;
         _networkClient->onGameOver(
-            [registry, switchToScene](const ::rtype::client::GameOverEvent& event) mutable {
+            [registry, switchToScene](
+                const ::rtype::client::GameOverEvent& event) mutable {
                 if (registry) {
                     if (!registry->hasSingleton<
                             ::rtype::games::rtype::client::GameOverState>()) {
@@ -180,24 +182,24 @@ void RtypeGameScene::setupEntityFactory() {
 
 void RtypeGameScene::setupLocalPlayerCallback() {
     auto registry = this->_registry;
-    _networkSystem->onLocalPlayerAssigned(
-        [this, registry](std::uint32_t userId, ECS::Entity entity) {
-            if (registry->isAlive(entity)) {
-                registry->emplaceComponent<ControllableTag>(entity);
-                LOG_DEBUG("[RtypeGameScene] Local player entity assigned");
-            }
-            _localPlayerEntity = entity;
-            _localPlayerId = userId;
-            LOG_DEBUG("[RtypeGameScene] Local player ID set to " << userId);
-            if (registry->isAlive(entity) &&
-                registry->hasComponent<rs::HealthComponent>(entity)) {
-                const auto& health =
-                    registry->getComponent<rs::HealthComponent>(entity);
-                LOG_DEBUG("[RtypeGameScene] Initial health: " << health.current
-                          << "/" << health.max);
-                updateLivesDisplay(health.current, health.max);
-            }
-        });
+    _networkSystem->onLocalPlayerAssigned([this, registry](std::uint32_t userId,
+                                                           ECS::Entity entity) {
+        if (registry->isAlive(entity)) {
+            registry->emplaceComponent<ControllableTag>(entity);
+            LOG_DEBUG("[RtypeGameScene] Local player entity assigned");
+        }
+        _localPlayerEntity = entity;
+        _localPlayerId = userId;
+        LOG_DEBUG("[RtypeGameScene] Local player ID set to " << userId);
+        if (registry->isAlive(entity) &&
+            registry->hasComponent<rs::HealthComponent>(entity)) {
+            const auto& health =
+                registry->getComponent<rs::HealthComponent>(entity);
+            LOG_DEBUG("[RtypeGameScene] Initial health: " << health.current
+                                                          << "/" << health.max);
+            updateLivesDisplay(health.current, health.max);
+        }
+    });
 }
 
 void RtypeGameScene::setupHud() {
@@ -207,28 +209,24 @@ void RtypeGameScene::setupHud() {
 
     auto bg = _registry->spawnEntity();
     _registry->emplaceComponent<rs::Position>(bg, barPos.x, barPos.y);
-    _registry->emplaceComponent<Rectangle>(bg,
-                                           std::pair<float, float>{barWidth,
-                                                                   barHeight},
-                                           sf::Color(30, 35, 45, 220),
-                                           sf::Color(30, 35, 45, 220));
+    _registry->emplaceComponent<Rectangle>(
+        bg, std::pair<float, float>{barWidth, barHeight},
+        sf::Color(30, 35, 45, 220), sf::Color(30, 35, 45, 220));
     _registry->emplaceComponent<ZIndex>(bg, GraphicsConfig::ZINDEX_UI);
     _healthBarBgEntity = bg;
 
     auto fill = _registry->spawnEntity();
     _registry->emplaceComponent<rs::Position>(fill, barPos.x, barPos.y);
-    _registry->emplaceComponent<Rectangle>(fill,
-                                           std::pair<float, float>{barWidth,
-                                                                   barHeight},
-                                           sf::Color(90, 220, 140, 240),
-                                           sf::Color(90, 220, 140, 240));
+    _registry->emplaceComponent<Rectangle>(
+        fill, std::pair<float, float>{barWidth, barHeight},
+        sf::Color(90, 220, 140, 240), sf::Color(90, 220, 140, 240));
     _registry->emplaceComponent<ZIndex>(fill, GraphicsConfig::ZINDEX_UI + 1);
     _healthBarFillEntity = fill;
 
     auto hpText = EntityFactory::createStaticText(
         _registry, _assetsManager, "HP: --/--", "title_font",
         sf::Vector2f{barPos.x + barWidth + 16.f, barPos.y - 2.f}, 24.f);
-        _registry->emplaceComponent<ZIndex>(hpText, GraphicsConfig::ZINDEX_UI + 2);
+    _registry->emplaceComponent<ZIndex>(hpText, GraphicsConfig::ZINDEX_UI + 2);
     _healthTextEntity = hpText;
     _livesTextEntity = hpText;
 }
@@ -242,10 +240,12 @@ void RtypeGameScene::updateLivesDisplay(int current, int max) {
 
 void RtypeGameScene::handleHealthUpdate(
     const ::rtype::client::EntityHealthEvent& event) {
-    LOG_DEBUG("[RtypeGameScene] Health update: entityId=" << event.entityId
-              << " current=" << event.current << " max=" << event.max);
+    LOG_DEBUG("[RtypeGameScene] Health update: entityId="
+              << event.entityId << " current=" << event.current
+              << " max=" << event.max);
     if (!_localPlayerId.has_value()) {
-        LOG_DEBUG("[RtypeGameScene] No localPlayerId yet, checking networkSystem");
+        LOG_DEBUG(
+            "[RtypeGameScene] No localPlayerId yet, checking networkSystem");
         if (_networkSystem && _networkSystem->getLocalUserId().has_value() &&
             *_networkSystem->getLocalUserId() == event.entityId) {
             _localPlayerId = event.entityId;
@@ -257,12 +257,13 @@ void RtypeGameScene::handleHealthUpdate(
         }
     }
     if (event.entityId != *_localPlayerId) {
-        LOG_DEBUG("[RtypeGameScene] entityId " << event.entityId
-                  << " != localPlayerId " << *_localPlayerId << ", ignoring");
+        LOG_DEBUG("[RtypeGameScene] entityId "
+                  << event.entityId << " != localPlayerId " << *_localPlayerId
+                  << ", ignoring");
         return;
     }
     LOG_DEBUG("[RtypeGameScene] Updating HUD with HP " << event.current << "/"
-              << event.max);
+                                                       << event.max);
     if (_lastKnownLives > event.current) {
         int damageAmount = _lastKnownLives - event.current;
         triggerDamageFlash(damageAmount);
@@ -278,22 +279,29 @@ void RtypeGameScene::handleHealthUpdate(
 }
 
 void RtypeGameScene::updateHealthBar(int current, int max) {
-    LOG_DEBUG("[RtypeGameScene] updateHealthBar called: " << current << "/" << max);
-    if (!_healthBarFillEntity.has_value() || !_registry->isAlive(*_healthBarFillEntity)) {
+    LOG_DEBUG("[RtypeGameScene] updateHealthBar called: " << current << "/"
+                                                          << max);
+    if (!_healthBarFillEntity.has_value() ||
+        !_registry->isAlive(*_healthBarFillEntity)) {
         LOG_DEBUG("[RtypeGameScene] Health bar fill entity not valid");
         return;
     }
 
     const float barWidth = 220.f;
-    const float ratio = max > 0 ? std::max(0.f, std::min(1.f, current / static_cast<float>(max))) : 0.f;
+    const float ratio =
+        max > 0
+            ? std::max(0.f, std::min(1.f, current / static_cast<float>(max)))
+            : 0.f;
     auto& rect = _registry->getComponent<Rectangle>(*_healthBarFillEntity);
     rect.size.first = barWidth * ratio;
     LOG_DEBUG("[RtypeGameScene] Health bar width set to: " << rect.size.first);
 
-    if (_healthTextEntity.has_value() && _registry->isAlive(*_healthTextEntity) &&
+    if (_healthTextEntity.has_value() &&
+        _registry->isAlive(*_healthTextEntity) &&
         _registry->hasComponent<Text>(*_healthTextEntity)) {
         auto& text = _registry->getComponent<Text>(*_healthTextEntity);
-        text.textContent = "HP: " + std::to_string(current) + "/" + std::to_string(max);
+        text.textContent =
+            "HP: " + std::to_string(current) + "/" + std::to_string(max);
         LOG_DEBUG("[RtypeGameScene] HP text updated to: " << text.textContent);
     } else {
         LOG_DEBUG("[RtypeGameScene] Health text entity not valid for update");
@@ -307,7 +315,8 @@ void RtypeGameScene::setupDamageVignette() {
     _vignetteEntities.clear();
 
     for (int layer = 0; layer < kVignetteLayers; ++layer) {
-        float layerRatio = static_cast<float>(layer) / static_cast<float>(kVignetteLayers - 1);
+        float layerRatio =
+            static_cast<float>(layer) / static_cast<float>(kVignetteLayers - 1);
         float inset = layerRatio * 80.f;
         float thickness = 50.f + layerRatio * 40.f;
 
@@ -315,37 +324,43 @@ void RtypeGameScene::setupDamageVignette() {
 
         auto top = _registry->spawnEntity();
         _registry->emplaceComponent<rs::Position>(top, 0.f, inset);
-        _registry->emplaceComponent<Rectangle>(top,
-            std::pair<float, float>{screenWidth, thickness},
-            vignetteColor, vignetteColor);
-        _registry->emplaceComponent<ZIndex>(top, GraphicsConfig::ZINDEX_UI + 100 + layer);
+        _registry->emplaceComponent<Rectangle>(
+            top, std::pair<float, float>{screenWidth, thickness}, vignetteColor,
+            vignetteColor);
+        _registry->emplaceComponent<ZIndex>(
+            top, GraphicsConfig::ZINDEX_UI + 100 + layer);
         _registry->emplaceComponent<ScreenSpaceTag>(top);
         _vignetteEntities.push_back(top);
 
         auto bottom = _registry->spawnEntity();
-        _registry->emplaceComponent<rs::Position>(bottom, 0.f, screenHeight - inset - thickness);
-        _registry->emplaceComponent<Rectangle>(bottom,
-            std::pair<float, float>{screenWidth, thickness},
+        _registry->emplaceComponent<rs::Position>(
+            bottom, 0.f, screenHeight - inset - thickness);
+        _registry->emplaceComponent<Rectangle>(
+            bottom, std::pair<float, float>{screenWidth, thickness},
             vignetteColor, vignetteColor);
-        _registry->emplaceComponent<ZIndex>(bottom, GraphicsConfig::ZINDEX_UI + 100 + layer);
+        _registry->emplaceComponent<ZIndex>(
+            bottom, GraphicsConfig::ZINDEX_UI + 100 + layer);
         _registry->emplaceComponent<ScreenSpaceTag>(bottom);
         _vignetteEntities.push_back(bottom);
 
         auto left = _registry->spawnEntity();
         _registry->emplaceComponent<rs::Position>(left, inset, 0.f);
-        _registry->emplaceComponent<Rectangle>(left,
-            std::pair<float, float>{thickness, screenHeight},
+        _registry->emplaceComponent<Rectangle>(
+            left, std::pair<float, float>{thickness, screenHeight},
             vignetteColor, vignetteColor);
-        _registry->emplaceComponent<ZIndex>(left, GraphicsConfig::ZINDEX_UI + 100 + layer);
+        _registry->emplaceComponent<ZIndex>(
+            left, GraphicsConfig::ZINDEX_UI + 100 + layer);
         _registry->emplaceComponent<ScreenSpaceTag>(left);
         _vignetteEntities.push_back(left);
 
         auto right = _registry->spawnEntity();
-        _registry->emplaceComponent<rs::Position>(right, screenWidth - inset - thickness, 0.f);
-        _registry->emplaceComponent<Rectangle>(right,
-            std::pair<float, float>{thickness, screenHeight},
+        _registry->emplaceComponent<rs::Position>(
+            right, screenWidth - inset - thickness, 0.f);
+        _registry->emplaceComponent<Rectangle>(
+            right, std::pair<float, float>{thickness, screenHeight},
             vignetteColor, vignetteColor);
-        _registry->emplaceComponent<ZIndex>(right, GraphicsConfig::ZINDEX_UI + 100 + layer);
+        _registry->emplaceComponent<ZIndex>(
+            right, GraphicsConfig::ZINDEX_UI + 100 + layer);
         _registry->emplaceComponent<ScreenSpaceTag>(right);
         _vignetteEntities.push_back(right);
     }
@@ -361,14 +376,17 @@ void RtypeGameScene::refreshDamageVignetteLayout() {
 
     const sf::Vector2u currentSize = _window->getSize();
     const sf::View defaultView = _window->getDefaultView();
-    const float viewLeft = defaultView.getCenter().x - defaultView.getSize().x / 2.0f;
-    const float viewTop = defaultView.getCenter().y - defaultView.getSize().y / 2.0f;
+    const float viewLeft =
+        defaultView.getCenter().x - defaultView.getSize().x / 2.0f;
+    const float viewTop =
+        defaultView.getCenter().y - defaultView.getSize().y / 2.0f;
     const float screenWidth = defaultView.getSize().x;
     const float screenHeight = defaultView.getSize().y;
 
     int entityIndex = 0;
     for (int layer = 0; layer < kVignetteLayers; ++layer) {
-        float layerRatio = static_cast<float>(layer) / static_cast<float>(kVignetteLayers - 1);
+        float layerRatio =
+            static_cast<float>(layer) / static_cast<float>(kVignetteLayers - 1);
         float inset = layerRatio * 80.f;
         float thickness = 50.f + layerRatio * 40.f;
 
@@ -433,17 +451,21 @@ void RtypeGameScene::updateDamageVignette(float deltaTime) {
     if (_vignetteAlpha <= 0.0F) {
         return;
     }
-    _vignetteAlpha = std::max(0.0F, _vignetteAlpha - kVignetteFadeSpeed * deltaTime);
+    _vignetteAlpha =
+        std::max(0.0F, _vignetteAlpha - kVignetteFadeSpeed * deltaTime);
 
     int layerIndex = 0;
     for (auto& entity : _vignetteEntities) {
-        if (_registry->isAlive(entity) && _registry->hasComponent<Rectangle>(entity)) {
+        if (_registry->isAlive(entity) &&
+            _registry->hasComponent<Rectangle>(entity)) {
             int layer = layerIndex / 4;
-            float layerRatio = static_cast<float>(layer) / static_cast<float>(kVignetteLayers - 1);
+            float layerRatio = static_cast<float>(layer) /
+                               static_cast<float>(kVignetteLayers - 1);
             float layerAlpha = _vignetteAlpha * (1.0f - layerRatio * 0.7f);
 
             auto& rect = _registry->getComponent<Rectangle>(entity);
-            rect.currentColor = sf::Color(255, 0, 0, static_cast<uint8_t>(layerAlpha));
+            rect.currentColor =
+                sf::Color(255, 0, 0, static_cast<uint8_t>(layerAlpha));
             rect.mainColor = rect.currentColor;
         }
         ++layerIndex;
@@ -454,7 +476,8 @@ void RtypeGameScene::clearDamageVignette() {
     _vignetteAlpha = 0.0F;
     int layerIndex = 0;
     for (auto& entity : _vignetteEntities) {
-        if (_registry->isAlive(entity) && _registry->hasComponent<Rectangle>(entity)) {
+        if (_registry->isAlive(entity) &&
+            _registry->hasComponent<Rectangle>(entity)) {
             auto& rect = _registry->getComponent<Rectangle>(entity);
             rect.currentColor = sf::Color(255, 0, 0, 0);
             rect.mainColor = rect.currentColor;
@@ -471,7 +494,8 @@ void RtypeGameScene::setHealthBarVisible(bool visible) {
         if (_registry->hasComponent<HiddenComponent>(ent)) {
             _registry->getComponent<HiddenComponent>(ent).isHidden = !visible;
         } else {
-            _registry->emplaceComponent<HiddenComponent>(ent, HiddenComponent{!visible});
+            _registry->emplaceComponent<HiddenComponent>(
+                ent, HiddenComponent{!visible});
         }
     };
 
@@ -487,13 +511,16 @@ void RtypeGameScene::triggerDamageFlash(int damageAmount) {
     _vignetteAlpha = kVignetteMaxAlpha;
     int layerIndex = 0;
     for (auto& entity : _vignetteEntities) {
-        if (_registry->isAlive(entity) && _registry->hasComponent<Rectangle>(entity)) {
+        if (_registry->isAlive(entity) &&
+            _registry->hasComponent<Rectangle>(entity)) {
             int layer = layerIndex / 4;
-            float layerRatio = static_cast<float>(layer) / static_cast<float>(kVignetteLayers - 1);
+            float layerRatio = static_cast<float>(layer) /
+                               static_cast<float>(kVignetteLayers - 1);
             float layerAlpha = _vignetteAlpha * (1.0f - layerRatio * 0.7f);
 
             auto& rect = _registry->getComponent<Rectangle>(entity);
-            rect.currentColor = sf::Color(255, 0, 0, static_cast<uint8_t>(layerAlpha));
+            rect.currentColor =
+                sf::Color(255, 0, 0, static_cast<uint8_t>(layerAlpha));
             rect.mainColor = rect.currentColor;
         }
         ++layerIndex;
@@ -514,7 +541,8 @@ void RtypeGameScene::triggerDamageFlash(int damageAmount) {
 }
 
 void RtypeGameScene::spawnDamagePopup(int damage) {
-    LOG_DEBUG("[RtypeGameScene] spawnDamagePopup called with damage=" << damage);
+    LOG_DEBUG(
+        "[RtypeGameScene] spawnDamagePopup called with damage=" << damage);
 
     std::optional<ECS::Entity> playerEntity = _localPlayerEntity;
     if (!playerEntity.has_value() && _networkSystem) {
@@ -522,7 +550,8 @@ void RtypeGameScene::spawnDamagePopup(int damage) {
     }
 
     if (!playerEntity.has_value()) {
-        LOG_DEBUG("[RtypeGameScene] No player entity available for damage popup");
+        LOG_DEBUG(
+            "[RtypeGameScene] No player entity available for damage popup");
         return;
     }
 
@@ -532,12 +561,14 @@ void RtypeGameScene::spawnDamagePopup(int damage) {
     }
 
     if (!_registry->hasComponent<rs::Position>(*playerEntity)) {
-        LOG_DEBUG("[RtypeGameScene] Player entity has no Position for damage popup");
+        LOG_DEBUG(
+            "[RtypeGameScene] Player entity has no Position for damage popup");
         return;
     }
 
     const auto& pos = _registry->getComponent<rs::Position>(*playerEntity);
-    LOG_DEBUG("[RtypeGameScene] Player position for popup: (" << pos.x << ", " << pos.y << ")");
+    LOG_DEBUG("[RtypeGameScene] Player position for popup: (" << pos.x << ", "
+                                                              << pos.y << ")");
 
     if (!_assetsManager || !_assetsManager->fontManager) {
         LOG_DEBUG("[RtypeGameScene] No assets manager for damage popup");
@@ -546,14 +577,13 @@ void RtypeGameScene::spawnDamagePopup(int damage) {
 
     try {
         const sf::Font& font = _assetsManager->fontManager->get("title_font");
-        VisualCueFactory::createDamagePopup(*_registry,
-                                            sf::Vector2f(pos.x + 20.f, pos.y - 10.f),
-                                            damage,
-                                            font,
-                                            sf::Color(255, 60, 60));
+        VisualCueFactory::createDamagePopup(
+            *_registry, sf::Vector2f(pos.x + 20.f, pos.y - 10.f), damage, font,
+            sf::Color(255, 60, 60));
         LOG_DEBUG("[RtypeGameScene] Damage popup created successfully");
     } catch (const std::exception& e) {
-        LOG_DEBUG("[RtypeGameScene] Failed to create damage popup: " << e.what());
+        LOG_DEBUG(
+            "[RtypeGameScene] Failed to create damage popup: " << e.what());
     }
 }
 
@@ -572,4 +602,4 @@ void RtypeGameScene::resetHudColors() {
     }
 }
 
-}  // namespace rtype::games::rtype::client}  // namespace rtype::games::rtype::client
+}  // namespace rtype::games::rtype::client

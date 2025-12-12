@@ -9,12 +9,12 @@
 #include <utility>
 
 #include "AllComponents.hpp"
-#include "Logger/Macros.hpp"
 #include "Components/RectangleComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
 #include "Graphic/Accessibility.hpp"
+#include "Logger/Macros.hpp"
 #include "games/rtype/shared/Components/LifetimeComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 
@@ -51,13 +51,11 @@ void VisualCueFactory::createFlash(ECS::Registry& registry,
 
 void VisualCueFactory::createDamagePopup(ECS::Registry& registry,
                                          const sf::Vector2f& position,
-                                         int damage,
-                                         const sf::Font& font,
+                                         int damage, const sf::Font& font,
                                          const sf::Color& color) {
     auto entity = registry.spawnEntity();
     LOG_DEBUG("[VisualCueFactory] Damage popup entity=" +
-              std::to_string(entity.id) + " dmg=" +
-              std::to_string(damage));
+              std::to_string(entity.id) + " dmg=" + std::to_string(damage));
 
     std::string damageText = "-" + std::to_string(damage);
     registry.emplaceComponent<Text>(entity, font, color, 32, damageText);

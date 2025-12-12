@@ -150,7 +150,8 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     event.x = spawnX;
     event.y = spawnY;
     event.rotation = 0.0F;
-    event.entityType = static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
+    event.entityType =
+        static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
     _emitEvent(event);
 }
 
@@ -187,7 +188,8 @@ void SpawnerSystem::spawnObstacle(ECS::Registry& registry) {
     event.entityNetworkId = networkId;
     event.x = _config.spawnX;
     event.y = spawnY;
-    event.entityType = static_cast<uint8_t>(::rtype::network::EntityType::Obstacle);
+    event.entityType =
+        static_cast<uint8_t>(::rtype::network::EntityType::Obstacle);
     _emitEvent(event);
 }
 
@@ -215,7 +217,8 @@ void SpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
     event.entityNetworkId = networkId;
     event.x = _config.spawnX;
     event.y = spawnY;
-    event.entityType = static_cast<uint8_t>(::rtype::network::EntityType::Pickup);
+    event.entityType =
+        static_cast<uint8_t>(::rtype::network::EntityType::Pickup);
     _emitEvent(event);
 }
 

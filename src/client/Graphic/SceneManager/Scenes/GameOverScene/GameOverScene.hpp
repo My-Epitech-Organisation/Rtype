@@ -12,8 +12,9 @@
 #include <memory>
 #include <vector>
 
-#include "AudioLib/AudioLib.hpp"
 #include <SFML/Window/Event.hpp>
+
+#include "AudioLib/AudioLib.hpp"
 #include "SceneManager/SceneManager.hpp"
 #include "SceneManager/Scenes/AScene.hpp"
 

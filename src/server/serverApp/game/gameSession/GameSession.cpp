@@ -281,8 +281,7 @@ void GameSession::processGameEvents() {
                 break;
             case engine::GameEventType::PowerUpApplied:
                 _networkSystem->broadcastPowerUp(event.entityNetworkId,
-                                                 event.subType,
-                                                 event.duration);
+                                                 event.subType, event.duration);
                 break;
         }
     }

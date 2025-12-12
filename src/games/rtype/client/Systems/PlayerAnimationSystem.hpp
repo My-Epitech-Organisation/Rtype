@@ -2,7 +2,8 @@
 ** EPITECH PROJECT, 2025
 ** r-type
 ** File description:
-** PlayerAnimationSystem - Updates player sprite frame based on movement and player id
+** PlayerAnimationSystem - Updates player sprite frame based on movement and
+* player id
 */
 
 #ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_PLAYERANIMATIONSYSTEM_HPP_

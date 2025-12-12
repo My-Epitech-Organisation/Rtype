@@ -38,8 +38,7 @@ class VisualCueFactory {
      * @param color Text color (default red for damage)
      */
     static void createDamagePopup(ECS::Registry& registry,
-                                  const sf::Vector2f& position,
-                                  int damage,
+                                  const sf::Vector2f& position, int damage,
                                   const sf::Font& font,
                                   const sf::Color& color = sf::Color::Red);
 };

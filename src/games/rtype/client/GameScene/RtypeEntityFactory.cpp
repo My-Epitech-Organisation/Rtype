@@ -10,6 +10,9 @@
 #include <memory>
 #include <utility>
 
+#include "../Components/RectangleComponent.hpp"
+#include "../Systems/PlayerAnimationSystem.hpp"
+#include "../shared/Components/BoundingBoxComponent.hpp"
 #include "../shared/Components/HealthComponent.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
 #include "AllComponents.hpp"
@@ -22,9 +25,6 @@
 #include "Logger/Macros.hpp"
 #include "VisualCueFactory.hpp"
 #include "protocol/Payloads.hpp"
-#include "../Systems/PlayerAnimationSystem.hpp"
-#include "../Components/RectangleComponent.hpp"
-#include "../shared/Components/BoundingBoxComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -78,10 +78,12 @@ void RtypeEntityFactory::setupPlayerEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Player components");
-    const auto networkId = reg.getComponent<shared::NetworkIdComponent>(entity).networkId;
-    const int colorRow = (PlayerAnimationSystem::kColorRows > 0)
-                             ? static_cast<int>(networkId % PlayerAnimationSystem::kColorRows)
-                             : 0;
+    const auto networkId =
+        reg.getComponent<shared::NetworkIdComponent>(entity).networkId;
+    const int colorRow =
+        (PlayerAnimationSystem::kColorRows > 0)
+            ? static_cast<int>(networkId % PlayerAnimationSystem::kColorRows)
+            : 0;
     constexpr int neutralColumn = 2;
     constexpr int width = PlayerAnimationSystem::kFrameWidth;
     constexpr int height = PlayerAnimationSystem::kFrameHeight;
@@ -94,7 +96,8 @@ void RtypeEntityFactory::setupPlayerEntity(
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({left, top}),
                                       std::pair<int, int>({width, height}));
     reg.emplaceComponent<Size>(entity, 4, 4);
-    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(entity, 128.0f, 64.0f);
+    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+        entity, 128.0f, 64.0f);
     reg.emplaceComponent<shared::HealthComponent>(entity, 1, 1);
     reg.emplaceComponent<PlayerTag>(entity);
     reg.emplaceComponent<BoxingComponent>(entity,
@@ -120,7 +123,8 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 34}));
     reg.emplaceComponent<Size>(entity, 2, 2);
-    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(entity, 32.0f, 32.0f);
+    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+        entity, 32.0f, 32.0f);
     reg.emplaceComponent<BoxingComponent>(entity,
                                           sf::FloatRect({0, 0}, {33.f, 34.f}));
     reg.getComponent<BoxingComponent>(entity).outlineColor =
@@ -146,7 +150,8 @@ void RtypeEntityFactory::setupMissileEntity(
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 34}));
     reg.emplaceComponent<Size>(entity, 1, 1);
-    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(entity, 8.0f, 4.0f);
+    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+        entity, 8.0f, 4.0f);
     reg.emplaceComponent<shared::ProjectileTag>(entity);
     reg.emplaceComponent<BoxingComponent>(entity,
                                           sf::FloatRect({0, 0}, {33.f, 34.f}));
@@ -184,10 +189,12 @@ void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
     reg.emplaceComponent<BoxingComponent>(entity,
                                           sf::FloatRect({0, 0}, {24.f, 24.f}));
     reg.getComponent<BoxingComponent>(entity).outlineColor = color;
-    reg.getComponent<BoxingComponent>(entity).fillColor = sf::Color(color.r, color.g, color.b, 45);
+    reg.getComponent<BoxingComponent>(entity).fillColor =
+        sf::Color(color.r, color.g, color.b, 45);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
-    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(entity, 24.0f, 24.0f);
+    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+        entity, 24.0f, 24.0f);
 }
 
 void RtypeEntityFactory::setupObstacleEntity(ECS::Registry& reg,
@@ -209,7 +216,8 @@ void RtypeEntityFactory::setupObstacleEntity(ECS::Registry& reg,
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
 
-    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(entity, 64.0f, 64.0f);
+    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+        entity, 64.0f, 64.0f);
 }
 
 }  // namespace rtype::games::rtype::client

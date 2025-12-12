@@ -19,21 +19,21 @@
 #include "../../games/rtype/client/Systems/EventSystem.hpp"
 #include "../../games/rtype/client/Systems/MovementSystem.hpp"
 #include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
+#include "../../games/rtype/client/Systems/PlayerAnimationSystem.hpp"
+#include "../../games/rtype/client/Systems/PlayerPowerUpVisualSystem.hpp"
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
 #include "../network/ClientNetworkSystem.hpp"
-#include "Systems/ClientDestroySystem.hpp"
 #include "../network/NetworkClient.hpp"
 #include "Accessibility.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
+#include "Systems/ClientDestroySystem.hpp"
 #include "Systems/ShaderRenderSystem.hpp"
-#include "../../games/rtype/client/Systems/PlayerPowerUpVisualSystem.hpp"
-#include "../../games/rtype/client/Systems/PlayerAnimationSystem.hpp"
 
 /**
  * @brief Main graphics class managing the game window and rendering pipeline.
@@ -46,8 +46,10 @@
  * 1. ResetTriggers - Resets input states
  * 2. Network - Polls network and processes incoming packets
  * 3. Movement - Updates entity positions (depends on ResetTriggers)
- * 4. PlayerAnimation - Selects sprite frame by velocity/id (depends on Movement)
- * 5. PowerUpVisuals - Applies tint to players with active power-ups (depends on Movement)
+ * 4. PlayerAnimation - Selects sprite frame by velocity/id (depends on
+ * Movement)
+ * 5. PowerUpVisuals - Applies tint to players with active power-ups (depends on
+ * Movement)
  * 6. Parallax - Updates parallax backgrounds (depends on Movement)
  * 7. ButtonUpdate - Updates button states (depends on Parallax, for UI/menus)
  * 8. Render - Draws all entities (depends on ButtonUpdate)

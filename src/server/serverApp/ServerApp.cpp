@@ -11,10 +11,10 @@
 #include <memory>
 #include <span>
 
-#include "server/serverApp/game/entitySpawnerFactory/EntitySpawnerFactory.hpp"
 #include "games/rtype/shared/Components/EntityType.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
+#include "server/serverApp/game/entitySpawnerFactory/EntitySpawnerFactory.hpp"
 
 namespace rtype::server {
 
@@ -350,7 +350,8 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
                     NetworkServer::GameState::GameOver);
                 _networkSystem->broadcastGameOver(_score);
             } else if (_networkServer) {
-                _networkServer->updateGameState(NetworkServer::GameState::GameOver);
+                _networkServer->updateGameState(
+                    NetworkServer::GameState::GameOver);
                 _networkServer->sendGameOver(_score);
             }
             resetToLobby();
@@ -493,8 +494,8 @@ void ServerApp::resetToLobby() {
             PlayerSpawnConfig cfg{userId, idx++};
             auto result = _entitySpawner->spawnPlayer(cfg);
             if (!result.success) {
-                LOG_ERROR("[Server] Failed to respawn player for userId="
-                          << userId);
+                LOG_ERROR(
+                    "[Server] Failed to respawn player for userId=" << userId);
             }
         }
     }
@@ -509,9 +510,9 @@ std::size_t ServerApp::countAlivePlayers() {
     auto view = _registry->view<games::rtype::shared::PlayerTag,
                                 games::rtype::shared::HealthComponent>();
 
-    view.each([this, &aliveCount](ECS::Entity entity,
-                                  const games::rtype::shared::PlayerTag&,
-                                  const games::rtype::shared::HealthComponent& health) {
+    view.each([this, &aliveCount](
+                  ECS::Entity entity, const games::rtype::shared::PlayerTag&,
+                  const games::rtype::shared::HealthComponent& health) {
         bool markedForDestroy =
             _registry->hasComponent<games::rtype::shared::DestroyTag>(entity);
         if (health.isAlive() && !markedForDestroy) {
@@ -529,7 +530,7 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
 
     if (event.type == engine::GameEventType::EntityDestroyed &&
         event.entityType == static_cast<std::uint8_t>(
-                              games::rtype::shared::EntityType::Enemy)) {
+                                games::rtype::shared::EntityType::Enemy)) {
         _score += ENEMY_DESTRUCTION_SCORE;
     }
 }

@@ -11,9 +11,10 @@
 #include <vector>
 
 #include <rtype/engine.hpp>
-#include "Logger/Macros.hpp"
-#include "../../../games/rtype/shared/Components/Tags.hpp"
+
 #include "../../../games/rtype/shared/Components/LifetimeComponent.hpp"
+#include "../../../games/rtype/shared/Components/Tags.hpp"
+#include "Logger/Macros.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -36,11 +37,12 @@ class ClientDestroySystem : public ::rtype::engine::ASystem {
             toDestroy.push_back(entity);
         });
         auto lifetimeView = registry.view<shared::LifetimeComponent>();
-        lifetimeView.each([&toDestroy](auto entity, const shared::LifetimeComponent& life) {
-            if (life.remainingTime <= 0.0F) {
-                toDestroy.push_back(entity);
-            }
-        });
+        lifetimeView.each(
+            [&toDestroy](auto entity, const shared::LifetimeComponent& life) {
+                if (life.remainingTime <= 0.0F) {
+                    toDestroy.push_back(entity);
+                }
+            });
 
         if (!toDestroy.empty()) {
             LOG_DEBUG("[ClientDestroySystem] Destroying " +

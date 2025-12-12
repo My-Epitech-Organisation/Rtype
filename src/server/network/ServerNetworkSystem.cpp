@@ -161,12 +161,15 @@ void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
     }
 
     if (info.entity.isNull()) {
-        auto view = registry_->view<rtype::games::rtype::shared::NetworkIdComponent>();
-        view.each([&](ECS::Entity ent, const rtype::games::rtype::shared::NetworkIdComponent& net) {
-            if (net.networkId == networkId) {
-                info.entity = ent;
-            }
-        });
+        auto view =
+            registry_->view<rtype::games::rtype::shared::NetworkIdComponent>();
+        view.each(
+            [&](ECS::Entity ent,
+                const rtype::games::rtype::shared::NetworkIdComponent& net) {
+                if (net.networkId == networkId) {
+                    info.entity = ent;
+                }
+            });
     }
 
     info.networkId = networkId;
@@ -180,17 +183,21 @@ void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
     networkedEntities_[networkId] = info;
     server_->spawnEntity(networkId, type, x, y);
 
-$    if (registry_ && !info.entity.isNull() &&
-        registry_->isAlive(info.entity) &&
-        registry_->hasComponent<rtype::games::rtype::shared::HealthComponent>(
-            info.entity)) {
-        const auto& health = registry_->getComponent<
-            rtype::games::rtype::shared::HealthComponent>(info.entity);
+    $ if (registry_ && !info.entity.isNull() &&
+          registry_->isAlive(info.entity) &&
+          registry_->hasComponent<rtype::games::rtype::shared::HealthComponent>(
+              info.entity)) {
+        const auto& health =
+            registry_
+                ->getComponent<rtype::games::rtype::shared::HealthComponent>(
+                    info.entity);
         LOG_DEBUG("[ServerNetworkSystem] Sending initial health for entity " +
-                  std::to_string(networkId) + ": " + std::to_string(health.current) +
-                  "/" + std::to_string(health.max));
+                  std::to_string(networkId) + ": " +
+                  std::to_string(health.current) + "/" +
+                  std::to_string(health.max));
         server_->updateEntityHealth(networkId, health.current, health.max);
-    } else {
+    }
+    else {
         LOG_DEBUG("[ServerNetworkSystem] No health component for entity " +
                   std::to_string(networkId));
     }

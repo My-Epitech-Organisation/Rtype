@@ -18,8 +18,8 @@
 #include "../shared/Components/Tags.hpp"
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
-#include "protocol/Payloads.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
+#include "protocol/Payloads.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -192,8 +192,8 @@ engine::ProcessedEvent GameEngine::processEvent(
             if (!found) {
                 return result;
             }
-            auto protoType = static_cast<::rtype::network::EntityType>(
-                event.entityType);
+            auto protoType =
+                static_cast<::rtype::network::EntityType>(event.entityType);
 
             switch (protoType) {
                 case ::rtype::network::EntityType::Player:
@@ -204,8 +204,8 @@ engine::ProcessedEvent GameEngine::processEvent(
                     result.networkEntityType = event.entityType;
                     break;
                 default:
-                    result.networkEntityType =
-                        static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
+                    result.networkEntityType = static_cast<uint8_t>(
+                        ::rtype::network::EntityType::Bydos);
                     break;
             }
             result.valid = true;

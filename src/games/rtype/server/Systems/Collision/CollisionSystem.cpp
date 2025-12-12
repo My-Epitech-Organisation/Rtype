@@ -173,20 +173,25 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
         auto& health = registry.getComponent<HealthComponent>(target);
         const int32_t prevHealth = health.current;
         health.takeDamage(damage);
-        LOG_DEBUG("[CollisionSystem] Health after damage: " << prevHealth
-                  << " -> " << health.current << " (damage=" << damage << ")");
+        LOG_DEBUG("[CollisionSystem] Health after damage: "
+                  << prevHealth << " -> " << health.current
+                  << " (damage=" << damage << ")");
 
         if (isTargetPlayer && _emitEvent &&
             registry.hasComponent<NetworkIdComponent>(target)) {
             const auto& netId =
                 registry.getComponent<NetworkIdComponent>(target);
             if (netId.isValid()) {
-                LOG_DEBUG("[CollisionSystem] Emitting EntityHealthChanged for player networkId="
-                          << netId.networkId << " health=" << health.current << "/" << health.max);
+                LOG_DEBUG(
+                    "[CollisionSystem] Emitting EntityHealthChanged for player "
+                    "networkId="
+                    << netId.networkId << " health=" << health.current << "/"
+                    << health.max);
                 engine::GameEvent event{};
                 event.type = engine::GameEventType::EntityHealthChanged;
                 event.entityNetworkId = netId.networkId;
-                event.entityType = static_cast<uint8_t>(::rtype::network::EntityType::Player);
+                event.entityType =
+                    static_cast<uint8_t>(::rtype::network::EntityType::Player);
                 event.healthCurrent = health.current;
                 event.healthMax = health.max;
                 _emitEvent(event);
@@ -287,8 +292,7 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
             break;
     }
 
-    if (_emitEvent &&
-        registry.hasComponent<NetworkIdComponent>(player) &&
+    if (_emitEvent && registry.hasComponent<NetworkIdComponent>(player) &&
         registry.getComponent<NetworkIdComponent>(player).isValid()) {
         const auto& netId = registry.getComponent<NetworkIdComponent>(player);
         engine::GameEvent evt{};
@@ -338,8 +342,8 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
                 engine::GameEvent evt{};
                 evt.type = engine::GameEventType::EntityHealthChanged;
                 evt.entityNetworkId = netId.networkId;
-                evt.entityType = static_cast<uint8_t>(
-                    ::rtype::network::EntityType::Player);
+                evt.entityType =
+                    static_cast<uint8_t>(::rtype::network::EntityType::Player);
                 evt.healthCurrent = health.current;
                 evt.healthMax = health.max;
                 _emitEvent(evt);

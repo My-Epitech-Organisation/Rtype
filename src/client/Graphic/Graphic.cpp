@@ -132,11 +132,10 @@ void Graphic::_setupNetworkEntityFactory() {
 void Graphic::_initializeSystems() {
     this->_movementSystem =
         std::make_unique<::rtype::games::rtype::client::MovementSystem>();
-    this->_playerAnimationSystem =
-        std::make_unique<::rtype::games::rtype::client::PlayerAnimationSystem>();
-    this->_playerPowerUpVisualSystem =
-        std::make_unique<
-            ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
+    this->_playerAnimationSystem = std::make_unique<
+        ::rtype::games::rtype::client::PlayerAnimationSystem>();
+    this->_playerPowerUpVisualSystem = std::make_unique<
+        ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_buttonUpdateSystem =
         std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(
             this->_window);
@@ -180,19 +179,19 @@ void Graphic::_initializeSystems() {
                                       },
                                       {"reset_triggers"});
 
-    this->_systemScheduler->addSystem(
-        "player_animation",
-        [this](ECS::Registry& reg) {
-            _playerAnimationSystem->update(reg, _currentDeltaTime);
-        },
-        {"movement"});
+    this->_systemScheduler->addSystem("player_animation",
+                                      [this](ECS::Registry& reg) {
+                                          _playerAnimationSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"movement"});
 
-    this->_systemScheduler->addSystem(
-        "powerup_visuals",
-        [this](ECS::Registry& reg) {
-            _playerPowerUpVisualSystem->update(reg, _currentDeltaTime);
-        },
-        {"movement"});
+    this->_systemScheduler->addSystem("powerup_visuals",
+                                      [this](ECS::Registry& reg) {
+                                          _playerPowerUpVisualSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"movement"});
 
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {
@@ -263,8 +262,7 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.astroVessel);
     manager->textureManager->load("player_vessel",
                                   config.assets.textures.Player);
-    manager->textureManager->load("bdos_enemy",
-                                  config.assets.textures.Enemy);
+    manager->textureManager->load("bdos_enemy", config.assets.textures.Enemy);
     manager->textureManager->load("projectile_player_laser",
                                   config.assets.textures.missileLaser);
 

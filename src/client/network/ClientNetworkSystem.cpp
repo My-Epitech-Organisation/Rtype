@@ -16,16 +16,16 @@
 #include "Components/PositionComponent.hpp"
 #include "Components/SoundComponent.hpp"
 #include "Components/VelocityComponent.hpp"
-#include "games/rtype/client/Components/ImageComponent.hpp"
-#include "games/rtype/client/Components/BoxingComponent.hpp"
-#include "games/rtype/client/Components/RectangleComponent.hpp"
-#include "games/rtype/client/Components/ZIndexComponent.hpp"
-#include "games/rtype/shared/Components/Tags.hpp"
-#include "games/rtype/shared/Components/NetworkIdComponent.hpp"
-#include "games/rtype/shared/Components/PowerUpComponent.hpp"
 #include "Logger/Macros.hpp"
 #include "client/Graphic/AudioLib/AudioLib.hpp"
+#include "games/rtype/client/Components/BoxingComponent.hpp"
+#include "games/rtype/client/Components/ImageComponent.hpp"
+#include "games/rtype/client/Components/RectangleComponent.hpp"
+#include "games/rtype/client/Components/ZIndexComponent.hpp"
 #include "games/rtype/client/GameScene/VisualCueFactory.hpp"
+#include "games/rtype/shared/Components/NetworkIdComponent.hpp"
+#include "games/rtype/shared/Components/PowerUpComponent.hpp"
+#include "games/rtype/shared/Components/Tags.hpp"
 
 namespace rtype::client {
 
@@ -72,8 +72,9 @@ void ClientNetworkSystem::onLocalPlayerAssigned(
 
     if (localUserId_.has_value() && localPlayerEntity_.has_value() &&
         onLocalPlayerAssignedCallback_) {
-        LOG_DEBUG("[ClientNetworkSystem] Replaying local player assignment: userId="
-                  << *localUserId_ << " entity=" << localPlayerEntity_->id);
+        LOG_DEBUG(
+            "[ClientNetworkSystem] Replaying local player assignment: userId="
+            << *localUserId_ << " entity=" << localPlayerEntity_->id);
         onLocalPlayerAssignedCallback_(*localUserId_, *localPlayerEntity_);
     }
 }
@@ -89,8 +90,10 @@ void ClientNetworkSystem::onHealthUpdate(
             event.entityId = *localUserId_;
             event.current = it->second.current;
             event.max = it->second.max;
-            LOG_DEBUG("[ClientNetworkSystem] Replaying cached health event for local user "
-                      << *localUserId_ << ": " << event.current << "/" << event.max);
+            LOG_DEBUG(
+                "[ClientNetworkSystem] Replaying cached health event for local "
+                "user "
+                << *localUserId_ << ": " << event.current << "/" << event.max);
             onHealthUpdateCallback_(event);
         }
     }
@@ -159,8 +162,9 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
             }
         } else {
             pendingPlayerSpawns_[event.entityId] = entity;
-            LOG_DEBUG("[ClientNetworkSystem] Stored pending player spawn: entityId=" +
-                      std::to_string(event.entityId));
+            LOG_DEBUG(
+                "[ClientNetworkSystem] Stored pending player spawn: entityId=" +
+                std::to_string(event.entityId));
         }
     }
 }
@@ -195,19 +199,19 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
             auto& img =
                 registry_->getComponent<games::rtype::client::Image>(entity);
             const bool isEnemyShot = vel.vx < 0.0F;
-            img.sprite.setColor(
-                isEnemyShot ? sf::Color(255, 80, 80)
-                            : sf::Color(80, 255, 240));
+            img.sprite.setColor(isEnemyShot ? sf::Color(255, 80, 80)
+                                            : sf::Color(80, 255, 240));
 
             if (registry_->hasComponent<games::rtype::client::BoxingComponent>(
                     entity)) {
-                auto& box = registry_->getComponent<
-                    games::rtype::client::BoxingComponent>(entity);
-                box.outlineColor =
-                    isEnemyShot ? sf::Color(255, 80, 80) : sf::Color(0, 220, 180);
-                box.fillColor = isEnemyShot
-                                    ? sf::Color(255, 80, 80, 40)
-                                    : sf::Color(0, 220, 180, 35);
+                auto& box =
+                    registry_
+                        ->getComponent<games::rtype::client::BoxingComponent>(
+                            entity);
+                box.outlineColor = isEnemyShot ? sf::Color(255, 80, 80)
+                                               : sf::Color(0, 220, 180);
+                box.fillColor = isEnemyShot ? sf::Color(255, 80, 80, 40)
+                                            : sf::Color(0, 220, 180, 35);
             }
         }
     }
@@ -314,18 +318,20 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
 
             if (previousHealth.has_value() &&
                 previousHealth.value() > event.current &&
-                registry_->hasComponent<
-                    rtype::games::rtype::shared::Position>(entity)) {
-                const auto& pos = registry_->getComponent<
-                    rtype::games::rtype::shared::Position>(entity);
+                registry_->hasComponent<rtype::games::rtype::shared::Position>(
+                    entity)) {
+                const auto& pos =
+                    registry_
+                        ->getComponent<rtype::games::rtype::shared::Position>(
+                            entity);
                 games::rtype::client::VisualCueFactory::createFlash(
-                    *registry_, {pos.x, pos.y}, sf::Color(255, 80, 80),
-                    70.f, 0.25f, 12);
+                    *registry_, {pos.x, pos.y}, sf::Color(255, 80, 80), 70.f,
+                    0.25f, 12);
             }
         }
     } else {
-        LOG_DEBUG("[ClientNetworkSystem] Entity " << event.entityId
-                  << " not found in networkIdToEntity_ map");
+        LOG_DEBUG("[ClientNetworkSystem] Entity "
+                  << event.entityId << " not found in networkIdToEntity_ map");
     }
 
     lastKnownHealth_[event.entityId] = {event.current, event.max};
@@ -334,7 +340,8 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
         LOG_DEBUG("[ClientNetworkSystem] Calling onHealthUpdateCallback_");
         onHealthUpdateCallback_(event);
     } else {
-        LOG_DEBUG("[ClientNetworkSystem] No onHealthUpdateCallback_ registered!");
+        LOG_DEBUG(
+            "[ClientNetworkSystem] No onHealthUpdateCallback_ registered!");
     }
 }
 
@@ -349,26 +356,25 @@ void ClientNetworkSystem::handlePowerUpEvent(const PowerUpEvent& event) {
         return;
     }
 
-    const auto powerUpType = static_cast<
-        rtype::games::rtype::shared::PowerUpType>(event.powerUpType);
+    const auto powerUpType =
+        static_cast<rtype::games::rtype::shared::PowerUpType>(
+            event.powerUpType);
 
-    auto& active = registry_->hasComponent<
-                       rtype::games::rtype::shared::ActivePowerUpComponent>(
-                       entity)
-                       ? registry_->getComponent<
-                             rtype::games::rtype::shared::ActivePowerUpComponent>(
-                             entity)
-                       : registry_->emplaceComponent<
-                             rtype::games::rtype::shared::ActivePowerUpComponent>(
-                             entity);
+    auto& active =
+        registry_->hasComponent<
+            rtype::games::rtype::shared::ActivePowerUpComponent>(entity)
+            ? registry_->getComponent<
+                  rtype::games::rtype::shared::ActivePowerUpComponent>(entity)
+            : registry_->emplaceComponent<
+                  rtype::games::rtype::shared::ActivePowerUpComponent>(entity);
 
     active.type = powerUpType;
     active.remainingTime = event.duration;
     active.speedMultiplier = 1.0F;
     active.fireRateMultiplier = 1.0F;
     active.damageMultiplier = 1.0F;
-    active.shieldActive = powerUpType ==
-        rtype::games::rtype::shared::PowerUpType::Shield;
+    active.shieldActive =
+        powerUpType == rtype::games::rtype::shared::PowerUpType::Shield;
     active.hasOriginalCooldown = false;
 
     if (registry_->hasComponent<rtype::games::rtype::shared::Position>(
@@ -410,9 +416,10 @@ void ClientNetworkSystem::handleConnected(std::uint32_t userId) {
     auto pendingIt = pendingPlayerSpawns_.find(userId);
     if (pendingIt != pendingPlayerSpawns_.end()) {
         localPlayerEntity_ = pendingIt->second;
-        LOG_INFO("[ClientNetworkSystem] Found pending player spawn for our userId=" +
-                 std::to_string(userId) + " -> entity=" +
-                 std::to_string(localPlayerEntity_->id));
+        LOG_INFO(
+            "[ClientNetworkSystem] Found pending player spawn for our userId=" +
+            std::to_string(userId) +
+            " -> entity=" + std::to_string(localPlayerEntity_->id));
 
         if (onLocalPlayerAssignedCallback_) {
             onLocalPlayerAssignedCallback_(*localUserId_, *localPlayerEntity_);
@@ -424,8 +431,10 @@ void ClientNetworkSystem::handleConnected(std::uint32_t userId) {
             event.entityId = userId;
             event.current = healthIt->second.current;
             event.max = healthIt->second.max;
-            LOG_INFO("[ClientNetworkSystem] Replaying cached health for newly assigned player: "
-                     << event.current << "/" << event.max);
+            LOG_INFO(
+                "[ClientNetworkSystem] Replaying cached health for newly "
+                "assigned player: "
+                << event.current << "/" << event.max);
             onHealthUpdateCallback_(event);
         }
     }
@@ -465,8 +474,7 @@ ECS::Entity ClientNetworkSystem::defaultEntityFactory(
                 entity, std::pair<float, float>{22.f, 22.f}, color, color);
             registry.emplaceComponent<games::rtype::client::BoxingComponent>(
                 entity, sf::FloatRect({0, 0}, {22.f, 22.f}));
-            registry.emplaceComponent<games::rtype::client::ZIndex>(entity,
-                                                                    0);
+            registry.emplaceComponent<games::rtype::client::ZIndex>(entity, 0);
             break;
         }
         case network::EntityType::Obstacle: {
@@ -475,8 +483,7 @@ ECS::Entity ClientNetworkSystem::defaultEntityFactory(
                 entity, std::pair<float, float>{48.f, 48.f}, color, color);
             registry.emplaceComponent<games::rtype::client::BoxingComponent>(
                 entity, sf::FloatRect({0, 0}, {48.f, 48.f}));
-            registry.emplaceComponent<games::rtype::client::ZIndex>(entity,
-                                                                    0);
+            registry.emplaceComponent<games::rtype::client::ZIndex>(entity, 0);
             break;
         }
         default:

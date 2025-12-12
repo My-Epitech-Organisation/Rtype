@@ -121,8 +121,8 @@ void NetworkServer::destroyEntity(std::uint32_t id) {
 
 void NetworkServer::updateEntityHealth(std::uint32_t id, std::int32_t current,
                                        std::int32_t max) {
-    LOG_DEBUG("[NetworkServer] updateEntityHealth: entityId=" << id
-              << " current=" << current << " max=" << max);
+    LOG_DEBUG("[NetworkServer] updateEntityHealth: entityId="
+              << id << " current=" << current << " max=" << max);
     network::EntityHealthPayload payload;
     payload.entityId = id;
     payload.current = current;
@@ -134,8 +134,7 @@ void NetworkServer::updateEntityHealth(std::uint32_t id, std::int32_t current,
 }
 
 void NetworkServer::broadcastPowerUp(std::uint32_t playerId,
-                                     std::uint8_t powerUpType,
-                                     float duration) {
+                                     std::uint8_t powerUpType, float duration) {
     network::PowerUpEventPayload payload{};
     payload.playerId = playerId;
     payload.powerUpType = powerUpType;

@@ -140,6 +140,7 @@ class RtypeGameScene : public AGameScene {
     void triggerDamageFlash(int damageAmount);
     void resetHudColors();
     void spawnDamagePopup(int damage);
-};}  // namespace rtype::games::rtype::client
+};
+}  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_GAMESCENE_RTYPEGAMESCENE_HPP_

@@ -71,7 +71,8 @@ class RenderSystem : public ::rtype::engine::ASystem {
     void _renderStaticText(ECS::Registry& registry);
 
     /**
-     * @brief Render screen-space rectangles (UI elements not affected by camera).
+     * @brief Render screen-space rectangles (UI elements not affected by
+     * camera).
      * @param registry The ECS registry
      */
     void _renderScreenSpaceRectangles(ECS::Registry& registry);

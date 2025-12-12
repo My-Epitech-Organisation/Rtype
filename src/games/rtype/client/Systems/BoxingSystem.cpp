@@ -31,8 +31,9 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
         return;
     }
 
-    registry.view<::rtype::games::rtype::shared::Position,
-                  ::rtype::games::rtype::shared::BoundingBoxComponent>()
+    registry
+        .view<::rtype::games::rtype::shared::Position,
+              ::rtype::games::rtype::shared::BoundingBoxComponent>()
         .each([this](auto /*entt*/, const auto& pos, const auto& bbox) {
             sf::RectangleShape hitbox;
             hitbox.setSize({bbox.width, bbox.height});

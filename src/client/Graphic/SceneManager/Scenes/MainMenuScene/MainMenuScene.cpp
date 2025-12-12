@@ -180,14 +180,13 @@ void MainMenuScene::_onConnectClicked(
                   sf::Color::Yellow);
     std::weak_ptr<ECS::Registry> weakRegistry = _registry;
 
-    _networkClient->onConnected([this, switchToScene, weakRegistry](
-                                     std::uint32_t userId) {
+    _networkClient->onConnected([this, switchToScene,
+                                 weakRegistry](std::uint32_t userId) {
         if (!_alive) return;
         auto reg = weakRegistry.lock();
         if (!reg) return;
 
-        LOG_INFO("[Client] Connected with user ID: " +
-                 std::to_string(userId));
+        LOG_INFO("[Client] Connected with user ID: " + std::to_string(userId));
         _updateStatus("Connected! Starting game...", sf::Color::Green);
         try {
             switchToScene(SceneManager::IN_GAME);
@@ -198,7 +197,8 @@ void MainMenuScene::_onConnectClicked(
     });
 
     _networkClient->onDisconnected(
-        [this, weakRegistry](rtype::client::NetworkClient::DisconnectReason reason) {
+        [this,
+         weakRegistry](rtype::client::NetworkClient::DisconnectReason reason) {
             if (!_alive) return;
             auto reg = weakRegistry.lock();
             if (!reg) return;
@@ -235,9 +235,8 @@ void MainMenuScene::_updateStatus(const std::string& message, sf::Color color) {
         return;
     }
 
-    auto& text =
-        _registry->getComponent<rtype::games::rtype::client::Text>(
-            _statusEntity);
+    auto& text = _registry->getComponent<rtype::games::rtype::client::Text>(
+        _statusEntity);
     text.textContent = message;
     text.text.setString(message);
     text.text.setFillColor(color);
