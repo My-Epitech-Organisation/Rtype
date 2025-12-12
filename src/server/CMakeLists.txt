@@ -30,10 +30,10 @@ target_include_directories(rtype_server_core PUBLIC
 )
 target_link_libraries(rtype_server_core
     PUBLIC
-    rtype_engine
-    rtype_ecs
-    rtype_common
-    rtype_network
+    engine
+    ecs
+    common
+    network
     rtype_game_server
     rtype_game_shared
 )
