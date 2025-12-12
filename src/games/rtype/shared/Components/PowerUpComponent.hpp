@@ -22,6 +22,7 @@ enum class PowerUpType : uint8_t {
     RapidFire,
     DoubleDamage,
     HealthBoost
+};
 
 /**
  * @struct PowerUpComponent
