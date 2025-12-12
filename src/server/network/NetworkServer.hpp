@@ -178,6 +178,15 @@ class NetworkServer {
                             std::int32_t max);
 
     /**
+     * @brief Notify clients that a player picked a power-up
+     * @param playerId Target player network id
+     * @param powerUpType Encoded power-up type
+     * @param duration Remaining duration (seconds)
+     */
+    void broadcastPowerUp(std::uint32_t playerId, std::uint8_t powerUpType,
+                          float duration);
+
+    /**
      * @brief Update game state on all clients
      *
      * Sent reliably - guaranteed delivery.
@@ -239,6 +248,9 @@ class NetworkServer {
      */
     void updateEntityHealthToClient(std::uint32_t userId, std::uint32_t id,
                                     std::int32_t current, std::int32_t max);
+
+    void sendPowerUpToClient(std::uint32_t userId, std::uint32_t playerId,
+                             std::uint8_t powerUpType, float duration);
 
     /**
      * @brief Update game state on a specific client
