@@ -22,7 +22,9 @@
 #include "RtypeEntityFactory.hpp"
 #include "RtypeInputHandler.hpp"
 #include "RtypePauseMenu.hpp"
+#include "client/network/NetworkClient.hpp"
 #include "games/rtype/client/PauseState.hpp"
+#include "games/rtype/client/GameOverState.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -38,7 +40,32 @@ RtypeGameScene::RtypeGameScene(
     : AGameScene(std::move(registry), std::move(assetsManager),
                  std::move(window), std::move(keybinds),
                  std::move(switchToScene), std::move(networkClient),
-                 std::move(networkSystem)) {}
+                 std::move(networkSystem)) {
+    if (_networkClient) {
+        auto registry = _registry;
+        auto switchToScene = _switchToScene;
+        _networkClient->onGameOver(
+            [registry, switchToScene](const ::rtype::client::GameOverEvent& event) mutable {
+                if (registry) {
+                    if (!registry->hasSingleton<
+                            ::rtype::games::rtype::client::GameOverState>()) {
+                        registry->setSingleton<
+                            ::rtype::games::rtype::client::GameOverState>(
+                            ::rtype::games::rtype::client::GameOverState{
+                                event.finalScore});
+                    } else {
+                        registry
+                            ->getSingleton<
+                                ::rtype::games::rtype::client::GameOverState>()
+                            .finalScore = event.finalScore;
+                    }
+                }
+                if (switchToScene) {
+                    switchToScene(SceneManager::GAME_OVER);
+                }
+            });
+    }
+}
 
 std::vector<ECS::Entity> RtypeGameScene::initialize() {
     LOG_DEBUG("[RtypeGameScene] Initialize called");
