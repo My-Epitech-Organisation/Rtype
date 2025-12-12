@@ -10,8 +10,8 @@ target_link_libraries(rtype-graphic-how-to-play-scene
     SFML::Window
     SFML::Audio
     SFML::System
-    rtype_engine
-    rtype_network
+    engine
+    network
     rtype-graphic-asset-manager
     rtype-graphic-entity-factory
     rtype-graphic-audio
