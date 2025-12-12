@@ -15,6 +15,9 @@
 #include <utility>
 #include <vector>
 
+#include <SFML/System/Clock.hpp>
+#include <SFML/System/Vector2.hpp>
+
 #include "AudioLib/AudioLib.hpp"
 #include "Graphic/SceneManager/Scenes/GameScene/AGameScene.hpp"
 
@@ -111,12 +114,32 @@ class RtypeGameScene : public AGameScene {
     void handleHealthUpdate(const ::rtype::client::EntityHealthEvent& event);
 
     std::optional<ECS::Entity> _livesTextEntity;
+    std::optional<ECS::Entity> _healthBarBgEntity;
+    std::optional<ECS::Entity> _healthBarFillEntity;
+    std::optional<ECS::Entity> _healthTextEntity;
     std::optional<std::uint32_t> _localPlayerId;
     std::optional<ECS::Entity> _localPlayerEntity;
     int _lastKnownLives{0};
     int _lastKnownMaxLives{0};
-};
+    float _damageFlashTimer{0.0F};
+    sf::Clock _uiClock;
 
-}  // namespace rtype::games::rtype::client
+    static constexpr int kVignetteLayers = 6;
+    std::vector<ECS::Entity> _vignetteEntities;
+    float _vignetteAlpha{0.0F};
+    static constexpr float kVignetteFadeSpeed = 300.0F;
+    static constexpr float kVignetteMaxAlpha = 180.0F;
+    sf::Vector2u _lastVignetteSize{0, 0};
+
+    void setupDamageVignette();
+    void refreshDamageVignetteLayout();
+    void clearDamageVignette();
+    void setHealthBarVisible(bool visible);
+    void updateDamageVignette(float deltaTime);
+    void updateHealthBar(int current, int max);
+    void triggerDamageFlash(int damageAmount);
+    void resetHudColors();
+    void spawnDamagePopup(int damage);
+};}  // namespace rtype::games::rtype::client
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_GAMESCENE_RTYPEGAMESCENE_HPP_
