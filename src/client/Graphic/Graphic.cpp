@@ -316,7 +316,8 @@ Graphic::Graphic(
         sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");
     this->_window->setView(*this->_view);
 
-    this->_sceneTexture = std::make_shared<sf::RenderTexture>(sf::Vector2u{WINDOW_WIDTH, WINDOW_HEIGHT});
+    this->_sceneTexture = std::make_shared<sf::RenderTexture>(
+        sf::Vector2u{WINDOW_WIDTH, WINDOW_HEIGHT});
 
     if (sf::Shader::isAvailable()) {
         auto shader = std::make_shared<sf::Shader>();
