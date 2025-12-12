@@ -58,6 +58,12 @@ struct EntityHealthEvent {
     std::int32_t max;
 };
 
+struct PowerUpEvent {
+    std::uint32_t playerId;
+    std::uint8_t powerUpType;
+    float duration;
+};
+
 /**
  * @brief Event data for game state change
  */
@@ -229,6 +235,11 @@ class NetworkClient {
     void onEntityHealth(std::function<void(EntityHealthEvent)> callback);
 
     /**
+     * @brief Register callback for power-up events
+     */
+    void onPowerUpEvent(std::function<void(PowerUpEvent)> callback);
+
+    /**
      * @brief Register callback for server position correction
      *
      * Called when server's authoritative position differs from client
@@ -278,6 +289,8 @@ class NetworkClient {
                              const network::Buffer& payload);
     void handleEntityHealth(const network::Header& header,
                             const network::Buffer& payload);
+    void handlePowerUpEvent(const network::Header& header,
+                            const network::Buffer& payload);
     void handleUpdatePos(const network::Header& header,
                          const network::Buffer& payload);
     void handleUpdateState(const network::Header& header,
@@ -313,6 +326,7 @@ class NetworkClient {
     std::function<void(float, float)> onPositionCorrectionCallback_;
     std::function<void(GameStateEvent)> onGameStateChangeCallback_;
     std::function<void(GameOverEvent)> onGameOverCallback_;
+    std::function<void(PowerUpEvent)> onPowerUpCallback_;
 
     std::thread networkThread_;
     std::atomic<bool> networkThreadRunning_{false};
