@@ -7,6 +7,7 @@
 
 #include "CollisionSystem.hpp"
 
+#include <algorithm>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -25,11 +26,17 @@ using shared::EnemyTag;
 using shared::EntityType;
 using shared::HealthComponent;
 using shared::NetworkIdComponent;
+using shared::InvincibleTag;
+using shared::PickupTag;
 using shared::PlayerProjectileTag;
 using shared::PlayerTag;
 using shared::ProjectileComponent;
 using shared::ProjectileOwner;
 using shared::ProjectileTag;
+using shared::PowerUpComponent;
+using shared::ActivePowerUpComponent;
+using shared::DamageOnContactComponent;
+using shared::ObstacleTag;
 using shared::QuadTreeSystem;
 using shared::TransformComponent;
 using shared::collision::overlaps;
@@ -82,10 +89,34 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         bool bIsEnemy = registry.hasComponent<EnemyTag>(entityB);
         bool aIsPlayer = registry.hasComponent<PlayerTag>(entityA);
         bool bIsPlayer = registry.hasComponent<PlayerTag>(entityB);
+        bool aIsPickup = registry.hasComponent<PickupTag>(entityA);
+        bool bIsPickup = registry.hasComponent<PickupTag>(entityB);
+        bool aIsObstacle = registry.hasComponent<ObstacleTag>(entityA);
+        bool bIsObstacle = registry.hasComponent<ObstacleTag>(entityB);
+        bool aHasHealth = registry.hasComponent<HealthComponent>(entityA);
+        bool bHasHealth = registry.hasComponent<HealthComponent>(entityB);
 
-        if (aIsProjectile && (bIsEnemy || bIsPlayer)) {
+        if (aIsPickup && bIsPlayer) {
+            handlePickupCollision(registry, entityB, entityA);
+            continue;
+        }
+        if (bIsPickup && aIsPlayer) {
+            handlePickupCollision(registry, entityA, entityB);
+            continue;
+        }
+
+        if (aIsObstacle && (bIsPlayer || bIsProjectile)) {
+            handleObstacleCollision(registry, entityA, entityB, bIsPlayer);
+            continue;
+        }
+        if (bIsObstacle && (aIsPlayer || aIsProjectile)) {
+            handleObstacleCollision(registry, entityB, entityA, aIsPlayer);
+            continue;
+        }
+
+        if (aIsProjectile && (bIsEnemy || bIsPlayer || bHasHealth)) {
             handleProjectileCollision(registry, entityA, entityB, bIsPlayer);
-        } else if (bIsProjectile && (aIsEnemy || aIsPlayer)) {
+        } else if (bIsProjectile && (aIsEnemy || aIsPlayer || aHasHealth)) {
             handleProjectileCollision(registry, entityB, entityA, aIsPlayer);
         }
     }
@@ -176,6 +207,117 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
                       << projectile.id << " destroyed (max hits)");
             registry.emplaceComponent<DestroyTag>(projectile, DestroyTag{});
         }
+    }
+}
+
+void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
+                                            ECS::Entity player,
+                                            ECS::Entity pickup) {
+    if (registry.hasComponent<DestroyTag>(pickup) ||
+        registry.hasComponent<DestroyTag>(player)) {
+        return;
+    }
+
+    if (!registry.hasComponent<PowerUpComponent>(pickup)) {
+        return;
+    }
+
+    const auto& powerUp = registry.getComponent<PowerUpComponent>(pickup);
+    ActivePowerUpComponent* activePtr = nullptr;
+    if (registry.hasComponent<ActivePowerUpComponent>(player)) {
+        activePtr = &registry.getComponent<ActivePowerUpComponent>(player);
+        *activePtr = ActivePowerUpComponent{};
+    } else {
+        activePtr = &registry.emplaceComponent<ActivePowerUpComponent>(
+            player, ActivePowerUpComponent{});
+    }
+
+    auto& active = *activePtr;
+
+    active.type = powerUp.type;
+    active.remainingTime = powerUp.duration;
+    active.speedMultiplier = 1.0F;
+    active.fireRateMultiplier = 1.0F;
+    active.damageMultiplier = 1.0F;
+    active.shieldActive = false;
+    active.hasOriginalCooldown = false;
+
+    switch (powerUp.type) {
+        case shared::PowerUpType::SpeedBoost:
+            active.speedMultiplier = 1.0F + powerUp.magnitude;
+            break;
+        case shared::PowerUpType::Shield:
+            active.shieldActive = true;
+            if (!registry.hasComponent<shared::InvincibleTag>(player)) {
+                registry.emplaceComponent<shared::InvincibleTag>(player);
+            }
+            break;
+        case shared::PowerUpType::RapidFire:
+            active.fireRateMultiplier = 1.0F + powerUp.magnitude;
+            if (registry.hasComponent<shared::ShootCooldownComponent>(player)) {
+                auto& cd = registry.getComponent<shared::ShootCooldownComponent>(
+                    player);
+                active.originalCooldown = cd.cooldownTime;
+                active.hasOriginalCooldown = true;
+                float factor = 1.0F / active.fireRateMultiplier;
+                cd.setCooldownTime(std::max(0.05F, cd.cooldownTime * factor));
+            }
+            break;
+        case shared::PowerUpType::DoubleDamage:
+            active.damageMultiplier = 1.0F + powerUp.magnitude;
+            break;
+        case shared::PowerUpType::ExtraLife:
+            if (registry.hasComponent<HealthComponent>(player)) {
+                auto& health = registry.getComponent<HealthComponent>(player);
+                health.max += 1;
+                health.current = std::min(health.current + 1, health.max);
+            }
+            break;
+        case shared::PowerUpType::None:
+        default:
+            break;
+    }
+
+    registry.emplaceComponent<DestroyTag>(pickup, DestroyTag{});
+}
+
+void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
+                                              ECS::Entity obstacle,
+                                              ECS::Entity other,
+                                              bool otherIsPlayer) {
+    if (registry.hasComponent<DestroyTag>(obstacle) ||
+        registry.hasComponent<DestroyTag>(other)) {
+        return;
+    }
+
+    int32_t damage = 15;
+    bool destroyObstacle = false;
+    if (registry.hasComponent<DamageOnContactComponent>(obstacle)) {
+        const auto& dmgComp =
+            registry.getComponent<DamageOnContactComponent>(obstacle);
+        damage = dmgComp.damage;
+        destroyObstacle = dmgComp.destroySelf;
+    }
+
+    if (otherIsPlayer) {
+        if (registry.hasComponent<shared::InvincibleTag>(other)) {
+            return;
+        }
+        if (registry.hasComponent<HealthComponent>(other)) {
+            auto& health = registry.getComponent<HealthComponent>(other);
+            health.takeDamage(damage);
+            if (!health.isAlive()) {
+                registry.emplaceComponent<DestroyTag>(other, DestroyTag{});
+            }
+        } else {
+            registry.emplaceComponent<DestroyTag>(other, DestroyTag{});
+        }
+    } else {
+        registry.emplaceComponent<DestroyTag>(other, DestroyTag{});
+    }
+
+    if (destroyObstacle) {
+        registry.emplaceComponent<DestroyTag>(obstacle, DestroyTag{});
     }
 }
 

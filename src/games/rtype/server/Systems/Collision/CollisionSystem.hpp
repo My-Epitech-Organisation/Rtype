@@ -14,6 +14,8 @@
 #include <rtype/engine.hpp>
 
 #include "../../../shared/Systems/Collision/QuadTreeSystem.hpp"
+#include "../../../shared/Components/PowerUpComponent.hpp"
+#include "../../../shared/Components/DamageOnContactComponent.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -50,6 +52,12 @@ class CollisionSystem : public ::rtype::engine::ASystem {
     void handleProjectileCollision(ECS::Registry& registry,
                                    ECS::Entity projectile, ECS::Entity target,
                                    bool isTargetPlayer);
+
+    void handlePickupCollision(ECS::Registry& registry, ECS::Entity player,
+                               ECS::Entity pickup);
+
+    void handleObstacleCollision(ECS::Registry& registry, ECS::Entity obstacle,
+                                 ECS::Entity other, bool otherIsPlayer);
 
     EventEmitter _emitEvent;
     std::unique_ptr<shared::QuadTreeSystem> _quadTreeSystem;
