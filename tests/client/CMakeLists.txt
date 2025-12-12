@@ -159,8 +159,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_asset_managers PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
@@ -238,8 +238,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_accessibility_and_input PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
@@ -256,8 +256,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_input_handler PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML
@@ -273,8 +273,8 @@ if(BUILD_GRAPHICAL_TESTS)
 
     target_link_libraries(test_pause_menu PRIVATE
         GTest::gtest_main
-        rtype_engine
-        rtype_network
+        engine
+        network
         rtype_game_shared
         rtype_game_client
         rtype-graphic-SFML

@@ -67,7 +67,7 @@ target_link_libraries(test_packet_validation PRIVATE
 add_executable(test_opcode test_opcode.cpp)
 
 target_link_libraries(test_opcode PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -75,7 +75,7 @@ target_link_libraries(test_opcode PRIVATE
 add_executable(test_validator test_validator.cpp)
 
 target_link_libraries(test_validator PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -83,7 +83,7 @@ target_link_libraries(test_validator PRIVATE
 add_executable(test_byteorderspec_extra test_byteorderspec_extra.cpp)
 
 target_link_libraries(test_byteorderspec_extra PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -91,80 +91,80 @@ target_link_libraries(test_byteorderspec_extra PRIVATE
 add_executable(test_coverage_harness test_coverage_harness.cpp)
 
 target_link_libraries(test_coverage_harness PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 # New targeted branch tests
 add_executable(test_serializer_branches test_serializer_branches.cpp)
 target_link_libraries(test_serializer_branches PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_byteorderspec_branches test_byteorderspec_branches.cpp)
 target_link_libraries(test_byteorderspec_branches PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_header_branches test_header_branches.cpp)
 target_link_libraries(test_header_branches PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_validator_additional test_validator_additional.cpp)
 target_link_libraries(test_validator_additional PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_serializer_and_validator_errors test_serializer_and_validator_errors.cpp)
 target_link_libraries(test_serializer_and_validator_errors PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_serializer_template test_serializer_template.cpp)
 target_link_libraries(test_serializer_template PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_serializer_string_roundtrip test_serializer_string_roundtrip.cpp)
 target_link_libraries(test_serializer_string_roundtrip PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_validator_extra test_validator_extra.cpp)
 target_link_libraries(test_validator_extra PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_serializer_endian test_serializer_endian.cpp)
 target_link_libraries(test_serializer_endian PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_serializer_validate_extract_server_userid test_serializer_validate_extract_server_userid.cpp)
 target_link_libraries(test_serializer_validate_extract_server_userid PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_serializer_validate_extract_extra test_serializer_validate_extract_extra.cpp)
 target_link_libraries(test_serializer_validate_extract_extra PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_byteorderspec_various_sizes test_byteorderspec_various_sizes.cpp)
 target_link_libraries(test_byteorderspec_various_sizes PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -172,13 +172,13 @@ target_link_libraries(test_byteorderspec_various_sizes PRIVATE
 
 add_executable(test_opcode_exhaustive test_opcode_exhaustive.cpp)
 target_link_libraries(test_opcode_exhaustive PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_validator_success test_validator_success.cpp)
 target_link_libraries(test_validator_success PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -188,19 +188,19 @@ add_executable(test_asio_error_mapping_extra
     test_asio_socket_error_cases.cpp
 )
 target_link_libraries(test_asio_error_mapping_extra PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_asio_error_mapping_all test_asio_error_mapping_all.cpp)
 target_link_libraries(test_asio_error_mapping_all PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
 add_executable(test_asio_socket_misc test_asio_socket_misc.cpp)
 target_link_libraries(test_asio_socket_misc PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 

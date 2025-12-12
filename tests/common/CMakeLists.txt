@@ -104,7 +104,7 @@ add_executable(test_scene_exception test_scene_exception.cpp)
 
 target_link_libraries(test_scene_exception PRIVATE
     GTest::gtest_main
-    rtype_common
+    common
 )
 
 target_include_directories(test_scene_exception PRIVATE
