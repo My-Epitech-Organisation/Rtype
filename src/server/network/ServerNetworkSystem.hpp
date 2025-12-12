@@ -193,6 +193,9 @@ class ServerNetworkSystem {
     void updateEntityHealth(std::uint32_t networkId, std::int32_t current,
                             std::int32_t max);
 
+    void broadcastPowerUp(std::uint32_t playerNetworkId,
+                          std::uint8_t powerUpType, float duration);
+
     /**
      * @brief Send position correction to a specific player
      *

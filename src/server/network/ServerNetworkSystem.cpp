@@ -11,7 +11,9 @@
 #include <utility>
 #include <vector>
 
+#include "Logger/Macros.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
+#include "games/rtype/shared/Components/NetworkIdComponent.hpp"
 
 namespace rtype::server {
 
@@ -132,6 +134,12 @@ void ServerNetworkSystem::updateEntityHealth(std::uint32_t networkId,
     server_->updateEntityHealth(networkId, current, max);
 }
 
+void ServerNetworkSystem::broadcastPowerUp(std::uint32_t playerNetworkId,
+                                           std::uint8_t powerUpType,
+                                           float duration) {
+    server_->broadcastPowerUp(playerNetworkId, powerUpType, duration);
+}
+
 void ServerNetworkSystem::broadcastEntityUpdates() {
     for (auto& [networkId, info] : networkedEntities_) {
         if (info.dirty) {
@@ -145,8 +153,22 @@ void ServerNetworkSystem::broadcastEntityUpdates() {
 void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
                                                EntityType type, float x,
                                                float y) {
-    NetworkedEntity info;
-    info.entity = ECS::Entity{};
+    NetworkedEntity info{};
+
+    auto existing = networkedEntities_.find(networkId);
+    if (existing != networkedEntities_.end()) {
+        info = existing->second;
+    }
+
+    if (info.entity.isNull()) {
+        auto view = registry_->view<rtype::games::rtype::shared::NetworkIdComponent>();
+        view.each([&](ECS::Entity ent, const rtype::games::rtype::shared::NetworkIdComponent& net) {
+            if (net.networkId == networkId) {
+                info.entity = ent;
+            }
+        });
+    }
+
     info.networkId = networkId;
     info.type = type;
     info.lastX = x;
@@ -157,6 +179,21 @@ void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
 
     networkedEntities_[networkId] = info;
     server_->spawnEntity(networkId, type, x, y);
+
+$    if (registry_ && !info.entity.isNull() &&
+        registry_->isAlive(info.entity) &&
+        registry_->hasComponent<rtype::games::rtype::shared::HealthComponent>(
+            info.entity)) {
+        const auto& health = registry_->getComponent<
+            rtype::games::rtype::shared::HealthComponent>(info.entity);
+        LOG_DEBUG("[ServerNetworkSystem] Sending initial health for entity " +
+                  std::to_string(networkId) + ": " + std::to_string(health.current) +
+                  "/" + std::to_string(health.max));
+        server_->updateEntityHealth(networkId, health.current, health.max);
+    } else {
+        LOG_DEBUG("[ServerNetworkSystem] No health component for entity " +
+                  std::to_string(networkId));
+    }
 }
 
 void ServerNetworkSystem::broadcastGameStart() {
