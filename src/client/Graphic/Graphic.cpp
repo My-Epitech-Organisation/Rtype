@@ -159,6 +159,8 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::shared::ProjectileSystem>();
     this->_lifetimeSystem =
         std::make_unique<::rtype::games::rtype::shared::LifetimeSystem>();
+    this->_clientDestroySystem =
+        std::make_unique<::rtype::games::rtype::client::ClientDestroySystem>();
     this->_shaderRenderSystem =
         std::make_unique<::rtype::games::rtype::client::ShaderRenderSystem>(
             this->_window, this->_sceneTexture, this->_colorShader);
@@ -218,10 +220,17 @@ void Graphic::_initializeSystems() {
                                       },
                                       {"projectile"});
 
+    this->_systemScheduler->addSystem("client_destroy",
+                                      [this](ECS::Registry& reg) {
+                                          this->_clientDestroySystem->update(
+                                              reg, 0.f);
+                                      },
+                                      {"lifetime"});
+
     this->_systemScheduler->addSystem(
         "render",
         [this](ECS::Registry& reg) { this->_renderSystem->update(reg, 0.f); },
-        {"lifetime"});
+        {"client_destroy"});
 
     this->_systemScheduler->addSystem(
         "boxing",

@@ -24,6 +24,7 @@
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
 #include "../network/ClientNetworkSystem.hpp"
+#include "Systems/ClientDestroySystem.hpp"
 #include "../network/NetworkClient.hpp"
 #include "Accessibility.hpp"
 #include "AssetManager/AssetManager.hpp"
@@ -136,6 +137,8 @@ class Graphic {
         _projectileSystem;
     std::unique_ptr<::rtype::games::rtype::shared::LifetimeSystem>
         _lifetimeSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ClientDestroySystem>
+        _clientDestroySystem;
     std::unique_ptr<::rtype::games::rtype::client::ShaderRenderSystem>
         _shaderRenderSystem;
 
