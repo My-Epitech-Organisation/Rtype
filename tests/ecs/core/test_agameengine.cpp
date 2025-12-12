@@ -62,6 +62,8 @@ class TestGameEngine : public AGameEngine {
         // No-op for test implementation
     }
 
+    [[nodiscard]] std::string getGameId() const override { return "test_game"; }
+
     // Test helpers
     void setShouldFailInit(bool shouldFail) { _shouldFailInit = shouldFail; }
     bool wasInitializeCalled() const { return _initializeCalled; }

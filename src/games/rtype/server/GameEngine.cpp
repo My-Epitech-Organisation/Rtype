@@ -7,12 +7,17 @@
 
 #include "GameEngine.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
 
 #include "../shared/Components/EntityType.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
+#include "../shared/Components/PositionComponent.hpp"
+#include "../shared/Components/Tags.hpp"
+#include "../shared/Components/TransformComponent.hpp"
+#include "../shared/Components/VelocityComponent.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 
 namespace rtype::games::rtype::server {
@@ -181,6 +186,7 @@ engine::ProcessedEvent GameEngine::processEvent(
         }
         case engine::GameEventType::EntityDestroyed:
         case engine::GameEventType::EntityUpdated:
+        case engine::GameEventType::EntityHealthChanged:
             result.valid = true;
             break;
     }
@@ -212,8 +218,8 @@ void GameEngine::syncEntityPositions(
     });
 }
 
-uint32_t GameEngine::spawnPlayerProjectile(uint32_t playerNetworkId,
-                                           float playerX, float playerY) {
+uint32_t GameEngine::spawnProjectile(uint32_t playerNetworkId, float playerX,
+                                     float playerY) {
     if (!_running || !_projectileSpawnerSystem) {
         return 0;
     }
@@ -229,14 +235,24 @@ void GameEngine::emitEvent(const engine::GameEvent& event) {
     }
 }
 
-}  // namespace rtype::games::rtype::server
+void registerRTypeGameEngine() {
+    static bool registered = false;
+    if (registered) {
+        return;
+    }
+    registered = true;
 
-namespace rtype::engine {
-
-std::unique_ptr<IGameEngine> createGameEngine(
-    std::shared_ptr<ECS::Registry> registry) {
-    return std::make_unique<games::rtype::server::GameEngine>(
-        std::move(registry));
+    engine::GameEngineFactory::registerGame(
+        "rtype", [](std::shared_ptr<ECS::Registry> registry) {
+            return std::make_unique<GameEngine>(std::move(registry));
+        });
+    engine::GameEngineFactory::setDefaultGame("rtype");
 }
 
-}  // namespace rtype::engine
+namespace {
+struct RTypeAutoRegistrar {
+    RTypeAutoRegistrar() { registerRTypeGameEngine(); }
+} rtypeAutoRegistrar;
+}  // namespace
+
+}  // namespace rtype::games::rtype::server

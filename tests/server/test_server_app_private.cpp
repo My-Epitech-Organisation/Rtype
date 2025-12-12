@@ -14,7 +14,7 @@
 // Expose private members of ServerApp only while including its header
 #define private public
 #define protected public
-#include "ServerApp.hpp"
+#include "server/serverApp/ServerApp.hpp"
 #undef private
 #undef protected
 
@@ -33,6 +33,23 @@ protected:
 
     std::shared_ptr<std::atomic<bool>> shutdownFlag_;
 };
+
+// Note: extractPacketFromData, getLoopTiming, performFixedUpdates, 
+// calculateFrameTime and sleepUntilNextFrame have been moved to 
+// ServerLoop and PacketProcessor classes. Those tests are now in
+// test_ServerLoop.cpp.
+
+TEST_F(ServerAppPrivateTest, Shutdown_OnlyPerformedOnce) {
+    ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+
+    // First shutdown should complete successfully
+    server.stop();
+    EXPECT_FALSE(server.isRunning());
+
+    // Second stop should be idempotent
+    server.stop();
+    EXPECT_FALSE(server.isRunning());
+}
 
 #else
 

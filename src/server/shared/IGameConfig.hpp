@@ -5,8 +5,8 @@
 ** IGameConfig - Abstract interface for game configuration
 */
 
-#ifndef SRC_SERVER_IGAMECONFIG_HPP_
-#define SRC_SERVER_IGAMECONFIG_HPP_
+#ifndef SRC_SERVER_SHARED_IGAMECONFIG_HPP_
+#define SRC_SERVER_SHARED_IGAMECONFIG_HPP_
 
 #include <cstdint>
 #include <optional>
@@ -170,4 +170,4 @@ class IGameConfig {
 
 }  // namespace rtype::server
 
-#endif  // SRC_SERVER_IGAMECONFIG_HPP_
+#endif  // SRC_SERVER_SHARED_IGAMECONFIG_HPP_

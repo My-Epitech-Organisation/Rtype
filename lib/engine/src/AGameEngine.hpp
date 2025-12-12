@@ -26,6 +26,7 @@ namespace rtype::engine {
  *     bool initialize() override { ... }
  *     void update(float deltaTime) override { ... }
  *     void shutdown() override { ... }
+ *     std::string getGameId() const override { return "rtype"; }
  * };
  * @endcode
  */

@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <mutex>
+#include <string>
 #include <vector>
 
 #include <rtype/ecs.hpp>
@@ -79,6 +80,7 @@ class GameEngine : public engine::AGameEngine {
     void clearPendingEvents() override;
     std::size_t getEntityCount() const override;
     bool isRunning() const override;
+    [[nodiscard]] std::string getGameId() const override { return "rtype"; }
     engine::ProcessedEvent processEvent(
         const engine::GameEvent& event) override;
     void syncEntityPositions(
@@ -86,22 +88,21 @@ class GameEngine : public engine::AGameEngine {
         override;
 
     /**
+     * @brief Spawn a projectile for a player
+     * @param playerNetworkId Network ID of the player shooting
+     * @param playerX Player X position
+     * @param playerY Player Y position
+     * @return Network ID of the spawned projectile (0 if failed)
+     */
+    uint32_t spawnProjectile(uint32_t playerNetworkId, float playerX,
+                             float playerY);
+
+    /**
      * @brief Get the ECS registry
      * @return Reference to the ECS registry
      */
     ECS::Registry& getRegistry() { return *_registry; }
     const ECS::Registry& getRegistry() const { return *_registry; }
-
-    /**
-     * @brief Spawn a player projectile
-     * @param playerEntity The player entity that is shooting
-     * @param playerNetworkId Network ID of the player
-     * @param playerX Player X position
-     * @param playerY Player Y position
-     * @return Network ID of the spawned projectile (0 if failed)
-     */
-    uint32_t spawnPlayerProjectile(uint32_t playerNetworkId, float playerX,
-                                   float playerY);
 
     /**
      * @brief Get projectile spawner system (for advanced configuration)
@@ -136,5 +137,15 @@ class GameEngine : public engine::AGameEngine {
     std::vector<engine::GameEvent> _pendingEvents;
     mutable std::mutex _eventMutex;
 };
+
+/**
+ * @brief Register RType game engine with the factory
+ *
+ * This function must be called once during application startup
+ * to register the RType game engine with the GameEngineFactory.
+ * This is typically done automatically via static initialization,
+ * but can be called explicitly if needed.
+ */
+void registerRTypeGameEngine();
 
 }  // namespace rtype::games::rtype::server

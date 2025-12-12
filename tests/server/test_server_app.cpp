@@ -12,8 +12,8 @@
 #include <chrono>
 #include <vector>
 
-#include "../../../src/server/ServerApp.hpp"
-#include "../../../lib/network/src/Packet.hpp"
+#include "server/serverApp/ServerApp.hpp"
+#include "Packet.hpp"
 
 using namespace rtype::server;
 using namespace rtype::network;
@@ -174,17 +174,8 @@ TEST_F(ServerAppTest, GetMetrics) {
     EXPECT_GE(metrics.totalConnections, 0u);
 }
 
-TEST_F(ServerAppTest, GetLoopTiming_ValidValues) {
-    ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
-
-    auto timing = server.getLoopTiming();
-
-    // Check that timing values are reasonable for 60 FPS
-    EXPECT_GT(timing.fixedDeltaNs.count(), 0);
-    EXPECT_LT(timing.fixedDeltaNs.count(), 1000000000);  // Less than 1 second
-    EXPECT_GE(timing.maxFrameTime.count(), 0);
-    EXPECT_EQ(timing.maxUpdatesPerFrame, 5u);  // MAX_UPDATES_PER_FRAME
-}
+// NOTE: GetLoopTiming test removed - timing functionality moved to ServerLoop class.
+// See test_ServerLoop.cpp for timing tests.
 
 TEST_F(ServerAppTest, Constructor_MinimumValues) {
     // Test with minimum reasonable values

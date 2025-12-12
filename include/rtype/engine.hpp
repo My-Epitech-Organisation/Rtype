@@ -8,3 +8,4 @@
 #include "../../lib/engine/src/ASystem.hpp"
 #include "../../lib/engine/src/IGameEngine.hpp"
 #include "../../lib/engine/src/ISystem.hpp"
+#include "../../lib/engine/src/GameEngineFactory.hpp"

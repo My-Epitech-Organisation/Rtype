@@ -5,8 +5,8 @@
 ** ServerMetrics - Server performance and activity metrics
 */
 
-#ifndef SRC_SERVER_SERVERMETRICS_HPP_
-#define SRC_SERVER_SERVERMETRICS_HPP_
+#ifndef SRC_SERVER_SHARED_SERVERMETRICS_HPP_
+#define SRC_SERVER_SHARED_SERVERMETRICS_HPP_
 
 #include <atomic>
 #include <cstdint>
@@ -36,4 +36,4 @@ struct ServerMetrics {
 
 }  // namespace rtype::server
 
-#endif  // SRC_SERVER_SERVERMETRICS_HPP_
+#endif  // SRC_SERVER_SHARED_SERVERMETRICS_HPP_
