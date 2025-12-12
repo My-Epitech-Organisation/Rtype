@@ -8,6 +8,9 @@
 #ifndef SRC_CLIENT_GRAPHIC_CONTROLLERRUMBLE_HPP_
 #define SRC_CLIENT_GRAPHIC_CONTROLLERRUMBLE_HPP_
 // clang-format off
+#ifndef SDL_MAIN_HANDLED
+#define SDL_MAIN_HANDLED
+#endif
 #include <SDL2/SDL.h>
 
 #include <chrono>
