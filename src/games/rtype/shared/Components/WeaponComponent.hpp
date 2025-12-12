@@ -129,7 +129,7 @@ inline constexpr WeaponConfig EnemyBullet{
     ProjectileType::EnemyBullet,
     15,      // damage
     300.0F,  // speed
-    0.8F,    // cooldown
+    1.8F,    // cooldown (slower enemy fire)
     5.0F,    // lifetime
     12.0F,   // hitbox width
     12.0F,   // hitbox height
