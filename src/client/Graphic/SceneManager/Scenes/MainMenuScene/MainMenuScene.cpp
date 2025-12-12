@@ -178,8 +178,16 @@ void MainMenuScene::_onConnectClicked(
 
     _updateStatus("Connecting to " + ip + ":" + std::to_string(port) + "...",
                   sf::Color::Yellow);
-    _networkClient->onConnected([this, switchToScene](std::uint32_t userId) {
-        LOG_INFO("[Client] Connected with user ID: " + std::to_string(userId));
+    std::weak_ptr<ECS::Registry> weakRegistry = _registry;
+
+    _networkClient->onConnected([this, switchToScene, weakRegistry](
+                                     std::uint32_t userId) {
+        if (!_alive) return;
+        auto reg = weakRegistry.lock();
+        if (!reg) return;
+
+        LOG_INFO("[Client] Connected with user ID: " +
+                 std::to_string(userId));
         _updateStatus("Connected! Starting game...", sf::Color::Green);
         try {
             switchToScene(SceneManager::IN_GAME);
@@ -190,7 +198,10 @@ void MainMenuScene::_onConnectClicked(
     });
 
     _networkClient->onDisconnected(
-        [this](rtype::client::NetworkClient::DisconnectReason reason) {
+        [this, weakRegistry](rtype::client::NetworkClient::DisconnectReason reason) {
+            if (!_alive) return;
+            auto reg = weakRegistry.lock();
+            if (!reg) return;
             std::string reasonStr;
             switch (reason) {
                 case rtype::network::DisconnectReason::Timeout:
@@ -217,14 +228,19 @@ void MainMenuScene::_onConnectClicked(
 }
 
 void MainMenuScene::_updateStatus(const std::string& message, sf::Color color) {
-    if (_registry->hasComponent<rtype::games::rtype::client::Text>(
+    if (!_registry) return;
+    if (!_registry->isAlive(_statusEntity)) return;
+    if (!_registry->hasComponent<rtype::games::rtype::client::Text>(
             _statusEntity)) {
-        auto& text = _registry->getComponent<rtype::games::rtype::client::Text>(
-            _statusEntity);
-        text.textContent = message;
-        text.text.setString(message);
-        text.text.setFillColor(color);
+        return;
     }
+
+    auto& text =
+        _registry->getComponent<rtype::games::rtype::client::Text>(
+            _statusEntity);
+    text.textContent = message;
+    text.text.setString(message);
+    text.text.setFillColor(color);
 }
 
 void MainMenuScene::update(float dt) {
@@ -379,6 +395,7 @@ MainMenuScene::MainMenuScene(
 }
 
 MainMenuScene::~MainMenuScene() {
+    _alive = false;
     if (_networkClient) {
         _networkClient->onConnected([](std::uint32_t) {});
         _networkClient->onDisconnected([](rtype::network::DisconnectReason) {});
