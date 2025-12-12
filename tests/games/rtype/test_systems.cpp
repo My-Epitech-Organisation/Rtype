@@ -1334,7 +1334,9 @@ TEST_F(SpawnerSystemTest, SpawnEventHasCorrectCoordinates) {
     }
 
     ASSERT_FALSE(emittedEvents.empty());
-    EXPECT_FLOAT_EQ(emittedEvents[0].x, config.spawnX);
+    float minX = config.spawnX - config.stationarySpawnInset;
+    EXPECT_LE(emittedEvents[0].x, config.spawnX);
+    EXPECT_GE(emittedEvents[0].x, minX);
     EXPECT_GE(emittedEvents[0].y, config.minSpawnY);
     EXPECT_LE(emittedEvents[0].y, config.maxSpawnY);
     EXPECT_FLOAT_EQ(emittedEvents[0].rotation, 0.0F);

@@ -49,6 +49,12 @@ bool GameEngine::initialize() {
     spawnerConfig.maxSpawnY =
         GameConfig::SCREEN_HEIGHT - GameConfig::SPAWN_MARGIN;
     spawnerConfig.bydosSlaveSpeed = GameConfig::BYDOS_SLAVE_SPEED;
+    spawnerConfig.weightMoveLeft = 0.2F;
+    spawnerConfig.weightSineWave = 0.1F;
+    spawnerConfig.weightZigZag = 0.3F;
+    spawnerConfig.weightDiveBomb = 1.0F;
+    spawnerConfig.weightStationary = 1.2F;
+    spawnerConfig.weightChase = 1.5F;
     spawnerConfig.stationarySpawnInset = GameConfig::STATIONARY_SPAWN_INSET;
     _spawnerSystem =
         std::make_unique<SpawnerSystem>(eventEmitter, spawnerConfig);

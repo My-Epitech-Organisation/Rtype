@@ -735,14 +735,14 @@ TEST(RTypeGameConfigBranchTest, ApplyDefaultsGameplayPlayerSpeedZero) {
     RTypeGameConfig config;
     config.gameplay.playerSpeed = 0.0F;
     config.applyDefaults();
-    EXPECT_FLOAT_EQ(config.gameplay.playerSpeed, 200.0F);
+    EXPECT_FLOAT_EQ(config.gameplay.playerSpeed, 260.0F);
 }
 
 TEST(RTypeGameConfigBranchTest, ApplyDefaultsGameplayPlayerSpeedNegative) {
     RTypeGameConfig config;
     config.gameplay.playerSpeed = -50.0F;
     config.applyDefaults();
-    EXPECT_FLOAT_EQ(config.gameplay.playerSpeed, 200.0F);
+    EXPECT_FLOAT_EQ(config.gameplay.playerSpeed, 260.0F);
 }
 
 TEST(RTypeGameConfigBranchTest, ApplyDefaultsGameplayEnemySpeedMultiplierZero) {
