@@ -12,9 +12,12 @@
 #include <utility>
 #include <vector>
 
+#include <rtype/engine.hpp>
+
 #include "../../../shared/Components.hpp"
 #include "../../../shared/Systems/Collision/AABB.hpp"
 #include "Logger/Macros.hpp"
+#include "protocol/Payloads.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -168,17 +171,22 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
 
     if (registry.hasComponent<HealthComponent>(target)) {
         auto& health = registry.getComponent<HealthComponent>(target);
+        const int32_t prevHealth = health.current;
         health.takeDamage(damage);
+        LOG_DEBUG("[CollisionSystem] Health after damage: " << prevHealth
+                  << " -> " << health.current << " (damage=" << damage << ")");
 
         if (isTargetPlayer && _emitEvent &&
             registry.hasComponent<NetworkIdComponent>(target)) {
             const auto& netId =
                 registry.getComponent<NetworkIdComponent>(target);
             if (netId.isValid()) {
+                LOG_DEBUG("[CollisionSystem] Emitting EntityHealthChanged for player networkId="
+                          << netId.networkId << " health=" << health.current << "/" << health.max);
                 engine::GameEvent event{};
                 event.type = engine::GameEventType::EntityHealthChanged;
                 event.entityNetworkId = netId.networkId;
-                event.entityType = static_cast<uint8_t>(EntityType::Player);
+                event.entityType = static_cast<uint8_t>(::rtype::network::EntityType::Player);
                 event.healthCurrent = health.current;
                 event.healthMax = health.max;
                 _emitEvent(event);
@@ -279,6 +287,18 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
             break;
     }
 
+    if (_emitEvent &&
+        registry.hasComponent<NetworkIdComponent>(player) &&
+        registry.getComponent<NetworkIdComponent>(player).isValid()) {
+        const auto& netId = registry.getComponent<NetworkIdComponent>(player);
+        engine::GameEvent evt{};
+        evt.type = engine::GameEventType::PowerUpApplied;
+        evt.entityNetworkId = netId.networkId;
+        evt.subType = static_cast<uint8_t>(powerUp.type);
+        evt.duration = powerUp.duration;
+        _emitEvent(evt);
+    }
+
     registry.emplaceComponent<DestroyTag>(pickup, DestroyTag{});
 }
 
@@ -309,6 +329,20 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
             health.takeDamage(damage);
             if (!health.isAlive()) {
                 registry.emplaceComponent<DestroyTag>(other, DestroyTag{});
+            }
+            if (_emitEvent &&
+                registry.hasComponent<NetworkIdComponent>(other) &&
+                registry.getComponent<NetworkIdComponent>(other).isValid()) {
+                const auto& netId =
+                    registry.getComponent<NetworkIdComponent>(other);
+                engine::GameEvent evt{};
+                evt.type = engine::GameEventType::EntityHealthChanged;
+                evt.entityNetworkId = netId.networkId;
+                evt.entityType = static_cast<uint8_t>(
+                    ::rtype::network::EntityType::Player);
+                evt.healthCurrent = health.current;
+                evt.healthMax = health.max;
+                _emitEvent(evt);
             }
         } else {
             registry.emplaceComponent<DestroyTag>(other, DestroyTag{});
