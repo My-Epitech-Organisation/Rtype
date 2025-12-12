@@ -30,8 +30,8 @@ TEST(SerializerErrorBranches, FromNetworkByteOrderSizeMismatchThrows)
 
 TEST(SerializerErrorBranches, DeserializePrimitiveSizeMismatchThrows)
 {
-    std::vector<uint8_t> small(1, 0x01);
-    EXPECT_THROW({ (void)Serializer::deserialize<uint32_t>(small); }, std::runtime_error);
+    std::vector<uint8_t> smallBuf(1, 0x01);
+    EXPECT_THROW({ (void)Serializer::deserialize<uint32_t>(smallBuf); }, std::runtime_error);
 }
 
 TEST(ValidatorErrorBranches, SafeDeserializeBoundsFailure)

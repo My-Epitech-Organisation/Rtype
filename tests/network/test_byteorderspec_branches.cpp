@@ -29,12 +29,12 @@ TEST(ByteOrderSpecBranches, GenericToFromNetwork) {
 
 TEST(ByteOrderSpecBranches, DeserializeVectorTooSmall) {
     // Header is 16 bytes; pass a short vector to cause exception
-    std::vector<std::uint8_t> small(8, 0);
-    EXPECT_THROW(ByteOrderSpec::deserializeFromNetwork<Header>(small), std::runtime_error);
+    std::vector<std::uint8_t> smallBuf(8, 0);
+    EXPECT_THROW(ByteOrderSpec::deserializeFromNetwork<Header>(smallBuf), std::runtime_error);
 }
 
 TEST(ByteOrderSpecBranches, DeserializeSpanTooSmall) {
-    std::vector<std::uint8_t> small(8, 0);
-    std::span<const std::uint8_t> s(small);
+    std::vector<std::uint8_t> smallBuf(8, 0);
+    std::span<const std::uint8_t> s(smallBuf);
     EXPECT_THROW(ByteOrderSpec::deserializeFromNetwork<Header>(s), std::runtime_error);
 }

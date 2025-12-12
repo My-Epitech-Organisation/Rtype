@@ -10,8 +10,8 @@
 using namespace rtype::network;
 
 TEST(ValidatorBranches, PacketTooSmall) {
-    std::vector<uint8_t> small(1);
-    auto res = Validator::validatePacket(std::span<const uint8_t>(small), false);
+    std::vector<uint8_t> smallBuf(1);
+    auto res = Validator::validatePacket(std::span<const uint8_t>(smallBuf), false);
     EXPECT_TRUE(res.isErr());
 }
 
