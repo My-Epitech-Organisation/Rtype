@@ -7,6 +7,7 @@
 
 #include "SpawnerSystem.hpp"
 
+#include <algorithm>
 #include <vector>
 
 #include "../../../shared/Components.hpp"
@@ -98,7 +99,12 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
         }
     }
 
-    registry.emplaceComponent<TransformComponent>(enemy, _config.spawnX, spawnY,
+    float spawnX = _config.spawnX;
+    if (chosenBehavior == AIBehavior::Stationary) {
+        spawnX = std::max(0.0F, _config.spawnX - _config.stationarySpawnInset);
+    }
+
+    registry.emplaceComponent<TransformComponent>(enemy, spawnX, spawnY,
                                                   0.0F);
     registry.emplaceComponent<VelocityComponent>(
         enemy, -_config.bydosSlaveSpeed, 0.0F);
@@ -118,7 +124,7 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
             ai.targetY = 1.0F;
             break;
         case AIBehavior::Stationary:
-            ai.targetX = _config.spawnX;
+            ai.targetX = spawnX;
             ai.targetY = spawnY;
             break;
         default:
@@ -143,7 +149,7 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     engine::GameEvent event{};
     event.type = engine::GameEventType::EntitySpawned;
     event.entityNetworkId = networkId;
-    event.x = _config.spawnX;
+    event.x = spawnX;
     event.y = spawnY;
     event.rotation = 0.0F;
     event.entityType = static_cast<uint8_t>(EntityType::Enemy);
