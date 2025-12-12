@@ -15,6 +15,8 @@ add_library(rtype_game_client_systems STATIC
     ResetTriggersSystem.hpp
     TextInputSystem.cpp
     TextInputSystem.hpp
+    PlayerAnimationSystem.cpp
+    PlayerAnimationSystem.hpp
 )
 
 target_link_libraries(rtype_game_client_systems
