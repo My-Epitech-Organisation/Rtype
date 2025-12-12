@@ -151,6 +151,8 @@ class ServerApp {
     void handleClientDisconnected(std::uint32_t userId);
     void handleStateChange(GameState oldState, GameState newState);
 
+    void resetToLobby();
+
     void processIncomingData() noexcept;
     void processRawNetworkData() noexcept;
     [[nodiscard]] bool startNetworkThread();

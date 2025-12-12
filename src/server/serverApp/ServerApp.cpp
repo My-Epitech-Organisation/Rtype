@@ -339,6 +339,8 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
         case GameState::WaitingForPlayers:
             if (oldState == GameState::Paused) {
                 LOG_INFO("[Server] Resuming wait for players");
+            } else if (oldState == GameState::GameOver) {
+                LOG_INFO("[Server] Back to lobby - waiting for players");
             }
             break;
         case GameState::GameOver:
@@ -351,6 +353,7 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
                 _networkServer->updateGameState(NetworkServer::GameState::GameOver);
                 _networkServer->sendGameOver(_score);
             }
+            resetToLobby();
             break;
     }
 }
@@ -453,6 +456,48 @@ void ServerApp::checkGameOverCondition() {
     }
 
     _stateManager->transitionTo(GameState::GameOver);
+}
+
+void ServerApp::resetToLobby() {
+    LOG_INFO("[Server] Resetting session to lobby");
+
+    if (_registry) {
+        _registry->removeEntitiesIf([](ECS::Entity) { return true; });
+        _registry->cleanupTombstones();
+    }
+
+    if (_networkSystem) {
+        _networkSystem->resetState();
+        _networkSystem->broadcastGameState(NetworkServer::GameState::Lobby);
+    } else if (_networkServer) {
+        _networkServer->updateGameState(NetworkServer::GameState::Lobby);
+    }
+
+    _score = 0;
+
+    if (_gameEngine) {
+        if (_gameEngine->isRunning()) {
+            _gameEngine->shutdown();
+        }
+        _gameEngine->initialize();
+    }
+
+    if (_stateManager) {
+        _stateManager->reset();
+    }
+
+    if (_entitySpawner) {
+        auto connected = getConnectedClientIds();
+        std::size_t idx = 0;
+        for (auto userId : connected) {
+            PlayerSpawnConfig cfg{userId, idx++};
+            auto result = _entitySpawner->spawnPlayer(cfg);
+            if (!result.success) {
+                LOG_ERROR("[Server] Failed to respawn player for userId="
+                          << userId);
+            }
+        }
+    }
 }
 
 std::size_t ServerApp::countAlivePlayers() {
