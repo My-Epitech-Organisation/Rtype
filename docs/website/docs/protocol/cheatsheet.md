@@ -48,8 +48,8 @@ This quick cheatsheet summarises the binary protocol used by the R-Type client &
 
 For the full opcode list and payload structures, see:
 
-- `lib/rtype_network/src/protocol/OpCode.hpp`
-- `lib/rtype_network/src/protocol/Payloads.hpp`
+- `lib/network/src/protocol/OpCode.hpp`
+- `lib/network/src/protocol/Payloads.hpp`
 
 ## Best Practices
 

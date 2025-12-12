@@ -156,7 +156,7 @@ Make sure your changes are small and test-covered where possible — tests speed
 - `src/games/rtype/server/Systems/` for server systems, or
 - `src/games/rtype/client/Systems/` for client systems.
 1. Derive from `rtype::engine::ASystem` and implement the `update` method.
-1. Use the `Registry` and `View` constructs from `lib/rtype_ecs` to find entities/components.
+1. Use the `Registry` and `View` constructs from `lib/ecs` to find entities/components.
 1. Register the system with the scheduler or add it to `GameEngine::initialize()` (server) or scene creation (client).
 1. Add unit tests in `tests/**` to validate system logic.
 1. Add README or documentation in `docs/website/docs/Architecture` describing the system purpose and interfaces.
@@ -165,10 +165,10 @@ Make sure your changes are small and test-covered where possible — tests speed
 
 When adding a new payload or opcode, keep in mind that the protocol is binary and validated carefully.
 
-1. Add the opcode to `lib/rtype_network/src/protocol/OpCode.hpp`.
-1. Add the payload struct to `lib/rtype_network/src/protocol/Payloads.hpp` and add size assertions.
-1. If needed, add serialization/deserialization logic to `lib/rtype_network/src/Serializer.cpp`.
-1. Update `lib/rtype_network/src/protocol/Validator.hpp` if this opcode requires custom payload validation.
+1. Add the opcode to `lib/network/src/protocol/OpCode.hpp`.
+1. Add the payload struct to `lib/network/src/protocol/Payloads.hpp` and add size assertions.
+1. If needed, add serialization/deserialization logic to `lib/network/src/Serializer.cpp`.
+1. Update `lib/network/src/protocol/Validator.hpp` if this opcode requires custom payload validation.
 1. Add handlers on the server (`src/server/network/NetworkServer.cpp`) and client (`src/client/network/NetworkClient.cpp`) to process or generate this message.
 1. Update the RFC & docs: `docs/RFC/RFC_RTGP_v1.2.0.md` and `docs/website/docs/protocol` (create the page if needed).
 1. Add unit tests for serialization and integration tests to ensure both sides interpret the payload correctly.

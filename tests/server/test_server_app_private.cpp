@@ -1,5 +1,7 @@
+#include <atomic>
+#include <memory>
+
 #include <gtest/gtest.h>
-#include "protocol/ByteOrderSpec.hpp"
 
 // Private tests reference internal implementation and can cause linkage
 // differences on MSVC/Windows builds. Guard the whole test file so that
@@ -12,9 +14,6 @@
 #include "server/serverApp/ServerApp.hpp"
 #undef private
 #undef protected
-
-using namespace rtype::server;
-using namespace rtype::network;
 
 class ServerAppPrivateTest : public ::testing::Test {
 protected:
@@ -29,13 +28,13 @@ protected:
     std::shared_ptr<std::atomic<bool>> shutdownFlag_;
 };
 
-// Note: extractPacketFromData, getLoopTiming, performFixedUpdates, 
-// calculateFrameTime and sleepUntilNextFrame have been moved to 
+// Note: extractPacketFromData, getLoopTiming, performFixedUpdates,
+// calculateFrameTime and sleepUntilNextFrame have been moved to
 // ServerLoop and PacketProcessor classes. Those tests are now in
 // test_ServerLoop.cpp.
 
 TEST_F(ServerAppPrivateTest, Shutdown_OnlyPerformedOnce) {
-    ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+    rtype::server::ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
 
     // First shutdown should complete successfully
     server.stop();
@@ -56,4 +55,4 @@ TEST(WindowsPlaceholder, ServerAppPrivateTestsDisabledOnWindows) {
     SUCCEED();
 }
 
-#endif // !defined(_WIN32)
+#endif  // !defined(_WIN32)

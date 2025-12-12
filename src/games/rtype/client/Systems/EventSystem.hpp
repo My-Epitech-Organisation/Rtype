@@ -9,6 +9,7 @@
 #define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_EVENTSYSTEM_HPP_
 #include <memory>
 #include <optional>
+#include <vector>
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
@@ -51,6 +52,13 @@ class EventSystem : public ::rtype::engine::ASystem {
 
     bool _handleMouseReleased(UserEvent& actionType,
                               const Rectangle& rect) const;
+
+    void _handleMenuNavigation(ECS::Registry& registry,
+                               const std::vector<ECS::Entity>& buttons,
+                               bool moveDown) const;
+
+    void _handleMenuActivation(ECS::Registry& registry,
+                               const std::vector<ECS::Entity>& buttons) const;
 
    public:
     /**

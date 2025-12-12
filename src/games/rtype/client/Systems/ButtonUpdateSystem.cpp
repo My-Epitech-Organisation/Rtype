@@ -9,9 +9,11 @@
 
 #include <exception>
 #include <string>
+#include <utility>
 
 #include "../AllComponents.hpp"
 #include "Logger/Logger.hpp"
+#include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 
 namespace rtype::games::rtype::client {
@@ -22,9 +24,11 @@ ButtonUpdateSystem::ButtonUpdateSystem(std::shared_ptr<sf::RenderWindow> window)
 
 void ButtonUpdateSystem::update(ECS::Registry& registry, float /*dt*/) {
     registry.view<Button<>, UserEvent>().each(
-        [](auto /*entity*/, auto& buttonAct, auto& actionType) {
+        [](ECS::Entity /*entity*/, auto& buttonAct, auto& actionType) {
             if (!actionType.idle && actionType.isReleased &&
                 actionType.isHovered) {
+                LOG_DEBUG(
+                    "[ButtonUpdateSystem] Button clicked, executing callback");
                 try {
                     buttonAct.callback();
                 } catch (SceneNotFound& e) {

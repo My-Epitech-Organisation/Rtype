@@ -16,8 +16,10 @@
 #include "Components/LifetimeComponent.hpp"
 #include "Components/SoundComponent.hpp"
 #include "Components/Tags.hpp"
+#include "Graphic/ControllerRumble.hpp"
 #include "GraphicsConstants.hpp"
 #include "Logger/Macros.hpp"
+#include "VisualCueFactory.hpp"
 #include "protocol/Payloads.hpp"
 
 namespace rtype::games::rtype::client {
@@ -69,6 +71,11 @@ void RtypeEntityFactory::setupPlayerEntity(
     reg.emplaceComponent<Size>(entity, 4, 4);
     reg.emplaceComponent<shared::HealthComponent>(entity, 1, 1);
     reg.emplaceComponent<PlayerTag>(entity);
+    reg.emplaceComponent<BoxingComponent>(entity,
+                                          sf::FloatRect({0, 0}, {33.f, 17.f}));
+    reg.getComponent<BoxingComponent>(entity).outlineColor = sf::Color::White;
+    reg.getComponent<BoxingComponent>(entity).fillColor =
+        sf::Color(0, 200, 255, 45);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<PlayerSoundComponent>(
@@ -87,6 +94,12 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 34}));
     reg.emplaceComponent<Size>(entity, 2, 2);
+    reg.emplaceComponent<BoxingComponent>(entity,
+                                          sf::FloatRect({0, 0}, {33.f, 34.f}));
+    reg.getComponent<BoxingComponent>(entity).outlineColor =
+        sf::Color(255, 120, 0);
+    reg.getComponent<BoxingComponent>(entity).fillColor =
+        sf::Color(255, 120, 0, 40);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<EnemySoundComponent>(
@@ -106,6 +119,12 @@ void RtypeEntityFactory::setupMissileEntity(
                                       std::pair<int, int>({33, 34}));
     reg.emplaceComponent<Size>(entity, 2, 2);
     reg.emplaceComponent<shared::ProjectileTag>(entity);
+    reg.emplaceComponent<BoxingComponent>(entity,
+                                          sf::FloatRect({0, 0}, {33.f, 34.f}));
+    reg.getComponent<BoxingComponent>(entity).outlineColor =
+        sf::Color(0, 220, 180);
+    reg.getComponent<BoxingComponent>(entity).fillColor =
+        sf::Color(0, 220, 180, 35);
     reg.emplaceComponent<ZIndex>(entity, 1);
     reg.emplaceComponent<shared::LifetimeComponent>(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
@@ -113,6 +132,12 @@ void RtypeEntityFactory::setupMissileEntity(
     reg.emplaceComponent<GameTag>(entity);
     auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
     lib->playSFX(*assetsManager->soundManager->get("laser_sfx"));
+
+    if (reg.hasComponent<shared::Position>(entity)) {
+        const auto& pos = reg.getComponent<shared::Position>(entity);
+        VisualCueFactory::createFlash(reg, {pos.x, pos.y},
+                                      sf::Color(0, 255, 220), 52.f, 0.25f, 10);
+    }
 }
 
 }  // namespace rtype::games::rtype::client

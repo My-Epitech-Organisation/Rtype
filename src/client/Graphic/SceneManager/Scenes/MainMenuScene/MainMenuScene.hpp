@@ -7,10 +7,13 @@
 
 #ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_MAINMENUSCENE_MAINMENUSCENE_HPP_
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_MAINMENUSCENE_MAINMENUSCENE_HPP_
+
+#include <memory>
+#include <string>
+
 #include "AudioLib/AudioLib.hpp"
 
 static constexpr int nbr_vessels = 7;
-
 #include <SFML/Graphics/Color.hpp>
 
 #include "../../../../network/ClientNetworkSystem.hpp"
@@ -73,6 +76,11 @@ class MainMenuScene : public AScene {
         std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =
             nullptr,
         std::shared_ptr<AudioLib> audioLib = nullptr);
+
+    /**
+     * @brief Destructor - clears network callbacks to prevent use-after-free
+     */
+    ~MainMenuScene();
 
    private:
     std::shared_ptr<AudioLib> _audioLib;

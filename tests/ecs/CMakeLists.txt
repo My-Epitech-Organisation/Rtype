@@ -17,6 +17,7 @@ set(ECS_TESTS
     core/test_system_scheduler
     core/test_agameengine
     core/test_asystem
+    core/test_prefab
     # Storage tests
     storage/test_isparse_set
     storage/test_sparse_set

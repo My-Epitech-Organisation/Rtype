@@ -7,15 +7,19 @@
 
 #include "Graphic.hpp"
 
+#include <algorithm>
+#include <array>
 #include <optional>
 #include <utility>
 
+#include "Accessibility.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "Config/Parser/RTypeConfigParser.hpp"
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "games/rtype/client/AllComponents.hpp"
 #include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"
+#include "games/rtype/client/PauseState.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 
@@ -52,27 +56,52 @@ void Graphic::_updateNetwork() {
 void Graphic::_update() {
     _updateDeltaTime();
     _updateNetwork();
-    _updateViewScrolling();
-
-    this->_systemScheduler->runSystem("movement");
-    this->_systemScheduler->runSystem("parallax");
     this->_systemScheduler->runSystem("button_update");
-    this->_systemScheduler->runSystem("projectile");
+
+    bool isPaused = false;
+    if (this->_registry &&
+        this->_registry
+            ->hasSingleton<rtype::games::rtype::client::PauseState>()) {
+        try {
+            isPaused =
+                this->_registry
+                    ->getSingleton<rtype::games::rtype::client::PauseState>()
+                    .isPaused;
+        } catch (const std::exception& e) {
+            LOG_ERROR("[Graphic] Exception accessing PauseState: " << e.what());
+        } catch (...) {
+            LOG_ERROR("[Graphic] Unknown exception accessing PauseState");
+        }
+    }
+
+    if (!isPaused) {
+        _updateViewScrolling();
+        this->_systemScheduler->runSystem("movement");
+        this->_systemScheduler->runSystem("parallax");
+        this->_systemScheduler->runSystem("projectile");
+    }
+
     this->_systemScheduler->runSystem("lifetime");
     this->_sceneManager->update(this->_currentDeltaTime);
 }
 
 void Graphic::_display() {
-    this->_window->clear();
+    this->_sceneTexture->clear();
 
     this->_systemScheduler->runSystem("render");
     this->_systemScheduler->runSystem("boxing");
+
+    this->_sceneTexture->display();
+
+    this->_systemScheduler->runSystem("shader_render");
 
     this->_sceneManager->draw();
     this->_window->display();
 }
 
 void Graphic::loop() {
+    this->_window->setFramerateLimit(60);
+
     while (this->_window->isOpen()) {
         this->_pollEvents();
         this->_update();
@@ -107,12 +136,13 @@ void Graphic::_initializeSystems() {
     this->_parallaxScrolling =
         std::make_unique<::rtype::games::rtype::client::ParallaxScrolling>(
             this->_view);
+    std::shared_ptr<sf::RenderTarget> targetPtr = this->_sceneTexture;
     this->_renderSystem =
         std::make_unique<::rtype::games::rtype::client::RenderSystem>(
-            this->_window);
+            targetPtr);
     this->_boxingSystem =
         std::make_unique<::rtype::games::rtype::client::BoxingSystem>(
-            this->_window);
+            targetPtr);
     this->_resetTriggersSystem =
         std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
     this->_eventSystem =
@@ -122,6 +152,9 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::shared::ProjectileSystem>();
     this->_lifetimeSystem =
         std::make_unique<::rtype::games::rtype::shared::LifetimeSystem>();
+    this->_shaderRenderSystem =
+        std::make_unique<::rtype::games::rtype::client::ShaderRenderSystem>(
+            this->_window, this->_sceneTexture, this->_colorShader);
 
     this->_systemScheduler =
         std::make_unique<ECS::SystemScheduler>(*this->_registry);
@@ -173,6 +206,13 @@ void Graphic::_initializeSystems() {
         "boxing",
         [this](ECS::Registry& reg) { this->_boxingSystem->update(reg, 0.f); },
         {"render"});
+
+    this->_systemScheduler->addSystem("shader_render",
+                                      [this](ECS::Registry& reg) {
+                                          this->_shaderRenderSystem->update(
+                                              reg, 0.f);
+                                      },
+                                      {"boxing"});
 }
 
 void Graphic::_initializeCommonAssets() {
@@ -224,12 +264,29 @@ Graphic::Graphic(
     this->_window = std::make_shared<sf::RenderWindow>(
         sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");
     this->_window->setView(*this->_view);
+
+    this->_sceneTexture = std::make_shared<sf::RenderTexture>(
+        sf::Vector2u{WINDOW_WIDTH, WINDOW_HEIGHT});
+
+    if (sf::Shader::isAvailable()) {
+        auto shader = std::make_shared<sf::Shader>();
+        if (shader->loadFromFile("assets/shaders/colorblind.frag",
+                                 sf::Shader::Type::Fragment)) {
+            this->_colorShader = shader;
+        } else {
+            LOG_ERROR("Failed to load shader: assets/shaders/colorblind.frag");
+        }
+    }
     this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value());
     if (_networkSystem) {
         _setupNetworkEntityFactory();
     }
     this->_audioLib = std::make_shared<AudioLib>();
     this->_registry->setSingleton<std::shared_ptr<AudioLib>>(this->_audioLib);
+    this->_registry->setSingleton<AccessibilitySettings>(
+        AccessibilitySettings{ColorBlindMode::None});
+    this->_registry->setSingleton<rtype::games::rtype::client::PauseState>(
+        rtype::games::rtype::client::PauseState{false});
     this->_initializeCommonAssets();
     this->_sceneManager = std::make_unique<SceneManager>(
         _registry, this->_assetsManager, this->_window, this->_keybinds,

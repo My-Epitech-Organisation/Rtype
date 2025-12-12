@@ -16,6 +16,7 @@
 #include "Components/VelocityComponent.hpp"
 #include "Logger/Macros.hpp"
 #include "client/Graphic/AudioLib/AudioLib.hpp"
+#include "games/rtype/client/GameScene/VisualCueFactory.hpp"
 
 namespace rtype::client {
 
@@ -161,6 +162,12 @@ void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
                 entity);
         auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
         audioLib->playSFX(*soundComp.deathSFX);
+    }
+    if (registry_->hasComponent<games::rtype::shared::Position>(entity)) {
+        const auto& pos =
+            registry_->getComponent<games::rtype::shared::Position>(entity);
+        games::rtype::client::VisualCueFactory::createFlash(
+            *registry_, {pos.x, pos.y}, sf::Color(255, 80, 0), 90.f, 0.45f, 20);
     }
     if (registry_->hasComponent<games::rtype::client::PlayerSoundComponent>(
             entity)) {

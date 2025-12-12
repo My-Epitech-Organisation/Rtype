@@ -6,8 +6,10 @@
 */
 
 #include <exception>
+#include <string>
 
 #include "ClientApp.hpp"
+#include "Graphic/ControllerRumble.hpp"
 #include "Logger/Macros.hpp"
 
 auto main(int argc, char** argv) -> int {
@@ -22,9 +24,12 @@ auto main(int argc, char** argv) -> int {
 
         ClientApp client(config);
         client.run();
+
+        ControllerRumble::cleanup();
     } catch (const std::exception& e) {
         LOG_ERROR(std::string("Program exited with an error: ") +
                   std::string(e.what()));
+        ControllerRumble::cleanup();
         return 1;
     }
     return 0;

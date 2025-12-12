@@ -166,6 +166,15 @@ if $GENERATE_HTML; then
         '*/asio/*' \
         '*/boost/*' \
         '*/vcpkg_installed/*' \
+        '*/build/*' \
+        '*/build-coverage/*' \
+        '*/docs/*' \
+        '*/scripts/*' \
+        '*/assets/*' \
+        '*/dev_ressources/*' \
+        '*/cmake/*' \
+        '*/tools/*' \
+        '*/saves/*' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS
 
@@ -275,6 +284,15 @@ else
         '*/asio/*' \
         '*/boost/*' \
         '*/vcpkg_installed/*' \
+        '*/build/*' \
+        '*/build-coverage/*' \
+        '*/docs/*' \
+        '*/scripts/*' \
+        '*/assets/*' \
+        '*/dev_ressources/*' \
+        '*/cmake/*' \
+        '*/tools/*' \
+        '*/saves/*' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS
 
