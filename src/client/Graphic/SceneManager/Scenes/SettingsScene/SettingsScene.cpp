@@ -462,8 +462,7 @@ void SettingsScene::_refreshIntensityLabel() {
     text.text.setString(text.textContent);
 }
 
-void SettingsScene::update(float dt) {
-}
+void SettingsScene::update(float dt) {}
 
 void SettingsScene::render(std::shared_ptr<sf::RenderWindow> window) {}
 
