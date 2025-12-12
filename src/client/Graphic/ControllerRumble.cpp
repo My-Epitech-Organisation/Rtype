@@ -8,9 +8,9 @@
 #include "ControllerRumble.hpp"
 
 #include <algorithm>
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 #include <SFML/Window/Joystick.hpp>
 
@@ -58,8 +58,8 @@ void ControllerRumble::triggerRumble(unsigned int joystickId, float intensity,
              ", strength=" + std::to_string(rumbleStrength) +
              ", duration=" + std::to_string(std::max(0, durationMs)) + "ms)");
 
-    int result = SDL_GameControllerRumble(controller, rumbleStrength,
-                                          rumbleStrength, std::max(0, durationMs));
+    int result = SDL_GameControllerRumble(
+        controller, rumbleStrength, rumbleStrength, std::max(0, durationMs));
     if (result == 0) {
         LOG_INFO("[ControllerRumble] ✓ Rumble triggered successfully!");
     } else {
