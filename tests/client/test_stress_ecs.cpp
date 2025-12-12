@@ -16,7 +16,7 @@
 #include <numeric>
 
 #include <SFML/Graphics.hpp>
-#include <ecs/ECS.hpp>
+#include <rtype/ecs.hpp>
 
 #include "../../src/games/rtype/client/AllComponents.hpp"
 

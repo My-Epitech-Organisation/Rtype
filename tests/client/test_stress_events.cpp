@@ -15,7 +15,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
-#include <ecs/ECS.hpp>
+#include <rtype/ecs.hpp>
 
 #include "../../src/games/rtype/client/AllComponents.hpp"
 #include "../../src/games/rtype/client/Systems/ButtonUpdateSystem.hpp"
@@ -541,7 +541,7 @@ TEST_F(EventStressTest, ButtonCallbacks_ClickSimulation) {
     // Simulate clicking all buttons
     for (auto entity : entities) {
         auto& event = registry->getComponent<rc::UserEvent>(entity);
-        event.isClicked = true;
+        event.isPressed = true;
     }
 
     double time = measureTime([this]() {

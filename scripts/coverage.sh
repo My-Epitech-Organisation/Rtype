@@ -104,8 +104,13 @@ else
     # 3. VCPKG_ROOT environment variable
     if [[ -d "$PROJECT_ROOT/build/vcpkg_installed" ]]; then
         echo ">>> Using cached vcpkg installation from build..."
-                CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=$PROJECT_ROOT/external/vcpkg/scripts/buildsystems/vcpkg.cmake"
-                CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_PREFIX_PATH=$PROJECT_ROOT/build/vcpkg_installed/x64-linux -DUSE_SFML=ON"
+        # Copy the cached vcpkg_installed to build-coverage to avoid rebuilding
+        if [[ ! -d "$BUILD_DIR/vcpkg_installed" ]]; then
+            echo ">>> Copying cached vcpkg packages to build-coverage..."
+            cp -r "$PROJECT_ROOT/build/vcpkg_installed" "$BUILD_DIR/"
+        fi
+        CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=$PROJECT_ROOT/external/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        CMAKE_ARGS="$CMAKE_ARGS -DUSE_SFML=ON"
     elif [[ -d "$PROJECT_ROOT/external/vcpkg" ]]; then
         echo ">>> Using vcpkg submodule..."
         # Ensure submodule is initialized
@@ -161,6 +166,15 @@ if $GENERATE_HTML; then
         '*/asio/*' \
         '*/boost/*' \
         '*/vcpkg_installed/*' \
+        '*/build/*' \
+        '*/build-coverage/*' \
+        '*/docs/*' \
+        '*/scripts/*' \
+        '*/assets/*' \
+        '*/dev_ressources/*' \
+        '*/cmake/*' \
+        '*/tools/*' \
+        '*/saves/*' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS
 
@@ -270,6 +284,15 @@ else
         '*/asio/*' \
         '*/boost/*' \
         '*/vcpkg_installed/*' \
+        '*/build/*' \
+        '*/build-coverage/*' \
+        '*/docs/*' \
+        '*/scripts/*' \
+        '*/assets/*' \
+        '*/dev_ressources/*' \
+        '*/cmake/*' \
+        '*/tools/*' \
+        '*/saves/*' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS
 

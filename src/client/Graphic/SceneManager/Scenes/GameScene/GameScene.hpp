@@ -8,37 +8,70 @@
 #ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_GAMESCENE_GAMESCENE_HPP_
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_GAMESCENE_GAMESCENE_HPP_
 
+#include <cstdint>
+#include <memory>
+
+#include "../../../../network/ClientNetworkSystem.hpp"
+#include "../../../../network/NetworkClient.hpp"
 #include "../AScene.hpp"
+#include "AudioLib/AudioLib.hpp"
+#include "IGameScene.hpp"
 #include "SceneManager/SceneManager.hpp"
 
-static constexpr int SizeXPauseMenu = 600;
-static constexpr int SizeYPauseMenu = 600;
-static constexpr int SizeFontPauseMenu = 40;
-static constexpr std::string PauseMenuTitle = "Pause";
-
-static constexpr float PlayerMovementSpeed = 300.0f;
-
+/**
+ * @brief Generic GameScene that delegates game-specific logic to IGameScene
+ *
+ * This class provides the shell for a game scene, delegating all game-specific
+ * logic (entity creation, input handling, etc.) to an IGameScene
+ * implementation. This allows different games to be plugged in without
+ * modifying this class.
+ */
 class GameScene : public AScene {
    private:
     std::shared_ptr<KeyboardActions> _keybinds;
 
-    void _updateUserMovementUp();
-    void _updateUserMovementDown();
-    void _updateUserMovementLeft();
-    void _updateUserMovementRight();
+    /// @brief Network client for server communication
+    std::shared_ptr<rtype::client::NetworkClient> _networkClient;
 
-    void _handleKeyReleasedEvent(const sf::Event& event);
+    /// @brief Network system for ECS synchronization
+    std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
+
+    /// @brief Game-specific scene implementation
+    std::unique_ptr<IGameScene> _gameScene;
+
+    /// @brief Last input mask sent to server (to avoid flooding)
+    std::uint8_t _lastInputMask = 0;
 
    public:
-    void update() override;
+    void update(float dt) override;
     void render(std::shared_ptr<sf::RenderWindow> window) override;
     void pollEvents(const sf::Event& e) override;
 
-    GameScene(std::shared_ptr<ECS::Registry> ecs,
-              std::shared_ptr<AssetManager> textureManager,
-              std::shared_ptr<sf::RenderWindow> window,
-              std::shared_ptr<KeyboardActions> keybinds,
-              std::function<void(const SceneManager::Scene&)> switchToScene);
+    /**
+     * @brief Construct a new GameScene
+     *
+     * @param ecs The ECS registry
+     * @param textureManager Asset manager
+     * @param window Render window
+     * @param keybinds Keyboard bindings
+     * @param switchToScene Scene switch callback
+     * @param gameScene Game-specific scene implementation
+     * @param networkClient Network client (optional)
+     * @param networkSystem Network system (optional)
+     */
+    GameScene(
+        std::shared_ptr<ECS::Registry> ecs,
+        std::shared_ptr<AssetManager> textureManager,
+        std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<KeyboardActions> keybinds,
+        std::function<void(const SceneManager::Scene&)> switchToScene,
+        std::unique_ptr<IGameScene> gameScene,
+        std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,
+        std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =
+            nullptr,
+        std::shared_ptr<AudioLib> audio = nullptr);
+
+    ~GameScene();
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_GAMESCENE_GAMESCENE_HPP_

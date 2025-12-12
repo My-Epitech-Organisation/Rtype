@@ -42,6 +42,9 @@
     "name" : "opengl",
     "version>=" : "2022-12-04#3"
   }, {
+    "name" : "sdl2",
+    "version>=" : "2.32.4"
+  }, {
     "name" : "sfml",
     "version>=" : "3.0.2"
   }, {

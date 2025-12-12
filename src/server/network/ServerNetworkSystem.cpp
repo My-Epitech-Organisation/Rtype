@@ -11,6 +11,8 @@
 #include <utility>
 #include <vector>
 
+#include "games/rtype/shared/Components/HealthComponent.hpp"
+
 namespace rtype::server {
 
 ServerNetworkSystem::ServerNetworkSystem(
@@ -69,8 +71,9 @@ void ServerNetworkSystem::unregisterNetworkedEntityById(
     if (it == networkedEntities_.end()) {
         return;
     }
-
-    entityToNetworkId_.erase(it->second.entity.id);
+    if (!it->second.entity.isNull()) {
+        entityToNetworkId_.erase(it->second.entity.id);
+    }
     networkedEntities_.erase(it);
 
     server_->destroyEntity(networkId);
@@ -123,6 +126,12 @@ void ServerNetworkSystem::correctPlayerPosition(std::uint32_t userId, float x,
     server_->correctPosition(userId, x, y);
 }
 
+void ServerNetworkSystem::updateEntityHealth(std::uint32_t networkId,
+                                             std::int32_t current,
+                                             std::int32_t max) {
+    server_->updateEntityHealth(networkId, current, max);
+}
+
 void ServerNetworkSystem::broadcastEntityUpdates() {
     for (auto& [networkId, info] : networkedEntities_) {
         if (info.dirty) {
@@ -133,6 +142,27 @@ void ServerNetworkSystem::broadcastEntityUpdates() {
     }
 }
 
+void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
+                                               EntityType type, float x,
+                                               float y) {
+    NetworkedEntity info;
+    info.entity = ECS::Entity{};
+    info.networkId = networkId;
+    info.type = type;
+    info.lastX = x;
+    info.lastY = y;
+    info.lastVx = 0;
+    info.lastVy = 0;
+    info.dirty = false;
+
+    networkedEntities_[networkId] = info;
+    server_->spawnEntity(networkId, type, x, y);
+}
+
+void ServerNetworkSystem::broadcastGameStart() {
+    server_->updateGameState(NetworkServer::GameState::Running);
+}
+
 void ServerNetworkSystem::update() {
     server_->poll();
 
@@ -140,7 +170,7 @@ void ServerNetworkSystem::update() {
 
     std::vector<std::uint32_t> toRemove;
     for (auto& [networkId, info] : networkedEntities_) {
-        if (!registry_->isAlive(info.entity)) {
+        if (!info.entity.isNull() && !registry_->isAlive(info.entity)) {
             toRemove.push_back(networkId);
         }
     }
@@ -181,6 +211,16 @@ void ServerNetworkSystem::handleClientConnected(std::uint32_t userId) {
     for (const auto& [networkId, info] : networkedEntities_) {
         server_->spawnEntityToClient(userId, networkId, info.type, info.lastX,
                                      info.lastY);
+
+        if (registry_->isAlive(info.entity) &&
+            registry_
+                ->hasComponent<rtype::games::rtype::shared::HealthComponent>(
+                    info.entity)) {
+            const auto& health = registry_->getComponent<
+                rtype::games::rtype::shared::HealthComponent>(info.entity);
+            server_->updateEntityHealthToClient(userId, networkId,
+                                                health.current, health.max);
+        }
     }
 
     if (onClientConnectedCallback_) {

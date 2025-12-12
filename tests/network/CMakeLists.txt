@@ -3,7 +3,7 @@
 add_executable(test_protocol test_protocol.cpp)
 
 target_link_libraries(test_protocol PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -11,7 +11,7 @@ target_link_libraries(test_protocol PRIVATE
 add_executable(test_serialization test_serialization.cpp)
 
 target_link_libraries(test_serialization PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -19,7 +19,7 @@ target_link_libraries(test_serialization PRIVATE
 add_executable(test_error test_error.cpp)
 
 target_link_libraries(test_error PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -27,7 +27,7 @@ target_link_libraries(test_error PRIVATE
 add_executable(test_asio_socket test_asio_socket.cpp)
 
 target_link_libraries(test_asio_socket PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -35,7 +35,7 @@ target_link_libraries(test_asio_socket PRIVATE
 add_executable(test_reliable_channel test_reliable_channel.cpp)
 
 target_link_libraries(test_reliable_channel PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -43,7 +43,7 @@ target_link_libraries(test_reliable_channel PRIVATE
 add_executable(test_connection_state test_connection_state.cpp)
 
 target_link_libraries(test_connection_state PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -51,7 +51,7 @@ target_link_libraries(test_connection_state PRIVATE
 add_executable(test_connection test_connection.cpp)
 
 target_link_libraries(test_connection PRIVATE
-    rtype_network
+    network
     GTest::gtest_main
 )
 
@@ -59,7 +59,148 @@ target_link_libraries(test_connection PRIVATE
 add_executable(test_packet_validation test_packet_validation.cpp)
 
 target_link_libraries(test_packet_validation PRIVATE
-    rtype_network
+    network
+    GTest::gtest_main
+)
+
+# OpCode tests
+add_executable(test_opcode test_opcode.cpp)
+
+target_link_libraries(test_opcode PRIVATE
+    network
+    GTest::gtest_main
+)
+
+# Validator tests
+add_executable(test_validator test_validator.cpp)
+
+target_link_libraries(test_validator PRIVATE
+    network
+    GTest::gtest_main
+)
+
+# ByteOrderSpec extra coverage tests
+add_executable(test_byteorderspec_extra test_byteorderspec_extra.cpp)
+
+target_link_libraries(test_byteorderspec_extra PRIVATE
+    network
+    GTest::gtest_main
+)
+
+# Exhausive coverage harness
+add_executable(test_coverage_harness test_coverage_harness.cpp)
+
+target_link_libraries(test_coverage_harness PRIVATE
+    network
+    GTest::gtest_main
+)
+
+# New targeted branch tests
+add_executable(test_serializer_branches test_serializer_branches.cpp)
+target_link_libraries(test_serializer_branches PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_byteorderspec_branches test_byteorderspec_branches.cpp)
+target_link_libraries(test_byteorderspec_branches PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_header_branches test_header_branches.cpp)
+target_link_libraries(test_header_branches PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_validator_additional test_validator_additional.cpp)
+target_link_libraries(test_validator_additional PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_serializer_and_validator_errors test_serializer_and_validator_errors.cpp)
+target_link_libraries(test_serializer_and_validator_errors PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_serializer_template test_serializer_template.cpp)
+target_link_libraries(test_serializer_template PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_serializer_string_roundtrip test_serializer_string_roundtrip.cpp)
+target_link_libraries(test_serializer_string_roundtrip PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_validator_extra test_validator_extra.cpp)
+target_link_libraries(test_validator_extra PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_serializer_endian test_serializer_endian.cpp)
+target_link_libraries(test_serializer_endian PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_serializer_validate_extract_server_userid test_serializer_validate_extract_server_userid.cpp)
+target_link_libraries(test_serializer_validate_extract_server_userid PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_serializer_validate_extract_extra test_serializer_validate_extract_extra.cpp)
+target_link_libraries(test_serializer_validate_extract_extra PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_byteorderspec_various_sizes test_byteorderspec_various_sizes.cpp)
+target_link_libraries(test_byteorderspec_various_sizes PRIVATE
+    network
+    GTest::gtest_main
+)
+
+# Additional Asio error mapping test
+
+add_executable(test_opcode_exhaustive test_opcode_exhaustive.cpp)
+target_link_libraries(test_opcode_exhaustive PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_validator_success test_validator_success.cpp)
+target_link_libraries(test_validator_success PRIVATE
+    network
+    GTest::gtest_main
+)
+
+# Extra Asio error mapping test
+add_executable(test_asio_error_mapping_extra
+    test_asio_error_mapping_extra.cpp
+    test_asio_socket_error_cases.cpp
+)
+target_link_libraries(test_asio_error_mapping_extra PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_asio_error_mapping_all test_asio_error_mapping_all.cpp)
+target_link_libraries(test_asio_error_mapping_all PRIVATE
+    network
+    GTest::gtest_main
+)
+
+add_executable(test_asio_socket_misc test_asio_socket_misc.cpp)
+target_link_libraries(test_asio_socket_misc PRIVATE
+    network
     GTest::gtest_main
 )
 
@@ -73,3 +214,27 @@ gtest_discover_tests(test_reliable_channel)
 gtest_discover_tests(test_connection_state)
 gtest_discover_tests(test_connection)
 gtest_discover_tests(test_packet_validation)
+
+gtest_discover_tests(test_opcode)
+gtest_discover_tests(test_validator)
+gtest_discover_tests(test_byteorderspec_extra)
+gtest_discover_tests(test_coverage_harness)
+gtest_discover_tests(test_serializer_branches)
+gtest_discover_tests(test_byteorderspec_branches)
+gtest_discover_tests(test_header_branches)
+gtest_discover_tests(test_validator_additional)
+gtest_discover_tests(test_serializer_template)
+gtest_discover_tests(test_byteorderspec_various_sizes)
+gtest_discover_tests(test_opcode_exhaustive)
+gtest_discover_tests(test_validator_success)
+gtest_discover_tests(test_asio_error_mapping_extra)
+gtest_discover_tests(test_asio_error_mapping_all)
+gtest_discover_tests(test_serializer_and_validator_errors)
+gtest_discover_tests(test_serializer_string_roundtrip)
+gtest_discover_tests(test_validator_extra)
+gtest_discover_tests(test_serializer_endian)
+gtest_discover_tests(test_asio_socket_misc)
+gtest_discover_tests(test_serializer_validate_extract_server_userid)
+gtest_discover_tests(test_serializer_validate_extract_extra)
+gtest_discover_tests(test_asio_error_mapping_all)
+## test_asio_error_mapping removed due to private API access - rely on other asio tests

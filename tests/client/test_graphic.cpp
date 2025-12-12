@@ -10,6 +10,7 @@
 #include "../src/client/Graphic/KeyboardActions.hpp"
 #include "../src/client/Graphic/AssetManager/AssetManager.hpp"
 #include "../src/client/GameAction.hpp"
+#include "../src/games/rtype/shared/Config/RTypeConfig.hpp"
 
 TEST(KeyboardActionsTest, Constructor_InitializesDefaultBindings) {
     KeyboardActions actions;
@@ -32,7 +33,8 @@ TEST(KeyboardActionsTest, GetKeyBinding_ReturnsNoneForUnset) {
 }
 
 TEST(AssetManagerTest, Constructor_CreatesManagers) {
-    AssetManager manager;
+    rtype::game::config::RTypeGameConfig config;
+    AssetManager manager(config);
     EXPECT_NE(manager.textureManager, nullptr);
     EXPECT_NE(manager.fontManager, nullptr);
 }

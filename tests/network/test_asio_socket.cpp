@@ -79,9 +79,14 @@ TEST_F(AsioUdpSocketTest, BindToSpecificPort) {
     auto socket = createAsyncSocket(ctx_->get());
     ASSERT_NE(socket, nullptr);
 
-    // Use a high port number to avoid permission issues
-    constexpr uint16_t testPort = 54321;
+    // First bind to ephemeral port to get an available port
+    auto helperSocket = createAsyncSocket(ctx_->get());
+    auto helperResult = helperSocket->bind(0);
+    ASSERT_TRUE(helperResult.isOk()) << "Helper bind failed";
+    uint16_t testPort = helperSocket->localPort();
+    helperSocket->close();
 
+    // Now bind our test socket to the port we know was available
     auto result = socket->bind(testPort);
     EXPECT_TRUE(result.isOk()) << "Bind failed: " << toString(result.error());
     EXPECT_EQ(socket->localPort(), testPort);
@@ -89,17 +94,20 @@ TEST_F(AsioUdpSocketTest, BindToSpecificPort) {
 
 TEST_F(AsioUdpSocketTest, BindTwiceToSameSocketFails) {
     auto socket = createAsyncSocket(ctx_->get());
-    constexpr uint16_t testPort = 54322;
 
-    // First bind should succeed
-    auto result1 = socket->bind(testPort);
-    EXPECT_TRUE(result1.isOk());
+    // First bind to ephemeral port
+    auto result1 = socket->bind(0);
+    EXPECT_TRUE(result1.isOk()) << "First bind failed: " << toString(result1.error());
+    uint16_t firstPort = socket->localPort();
+    EXPECT_GT(firstPort, 0);
 
-    // Second bind on SAME socket should fail (already bound)
-    auto result2 = socket->bind(testPort + 1);
-    // After first bind, socket is already bound - implementation closes and reopens
-    // This is actually valid behavior, so just verify first bind works
-    EXPECT_TRUE(result1.isOk());
+    // Second bind on SAME socket - implementation closes and reopens
+    // This is actually valid behavior since we reopen the socket
+    auto result2 = socket->bind(0);
+    EXPECT_TRUE(result2.isOk()) << "Second bind failed: " << toString(result2.error());
+
+    // Verify socket is still functional after rebind
+    EXPECT_TRUE(socket->isOpen());
 }
 
 TEST_F(AsioUdpSocketTest, CloseSocket) {

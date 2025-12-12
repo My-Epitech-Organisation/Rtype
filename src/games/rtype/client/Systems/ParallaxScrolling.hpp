@@ -20,9 +20,7 @@ namespace rtype::games::rtype::client {
 /**
  * @brief System for parallax scrolling background layers.
  *
- * Uses cached view dimensions to avoid per-frame recalculation.
- * Call invalidateCache() if view size changes.
- */
+ **/
 class ParallaxScrolling : public ::rtype::engine::ASystem {
    private:
     std::shared_ptr<sf::View> _view;
@@ -41,9 +39,6 @@ class ParallaxScrolling : public ::rtype::engine::ASystem {
 
    public:
     explicit ParallaxScrolling(std::shared_ptr<sf::View> view);
-
-    /// @brief Invalidate cached dimensions (call when view resizes)
-    void invalidateCache();
 
     void update(ECS::Registry& registry, float dt) override;
 };

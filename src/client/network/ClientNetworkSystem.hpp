@@ -83,11 +83,8 @@ class ClientNetworkSystem {
      */
     ~ClientNetworkSystem() = default;
 
-    // Non-copyable
     ClientNetworkSystem(const ClientNetworkSystem&) = delete;
     ClientNetworkSystem& operator=(const ClientNetworkSystem&) = delete;
-
-    // Non-movable
     ClientNetworkSystem(ClientNetworkSystem&&) = delete;
     ClientNetworkSystem& operator=(ClientNetworkSystem&&) = delete;
 
@@ -112,6 +109,12 @@ class ClientNetworkSystem {
      */
     void onLocalPlayerAssigned(
         std::function<void(std::uint32_t userId, ECS::Entity entity)> callback);
+
+    /**
+     * @brief Register callback for health updates (after ECS sync)
+     * @param callback Function receiving the health event
+     */
+    void onHealthUpdate(std::function<void(const EntityHealthEvent&)> callback);
 
     /**
      * @brief Update the network system
@@ -157,8 +160,12 @@ class ClientNetworkSystem {
    private:
     void handleEntitySpawn(const EntitySpawnEvent& event);
     void handleEntityMove(const EntityMoveEvent& event);
+
+    void _playDeathSound(ECS::Entity entity);
+
     void handleEntityDestroy(std::uint32_t entityId);
     void handlePositionCorrection(float x, float y);
+    void handleEntityHealth(const EntityHealthEvent& event);
     void handleConnected(std::uint32_t userId);
     void handleDisconnected(network::DisconnectReason reason);
 
@@ -178,6 +185,7 @@ class ClientNetworkSystem {
 
     std::function<void(std::uint32_t, ECS::Entity)>
         onLocalPlayerAssignedCallback_;
+    std::function<void(const EntityHealthEvent&)> onHealthUpdateCallback_;
 };
 
 }  // namespace rtype::client

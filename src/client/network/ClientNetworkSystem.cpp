@@ -10,7 +10,18 @@
 #include <memory>
 #include <utility>
 
+#include "Components/HealthComponent.hpp"
+#include "Components/PositionComponent.hpp"
+#include "Components/SoundComponent.hpp"
+#include "Components/VelocityComponent.hpp"
+#include "Logger/Macros.hpp"
+#include "client/Graphic/AudioLib/AudioLib.hpp"
+#include "games/rtype/client/GameScene/VisualCueFactory.hpp"
+
 namespace rtype::client {
+
+using Position = rtype::games::rtype::shared::Position;
+using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
 ClientNetworkSystem::ClientNetworkSystem(
     std::shared_ptr<ECS::Registry> registry,
@@ -32,6 +43,9 @@ ClientNetworkSystem::ClientNetworkSystem(
     client_->onEntityDestroy(
         [this](std::uint32_t entityId) { handleEntityDestroy(entityId); });
 
+    client_->onEntityHealth(
+        [this](EntityHealthEvent event) { handleEntityHealth(event); });
+
     client_->onPositionCorrection(
         [this](float x, float y) { handlePositionCorrection(x, y); });
 }
@@ -43,6 +57,11 @@ void ClientNetworkSystem::setEntityFactory(EntityFactory factory) {
 void ClientNetworkSystem::onLocalPlayerAssigned(
     std::function<void(std::uint32_t userId, ECS::Entity entity)> callback) {
     onLocalPlayerAssignedCallback_ = std::move(callback);
+}
+
+void ClientNetworkSystem::onHealthUpdate(
+    std::function<void(const EntityHealthEvent&)> callback) {
+    onHealthUpdateCallback_ = std::move(callback);
 }
 
 void ClientNetworkSystem::update() { client_->poll(); }
@@ -71,23 +90,37 @@ std::optional<ECS::Entity> ClientNetworkSystem::findEntityByNetworkId(
 bool ClientNetworkSystem::isConnected() const { return client_->isConnected(); }
 
 void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
+    LOG_DEBUG(
+        "[ClientNetworkSystem] Entity spawn received: entityId=" +
+        std::to_string(event.entityId) +
+        " type=" + std::to_string(static_cast<int>(event.type)) + " pos=(" +
+        std::to_string(event.x) + ", " + std::to_string(event.y) +
+        ") localUserId=" +
+        (localUserId_.has_value() ? std::to_string(*localUserId_) : "none"));
+
     if (networkIdToEntity_.find(event.entityId) != networkIdToEntity_.end()) {
+        LOG_DEBUG("[ClientNetworkSystem] Entity already exists, skipping");
         return;
     }
 
     ECS::Entity entity;
 
     if (entityFactory_) {
+        LOG_DEBUG("[ClientNetworkSystem] Using custom entityFactory");
         entity = entityFactory_(*registry_, event);
     } else {
+        LOG_DEBUG("[ClientNetworkSystem] Using default entityFactory");
         entity = defaultEntityFactory(*registry_, event);
     }
 
     networkIdToEntity_[event.entityId] = entity;
+    LOG_DEBUG("[ClientNetworkSystem] Created entity id=" +
+              std::to_string(entity.id));
 
     if (localUserId_.has_value() && event.entityId == *localUserId_ &&
         event.type == network::EntityType::Player) {
         localPlayerEntity_ = entity;
+        LOG_DEBUG("[ClientNetworkSystem] This is our local player!");
 
         if (onLocalPlayerAssignedCallback_) {
             onLocalPlayerAssignedCallback_(*localUserId_, entity);
@@ -108,27 +141,67 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
         return;
     }
 
-    // TODO(SamTess): Implement component updates for entity movement.
-    // The EntityFactory should set up TransformComponent and VelocityComponent.
-    // Update them here using event.x, event.y, event.vx, event.vy.
+    if (registry_->hasComponent<Position>(entity)) {
+        auto& pos = registry_->getComponent<Position>(entity);
+        pos.x = event.x;
+        pos.y = event.y;
+    }
+
+    if (registry_->hasComponent<Velocity>(entity)) {
+        auto& vel = registry_->getComponent<Velocity>(entity);
+        vel.vx = event.vx;
+        vel.vy = event.vy;
+    }
+}
+
+void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
+    if (registry_->hasComponent<games::rtype::client::EnemySoundComponent>(
+            entity)) {
+        auto& soundComp =
+            registry_->getComponent<games::rtype::client::EnemySoundComponent>(
+                entity);
+        auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
+        audioLib->playSFX(*soundComp.deathSFX);
+    }
+    if (registry_->hasComponent<games::rtype::shared::Position>(entity)) {
+        const auto& pos =
+            registry_->getComponent<games::rtype::shared::Position>(entity);
+        games::rtype::client::VisualCueFactory::createFlash(
+            *registry_, {pos.x, pos.y}, sf::Color(255, 80, 0), 90.f, 0.45f, 20);
+    }
+    if (registry_->hasComponent<games::rtype::client::PlayerSoundComponent>(
+            entity)) {
+        auto& soundComp =
+            registry_->getComponent<games::rtype::client::PlayerSoundComponent>(
+                entity);
+        auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
+        audioLib->playSFX(*soundComp.deathSFX);
+    }
 }
 
 void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
+    LOG_DEBUG("[ClientNetworkSystem] Entity destroy received: entityId=" +
+              std::to_string(entityId));
+
     auto it = networkIdToEntity_.find(entityId);
     if (it == networkIdToEntity_.end()) {
+        LOG_DEBUG("[ClientNetworkSystem] Entity not found in map, skipping");
         return;
     }
 
     ECS::Entity entity = it->second;
 
     if (registry_->isAlive(entity)) {
+        _playDeathSound(entity);
         registry_->killEntity(entity);
+        LOG_DEBUG("[ClientNetworkSystem] Entity killed");
     }
 
-    networkIdToEntity_.erase(it);
+    this->networkIdToEntity_.erase(it);
 
     if (localPlayerEntity_.has_value() && *localPlayerEntity_ == entity) {
         localPlayerEntity_.reset();
+        LOG_DEBUG("[ClientNetworkSystem] Local player entity reset!");
     }
 }
 
@@ -144,12 +217,40 @@ void ClientNetworkSystem::handlePositionCorrection(float x, float y) {
         return;
     }
 
-    // TODO(SamTess): Implement position correction/reconciliation using x, y.
-    (void)x;
-    (void)y;
+    if (registry_->hasComponent<Position>(entity)) {
+        auto& pos = registry_->getComponent<Position>(entity);
+        pos.x = x;
+        pos.y = y;
+    }
+}
+
+void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
+    auto it = networkIdToEntity_.find(event.entityId);
+    if (it != networkIdToEntity_.end()) {
+        ECS::Entity entity = it->second;
+        if (registry_->isAlive(entity)) {
+            if (registry_->hasComponent<
+                    rtype::games::rtype::shared::HealthComponent>(entity)) {
+                auto& health = registry_->getComponent<
+                    rtype::games::rtype::shared::HealthComponent>(entity);
+                health.current = event.current;
+                health.max = event.max;
+            } else {
+                registry_->emplaceComponent<
+                    rtype::games::rtype::shared::HealthComponent>(
+                    entity, event.current, event.max);
+            }
+        }
+    }
+
+    if (onHealthUpdateCallback_) {
+        onHealthUpdateCallback_(event);
+    }
 }
 
 void ClientNetworkSystem::handleConnected(std::uint32_t userId) {
+    LOG_INFO("[ClientNetworkSystem] Connected with userId=" +
+             std::to_string(userId));
     localUserId_ = userId;
 }
 

@@ -8,6 +8,8 @@
 #include "RenderSystem.hpp"
 
 #include <algorithm>
+#include <utility>
+#include <vector>
 
 #include "../AllComponents.hpp"
 #include "ECS.hpp"
@@ -18,8 +20,8 @@ namespace rs = ::rtype::games::rtype::shared;
 
 namespace rtype::games::rtype::client {
 
-RenderSystem::RenderSystem(std::shared_ptr<sf::RenderWindow> window)
-    : ::rtype::engine::ASystem("RenderSystem"), _window(std::move(window)) {}
+RenderSystem::RenderSystem(std::shared_ptr<sf::RenderTarget> target)
+    : ::rtype::engine::ASystem("RenderSystem"), _target(std::move(target)) {}
 
 bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
     if (registry.hasComponent<HiddenComponent>(entity)) {
@@ -29,28 +31,18 @@ bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
 }
 
 void RenderSystem::_renderImages(ECS::Registry& registry) {
-    _cachedDrawableEntities.clear();
+    std::vector<ECS::Entity> drawableEntities;
     registry.view<Image, rs::Position, ZIndex>().each(
-        [this](auto entt, auto& /*img*/, auto& /*pos*/, auto& /*zindex*/) {
-            _cachedDrawableEntities.push_back(entt);
+        [&drawableEntities](auto entt, auto, auto, auto) {
+            drawableEntities.push_back(entt);
         });
-
-    const std::size_t currentCount = _cachedDrawableEntities.size();
-    if (currentCount != _lastDrawableCount) {
-        _needsResort = true;
-        _lastDrawableCount = currentCount;
-    }
-    if (_needsResort && !_cachedDrawableEntities.empty()) {
-        std::sort(_cachedDrawableEntities.begin(),
-                  _cachedDrawableEntities.end(),
-                  [&registry](ECS::Entity a, ECS::Entity b) {
-                      const auto& za = registry.getComponent<ZIndex>(a);
-                      const auto& zb = registry.getComponent<ZIndex>(b);
-                      return za.depth < zb.depth;
-                  });
-        _needsResort = false;
-    }
-    for (auto entt : _cachedDrawableEntities) {
+    std::sort(drawableEntities.begin(), drawableEntities.end(),
+              [&registry](ECS::Entity a, ECS::Entity b) {
+                  auto& za = registry.getComponent<ZIndex>(a);
+                  auto& zb = registry.getComponent<ZIndex>(b);
+                  return za.depth < zb.depth;
+              });
+    for (auto entt : drawableEntities) {
         if (isEntityHidden(registry, entt)) continue;
 
         auto& img = registry.getComponent<Image>(entt);
@@ -68,7 +60,7 @@ void RenderSystem::_renderImages(ECS::Registry& registry) {
             img.sprite.setTextureRect(texture.rect);
         }
 
-        _window->draw(img.sprite);
+        _target->draw(img.sprite);
     }
 }
 
@@ -86,7 +78,7 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry) {
             rectData.rectangle.setOutlineColor(rectData.outlineColor);
             rectData.rectangle.setFillColor(rectData.currentColor);
 
-            _window->draw(rectData.rectangle);
+            _target->draw(rectData.rectangle);
         });
 }
 
@@ -109,6 +101,10 @@ void RenderSystem::_renderButtons(ECS::Registry& registry) {
             float rectWidth = rectData.size.first;
             float rectHeight = rectData.size.second;
 
+            textData.text.setCharacterSize(textData.size);
+            textData.text.setFillColor(textData.color);
+            textData.text.setString(textData.textContent);
+
             sf::FloatRect textBounds = textData.text.getLocalBounds();
             float textWidth = textBounds.size.x;
             float textHeight = textBounds.size.y;
@@ -119,12 +115,9 @@ void RenderSystem::_renderButtons(ECS::Registry& registry) {
                 rectY + (rectHeight / 2.0f) - (textHeight / 2.0f) - textTop;
 
             textData.text.setPosition({centerX, centerY});
-            textData.text.setCharacterSize(textData.size);
-            textData.text.setFillColor(textData.color);
-            textData.text.setString(textData.textContent);
 
-            _window->draw(rectData.rectangle);
-            _window->draw(textData.text);
+            _target->draw(rectData.rectangle);
+            _target->draw(textData.text);
         });
 }
 
@@ -139,7 +132,7 @@ void RenderSystem::_renderStaticText(ECS::Registry& registry) {
             textData.text.setFillColor(textData.color);
             textData.text.setString(textData.textContent);
 
-            _window->draw(textData.text);
+            _target->draw(textData.text);
         });
 }
 

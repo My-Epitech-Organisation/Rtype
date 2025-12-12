@@ -7,6 +7,9 @@ add_library(rtype_game_shared_systems OBJECT
     AISystem/Behaviors/Patrol/PatrolBehavior.cpp
     AISystem/Behaviors/Stationary/StationaryBehavior.cpp
     AISystem/Behaviors/BehaviorRegistry.cpp
+    Projectile/ProjectileSystem.cpp
+    Lifetime/LifetimeSystem.cpp
+    Collision/QuadTreeSystem.cpp
 )
 
 target_include_directories(rtype_game_shared_systems PUBLIC
@@ -15,5 +18,5 @@ target_include_directories(rtype_game_shared_systems PUBLIC
 )
 
 target_link_libraries(rtype_game_shared_systems PUBLIC
-    rtype_engine
+    engine
 )

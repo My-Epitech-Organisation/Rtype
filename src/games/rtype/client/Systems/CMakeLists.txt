@@ -13,6 +13,8 @@ add_library(rtype_game_client_systems STATIC
     BoxingSystem.hpp
     ResetTriggersSystem.cpp
     ResetTriggersSystem.hpp
+    TextInputSystem.cpp
+    TextInputSystem.hpp
 )
 
 target_link_libraries(rtype_game_client_systems
@@ -22,7 +24,7 @@ target_link_libraries(rtype_game_client_systems
     SFML::Window
     SFML::Audio
     SFML::System
-    rtype_engine
+    engine
     rtype-graphic-scene-manager
     rtype_game_shared
     rtype_game_client_components

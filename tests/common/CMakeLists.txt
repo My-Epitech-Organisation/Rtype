@@ -6,7 +6,7 @@ target_link_libraries(test_argparser PRIVATE
 
 target_include_directories(test_argparser PRIVATE
     ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/lib/rtype_common/src
+    ${CMAKE_SOURCE_DIR}/lib/common/src
     ${CMAKE_SOURCE_DIR}/lib
 )
 
@@ -17,7 +17,7 @@ add_executable(test_logger test_logger.cpp)
 
 target_link_libraries(test_logger PRIVATE
     GTest::gtest_main
-    rtype_common
+    common
 )
 
 target_include_directories(test_logger PRIVATE
@@ -35,7 +35,7 @@ target_link_libraries(test_safe_queue PRIVATE
 
 target_include_directories(test_safe_queue PRIVATE
     ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/lib/rtype_common/src
+    ${CMAKE_SOURCE_DIR}/lib/common/src
     ${CMAKE_SOURCE_DIR}/lib
 )
 
@@ -99,6 +99,20 @@ target_include_directories(test_tomlparser_branches PRIVATE
 )
 
 gtest_discover_tests(test_tomlparser_branches)
+
+add_executable(test_scene_exception test_scene_exception.cpp)
+
+target_link_libraries(test_scene_exception PRIVATE
+    GTest::gtest_main
+    common
+)
+
+target_include_directories(test_scene_exception PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib
+)
+
+gtest_discover_tests(test_scene_exception)
 
 # Branch coverage tests for SaveManager
 add_executable(test_savemanager_branches test_savemanager_branches.cpp)

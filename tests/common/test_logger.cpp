@@ -17,11 +17,11 @@
 #include <thread>
 #include <vector>
 
-#include "rtype_common/src/Logger/FileWriter.hpp"
-#include "rtype_common/src/Logger/LogLevel.hpp"
-#include "rtype_common/src/Logger/Logger.hpp"
-#include "rtype_common/src/Logger/Macros.hpp"
-#include "rtype_common/src/Logger/Timestamp.hpp"
+#include "common/src/Logger/FileWriter.hpp"
+#include "common/src/Logger/LogLevel.hpp"
+#include "common/src/Logger/Logger.hpp"
+#include "common/src/Logger/Macros.hpp"
+#include "common/src/Logger/Timestamp.hpp"
 
 using namespace rtype;
 

@@ -60,6 +60,70 @@ struct NetworkConfig {
 };
 
 /**
+ * @brief Fonts configuration section
+ */
+struct FontsConfig {
+    std::string MainFont;
+    std::string TitleFont;
+
+    bool operator==(const FontsConfig&) const = default;
+};
+
+/**
+ * @brief Textures configuration section
+ */
+struct TexturesConfig {
+    std::string Player;
+    std::string Enemy;
+    std::string background;
+    std::string planet1;
+    std::string planet2;
+    std::string planet3;
+    std::string astroVessel;
+    std::string missileLaser;
+
+    bool operator==(const TexturesConfig&) const = default;
+};
+
+/**
+ * @brief Music configuration section
+ */
+struct MusicConfig {
+    std::string mainMenu;
+    std::string game;
+    std::string settings;
+
+    bool operator==(const MusicConfig&) const = default;
+};
+
+/**
+ * @brief Sfx configuration section
+ */
+struct SfxConfig {
+    std::string hoverButton;
+    std::string clickButton;
+    std::string laser;
+    std::string enemySpawn;
+    std::string enemyDeath;
+    std::string playerSpawn;
+    std::string playerDeath;
+
+    bool operator==(const SfxConfig&) const = default;
+};
+
+/**
+ * @brief Assets configuration section
+ */
+struct AssetsConfig {
+    MusicConfig music;
+    SfxConfig sfx;
+    TexturesConfig textures;
+    FontsConfig fonts;
+
+    bool operator==(const AssetsConfig&) const = default;
+};
+
+/**
  * @brief Server-specific configuration section
  */
 struct ServerConfig {
@@ -164,6 +228,9 @@ class RTypeGameConfig {
 
     /// @brief Network settings
     NetworkConfig network;
+
+    /// @brief Assets settings
+    AssetsConfig assets;
 
     /// @brief Server settings (server-only)
     ServerConfig server;

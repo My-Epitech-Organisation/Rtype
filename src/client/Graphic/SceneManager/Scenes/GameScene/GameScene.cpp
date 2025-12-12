@@ -7,105 +7,29 @@
 
 #include "GameScene.hpp"
 
-#include "Components/HiddenComponent.hpp"
+#include <memory>
+#include <utility>
+
+#include "Accessibility.hpp"
 #include "Components/TagComponent.hpp"
-#include "Components/VelocityComponent.hpp"
-#include "EntityFactory/EntityFactory.hpp"
-#include "Graphic.hpp"
-#include "SceneManager/SceneException.hpp"
+#include "Logger/Macros.hpp"
+#include "games/rtype/client/PauseState.hpp"
 
-void GameScene::_updateUserMovementUp() {
-    auto keyMoveUp = this->_keybinds->getKeyBinding(GameAction::MOVE_UP);
-    if (!keyMoveUp.has_value()) {
-        return;
-    }
-    if (sf::Keyboard::isKeyPressed(*keyMoveUp)) {
-        this->_registry
-            ->view<rtype::games::rtype::shared::VelocityComponent,
-                   rtype::games::rtype::client::ControllableTag>()
-            .each([](auto, auto& velocity, auto) {
-                velocity.vy -= PlayerMovementSpeed;
-            });
+void GameScene::update(float dt) {
+    if (_gameScene) {
+        _gameScene->update();
     }
 }
 
-void GameScene::_updateUserMovementDown() {
-    auto keyMoveDown = this->_keybinds->getKeyBinding(GameAction::MOVE_DOWN);
-    if (!keyMoveDown.has_value()) {
-        return;
-    }
-    if (sf::Keyboard::isKeyPressed(*keyMoveDown)) {
-        this->_registry
-            ->view<rtype::games::rtype::shared::VelocityComponent,
-                   rtype::games::rtype::client::ControllableTag>()
-            .each([](auto, auto& velocity, auto) {
-                velocity.vy += PlayerMovementSpeed;
-            });
+void GameScene::render(std::shared_ptr<sf::RenderWindow> window) {
+    if (_gameScene) {
+        _gameScene->render(window);
     }
 }
-
-void GameScene::_updateUserMovementLeft() {
-    auto keyMoveLeft = this->_keybinds->getKeyBinding(GameAction::MOVE_LEFT);
-    if (!keyMoveLeft.has_value()) {
-        return;
-    }
-    if (sf::Keyboard::isKeyPressed(*keyMoveLeft)) {
-        this->_registry
-            ->view<rtype::games::rtype::shared::VelocityComponent,
-                   rtype::games::rtype::client::ControllableTag>()
-            .each([](auto, auto& velocity, auto) {
-                velocity.vx -= PlayerMovementSpeed;
-            });
-    }
-}
-
-void GameScene::_updateUserMovementRight() {
-    auto keyMoveRight = this->_keybinds->getKeyBinding(GameAction::MOVE_RIGHT);
-    if (!keyMoveRight.has_value()) {
-        return;
-    }
-    if (sf::Keyboard::isKeyPressed(*keyMoveRight)) {
-        this->_registry
-            ->view<rtype::games::rtype::shared::VelocityComponent,
-                   rtype::games::rtype::client::ControllableTag>()
-            .each([](auto, auto& velocity, auto) {
-                velocity.vx += PlayerMovementSpeed;
-            });
-    }
-}
-
-void GameScene::_handleKeyReleasedEvent(const sf::Event& event) {
-    auto eventKeyRelease = event.getIf<sf::Event::KeyReleased>();
-    auto keyPause = this->_keybinds->getKeyBinding(GameAction::PAUSE);
-    if (!eventKeyRelease || !keyPause.has_value()) return;
-    if (eventKeyRelease->code == *keyPause) {
-        this->_registry
-            ->view<rtype::games::rtype::client::HiddenComponent,
-                   rtype::games::rtype::client::PauseMenuTag>()
-            .each([](auto, rtype::games::rtype::client::HiddenComponent& hidden,
-                     auto) { hidden.isHidden = !hidden.isHidden; });
-    }
-}
-
-void GameScene::update() {
-    this->_registry
-        ->view<rtype::games::rtype::shared::VelocityComponent,
-               rtype::games::rtype::client::ControllableTag>()
-        .each([](auto, auto& velocity, auto) {
-            velocity.vx = 0;
-            velocity.vy = 0;
-        });
-    this->_updateUserMovementUp();
-    this->_updateUserMovementDown();
-    this->_updateUserMovementLeft();
-    this->_updateUserMovementRight();
-}
-
-void GameScene::render(std::shared_ptr<sf::RenderWindow> window) {}
 
 void GameScene::pollEvents(const sf::Event& e) {
-    if (e.is<sf::Event::KeyReleased>()) {
-        this->_handleKeyReleasedEvent(e);
+    if (_gameScene) {
+        _gameScene->pollEvents(e);
     }
 }
 
@@ -114,60 +38,88 @@ GameScene::GameScene(
     std::shared_ptr<AssetManager> textureManager,
     std::shared_ptr<sf::RenderWindow> window,
     std::shared_ptr<KeyboardActions> keybinds,
-    std::function<void(const SceneManager::Scene&)> switchToScene)
-    : AScene(ecs, textureManager, window), _keybinds(keybinds) {
-    this->_listEntity = (EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, ""));
-    auto fakePlayer = EntityFactory::createPlayer(
-        this->_registry, this->_assetsManager, {4, 4}, true);
-    this->_listEntity.push_back(fakePlayer);
-    auto sectionX = (Graphic::WINDOW_WIDTH - SizeXPauseMenu) / 2;
-    auto sectionY = (Graphic::WINDOW_HEIGHT - SizeYPauseMenu) / 2;
-    auto pauseEntities = EntityFactory::createSection(
-        this->_registry, this->_assetsManager, "", sectionX, sectionY,
-        SizeXPauseMenu, SizeYPauseMenu);
-    auto titleEntity = EntityFactory::createStaticText(
-        this->_registry, this->_assetsManager, PauseMenuTitle, "title_font",
-        (sectionX + SizeXPauseMenu / 2) -
-            ((PauseMenuTitle.length() - 2) * (SizeFontPauseMenu / 2)),
-        sectionY, SizeFontPauseMenu);
-    auto& titleText =
-        this->_registry->getComponent<rtype::games::rtype::client::Text>(
-            titleEntity);
-    sf::FloatRect bounds = titleText.text.getLocalBounds();
-    float centeredX = sectionX + (SizeXPauseMenu - bounds.size.x) / 2;
-    auto& titlePos =
-        this->_registry->getComponent<rtype::games::rtype::shared::Position>(
-            titleEntity);
-    titlePos.x = centeredX;
-    pauseEntities.push_back(titleEntity);
-
-    pauseEntities.push_back(EntityFactory::createButton(
-        this->_registry,
-        rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("title_font"),
-            sf::Color::White, 30, "Menu"),
-        rtype::games::rtype::shared::Position(
-            sectionX + ((SizeXPauseMenu / 2) - (150 / 2)),
-            sectionY + SizeYPauseMenu - 75),
-        rtype::games::rtype::client::Rectangle({150, 55}, sf::Color::Blue,
-                                               sf::Color::Red),
-        std::function<void()>([switchToScene]() {
-            try {
-                switchToScene(SceneManager::MAIN_MENU);
-            } catch (SceneNotFound& e) {
-                std::cerr << "Error switching to Main Menu: " << e.what()
-                          << std::endl;
-            }
-        })));
-
-    for (auto& entt : pauseEntities) {
-        this->_registry
-            ->emplaceComponent<rtype::games::rtype::client::HiddenComponent>(
-                entt, true);
-        this->_registry
-            ->emplaceComponent<rtype::games::rtype::client::PauseMenuTag>(entt);
+    std::function<void(const SceneManager::Scene&)> switchToScene,
+    std::unique_ptr<IGameScene> gameScene,
+    std::shared_ptr<rtype::client::NetworkClient> networkClient,
+    std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem,
+    std::shared_ptr<AudioLib> audio)
+    : AScene(ecs, textureManager, window, audio),
+      _keybinds(std::move(keybinds)),
+      _networkClient(std::move(networkClient)),
+      _networkSystem(std::move(networkSystem)),
+      _gameScene(std::move(gameScene)) {
+    LOG_DEBUG("[GameScene] Constructor started");
+    if (_gameScene) {
+        LOG_DEBUG("[GameScene] Calling initialize on game scene");
+        this->_listEntity = _gameScene->initialize();
+        LOG_DEBUG("[GameScene] Game scene initialized, entities created: "
+                  << this->_listEntity.size());
     }
-    this->_listEntity.insert(this->_listEntity.end(), pauseEntities.begin(),
-                             pauseEntities.end());
+    LOG_DEBUG("[GameScene] Loading game textures");
+    this->_assetsManager->textureManager->load(
+        "bdos_enemy",
+        this->_assetsManager->configGameAssets.assets.textures.Enemy);
+    this->_assetsManager->textureManager->load(
+        "projectile_player_laser",
+        this->_assetsManager->configGameAssets.assets.textures.missileLaser);
+    LOG_DEBUG("[GameScene] Game textures loaded");
+    LOG_DEBUG("[GameScene] Setting up audio");
+    if (!this->_audio) {
+        LOG_DEBUG("[GameScene] No audio library available");
+        return;
+    }
+    if (this->_assetsManager && this->_assetsManager->audioManager) {
+        this->_assetsManager->audioManager->load(
+            "main_game_music",
+            this->_assetsManager->configGameAssets.assets.music.game);
+        auto bgMusic =
+            this->_assetsManager->audioManager->get("main_game_music");
+        if (bgMusic) {
+            LOG_DEBUG("[GameScene] Playing game music");
+            this->_audio->loadMusic(bgMusic);
+            this->_audio->setLoop(true);
+            this->_audio->play();
+        }
+    }
+    LOG_DEBUG("[GameScene] Constructor completed successfully");
+}
+
+GameScene::~GameScene() {
+    LOG_DEBUG("[GameScene] Destructor called");
+
+    if (_networkClient && _networkClient->isConnected()) {
+        LOG_DEBUG("[GameScene] Disconnecting from server");
+        _networkClient->disconnect();
+    }
+
+    this->_registry->view<rtype::games::rtype::client::GameTag>().each(
+        [this](ECS::Entity entity,
+               rtype::games::rtype::client::GameTag& /*tag*/) {
+            this->_registry->killEntity(entity);
+        });
+
+    LOG_DEBUG("[GameScene] Cleaning up pause menu entities");
+    this->_registry->view<rtype::games::rtype::client::PauseMenuTag>().each(
+        [this](ECS::Entity entity,
+               rtype::games::rtype::client::PauseMenuTag& /*tag*/) {
+            this->_registry->killEntity(entity);
+        });
+
+    if (this->_registry
+            ->hasSingleton<rtype::games::rtype::client::PauseState>()) {
+        LOG_DEBUG("[GameScene] Removing PauseState singleton");
+        this->_registry
+            ->removeSingleton<rtype::games::rtype::client::PauseState>();
+    }
+
+    if (this->_registry->hasSingleton<AccessibilitySettings>()) {
+        LOG_DEBUG("[GameScene] Removing AccessibilitySettings singleton");
+        this->_registry->removeSingleton<AccessibilitySettings>();
+    }
+
+    if (this->_audio) {
+        LOG_DEBUG("[GameScene] Pausing music");
+        this->_audio->pauseMusic();
+    }
+    LOG_DEBUG("[GameScene] Destructor completed");
 }

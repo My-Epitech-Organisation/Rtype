@@ -54,6 +54,27 @@ class TestGameEngine : public AGameEngine {
 
     void shutdown() override { setRunning(false); }
 
+    // Implement pure virtual methods from IGameEngine
+    ProcessedEvent processEvent(const GameEvent& event) override {
+        ProcessedEvent result{};
+        result.type = event.type;
+        result.networkId = event.entityNetworkId;
+        result.networkEntityType = event.entityType;
+        result.x = event.x;
+        result.y = event.y;
+        result.vx = event.velocityX;
+        result.vy = event.velocityY;
+        result.valid = true;
+        return result;
+    }
+
+    void syncEntityPositions(
+        std::function<void(uint32_t, float, float, float, float)> /*callback*/) override {
+        // No-op for test implementation
+    }
+
+    [[nodiscard]] std::string getGameId() const override { return "test_game"; }
+
     // Expose protected methods for testing
     void testEmitEvent(const GameEvent& event) { emitEvent(event); }
 

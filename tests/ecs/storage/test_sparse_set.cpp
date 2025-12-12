@@ -8,8 +8,8 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
-#include "../../../lib/rtype_ecs/src/core/Entity.hpp"
-#include "../../../lib/rtype_ecs/src/storage/SparseSet.hpp"
+#include "../../../lib/ecs/src/core/Entity.hpp"
+#include "../../../lib/ecs/src/storage/SparseSet.hpp"
 
 using namespace ECS;
 

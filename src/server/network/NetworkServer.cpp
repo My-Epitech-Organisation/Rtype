@@ -118,6 +118,18 @@ void NetworkServer::destroyEntity(std::uint32_t id) {
     broadcastToAll(network::OpCode::S_ENTITY_DESTROY, serialized);
 }
 
+void NetworkServer::updateEntityHealth(std::uint32_t id, std::int32_t current,
+                                       std::int32_t max) {
+    network::EntityHealthPayload payload;
+    payload.entityId = id;
+    payload.current = current;
+    payload.max = max;
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    broadcastToAll(network::OpCode::S_ENTITY_HEALTH, serialized);
+}
+
 void NetworkServer::updateGameState(GameState state) {
     network::UpdateStatePayload payload;
     payload.stateId = static_cast<std::uint8_t>(state);
@@ -177,6 +189,25 @@ void NetworkServer::destroyEntityToClient(std::uint32_t userId,
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
     sendToClient(client, network::OpCode::S_ENTITY_DESTROY, serialized);
+}
+
+void NetworkServer::updateEntityHealthToClient(std::uint32_t userId,
+                                               std::uint32_t id,
+                                               std::int32_t current,
+                                               std::int32_t max) {
+    auto client = findClientByUserId(userId);
+    if (!client) {
+        return;
+    }
+
+    network::EntityHealthPayload payload;
+    payload.entityId = id;
+    payload.current = current;
+    payload.max = max;
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    sendToClient(client, network::OpCode::S_ENTITY_HEALTH, serialized);
 }
 
 void NetworkServer::updateGameStateToClient(std::uint32_t userId,

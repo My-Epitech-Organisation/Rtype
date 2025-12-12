@@ -3,21 +3,64 @@
 #
 # This script:
 #   1. Checks/sets up vcpkg
-#   2. Configures CMake with release preset
+#   2. Configures CMake with release preset (if needed)
 #   3. Builds the project
 #   4. Copies executables to repository root
 #
 # Usage:
-#   ./build.sh
+#   ./build.sh              # Full rebuild (clean + build, client and server only)
+#   ./build.sh -t           # Full rebuild with tests
+#   ./build.sh -r           # Incremental build (reuse existing build)
+#   ./build.sh -r -t        # Incremental build with tests
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
 
+# Parse arguments
+BUILD_TESTS=false
+INCREMENTAL_BUILD=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -t|--tests)
+            BUILD_TESTS=true
+            shift
+            ;;
+        -r|--reuse)
+            INCREMENTAL_BUILD=true
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: $0 [-t|--tests] [-r|--reuse]"
+            echo "  -t, --tests    Build with unit tests"
+            echo "  -r, --reuse    Incremental build (reuse existing build directory)"
+            echo "  -h, --help     Show this help message"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use -h or --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║           R-Type - Release Build Script (Linux)          ║"
 echo "╚══════════════════════════════════════════════════════════╝"
+echo ""
+
+if [ "$BUILD_TESTS" = true ]; then
+    echo "→ Build mode: Client + Server + Tests"
+else
+    echo "→ Build mode: Client + Server"
+fi
+if [ "$INCREMENTAL_BUILD" = true ]; then
+    echo "→ Build type: Incremental"
+else
+    echo "→ Build type: Full rebuild"
+fi
 echo ""
 
 # Step 1: Check/setup vcpkg
@@ -40,18 +83,26 @@ echo ""
 echo "→ Step 2/4: Configuring CMake (linux-release preset)..."
 cd "$PROJECT_ROOT"
 
-if [ -d "build" ]; then
+if [ "$INCREMENTAL_BUILD" = false ] && [ -d "build" ]; then
     echo "  Cleaning existing build directory..."
     rm -rf build
 fi
 
-cmake --preset "linux-release"
-echo "✓ CMake configuration complete"
+if [ ! -d "build" ]; then
+    cmake --preset "linux-release"
+    echo "✓ CMake configuration complete"
+else
+    echo "✓ Using existing build configuration (incremental build)"
+fi
 echo ""
 
 # Step 3: Build
 echo "→ Step 3/4: Building project..."
-cmake --build --preset "linux-release" -- -j$(nproc 2>/dev/null || echo 4)
+if [ "$BUILD_TESTS" = true ]; then
+    cmake --build --preset linux-release -- -j$(nproc 2>/dev/null || echo 4)
+else
+    cmake --build --preset linux-release --target r-type_client r-type_server -- -j$(nproc 2>/dev/null || echo 4)
+fi
 echo "✓ Build complete"
 echo ""
 
@@ -77,7 +128,7 @@ fi
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║                   Build Complete!                         ║"
+echo "║                   Build Complete!                        ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 echo "Executables are now in the repository root:"

@@ -8,16 +8,27 @@
 #include "BoxingSystem.hpp"
 
 #include <memory>
+#include <utility>
 
 #include "../Components/BoxingComponent.hpp"
 #include "../Components/ImageComponent.hpp"
+#include "Graphic/Accessibility.hpp"
 
 namespace rtype::games::rtype::client {
 
-BoxingSystem::BoxingSystem(std::shared_ptr<sf::RenderWindow> window)
-    : ::rtype::engine::ASystem("BoxingSystem"), _window(std::move(window)) {}
+BoxingSystem::BoxingSystem(std::shared_ptr<sf::RenderTarget> target)
+    : ::rtype::engine::ASystem("BoxingSystem"), _target(std::move(target)) {}
 
 void BoxingSystem::update(ECS::Registry& registry, float dt) {
+    if (registry.hasSingleton<AccessibilitySettings>()) {
+        const auto& acc = registry.getSingleton<AccessibilitySettings>();
+        if (!acc.showHitboxes) {
+            return;
+        }
+    } else {
+        return;
+    }
+
     registry
         .view<::rtype::games::rtype::client::Image,
               ::rtype::games::rtype::client::BoxingComponent>()
@@ -29,11 +40,11 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
             box.box.setSize({bounds.size.x, bounds.size.y});
             box.box.setPosition({bounds.position.x, bounds.position.y});
 
-            box.box.setFillColor(sf::Color::Transparent);
-            box.box.setOutlineColor(sf::Color::Red);
-            box.box.setOutlineThickness(1.f);
+            box.box.setFillColor(box.fillColor);
+            box.box.setOutlineColor(box.outlineColor);
+            box.box.setOutlineThickness(box.outlineThickness);
 
-            this->_window->draw(box.box);
+            this->_target->draw(box.box);
         });
 }
 }  // namespace rtype::games::rtype::client

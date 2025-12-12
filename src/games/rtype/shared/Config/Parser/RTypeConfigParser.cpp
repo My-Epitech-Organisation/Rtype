@@ -78,7 +78,8 @@ bool RTypeConfigParser::saveToFile(const RTypeGameConfig& config,
         std::filesystem::rename(tempPath, filepath);
     } catch (const std::exception& e) {
         _parser.reportError(
-            {"file", "", std::string("Failed to save file: ") + e.what()});
+            {"file", "",
+             std::string("Failed to save file: ") + std::string(e.what())});
         std::filesystem::remove(tempPath);
         return false;
     }
@@ -205,6 +206,73 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
         _parser.getString(table, "paths", "logsPath", defaults.paths.logsPath);
     config.paths.configPath = _parser.getString(table, "paths", "configPath",
                                                 defaults.paths.configPath);
+
+    // Assets
+    config.assets.fonts.MainFont =
+        "assets/" + _parser.getString(table, "Fonts", "MainFont",
+                                      defaults.assets.fonts.MainFont);
+    config.assets.fonts.TitleFont =
+        "assets/" + _parser.getString(table, "Fonts", "TitleFont",
+                                      defaults.assets.fonts.TitleFont);
+
+    // Textures
+    config.assets.textures.background =
+        "assets/" + _parser.getString(table, "Textures", "Background",
+                                      defaults.assets.textures.background);
+    config.assets.textures.planet1 =
+        "assets/" + _parser.getString(table, "Textures", "Planet1",
+                                      defaults.assets.textures.planet1);
+    config.assets.textures.planet2 =
+        "assets/" + _parser.getString(table, "Textures", "Planet2",
+                                      defaults.assets.textures.planet2);
+    config.assets.textures.planet3 =
+        "assets/" + _parser.getString(table, "Textures", "Planet3",
+                                      defaults.assets.textures.planet3);
+    config.assets.textures.astroVessel =
+        "assets/" + _parser.getString(table, "Textures", "AstroVessel",
+                                      defaults.assets.textures.astroVessel);
+    config.assets.textures.Player =
+        "assets/" + _parser.getString(table, "Textures", "Player",
+                                      defaults.assets.textures.Player);
+    config.assets.textures.Enemy =
+        "assets/" + _parser.getString(table, "Textures", "Enemy",
+                                      defaults.assets.textures.Enemy);
+    config.assets.textures.missileLaser =
+        "assets/" + _parser.getString(table, "Textures", "MissileLaser",
+                                      defaults.assets.textures.missileLaser);
+    // Music
+    config.assets.music.mainMenu =
+        "assets/" + _parser.getString(table, "Music", "MainMenu",
+                                      defaults.assets.music.mainMenu);
+    config.assets.music.game =
+        "assets/" +
+        _parser.getString(table, "Music", "Game", defaults.assets.music.game);
+    config.assets.music.settings =
+        "assets/" + _parser.getString(table, "Music", "Settings",
+                                      defaults.assets.music.settings);
+
+    // SFX
+    config.assets.sfx.clickButton =
+        "assets/" + _parser.getString(table, "SFX", "ClickButton",
+                                      defaults.assets.sfx.clickButton);
+    config.assets.sfx.hoverButton =
+        "assets/" + _parser.getString(table, "SFX", "HoverButton",
+                                      defaults.assets.sfx.hoverButton);
+    config.assets.sfx.laser =
+        "assets/" +
+        _parser.getString(table, "SFX", "Laser", defaults.assets.sfx.laser);
+    config.assets.sfx.playerSpawn =
+        "assets/" + _parser.getString(table, "SFX", "PlayerSpawn",
+                                      defaults.assets.sfx.playerSpawn);
+    config.assets.sfx.playerDeath =
+        "assets/" + _parser.getString(table, "SFX", "PlayerDeath",
+                                      defaults.assets.sfx.playerDeath);
+    config.assets.sfx.enemySpawn =
+        "assets/" + _parser.getString(table, "SFX", "EnemySpawn",
+                                      defaults.assets.sfx.enemySpawn);
+    config.assets.sfx.enemyDeath =
+        "assets/" + _parser.getString(table, "SFX", "EnemyDeath",
+                                      defaults.assets.sfx.enemyDeath);
 
     return config;
 }

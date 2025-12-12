@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "../../lib/rtype_common/src/Logger/Logger.hpp"
-#include "../../lib/rtype_common/src/SafeQueue/SafeQueue.hpp"
-#include "../../lib/rtype_common/src/Types.hpp"
-#include "../../lib/rtype_common/src/Config/TomlParser.hpp"
-#include "../../lib/rtype_common/src/ArgParser/ArgParser.hpp"
-#include "../../lib/rtype_common/src/ArgParser/NumberParser.hpp"
+#include "../../lib/common/src/Logger/Logger.hpp"
+#include "../../lib/common/src/SafeQueue/SafeQueue.hpp"
+#include "../../lib/common/src/Types.hpp"
+#include "../../lib/common/src/Config/TomlParser.hpp"
+#include "../../lib/common/src/ArgParser/ArgParser.hpp"
+#include "../../lib/common/src/ArgParser/NumberParser.hpp"

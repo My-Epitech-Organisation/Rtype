@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <atomic>
 
-#include "../../../lib/rtype_ecs/src/signal/SignalDispatcher.hpp"
-#include "../../../lib/rtype_ecs/src/core/Entity.hpp"
+#include "../../../lib/ecs/src/signal/SignalDispatcher.hpp"
+#include "../../../lib/ecs/src/core/Entity.hpp"
 
 using namespace ECS;
 
