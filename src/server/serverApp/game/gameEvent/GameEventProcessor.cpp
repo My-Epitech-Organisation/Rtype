@@ -79,14 +79,24 @@ void GameEventProcessor::processEvents() {
                 break;
             }
             case engine::GameEventType::EntityHealthChanged: {
+                LOG_DEBUG("[EventProcessor] Processing EntityHealthChanged: "
+                          << "networkId=" << event.entityNetworkId
+                          << " health=" << event.healthCurrent << "/"
+                          << event.healthMax);
                 _networkSystem->updateEntityHealth(event.entityNetworkId,
                                                    event.healthCurrent,
                                                    event.healthMax);
+                break;
+            }
+            case engine::GameEventType::PowerUpApplied: {
+                _networkSystem->broadcastPowerUp(event.entityNetworkId,
+                                                 event.subType,
+                                                 event.duration);
                 if (_verbose) {
-                    LOG_DEBUG("[EventProcessor] Entity health changed: "
-                              << "networkId=" << event.entityNetworkId
-                              << " health=" << event.healthCurrent << "/"
-                              << event.healthMax);
+                    LOG_DEBUG("[EventProcessor] Power-up applied: playerId="
+                              << event.entityNetworkId
+                              << " type=" << static_cast<int>(event.subType)
+                              << " duration=" << event.duration);
                 }
                 break;
             }
