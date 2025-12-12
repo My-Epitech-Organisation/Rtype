@@ -20,6 +20,7 @@ using shared::EnemyTag;
 using shared::EntityType;
 using shared::NetworkIdComponent;
 using shared::ProjectileTag;
+using shared::ObstacleTag;
 
 DestroySystem::DestroySystem(EventEmitter emitter,
                              EnemyCountUpdater enemyCountDecrementer)
@@ -40,6 +41,7 @@ void DestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {
         bool hasNetworkId = false;
         bool isEnemy = false;
         bool isProjectile = false;
+        bool isObstacle = false;
 
         if (registry.hasComponent<NetworkIdComponent>(entity)) {
             netIdComp = registry.getComponent<NetworkIdComponent>(entity);
@@ -50,6 +52,9 @@ void DestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {
         }
         if (registry.hasComponent<ProjectileTag>(entity)) {
             isProjectile = true;
+        }
+        if (registry.hasComponent<ObstacleTag>(entity)) {
+            isObstacle = true;
         }
         if (isEnemy) {
             _decrementEnemyCount();
@@ -62,6 +67,8 @@ void DestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {
                 event.entityType = static_cast<uint8_t>(EntityType::Enemy);
             } else if (isProjectile) {
                 event.entityType = static_cast<uint8_t>(EntityType::Projectile);
+            } else if (isObstacle) {
+                event.entityType = static_cast<uint8_t>(EntityType::Obstacle);
             } else {
                 event.entityType = static_cast<uint8_t>(EntityType::Player);
             }
