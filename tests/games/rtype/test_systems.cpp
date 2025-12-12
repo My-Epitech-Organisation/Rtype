@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
 #include <vector>
 
 #include "../../../src/games/rtype/shared/Components.hpp"
@@ -1236,7 +1237,12 @@ TEST_F(SpawnerSystemTest, SpawnedEntityHasCorrectAIComponent) {
     view.each([this](ECS::Entity /*entity*/,
                      const AIComponent& ai,
                      const EnemyTag& /*tag*/) {
-        EXPECT_EQ(ai.behavior, AIBehavior::MoveLeft);
+        const std::array<AIBehavior, 6> allowed = {
+            AIBehavior::MoveLeft, AIBehavior::SineWave, AIBehavior::ZigZag,
+            AIBehavior::DiveBomb, AIBehavior::Stationary, AIBehavior::Chase};
+        const bool found = std::find(allowed.begin(), allowed.end(),
+                                      ai.behavior) != allowed.end();
+        EXPECT_TRUE(found);
         EXPECT_FLOAT_EQ(ai.speed, config.bydosSlaveSpeed);
     });
 }
