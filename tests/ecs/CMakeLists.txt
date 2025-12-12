@@ -31,7 +31,7 @@ function(add_ecs_test TEST_PATH)
     get_filename_component(TEST_NAME ${TEST_PATH} NAME)
     add_executable(${TEST_NAME} ${TEST_PATH}.cpp)
     target_link_libraries(${TEST_NAME} PRIVATE
-        rtype_engine
+        engine
         GTest::gtest_main
     )
     target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)

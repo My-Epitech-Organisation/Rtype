@@ -1,4 +1,4 @@
-add_library(rtype_network STATIC
+add_library(network STATIC
     # Transport layer (Asio-based async UDP)
     transport/AsioUdpSocket.cpp
 
@@ -23,19 +23,19 @@ add_library(rtype_network STATIC
 # Find Asio (standalone, non-Boost)
 find_package(asio CONFIG REQUIRED)
 
-target_include_directories(rtype_network PUBLIC
+target_include_directories(network PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_compile_features(rtype_network PUBLIC cxx_std_20)
+target_compile_features(network PUBLIC cxx_std_20)
 
 # Network depends on engine and Asio
-target_link_libraries(rtype_network PUBLIC
-    rtype_engine
+target_link_libraries(network PUBLIC
+    engine
     asio::asio
 )
 
 # Windows-specific: link Winsock2 for byte order functions (htons, htonl, etc.)
 if(WIN32)
-    target_link_libraries(rtype_network PUBLIC ws2_32)
+    target_link_libraries(network PUBLIC ws2_32)
 endif()

@@ -17,8 +17,8 @@ target_compile_features(rtype_game_server PUBLIC cxx_std_20)
 
 # Server depends on engine, network, and shared
 target_link_libraries(rtype_game_server PUBLIC
-    rtype_engine
-    rtype_network
+    engine
+    network
     rtype_game_shared
 )
 
