@@ -26,6 +26,24 @@ struct SpawnerConfig {
     float minSpawnY = 50.0F;         // Minimum Y spawn position
     float maxSpawnY = 550.0F;        // Maximum Y spawn position
     float bydosSlaveSpeed = 100.0F;  // Speed of Bydos slave enemies
+
+    float weightMoveLeft = 1.0F;
+    float weightSineWave = 0.8F;
+    float weightZigZag = 0.7F;
+    float weightDiveBomb = 0.5F;
+    float weightStationary = 0.2F;
+    float weightChase = 1.5F;
+
+    float obstacleMinInterval = 3.0F;
+    float obstacleMaxInterval = 6.0F;
+    float obstacleSpeed = 80.0F;
+    float obstacleWidth = 64.0F;
+    float obstacleHeight = 64.0F;
+    int32_t obstacleDamage = 15;
+
+    float powerUpMinInterval = 8.0F;
+    float powerUpMaxInterval = 14.0F;
+    float powerUpSpeed = 70.0F;
 };
 
 /**
@@ -66,6 +84,11 @@ class SpawnerSystem : public ::rtype::engine::ASystem {
     }
     void spawnBydosSlave(ECS::Registry& registry);
     void generateNextSpawnTime();
+    void generateNextObstacleSpawnTime();
+    void generateNextPowerUpSpawnTime();
+
+    void spawnObstacle(ECS::Registry& registry);
+    void spawnPowerUp(ECS::Registry& registry);
     std::random_device::result_type getRandomSeed() {
         std::random_device rd;
         return rd();
@@ -75,12 +98,19 @@ class SpawnerSystem : public ::rtype::engine::ASystem {
     SpawnerConfig _config;
     float _spawnTimer = 0.0F;
     float _nextSpawnTime = 0.0F;
+    float _obstacleSpawnTimer = 0.0F;
+    float _nextObstacleSpawnTime = 0.0F;
+    float _powerUpSpawnTimer = 0.0F;
+    float _nextPowerUpSpawnTime = 0.0F;
     std::size_t _enemyCount = 0;
     uint32_t _nextNetworkId = 1000;
 
     std::mt19937 _rng;
     std::uniform_real_distribution<float> _spawnTimeDist;
     std::uniform_real_distribution<float> _spawnYDist;
+    std::uniform_real_distribution<float> _obstacleSpawnTimeDist;
+    std::uniform_real_distribution<float> _powerUpSpawnTimeDist;
+    std::uniform_int_distribution<int> _powerUpTypeDist;
 };
 
 }  // namespace rtype::games::rtype::server
