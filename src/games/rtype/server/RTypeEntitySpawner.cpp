@@ -74,23 +74,23 @@ RTypeEntitySpawner::RTypeEntitySpawner(
         playerEntity, kPlayerWidth, kPlayerHeight);
     _registry->emplaceComponent<PlayerTag>(playerEntity);
     _registry->emplaceComponent<HealthComponent>(
-        playerEntity, kDefaultPlayerLives, kDefaultPlayerLives);
+        playerEntity, kDefaultPlayerHealth, kDefaultPlayerHealth);
 
     std::uint32_t networkId = config.userId;
     _registry->emplaceComponent<NetworkIdComponent>(playerEntity, networkId);
 
     _networkSystem->registerNetworkedEntity(playerEntity, networkId,
                                             EntityType::Player, spawnX, spawnY);
-    _networkSystem->updateEntityHealth(networkId, kDefaultPlayerLives,
-                                       kDefaultPlayerLives);
+    _networkSystem->updateEntityHealth(networkId, kDefaultPlayerHealth,
+                                       kDefaultPlayerHealth);
     _networkSystem->setPlayerEntity(config.userId, playerEntity);
 
     result.entity = playerEntity;
     result.networkId = networkId;
     result.x = spawnX;
     result.y = spawnY;
-    result.health = kDefaultPlayerLives;
-    result.maxHealth = kDefaultPlayerLives;
+    result.health = kDefaultPlayerHealth;
+    result.maxHealth = kDefaultPlayerHealth;
     result.success = true;
 
     return result;
