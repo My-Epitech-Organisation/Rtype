@@ -33,8 +33,8 @@ struct GameConfig {
     static constexpr float SPAWN_MARGIN = 50.0F;
 
     // Spawn parameters
-    static constexpr float MIN_SPAWN_INTERVAL = 1.0F;
-    static constexpr float MAX_SPAWN_INTERVAL = 3.0F;
+    static constexpr float MIN_SPAWN_INTERVAL = 1.6F;
+    static constexpr float MAX_SPAWN_INTERVAL = 3.6F;
     static constexpr std::size_t MAX_ENEMIES = 50;
 
     // Cleanup boundaries (destroy entities outside these bounds)
@@ -126,9 +126,11 @@ class GameEngine : public engine::AGameEngine {
 
     std::unique_ptr<SpawnerSystem> _spawnerSystem;
     std::unique_ptr<ProjectileSpawnerSystem> _projectileSpawnerSystem;
+    std::unique_ptr<EnemyShootingSystem> _enemyShootingSystem;
     std::unique_ptr<shared::AISystem> _aiSystem;
     std::unique_ptr<shared::MovementSystem> _movementSystem;
     std::unique_ptr<shared::LifetimeSystem> _lifetimeSystem;
+    std::unique_ptr<shared::PowerUpSystem> _powerUpSystem;
     std::unique_ptr<CollisionSystem> _collisionSystem;
     std::unique_ptr<CleanupSystem> _cleanupSystem;
     std::unique_ptr<DestroySystem> _destroySystem;

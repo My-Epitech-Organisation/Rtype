@@ -55,10 +55,23 @@ bool GameEngine::initialize() {
     _projectileSpawnerSystem =
         std::make_unique<ProjectileSpawnerSystem>(eventEmitter, projConfig);
 
+    auto enemyShootCb = [this](ECS::Registry& reg, ECS::Entity enemy,
+                               uint32_t enemyNetId, float ex, float ey,
+                               float tx, float ty) {
+        if (_projectileSpawnerSystem) {
+            return _projectileSpawnerSystem->spawnEnemyProjectile(
+                reg, enemy, enemyNetId, ex, ey, tx, ty);
+        }
+        return 0U;
+    };
+    _enemyShootingSystem =
+        std::make_unique<EnemyShootingSystem>(std::move(enemyShootCb));
+
     shared::registerDefaultBehaviors();
     _aiSystem = std::make_unique<shared::AISystem>();
     _movementSystem = std::make_unique<shared::MovementSystem>();
     _lifetimeSystem = std::make_unique<shared::LifetimeSystem>();
+    _powerUpSystem = std::make_unique<shared::PowerUpSystem>();
     _collisionSystem = std::make_unique<CollisionSystem>(
         eventEmitter, GameConfig::SCREEN_WIDTH, GameConfig::SCREEN_HEIGHT);
     CleanupConfig cleanupConfig{};
@@ -85,9 +98,11 @@ void GameEngine::update(float deltaTime) {
 
     _spawnerSystem->update(*_registry, deltaTime);
     _projectileSpawnerSystem->update(*_registry, deltaTime);
+    _enemyShootingSystem->update(*_registry, deltaTime);
     _aiSystem->update(*_registry, deltaTime);
     _movementSystem->update(*_registry, deltaTime);
     _lifetimeSystem->update(*_registry, deltaTime);
+    _powerUpSystem->update(*_registry, deltaTime);
     _collisionSystem->update(*_registry, deltaTime);
     _cleanupSystem->update(*_registry, deltaTime);
     _destroySystem->update(*_registry, deltaTime);
@@ -103,9 +118,11 @@ void GameEngine::shutdown() {
     }
     _spawnerSystem.reset();
     _projectileSpawnerSystem.reset();
+    _enemyShootingSystem.reset();
     _aiSystem.reset();
     _movementSystem.reset();
     _lifetimeSystem.reset();
+    _powerUpSystem.reset();
     _cleanupSystem.reset();
     _destroySystem.reset();
     {
