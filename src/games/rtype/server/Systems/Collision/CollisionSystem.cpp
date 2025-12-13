@@ -237,7 +237,6 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
 
     const auto& powerUp = registry.getComponent<PowerUpComponent>(pickup);
 
-    // Validate power-up type to prevent invalid configurations
     if (powerUp.type == shared::PowerUpType::None) {
         LOG_DEBUG("[CollisionSystem] Ignoring pickup with PowerUpType::None");
         registry.emplaceComponent<DestroyTag>(pickup, DestroyTag{});
@@ -300,7 +299,6 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
             active.damageMultiplier = 1.0F + powerUp.magnitude;
             break;
         case shared::PowerUpType::HealthBoost:
-            // Adds health points based on magnitude, not a full extra life
             if (registry.hasComponent<HealthComponent>(player)) {
                 auto& health = registry.getComponent<HealthComponent>(player);
                 int32_t healthBoost =
