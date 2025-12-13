@@ -29,20 +29,18 @@ namespace rtype::games::rtype::client {
  * @brief Get the texture rectangle (sprite position) for a player based on
  * their ID
  *
- * The player_vessel sprite sheet has 5 rows (colors) and multiple columns.
+ * The player_vessel sprite sheet has 4 rows (colors) and multiple columns.
  * Each row represents a different player color:
  * - Row 0 (Y=0): Blue player
  * - Row 1 (Y=17): Pink/Magenta player
  * - Row 2 (Y=34): Green player
  * - Row 3 (Y=51): Red player
- * - Row 4 (Y=68): Dark/Gray player
  *
  * @param playerId Player ID (1-4)
  * @return Pair of (offset_x, offset_y) for the texture rectangle
  */
 static std::pair<int, int> getPlayerSpriteOffset(uint32_t playerId) noexcept {
     const int SPRITE_HEIGHT = 17;
-    const int SPRITE_WIDTH = 33;
 
     uint32_t rowIndex = (playerId - 1) % 4;
     int yOffset = static_cast<int>(rowIndex) * SPRITE_HEIGHT;
