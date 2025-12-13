@@ -115,6 +115,13 @@ inline constexpr float ASTRONEER_VESSEL_SCALE = 0.3f;
 /// @brief Fake player (preview) scale factor
 inline constexpr float FAKE_PLAYER_SCALE = 2.2f;
 
+// ==========================================================================
+// Player Configuration
+// ==========================================================================
+
+/// @brief Maximum number of player sprites (colors) available
+inline constexpr unsigned int MAX_PLAYER_SPRITES = 4;
+
 }  // namespace GraphicsConfig
 
 }  // namespace rtype::games::rtype::client

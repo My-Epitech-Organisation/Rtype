@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include "../../../src/games/rtype/shared/Components.hpp"
+#include "../../../src/games/rtype/shared/Components/PlayerIdComponent.hpp"
 
 using namespace rtype::games::rtype::shared;
 
@@ -620,6 +621,55 @@ TEST_F(ProjectileComponentTest, ProjectileOwnerValues) {
     EXPECT_EQ(static_cast<uint8_t>(ProjectileOwner::Player), 0);
     EXPECT_EQ(static_cast<uint8_t>(ProjectileOwner::Enemy), 1);
     EXPECT_EQ(static_cast<uint8_t>(ProjectileOwner::Neutral), 2);
+}
+
+// =============================================================================
+// PlayerIdComponent Tests
+// =============================================================================
+
+class PlayerIdComponentTest : public ::testing::Test {
+   protected:
+    PlayerIdComponent playerIdComp;
+};
+
+TEST_F(PlayerIdComponentTest, DefaultValueIsInvalid) {
+    EXPECT_EQ(playerIdComp.playerId, 0);
+    EXPECT_FALSE(playerIdComp.isValid());
+}
+
+TEST_F(PlayerIdComponentTest, IsValidForPlayer1) {
+    playerIdComp.playerId = 1;
+    EXPECT_TRUE(playerIdComp.isValid());
+}
+
+TEST_F(PlayerIdComponentTest, IsValidForPlayer2) {
+    playerIdComp.playerId = 2;
+    EXPECT_TRUE(playerIdComp.isValid());
+}
+
+TEST_F(PlayerIdComponentTest, IsValidForPlayer3) {
+    playerIdComp.playerId = 3;
+    EXPECT_TRUE(playerIdComp.isValid());
+}
+
+TEST_F(PlayerIdComponentTest, IsValidForPlayer4) {
+    playerIdComp.playerId = 4;
+    EXPECT_TRUE(playerIdComp.isValid());
+}
+
+TEST_F(PlayerIdComponentTest, IsInvalidForPlayer0) {
+    playerIdComp.playerId = 0;
+    EXPECT_FALSE(playerIdComp.isValid());
+}
+
+TEST_F(PlayerIdComponentTest, IsInvalidForPlayer5) {
+    playerIdComp.playerId = 5;
+    EXPECT_FALSE(playerIdComp.isValid());
+}
+
+TEST_F(PlayerIdComponentTest, IsInvalidForLargePlayerId) {
+    playerIdComp.playerId = 100;
+    EXPECT_FALSE(playerIdComp.isValid());
 }
 
 // =============================================================================
