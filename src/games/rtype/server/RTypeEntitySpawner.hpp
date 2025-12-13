@@ -104,8 +104,8 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
 
     static constexpr int kDefaultPlayerHealth = 100;
     static constexpr float kDefaultPlayerSpeed = 250.0F;
-    static constexpr float kPlayerWidth = 33.0F;
-    static constexpr float kPlayerHeight = 17.0F;
+    static constexpr float kPlayerWidth = 132.0F;
+    static constexpr float kPlayerHeight = 68.0F;
     static constexpr float kSpawnBaseX = 100.0F;
     static constexpr float kSpawnBaseY = 150.0F;
     static constexpr float kSpawnYOffset = 100.0F;

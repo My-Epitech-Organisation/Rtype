@@ -97,11 +97,11 @@ void RtypeEntityFactory::setupPlayerEntity(
                                       std::pair<int, int>({width, height}));
     reg.emplaceComponent<Size>(entity, 4, 4);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, 128.0f, 64.0f);
+        entity, 132.0f, 68.0f);
     reg.emplaceComponent<shared::HealthComponent>(entity, 1, 1);
     reg.emplaceComponent<PlayerTag>(entity);
     reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {33.f, 17.f}));
+                                          sf::FloatRect({0, 0}, {132.f, 68.f}));
     reg.getComponent<BoxingComponent>(entity).outlineColor = sf::Color::White;
     reg.getComponent<BoxingComponent>(entity).fillColor =
         sf::Color(0, 200, 255, 45);
@@ -124,9 +124,9 @@ void RtypeEntityFactory::setupBydosEntity(
                                       std::pair<int, int>({33, 34}));
     reg.emplaceComponent<Size>(entity, 2, 2);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, 32.0f, 32.0f);
+        entity, 66.0f, 68.0f);
     reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {33.f, 34.f}));
+                                          sf::FloatRect({0, 0}, {66.f, 68.f}));
     reg.getComponent<BoxingComponent>(entity).outlineColor =
         sf::Color(255, 120, 0);
     reg.getComponent<BoxingComponent>(entity).fillColor =
@@ -151,7 +151,7 @@ void RtypeEntityFactory::setupMissileEntity(
                                       std::pair<int, int>({33, 34}));
     reg.emplaceComponent<Size>(entity, 1, 1);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, 8.0f, 4.0f);
+        entity, 33.0f, 34.0f);
     reg.emplaceComponent<shared::ProjectileTag>(entity);
     reg.emplaceComponent<BoxingComponent>(entity,
                                           sf::FloatRect({0, 0}, {33.f, 34.f}));
