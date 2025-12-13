@@ -33,8 +33,10 @@ NetworkClient::NetworkClient(const Config& config)
 
     connCallbacks.onConnected = [this](std::uint32_t userId) {
         queueCallback([this, userId]() {
-            if (onConnectedCallback_) {
-                onConnectedCallback_(userId);
+            for (const auto& callback : onConnectedCallbacks_) {
+                if (callback) {
+                    callback(userId);
+                }
             }
         });
     };
@@ -146,7 +148,7 @@ bool NetworkClient::sendInput(std::uint8_t inputMask) {
 
 void NetworkClient::onConnected(
     std::function<void(std::uint32_t myUserId)> callback) {
-    onConnectedCallback_ = std::move(callback);
+    onConnectedCallbacks_.push_back(std::move(callback));
 }
 
 void NetworkClient::onDisconnected(
@@ -174,6 +176,10 @@ void NetworkClient::onEntityHealth(
     onEntityHealthCallback_ = std::move(callback);
 }
 
+void NetworkClient::onPowerUpEvent(std::function<void(PowerUpEvent)> callback) {
+    onPowerUpCallback_ = std::move(callback);
+}
+
 void NetworkClient::onPositionCorrection(
     std::function<void(float x, float y)> callback) {
     onPositionCorrectionCallback_ = std::move(callback);
@@ -182,6 +188,10 @@ void NetworkClient::onPositionCorrection(
 void NetworkClient::onGameStateChange(
     std::function<void(GameStateEvent)> callback) {
     onGameStateChangeCallback_ = std::move(callback);
+}
+
+void NetworkClient::onGameOver(std::function<void(GameOverEvent)> callback) {
+    onGameOverCallback_ = std::move(callback);
 }
 
 void NetworkClient::poll() {
@@ -294,12 +304,20 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
             handleEntityHealth(header, payload);
             break;
 
+        case network::OpCode::S_POWERUP_EVENT:
+            handlePowerUpEvent(header, payload);
+            break;
+
         case network::OpCode::S_UPDATE_POS:
             handleUpdatePos(header, payload);
             break;
 
         case network::OpCode::S_UPDATE_STATE:
             handleUpdateState(header, payload);
+            break;
+
+        case network::OpCode::S_GAME_OVER:
+            handleGameOver(header, payload);
             break;
 
         default:
@@ -402,13 +420,21 @@ void NetworkClient::handleEntityHealth(const network::Header& header,
                                        const network::Buffer& payload) {
     (void)header;
 
+    LOG_DEBUG("[NetworkClient] handleEntityHealth called, payload size="
+              << payload.size());
+
     if (payload.size() < sizeof(network::EntityHealthPayload)) {
+        LOG_DEBUG("[NetworkClient] Payload too small for EntityHealthPayload");
         return;
     }
 
     try {
         auto deserialized = network::Serializer::deserializeFromNetwork<
             network::EntityHealthPayload>(payload);
+
+        LOG_DEBUG("[NetworkClient] Deserialized health: entityId="
+                  << deserialized.entityId << " current="
+                  << deserialized.current << " max=" << deserialized.max);
 
         EntityHealthEvent event{};
         event.entityId = deserialized.entityId;
@@ -418,6 +444,33 @@ void NetworkClient::handleEntityHealth(const network::Header& header,
         queueCallback([this, event]() {
             if (onEntityHealthCallback_) {
                 onEntityHealthCallback_(event);
+            }
+        });
+    } catch (...) {
+        LOG_DEBUG("[NetworkClient] Exception deserializing health payload");
+    }
+}
+
+void NetworkClient::handlePowerUpEvent(const network::Header& header,
+                                       const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::PowerUpEventPayload)) {
+        return;
+    }
+
+    try {
+        auto deserialized = network::Serializer::deserializeFromNetwork<
+            network::PowerUpEventPayload>(payload);
+
+        PowerUpEvent event{};
+        event.playerId = deserialized.playerId;
+        event.powerUpType = deserialized.powerUpType;
+        event.duration = deserialized.duration;
+
+        queueCallback([this, event]() {
+            if (onPowerUpCallback_) {
+                onPowerUpCallback_(event);
             }
         });
     } catch (...) {
@@ -468,6 +521,30 @@ void NetworkClient::handleUpdateState(const network::Header& header,
         queueCallback([this, event]() {
             if (onGameStateChangeCallback_) {
                 onGameStateChangeCallback_(event);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
+void NetworkClient::handleGameOver(const network::Header& header,
+                                   const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::GameOverPayload)) {
+        return;
+    }
+
+    try {
+        auto deserialized = network::Serializer::deserializeFromNetwork<
+            network::GameOverPayload>(payload);
+
+        GameOverEvent event{deserialized.finalScore};
+
+        queueCallback([this, event]() {
+            if (onGameOverCallback_) {
+                onGameOverCallback_(event);
             }
         });
     } catch (...) {

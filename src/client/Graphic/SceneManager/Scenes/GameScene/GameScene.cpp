@@ -87,6 +87,12 @@ GameScene::GameScene(
 GameScene::~GameScene() {
     LOG_DEBUG("[GameScene] Destructor called");
 
+    if (_networkSystem) {
+        _networkSystem->onLocalPlayerAssigned(nullptr);
+        _networkSystem->onHealthUpdate(nullptr);
+        _networkSystem->setEntityFactory({});
+    }
+
     if (_networkClient && _networkClient->isConnected()) {
         LOG_DEBUG("[GameScene] Disconnecting from server");
         _networkClient->disconnect();

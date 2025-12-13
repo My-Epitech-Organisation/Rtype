@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
 #include <vector>
 
 #include "../../../src/games/rtype/shared/Components.hpp"
@@ -906,7 +907,7 @@ TEST_F(DestroySystemTest, DestroyedEnemyEventHasCorrectEntityType) {
     destroySystem.update(registry, 0.016F);
 
     ASSERT_EQ(emittedEvents.size(), 1u);
-    EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Enemy));
+    EXPECT_EQ(emittedEvents[0].entityType, 1u);  // network::EntityType::Bydos
 }
 
 TEST_F(DestroySystemTest, DestroyedNonEnemyEventHasPlayerEntityType) {
@@ -923,7 +924,7 @@ TEST_F(DestroySystemTest, DestroyedNonEnemyEventHasPlayerEntityType) {
     destroySystem.update(registry, 0.016F);
 
     ASSERT_EQ(emittedEvents.size(), 1u);
-    EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Player));
+    EXPECT_EQ(emittedEvents[0].entityType, 0u);  // network::EntityType::Player
 }
 
 TEST_F(DestroySystemTest, UpdateWithEmptyRegistry) {
@@ -980,7 +981,7 @@ TEST_F(DestroySystemTest, DestroyEnemyWithValidNetworkId) {
     EXPECT_TRUE(enemyCountDecremented);
     ASSERT_EQ(emittedEvents.size(), 1u);
     EXPECT_EQ(emittedEvents[0].entityNetworkId, 999u);
-    EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Enemy));
+    EXPECT_EQ(emittedEvents[0].entityType, 1u);  // network::EntityType::Bydos
 }
 
 TEST_F(DestroySystemTest, DestroyPlayerWithValidNetworkId) {
@@ -1000,7 +1001,7 @@ TEST_F(DestroySystemTest, DestroyPlayerWithValidNetworkId) {
     EXPECT_FALSE(enemyCountDecremented);  // Not an enemy
     ASSERT_EQ(emittedEvents.size(), 1u);
     EXPECT_EQ(emittedEvents[0].entityNetworkId, 123u);
-    EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Player));
+    EXPECT_EQ(emittedEvents[0].entityType, 0u);  // network::EntityType::Player
 }
 
 // =============================================================================
@@ -1107,7 +1108,13 @@ TEST_F(SpawnerSystemTest, SpawnedEntityHasCorrectPosition) {
     view.each([this](ECS::Entity /*entity*/,
                      const TransformComponent& transform,
                      const EnemyTag& /*tag*/) {
-        EXPECT_FLOAT_EQ(transform.x, config.spawnX);
+        // X position can be either config.spawnX or adjusted for Stationary behavior
+        float expectedStationaryX = std::max(0.0F, config.spawnX - config.stationarySpawnInset);
+        bool xIsValid = (std::abs(transform.x - config.spawnX) < 0.01F) ||
+                        (std::abs(transform.x - expectedStationaryX) < 0.01F);
+        EXPECT_TRUE(xIsValid) << "X position " << transform.x 
+                              << " is neither " << config.spawnX 
+                              << " nor " << expectedStationaryX;
         EXPECT_GE(transform.y, config.minSpawnY);
         EXPECT_LE(transform.y, config.maxSpawnY);
     });
@@ -1150,7 +1157,7 @@ TEST_F(SpawnerSystemTest, SpawnEmitsEvent) {
 
     ASSERT_FALSE(emittedEvents.empty());
     EXPECT_EQ(emittedEvents[0].type, rtype::engine::GameEventType::EntitySpawned);
-    EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Enemy));
+    EXPECT_EQ(emittedEvents[0].entityType, 1u);  // network::EntityType::Bydos
 }
 
 TEST_F(SpawnerSystemTest, RespectsMaxEnemies) {
@@ -1236,7 +1243,12 @@ TEST_F(SpawnerSystemTest, SpawnedEntityHasCorrectAIComponent) {
     view.each([this](ECS::Entity /*entity*/,
                      const AIComponent& ai,
                      const EnemyTag& /*tag*/) {
-        EXPECT_EQ(ai.behavior, AIBehavior::MoveLeft);
+        const std::array<AIBehavior, 6> allowed = {
+            AIBehavior::MoveLeft, AIBehavior::SineWave, AIBehavior::ZigZag,
+            AIBehavior::DiveBomb, AIBehavior::Stationary, AIBehavior::Chase};
+        const bool found = std::find(allowed.begin(), allowed.end(),
+                                      ai.behavior) != allowed.end();
+        EXPECT_TRUE(found);
         EXPECT_FLOAT_EQ(ai.speed, config.bydosSlaveSpeed);
     });
 }
@@ -1328,7 +1340,9 @@ TEST_F(SpawnerSystemTest, SpawnEventHasCorrectCoordinates) {
     }
 
     ASSERT_FALSE(emittedEvents.empty());
-    EXPECT_FLOAT_EQ(emittedEvents[0].x, config.spawnX);
+    float minX = config.spawnX - config.stationarySpawnInset;
+    EXPECT_LE(emittedEvents[0].x, config.spawnX);
+    EXPECT_GE(emittedEvents[0].x, minX);
     EXPECT_GE(emittedEvents[0].y, config.minSpawnY);
     EXPECT_LE(emittedEvents[0].y, config.maxSpawnY);
     EXPECT_FLOAT_EQ(emittedEvents[0].rotation, 0.0F);

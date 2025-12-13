@@ -23,7 +23,8 @@ enum class GameEventType : uint8_t {
     EntitySpawned = 0,
     EntityDestroyed,
     EntityUpdated,
-    EntityHealthChanged
+    EntityHealthChanged,
+    PowerUpApplied
 };
 
 /**
@@ -43,6 +44,7 @@ struct GameEvent {
     float velocityY = 0.0F;
     int32_t healthCurrent{0};
     int32_t healthMax{0};
+    float duration{0.0F};
 };
 
 /**
@@ -59,6 +61,7 @@ struct ProcessedEvent {
     float y;
     float vx;
     float vy;
+    float duration;
     bool valid;
 };
 

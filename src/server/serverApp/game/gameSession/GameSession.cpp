@@ -279,6 +279,10 @@ void GameSession::processGameEvents() {
                                                    event.healthCurrent,
                                                    event.healthMax);
                 break;
+            case engine::GameEventType::PowerUpApplied:
+                _networkSystem->broadcastPowerUp(event.entityNetworkId,
+                                                 event.subType, event.duration);
+                break;
         }
     }
 

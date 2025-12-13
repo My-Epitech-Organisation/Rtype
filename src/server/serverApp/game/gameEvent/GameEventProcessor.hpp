@@ -8,6 +8,7 @@
 #ifndef SRC_SERVER_SERVERAPP_GAME_GAMEEVENT_GAMEEVENTPROCESSOR_HPP_
 #define SRC_SERVER_SERVERAPP_GAME_GAMEEVENT_GAMEEVENTPROCESSOR_HPP_
 
+#include <functional>
 #include <memory>
 
 #include <rtype/engine.hpp>
@@ -33,9 +34,11 @@ class GameEventProcessor {
      * @param networkSystem Shared pointer to the network system
      * @param verbose Enable verbose logging
      */
-    GameEventProcessor(std::shared_ptr<engine::IGameEngine> gameEngine,
-                       std::shared_ptr<ServerNetworkSystem> networkSystem,
-                       bool verbose = false);
+    GameEventProcessor(
+        std::shared_ptr<engine::IGameEngine> gameEngine,
+        std::shared_ptr<ServerNetworkSystem> networkSystem,
+        bool verbose = false,
+        std::function<void(const engine::GameEvent&)> eventObserver = nullptr);
 
     ~GameEventProcessor() = default;
 
@@ -53,6 +56,7 @@ class GameEventProcessor {
     std::shared_ptr<engine::IGameEngine> _gameEngine;
     std::shared_ptr<ServerNetworkSystem> _networkSystem;
     bool _verbose;
+    std::function<void(const engine::GameEvent&)> _eventObserver;
 };
 
 }  // namespace rtype::server

@@ -8,10 +8,12 @@
 #include "BehaviorRegistry.hpp"
 
 #include "Chase/ChaseBehavior.hpp"
+#include "DiveBomb/DiveBombBehavior.hpp"
 #include "MoveLeft/MoveLeftBehavior.hpp"
 #include "Patrol/PatrolBehavior.hpp"
 #include "SineWave/SineWaveBehavior.hpp"
 #include "Stationary/StationaryBehavior.hpp"
+#include "ZigZag/ZigZagBehavior.hpp"
 
 namespace rtype::games::rtype::shared {
 
@@ -23,6 +25,8 @@ void registerDefaultBehaviors() {
     registry.registerBehavior<ChaseBehavior>();
     registry.registerBehavior<PatrolBehavior>();
     registry.registerBehavior<StationaryBehavior>();
+    registry.registerBehavior<ZigZagBehavior>();
+    registry.registerBehavior<DiveBombBehavior>();
 }
 
 }  // namespace rtype::games::rtype::shared

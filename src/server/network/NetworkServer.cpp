@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "Logger/Macros.hpp"
 #include "Serializer.hpp"
 #include "protocol/ByteOrderSpec.hpp"
 #include "protocol/Validator.hpp"
@@ -120,6 +121,8 @@ void NetworkServer::destroyEntity(std::uint32_t id) {
 
 void NetworkServer::updateEntityHealth(std::uint32_t id, std::int32_t current,
                                        std::int32_t max) {
+    LOG_DEBUG("[NetworkServer] updateEntityHealth: entityId="
+              << id << " current=" << current << " max=" << max);
     network::EntityHealthPayload payload;
     payload.entityId = id;
     payload.current = current;
@@ -130,6 +133,18 @@ void NetworkServer::updateEntityHealth(std::uint32_t id, std::int32_t current,
     broadcastToAll(network::OpCode::S_ENTITY_HEALTH, serialized);
 }
 
+void NetworkServer::broadcastPowerUp(std::uint32_t playerId,
+                                     std::uint8_t powerUpType, float duration) {
+    network::PowerUpEventPayload payload{};
+    payload.playerId = playerId;
+    payload.powerUpType = powerUpType;
+    payload.duration = duration;
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    broadcastToAll(network::OpCode::S_POWERUP_EVENT, serialized);
+}
+
 void NetworkServer::updateGameState(GameState state) {
     network::UpdateStatePayload payload;
     payload.stateId = static_cast<std::uint8_t>(state);
@@ -137,6 +152,15 @@ void NetworkServer::updateGameState(GameState state) {
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
     broadcastToAll(network::OpCode::S_UPDATE_STATE, serialized);
+}
+
+void NetworkServer::sendGameOver(std::uint32_t finalScore) {
+    network::GameOverPayload payload;
+    payload.finalScore = finalScore;
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    broadcastToAll(network::OpCode::S_GAME_OVER, serialized);
 }
 
 void NetworkServer::spawnEntityToClient(std::uint32_t userId, std::uint32_t id,
@@ -208,6 +232,25 @@ void NetworkServer::updateEntityHealthToClient(std::uint32_t userId,
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
     sendToClient(client, network::OpCode::S_ENTITY_HEALTH, serialized);
+}
+
+void NetworkServer::sendPowerUpToClient(std::uint32_t userId,
+                                        std::uint32_t playerId,
+                                        std::uint8_t powerUpType,
+                                        float duration) {
+    auto client = findClientByUserId(userId);
+    if (!client) {
+        return;
+    }
+
+    network::PowerUpEventPayload payload{};
+    payload.playerId = playerId;
+    payload.powerUpType = powerUpType;
+    payload.duration = duration;
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    sendToClient(client, network::OpCode::S_POWERUP_EVENT, serialized);
 }
 
 void NetworkServer::updateGameStateToClient(std::uint32_t userId,

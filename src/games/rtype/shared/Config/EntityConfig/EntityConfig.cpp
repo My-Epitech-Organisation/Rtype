@@ -27,6 +27,8 @@ AIBehavior stringToBehavior(const std::string& str) {
     if (str == "patrol" || str == "Patrol") return AIBehavior::Patrol;
     if (str == "stationary" || str == "Stationary")
         return AIBehavior::Stationary;
+    if (str == "zigzag" || str == "ZigZag") return AIBehavior::ZigZag;
+    if (str == "divebomb" || str == "DiveBomb") return AIBehavior::DiveBomb;
     return AIBehavior::MoveLeft;
 }
 
@@ -42,8 +44,9 @@ PowerUpConfig::EffectType stringToEffect(const std::string& str) {
         return PowerUpConfig::EffectType::WeaponUpgrade;
     if (str == "shield" || str == "Shield")
         return PowerUpConfig::EffectType::Shield;
-    if (str == "extra_life" || str == "ExtraLife")
-        return PowerUpConfig::EffectType::ExtraLife;
+    if (str == "extra_life" || str == "ExtraLife" || str == "health_boost" ||
+        str == "HealthBoost")
+        return PowerUpConfig::EffectType::HealthBoost;
     return PowerUpConfig::EffectType::Health;
 }
 

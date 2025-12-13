@@ -46,8 +46,8 @@ inline constexpr WeaponConfig BasicBullet{
     500.0F,  // speed
     0.2F,    // cooldown
     3.0F,    // lifetime
-    16.0F,   // hitbox width
-    8.0F,    // hitbox height
+    33.0F,   // hitbox width
+    34.0F,   // hitbox height
     false,   // piercing
     1,       // maxHits
     1,       // projectileCount
@@ -63,8 +63,8 @@ inline constexpr WeaponConfig ChargedShot{
     600.0F,  // speed
     1.0F,    // cooldown
     4.0F,    // lifetime
-    32.0F,   // hitbox width
-    24.0F,   // hitbox height
+    33.0F,   // hitbox width
+    34.0F,   // hitbox height
     true,    // piercing
     3,       // maxHits
     1,       // projectileCount
@@ -80,8 +80,8 @@ inline constexpr WeaponConfig Missile{
     350.0F,  // speed
     0.5F,    // cooldown
     5.0F,    // lifetime
-    24.0F,   // hitbox width
-    12.0F,   // hitbox height
+    33.0F,   // hitbox width
+    34.0F,   // hitbox height
     false,   // piercing
     1,       // maxHits
     1,       // projectileCount
@@ -97,8 +97,8 @@ inline constexpr WeaponConfig LaserBeam{
     800.0F,  // speed
     0.3F,    // cooldown
     2.0F,    // lifetime
-    48.0F,   // hitbox width
-    8.0F,    // hitbox height
+    33.0F,   // hitbox width
+    34.0F,   // hitbox height
     true,    // piercing
     10,      // maxHits
     1,       // projectileCount
@@ -114,8 +114,8 @@ inline constexpr WeaponConfig SpreadShot{
     450.0F,  // speed
     0.4F,    // cooldown
     2.5F,    // lifetime
-    12.0F,   // hitbox width
-    8.0F,    // hitbox height
+    33.0F,   // hitbox width
+    34.0F,   // hitbox height
     false,   // piercing
     1,       // maxHits
     5,       // projectileCount
@@ -129,10 +129,10 @@ inline constexpr WeaponConfig EnemyBullet{
     ProjectileType::EnemyBullet,
     15,      // damage
     300.0F,  // speed
-    0.8F,    // cooldown
+    1.8F,    // cooldown (slower enemy fire)
     5.0F,    // lifetime
-    12.0F,   // hitbox width
-    12.0F,   // hitbox height
+    33.0F,   // hitbox width
+    34.0F,   // hitbox height
     false,   // piercing
     1,       // maxHits
     1,       // projectileCount
@@ -148,8 +148,8 @@ inline constexpr WeaponConfig HeavyBullet{
     250.0F,  // speed
     1.2F,    // cooldown
     6.0F,    // lifetime
-    20.0F,   // hitbox width
-    20.0F,   // hitbox height
+    33.0F,   // hitbox width
+    34.0F,   // hitbox height
     false,   // piercing
     1,       // maxHits
     1,       // projectileCount

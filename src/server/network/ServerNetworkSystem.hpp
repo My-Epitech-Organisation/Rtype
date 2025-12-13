@@ -193,6 +193,9 @@ class ServerNetworkSystem {
     void updateEntityHealth(std::uint32_t networkId, std::int32_t current,
                             std::int32_t max);
 
+    void broadcastPowerUp(std::uint32_t playerNetworkId,
+                          std::uint8_t powerUpType, float duration);
+
     /**
      * @brief Send position correction to a specific player
      *
@@ -231,6 +234,24 @@ class ServerNetworkSystem {
      * Called when the server transitions to Playing state.
      */
     void broadcastGameStart();
+
+    /**
+     * @brief Broadcast a game state update to all clients
+     */
+    void broadcastGameState(NetworkServer::GameState state);
+
+    /**
+     * @brief Broadcast final score when the game ends
+     */
+    void broadcastGameOver(std::uint32_t finalScore);
+
+    /**
+     * @brief Reset all tracked network state
+     *
+     * Clears entity/user mappings and resets network id counter.
+     * Use when returning to lobby between games.
+     */
+    void resetState();
 
     /**
      * @brief Update the network system

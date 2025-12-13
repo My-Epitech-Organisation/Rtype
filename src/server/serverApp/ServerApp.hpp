@@ -143,9 +143,15 @@ class ServerApp {
     void onUpdate(float deltaTime);
     void onPostUpdate();
 
+    void checkGameOverCondition();
+    [[nodiscard]] std::size_t countAlivePlayers();
+    void onGameEvent(const engine::GameEvent& event);
+
     void handleClientConnected(std::uint32_t userId);
     void handleClientDisconnected(std::uint32_t userId);
     void handleStateChange(GameState oldState, GameState newState);
+
+    void resetToLobby();
 
     void processIncomingData() noexcept;
     void processRawNetworkData() noexcept;
@@ -181,6 +187,9 @@ class ServerApp {
     std::shared_ptr<NetworkServer> _networkServer;
     std::shared_ptr<ServerNetworkSystem> _networkSystem;
     std::shared_ptr<ECS::Registry> _registry;
+
+    std::uint32_t _score{0};
+    static constexpr std::uint32_t ENEMY_DESTRUCTION_SCORE = 100;
 };
 
 }  // namespace rtype::server

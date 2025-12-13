@@ -55,6 +55,8 @@ TEST_F(OpCodeTest, IsReliableMatchesRFC) {
     EXPECT_TRUE(isReliable(OpCode::S_ENTITY_SPAWN));
     EXPECT_TRUE(isReliable(OpCode::S_ENTITY_DESTROY));
     EXPECT_TRUE(isReliable(OpCode::S_ENTITY_HEALTH));
+    EXPECT_TRUE(isReliable(OpCode::S_GAME_OVER));
+    EXPECT_TRUE(isReliable(OpCode::S_POWERUP_EVENT));
 
     // Unreliable opcodes (no ACK needed)
     EXPECT_FALSE(isReliable(OpCode::S_ENTITY_MOVE));
@@ -99,7 +101,7 @@ TEST_F(OpCodeTest, IsValidOpCode) {
 
     // Invalid opcodes
     EXPECT_FALSE(isValidOpCode(0x00));
-    EXPECT_FALSE(isValidOpCode(0x07));
+    EXPECT_TRUE(isValidOpCode(0x07));  // S_GAME_OVER is a valid OpCode
     EXPECT_FALSE(isValidOpCode(0x30));
     EXPECT_FALSE(isValidOpCode(0xFF));  // Not defined
 }
@@ -288,6 +290,32 @@ TEST_F(PayloadTest, UpdateStatePayloadState) {
 
     state.stateId = static_cast<uint8_t>(GameState::GameOver);
     EXPECT_EQ(state.getState(), GameState::GameOver);
+}
+
+TEST_F(PayloadTest, GameOverPayloadStructure) {
+    GameOverPayload gameOver;
+    EXPECT_EQ(sizeof(GameOverPayload), sizeof(std::uint32_t));
+    
+    gameOver.finalScore = 12345;
+    EXPECT_EQ(gameOver.finalScore, 12345u);
+    
+    // Test with max score
+    gameOver.finalScore = 0xFFFFFFFF;
+    EXPECT_EQ(gameOver.finalScore, 0xFFFFFFFFu);
+}
+
+TEST_F(PayloadTest, PowerUpEventPayloadStructure) {
+    PowerUpEventPayload powerUp;
+    EXPECT_EQ(sizeof(PowerUpEventPayload), 
+              sizeof(std::uint32_t) + sizeof(std::uint8_t) + sizeof(float));
+    
+    powerUp.playerId = 42;
+    powerUp.powerUpType = 3;  // DoubleDamage
+    powerUp.duration = 10.5F;
+    
+    EXPECT_EQ(powerUp.playerId, 42u);
+    EXPECT_EQ(powerUp.powerUpType, 3u);
+    EXPECT_FLOAT_EQ(powerUp.duration, 10.5F);
 }
 
 // ============================================================================

@@ -37,6 +37,12 @@ struct ProjectileTag {};
  */
 struct PickupTag {};
 
+/**
+ * @struct ObstacleTag
+ * @brief Tag component to mark damaging obstacles
+ */
+struct ObstacleTag {};
+
 // =============================================================================
 // Enemy Type Tags
 // =============================================================================

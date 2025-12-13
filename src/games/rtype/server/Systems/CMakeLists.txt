@@ -4,11 +4,13 @@ add_library(rtype_game_server_systems OBJECT
     Cleanup/CleanupSystem.cpp
     Destroy/DestroySystem.cpp
     Projectile/ProjectileSpawnerSystem.cpp
+    EnemyShooting/EnemyShootingSystem.cpp
 )
 
 target_include_directories(rtype_game_server_systems PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/network/src
 )
 
 target_link_libraries(rtype_game_server_systems PUBLIC

@@ -20,7 +20,9 @@ enum class AIBehavior : uint8_t {
     SineWave,      // Sine wave movement pattern
     Chase,         // Chase nearest player
     Patrol,        // Patrol between points
-    Stationary     // Stay in place (turrets)
+    Stationary,    // Stay in place (turrets)
+    ZigZag,        // Left movement with vertical oscillation by steps
+    DiveBomb       // Dives toward a target Y while drifting left
 };
 
 /**

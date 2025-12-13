@@ -12,6 +12,8 @@
 
 #include "../Components/BoxingComponent.hpp"
 #include "../Components/ImageComponent.hpp"
+#include "../shared/Components/BoundingBoxComponent.hpp"
+#include "../shared/Components/PositionComponent.hpp"
 #include "Graphic/Accessibility.hpp"
 
 namespace rtype::games::rtype::client {
@@ -28,6 +30,20 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
     } else {
         return;
     }
+
+    registry
+        .view<::rtype::games::rtype::shared::Position,
+              ::rtype::games::rtype::shared::BoundingBoxComponent>()
+        .each([this](auto /*entt*/, const auto& pos, const auto& bbox) {
+            sf::RectangleShape hitbox;
+            hitbox.setSize({bbox.width, bbox.height});
+            hitbox.setOrigin({bbox.width / 2.0F, bbox.height / 2.0F});
+            hitbox.setPosition({pos.x, pos.y});
+            hitbox.setFillColor(sf::Color(255, 0, 0, 30));
+            hitbox.setOutlineColor(sf::Color(255, 0, 0, 180));
+            hitbox.setOutlineThickness(2.0F);
+            this->_target->draw(hitbox);
+        });
 
     registry
         .view<::rtype::games::rtype::client::Image,

@@ -15,10 +15,12 @@ namespace rtype::server {
 
 GameEventProcessor::GameEventProcessor(
     std::shared_ptr<engine::IGameEngine> gameEngine,
-    std::shared_ptr<ServerNetworkSystem> networkSystem, bool verbose)
+    std::shared_ptr<ServerNetworkSystem> networkSystem, bool verbose,
+    std::function<void(const engine::GameEvent&)> eventObserver)
     : _gameEngine(std::move(gameEngine)),
       _networkSystem(std::move(networkSystem)),
-      _verbose(verbose) {}
+      _verbose(verbose),
+      _eventObserver(std::move(eventObserver)) {}
 
 void GameEventProcessor::processEvents() {
     if (!_gameEngine || !_networkSystem) {
@@ -37,6 +39,10 @@ void GameEventProcessor::processEvents() {
                           << " networkId=" << event.entityNetworkId);
             }
             continue;
+        }
+
+        if (_eventObserver) {
+            _eventObserver(event);
         }
 
         switch (processed.type) {
@@ -73,14 +79,22 @@ void GameEventProcessor::processEvents() {
                 break;
             }
             case engine::GameEventType::EntityHealthChanged: {
+                LOG_DEBUG("[EventProcessor] Processing EntityHealthChanged: "
+                          << "networkId=" << event.entityNetworkId << " health="
+                          << event.healthCurrent << "/" << event.healthMax);
                 _networkSystem->updateEntityHealth(event.entityNetworkId,
                                                    event.healthCurrent,
                                                    event.healthMax);
+                break;
+            }
+            case engine::GameEventType::PowerUpApplied: {
+                _networkSystem->broadcastPowerUp(event.entityNetworkId,
+                                                 event.subType, event.duration);
                 if (_verbose) {
-                    LOG_DEBUG("[EventProcessor] Entity health changed: "
-                              << "networkId=" << event.entityNetworkId
-                              << " health=" << event.healthCurrent << "/"
-                              << event.healthMax);
+                    LOG_DEBUG("[EventProcessor] Power-up applied: playerId="
+                              << event.entityNetworkId
+                              << " type=" << static_cast<int>(event.subType)
+                              << " duration=" << event.duration);
                 }
                 break;
             }
