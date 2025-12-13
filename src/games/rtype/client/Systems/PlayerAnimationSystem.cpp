@@ -25,19 +25,17 @@ void PlayerAnimationSystem::update(ECS::Registry& registry, float /*dt*/) {
         .each([&](auto /*entity*/, const rs::VelocityComponent& vel,
                   TextureRect& tex, Image& img,
                   const rs::NetworkIdComponent& netId, PlayerTag& /*tag*/) {
-            // Column selection based on vertical velocity
-            int column = 2;  // default: neutral
+            int column = 2;
             if (vel.vy > kHighThreshold) {
-                column = 0;  // strong downwards
+                column = 0;
             } else if (vel.vy > kLowThreshold) {
-                column = 1;  // easing downwards
+                column = 1;
             } else if (vel.vy < -kHighThreshold) {
-                column = 4;  // strong upwards
+                column = 4;
             } else if (vel.vy < -kLowThreshold) {
-                column = 3;  // easing upwards
+                column = 3;
             }
 
-            // Row selection based on player id to colorize per user
             int row = 0;
             if (kColorRows > 0) {
                 row = static_cast<int>(netId.networkId % kColorRows);
