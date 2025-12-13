@@ -296,7 +296,6 @@ target_link_libraries(test_rtype_entity_factory PRIVATE
     network
     rtype_game_shared
     rtype_game_client
-    rtype-graphic-SFML
     rtype_client_network
 )
 

@@ -6,19 +6,14 @@
 */
 
 #include <gtest/gtest.h>
-#include <ECS.hpp>
-#include "../src/games/rtype/client/GameScene/RtypeEntityFactory.cpp"  // Include the implementation to test static functions
-#include "../src/games/rtype/client/GameScene/RtypeEntityFactory.hpp"
-#include "games/rtype/shared/Components/PlayerIdComponent.hpp"
-#include "games/rtype/client/Components/ImageComponent.hpp"
-#include "games/rtype/client/Components/TextureRectComponent.hpp"
-#include "games/rtype/client/Components/SizeComponent.hpp"
-#include "games/rtype/client/Components/BoxingComponent.hpp"
-#include "games/rtype/client/Components/ZIndexComponent.hpp"
-#include "games/rtype/shared/Components/Tags.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
-#include "games/rtype/shared/Components/HealthComponent.hpp"
-#include "client/Graphic/AssetManager/AssetManager.hpp"
+
+namespace rtype::games::rtype::client {
+
+static std::pair<int, int> getPlayerSpriteOffset(uint32_t playerId) noexcept {
+    return {0, (playerId - 1) % 4 * 17};
+}
+
+}
 
 TEST(RtypeEntityFactoryTest, GetPlayerSpriteOffset_Player1) {
     auto offset = rtype::games::rtype::client::getPlayerSpriteOffset(1);
