@@ -80,8 +80,8 @@ RTypeEntitySpawner::RTypeEntitySpawner(
     std::uint32_t networkId = config.userId;
     _registry->emplaceComponent<NetworkIdComponent>(playerEntity, networkId);
 
-    _registry->emplaceComponent<PlayerIdComponent>(playerEntity,
-                                                   (config.playerIndex % 4) + 1);
+    std::uint32_t playerId = config.playerIndex + 1;
+    _registry->emplaceComponent<PlayerIdComponent>(playerEntity, playerId);
 
     _networkSystem->registerNetworkedEntity(playerEntity, networkId,
                                             EntityType::Player, spawnX, spawnY);
