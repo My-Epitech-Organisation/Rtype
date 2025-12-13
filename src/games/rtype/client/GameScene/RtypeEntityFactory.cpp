@@ -96,15 +96,18 @@ void RtypeEntityFactory::setupPlayerEntity(
     uint32_t playerId = 1;
 
     if (userId < 1 || userId > ::rtype::game::config::MAX_PLAYER_COUNT) {
-        LOG_ERROR("[RtypeEntityFactory] Invalid userId " << userId << ", must be 1-" << ::rtype::game::config::MAX_PLAYER_COUNT << ". Defaulting to 1");
+        LOG_ERROR("[RtypeEntityFactory] Invalid userId "
+                  << userId << ", must be 1-"
+                  << ::rtype::game::config::MAX_PLAYER_COUNT
+                  << ". Defaulting to 1");
         userId = 1;
     }
 
     playerId = userId;
     spriteOffset = getPlayerSpriteOffset(playerId);
-    LOG_DEBUG("[RtypeEntityFactory] Player "
-              << playerId << " sprite offset: (" << spriteOffset.first
-              << ", " << spriteOffset.second << ")");
+    LOG_DEBUG("[RtypeEntityFactory] Player " << playerId << " sprite offset: ("
+                                             << spriteOffset.first << ", "
+                                             << spriteOffset.second << ")");
 
     reg.emplaceComponent<shared::PlayerIdComponent>(entity, playerId);
 

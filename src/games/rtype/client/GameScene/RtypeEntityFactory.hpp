@@ -10,9 +10,9 @@
 
 #include <memory>
 
-#include "ECS.hpp"
 #include "../../../../client/Graphic/AssetManager/AssetManager.hpp"
 #include "../../../../client/network/ClientNetworkSystem.hpp"
+#include "ECS.hpp"
 
 namespace rtype::games::rtype::client {
 
