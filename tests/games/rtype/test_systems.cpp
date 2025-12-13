@@ -1108,7 +1108,13 @@ TEST_F(SpawnerSystemTest, SpawnedEntityHasCorrectPosition) {
     view.each([this](ECS::Entity /*entity*/,
                      const TransformComponent& transform,
                      const EnemyTag& /*tag*/) {
-        EXPECT_FLOAT_EQ(transform.x, config.spawnX);
+        // X position can be either config.spawnX or adjusted for Stationary behavior
+        float expectedStationaryX = std::max(0.0F, config.spawnX - config.stationarySpawnInset);
+        bool xIsValid = (std::abs(transform.x - config.spawnX) < 0.01F) ||
+                        (std::abs(transform.x - expectedStationaryX) < 0.01F);
+        EXPECT_TRUE(xIsValid) << "X position " << transform.x 
+                              << " is neither " << config.spawnX 
+                              << " nor " << expectedStationaryX;
         EXPECT_GE(transform.y, config.minSpawnY);
         EXPECT_LE(transform.y, config.maxSpawnY);
     });
