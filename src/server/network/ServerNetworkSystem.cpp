@@ -195,7 +195,7 @@ void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
                   std::to_string(health.current) + "/" +
                   std::to_string(health.max));
         server_->updateEntityHealth(networkId, health.current, health.max);
-    } else {  // NOLINT(whitespace/newline, readability/braces)
+    } else {
         LOG_DEBUG("[ServerNetworkSystem] No health component for entity " +
                   std::to_string(networkId));
     }
