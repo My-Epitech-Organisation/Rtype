@@ -907,7 +907,7 @@ TEST_F(DestroySystemTest, DestroyedEnemyEventHasCorrectEntityType) {
     destroySystem.update(registry, 0.016F);
 
     ASSERT_EQ(emittedEvents.size(), 1u);
-    EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Enemy));
+    EXPECT_EQ(emittedEvents[0].entityType, 1u);  // network::EntityType::Bydos
 }
 
 TEST_F(DestroySystemTest, DestroyedNonEnemyEventHasPlayerEntityType) {
@@ -924,7 +924,7 @@ TEST_F(DestroySystemTest, DestroyedNonEnemyEventHasPlayerEntityType) {
     destroySystem.update(registry, 0.016F);
 
     ASSERT_EQ(emittedEvents.size(), 1u);
-    EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Player));
+    EXPECT_EQ(emittedEvents[0].entityType, 0u);  // network::EntityType::Player
 }
 
 TEST_F(DestroySystemTest, UpdateWithEmptyRegistry) {
@@ -981,7 +981,7 @@ TEST_F(DestroySystemTest, DestroyEnemyWithValidNetworkId) {
     EXPECT_TRUE(enemyCountDecremented);
     ASSERT_EQ(emittedEvents.size(), 1u);
     EXPECT_EQ(emittedEvents[0].entityNetworkId, 999u);
-    EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Enemy));
+    EXPECT_EQ(emittedEvents[0].entityType, 1u);  // network::EntityType::Bydos
 }
 
 TEST_F(DestroySystemTest, DestroyPlayerWithValidNetworkId) {
@@ -1001,7 +1001,7 @@ TEST_F(DestroySystemTest, DestroyPlayerWithValidNetworkId) {
     EXPECT_FALSE(enemyCountDecremented);  // Not an enemy
     ASSERT_EQ(emittedEvents.size(), 1u);
     EXPECT_EQ(emittedEvents[0].entityNetworkId, 123u);
-    EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Player));
+    EXPECT_EQ(emittedEvents[0].entityType, 0u);  // network::EntityType::Player
 }
 
 // =============================================================================
@@ -1151,7 +1151,7 @@ TEST_F(SpawnerSystemTest, SpawnEmitsEvent) {
 
     ASSERT_FALSE(emittedEvents.empty());
     EXPECT_EQ(emittedEvents[0].type, rtype::engine::GameEventType::EntitySpawned);
-    EXPECT_EQ(emittedEvents[0].entityType, static_cast<uint8_t>(EntityType::Enemy));
+    EXPECT_EQ(emittedEvents[0].entityType, 1u);  // network::EntityType::Bydos
 }
 
 TEST_F(SpawnerSystemTest, RespectsMaxEnemies) {
