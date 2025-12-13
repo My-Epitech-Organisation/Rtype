@@ -27,8 +27,6 @@ class EnemyShootingSystem : public ::rtype::engine::ASystem {
     using ShootCallback = std::function<uint32_t(
         ECS::Registry&, ECS::Entity, uint32_t, float, float, float, float)>;
 
-    /// Default horizontal offset for non-tracking enemy projectiles (pixels
-    /// left of enemy)
     static constexpr float kDefaultTargetOffset = 300.0F;
 
     explicit EnemyShootingSystem(
