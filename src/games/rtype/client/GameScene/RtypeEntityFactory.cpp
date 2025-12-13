@@ -92,8 +92,8 @@ void RtypeEntityFactory::setupPlayerEntity(
     std::pair<int, int> spriteOffset = {0, 0};
     uint32_t playerId = 1;
 
-    if (userId > 0 && userId <= 4) {
-        playerId = userId;
+    if (userId > 0) {
+        playerId = ((userId - 1) % 4) + 1;
         spriteOffset = getPlayerSpriteOffset(playerId);
         LOG_DEBUG("[RtypeEntityFactory] Player "
                   << playerId << " sprite offset: (" << spriteOffset.first

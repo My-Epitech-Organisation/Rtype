@@ -11,8 +11,8 @@
 #include <memory>
 
 #include "ECS.hpp"
-#include "Graphic/AssetManager/AssetManager.hpp"
-#include "network/ClientNetworkSystem.hpp"
+#include "../../../../client/Graphic/AssetManager/AssetManager.hpp"
+#include "../../../../client/network/ClientNetworkSystem.hpp"
 
 namespace rtype::games::rtype::client {
 
