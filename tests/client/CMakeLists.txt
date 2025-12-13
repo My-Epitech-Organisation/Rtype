@@ -287,3 +287,21 @@ if(BUILD_GRAPHICAL_TESTS)
     gtest_discover_tests(test_pause_menu)
 
 endif()
+
+add_executable(test_rtype_entity_factory test_rtype_entity_factory.cpp)
+
+target_link_libraries(test_rtype_entity_factory PRIVATE
+    GTest::gtest_main
+    engine
+    network
+    rtype_game_shared
+    rtype_game_client
+    rtype-graphic-SFML
+    rtype_client_network
+)
+
+target_include_directories(test_rtype_entity_factory PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_rtype_entity_factory)
