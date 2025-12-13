@@ -7,10 +7,20 @@
 
 #include <gtest/gtest.h>
 
+#include "../../src/games/rtype/client/GraphicsConstants.hpp"
+#include "../../src/games/rtype/shared/Config/GameConfig/RTypeGameConfig.hpp"
+
 namespace rtype::games::rtype::client {
 
-static std::pair<int, int> getPlayerSpriteOffset(uint32_t playerId) noexcept {
-    return {0, (playerId - 1) % 4 * 17};
+static std::pair<int, int> getPlayerSpriteOffset(uint32_t playerId) {
+    const int SPRITE_HEIGHT = 17;
+    uint32_t rowIndex = 0;
+    if (playerId >= 1 && playerId <= ::rtype::game::config::MAX_PLAYER_COUNT) {
+        rowIndex = playerId - 1;
+    }
+    int yOffset = static_cast<int>(rowIndex) * SPRITE_HEIGHT;
+
+    return {0, yOffset};
 }
 
 }
@@ -40,15 +50,13 @@ TEST(RtypeEntityFactoryTest, GetPlayerSpriteOffset_Player4) {
 }
 
 TEST(RtypeEntityFactoryTest, GetPlayerSpriteOffset_InvalidPlayerId) {
-    // Test edge case: playerId=0 (should still compute, though not used)
     auto offset = rtype::games::rtype::client::getPlayerSpriteOffset(0);
     EXPECT_EQ(offset.first, 0);
-    EXPECT_EQ(offset.second, 51);  // (0-1)%4 = 3, 3*17=51
+    EXPECT_EQ(offset.second, 0);  // defaults to row 0
 }
 
-TEST(RtypeEntityFactoryTest, GetPlayerSpriteOffset_PlayerId5) {
-    // Test wrap-around: playerId=5 maps to same as playerId=1
-    auto offset5 = rtype::games::rtype::client::getPlayerSpriteOffset(5);
-    auto offset1 = rtype::games::rtype::client::getPlayerSpriteOffset(1);
-    EXPECT_EQ(offset5, offset1);
+TEST(RtypeEntityFactoryTest, GetPlayerSpriteOffset_InvalidPlayerIdHigh) {
+    auto offset = rtype::games::rtype::client::getPlayerSpriteOffset(5);
+    EXPECT_EQ(offset.first, 0);
+    EXPECT_EQ(offset.second, 0);  // defaults to row 0
 }
