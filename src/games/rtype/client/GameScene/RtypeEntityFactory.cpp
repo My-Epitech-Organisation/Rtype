@@ -12,6 +12,7 @@
 
 #include "../shared/Components/HealthComponent.hpp"
 #include "../shared/Components/PlayerIdComponent.hpp"
+#include "../shared/Config/GameConfig/RTypeGameConfig.hpp"
 #include "AllComponents.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Components/LifetimeComponent.hpp"
@@ -36,13 +37,15 @@ namespace rtype::games::rtype::client {
  * - Row 2 (Y=34): Green player
  * - Row 3 (Y=51): Red player
  *
- * @param playerId Player ID (1-4)
+ * @param playerId Player ID (1-MAX_PLAYER_COUNT)
  * @return Pair of (offset_x, offset_y) for the texture rectangle
  */
-static std::pair<int, int> getPlayerSpriteOffset(uint32_t playerId) noexcept {
+static std::pair<int, int> getPlayerSpriteOffset(uint32_t playerId) {
     const int SPRITE_HEIGHT = 17;
-
-    uint32_t rowIndex = (playerId - 1) % 4;
+    uint32_t rowIndex = 0;
+    if (playerId >= 1 && playerId <= ::rtype::game::config::MAX_PLAYER_COUNT) {
+        rowIndex = playerId - 1;
+    }
     int yOffset = static_cast<int>(rowIndex) * SPRITE_HEIGHT;
 
     return {0, yOffset};
@@ -92,13 +95,16 @@ void RtypeEntityFactory::setupPlayerEntity(
     std::pair<int, int> spriteOffset = {0, 0};
     uint32_t playerId = 1;
 
-    if (userId > 0) {
-        playerId = ((userId - 1) % 4) + 1;
-        spriteOffset = getPlayerSpriteOffset(playerId);
-        LOG_DEBUG("[RtypeEntityFactory] Player "
-                  << playerId << " sprite offset: (" << spriteOffset.first
-                  << ", " << spriteOffset.second << ")");
+    if (userId < 1 || userId > ::rtype::game::config::MAX_PLAYER_COUNT) {
+        LOG_ERROR("[RtypeEntityFactory] Invalid userId " << userId << ", must be 1-" << ::rtype::game::config::MAX_PLAYER_COUNT << ". Defaulting to 1");
+        userId = 1;
     }
+
+    playerId = userId;
+    spriteOffset = getPlayerSpriteOffset(playerId);
+    LOG_DEBUG("[RtypeEntityFactory] Player "
+              << playerId << " sprite offset: (" << spriteOffset.first
+              << ", " << spriteOffset.second << ")");
 
     reg.emplaceComponent<shared::PlayerIdComponent>(entity, playerId);
 
