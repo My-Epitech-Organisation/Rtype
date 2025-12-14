@@ -39,7 +39,8 @@ void GameStateManager::playerLeft(std::uint32_t userId) {
                                     << " players remaining");
 
     if (_state == GameState::Playing && _readyPlayers.empty()) {
-        transitionTo(GameState::Paused);
+        LOG_INFO("[GameState] All players left during game. Ending game...");
+        transitionTo(GameState::GameOver);
     }
 }
 
