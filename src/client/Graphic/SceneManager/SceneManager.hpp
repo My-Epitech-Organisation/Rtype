@@ -51,6 +51,12 @@ class SceneManager {
     /// @brief Network system for ECS synchronization
     std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
 
+    /// @brief ECS registry
+    std::shared_ptr<ECS::Registry> _registry;
+
+    /// @brief Asset manager
+    std::shared_ptr<AssetManager> _assetManager;
+
     void _applySceneChange();
 
    public:
