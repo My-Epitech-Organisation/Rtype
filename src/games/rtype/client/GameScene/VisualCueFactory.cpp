@@ -48,6 +48,7 @@ void VisualCueFactory::createFlash(ECS::Registry& registry,
     registry.emplaceComponent<ZIndex>(entity, zIndex);
     registry.emplaceComponent<::rtype::games::rtype::shared::LifetimeComponent>(
         entity, lifetime);
+    registry.emplaceComponent<GameTag>(entity);
 }
 
 void VisualCueFactory::createDamagePopup(ECS::Registry& registry,
@@ -77,6 +78,7 @@ void VisualCueFactory::createDamagePopup(ECS::Registry& registry,
 
     registry.emplaceComponent<::rtype::games::rtype::shared::LifetimeComponent>(
         entity, 1.2f);
+    registry.emplaceComponent<GameTag>(entity);
 }
 
 }  // namespace rtype::games::rtype::client
