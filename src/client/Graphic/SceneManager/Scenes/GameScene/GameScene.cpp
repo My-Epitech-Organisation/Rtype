@@ -91,6 +91,7 @@ GameScene::~GameScene() {
         _networkSystem->onLocalPlayerAssigned(nullptr);
         _networkSystem->onHealthUpdate(nullptr);
         _networkSystem->setEntityFactory({});
+        _networkSystem->reset();
     }
 
     if (_networkClient && _networkClient->isConnected()) {
