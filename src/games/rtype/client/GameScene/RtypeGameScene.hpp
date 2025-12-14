@@ -48,7 +48,7 @@ class RtypeGameScene : public AGameScene {
         std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem,
         std::shared_ptr<AudioLib> audioLib = nullptr);
 
-    ~RtypeGameScene() override = default;
+    ~RtypeGameScene() override;
 
     /**
      * @brief Initialize R-Type specific game entities

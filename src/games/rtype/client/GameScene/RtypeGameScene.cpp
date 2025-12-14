@@ -77,6 +77,14 @@ RtypeGameScene::RtypeGameScene(
     }
 }
 
+RtypeGameScene::~RtypeGameScene() {
+    LOG_DEBUG("[RtypeGameScene] Destructor called");
+    clearDamageVignette();
+    _vignetteEntities.clear();
+    _vignetteAlpha = 0.0F;
+    LOG_DEBUG("[RtypeGameScene] Destructor completed");
+}
+
 std::vector<ECS::Entity> RtypeGameScene::initialize() {
     LOG_DEBUG("[RtypeGameScene] Initialize called");
     std::vector<ECS::Entity> entities;
@@ -88,8 +96,6 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
                                                           << " entities");
 
     if (_networkSystem) {
-        LOG_DEBUG("[RtypeGameScene] Setting up entity factory");
-        setupEntityFactory();
         LOG_DEBUG("[RtypeGameScene] Setting up local player callback");
         setupLocalPlayerCallback();
         LOG_DEBUG("[RtypeGameScene] Setting up health update callback");
@@ -213,6 +219,8 @@ void RtypeGameScene::setupHud() {
         bg, std::pair<float, float>{barWidth, barHeight},
         sf::Color(30, 35, 45, 220), sf::Color(30, 35, 45, 220));
     _registry->emplaceComponent<ZIndex>(bg, GraphicsConfig::ZINDEX_UI);
+    _registry->emplaceComponent<ScreenSpaceTag>(bg);
+    _registry->emplaceComponent<GameTag>(bg);
     _healthBarBgEntity = bg;
 
     auto fill = _registry->spawnEntity();
@@ -221,12 +229,16 @@ void RtypeGameScene::setupHud() {
         fill, std::pair<float, float>{barWidth, barHeight},
         sf::Color(90, 220, 140, 240), sf::Color(90, 220, 140, 240));
     _registry->emplaceComponent<ZIndex>(fill, GraphicsConfig::ZINDEX_UI + 1);
+    _registry->emplaceComponent<ScreenSpaceTag>(fill);
+    _registry->emplaceComponent<GameTag>(fill);
     _healthBarFillEntity = fill;
 
     auto hpText = EntityFactory::createStaticText(
         _registry, _assetsManager, "HP: --/--", "title_font",
         sf::Vector2f{barPos.x + barWidth + 16.f, barPos.y - 2.f}, 24.f);
     _registry->emplaceComponent<ZIndex>(hpText, GraphicsConfig::ZINDEX_UI + 2);
+    _registry->emplaceComponent<ScreenSpaceTag>(hpText);
+    _registry->emplaceComponent<GameTag>(hpText);
     _healthTextEntity = hpText;
     _livesTextEntity = hpText;
 }
@@ -309,6 +321,7 @@ void RtypeGameScene::setupDamageVignette() {
         _registry->emplaceComponent<ZIndex>(
             top, GraphicsConfig::ZINDEX_UI + 100 + layer);
         _registry->emplaceComponent<ScreenSpaceTag>(top);
+        _registry->emplaceComponent<GameTag>(top);
         _vignetteEntities.push_back(top);
 
         auto bottom = _registry->spawnEntity();
@@ -320,6 +333,7 @@ void RtypeGameScene::setupDamageVignette() {
         _registry->emplaceComponent<ZIndex>(
             bottom, GraphicsConfig::ZINDEX_UI + 100 + layer);
         _registry->emplaceComponent<ScreenSpaceTag>(bottom);
+        _registry->emplaceComponent<GameTag>(bottom);
         _vignetteEntities.push_back(bottom);
 
         auto left = _registry->spawnEntity();
@@ -330,6 +344,7 @@ void RtypeGameScene::setupDamageVignette() {
         _registry->emplaceComponent<ZIndex>(
             left, GraphicsConfig::ZINDEX_UI + 100 + layer);
         _registry->emplaceComponent<ScreenSpaceTag>(left);
+        _registry->emplaceComponent<GameTag>(left);
         _vignetteEntities.push_back(left);
 
         auto right = _registry->spawnEntity();
@@ -341,6 +356,7 @@ void RtypeGameScene::setupDamageVignette() {
         _registry->emplaceComponent<ZIndex>(
             right, GraphicsConfig::ZINDEX_UI + 100 + layer);
         _registry->emplaceComponent<ScreenSpaceTag>(right);
+        _registry->emplaceComponent<GameTag>(right);
         _vignetteEntities.push_back(right);
     }
 
