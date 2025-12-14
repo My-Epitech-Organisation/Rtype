@@ -157,6 +157,14 @@ class ClientNetworkSystem {
      */
     [[nodiscard]] bool isConnected() const;
 
+    /**
+     * @brief Reset the network system state
+     *
+     * Clears all tracked entities and resets state.
+     * Should be called when disconnecting or switching scenes.
+     */
+    void reset();
+
    private:
     void handleEntitySpawn(const EntitySpawnEvent& event);
     void handleEntityMove(const EntityMoveEvent& event);

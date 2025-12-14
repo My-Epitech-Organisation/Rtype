@@ -124,6 +124,22 @@ std::optional<ECS::Entity> ClientNetworkSystem::findEntityByNetworkId(
 
 bool ClientNetworkSystem::isConnected() const { return client_->isConnected(); }
 
+void ClientNetworkSystem::reset() {
+    LOG_DEBUG("[ClientNetworkSystem] Resetting network system state");
+    for (const auto& [networkId, entity] : networkIdToEntity_) {
+        if (registry_->isAlive(entity)) {
+            LOG_DEBUG("[ClientNetworkSystem] Destroying network entity: networkId=" << networkId);
+            registry_->killEntity(entity);
+        }
+    }
+    networkIdToEntity_.clear();
+    localUserId_.reset();
+    localPlayerEntity_.reset();
+    pendingPlayerSpawns_.clear();
+    lastKnownHealth_.clear();
+    LOG_DEBUG("[ClientNetworkSystem] Network system state reset complete");
+}
+
 void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
     LOG_DEBUG(
         "[ClientNetworkSystem] Entity spawn received: entityId=" +
@@ -133,9 +149,15 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
         ") localUserId=" +
         (localUserId_.has_value() ? std::to_string(*localUserId_) : "none"));
 
-    if (networkIdToEntity_.find(event.entityId) != networkIdToEntity_.end()) {
-        LOG_DEBUG("[ClientNetworkSystem] Entity already exists, skipping");
-        return;
+    auto existingIt = networkIdToEntity_.find(event.entityId);
+    if (existingIt != networkIdToEntity_.end()) {
+        if (registry_->isAlive(existingIt->second)) {
+            LOG_DEBUG("[ClientNetworkSystem] Entity already exists and is alive, skipping");
+            return;
+        } else {
+            LOG_DEBUG("[ClientNetworkSystem] Entity exists but is dead, removing and recreating");
+            networkIdToEntity_.erase(existingIt);
+        }
     }
 
     ECS::Entity entity;
