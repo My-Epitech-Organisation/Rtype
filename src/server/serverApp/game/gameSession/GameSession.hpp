@@ -33,8 +33,9 @@ class ServerNetworkSystem;
  * - WaitingForPlayers: Server accepts connections but doesn't run gameplay
  * - Playing: Full game simulation running
  * - Paused: Game paused (all clients disconnected during game)
+ * - GameOver: Game ended, ready to be cleaned up
  */
-enum class GameState { WaitingForPlayers, Playing, Paused };
+enum class GameState { WaitingForPlayers, Playing, Paused, GameOver };
 
 /**
  * @brief Converts GameState to string representation
@@ -47,6 +48,8 @@ enum class GameState { WaitingForPlayers, Playing, Paused };
             return "Playing";
         case GameState::Paused:
             return "Paused";
+        case GameState::GameOver:
+            return "GameOver";
         default:
             return "Unknown";
     }
@@ -224,6 +227,11 @@ class GameSession {
      * @brief Update player movement based on velocity
      */
     void updatePlayerMovement(float deltaTime);
+
+    /**
+     * @brief Stop and cleanup the game session
+     */
+    void stopGame();
 
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<ServerNetworkSystem> _networkSystem;
