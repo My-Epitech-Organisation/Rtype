@@ -10,8 +10,8 @@
 #include <utility>
 
 #include "../../GameAction.hpp"
-#include "GameScene/RtypeGameScene.hpp"
 #include "GameScene/RtypeEntityFactory.hpp"
+#include "GameScene/RtypeGameScene.hpp"
 #include "SceneException.hpp"
 #include "Scenes/GameOverScene/GameOverScene.hpp"
 #include "Scenes/GameScene/GameScene.hpp"
@@ -48,11 +48,14 @@ void SceneManager::setCurrentScene(const Scene scene) {
     }
     LOG_DEBUG("[SceneManager] Scene change requested to: "
               << static_cast<int>(scene));
-    if (scene == IN_GAME && this->_networkSystem && this->_registry && this->_assetManager) {
-        LOG_DEBUG("[SceneManager] Pre-configuring entity factory for IN_GAME scene");
+    if (scene == IN_GAME && this->_networkSystem && this->_registry &&
+        this->_assetManager) {
+        LOG_DEBUG(
+            "[SceneManager] Pre-configuring entity factory for IN_GAME scene");
         this->_networkSystem->setEntityFactory(
-            rtype::games::rtype::client::RtypeEntityFactory::createNetworkEntityFactory(
-                this->_registry, this->_assetManager));
+            rtype::games::rtype::client::RtypeEntityFactory::
+                createNetworkEntityFactory(this->_registry,
+                                           this->_assetManager));
     }
     this->_nextScene = scene;
 }
@@ -122,10 +125,12 @@ SceneManager::SceneManager(
     });
     this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
         if (this->_networkSystem) {
-            LOG_DEBUG("[SceneManager] Setting up entity factory before scene creation");
+            LOG_DEBUG(
+                "[SceneManager] Setting up entity factory before scene "
+                "creation");
             this->_networkSystem->setEntityFactory(
-                rtype::games::rtype::client::RtypeEntityFactory::createNetworkEntityFactory(
-                    ecs, texture));
+                rtype::games::rtype::client::RtypeEntityFactory::
+                    createNetworkEntityFactory(ecs, texture));
         }
         auto rtypeGameScene =
             std::make_unique<rtype::games::rtype::client::RtypeGameScene>(

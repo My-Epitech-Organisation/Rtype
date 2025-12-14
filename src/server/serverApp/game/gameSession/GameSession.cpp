@@ -84,7 +84,8 @@ void GameSession::handleClientDisconnected(std::uint32_t userId) {
 
     if (_state == GameState::Playing && _readyPlayers.empty()) {
         LOG_WARNING(
-            "[GameSession] All players disconnected during game. Stopping game...");
+            "[GameSession] All players disconnected during game. Stopping "
+            "game...");
         stopGame();
         return;
     }
@@ -311,7 +312,8 @@ void GameSession::syncEntityPositions() {
 void GameSession::stopGame() {
     LOG_INFO("[GameSession] Stopping game session");
     for (const auto& userId : _readyPlayers) {
-        LOG_INFO("[GameSession] Destroying player entity for userId=" << userId);
+        LOG_INFO(
+            "[GameSession] Destroying player entity for userId=" << userId);
         _entitySpawner->destroyPlayerByUserId(userId);
     }
     _readyPlayers.clear();

@@ -77,7 +77,8 @@ RtypeEntityFactory::createNetworkEntityFactory(
 void RtypeEntityFactory::setupPlayerEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity) {
-    LOG_DEBUG("[RtypeEntityFactory] Adding Player components for entity " << entity.id);
+    LOG_DEBUG("[RtypeEntityFactory] Adding Player components for entity "
+              << entity.id);
     const auto networkId =
         reg.getComponent<shared::NetworkIdComponent>(entity).networkId;
     LOG_DEBUG("[RtypeEntityFactory] Player networkId: " << networkId);
@@ -94,12 +95,15 @@ void RtypeEntityFactory::setupPlayerEntity(
 
     LOG_DEBUG("[RtypeEntityFactory] Getting player_vessel texture");
     auto& playerTexture = assetsManager->textureManager->get("player_vessel");
-    LOG_DEBUG("[RtypeEntityFactory] Texture size: " << playerTexture.getSize().x << "x" << playerTexture.getSize().y);
+    LOG_DEBUG("[RtypeEntityFactory] Texture size: "
+              << playerTexture.getSize().x << "x" << playerTexture.getSize().y);
     reg.emplaceComponent<Image>(entity, playerTexture);
     LOG_DEBUG("[RtypeEntityFactory] Image component added");
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({left, top}),
                                       std::pair<int, int>({width, height}));
-    LOG_DEBUG("[RtypeEntityFactory] TextureRect set to: left=" << left << " top=" << top << " width=" << width << " height=" << height);
+    LOG_DEBUG("[RtypeEntityFactory] TextureRect set to: left="
+              << left << " top=" << top << " width=" << width
+              << " height=" << height);
     reg.emplaceComponent<Size>(entity, 4, 4);
     LOG_DEBUG("[RtypeEntityFactory] Size component added");
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(

@@ -128,7 +128,9 @@ void ClientNetworkSystem::reset() {
     LOG_DEBUG("[ClientNetworkSystem] Resetting network system state");
     for (const auto& [networkId, entity] : networkIdToEntity_) {
         if (registry_->isAlive(entity)) {
-            LOG_DEBUG("[ClientNetworkSystem] Destroying network entity: networkId=" << networkId);
+            LOG_DEBUG(
+                "[ClientNetworkSystem] Destroying network entity: networkId="
+                << networkId);
             registry_->killEntity(entity);
         }
     }
@@ -152,10 +154,14 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
     auto existingIt = networkIdToEntity_.find(event.entityId);
     if (existingIt != networkIdToEntity_.end()) {
         if (registry_->isAlive(existingIt->second)) {
-            LOG_DEBUG("[ClientNetworkSystem] Entity already exists and is alive, skipping");
+            LOG_DEBUG(
+                "[ClientNetworkSystem] Entity already exists and is alive, "
+                "skipping");
             return;
         } else {
-            LOG_DEBUG("[ClientNetworkSystem] Entity exists but is dead, removing and recreating");
+            LOG_DEBUG(
+                "[ClientNetworkSystem] Entity exists but is dead, removing and "
+                "recreating");
             networkIdToEntity_.erase(existingIt);
         }
     }
