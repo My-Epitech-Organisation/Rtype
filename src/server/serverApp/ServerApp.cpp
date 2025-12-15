@@ -547,7 +547,9 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
     }
 
     if (event.type == engine::GameEventType::GameOver) {
-        LOG_INFO("[ServerApp] GameOver event received, transitioning to GameOver state");
+        LOG_INFO(
+            "[ServerApp] GameOver event received, transitioning to GameOver "
+            "state");
         _stateManager->transitionTo(GameState::GameOver);
         return;
     }

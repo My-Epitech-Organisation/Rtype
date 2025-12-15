@@ -155,7 +155,8 @@ void NetworkServer::updateGameState(GameState state) {
 }
 
 void NetworkServer::sendGameOver(std::uint32_t finalScore) {
-    LOG_INFO("[NetworkServer] Sending GameOver packet with score=" << finalScore);
+    LOG_INFO(
+        "[NetworkServer] Sending GameOver packet with score=" << finalScore);
     network::GameOverPayload payload;
     payload.finalScore = finalScore;
 

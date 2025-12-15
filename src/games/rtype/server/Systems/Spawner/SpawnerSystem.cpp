@@ -69,19 +69,24 @@ void SpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
     static float logTimer = 0.0F;
     logTimer += deltaTime;
     if (logTimer >= 2.0F) {
-        LOG_DEBUG("[SpawnerSystem] Update: timer=" << _spawnTimer << "/" << _nextSpawnTime
+        LOG_DEBUG("[SpawnerSystem] Update: timer="
+                  << _spawnTimer << "/" << _nextSpawnTime
                   << " enemyCount=" << _enemyCount << "/" << _config.maxEnemies
                   << " wave=" << _currentWave << "/" << _config.maxWaves
-                  << " spawned=" << _enemiesSpawnedThisWave << "/" << _config.enemiesPerWave
-                  << " alive=" << aliveEnemies);
+                  << " spawned=" << _enemiesSpawnedThisWave << "/"
+                  << _config.enemiesPerWave << " alive=" << aliveEnemies);
         logTimer = 0.0F;
     }
 
-    if (_config.maxWaves > 0 && _enemiesSpawnedThisWave >= _config.enemiesPerWave && aliveEnemies == 0) {
-        LOG_INFO("[SpawnerSystem] Wave " << _currentWave << " complete! All enemies eliminated.");
+    if (_config.maxWaves > 0 &&
+        _enemiesSpawnedThisWave >= _config.enemiesPerWave &&
+        aliveEnemies == 0) {
+        LOG_INFO("[SpawnerSystem] Wave "
+                 << _currentWave << " complete! All enemies eliminated.");
 
         if (_currentWave >= _config.maxWaves) {
-            LOG_INFO("[SpawnerSystem] All waves completed! Emitting GameOver event");
+            LOG_INFO(
+                "[SpawnerSystem] All waves completed! Emitting GameOver event");
             _gameOverEmitted = true;
             engine::GameEvent event{};
             event.type = engine::GameEventType::GameOver;
@@ -94,15 +99,18 @@ void SpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
         LOG_INFO("[SpawnerSystem] Starting wave " << _currentWave);
     }
 
-    if (_spawnTimer >= _nextSpawnTime && _enemiesSpawnedThisWave < _config.enemiesPerWave) {
+    if (_spawnTimer >= _nextSpawnTime &&
+        _enemiesSpawnedThisWave < _config.enemiesPerWave) {
         if (_enemyCount >= _config.maxEnemies) {
-            LOG_DEBUG("[SpawnerSystem] Cannot spawn: enemyCount=" << _enemyCount
+            LOG_DEBUG("[SpawnerSystem] Cannot spawn: enemyCount="
+                      << _enemyCount
                       << " >= maxEnemies=" << _config.maxEnemies);
         } else {
             spawnBydosSlave(registry);
             _enemiesSpawnedThisWave++;
             LOG_DEBUG("[SpawnerSystem] Enemy spawned. Total this wave: "
-                      << _enemiesSpawnedThisWave << "/" << _config.enemiesPerWave
+                      << _enemiesSpawnedThisWave << "/"
+                      << _config.enemiesPerWave
                       << " | Current wave: " << _currentWave << "/"
                       << _config.maxWaves << " | Alive: " << aliveEnemies);
             _spawnTimer = 0.0F;

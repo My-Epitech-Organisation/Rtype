@@ -47,7 +47,7 @@ struct SpawnerConfig {
     float powerUpMaxInterval = 14.0F;
     float powerUpSpeed = 70.0F;
 
-    std::size_t maxWaves = 1;           // 0 = infinite waves
+    std::size_t maxWaves = 1;  // 0 = infinite waves
     std::size_t enemiesPerWave = 5;
 };
 
