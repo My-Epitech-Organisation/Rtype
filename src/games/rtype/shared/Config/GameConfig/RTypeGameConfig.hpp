@@ -15,6 +15,11 @@
 namespace rtype::game::config {
 
 /**
+ * @brief Maximum number of players supported by the game
+ */
+inline constexpr uint32_t MAX_PLAYER_COUNT = 4;
+
+/**
  * @brief Schema version for configuration file compatibility
  */
 constexpr uint32_t CONFIG_SCHEMA_VERSION = 1;
