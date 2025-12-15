@@ -5,6 +5,7 @@
 ** SpawnerSystem - Server enemy spawning implementation
 */
 
+#define NOMINMAX
 #include "SpawnerSystem.hpp"
 
 #include <algorithm>

@@ -5,6 +5,7 @@
 ** CollisionSystem - Server-side collision handling using QuadTree + AABB
 */
 
+#define NOMINMAX
 #include "CollisionSystem.hpp"
 
 #include <algorithm>
