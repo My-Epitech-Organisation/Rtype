@@ -78,7 +78,7 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry) {
         [this, &registry](auto entt, auto& rectData, auto& pos) {
             if (registry.hasComponent<ButtonTag>(entt)) return;
             if (registry.hasComponent<ScreenSpaceTag>(entt))
-                return;  // Rendered separately
+                return;
             if (isEntityHidden(registry, entt)) return;
             if (registry.hasComponent<rs::DestroyTag>(entt)) return;
 
