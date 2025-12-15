@@ -23,6 +23,7 @@ static constexpr int nbr_vessels = 7;
 
 class MainMenuScene : public AScene {
    private:
+    bool _connectPopUpVisible = false;
     /// @brief Network client for server communication
     std::shared_ptr<rtype::client::NetworkClient> _networkClient;
 

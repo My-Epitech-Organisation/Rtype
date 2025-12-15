@@ -23,8 +23,8 @@
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 
-static constexpr float kConnectionPanelX = 1400.f;
-static constexpr float kConnectionPanelY = 300.f;
+static constexpr float kConnectionPanelX = 750.f;
+static constexpr float kConnectionPanelY = 350.f;
 static constexpr float kConnectionPanelWidth = 450.f;
 static constexpr float kConnectionPanelHeight = 350.f;
 static constexpr float kInputWidth = 300.f;
@@ -83,63 +83,89 @@ void MainMenuScene::_createFakePlayer() {
 
 void MainMenuScene::_createConnectionPanel(
     std::function<void(const SceneManager::Scene&)> switchToScene) {
+
     auto panelEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "",
         sf::FloatRect(
             sf::Vector2f(kConnectionPanelX, kConnectionPanelY),
             sf::Vector2f(kConnectionPanelWidth, kConnectionPanelHeight)));
-    this->_listEntity.insert(this->_listEntity.end(), panelEntities.begin(),
-                             panelEntities.end());
 
-    auto title = EntityFactory::createStaticText(
+    for (auto &s: panelEntities) {
+        if (this->_registry->hasComponent<rtype::games::rtype::client::Rectangle>(s))
+            this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(s, 3);
+    }
+    panelEntities.push_back(EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Connect to Server",
         "title_font",
-        sf::Vector2f(kConnectionPanelX + 50.f, kConnectionPanelY + 20.f), 32);
-    this->_listEntity.push_back(title);
-    auto ipLabel = EntityFactory::createStaticText(
+        sf::Vector2f(kConnectionPanelX + 50.f, kConnectionPanelY + 20.f), 32));
+    panelEntities.push_back(EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "IP:", "main_font",
         sf::Vector2f(kConnectionPanelX + kLabelOffsetX,
                      kConnectionPanelY + 90.f),
-        24);
-    this->_listEntity.push_back(ipLabel);
-    _ipInputEntity = EntityFactory::createTextInput(
+        24));
+    this->_ipInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
         sf::FloatRect(sf::Vector2f(kConnectionPanelX + kInputOffsetX,
                                    kConnectionPanelY + 85.f),
                       sf::Vector2f(kInputWidth, kInputHeight)),
         "127.0.0.1", "127.0.0.1", 15, false);
-    this->_listEntity.push_back(_ipInputEntity);
-    auto portLabel = EntityFactory::createStaticText(
+    panelEntities.push_back(this->_ipInputEntity);
+    panelEntities.push_back(EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Port:", "main_font",
         sf::Vector2f(kConnectionPanelX + kLabelOffsetX,
                      kConnectionPanelY + 150.f),
-        24);
-    this->_listEntity.push_back(portLabel);
-    _portInputEntity = EntityFactory::createTextInput(
+        24));
+    this->_portInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
         sf::FloatRect(sf::Vector2f(kConnectionPanelX + kInputOffsetX,
                                    kConnectionPanelY + 145.f),
                       sf::Vector2f(kInputWidth, kInputHeight)),
         "4242", "4242", 5, true);
-    this->_listEntity.push_back(_portInputEntity);
-    _statusEntity = EntityFactory::createStaticText(
+    panelEntities.push_back(_portInputEntity);
+    this->_statusEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "main_font",
         sf::Vector2f(kConnectionPanelX + kLabelOffsetX,
                      kConnectionPanelY + 200.f),
         18);
-    this->_listEntity.push_back(_statusEntity);
-    this->_listEntity.push_back(EntityFactory::createButton(
+    panelEntities.push_back(this->_statusEntity);
+    panelEntities.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 28, "Connect"),
-        rtype::games::rtype::shared::Position(kConnectionPanelX + 125.f,
-                                              kConnectionPanelY + 260.f),
+        rtype::games::rtype::shared::Position(kConnectionPanelX + 15.f,
+                                              kConnectionPanelY + 275.f),
         rtype::games::rtype::client::Rectangle({200, 60}, sf::Color(0, 150, 0),
                                                sf::Color(0, 200, 0)),
         this->_assetsManager, std::function<void()>([this, switchToScene]() {
             this->_onConnectClicked(switchToScene);
         })));
+    panelEntities.push_back(EntityFactory::createButton(
+    this->_registry,
+    rtype::games::rtype::client::Text(
+        this->_assetsManager->fontManager->get("main_font"),
+        sf::Color::White, 26, "Close"),
+    rtype::games::rtype::shared::Position(kConnectionPanelX + 235.f,
+                                          kConnectionPanelY + 275.f),
+    rtype::games::rtype::client::Rectangle({200, 60}, sf::Color(150, 0, 0),
+                                           sf::Color(200, 0, 0)),
+    this->_assetsManager, std::function<void()>([this]() {
+        this->_connectPopUpVisible = false;
+    })));
+    for (auto &s: panelEntities) {
+        if (!this->_registry->hasComponent<rtype::games::rtype::client::ZIndex>(s))
+            this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(s, 4);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::HiddenComponent>(s, true);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ConnectMenuTag>(s);
+    }
+    auto popUpBg = EntityFactory::createRectangle(this->_registry, sf::Vector2i(1920, 1080), sf::Color(0, 0, 0, 150));
+
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(popUpBg, 2);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ConnectMenuTag>(popUpBg);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::HiddenComponent>(popUpBg, true);
+    panelEntities.push_back(popUpBg);
+    this->_listEntity.insert(this->_listEntity.end(), panelEntities.begin(),
+                         panelEntities.end());
 }
 
 void MainMenuScene::_onConnectClicked(
@@ -231,19 +257,30 @@ void MainMenuScene::update(float dt) {
     if (_networkClient && !_networkClient->isConnected()) {
         _networkClient->poll();
     }
+    if (this->_connectPopUpVisible) {
+        auto view = _registry->view<rtype::games::rtype::client::ConnectMenuTag,
+                                   rtype::games::rtype::client::HiddenComponent>();
+
+        view.each([](auto, auto& , auto& hidden) {
+            hidden.isHidden = false;
+        });
+    } else {
+        auto view = _registry->view<rtype::games::rtype::client::ConnectMenuTag,
+                                   rtype::games::rtype::client::HiddenComponent>();
+
+        view.each([](auto, auto& , auto& hidden) {
+            hidden.isHidden = true;
+        });
+    }
+    this->_registry->view<rtype::games::rtype::client::UserEvent, rtype::games::rtype::client::ButtonMenuTag>().each([this](auto , rtype::games::rtype::client::UserEvent &event, auto) {
+        if (this->_connectPopUpVisible)
+            event.isDisabled = true;
+        else
+            event.isDisabled = false;
+    });
 }
 
 void MainMenuScene::render(std::shared_ptr<sf::RenderWindow> window) {
-    auto view = _registry->view<rtype::games::rtype::client::TextInput,
-                                rtype::games::rtype::shared::Position,
-                                rtype::games::rtype::client::TextInputTag>();
-
-    view.each([window](auto, auto& input, auto& pos, auto) {
-        input.background.setPosition({pos.x, pos.y});
-        input.text.setPosition({pos.x + 10.f, pos.y + 5.f});
-        window->draw(input.background);
-        window->draw(input.text);
-    });
 }
 
 void MainMenuScene::pollEvents(const sf::Event& e) {
@@ -309,7 +346,7 @@ MainMenuScene::MainMenuScene(
     this->_createAstroneerVessel();
     this->_createFakePlayer();
     this->_createConnectionPanel(switchToScene);
-    this->_listEntity.push_back(EntityFactory::createButton(
+    auto btnPlay = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
@@ -317,15 +354,17 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::shared::Position(100, 350),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
-        this->_assetsManager, std::function<void()>([switchToScene]() {
+        this->_assetsManager, std::function<void()>([this, switchToScene]() {
             try {
-                switchToScene(SceneManager::IN_GAME);
+                this->_connectPopUpVisible = true;
             } catch (SceneNotFound& e) {
                 LOG_ERROR(std::string("Error switching to Game Menu: ") +
                           std::string(e.what()));
             }
-        })));
-    this->_listEntity.push_back(EntityFactory::createButton(
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnPlay, 1);
+    this->_listEntity.push_back(btnPlay);
+    auto btnHowPlay = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
@@ -340,8 +379,10 @@ MainMenuScene::MainMenuScene(
                 LOG_ERROR(std::string("Error switching to How To Play: ") +
                           std::string(e.what()));
             }
-        })));
-    this->_listEntity.push_back(EntityFactory::createButton(
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnHowPlay, 1);
+    this->_listEntity.push_back(btnHowPlay);
+    auto btnSettings = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
@@ -356,8 +397,10 @@ MainMenuScene::MainMenuScene(
                 LOG_ERROR(std::string("Error switching to Settings Menu: ") +
                           std::string(e.what()));
             }
-        })));
-    this->_listEntity.push_back(EntityFactory::createButton(
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnSettings, 1);
+    this->_listEntity.push_back(btnSettings);
+    auto btnQuit = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
@@ -368,7 +411,13 @@ MainMenuScene::MainMenuScene(
         this->_assetsManager,
         std::function<void()>([this]() { this->_window->close(); })
 
-            ));
+            );
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnQuit, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ButtonMenuTag>(btnQuit);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ButtonMenuTag>(btnPlay);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ButtonMenuTag>(btnHowPlay);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ButtonMenuTag>(btnSettings);
+    this->_listEntity.push_back(btnQuit);
     this->_assetsManager->audioManager->load(
         "main_menu_music",
         this->_assetsManager->configGameAssets.assets.music.mainMenu);

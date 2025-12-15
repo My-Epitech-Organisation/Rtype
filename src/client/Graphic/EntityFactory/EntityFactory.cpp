@@ -82,6 +82,7 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
                                                                       50, 50);
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         appTitle);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(appTitle, 0);
     return {planet1, planet2, planet3, background, appTitle};
 }
 
@@ -119,6 +120,15 @@ std::vector<ECS::Entity> EntityFactory::createSection(
         titleEnt);
     entities.push_back(titleEnt);
     return entities;
+}
+
+ECS::Entity EntityFactory::createRectangle(std::shared_ptr<ECS::Registry> registry, sf::Vector2i size, sf::Color fill, sf::Vector2f position) {
+    auto entt = registry->spawnEntity();
+    registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
+        entt, std::pair<float, float>{static_cast<float>(size.x), static_cast<float>(size.y)},
+        fill, fill);
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(entt, position.x, position.y);
+    return entt;
 }
 
 ECS::Entity EntityFactory::createStaticText(

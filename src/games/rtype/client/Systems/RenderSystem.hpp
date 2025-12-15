@@ -49,28 +49,39 @@ class RenderSystem : public ::rtype::engine::ASystem {
     /**
      * @brief Render all image/sprite entities sorted by ZIndex.
      * @param registry The ECS registry
+     * @param entity The entity to try to render
      */
-    void _renderImages(ECS::Registry& registry);
+    void _renderImages(ECS::Registry& registry, ECS::Entity entity);
 
     /**
      * @brief Render all non-button rectangle entities.
      * @param registry The ECS registry
+     * @param entity The entity to try to render
      */
-    void _renderRectangles(ECS::Registry& registry);
+    void _renderRectangles(ECS::Registry& registry, ECS::Entity entity);
 
     /**
      * @brief Render all button entities (Rectangle + Text).
      * @param registry The ECS registry
+     * @param entity The entity to try to render
      */
-    void _renderButtons(ECS::Registry& registry);
+    void _renderButtons(ECS::Registry& registry, ECS::Entity entity);
 
     /**
      * @brief Render all static text entities.
      * @param registry The ECS registry
+     * @param entity The entity to try to render
      */
-    void _renderStaticText(ECS::Registry& registry);
+    void _renderStaticText(ECS::Registry& registry, ECS::Entity entity);
 
-   public:
+    /**
+    * @brief Render all text input entities.
+    * @param registry The ECS registry
+    * @param entity The entity to try to render
+    */
+    void _renderTextInputs(ECS::Registry &registry, ECS::Entity entity);
+
+public:
     /**
      * @brief Check if an entity should be hidden from rendering.
      * @param registry The ECS registry
