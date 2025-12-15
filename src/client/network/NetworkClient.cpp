@@ -289,7 +289,11 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
     auto opcode = static_cast<network::OpCode>(header.opcode);
 
     if (network::isReliable(opcode)) {
-        sendAck();
+        LOG_DEBUG("[NetworkClient] Received reliable packet: opcode="
+                  << static_cast<int>(opcode) << " seqId=" << header.seqId
+                  << " flags=0x" << std::hex << static_cast<int>(header.flags)
+                  << std::dec);
+        sendAck(header.seqId);
     }
 
     switch (opcode) {
@@ -576,16 +580,29 @@ void NetworkClient::flushOutgoing() {
     }
 }
 
-void NetworkClient::sendAck() {
+void NetworkClient::sendAck(std::uint16_t ackSeqId) {
     if (!serverEndpoint_.has_value() || !socket_->isOpen()) {
+        LOG_DEBUG("[NetworkClient] sendAck: no endpoint or socket not open");
         return;
     }
 
-    auto ackPacket = connection_.buildAckPacket();
+    auto ackPacket = connection_.buildAckPacket(ackSeqId);
     if (ackPacket.has_value()) {
+        LOG_DEBUG("[NetworkClient] sendAck: sending ACK for seqId="
+                  << ackSeqId << " packet size=" << ackPacket.value().size());
         socket_->asyncSendTo(
             ackPacket.value(), *serverEndpoint_,
-            [](network::Result<std::size_t> result) { (void)result; });
+            [ackSeqId](network::Result<std::size_t> result) {
+                if (result) {
+                    LOG_DEBUG("[NetworkClient] ACK sent successfully for seqId="
+                              << ackSeqId << " bytes=" << result.value());
+                } else {
+                    LOG_WARNING("[NetworkClient] ACK send failed for seqId="
+                                << ackSeqId);
+                }
+            });
+    } else {
+        LOG_WARNING("[NetworkClient] sendAck: buildAckPacket returned nullopt");
     }
 }
 

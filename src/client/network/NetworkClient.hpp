@@ -307,8 +307,9 @@ class NetworkClient {
      *
      * This is called right after receiving a reliable message to ensure
      * the server receives acknowledgment promptly, preventing retry timeouts.
+     * @param ackSeqId The specific sequence ID to acknowledge
      */
-    void sendAck();
+    void sendAck(std::uint16_t ackSeqId);
 
     Config config_;
 

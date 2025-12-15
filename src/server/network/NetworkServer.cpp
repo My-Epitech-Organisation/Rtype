@@ -468,17 +468,23 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
         }
     }
 
-    auto seqResult = securityContext_.validateSequenceId(connKey, header.seqId);
-    if (!seqResult) {
-        return;
-    }
-
     if (header.flags & network::Flags::kIsAck) {
         auto client = findClient(sender);
         if (client) {
+            LOG_DEBUG("[NetworkServer] Processing ACK from userId="
+                      << header.userId << " ackId=" << header.ackId
+                      << " (seqId=" << header.seqId << ")");
             client->reliableChannel.recordAck(header.ackId);
             client->lastActivity = std::chrono::steady_clock::now();
         }
+    }
+
+    auto seqResult = securityContext_.validateSequenceId(connKey, header.seqId);
+    if (!seqResult) {
+        LOG_DEBUG("[NetworkServer] Sequence validation failed for userId="
+                  << header.userId << " seqId=" << header.seqId
+                  << " (ACK already processed if present)");
+        return;
     }
 
     if (network::isReliable(opcode)) {

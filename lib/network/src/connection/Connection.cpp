@@ -310,6 +310,24 @@ Buffer Connection::buildAckPacketInternal(std::uint32_t userId) {
     return packet;
 }
 
+Buffer Connection::buildAckPacketInternal(std::uint32_t userId,
+                                          std::uint16_t ackSeqId) {
+    Header header;
+    header.magic = kMagicByte;
+    header.opcode = static_cast<std::uint8_t>(OpCode::PING);
+    header.payloadSize = 0;
+    header.userId = ByteOrderSpec::toNetwork(userId);
+    header.seqId = ByteOrderSpec::toNetwork(nextSequenceId());
+    header.ackId = ByteOrderSpec::toNetwork(ackSeqId);
+    header.flags = Flags::kIsAck;
+    header.reserved = {0, 0, 0};
+
+    Buffer packet(kHeaderSize);
+    std::memcpy(packet.data(), &header, kHeaderSize);
+
+    return packet;
+}
+
 std::optional<Buffer> Connection::buildAckPacket() {
     auto uid = stateMachine_.userId();
     if (!uid.has_value()) {
@@ -318,16 +336,23 @@ std::optional<Buffer> Connection::buildAckPacket() {
     return buildAckPacketInternal(*uid);
 }
 
+std::optional<Buffer> Connection::buildAckPacket(std::uint16_t ackSeqId) {
+    auto uid = stateMachine_.userId();
+    if (!uid.has_value()) {
+        return std::nullopt;
+    }
+    return buildAckPacketInternal(*uid, ackSeqId);
+}
+
 Result<void> Connection::handleConnectAccept(const Header& header,
                                              const Buffer& payload,
                                              const Endpoint& sender) {
-    (void)header;  // Suppress unused parameter warning
+    (void)header;
 
     if (payload.size() < sizeof(AcceptPayload)) {
         return Err<void>(NetworkError::MalformedPacket);
     }
 
-    // Capture server endpoint on first successful accept
     if (!serverEndpoint_.has_value()) {
         serverEndpoint_ = sender;
     }
@@ -347,7 +372,7 @@ Result<void> Connection::handleConnectAccept(const Header& header,
 }
 
 Result<void> Connection::handleDisconnect(const Header& header) {
-    (void)header;  // Suppress unused parameter warning
+    (void)header;
 
     return stateMachine_.handleRemoteDisconnect();
 }
