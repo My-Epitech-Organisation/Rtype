@@ -170,54 +170,56 @@ void MainMenuScene::_createConnectionPanel(
 
 void MainMenuScene::_onConnectClicked(
     std::function<void(const SceneManager::Scene&)> switchToScene) {
-    if (!_networkClient) {
-        _updateStatus("Error: Network not available", sf::Color::Red);
+    if (!this->_networkClient) {
+        this->_updateStatus("Error: Network not available", sf::Color::Red);
         return;
     }
     std::string ip = kIp;
     std::uint16_t port = kPort;
 
-    if (_registry->hasComponent<rtype::games::rtype::client::TextInput>(
-            _ipInputEntity)) {
+    if (this->_registry->hasComponent<rtype::games::rtype::client::TextInput>(
+            this->_ipInputEntity)) {
         auto& ipInput =
-            _registry->getComponent<rtype::games::rtype::client::TextInput>(
-                _ipInputEntity);
+            this->_registry->getComponent<rtype::games::rtype::client::TextInput>(
+                this->_ipInputEntity);
         if (!ipInput.content.empty()) {
             ip = ipInput.content;
         }
     }
 
-    if (_registry->hasComponent<rtype::games::rtype::client::TextInput>(
-            _portInputEntity)) {
+    if (this->_registry->hasComponent<rtype::games::rtype::client::TextInput>(
+            this->_portInputEntity)) {
         auto& portInput =
-            _registry->getComponent<rtype::games::rtype::client::TextInput>(
-                _portInputEntity);
+            this->_registry->getComponent<rtype::games::rtype::client::TextInput>(
+                this->_portInputEntity);
         if (!portInput.content.empty()) {
             try {
                 port = static_cast<std::uint16_t>(std::stoi(portInput.content));
             } catch (...) {
-                _updateStatus("Invalid port number", sf::Color::Red);
+                this->_updateStatus("Invalid port number", sf::Color::Red);
                 return;
             }
         }
     }
 
-    _updateStatus("Connecting to " + ip + ":" + std::to_string(port) + "...",
+    this->_updateStatus("Connecting to " + ip + ":" + std::to_string(port) + "...",
                   sf::Color::Yellow);
-    _networkClient->onConnected([this, switchToScene](std::uint32_t userId) {
+    this->_networkClient->onConnected([this, switchToScene](std::uint32_t userId) {
         LOG_INFO("[Client] Connected with user ID: " + std::to_string(userId));
-        _updateStatus("Connected! Starting game...", sf::Color::Green);
+        this->_updateStatus("Connected! Starting game...", sf::Color::Green);
         try {
-            switchToScene(SceneManager::IN_GAME);
+            switchToScene(SceneManager::LOBBY);
+            this->_connectPopUpVisible = false;
         } catch (SceneNotFound& e) {
             LOG_ERROR(std::string("Error switching to Game: ") +
                       std::string(e.what()));
         }
     });
 
-    _networkClient->onDisconnected(
+    this->_networkClient->onDisconnected(
         [this](rtype::client::NetworkClient::DisconnectReason reason) {
             std::string reasonStr;
+            this->_connectPopUpVisible = true;
             switch (reason) {
                 case rtype::network::DisconnectReason::Timeout:
                     reasonStr = "Connection timed out";
@@ -237,8 +239,9 @@ void MainMenuScene::_onConnectClicked(
             }
             _updateStatus(reasonStr, sf::Color::Red);
         });
-    if (!_networkClient->connect(ip, port)) {
-        _updateStatus("Failed to start connection", sf::Color::Red);
+    if (!this->_networkClient->connect(ip, port)) {
+        this->_connectPopUpVisible = true;
+        this->_updateStatus("Failed to start connection", sf::Color::Red);
     }
 }
 

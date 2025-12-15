@@ -187,6 +187,14 @@ class NetworkClient {
     bool sendInput(std::uint8_t inputMask);
 
     /**
+     * @brief Send a ping to the server
+     *
+     * Used for latency calculation.
+     * @return true if sent, false if not connected
+     */
+    bool ping();
+
+    /**
      * @brief Register callback for successful connection
      * @param callback Function receiving the assigned user ID
      */

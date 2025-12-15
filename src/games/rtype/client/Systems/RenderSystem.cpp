@@ -28,13 +28,10 @@ bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
     return false;
 }
 
-// Note: Passage de l'entité, plus besoin de try-catch
 void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
-    // Vérification préalable
     if (!registry.hasComponent<Image>(entity) || !registry.hasComponent<rs::Position>(entity))
         return;
 
-    // Utilisation de auto& (Référence) pour éviter la copie inutile
     auto& img = registry.getComponent<Image>(entity);
     const auto& pos = registry.getComponent<rs::Position>(entity);
 
@@ -50,11 +47,10 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
         img.sprite.setTextureRect(texture.rect);
     }
 
-    _target->draw(img.sprite);
+    this->_target->draw(img.sprite);
 }
 
 void RenderSystem::_renderRectangles(ECS::Registry& registry, ECS::Entity entity) {
-    // Vérifications : doit avoir Rectangle, Position, et NE PAS être un Button
     if (!registry.hasComponent<Rectangle>(entity) ||
         !registry.hasComponent<rs::Position>(entity) ||
         registry.hasComponent<ButtonTag>(entity))
@@ -71,7 +67,7 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry, ECS::Entity entity
     rectData.rectangle.setOutlineColor(rectData.outlineColor);
     rectData.rectangle.setFillColor(rectData.currentColor);
 
-    _target->draw(rectData.rectangle);
+    this->_target->draw(rectData.rectangle);
 }
 
 void RenderSystem::_renderButtons(ECS::Registry& registry, ECS::Entity entity) {
@@ -86,7 +82,6 @@ void RenderSystem::_renderButtons(ECS::Registry& registry, ECS::Entity entity) {
     auto& textData = registry.getComponent<Text>(entity);
     const auto& pos = registry.getComponent<rs::Position>(entity);
 
-    // Setup Rectangle
     rectData.rectangle.setPosition(
         {static_cast<float>(pos.x), static_cast<float>(pos.y)});
     rectData.rectangle.setSize(
@@ -95,12 +90,10 @@ void RenderSystem::_renderButtons(ECS::Registry& registry, ECS::Entity entity) {
     rectData.rectangle.setOutlineColor(rectData.outlineColor);
     rectData.rectangle.setFillColor(rectData.currentColor);
 
-    // Setup Text
     textData.text.setCharacterSize(textData.size);
     textData.text.setFillColor(textData.color);
     textData.text.setString(textData.textContent);
 
-    // Centering Logic
     float rectX = rectData.rectangle.getPosition().x;
     float rectY = rectData.rectangle.getPosition().y;
     float rectWidth = rectData.size.first;
@@ -116,8 +109,8 @@ void RenderSystem::_renderButtons(ECS::Registry& registry, ECS::Entity entity) {
 
     textData.text.setPosition({centerX, centerY});
 
-    _target->draw(rectData.rectangle);
-    _target->draw(textData.text);
+    this->_target->draw(rectData.rectangle);
+    this->_target->draw(textData.text);
 }
 
 void RenderSystem::_renderStaticText(ECS::Registry& registry, ECS::Entity entity) {
@@ -135,7 +128,7 @@ void RenderSystem::_renderStaticText(ECS::Registry& registry, ECS::Entity entity
     textData.text.setFillColor(textData.color);
     textData.text.setString(textData.textContent);
 
-    _target->draw(textData.text);
+    this->_target->draw(textData.text);
 }
 
 void RenderSystem::_renderTextInputs(ECS::Registry& registry, ECS::Entity entity) {
@@ -150,8 +143,8 @@ void RenderSystem::_renderTextInputs(ECS::Registry& registry, ECS::Entity entity
     textInput.background.setPosition({static_cast<float>(pos.x), static_cast<float>(pos.y)});
     textInput.text.setPosition({static_cast<float>(pos.x) + 10.f, static_cast<float>(pos.y) + 5.f});
 
-    _target->draw(textInput.background);
-    _target->draw(textInput.text);
+    this->_target->draw(textInput.background);
+    this->_target->draw(textInput.text);
 }
 
 void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
@@ -163,34 +156,21 @@ void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
         sortedEntities.push_back(entt);
     });
 
-    // 2. Trier par profondeur
     std::sort(sortedEntities.begin(), sortedEntities.end(),
               [&registry](ECS::Entity a, ECS::Entity b) {
-                  // Pas besoin de try/catch ici car on sait qu'elles viennent de la view<ZIndex>
                   const auto& za = registry.getComponent<ZIndex>(a);
                   const auto& zb = registry.getComponent<ZIndex>(b);
                   return za.depth < zb.depth;
               });
 
-    // 3. Rendu séquentiel
     for (auto entity : sortedEntities) {
         if (isEntityHidden(registry, entity)) continue;
 
-        // On appelle les sous-fonctions. Chacune vérifie avec hasComponent
-        // si elle doit dessiner quelque chose.
-
-        // Note: L'ordre ici n'a plus d'importance pour la superposition
-        // car c'est le tri du vecteur `sortedEntities` qui gère ça.
-        // On vérifie juste les types.
-
-        _renderImages(registry, entity);
-
-        // Note: _renderRectangles contient déjà le check "n'est pas un bouton"
-        _renderRectangles(registry, entity);
-
-        _renderButtons(registry, entity);
-        _renderStaticText(registry, entity);
-        _renderTextInputs(registry, entity);
+        this->_renderImages(registry, entity);
+        this->_renderRectangles(registry, entity);
+        this->_renderButtons(registry, entity);
+        this->_renderStaticText(registry, entity);
+        this->_renderTextInputs(registry, entity);
     }
 }
 

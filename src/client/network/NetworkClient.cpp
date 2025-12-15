@@ -144,6 +144,23 @@ bool NetworkClient::sendInput(std::uint8_t inputMask) {
     return true;
 }
 
+bool NetworkClient::ping() {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    auto result = connection_.buildPacket(network::OpCode::PING, {});
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    return true;
+}
+
 void NetworkClient::onConnected(
     std::function<void(std::uint32_t myUserId)> callback) {
     onConnectedCallback_ = std::move(callback);
