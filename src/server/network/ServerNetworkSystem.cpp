@@ -73,12 +73,20 @@ void ServerNetworkSystem::unregisterNetworkedEntityById(
     if (it == networkedEntities_.end()) {
         return;
     }
-    if (!it->second.entity.isNull()) {
-        entityToNetworkId_.erase(it->second.entity.id);
+
+    ECS::Entity entity = it->second.entity;
+
+    if (!entity.isNull()) {
+        entityToNetworkId_.erase(entity.id);
     }
+
     networkedEntities_.erase(it);
 
     server_->destroyEntity(networkId);
+
+    if (registry_ && !entity.isNull() && registry_->isAlive(entity)) {
+        registry_->killEntity(entity);
+    }
 }
 
 void ServerNetworkSystem::setPlayerEntity(std::uint32_t userId,
@@ -267,6 +275,13 @@ std::uint32_t ServerNetworkSystem::nextNetworkId() {
 void ServerNetworkSystem::handleClientConnected(std::uint32_t userId) {
     auto pendingIt = pendingDisconnections_.find(userId);
     if (pendingIt != pendingDisconnections_.end()) {
+        const auto& pending = pendingIt->second;
+        if (pending.networkId != 0) {
+            unregisterNetworkedEntityById(pending.networkId);
+        }
+        if (registry_ && registry_->isAlive(pending.playerEntity)) {
+            registry_->killEntity(pending.playerEntity);
+        }
         pendingDisconnections_.erase(pendingIt);
     }
 

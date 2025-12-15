@@ -408,6 +408,8 @@ class NetworkServer {
 
     std::unordered_map<std::uint32_t, std::string> userIdToKey_;
 
+    std::vector<std::uint32_t> freeUserIds_;
+
     std::uint32_t nextUserIdCounter_{1};
 
     std::shared_ptr<network::Buffer> receiveBuffer_;
