@@ -74,7 +74,6 @@ void Graphic::_update() {
         }
     }
 
-    // Keep view scrolling and parallax even when paused for visual continuity
     _updateViewScrolling();
     this->_systemScheduler->runSystem("parallax");
 
