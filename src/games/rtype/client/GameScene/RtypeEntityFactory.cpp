@@ -107,7 +107,6 @@ void RtypeEntityFactory::setupPlayerEntity(
     LOG_DEBUG("[RtypeEntityFactory] Adding Player components for entity "
               << entity.id);
 
-    // Validate and set player ID from userId (dev branch logic)
     uint32_t playerId = 1;
     if (userId < 1 || userId > ::rtype::game::config::MAX_PLAYER_COUNT) {
         LOG_ERROR("[RtypeEntityFactory] Invalid userId "
