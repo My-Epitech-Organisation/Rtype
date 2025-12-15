@@ -51,7 +51,8 @@ HowToPlayScene::HowToPlayScene(
                           std::string(e.what()));
             }
         }));
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnBack, 0);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        btnBack, 0);
     this->_listEntity.push_back(btnBack);
 }
 
@@ -94,7 +95,8 @@ void HowToPlayScene::_initLayout() {
         auto text = EntityFactory::createStaticText(
             this->_registry, this->_assetsManager, lines[i], fontId,
             sf::Vector2f{textX, y}, 28.f);
-        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(text, 1);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            text, 1);
         this->_listEntity.push_back(text);
     }
 }

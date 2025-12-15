@@ -75,13 +75,13 @@ class RenderSystem : public ::rtype::engine::ASystem {
     void _renderStaticText(ECS::Registry& registry, ECS::Entity entity);
 
     /**
-    * @brief Render all text input entities.
-    * @param registry The ECS registry
-    * @param entity The entity to try to render
-    */
-    void _renderTextInputs(ECS::Registry &registry, ECS::Entity entity);
+     * @brief Render all text input entities.
+     * @param registry The ECS registry
+     * @param entity The entity to try to render
+     */
+    void _renderTextInputs(ECS::Registry& registry, ECS::Entity entity);
 
-public:
+   public:
     /**
      * @brief Check if an entity should be hidden from rendering.
      * @param registry The ECS registry

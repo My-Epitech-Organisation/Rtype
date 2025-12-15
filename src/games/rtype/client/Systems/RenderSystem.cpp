@@ -29,7 +29,8 @@ bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
 }
 
 void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
-    if (!registry.hasComponent<Image>(entity) || !registry.hasComponent<rs::Position>(entity))
+    if (!registry.hasComponent<Image>(entity) ||
+        !registry.hasComponent<rs::Position>(entity))
         return;
 
     auto& img = registry.getComponent<Image>(entity);
@@ -50,13 +51,14 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
     this->_target->draw(img.sprite);
 }
 
-void RenderSystem::_renderRectangles(ECS::Registry& registry, ECS::Entity entity) {
+void RenderSystem::_renderRectangles(ECS::Registry& registry,
+                                     ECS::Entity entity) {
     if (!registry.hasComponent<Rectangle>(entity) ||
         !registry.hasComponent<rs::Position>(entity) ||
         registry.hasComponent<ButtonTag>(entity))
         return;
 
-    auto& rectData = registry.getComponent<Rectangle>(entity); // Référence !
+    auto& rectData = registry.getComponent<Rectangle>(entity);  // Référence !
     const auto& pos = registry.getComponent<rs::Position>(entity);
 
     rectData.rectangle.setPosition(
@@ -113,7 +115,8 @@ void RenderSystem::_renderButtons(ECS::Registry& registry, ECS::Entity entity) {
     this->_target->draw(textData.text);
 }
 
-void RenderSystem::_renderStaticText(ECS::Registry& registry, ECS::Entity entity) {
+void RenderSystem::_renderStaticText(ECS::Registry& registry,
+                                     ECS::Entity entity) {
     if (!registry.hasComponent<StaticTextTag>(entity) ||
         !registry.hasComponent<Text>(entity) ||
         !registry.hasComponent<rs::Position>(entity))
@@ -131,7 +134,8 @@ void RenderSystem::_renderStaticText(ECS::Registry& registry, ECS::Entity entity
     this->_target->draw(textData.text);
 }
 
-void RenderSystem::_renderTextInputs(ECS::Registry& registry, ECS::Entity entity) {
+void RenderSystem::_renderTextInputs(ECS::Registry& registry,
+                                     ECS::Entity entity) {
     if (!registry.hasComponent<TextInputTag>(entity) ||
         !registry.hasComponent<TextInput>(entity) ||
         !registry.hasComponent<rs::Position>(entity))
@@ -140,8 +144,10 @@ void RenderSystem::_renderTextInputs(ECS::Registry& registry, ECS::Entity entity
     auto& textInput = registry.getComponent<TextInput>(entity);
     const auto& pos = registry.getComponent<rs::Position>(entity);
 
-    textInput.background.setPosition({static_cast<float>(pos.x), static_cast<float>(pos.y)});
-    textInput.text.setPosition({static_cast<float>(pos.x) + 10.f, static_cast<float>(pos.y) + 5.f});
+    textInput.background.setPosition(
+        {static_cast<float>(pos.x), static_cast<float>(pos.y)});
+    textInput.text.setPosition(
+        {static_cast<float>(pos.x) + 10.f, static_cast<float>(pos.y) + 5.f});
 
     this->_target->draw(textInput.background);
     this->_target->draw(textInput.text);

@@ -89,7 +89,8 @@ void SettingsScene::_initKeybindSection() {
                     }
                 }
             }));
-        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(btn, 1);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            btn, 1);
         this->_actionButtons[action] = btn;
         this->_keybindSectionEntities.push_back(btn);
         this->_listEntity.push_back(btn);
@@ -192,7 +193,8 @@ void SettingsScene::_initAudioSection() {
             ->emplaceComponent<rtype::games::rtype::shared::Position>(
                 valueEntity,
                 rtype::games::rtype::shared::Position(labelX, y + 10));
-        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(valueEntity, 1);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            valueEntity, 1);
         this->_listEntity.push_back(valueEntity);
 
         auto minusBtn = EntityFactory::createButton(
@@ -224,7 +226,8 @@ void SettingsScene::_initAudioSection() {
                     textComp.text.setString(s);
                 }
             }));
-        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(minusBtn, 1);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            minusBtn, 1);
         this->_listEntity.push_back(minusBtn);
 
         auto plusBtn = EntityFactory::createButton(
@@ -256,7 +259,8 @@ void SettingsScene::_initAudioSection() {
                     textComp.text.setString(s);
                 }
             }));
-        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(plusBtn, 1);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            plusBtn, 1);
         this->_listEntity.push_back(plusBtn);
     };
 
@@ -305,7 +309,8 @@ void SettingsScene::_initInputModeSection() {
             this->_refreshKeybindSection();
         }));
 
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(keyboardBtn, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        keyboardBtn, 1);
     this->_listEntity.push_back(keyboardBtn);
 
     auto controllerBtn = EntityFactory::createButton(
@@ -321,13 +326,15 @@ void SettingsScene::_initInputModeSection() {
             this->_refreshInputModeLabel();
             this->_refreshKeybindSection();
         }));
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(controllerBtn, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        controllerBtn, 1);
     this->_listEntity.push_back(controllerBtn);
 
     this->_inputModeLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Current: Keyboard", "main_font",
         sf::Vector2f(sectionX + sectionW - 220, sectionY + 20), 20);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(this->_inputModeLabel, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        this->_inputModeLabel, 1);
     this->_listEntity.push_back(this->_inputModeLabel);
 
     this->_refreshInputModeLabel();
@@ -380,7 +387,8 @@ void SettingsScene::_initAccessibilitySection() {
                 {400, 55}, sf::Color(60, 60, 120), sf::Color(80, 80, 180)),
             this->_assetsManager,
             std::function<void()>([this, mode]() { _setColorMode(mode); }));
-        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(btn, 1);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            btn, 1);
         this->_listEntity.push_back(btn);
     };
 
@@ -414,7 +422,8 @@ void SettingsScene::_initAccessibilitySection() {
         this->_registry, this->_assetsManager,
         "Intensity: " + std::to_string(percent) + "%", "main_font",
         sf::Vector2f(labelX, sliderY), 24);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(*this->_intensityLabel, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        *this->_intensityLabel, 1);
     this->_listEntity.push_back(*this->_intensityLabel);
 
     auto btnMinus = EntityFactory::createButton(
@@ -427,7 +436,8 @@ void SettingsScene::_initAccessibilitySection() {
                                                sf::Color(70, 70, 140)),
         this->_assetsManager,
         std::function<void()>([this]() { _adjustColorIntensity(-0.1f); }));
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnMinus, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        btnMinus, 1);
     this->_listEntity.push_back(btnMinus);
 
     auto btnPlus = EntityFactory::createButton(
@@ -440,7 +450,8 @@ void SettingsScene::_initAccessibilitySection() {
                                                sf::Color(70, 70, 140)),
         this->_assetsManager,
         std::function<void()>([this]() { _adjustColorIntensity(0.1f); }));
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnPlus, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        btnPlus, 1);
     this->_listEntity.push_back(btnPlus);
 }
 
@@ -609,7 +620,8 @@ SettingsScene::SettingsScene(
                           std::string(e.what()));
             }
         }));
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(backBtn, 0);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        backBtn, 0);
     this->_listEntity.push_back(backBtn);
 
     this->_assetsManager->audioManager->load(

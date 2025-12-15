@@ -84,7 +84,9 @@ ECS::Entity createPlayer(std::shared_ptr<ECS::Registry> registry,
                          bool isControllable = false);
 
 ECS::Entity createRectangle(std::shared_ptr<ECS::Registry> registry,
-                         sf::Vector2i size = sf::Vector2i(1, 1), sf::Color fill = sf::Color::White, sf::Vector2f position = sf::Vector2f(0, 0));
+                            sf::Vector2i size = sf::Vector2i(1, 1),
+                            sf::Color fill = sf::Color::White,
+                            sf::Vector2f position = sf::Vector2f(0, 0));
 
 std::vector<ECS::Entity> createSection(std::shared_ptr<ECS::Registry> registry,
                                        std::shared_ptr<AssetManager> assets,

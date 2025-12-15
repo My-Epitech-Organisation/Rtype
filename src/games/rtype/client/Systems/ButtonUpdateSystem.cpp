@@ -41,8 +41,9 @@ void ButtonUpdateSystem::update(ECS::Registry& registry, float /*dt*/) {
 
     registry.view<Rectangle, UserEvent, ButtonTag>().each(
         [](auto /*entity*/, auto& rect, auto& actionType, auto /*tag*/) {
-            rect.currentColor =
-                actionType.isHovered && !actionType.isDisabled ? rect.hoveredColor : rect.mainColor;
+            rect.currentColor = actionType.isHovered && !actionType.isDisabled
+                                    ? rect.hoveredColor
+                                    : rect.mainColor;
         });
 }
 

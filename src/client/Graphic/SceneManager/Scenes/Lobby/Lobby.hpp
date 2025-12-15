@@ -8,17 +8,26 @@
 #ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_LOBBY_LOBBY_HPP_
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_LOBBY_LOBBY_HPP_
 
-#include "SceneManager.hpp"
+#include <unordered_map>
 #include "../AScene.hpp"
+#include "SceneManager.hpp"
 
 class Lobby : public AScene {
-    private:
+   private:
     bool _isConnected = false;
+    unsigned int _nbrUser = 0;
+    std::unordered_map<uint32_t, std::vector<ECS::Entity>> _listUser;
     std::shared_ptr<rtype::client::NetworkClient> _networkClient;
     std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
     std::function<void(const SceneManager::Scene&)> _switchToScene;
 
-    public:
+    void _initInfoMenu();
+
+    void _createPlayerInfoMenu(uint32_t id, int index = 0);
+
+    void _removePlayerInfoMenu(uint32_t userId);
+
+public:
     /**
      * @brief Construct a new Lobby scene
      * @param networkClient Shared pointer to the network client
@@ -26,13 +35,13 @@ class Lobby : public AScene {
      * @param switchToScene Scene switch callback
      */
     Lobby(std::shared_ptr<ECS::Registry> ecs,
-        std::shared_ptr<AssetManager> textureManager,
-        std::shared_ptr<sf::RenderWindow> window,
-        std::function<void(const SceneManager::Scene&)> switchToScene,
-        std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,
-        std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =
-            nullptr,
-        std::shared_ptr<AudioLib> audioLib = nullptr);
+          std::shared_ptr<AssetManager> textureManager,
+          std::shared_ptr<sf::RenderWindow> window,
+          std::function<void(const SceneManager::Scene&)> switchToScene,
+          std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,
+          std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =
+              nullptr,
+          std::shared_ptr<AudioLib> audioLib = nullptr);
 
     void update(float dt) override;
     void render(std::shared_ptr<sf::RenderWindow> window) override;
@@ -43,6 +52,5 @@ class Lobby : public AScene {
      */
     ~Lobby() override = default;
 };
-
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_LOBBY_LOBBY_HPP_
