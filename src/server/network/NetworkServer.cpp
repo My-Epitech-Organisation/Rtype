@@ -155,12 +155,14 @@ void NetworkServer::updateGameState(GameState state) {
 }
 
 void NetworkServer::sendGameOver(std::uint32_t finalScore) {
+    LOG_INFO("[NetworkServer] Sending GameOver packet with score=" << finalScore);
     network::GameOverPayload payload;
     payload.finalScore = finalScore;
 
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
     broadcastToAll(network::OpCode::S_GAME_OVER, serialized);
+    LOG_INFO("[NetworkServer] GameOver packet broadcasted to all clients");
 }
 
 void NetworkServer::spawnEntityToClient(std::uint32_t userId, std::uint32_t id,
