@@ -259,6 +259,7 @@ bool ServerApp::initialize() {
                       << static_cast<int>(event.type)
                       << " entityId=" << event.entityNetworkId);
         }
+        onGameEvent(event);
     });
 
     if (!_networkServer->start(_port)) {
@@ -346,10 +347,12 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
         case GameState::GameOver:
             LOG_INFO("[Server] *** GAME OVER *** Final score=" << _score);
             if (_networkSystem) {
+                LOG_INFO("[Server] Broadcasting GameOver via NetworkSystem");
                 _networkSystem->broadcastGameState(
                     NetworkServer::GameState::GameOver);
                 _networkSystem->broadcastGameOver(_score);
             } else if (_networkServer) {
+                LOG_INFO("[Server] Sending GameOver via NetworkServer");
                 _networkServer->updateGameState(
                     NetworkServer::GameState::GameOver);
                 _networkServer->sendGameOver(_score);
@@ -462,31 +465,44 @@ void ServerApp::checkGameOverCondition() {
 void ServerApp::resetToLobby() {
     LOG_INFO("[Server] Resetting session to lobby");
 
+    LOG_DEBUG("[Server] Step 1: Clearing registry");
     if (_registry) {
         _registry->removeEntitiesIf([](ECS::Entity) { return true; });
         _registry->cleanupTombstones();
     }
+    LOG_DEBUG("[Server] Step 1: Complete");
 
+    LOG_DEBUG("[Server] Step 2: Updating network state");
     if (_networkSystem) {
         _networkSystem->resetState();
         _networkSystem->broadcastGameState(NetworkServer::GameState::Lobby);
     } else if (_networkServer) {
         _networkServer->updateGameState(NetworkServer::GameState::Lobby);
     }
+    LOG_DEBUG("[Server] Step 2: Complete");
 
     _score = 0;
 
+    LOG_DEBUG("[Server] Step 3: Resetting game engine");
     if (_gameEngine) {
         if (_gameEngine->isRunning()) {
+            LOG_DEBUG("[Server] Step 3a: Shutting down engine");
             _gameEngine->shutdown();
+            LOG_DEBUG("[Server] Step 3a: Complete");
         }
+        LOG_DEBUG("[Server] Step 3b: Initializing engine");
         _gameEngine->initialize();
+        LOG_DEBUG("[Server] Step 3b: Complete");
     }
+    LOG_DEBUG("[Server] Step 3: Complete");
 
+    LOG_DEBUG("[Server] Step 4: Resetting state manager");
     if (_stateManager) {
         _stateManager->reset();
     }
+    LOG_DEBUG("[Server] Step 4: Complete");
 
+    LOG_DEBUG("[Server] Step 5: Respawning players");
     if (_entitySpawner) {
         auto connected = getConnectedClientIds();
         std::size_t idx = 0;
@@ -499,6 +515,8 @@ void ServerApp::resetToLobby() {
             }
         }
     }
+    LOG_DEBUG("[Server] Step 5: Complete");
+    LOG_INFO("[Server] Reset to lobby complete");
 }
 
 std::size_t ServerApp::countAlivePlayers() {
@@ -524,7 +542,17 @@ std::size_t ServerApp::countAlivePlayers() {
 }
 
 void ServerApp::onGameEvent(const engine::GameEvent& event) {
-    if (!_stateManager || !_stateManager->isPlaying()) {
+    if (!_stateManager) {
+        return;
+    }
+
+    if (event.type == engine::GameEventType::GameOver) {
+        LOG_INFO("[ServerApp] GameOver event received, transitioning to GameOver state");
+        _stateManager->transitionTo(GameState::GameOver);
+        return;
+    }
+
+    if (!_stateManager->isPlaying()) {
         return;
     }
 
