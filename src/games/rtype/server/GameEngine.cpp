@@ -12,6 +12,8 @@
 #include <utility>
 #include <vector>
 
+#include <rtype/network/Protocol.hpp>
+
 #include "../shared/Components/EntityType.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
 #include "../shared/Components/PositionComponent.hpp"
@@ -19,8 +21,6 @@
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
-#include "protocol/Payloads.hpp"
-
 namespace rtype::games::rtype::server {
 
 GameEngine::GameEngine(std::shared_ptr<ECS::Registry> registry)
