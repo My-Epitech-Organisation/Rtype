@@ -140,6 +140,25 @@ ECS::Entity EntityFactory::createRectangle(
     return entt;
 }
 
+ECS::Entity EntityFactory::createLobbyPlayer(
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assetManager, sf::Vector2f position,
+    sf::Vector2i scale,
+    bool isControllable)
+{
+    auto entt = registry->spawnEntity();
+    auto& texture = assetManager->textureManager->get("player_vessel");
+    registry->emplaceComponent<rtype::games::rtype::client::Image>(entt, texture);
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(entt, position.x, position.y);
+    registry->emplaceComponent<rtype::games::rtype::client::Size>(entt,
+        static_cast<float>(scale.x), static_cast<float>(scale.y));
+    if (isControllable) {
+        registry->emplaceComponent<rtype::games::rtype::client::ControllableTag>(entt);
+    }
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entt, 1);
+    return entt;
+}
+
 ECS::Entity EntityFactory::createStaticText(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assets, std::string_view title,

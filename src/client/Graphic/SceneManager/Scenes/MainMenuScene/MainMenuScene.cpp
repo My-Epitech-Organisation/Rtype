@@ -22,6 +22,7 @@
 #include "EntityFactory/EntityFactory.hpp"
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
+#include "Scenes/Lobby/Lobby.hpp"
 
 static constexpr float kConnectionPanelX = 750.f;
 static constexpr float kConnectionPanelY = 350.f;
@@ -230,7 +231,7 @@ void MainMenuScene::_onConnectClicked(
         LOG_INFO("[Client] Connected with user ID: " + std::to_string(userId));
         _updateStatus("Connected! Starting game...", sf::Color::Green);
         try {
-            switchToScene(SceneManager::IN_GAME);
+            switchToScene(SceneManager::LOBBY);
         } catch (SceneNotFound& e) {
             LOG_ERROR(std::string("Error switching to Game: ") +
                       std::string(e.what()));
@@ -300,13 +301,6 @@ void MainMenuScene::update(float dt) {
                             rtype::games::rtype::client::HiddenComponent>();
 
         view.each([](auto, auto&, auto& hidden) { hidden.isHidden = true; });
-
-        // view.each([this](auto entity, auto& input, auto& pos, auto) {
-        //     input.background.setPosition({pos.x, pos.y});
-        //     input.text.setPosition({pos.x + 10.f, pos.y + 5.f});
-        //     this->_window->draw(input.background);
-        //     this->_window->draw(input.text);
-        // });
     }
     this->_registry
         ->view<rtype::games::rtype::client::UserEvent,
@@ -355,13 +349,8 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::shared::Position(100, 350),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
-        this->_assetsManager, std::function<void()>([this, switchToScene]() {
-            try {
-                this->_connectPopUpVisible = true;
-            } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Game Menu: ") +
-                          std::string(e.what()));
-            }
+        this->_assetsManager, std::function<void()>([this]() {
+            this->_connectPopUpVisible = true;
         }));
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         btnPlay, 1);

@@ -7,15 +7,18 @@
 
 #include "Lobby.hpp"
 
+#include <ranges>
 #include <utility>
 
 #include "Components/HiddenComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneException.hpp"
+#include "Components/PlayerIdComponent.hpp"
+#include "GameScene/RtypeEntityFactory.hpp"
 
 constexpr int kSectionX = 210;
-constexpr int kSectionY = 250;
+constexpr int kSectionY = 200;
 constexpr int kSectionW = 1500;
 constexpr int kSectionH = 650;
 
@@ -41,17 +44,32 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
     this->_listUser.insert({userId, playerSection});
     this->_listEntity.insert(this->_listEntity.end(), playerSection.begin(),
                              playerSection.end());
+    this->_registry->view<rtype::games::rtype::shared::PlayerIdComponent, rtype::games::rtype::shared::Position, rtype::games::rtype::client::ZIndex>().each([this, userId](auto playerEntt, auto id, auto &pos, auto &Zindex) {
+        std::cout << "Comparaison between" << userId << " and " << id.playerId << std::endl;
+        if (userId != id.playerId)
+            return;
+        pos.x = this->_nbrUser * (kSectionW / 4 + 15.f);
+        pos.y = 550.f;
+        Zindex.depth = 4;
+        if (this->_listUser[userId].back() == playerEntt)
+            return;
+        this->_listUser[userId].push_back(playerEntt);
+    });
     auto backBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Disconnect"),
         rtype::games::rtype::shared::Position(100, 900),
-        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Red,
+        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color(200, 0, 0),
                                                sf::Color::Red),
         this->_assetsManager, std::function<void()>([this]() {
             try {
                 this->_networkClient->disconnect();
+                for (auto entities: this->_listUser | std::views::values) {
+                    for (auto entt : entities)
+                        this->_registry->killEntity(entt);
+                }
                 this->_switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
                 LOG_ERROR(std::string("Error switching to Main Menu: ") +
@@ -121,12 +139,29 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)),
       _switchToScene(std::move(switchToScene)) {
+    this->_nbrUser = 0;
+    this->_networkClient->onEntityMove(([](rtype::client::EntityMoveEvent){}));
+    this->_networkClient->onEntitySpawn(([this](rtype::client::EntitySpawnEvent type) {
+        if (type.type  == rtype::network::EntityType::Player) {
+            LOG_INFO("[Lobby] Spawned player entity with ID: "
+                     << type.entityId << " for user ID: " << type.userId << " Nbr players: " << this->_nbrUser);
+            this->_nbrUser++;
+            auto ent = this->_registry->spawnEntity();
+            rtype::games::rtype::client::RtypeEntityFactory::setupPlayerEntity(*this->_registry, this->_assetsManager, ent, type.userId);
+            this->_createPlayerInfoMenu(type.userId,
+                            this->_nbrUser);
+        }
+    }));
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "Lobby"));
+    if (this->_networkClient->userId().has_value()) {
+        this->_nbrUser = 1;
+        auto ent = this->_registry->spawnEntity();
+        rtype::games::rtype::client::RtypeEntityFactory::setupPlayerEntity(*this->_registry, this->_assetsManager, ent, *this->_networkClient->userId());
+        this->_createPlayerInfoMenu(*this->_networkClient->userId(),
+                this->_nbrUser);
+    }
     this->_initInfoMenu();
-    this->_nbrUser = 1;
-    this->_createPlayerInfoMenu(0, this->_nbrUser);
-
     /*
     ** TODO(Samuel): Create a new player info menu when a new user connects use
     *the network client onNewConnected callback and handle disconnected player
@@ -140,3 +175,13 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
     **  }));
     */
 }
+
+Lobby::~Lobby() {
+    if (_networkClient) {
+        this->_networkClient->onEntitySpawn([](rtype::client::EntitySpawnEvent){
+        });
+
+        this->_networkClient->onEntityMove([](rtype::client::EntityMoveEvent){});
+    }
+}
+

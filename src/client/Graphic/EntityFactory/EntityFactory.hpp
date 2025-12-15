@@ -78,8 +78,8 @@ std::vector<ECS::Entity> createBackground(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assetManager, std::string_view PageName);
 
-ECS::Entity createPlayer(std::shared_ptr<ECS::Registry> registry,
-                         std::shared_ptr<AssetManager> assetManager,
+ECS::Entity createLobbyPlayer(std::shared_ptr<ECS::Registry> registry,
+                         std::shared_ptr<AssetManager> assetManager, sf::Vector2f position,
                          sf::Vector2i scale = sf::Vector2i(1, 1),
                          bool isControllable = false);
 

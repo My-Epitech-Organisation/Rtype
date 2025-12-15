@@ -51,7 +51,7 @@ class Lobby : public AScene {
     /**
      * @brief Destroy the Lobby scene
      */
-    ~Lobby() override = default;
+    ~Lobby() override;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_LOBBY_LOBBY_HPP_
