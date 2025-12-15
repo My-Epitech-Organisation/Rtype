@@ -38,35 +38,36 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
     auto& img = registry.getComponent<Image>(entity);
     const auto& pos = registry.getComponent<rs::Position>(entity);
 
-        if (registry.hasComponent<Size>(entity)) {
-            const auto& size = registry.getComponent<Size>(entity);
-            img.sprite.setScale(sf::Vector2f({size.x, size.y}));
-        }
-        if (registry.hasComponent<TextureRect>(entity)) {
-            const auto& texture = registry.getComponent<TextureRect>(entity);
-            img.sprite.setTextureRect(texture.rect);
-        }
+    if (registry.hasComponent<Size>(entity)) {
+        const auto& size = registry.getComponent<Size>(entity);
+        img.sprite.setScale(sf::Vector2f({size.x, size.y}));
+    }
+    if (registry.hasComponent<TextureRect>(entity)) {
+        const auto& texture = registry.getComponent<TextureRect>(entity);
+        img.sprite.setTextureRect(texture.rect);
+    }
 
-        if (registry.hasComponent<GameTag>(entity)) {
-            auto bounds = img.sprite.getGlobalBounds();
-            float offsetX = pos.x - bounds.size.x / 2.0f;
-            float offsetY = pos.y - bounds.size.y / 2.0f;
-            img.sprite.setPosition({offsetX, offsetY});
-        } else {
-            img.sprite.setPosition(
-                {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-        }
+    if (registry.hasComponent<GameTag>(entity)) {
+        auto bounds = img.sprite.getGlobalBounds();
+        float offsetX = pos.x - bounds.size.x / 2.0f;
+        float offsetY = pos.y - bounds.size.y / 2.0f;
+        img.sprite.setPosition({offsetX, offsetY});
+    } else {
+        img.sprite.setPosition(
+            {static_cast<float>(pos.x), static_cast<float>(pos.y)});
+    }
 
-        this->_target->draw(img.sprite);
+    this->_target->draw(img.sprite);
 }
 
-    void RenderSystem::_renderRectangles(ECS::Registry& registry,
-                                         ECS::Entity entity) {
+void RenderSystem::_renderRectangles(ECS::Registry& registry,
+                                     ECS::Entity entity) {
     if (!registry.hasComponent<Rectangle>(entity) ||
         !registry.hasComponent<rs::Position>(entity) ||
         registry.hasComponent<ButtonTag>(entity) ||
         registry.hasComponent<HudTag>(entity) ||
-        registry.hasComponent<rs::DestroyTag>(entity)) return;
+        registry.hasComponent<rs::DestroyTag>(entity))
+        return;
     auto& rectData = registry.getComponent<Rectangle>(entity);  // Référence !
     const auto& pos = registry.getComponent<rs::Position>(entity);
 
@@ -88,7 +89,8 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
     _target->draw(rectData.rectangle);
 }
 
-void RenderSystem::_renderHudRectangles(ECS::Registry& registry, ECS::Entity entity) {
+void RenderSystem::_renderHudRectangles(ECS::Registry& registry,
+                                        ECS::Entity entity) {
     const sf::View savedView = _target->getView();
     _target->setView(_target->getDefaultView());
     if (!registry.hasComponent<Rectangle>(entity) ||

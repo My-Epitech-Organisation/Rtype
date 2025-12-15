@@ -471,7 +471,7 @@ MainMenuScene::MainMenuScene(
                     break;
             }
             _updateStatus(reasonStr, sf::Color::Red);
-    });
+        });
 }
 
 MainMenuScene::~MainMenuScene() {
