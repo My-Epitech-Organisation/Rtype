@@ -9,6 +9,7 @@
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_LOBBY_LOBBY_HPP_
 
 #include <unordered_map>
+
 #include "../AScene.hpp"
 #include "SceneManager.hpp"
 
@@ -27,7 +28,7 @@ class Lobby : public AScene {
 
     void _removePlayerInfoMenu(uint32_t userId);
 
-public:
+   public:
     /**
      * @brief Construct a new Lobby scene
      * @param networkClient Shared pointer to the network client

@@ -10,9 +10,9 @@
 #include <utility>
 
 #include "Components/HiddenComponent.hpp"
+#include "Components/ZIndexComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "SceneException.hpp"
-#include "Components/ZIndexComponent.hpp"
 
 constexpr int kSectionX = 210;
 constexpr int kSectionY = 250;
@@ -30,30 +30,36 @@ void Lobby::render(std::shared_ptr<sf::RenderWindow> window) {}
 void Lobby::pollEvents(const sf::Event& e) {}
 
 void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
-    auto playerSection = EntityFactory::createSection(this->_registry, this->_assetsManager,
-                                    "Player " + std::to_string(userId),
-                                    sf::FloatRect({static_cast<float>((kSectionX + 45) + (index - 1) * (kSectionW / 4 - 15)), kSectionY + (kSectionH / 5) }, {(kSectionW / 4 - 45), kSectionH / 1.5}), 1);
+    auto playerSection = EntityFactory::createSection(
+        this->_registry, this->_assetsManager,
+        "Player " + std::to_string(userId),
+        sf::FloatRect({static_cast<float>((kSectionX + 45) +
+                                          (index - 1) * (kSectionW / 4 - 15)),
+                       kSectionY + (kSectionH / 5)},
+                      {(kSectionW / 4 - 45), kSectionH / 1.5}),
+        1);
     this->_listUser.insert({userId, playerSection});
-    this->_listEntity.insert(this->_listEntity.end(), playerSection.begin(), playerSection.end());
+    this->_listEntity.insert(this->_listEntity.end(), playerSection.begin(),
+                             playerSection.end());
     auto backBtn = EntityFactory::createButton(
-            this->_registry,
-            rtype::games::rtype::client::Text(
-                this->_assetsManager->fontManager->get("main_font"),
-                sf::Color::White, 36, "Disconnect"),
-            rtype::games::rtype::shared::Position(100, 900),
-            rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
-                                                   sf::Color::Red),
-            this->_assetsManager, std::function<void()>([this]() {
-                try {
-                    this->_networkClient->disconnect();
-                    this->_switchToScene(SceneManager::MAIN_MENU);
-                } catch (SceneNotFound& e) {
-                    LOG_ERROR(std::string("Error switching to Main Menu: ") +
-                              std::string(e.what()));
-                }
-            }));
+        this->_registry,
+        rtype::games::rtype::client::Text(
+            this->_assetsManager->fontManager->get("main_font"),
+            sf::Color::White, 36, "Disconnect"),
+        rtype::games::rtype::shared::Position(100, 900),
+        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Red,
+                                               sf::Color::Red),
+        this->_assetsManager, std::function<void()>([this]() {
+            try {
+                this->_networkClient->disconnect();
+                this->_switchToScene(SceneManager::MAIN_MENU);
+            } catch (SceneNotFound& e) {
+                LOG_ERROR(std::string("Error switching to Main Menu: ") +
+                          std::string(e.what()));
+            }
+        }));
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        backBtn, 0);
+        backBtn, 2);
     this->_listEntity.push_back(backBtn);
 }
 
@@ -69,31 +75,37 @@ void Lobby::_removePlayerInfoMenu(uint32_t userId) {
 }
 
 void Lobby::_initInfoMenu() {
-    auto section = EntityFactory::createSection(this->_registry, this->_assetsManager,
-                                "", sf::FloatRect({kSectionX, kSectionY}, {kSectionW, kSectionH}));
+    auto section = EntityFactory::createSection(
+        this->_registry, this->_assetsManager, "",
+        sf::FloatRect({kSectionX, kSectionY}, {kSectionW, kSectionH}));
     this->_listEntity.insert(this->_listEntity.end(), section.begin(),
-                                 section.end());
+                             section.end());
     auto title = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Game Info", "main_font",
         sf::Vector2f(static_cast<float>(kSectionX + kSectionW / 2 - 100),
                      static_cast<float>(kSectionY + 20)),
         48);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(title, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        title, 1);
     this->_listEntity.push_back(title);
 
-    auto playBtn = EntityFactory::createButton(this->_registry, rtype::games::rtype::client::Text(
+    auto playBtn = EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 32, "Start Game"),
-            rtype::games::rtype::shared::Position(static_cast<float>(kSectionX + kSectionW - 280),
+        rtype::games::rtype::shared::Position(
+            static_cast<float>(kSectionX + kSectionW - 280),
             static_cast<float>(kSectionY + kSectionH - 70)),
-                            rtype::games::rtype::client::Rectangle( std::pair<int, int>(250, 50), sf::Color(70, 130, 180), sf::Color(0, 150, 0)),
-                                this->_assetsManager,
-                                std::function<void()>([this]() {
-                                    // TODO(Samuel): Send start game packet to server
-                                })
-    );
+        rtype::games::rtype::client::Rectangle(std::pair<int, int>(250, 50),
+                                               sf::Color(70, 130, 180),
+                                               sf::Color(0, 150, 0)),
+        this->_assetsManager, std::function<void()>([this]() {
+            // TODO(Samuel): Send start game packet to server
+        }));
 
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(playBtn, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        playBtn, 1);
     this->_listEntity.push_back(playBtn);
 }
 
@@ -116,7 +128,8 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
     this->_createPlayerInfoMenu(0, this->_nbrUser);
 
     /*
-    ** TODO(Samuel): Create a new player info menu when a new user connects use the network client onNewConnected callback and handle disconnected player
+    ** TODO(Samuel): Create a new player info menu when a new user connects use
+    *the network client onNewConnected callback and handle disconnected player
     **  this->_networkClient->onNewConnected(([this](uint32_t id) {
     **     this->_nbrUser++;
     **     this->_createPlayerInfoMenu(id, this->_nbrUser);

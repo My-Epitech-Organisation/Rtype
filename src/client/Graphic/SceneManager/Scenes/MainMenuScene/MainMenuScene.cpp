@@ -182,10 +182,12 @@ void MainMenuScene::_createConnectionPanel(
 
 void MainMenuScene::_onConnectClicked(
     std::function<void(const SceneManager::Scene&)> switchToScene) {
+    std::cout << "Connect button clicked\n";
     if (!this->_networkClient) {
         this->_updateStatus("Error: Network not available", sf::Color::Red);
         return;
     }
+    std::cout << "Connect button clickedAFTER\n";
     std::string ip = kIp;
     std::uint16_t port = kPort;
 
@@ -215,46 +217,10 @@ void MainMenuScene::_onConnectClicked(
             }
         }
     }
-
+    std::cout << "Connecting to " << ip << ":" << port << "...\n";
     this->_updateStatus(
         "Connecting to " + ip + ":" + std::to_string(port) + "...",
         sf::Color::Yellow);
-    this->_networkClient->onConnected([this,
-                                       switchToScene](std::uint32_t userId) {
-        LOG_INFO("[Client] Connected with user ID: " + std::to_string(userId));
-        this->_updateStatus("Connected! Starting game...", sf::Color::Green);
-        try {
-            switchToScene(SceneManager::LOBBY);
-            this->_connectPopUpVisible = false;
-        } catch (SceneNotFound& e) {
-            LOG_ERROR(std::string("Error switching to Game: ") +
-                      std::string(e.what()));
-        }
-    });
-
-    this->_networkClient->onDisconnected(
-        [this](rtype::client::NetworkClient::DisconnectReason reason) {
-            std::string reasonStr;
-            this->_connectPopUpVisible = true;
-            switch (reason) {
-                case rtype::network::DisconnectReason::Timeout:
-                    reasonStr = "Connection timed out";
-                    break;
-                case rtype::network::DisconnectReason::MaxRetriesExceeded:
-                    reasonStr = "Server unreachable";
-                    break;
-                case rtype::network::DisconnectReason::ProtocolError:
-                    reasonStr = "Protocol error";
-                    break;
-                case rtype::network::DisconnectReason::RemoteRequest:
-                    reasonStr = "Server closed connection";
-                    break;
-                default:
-                    reasonStr = "Disconnected";
-                    break;
-            }
-            _updateStatus(reasonStr, sf::Color::Red);
-        });
     if (!this->_networkClient->connect(ip, port)) {
         this->_connectPopUpVisible = true;
         this->_updateStatus("Failed to start connection", sf::Color::Red);
@@ -455,6 +421,42 @@ MainMenuScene::MainMenuScene(
     this->_audio->loadMusic(bgMusic);
     this->_audio->setLoop(true);
     this->_audio->play();
+    this->_networkClient->onConnected([this,
+                                       switchToScene](std::uint32_t userId) {
+        LOG_INFO("[Client] Connected with user ID: " + std::to_string(userId));
+        this->_updateStatus("Connected! Starting game...", sf::Color::Green);
+        try {
+            switchToScene(SceneManager::LOBBY);
+            this->_connectPopUpVisible = false;
+        } catch (SceneNotFound& e) {
+            LOG_ERROR(std::string("Error switching to Game: ") +
+                      std::string(e.what()));
+        }
+    });
+
+    this->_networkClient->onDisconnected(
+        [this](rtype::client::NetworkClient::DisconnectReason reason) {
+            std::string reasonStr;
+            this->_connectPopUpVisible = true;
+            switch (reason) {
+                case rtype::network::DisconnectReason::Timeout:
+                    reasonStr = "Connection timed out";
+                    break;
+                case rtype::network::DisconnectReason::MaxRetriesExceeded:
+                    reasonStr = "Server unreachable";
+                    break;
+                case rtype::network::DisconnectReason::ProtocolError:
+                    reasonStr = "Protocol error";
+                    break;
+                case rtype::network::DisconnectReason::RemoteRequest:
+                    reasonStr = "Server closed connection";
+                    break;
+                default:
+                    reasonStr = "Disconnected";
+                    break;
+            }
+            _updateStatus(reasonStr, sf::Color::Red);
+    });
 }
 
 MainMenuScene::~MainMenuScene() {
