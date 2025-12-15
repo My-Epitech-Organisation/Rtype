@@ -26,7 +26,11 @@ const config: Config = {
   projectName: 'Rtype', // Usually your repo name.
 
   onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
+  },
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -89,7 +93,7 @@ const config: Config = {
           label: 'Documentation',
         },
         {
-          to: '/api/index.html',
+          to: '/api/',
           label: 'API Reference',
           position: 'left',
         },

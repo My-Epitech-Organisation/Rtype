@@ -150,8 +150,14 @@ ECS::Entity EntityFactory::createTextInput(
     registry->emplaceComponent<rtype::games::rtype::shared::Position>(
         entity, bounds.position.x, bounds.position.y);
 
+    registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
+        entity, std::pair<float, float>{bounds.size.x, bounds.size.y},
+        sf::Color::Transparent, sf::Color::Transparent);
+
     registry->emplaceComponent<rtype::games::rtype::client::TextInputTag>(
         entity);
+
+    registry->emplaceComponent<rtype::games::rtype::client::UserEvent>(entity);
 
     return entity;
 }

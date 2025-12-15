@@ -15,6 +15,11 @@
 namespace rtype::game::config {
 
 /**
+ * @brief Maximum number of players supported by the game
+ */
+inline constexpr uint32_t MAX_PLAYER_COUNT = 4;
+
+/**
  * @brief Schema version for configuration file compatibility
  */
 constexpr uint32_t CONFIG_SCHEMA_VERSION = 1;
@@ -142,7 +147,7 @@ struct GameplayConfig {
     std::string difficulty = "normal";
     uint32_t startingLives = 3;
     uint32_t waves = 10;
-    float playerSpeed = 200.0F;
+    float playerSpeed = 260.0F;
     float enemySpeedMultiplier = 1.0F;
     bool friendlyFire = false;
 

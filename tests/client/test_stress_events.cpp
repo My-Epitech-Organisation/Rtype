@@ -21,6 +21,7 @@
 #include "../../src/games/rtype/client/Systems/ButtonUpdateSystem.hpp"
 #include "../../src/games/rtype/client/Systems/EventSystem.hpp"
 #include "../../src/games/rtype/client/Systems/ResetTriggersSystem.hpp"
+#include "AudioLib/AudioLib.hpp"
 
 // Namespace aliases
 namespace rc = ::rtype::games::rtype::client;
@@ -33,6 +34,7 @@ class EventStressTest : public ::testing::Test {
    protected:
     std::shared_ptr<ECS::Registry> registry;
     std::shared_ptr<sf::RenderWindow> window;
+    std::shared_ptr<AudioLib> audioLib;
 
     std::unique_ptr<rc::EventSystem> eventSystem;
     std::unique_ptr<rc::ButtonUpdateSystem> buttonUpdateSystem;
@@ -45,8 +47,10 @@ class EventStressTest : public ::testing::Test {
 
         window = std::make_shared<sf::RenderWindow>(
             sf::VideoMode({800, 600}), "EventStressTest", sf::Style::None);
+        
+        audioLib = std::make_shared<AudioLib>();
 
-        eventSystem = std::make_unique<rc::EventSystem>(window);
+        eventSystem = std::make_unique<rc::EventSystem>(window, audioLib);
         buttonUpdateSystem = std::make_unique<rc::ButtonUpdateSystem>(window);
         resetTriggersSystem = std::make_unique<rc::ResetTriggersSystem>();
     }

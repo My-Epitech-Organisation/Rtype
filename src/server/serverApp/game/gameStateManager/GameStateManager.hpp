@@ -18,7 +18,7 @@ namespace rtype::server {
 /**
  * @brief Server game state
  */
-enum class GameState { WaitingForPlayers, Playing, Paused };
+enum class GameState { WaitingForPlayers, Playing, Paused, GameOver };
 
 /**
  * @brief Convert GameState to string for logging
@@ -31,6 +31,8 @@ enum class GameState { WaitingForPlayers, Playing, Paused };
             return "Playing";
         case GameState::Paused:
             return "Paused";
+        case GameState::GameOver:
+            return "GameOver";
         default:
             return "Unknown";
     }
@@ -93,6 +95,13 @@ class GameStateManager {
      */
     [[nodiscard]] bool isPaused() const noexcept {
         return _state == GameState::Paused;
+    }
+
+    /**
+     * @brief Check if game is over
+     */
+    [[nodiscard]] bool isGameOver() const noexcept {
+        return _state == GameState::GameOver;
     }
 
     /**

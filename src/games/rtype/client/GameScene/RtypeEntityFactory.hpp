@@ -10,9 +10,9 @@
 
 #include <memory>
 
+#include "../../../../client/Graphic/AssetManager/AssetManager.hpp"
+#include "../../../../client/network/ClientNetworkSystem.hpp"
 #include "ECS.hpp"
-#include "Graphic/AssetManager/AssetManager.hpp"
-#include "network/ClientNetworkSystem.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -41,10 +41,11 @@ class RtypeEntityFactory {
      * @param reg ECS registry
      * @param assetsManager Asset manager
      * @param entity Entity to configure
+     * @param userId User ID for the player (used to determine player color)
      */
     static void setupPlayerEntity(ECS::Registry& reg,
                                   std::shared_ptr<AssetManager> assetsManager,
-                                  ECS::Entity entity);
+                                  ECS::Entity entity, std::uint32_t userId = 0);
 
     /**
      * @brief Create a Bydos enemy entity with all components
@@ -66,6 +67,24 @@ class RtypeEntityFactory {
     static void setupMissileEntity(ECS::Registry& reg,
                                    std::shared_ptr<AssetManager> assetsManager,
                                    ECS::Entity entity);
+    /**
+     * @brief Create a pickup entity with all components
+     *
+     * @param registry ECS registry
+     * @param entity Entity to configure
+     * @param networkId Network identifier for the entity
+     */
+    static void setupPickupEntity(ECS::Registry& registry, ECS::Entity entity,
+                                  std::uint32_t networkId);
+    /**
+     * @brief Create an obstacle entity with all components
+     *
+     * @param registry ECS registry
+     * @param entity Entity to configure
+     * @param networkId Network identifier for the entity
+     */
+    static void setupObstacleEntity(ECS::Registry& registry, ECS::Entity entity,
+                                    std::uint32_t networkId);
 };
 
 }  // namespace rtype::games::rtype::client

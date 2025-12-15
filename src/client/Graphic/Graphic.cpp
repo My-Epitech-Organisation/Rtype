@@ -74,10 +74,13 @@ void Graphic::_update() {
         }
     }
 
+    _updateViewScrolling();
+    this->_systemScheduler->runSystem("parallax");
+
     if (!isPaused) {
-        _updateViewScrolling();
         this->_systemScheduler->runSystem("movement");
-        this->_systemScheduler->runSystem("parallax");
+        this->_systemScheduler->runSystem("player_animation");
+        this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
     }
 
@@ -130,6 +133,10 @@ void Graphic::_setupNetworkEntityFactory() {
 void Graphic::_initializeSystems() {
     this->_movementSystem =
         std::make_unique<::rtype::games::rtype::client::MovementSystem>();
+    this->_playerAnimationSystem = std::make_unique<
+        ::rtype::games::rtype::client::PlayerAnimationSystem>();
+    this->_playerPowerUpVisualSystem = std::make_unique<
+        ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_buttonUpdateSystem =
         std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(
             this->_window);
@@ -152,6 +159,8 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::shared::ProjectileSystem>();
     this->_lifetimeSystem =
         std::make_unique<::rtype::games::rtype::shared::LifetimeSystem>();
+    this->_clientDestroySystem =
+        std::make_unique<::rtype::games::rtype::client::ClientDestroySystem>();
     this->_shaderRenderSystem =
         std::make_unique<::rtype::games::rtype::client::ShaderRenderSystem>(
             this->_window, this->_sceneTexture, this->_colorShader);
@@ -171,12 +180,26 @@ void Graphic::_initializeSystems() {
                                       },
                                       {"reset_triggers"});
 
+    this->_systemScheduler->addSystem("player_animation",
+                                      [this](ECS::Registry& reg) {
+                                          _playerAnimationSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"movement"});
+
+    this->_systemScheduler->addSystem("powerup_visuals",
+                                      [this](ECS::Registry& reg) {
+                                          _playerPowerUpVisualSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"movement"});
+
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {
                                           _parallaxScrolling->update(
                                               reg, _currentDeltaTime);
                                       },
-                                      {"movement"});
+                                      {"player_animation", "powerup_visuals"});
 
     this->_systemScheduler->addSystem(
         "button_update",
@@ -197,10 +220,17 @@ void Graphic::_initializeSystems() {
                                       },
                                       {"projectile"});
 
+    this->_systemScheduler->addSystem("client_destroy",
+                                      [this](ECS::Registry& reg) {
+                                          this->_clientDestroySystem->update(
+                                              reg, 0.f);
+                                      },
+                                      {"lifetime"});
+
     this->_systemScheduler->addSystem(
         "render",
         [this](ECS::Registry& reg) { this->_renderSystem->update(reg, 0.f); },
-        {"lifetime"});
+        {"client_destroy"});
 
     this->_systemScheduler->addSystem(
         "boxing",
@@ -233,6 +263,9 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.astroVessel);
     manager->textureManager->load("player_vessel",
                                   config.assets.textures.Player);
+    manager->textureManager->load("bdos_enemy", config.assets.textures.Enemy);
+    manager->textureManager->load("projectile_player_laser",
+                                  config.assets.textures.missileLaser);
 
     manager->soundManager->load("hover_button", config.assets.sfx.hoverButton);
     manager->soundManager->load("click_button", config.assets.sfx.clickButton);
@@ -278,6 +311,9 @@ Graphic::Graphic(
         }
     }
     this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value());
+
+    this->_initializeCommonAssets();
+
     if (_networkSystem) {
         _setupNetworkEntityFactory();
     }

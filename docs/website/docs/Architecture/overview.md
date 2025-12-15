@@ -124,4 +124,4 @@ src/
 
 - Explore the [ECS Guide](./ecs-guide) for detailed ECS usage
 - Read about [Network Architecture](./network-architecture)
-- Check the [API Reference](/api/index.html) for implementation details
+- Check the [API Reference](/api/) for implementation details

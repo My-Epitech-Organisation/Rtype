@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include <vector>
+
 #include "../../../src/games/rtype/shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 #include "../../../src/games/rtype/shared/Systems/AISystem/Behaviors/Behaviors.hpp"
 
@@ -169,13 +171,16 @@ TEST_F(BehaviorRegistryTest, RegisterDefaultBehaviorsFunction) {
 
     auto& registry = BehaviorRegistry::instance();
 
-    EXPECT_TRUE(registry.hasBehavior(AIBehavior::MoveLeft));
-    EXPECT_TRUE(registry.hasBehavior(AIBehavior::SineWave));
-    EXPECT_TRUE(registry.hasBehavior(AIBehavior::Chase));
-    EXPECT_TRUE(registry.hasBehavior(AIBehavior::Patrol));
-    EXPECT_TRUE(registry.hasBehavior(AIBehavior::Stationary));
+    const std::vector<AIBehavior> expected = {
+        AIBehavior::MoveLeft, AIBehavior::SineWave, AIBehavior::Chase,
+        AIBehavior::Patrol,   AIBehavior::Stationary,
+        AIBehavior::ZigZag,   AIBehavior::DiveBomb};
 
-    EXPECT_EQ(registry.size(), 5u);
+    for (auto behavior : expected) {
+        EXPECT_TRUE(registry.hasBehavior(behavior));
+    }
+
+    EXPECT_EQ(registry.size(), expected.size());
 }
 
 TEST_F(BehaviorRegistryTest, BehaviorCanBeApplied) {
@@ -211,9 +216,10 @@ TEST_F(BehaviorRegistryTest, AllRegisteredBehaviorsCanBeApplied) {
     VelocityComponent velocity;
 
     // Test all behaviors can be applied without crashing
-    std::vector<AIBehavior> behaviors = {AIBehavior::MoveLeft, AIBehavior::SineWave,
-                                          AIBehavior::Chase, AIBehavior::Patrol,
-                                          AIBehavior::Stationary};
+    std::vector<AIBehavior> behaviors = {
+        AIBehavior::MoveLeft,  AIBehavior::SineWave, AIBehavior::Chase,
+        AIBehavior::Patrol,    AIBehavior::Stationary,
+        AIBehavior::ZigZag,    AIBehavior::DiveBomb};
 
     for (auto behaviorType : behaviors) {
         auto behavior = registry.getBehavior(behaviorType);
@@ -252,6 +258,12 @@ TEST_F(BehaviorRegistryTest, SizeAfterRegistration) {
 
     registry.registerBehavior<StationaryBehavior>();
     EXPECT_EQ(registry.size(), 5u);
+
+    registry.registerBehavior<ZigZagBehavior>();
+    EXPECT_EQ(registry.size(), 6u);
+
+    registry.registerBehavior<DiveBombBehavior>();
+    EXPECT_EQ(registry.size(), 7u);
 }
 
 TEST_F(BehaviorRegistryTest, SizeAfterClear) {
@@ -309,6 +321,12 @@ TEST_F(BehaviorRegistryTest, RegisterAllBehaviorsIndividually) {
 
     registry.registerBehavior<StationaryBehavior>();
     EXPECT_EQ(registry.size(), 5u);
+
+    registry.registerBehavior<ZigZagBehavior>();
+    EXPECT_EQ(registry.size(), 6u);
+
+    registry.registerBehavior<DiveBombBehavior>();
+    EXPECT_EQ(registry.size(), 7u);
 }
 
 TEST_F(BehaviorRegistryTest, GetBehaviorForAllTypes) {
@@ -335,6 +353,14 @@ TEST_F(BehaviorRegistryTest, GetBehaviorForAllTypes) {
     auto stationary = registry.getBehavior(AIBehavior::Stationary);
     ASSERT_NE(stationary, nullptr);
     EXPECT_EQ(stationary->getName(), "StationaryBehavior");
+
+    auto zigzag = registry.getBehavior(AIBehavior::ZigZag);
+    ASSERT_NE(zigzag, nullptr);
+    EXPECT_EQ(zigzag->getName(), "ZigZagBehavior");
+
+    auto diveBomb = registry.getBehavior(AIBehavior::DiveBomb);
+    ASSERT_NE(diveBomb, nullptr);
+    EXPECT_EQ(diveBomb->getName(), "DiveBombBehavior");
 }
 
 TEST_F(BehaviorRegistryTest, ApplyAllBehaviorsSequentially) {
@@ -369,9 +395,9 @@ TEST_F(BehaviorRegistryTest, ApplyAllBehaviorsSequentially) {
 
 TEST_F(BehaviorRegistryTest, RegisterDefaultBehaviorsTwice) {
     registerDefaultBehaviors();
-    EXPECT_EQ(BehaviorRegistry::instance().size(), 5u);
+    EXPECT_EQ(BehaviorRegistry::instance().size(), 7u);
 
     // Registering again should not add duplicates
     registerDefaultBehaviors();
-    EXPECT_EQ(BehaviorRegistry::instance().size(), 5u);
+    EXPECT_EQ(BehaviorRegistry::instance().size(), 7u);
 }

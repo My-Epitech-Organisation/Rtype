@@ -123,7 +123,7 @@ TEST_F(ProjectileSpawnerSystemTest, SpawnPlayerProjectileEmitsEvent) {
 
     EXPECT_TRUE(eventEmitted);
     EXPECT_EQ(lastEvent.type, rtype::engine::GameEventType::EntitySpawned);
-    EXPECT_EQ(lastEvent.entityType, static_cast<uint8_t>(shared::EntityType::Projectile));
+    EXPECT_EQ(lastEvent.entityType, 2u);  // network::EntityType::Missile
 }
 
 TEST_F(ProjectileSpawnerSystemTest, SpawnPlayerProjectileHasCorrectComponents) {

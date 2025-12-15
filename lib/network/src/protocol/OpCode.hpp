@@ -41,6 +41,9 @@ enum class OpCode : std::uint8_t {
     /// Server notifies game state change (RELIABLE)
     S_UPDATE_STATE = 0x06,
 
+    /// Server notifies game over with final score (RELIABLE)
+    S_GAME_OVER = 0x07,
+
     /// Server spawns new entity (RELIABLE)
     S_ENTITY_SPAWN = 0x10,
 
@@ -52,6 +55,9 @@ enum class OpCode : std::uint8_t {
 
     /// Server updates entity health/lives (RELIABLE)
     S_ENTITY_HEALTH = 0x13,
+
+    /// Server notifies a power-up pickup (RELIABLE)
+    S_POWERUP_EVENT = 0x14,
 
     /// Client sends input state (UNRELIABLE)
     C_INPUT = 0x20,
@@ -95,9 +101,11 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::C_GET_USERS:
         case OpCode::R_GET_USERS:
         case OpCode::S_UPDATE_STATE:
+        case OpCode::S_GAME_OVER:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
+        case OpCode::S_POWERUP_EVENT:
             return true;
 
         case OpCode::S_ENTITY_MOVE:
@@ -141,10 +149,12 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_ACCEPT:
         case OpCode::R_GET_USERS:
         case OpCode::S_UPDATE_STATE:
+        case OpCode::S_GAME_OVER:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
+        case OpCode::S_POWERUP_EVENT:
         case OpCode::S_UPDATE_POS:
         case OpCode::PONG:
             return true;
@@ -170,10 +180,12 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::C_GET_USERS:
         case OpCode::R_GET_USERS:
         case OpCode::S_UPDATE_STATE:
+        case OpCode::S_GAME_OVER:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
+        case OpCode::S_POWERUP_EVENT:
         case OpCode::C_INPUT:
         case OpCode::S_UPDATE_POS:
         case OpCode::PING:
@@ -225,6 +237,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "R_GET_USERS";
         case OpCode::S_UPDATE_STATE:
             return "S_UPDATE_STATE";
+        case OpCode::S_GAME_OVER:
+            return "S_GAME_OVER";
         case OpCode::S_ENTITY_SPAWN:
             return "S_ENTITY_SPAWN";
         case OpCode::S_ENTITY_MOVE:
@@ -233,6 +247,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "S_ENTITY_DESTROY";
         case OpCode::S_ENTITY_HEALTH:
             return "S_ENTITY_HEALTH";
+        case OpCode::S_POWERUP_EVENT:
+            return "S_POWERUP_EVENT";
         case OpCode::C_INPUT:
             return "C_INPUT";
         case OpCode::S_UPDATE_POS:

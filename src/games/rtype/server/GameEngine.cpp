@@ -12,6 +12,8 @@
 #include <utility>
 #include <vector>
 
+#include <rtype/network/Protocol.hpp>
+
 #include "../shared/Components/EntityType.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
 #include "../shared/Components/PositionComponent.hpp"
@@ -19,7 +21,6 @@
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
-
 namespace rtype::games::rtype::server {
 
 GameEngine::GameEngine(std::shared_ptr<ECS::Registry> registry)
@@ -49,16 +50,36 @@ bool GameEngine::initialize() {
     spawnerConfig.maxSpawnY =
         GameConfig::SCREEN_HEIGHT - GameConfig::SPAWN_MARGIN;
     spawnerConfig.bydosSlaveSpeed = GameConfig::BYDOS_SLAVE_SPEED;
+    spawnerConfig.weightMoveLeft = 0.2F;
+    spawnerConfig.weightSineWave = 0.1F;
+    spawnerConfig.weightZigZag = 0.3F;
+    spawnerConfig.weightDiveBomb = 1.0F;
+    spawnerConfig.weightStationary = 1.2F;
+    spawnerConfig.weightChase = 1.5F;
+    spawnerConfig.stationarySpawnInset = GameConfig::STATIONARY_SPAWN_INSET;
     _spawnerSystem =
         std::make_unique<SpawnerSystem>(eventEmitter, spawnerConfig);
     ProjectileSpawnConfig projConfig{};
     _projectileSpawnerSystem =
         std::make_unique<ProjectileSpawnerSystem>(eventEmitter, projConfig);
 
+    auto enemyShootCb = [this](ECS::Registry& reg, ECS::Entity enemy,
+                               uint32_t enemyNetId, float ex, float ey,
+                               float tx, float ty) {
+        if (_projectileSpawnerSystem) {
+            return _projectileSpawnerSystem->spawnEnemyProjectile(
+                reg, enemy, enemyNetId, ex, ey, tx, ty);
+        }
+        return 0U;
+    };
+    _enemyShootingSystem =
+        std::make_unique<EnemyShootingSystem>(std::move(enemyShootCb));
+
     shared::registerDefaultBehaviors();
     _aiSystem = std::make_unique<shared::AISystem>();
     _movementSystem = std::make_unique<shared::MovementSystem>();
     _lifetimeSystem = std::make_unique<shared::LifetimeSystem>();
+    _powerUpSystem = std::make_unique<shared::PowerUpSystem>();
     _collisionSystem = std::make_unique<CollisionSystem>(
         eventEmitter, GameConfig::SCREEN_WIDTH, GameConfig::SCREEN_HEIGHT);
     CleanupConfig cleanupConfig{};
@@ -85,9 +106,11 @@ void GameEngine::update(float deltaTime) {
 
     _spawnerSystem->update(*_registry, deltaTime);
     _projectileSpawnerSystem->update(*_registry, deltaTime);
+    _enemyShootingSystem->update(*_registry, deltaTime);
     _aiSystem->update(*_registry, deltaTime);
     _movementSystem->update(*_registry, deltaTime);
     _lifetimeSystem->update(*_registry, deltaTime);
+    _powerUpSystem->update(*_registry, deltaTime);
     _collisionSystem->update(*_registry, deltaTime);
     _cleanupSystem->update(*_registry, deltaTime);
     _destroySystem->update(*_registry, deltaTime);
@@ -103,9 +126,11 @@ void GameEngine::shutdown() {
     }
     _spawnerSystem.reset();
     _projectileSpawnerSystem.reset();
+    _enemyShootingSystem.reset();
     _aiSystem.reset();
     _movementSystem.reset();
     _lifetimeSystem.reset();
+    _powerUpSystem.reset();
     _cleanupSystem.reset();
     _destroySystem.reset();
     {
@@ -147,6 +172,7 @@ engine::ProcessedEvent GameEngine::processEvent(
     result.y = event.y;
     result.vx = event.velocityX;
     result.vy = event.velocityY;
+    result.duration = event.duration;
     result.valid = false;
 
     switch (event.type) {
@@ -166,19 +192,20 @@ engine::ProcessedEvent GameEngine::processEvent(
             if (!found) {
                 return result;
             }
-            auto gameType = static_cast<shared::EntityType>(event.entityType);
-            switch (gameType) {
-                case shared::EntityType::Player:
-                    result.networkEntityType = 0;  // Player
-                    break;
-                case shared::EntityType::Enemy:
-                    result.networkEntityType = 1;  // Bydos
-                    break;
-                case shared::EntityType::Projectile:
-                    result.networkEntityType = 2;  // Missile
+            auto protoType =
+                static_cast<::rtype::network::EntityType>(event.entityType);
+
+            switch (protoType) {
+                case ::rtype::network::EntityType::Player:
+                case ::rtype::network::EntityType::Bydos:
+                case ::rtype::network::EntityType::Missile:
+                case ::rtype::network::EntityType::Pickup:
+                case ::rtype::network::EntityType::Obstacle:
+                    result.networkEntityType = event.entityType;
                     break;
                 default:
-                    result.networkEntityType = 1;  // Default to Bydos
+                    result.networkEntityType = static_cast<uint8_t>(
+                        ::rtype::network::EntityType::Bydos);
                     break;
             }
             result.valid = true;
@@ -187,6 +214,7 @@ engine::ProcessedEvent GameEngine::processEvent(
         case engine::GameEventType::EntityDestroyed:
         case engine::GameEventType::EntityUpdated:
         case engine::GameEventType::EntityHealthChanged:
+        case engine::GameEventType::PowerUpApplied:
             result.valid = true;
             break;
     }

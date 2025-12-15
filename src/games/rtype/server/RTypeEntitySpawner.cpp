@@ -13,7 +13,9 @@
 #include "../shared/Components/CooldownComponent.hpp"
 #include "../shared/Components/HealthComponent.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
+#include "../shared/Components/PlayerIdComponent.hpp"
 #include "../shared/Components/PositionComponent.hpp"
+#include "../shared/Components/PowerUpComponent.hpp"
 #include "../shared/Components/Tags.hpp"
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
@@ -37,6 +39,7 @@ RTypeEntitySpawner::RTypeEntitySpawner(
     using shared::BoundingBoxComponent;
     using shared::HealthComponent;
     using shared::NetworkIdComponent;
+    using shared::PlayerIdComponent;
     using shared::PlayerTag;
     using shared::Position;
     using shared::ShootCooldownComponent;
@@ -73,23 +76,26 @@ RTypeEntitySpawner::RTypeEntitySpawner(
         playerEntity, kPlayerWidth, kPlayerHeight);
     _registry->emplaceComponent<PlayerTag>(playerEntity);
     _registry->emplaceComponent<HealthComponent>(
-        playerEntity, kDefaultPlayerLives, kDefaultPlayerLives);
+        playerEntity, kDefaultPlayerHealth, kDefaultPlayerHealth);
 
     std::uint32_t networkId = config.userId;
     _registry->emplaceComponent<NetworkIdComponent>(playerEntity, networkId);
 
+    std::uint32_t playerId = config.playerIndex + 1;
+    _registry->emplaceComponent<PlayerIdComponent>(playerEntity, playerId);
+
     _networkSystem->registerNetworkedEntity(playerEntity, networkId,
                                             EntityType::Player, spawnX, spawnY);
-    _networkSystem->updateEntityHealth(networkId, kDefaultPlayerLives,
-                                       kDefaultPlayerLives);
+    _networkSystem->updateEntityHealth(networkId, kDefaultPlayerHealth,
+                                       kDefaultPlayerHealth);
     _networkSystem->setPlayerEntity(config.userId, playerEntity);
 
     result.entity = playerEntity;
     result.networkId = networkId;
     result.x = spawnX;
     result.y = spawnY;
-    result.health = kDefaultPlayerLives;
-    result.maxHealth = kDefaultPlayerLives;
+    result.health = kDefaultPlayerHealth;
+    result.maxHealth = kDefaultPlayerHealth;
     result.success = true;
 
     return result;
@@ -207,8 +213,14 @@ void RTypeEntitySpawner::updatePlayerVelocity(ECS::Entity entity, float vx,
 
     if (_registry->hasComponent<shared::VelocityComponent>(entity)) {
         auto& vel = _registry->getComponent<shared::VelocityComponent>(entity);
-        vel.vx = vx;
-        vel.vy = vy;
+        float speedMultiplier = 1.0F;
+        if (_registry->hasComponent<shared::ActivePowerUpComponent>(entity)) {
+            const auto& active =
+                _registry->getComponent<shared::ActivePowerUpComponent>(entity);
+            speedMultiplier = active.speedMultiplier;
+        }
+        vel.vx = vx * speedMultiplier;
+        vel.vy = vy * speedMultiplier;
     }
 }
 

@@ -152,10 +152,7 @@ registry.on_component_added<HealthComponent>([](Entity entity, HealthComponent& 
 
 ## API Reference
 
-For detailed API documentation, see:
-- [IRegistry Interface](/api/classIRegistry.html)
-- [Entity Class](/api/classEntity.html)
-- [Registry Implementation](/api/classRegistry.html)
+For detailed API documentation, see the [API Reference](/api/).
 
 ## Next Steps
 

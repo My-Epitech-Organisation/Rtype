@@ -83,7 +83,11 @@ void GameSession::handleClientDisconnected(std::uint32_t userId) {
     _readyPlayers.erase(userId);
 
     if (_state == GameState::Playing && _readyPlayers.empty()) {
-        transitionToState(GameState::Paused);
+        LOG_WARNING(
+            "[GameSession] All players disconnected during game. Stopping "
+            "game...");
+        stopGame();
+        return;
     }
 
     if (_networkSystem) {
@@ -213,6 +217,9 @@ void GameSession::transitionToState(GameState newState) {
                 LOG_INFO("[GameSession] Resuming wait for players");
             }
             break;
+        case GameState::GameOver:
+            LOG_INFO("[GameSession] Game ended - session can be cleaned up");
+            break;
     }
 
     if (_stateChangeCallback) {
@@ -279,6 +286,10 @@ void GameSession::processGameEvents() {
                                                    event.healthCurrent,
                                                    event.healthMax);
                 break;
+            case engine::GameEventType::PowerUpApplied:
+                _networkSystem->broadcastPowerUp(event.entityNetworkId,
+                                                 event.subType, event.duration);
+                break;
         }
     }
 
@@ -296,6 +307,18 @@ void GameSession::syncEntityPositions() {
         });
 
     _networkSystem->broadcastEntityUpdates();
+}
+
+void GameSession::stopGame() {
+    LOG_INFO("[GameSession] Stopping game session");
+    for (const auto& userId : _readyPlayers) {
+        LOG_INFO(
+            "[GameSession] Destroying player entity for userId=" << userId);
+        _entitySpawner->destroyPlayerByUserId(userId);
+    }
+    _readyPlayers.clear();
+    transitionToState(GameState::GameOver);
+    LOG_INFO("[GameSession] Game session stopped");
 }
 
 }  // namespace rtype::server

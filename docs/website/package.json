@@ -5,6 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
+    "prebuild": "node -e \"const fs=require('fs'); const spawn=require('child_process').spawnSync; if (!fs.existsSync('node_modules')) { const cmd = fs.existsSync('package-lock.json') ? ['ci'] : ['install']; console.log('Installing docs dependencies with npm', cmd.join(' ')); spawn('npm', cmd, {stdio:'inherit'}); }\"",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
