@@ -81,11 +81,24 @@ NetworkClient::~NetworkClient() {
 
 bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
     if (!connection_.isDisconnected()) {
+        LOG_DEBUG("[NetworkClient] Cannot connect: not disconnected");
         return false;
+    }
+
+    connection_.reset();
+
+    if (socket_) {
+        socket_->close();
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        receiveInProgress_ = false;
+        socket_ = network::createAsyncSocket(ioContext_.get());
     }
 
     auto bindResult = socket_->bind(0);
     if (!bindResult) {
+        LOG_ERROR("[NetworkClient] Failed to bind socket");
+        socket_->close();
+        socket_ = network::createAsyncSocket(ioContext_.get());
         return false;
     }
 
@@ -95,6 +108,13 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
 
     auto result = connection_.connect();
     if (!result) {
+        LOG_ERROR("[NetworkClient] Failed to initiate connection");
+        socket_->close();
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        receiveInProgress_ = false;
+        socket_ = network::createAsyncSocket(ioContext_.get());
+        serverEndpoint_.reset();
+        connection_.reset();
         return false;
     }
 
@@ -115,6 +135,13 @@ void NetworkClient::disconnect() {
 
     connection_.reset();
     serverEndpoint_.reset();
+
+    if (socket_) {
+        socket_->close();
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        receiveInProgress_ = false;
+        socket_ = network::createAsyncSocket(ioContext_.get());
+    }
 }
 
 bool NetworkClient::isConnected() const noexcept {
