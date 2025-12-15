@@ -37,6 +37,7 @@ struct EntitySpawnEvent {
     network::EntityType type;
     float x;
     float y;
+    std::uint32_t userId = 0;
 };
 
 /**

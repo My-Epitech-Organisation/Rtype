@@ -22,7 +22,7 @@ enum class ColorBlindMode : std::uint8_t {
 struct AccessibilitySettings {
     ColorBlindMode colorMode = ColorBlindMode::None;
     float intensity = 1.0f;
-    bool showHitboxes = true;
+    bool showHitboxes = false;
     bool showVisualCues = false;
 };
 

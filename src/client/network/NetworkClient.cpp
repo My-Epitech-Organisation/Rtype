@@ -353,6 +353,10 @@ void NetworkClient::handleEntitySpawn(const network::Header& header,
         event.x = deserialized.posX;
         event.y = deserialized.posY;
 
+        if (event.type == network::EntityType::Player) {
+            event.userId = deserialized.entityId;
+        }
+
         queueCallback([this, event]() {
             if (onEntitySpawnCallback_) {
                 onEntitySpawnCallback_(event);

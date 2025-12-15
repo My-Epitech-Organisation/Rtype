@@ -15,6 +15,8 @@
 #include "../shared/Components/BoundingBoxComponent.hpp"
 #include "../shared/Components/HealthComponent.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
+#include "../shared/Components/PlayerIdComponent.hpp"
+#include "../shared/Config/GameConfig/RTypeGameConfig.hpp"
 #include "AllComponents.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Components/LifetimeComponent.hpp"
@@ -27,6 +29,31 @@
 #include "protocol/Payloads.hpp"
 
 namespace rtype::games::rtype::client {
+
+/**
+ * @brief Get the texture rectangle (sprite position) for a player based on
+ * their ID
+ *
+ * The player_vessel sprite sheet has 4 rows (colors) and multiple columns.
+ * Each row represents a different player color:
+ * - Row 0 (Y=0): Blue player
+ * - Row 1 (Y=17): Pink/Magenta player
+ * - Row 2 (Y=34): Green player
+ * - Row 3 (Y=51): Red player
+ *
+ * @param playerId Player ID (1-MAX_PLAYER_COUNT)
+ * @return Pair of (offset_x, offset_y) for the texture rectangle
+ */
+static std::pair<int, int> getPlayerSpriteOffset(uint32_t playerId) {
+    const int SPRITE_HEIGHT = 17;
+    uint32_t rowIndex = 0;
+    if (playerId >= 1 && playerId <= ::rtype::game::config::MAX_PLAYER_COUNT) {
+        rowIndex = playerId - 1;
+    }
+    int yOffset = static_cast<int>(rowIndex) * SPRITE_HEIGHT;
+
+    return {0, yOffset};
+}
 
 ::rtype::client::ClientNetworkSystem::EntityFactory
 RtypeEntityFactory::createNetworkEntityFactory(
@@ -50,7 +77,7 @@ RtypeEntityFactory::createNetworkEntityFactory(
 
         switch (event.type) {
             case ::rtype::network::EntityType::Player:
-                setupPlayerEntity(reg, assetsManager, entity);
+                setupPlayerEntity(reg, assetsManager, entity, event.userId);
                 break;
 
             case ::rtype::network::EntityType::Bydos:
@@ -76,22 +103,34 @@ RtypeEntityFactory::createNetworkEntityFactory(
 
 void RtypeEntityFactory::setupPlayerEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
-    ECS::Entity entity) {
+    ECS::Entity entity, std::uint32_t userId) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Player components for entity "
               << entity.id);
-    const auto networkId =
-        reg.getComponent<shared::NetworkIdComponent>(entity).networkId;
-    LOG_DEBUG("[RtypeEntityFactory] Player networkId: " << networkId);
-    const int colorRow =
-        (PlayerAnimationSystem::kColorRows > 0)
-            ? static_cast<int>(networkId % PlayerAnimationSystem::kColorRows)
-            : 0;
+
+    // Validate and set player ID from userId (dev branch logic)
+    uint32_t playerId = 1;
+    if (userId < 1 || userId > ::rtype::game::config::MAX_PLAYER_COUNT) {
+        LOG_ERROR("[RtypeEntityFactory] Invalid userId "
+                  << userId << ", must be 1-"
+                  << ::rtype::game::config::MAX_PLAYER_COUNT
+                  << ". Defaulting to 1");
+        userId = 1;
+    }
+    playerId = userId;
+
+    std::pair<int, int> spriteOffset = getPlayerSpriteOffset(playerId);
+    LOG_DEBUG("[RtypeEntityFactory] Player " << playerId << " sprite offset: ("
+                                             << spriteOffset.first << ", "
+                                             << spriteOffset.second << ")");
+
+    reg.emplaceComponent<shared::PlayerIdComponent>(entity, playerId);
+
     constexpr int neutralColumn = 2;
     constexpr int width = PlayerAnimationSystem::kFrameWidth;
     constexpr int height = PlayerAnimationSystem::kFrameHeight;
 
     const int left = neutralColumn * width;
-    const int top = colorRow * height;
+    const int top = spriteOffset.second;
 
     LOG_DEBUG("[RtypeEntityFactory] Getting player_vessel texture");
     auto& playerTexture = assetsManager->textureManager->get("player_vessel");
