@@ -187,8 +187,7 @@ void MainMenuScene::_onConnectClicked(
         this->_updateStatus("Error: Network not available", sf::Color::Red);
         return;
     }
-    std::cout << "Connect button clickedAFTER\n";
-    std::string ip = kIp;
+x    std::string ip = kIp;
     std::uint16_t port = kPort;
 
     if (this->_registry->hasComponent<rtype::games::rtype::client::TextInput>(
