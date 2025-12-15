@@ -1,4 +1,4 @@
-# build.ps1 - Build R-Type project for release on Windows
+﻿# build.ps1 - Build R-Type project for release on Windows
 #
 # This script:
 #   1. Checks/sets up vcpkg
@@ -57,6 +57,33 @@ Write-Host ""
 Write-Host "→ Step 2/4: Configuring CMake (windows-release preset)..." -ForegroundColor Yellow
 Set-Location $ProjectRoot
 
+$VSInstallPath = & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+if ($VSInstallPath) {
+    Write-Host "  Found Visual Studio Build Tools at: $VSInstallPath" -ForegroundColor Green
+
+    $vcpkgGitDir = Join-Path $VSInstallPath "VC\vcpkg\downloads\tools"
+    if (Test-Path $vcpkgGitDir) {
+        $gitDirs = Get-ChildItem -Path $vcpkgGitDir -Filter "git-*" -Directory | Sort-Object Name -Descending | Select-Object -First 1
+        if ($gitDirs) {
+            $gitPath = Join-Path $gitDirs.FullName "windows\bin"
+            if (Test-Path $gitPath) {
+                $env:PATH = "$gitPath;$env:PATH"
+                Write-Host "  Added vcpkg git to PATH: $gitPath" -ForegroundColor Green
+            }
+        }
+    }
+
+    $VCVarsAll = Join-Path $VSInstallPath "VC\Auxiliary\Build\vcvars64.bat"
+    if (Test-Path $VCVarsAll) {
+        Write-Host "  Importing MSVC environment..." -ForegroundColor Green
+        cmd /c "`"$VCVarsAll`" && set" | ForEach-Object {
+            if ($_ -match "^([^=]+)=(.*)$") {
+                [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2])
+            }
+        }
+    }
+}
+
 if (Test-Path "build") {
     Write-Host "  Cleaning existing build directory..."
     Remove-Item -Recurse -Force "build"
@@ -75,7 +102,7 @@ Write-Host "→ Step 3/4: Building project..." -ForegroundColor Yellow
 $NumProcs = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
 if (-not $NumProcs) { $NumProcs = 4 }
 
-cmake --build --preset "windows-release" -- /maxcpucount:$NumProcs
+cmake --build --preset "windows-release" --parallel $NumProcs
 if ($LASTEXITCODE -ne 0) {
     Write-Host "✗ Build failed" -ForegroundColor Red
     exit 1
@@ -111,7 +138,7 @@ if (Test-Path $ServerExe) {
 
 Write-Host ""
 Write-Host "╔══════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║                   Build Complete!                         ║" -ForegroundColor Cyan
+Write-Host "║                   Build Complete!                        ║" -ForegroundColor Cyan
 Write-Host "╚══════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Executables are now in the repository root:" -ForegroundColor White
