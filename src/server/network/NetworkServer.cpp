@@ -348,6 +348,10 @@ void NetworkServer::poll() {
 
             auto cleanupResult = client->reliableChannel.cleanup();
             if (!cleanupResult) {
+                LOG_WARNING(
+                    "[NetworkServer] Reliable channel retry limit for userId="
+                    << client->userId << " pending="
+                    << client->reliableChannel.getPendingCount());
                 usersToRemove.push_back(client->userId);
             }
         }
@@ -477,6 +481,13 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
         }
     }
 
+    if (network::isReliable(opcode)) {
+        if (auto client = findClient(sender)) {
+            client->reliableChannel.recordReceived(header.seqId);
+            client->lastActivity = std::chrono::steady_clock::now();
+        }
+    }
+
     network::Buffer payload;
     if (header.payloadSize > 0 &&
         data.size() >= network::kHeaderSize + header.payloadSize) {
@@ -512,13 +523,15 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
 void NetworkServer::handleConnect(const network::Header& header,
                                   const network::Buffer& payload,
                                   const network::Endpoint& sender) {
-    (void)header;
     (void)payload;
 
     std::string connKey = makeConnectionKey(sender);
 
     auto it = clients_.find(connKey);
     if (it != clients_.end()) {
+        it->second->reliableChannel.recordReceived(header.seqId);
+        it->second->lastActivity = std::chrono::steady_clock::now();
+
         network::AcceptPayload acceptPayload;
         acceptPayload.newUserId = it->second->userId;
 
@@ -533,6 +546,9 @@ void NetworkServer::handleConnect(const network::Header& header,
 
     auto client = std::make_shared<ClientConnection>(sender, newUserId,
                                                      config_.reliabilityConfig);
+
+    client->reliableChannel.recordReceived(header.seqId);
+    client->lastActivity = std::chrono::steady_clock::now();
 
     securityContext_.registerConnection(connKey, newUserId);
 
@@ -579,6 +595,8 @@ void NetworkServer::handleDisconnect(const network::Header& header,
         [](network::Result<std::size_t> result) { (void)result; });
 
     removeClient(userId);
+
+    LOG_INFO("[NetworkServer] Client requested disconnect userId=" << userId);
 
     queueCallback([this, userId]() {
         if (onClientDisconnectedCallback_) {
@@ -708,6 +726,12 @@ void NetworkServer::checkTimeouts() {
                     now - client->lastActivity);
 
             if (elapsed > config_.clientTimeout) {
+                LOG_WARNING(
+                    "[NetworkServer] Client timeout userId="
+                    << client->userId << " lastActivityMs="
+                    << std::chrono::duration_cast<std::chrono::milliseconds>(
+                           elapsed)
+                           .count());
                 timedOutUsers.push_back(client->userId);
             }
         }

@@ -18,6 +18,7 @@
 #include "Logger/Macros.hpp"
 #include "Serializer.hpp"
 #include "protocol/ByteOrderSpec.hpp"
+#include "protocol/OpCode.hpp"
 
 namespace rtype::client {
 
@@ -286,6 +287,10 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
     }
 
     auto opcode = static_cast<network::OpCode>(header.opcode);
+
+    if (network::isReliable(opcode)) {
+        connection_.sendAck();
+    }
 
     switch (opcode) {
         case network::OpCode::S_ENTITY_SPAWN:

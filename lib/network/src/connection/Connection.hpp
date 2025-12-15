@@ -123,6 +123,15 @@ class Connection {
      */
     void recordAck(std::uint16_t ackId) noexcept;
 
+    /**
+     * @brief Queue an ACK packet to be sent
+     *
+     * This sends a PING packet with the kIsAck flag to acknowledge
+     * received reliable messages. Should be called when receiving
+     * reliable messages to ensure the server knows we received them.
+     */
+    void sendAck();
+
     [[nodiscard]] ConnectionState state() const noexcept;
 
     [[nodiscard]] bool isConnected() const noexcept;

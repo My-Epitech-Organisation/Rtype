@@ -204,6 +204,15 @@ void Connection::recordAck(std::uint16_t ackId) noexcept {
     reliableChannel_.recordAck(ackId);
 }
 
+void Connection::sendAck() {
+    auto uid = stateMachine_.userId();
+    if (!uid.has_value()) {
+        return;
+    }
+    Buffer ackPacket = buildAckPacket(*uid);
+    queuePacket(std::move(ackPacket), false);
+}
+
 ConnectionState Connection::state() const noexcept {
     return stateMachine_.state();
 }

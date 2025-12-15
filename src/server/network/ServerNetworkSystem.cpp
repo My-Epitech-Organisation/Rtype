@@ -296,6 +296,10 @@ void ServerNetworkSystem::handleClientDisconnected(
         (reason == network::DisconnectReason::Timeout ||
          reason == network::DisconnectReason::MaxRetriesExceeded);
 
+    LOG_INFO("[ServerNetworkSystem] Client disconnected userId="
+             << userId << " reason=" << static_cast<int>(reason)
+             << (useGracePeriod ? " (grace)" : ""));
+
     if (useGracePeriod) {
         auto it = userIdToEntity_.find(userId);
         if (it != userIdToEntity_.end()) {
@@ -339,6 +343,9 @@ void ServerNetworkSystem::finalizeDisconnection(std::uint32_t userId) {
         }
         userIdToEntity_.erase(it);
     }
+
+    LOG_INFO(
+        "[ServerNetworkSystem] Finalized disconnection for userId=" << userId);
 
     if (onClientDisconnectedCallback_) {
         onClientDisconnectedCallback_(userId);
