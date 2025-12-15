@@ -89,7 +89,8 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
 std::vector<ECS::Entity> EntityFactory::createSection(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assets, std::string_view title,
-    const sf::FloatRect& bounds) {
+    const sf::FloatRect& bounds,
+    int ZindexRect) {
     std::vector<ECS::Entity> entities;
     auto bg = registry->spawnEntity();
     registry->emplaceComponent<rtype::games::rtype::shared::Position>(
@@ -104,7 +105,7 @@ std::vector<ECS::Entity> EntityFactory::createSection(
         rect.outlineThickness = cfg::UI_OUTLINE_THICKNESS;
         rect.outlineColor = sf::Color::White;
     }
-
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(bg, ZindexRect);
     if (title.empty()) return {bg};
 
     entities.push_back(bg);
@@ -118,6 +119,7 @@ std::vector<ECS::Entity> EntityFactory::createSection(
         cfg::SECTION_TITLE_FONT_SIZE, title);
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         titleEnt);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(titleEnt, ZindexRect + 1);
     entities.push_back(titleEnt);
     return entities;
 }

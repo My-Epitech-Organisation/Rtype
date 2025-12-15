@@ -9,6 +9,7 @@
 
 #include <SFML/Graphics/Color.hpp>
 
+#include "Components/ZIndexComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "Graphic/SceneManager/Scenes/SettingsScene/SettingsSceneUtils.hpp"
 #include "Logger/Macros.hpp"
@@ -16,9 +17,9 @@
 
 namespace {
 static constexpr float kSectionX = 350.f;
-static constexpr float kSectionY = 220.f;
+static constexpr float kSectionY = 250.f;
 static constexpr float kSectionW = 1220.f;
-static constexpr float kSectionH = 700.f;
+static constexpr float kSectionH = 600.f;
 }  // namespace
 
 HowToPlayScene::HowToPlayScene(
@@ -33,9 +34,8 @@ HowToPlayScene::HowToPlayScene(
       _switchToScene(std::move(switchToScene)) {
     this->_listEntity = EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "How to Play");
-    _initLayout();
-
-    this->_listEntity.push_back(EntityFactory::createButton(
+    this->_initLayout();
+    auto btnBack = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
@@ -50,7 +50,9 @@ HowToPlayScene::HowToPlayScene(
                 LOG_ERROR(std::string("Error switching to Main Menu: ") +
                           std::string(e.what()));
             }
-        })));
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnBack, 0);
+    this->_listEntity.push_back(btnBack);
 }
 
 std::string HowToPlayScene::_keyName(GameAction action) const {
@@ -92,6 +94,7 @@ void HowToPlayScene::_initLayout() {
         auto text = EntityFactory::createStaticText(
             this->_registry, this->_assetsManager, lines[i], fontId,
             sf::Vector2f{textX, y}, 28.f);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(text, 1);
         this->_listEntity.push_back(text);
     }
 }

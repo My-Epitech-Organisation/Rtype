@@ -89,7 +89,8 @@ ECS::Entity createRectangle(std::shared_ptr<ECS::Registry> registry,
 std::vector<ECS::Entity> createSection(std::shared_ptr<ECS::Registry> registry,
                                        std::shared_ptr<AssetManager> assets,
                                        std::string_view title,
-                                       const sf::FloatRect& bounds);
+                                       const sf::FloatRect& bounds,
+                                       int ZindexRect = 0);
 
 ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
                              std::shared_ptr<AssetManager> assets,
