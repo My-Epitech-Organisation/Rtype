@@ -13,11 +13,11 @@
 #include <vector>
 
 #include <rtype/engine.hpp>
+#include <rtype/network/Protocol.hpp>
 
 #include "../../../shared/Components.hpp"
 #include "../../../shared/Systems/Collision/AABB.hpp"
 #include "Logger/Macros.hpp"
-#include "protocol/Payloads.hpp"
 
 namespace rtype::games::rtype::server {
 
