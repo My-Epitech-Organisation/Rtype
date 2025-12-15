@@ -106,6 +106,9 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
         LOG_DEBUG("[RtypeGameScene] Network callbacks configured");
     }
 
+    LOG_DEBUG("[RtypeGameScene] Constructor started");
+    LOG_DEBUG("[RtypeGameScene] _networkClient is " << (_networkClient ? "valid" : "NULL"));
+    LOG_DEBUG("[RtypeGameScene] _registry is " << (_registry ? "valid" : "NULL"));
     LOG_DEBUG("[RtypeGameScene] Setting up HUD");
     setupHud();
     setupDamageVignette();
