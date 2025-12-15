@@ -23,7 +23,8 @@ bool TextInputSystem::handleEvent(ECS::Registry& registry,
                                   const sf::Event& event) {
     if (auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>()) {
         if (mousePressed->button == sf::Mouse::Button::Left) {
-            sf::Vector2f worldPos = _window->mapPixelToCoords(mousePressed->position);
+            sf::Vector2f worldPos =
+                _window->mapPixelToCoords(mousePressed->position);
             handleClick(registry, worldPos.x, worldPos.y);
             return true;
         }
@@ -65,8 +66,9 @@ void TextInputSystem::handleClick(ECS::Registry& registry, float mouseX,
     int highestZIndex = std::numeric_limits<int>::min();
     bool foundInput = false;
 
-    view.each([this, mouseX, mouseY, &topInput, &highestZIndex, &foundInput, &registry](
-                  ECS::Entity entity, TextInput& input, shared::Position& pos, auto) {
+    view.each([this, mouseX, mouseY, &topInput, &highestZIndex, &foundInput,
+               &registry](ECS::Entity entity, TextInput& input,
+                          shared::Position& pos, auto) {
         sf::FloatRect bounds = input.background.getGlobalBounds();
         bounds.position = {pos.x, pos.y};
 
@@ -84,11 +86,13 @@ void TextInputSystem::handleClick(ECS::Registry& registry, float mouseX,
     });
 
     if (foundInput) {
-        auto interactiveView = registry.view<Rectangle, shared::Position, UserEvent>();
+        auto interactiveView =
+            registry.view<Rectangle, shared::Position, UserEvent>();
         bool blockedByOther = false;
 
-        interactiveView.each([mouseX, mouseY, highestZIndex, &blockedByOther, &registry](
-                                 ECS::Entity entity, Rectangle& rect, shared::Position& pos, auto) {
+        interactiveView.each([mouseX, mouseY, highestZIndex, &blockedByOther,
+                              &registry](ECS::Entity entity, Rectangle& rect,
+                                         shared::Position& pos, auto) {
             if (registry.hasComponent<TextInputTag>(entity)) {
                 return;
             }

@@ -297,7 +297,9 @@ MainMenuScene::MainMenuScene(
     : AScene(ecs, assetsManager, window, audioLib),
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)),
-      _textInputSystem(std::make_shared<rtype::games::rtype::client::TextInputSystem>(window)) {
+      _textInputSystem(
+          std::make_shared<rtype::games::rtype::client::TextInputSystem>(
+              window)) {
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "R-TYPE"));
     this->_createAstroneerVessel();

@@ -31,7 +31,8 @@ class MainMenuScene : public AScene {
     std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
 
     /// @brief Text input system for handling input fields
-    std::shared_ptr<rtype::games::rtype::client::TextInputSystem> _textInputSystem;
+    std::shared_ptr<rtype::games::rtype::client::TextInputSystem>
+        _textInputSystem;
 
     /// @brief IP input field entity
     ECS::Entity _ipInputEntity;
