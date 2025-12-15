@@ -75,7 +75,7 @@ class RenderSystem : public ::rtype::engine::ASystem {
      * camera).
      * @param registry The ECS registry
      */
-    void _renderScreenSpaceRectangles(ECS::Registry& registry);
+    void _renderHudRectangles(ECS::Registry& registry);
 
    public:
     /**

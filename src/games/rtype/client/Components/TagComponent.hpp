@@ -16,6 +16,6 @@ struct PlayerTag {};
 struct GameTag {};
 struct ControllableTag {};
 struct PauseMenuTag {};
-struct ScreenSpaceTag {};
+struct HudTag {};
 }  // namespace rtype::games::rtype::client
 #endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_TAGCOMPONENT_HPP_

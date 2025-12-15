@@ -77,7 +77,7 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry) {
     registry.view<Rectangle, rs::Position>().each(
         [this, &registry](auto entt, auto& rectData, auto& pos) {
             if (registry.hasComponent<ButtonTag>(entt)) return;
-            if (registry.hasComponent<ScreenSpaceTag>(entt)) return;
+            if (registry.hasComponent<HudTag>(entt)) return;
             if (isEntityHidden(registry, entt)) return;
             if (registry.hasComponent<rs::DestroyTag>(entt)) return;
 
@@ -100,11 +100,11 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry) {
         });
 }
 
-void RenderSystem::_renderScreenSpaceRectangles(ECS::Registry& registry) {
+void RenderSystem::_renderHudRectangles(ECS::Registry& registry) {
     const sf::View savedView = _target->getView();
     _target->setView(_target->getDefaultView());
 
-    registry.view<Rectangle, rs::Position, ScreenSpaceTag>().each(
+    registry.view<Rectangle, rs::Position, HudTag>().each(
         [this, &registry](auto entt, auto& rectData, auto& pos, auto /*tag*/) {
             if (isEntityHidden(registry, entt)) return;
             if (registry.hasComponent<rs::DestroyTag>(entt)) return;
@@ -184,7 +184,7 @@ void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
     _renderRectangles(registry);
     _renderButtons(registry);
     _renderStaticText(registry);
-    _renderScreenSpaceRectangles(registry);
+    _renderHudRectangles(registry);
 }
 
 }  // namespace rtype::games::rtype::client

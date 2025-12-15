@@ -151,5 +151,5 @@ npm start
 ## Next Steps
 
 - Read the [Architecture Guide](./category/architecture) to understand the system design
-- Browse the [API Reference](/api/index.html) for detailed class documentation
+- Browse the [API Reference](/api/) for detailed class documentation
 - Check out example implementations in `src/games/rtype/`
