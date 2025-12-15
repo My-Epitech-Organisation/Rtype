@@ -198,29 +198,41 @@ void MainMenuScene::_onConnectClicked(
     _updateStatus("Connecting to " + ip + ":" + std::to_string(port) + "...",
                   sf::Color::Yellow);
     std::weak_ptr<ECS::Registry> weakRegistry = _registry;
+    ECS::Entity statusEntity = _statusEntity;
 
-    _networkClient->onConnected([this, switchToScene,
-                                 weakRegistry](std::uint32_t userId) {
-        if (!_alive) return;
-        auto reg = weakRegistry.lock();
-        if (!reg) return;
-
-        LOG_INFO("[Client] Connected with user ID: " + std::to_string(userId));
-        _updateStatus("Connected! Starting game...", sf::Color::Green);
-        try {
-            switchToScene(SceneManager::IN_GAME);
-        } catch (SceneNotFound& e) {
-            LOG_ERROR(std::string("Error switching to Game: ") +
-                      std::string(e.what()));
-        }
-    });
-
-    _networkClient->onDisconnected(
-        [this,
-         weakRegistry](rtype::client::NetworkClient::DisconnectReason reason) {
-            if (!_alive) return;
+    _networkClient->onConnected(
+        [weakRegistry, switchToScene, statusEntity](std::uint32_t userId) {
             auto reg = weakRegistry.lock();
             if (!reg) return;
+
+            LOG_INFO("[Client] Connected with user ID: "
+                     << std::to_string(userId));
+
+            if (reg->isAlive(statusEntity) &&
+                reg->hasComponent<rtype::games::rtype::client::Text>(
+                    statusEntity)) {
+                auto& text =
+                    reg->getComponent<rtype::games::rtype::client::Text>(
+                        statusEntity);
+                text.textContent = "Connected! Starting game...";
+                text.text.setString("Connected! Starting game...");
+                text.text.setFillColor(sf::Color::Green);
+            }
+
+            try {
+                switchToScene(SceneManager::IN_GAME);
+            } catch (SceneNotFound& e) {
+                LOG_ERROR(std::string("Error switching to Game: ") +
+                          std::string(e.what()));
+            }
+        });
+
+    _networkClient->onDisconnected(
+        [weakRegistry,
+         statusEntity](rtype::client::NetworkClient::DisconnectReason reason) {
+            auto reg = weakRegistry.lock();
+            if (!reg) return;
+
             std::string reasonStr;
             switch (reason) {
                 case rtype::network::DisconnectReason::Timeout:
@@ -239,7 +251,17 @@ void MainMenuScene::_onConnectClicked(
                     reasonStr = "Disconnected";
                     break;
             }
-            _updateStatus(reasonStr, sf::Color::Red);
+
+            if (reg->isAlive(statusEntity) &&
+                reg->hasComponent<rtype::games::rtype::client::Text>(
+                    statusEntity)) {
+                auto& text =
+                    reg->getComponent<rtype::games::rtype::client::Text>(
+                        statusEntity);
+                text.textContent = reasonStr;
+                text.text.setString(reasonStr);
+                text.text.setFillColor(sf::Color::Red);
+            }
         });
     if (!_networkClient->connect(ip, port)) {
         _updateStatus("Failed to start connection", sf::Color::Red);
@@ -375,7 +397,6 @@ MainMenuScene::MainMenuScene(
 }
 
 MainMenuScene::~MainMenuScene() {
-    _alive = false;
     if (_networkClient) {
         _networkClient->onConnected([](std::uint32_t) {});
         _networkClient->onDisconnected([](rtype::network::DisconnectReason) {});
