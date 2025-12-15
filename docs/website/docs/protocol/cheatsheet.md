@@ -39,9 +39,9 @@ This quick cheatsheet summarises the binary protocol used by the R-Type client &
 - `DISCONNECT` (0x03) — Disconnect notification
 - `C_GET_USERS` / `R_GET_USERS` — Request/response for user lists
 - `S_UPDATE_STATE` — Server state change payload (1 byte)
-- `S_ENTITY_SPAWN` — Payload: { entityId(uint32), type(uint8), posX(float), posY(float) }
-- `S_ENTITY_MOVE` — Payload: { entityId(uint32), posX(float), posY(float), velX(float), velY(float) }
-- `S_ENTITY_DESTROY` — Payload: { entityId(uint32) }
+- `S_ENTITY_SPAWN` — Payload: \{ entityId(uint32), type(uint8), posX(float), posY(float) \}
+- `S_ENTITY_MOVE` — Payload: \{ entityId(uint32), posX(float), posY(float), velX(float), velY(float) \}
+- `S_ENTITY_DESTROY` — Payload: \{ entityId(uint32) \}
 - `C_INPUT` — Payload: input mask (uint8)
 - `S_UPDATE_POS` — Payload: posX(float), posY(float) for corrections
 - `PING` / `PONG` — Keepalive; empty payloads; uses seq/ack for RTT
