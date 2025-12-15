@@ -147,7 +147,7 @@ struct GameplayConfig {
     std::string difficulty = "normal";
     uint32_t startingLives = 3;
     uint32_t waves = 10;
-    float playerSpeed = 200.0F;
+    float playerSpeed = 260.0F;
     float enemySpeedMultiplier = 1.0F;
     bool friendlyFire = false;
 

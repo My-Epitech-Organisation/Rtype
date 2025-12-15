@@ -16,6 +16,7 @@ struct PlayerTag {};
 struct GameTag {};
 struct ControllableTag {};
 struct PauseMenuTag {};
+struct HudTag {};
 struct ConnectMenuTag {};
 struct ButtonMenuTag {};
 }  // namespace rtype::games::rtype::client

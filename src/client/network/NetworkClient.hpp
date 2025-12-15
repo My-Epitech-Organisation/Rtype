@@ -15,6 +15,7 @@
 #include <optional>
 #include <queue>
 #include <string>
+#include <vector>
 
 #include <asio.hpp>
 
@@ -59,11 +60,24 @@ struct EntityHealthEvent {
     std::int32_t max;
 };
 
+struct PowerUpEvent {
+    std::uint32_t playerId;
+    std::uint8_t powerUpType;
+    float duration;
+};
+
 /**
  * @brief Event data for game state change
  */
 struct GameStateEvent {
     network::GameState state;
+};
+
+/**
+ * @brief Event data for game over notification
+ */
+struct GameOverEvent {
+    std::uint32_t finalScore;
 };
 
 /**
@@ -231,6 +245,11 @@ class NetworkClient {
     void onEntityHealth(std::function<void(EntityHealthEvent)> callback);
 
     /**
+     * @brief Register callback for power-up events
+     */
+    void onPowerUpEvent(std::function<void(PowerUpEvent)> callback);
+
+    /**
      * @brief Register callback for server position correction
      *
      * Called when server's authoritative position differs from client
@@ -245,6 +264,7 @@ class NetworkClient {
      * @param callback Function receiving the new game state
      */
     void onGameStateChange(std::function<void(GameStateEvent)> callback);
+    void onGameOver(std::function<void(GameOverEvent)> callback);
 
     /**
      * @brief Process network events and dispatch callbacks
@@ -279,12 +299,25 @@ class NetworkClient {
                              const network::Buffer& payload);
     void handleEntityHealth(const network::Header& header,
                             const network::Buffer& payload);
+    void handlePowerUpEvent(const network::Header& header,
+                            const network::Buffer& payload);
     void handleUpdatePos(const network::Header& header,
                          const network::Buffer& payload);
     void handleUpdateState(const network::Header& header,
                            const network::Buffer& payload);
+    void handleGameOver(const network::Header& header,
+                        const network::Buffer& payload);
 
     void flushOutgoing();
+
+    /**
+     * @brief Send an ACK packet immediately to acknowledge reliable messages
+     *
+     * This is called right after receiving a reliable message to ensure
+     * the server receives acknowledgment promptly, preventing retry timeouts.
+     * @param ackSeqId The specific sequence ID to acknowledge
+     */
+    void sendAck(std::uint16_t ackSeqId);
 
     Config config_;
 
@@ -303,7 +336,7 @@ class NetworkClient {
     std::mutex callbackMutex_;
     std::queue<std::function<void()>> callbackQueue_;
 
-    std::function<void(std::uint32_t)> onConnectedCallback_;
+    std::vector<std::function<void(std::uint32_t)>> onConnectedCallbacks_;
     std::function<void(DisconnectReason)> onDisconnectedCallback_;
     std::function<void(EntitySpawnEvent)> onEntitySpawnCallback_;
     std::function<void(EntityMoveEvent)> onEntityMoveCallback_;
@@ -311,6 +344,8 @@ class NetworkClient {
     std::function<void(EntityHealthEvent)> onEntityHealthCallback_;
     std::function<void(float, float)> onPositionCorrectionCallback_;
     std::function<void(GameStateEvent)> onGameStateChangeCallback_;
+    std::function<void(GameOverEvent)> onGameOverCallback_;
+    std::function<void(PowerUpEvent)> onPowerUpCallback_;
 
     std::thread networkThread_;
     std::atomic<bool> networkThreadRunning_{false};

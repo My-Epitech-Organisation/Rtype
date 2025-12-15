@@ -7,6 +7,13 @@
 
 #include "TextInputSystem.hpp"
 
+#include <limits>
+
+#include "Components/RectangleComponent.hpp"
+#include "Components/UserEventComponent.hpp"
+#include "Components/ZIndexComponent.hpp"
+#include "Logger/Macros.hpp"
+
 namespace rtype::games::rtype::client {
 
 TextInputSystem::TextInputSystem(std::shared_ptr<sf::RenderWindow> window)
@@ -16,8 +23,9 @@ bool TextInputSystem::handleEvent(ECS::Registry& registry,
                                   const sf::Event& event) {
     if (auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>()) {
         if (mousePressed->button == sf::Mouse::Button::Left) {
-            handleClick(registry, static_cast<float>(mousePressed->position.x),
-                        static_cast<float>(mousePressed->position.y));
+            sf::Vector2f worldPos =
+                _window->mapPixelToCoords(mousePressed->position);
+            handleClick(registry, worldPos.x, worldPos.y);
             return true;
         }
     }
@@ -53,16 +61,63 @@ void TextInputSystem::handleClick(ECS::Registry& registry, float mouseX,
     view.each(
         [](auto, TextInput& input, auto, auto) { input.setFocus(false); });
     _focusedInput = std::nullopt;
-    view.each([this, mouseX, mouseY](ECS::Entity entity, TextInput& input,
-                                     shared::Position& pos, auto) {
+
+    ECS::Entity topInput;
+    int highestZIndex = std::numeric_limits<int>::min();
+    bool foundInput = false;
+
+    view.each([this, mouseX, mouseY, &topInput, &highestZIndex, &foundInput,
+               &registry](ECS::Entity entity, TextInput& input,
+                          shared::Position& pos, auto) {
         sf::FloatRect bounds = input.background.getGlobalBounds();
         bounds.position = {pos.x, pos.y};
 
         if (bounds.contains({mouseX, mouseY})) {
-            input.setFocus(true);
-            _focusedInput = entity;
+            int zIndex = 0;
+            if (registry.hasComponent<ZIndex>(entity)) {
+                zIndex = registry.getComponent<ZIndex>(entity).depth;
+            }
+            if (!foundInput || zIndex > highestZIndex) {
+                topInput = entity;
+                highestZIndex = zIndex;
+                foundInput = true;
+            }
         }
     });
+
+    if (foundInput) {
+        auto interactiveView =
+            registry.view<Rectangle, shared::Position, UserEvent>();
+        bool blockedByOther = false;
+
+        interactiveView.each([mouseX, mouseY, highestZIndex, &blockedByOther,
+                              &registry](ECS::Entity entity, Rectangle& rect,
+                                         shared::Position& pos, auto) {
+            if (registry.hasComponent<TextInputTag>(entity)) {
+                return;
+            }
+            sf::FloatRect bounds = rect.rectangle.getGlobalBounds();
+            bounds.position = {pos.x, pos.y};
+            if (bounds.contains({mouseX, mouseY})) {
+                int otherZIndex = 0;
+                if (registry.hasComponent<ZIndex>(entity)) {
+                    otherZIndex = registry.getComponent<ZIndex>(entity).depth;
+                }
+                if (otherZIndex >= highestZIndex) {
+                    blockedByOther = true;
+                }
+            }
+        });
+        if (blockedByOther) {
+            foundInput = false;
+        }
+    }
+
+    if (foundInput && registry.isAlive(topInput)) {
+        auto& input = registry.getComponent<TextInput>(topInput);
+        input.setFocus(true);
+        _focusedInput = topInput;
+    }
 }
 
 bool TextInputSystem::handleTextEntered(ECS::Registry& registry,

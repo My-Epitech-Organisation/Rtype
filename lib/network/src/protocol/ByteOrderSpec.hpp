@@ -90,6 +90,8 @@ struct is_rfc_type<UpdatePosPayload> : std::true_type {};
 template <>
 struct is_rfc_type<UpdateStatePayload> : std::true_type {};
 template <>
+struct is_rfc_type<GameOverPayload> : std::true_type {};
+template <>
 struct is_rfc_type<InputPayload> : std::true_type {};
 template <>
 struct is_rfc_type<ConnectPayload> : std::true_type {};
@@ -307,6 +309,20 @@ fromNetwork(const T& data) noexcept {
 [[nodiscard]] inline UpdateStatePayload fromNetwork(
     const UpdateStatePayload& p) noexcept {
     return p;
+}
+
+[[nodiscard]] inline GameOverPayload toNetwork(
+    const GameOverPayload& p) noexcept {
+    GameOverPayload result;
+    result.finalScore = ByteOrder::toNetwork(p.finalScore);
+    return result;
+}
+
+[[nodiscard]] inline GameOverPayload fromNetwork(
+    const GameOverPayload& p) noexcept {
+    GameOverPayload result;
+    result.finalScore = ByteOrder::fromNetwork(p.finalScore);
+    return result;
 }
 
 [[nodiscard]] inline InputPayload toNetwork(const InputPayload& p) noexcept {

@@ -11,6 +11,8 @@ add_library(rtype-graphic-SFML
     KeyboardActions.hpp
     ControllerRumble.cpp
     ControllerRumble.hpp
+    Systems/ClientDestroySystem.cpp
+    Systems/ClientDestroySystem.hpp
     Systems/ShaderRenderSystem.cpp
     Systems/ShaderRenderSystem.hpp
 )

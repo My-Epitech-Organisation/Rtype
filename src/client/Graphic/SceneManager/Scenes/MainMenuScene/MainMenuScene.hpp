@@ -20,6 +20,7 @@ static constexpr int nbr_vessels = 7;
 #include "../../../../network/NetworkClient.hpp"
 #include "../AScene.hpp"
 #include "SceneManager/SceneManager.hpp"
+#include "Systems/TextInputSystem.hpp"
 
 class MainMenuScene : public AScene {
    private:
@@ -30,6 +31,10 @@ class MainMenuScene : public AScene {
     /// @brief Network system for ECS synchronization
     std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
 
+    /// @brief Text input system for handling input fields
+    std::shared_ptr<rtype::games::rtype::client::TextInputSystem>
+        _textInputSystem;
+
     /// @brief IP input field entity
     ECS::Entity _ipInputEntity;
 
@@ -38,6 +43,8 @@ class MainMenuScene : public AScene {
 
     /// @brief Status text entity
     ECS::Entity _statusEntity;
+
+    bool _alive{true};
 
     void _createAstroneerVessel();
     void _createFakePlayer();

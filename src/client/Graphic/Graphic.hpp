@@ -19,6 +19,8 @@
 #include "../../games/rtype/client/Systems/EventSystem.hpp"
 #include "../../games/rtype/client/Systems/MovementSystem.hpp"
 #include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
+#include "../../games/rtype/client/Systems/PlayerAnimationSystem.hpp"
+#include "../../games/rtype/client/Systems/PlayerPowerUpVisualSystem.hpp"
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
@@ -30,6 +32,7 @@
 #include "AudioLib/AudioLib.hpp"
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
+#include "Systems/ClientDestroySystem.hpp"
 #include "Systems/ShaderRenderSystem.hpp"
 
 /**
@@ -43,10 +46,14 @@
  * 1. ResetTriggers - Resets input states
  * 2. Network - Polls network and processes incoming packets
  * 3. Movement - Updates entity positions (depends on ResetTriggers)
- * 4. Parallax - Updates parallax backgrounds (depends on Movement)
- * 5. ButtonUpdate - Updates button states (depends on Parallax, for UI/menus)
- * 6. Render - Draws all entities (depends on ButtonUpdate)
- * 7. Boxing - Draws debug boxes on top (drawn after Render for visibility)
+ * 4. PlayerAnimation - Selects sprite frame by velocity/id (depends on
+ * Movement)
+ * 5. PowerUpVisuals - Applies tint to players with active power-ups (depends on
+ * Movement)
+ * 6. Parallax - Updates parallax backgrounds (depends on Movement)
+ * 7. ButtonUpdate - Updates button states (depends on Parallax, for UI/menus)
+ * 8. Render - Draws all entities (depends on ButtonUpdate)
+ * 9. Boxing - Draws debug boxes on top (drawn after Render for visibility)
  */
 class Graphic {
    public:
@@ -115,6 +122,10 @@ class Graphic {
 
     std::unique_ptr<::rtype::games::rtype::client::MovementSystem>
         _movementSystem;
+    std::unique_ptr<::rtype::games::rtype::client::PlayerAnimationSystem>
+        _playerAnimationSystem;
+    std::unique_ptr<::rtype::games::rtype::client::PlayerPowerUpVisualSystem>
+        _playerPowerUpVisualSystem;
     std::unique_ptr<::rtype::games::rtype::client::ButtonUpdateSystem>
         _buttonUpdateSystem;
     std::unique_ptr<::rtype::games::rtype::client::ParallaxScrolling>
@@ -128,6 +139,8 @@ class Graphic {
         _projectileSystem;
     std::unique_ptr<::rtype::games::rtype::shared::LifetimeSystem>
         _lifetimeSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ClientDestroySystem>
+        _clientDestroySystem;
     std::unique_ptr<::rtype::games::rtype::client::ShaderRenderSystem>
         _shaderRenderSystem;
 

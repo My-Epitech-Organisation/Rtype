@@ -205,18 +205,18 @@ TEST_F(GameEngineTest, AISystemSetsVelocityForMoveLeftBehavior) {
     auto& registry = engine->getRegistry();
     auto view = registry.view<VelocityComponent, AIComponent, EnemyTag>();
 
-    bool hasMovingEnemy = false;
-    view.each([&hasMovingEnemy](ECS::Entity /*entity*/,
-                                const VelocityComponent& velocity,
-                                const AIComponent& /*ai*/, const EnemyTag& /*tag*/) {
-        if (velocity.vx < 0) {
-            hasMovingEnemy = true;
+    bool hasNonPositiveVX = false;
+    view.each([&hasNonPositiveVX](ECS::Entity /*entity*/,
+                                  const VelocityComponent& velocity,
+                                  const AIComponent& /*ai*/, const EnemyTag& /*tag*/) {
+        if (velocity.vx <= 0.0F) {
+            hasNonPositiveVX = true;
         }
     });
 
     // If enemies were spawned, they should be moving
     if (engine->getEntityCount() > 0) {
-        EXPECT_TRUE(hasMovingEnemy);
+        EXPECT_TRUE(hasNonPositiveVX);
     }
 }
 

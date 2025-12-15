@@ -157,9 +157,19 @@ class ClientNetworkSystem {
      */
     [[nodiscard]] bool isConnected() const;
 
+    /**
+     * @brief Reset the network system state
+     *
+     * Clears all tracked entities and resets state.
+     * Should be called when disconnecting or switching scenes.
+     */
+    void reset();
+
    private:
     void handleEntitySpawn(const EntitySpawnEvent& event);
     void handleEntityMove(const EntityMoveEvent& event);
+
+    void handlePowerUpEvent(const PowerUpEvent& event);
 
     void _playDeathSound(ECS::Entity entity);
 
@@ -186,6 +196,14 @@ class ClientNetworkSystem {
     std::function<void(std::uint32_t, ECS::Entity)>
         onLocalPlayerAssignedCallback_;
     std::function<void(const EntityHealthEvent&)> onHealthUpdateCallback_;
+
+    struct HealthCache {
+        std::int32_t current;
+        std::int32_t max;
+    };
+    std::unordered_map<std::uint32_t, HealthCache> lastKnownHealth_;
+
+    std::unordered_map<std::uint32_t, ECS::Entity> pendingPlayerSpawns_;
 };
 
 }  // namespace rtype::client

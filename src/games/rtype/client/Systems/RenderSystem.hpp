@@ -81,6 +81,14 @@ class RenderSystem : public ::rtype::engine::ASystem {
      */
     void _renderTextInputs(ECS::Registry& registry, ECS::Entity entity);
 
+    /**
+     * @brief Render screen-space rectangles (UI elements not affected by
+     * camera).
+     * @param registry The ECS registry
+     * @param entity The entity to try to render
+     */
+    void _renderHudRectangles(ECS::Registry& registry, ECS::Entity entity);
+
    public:
     /**
      * @brief Check if an entity should be hidden from rendering.

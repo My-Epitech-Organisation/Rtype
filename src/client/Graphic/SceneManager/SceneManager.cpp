@@ -10,8 +10,10 @@
 #include <utility>
 
 #include "../../GameAction.hpp"
+#include "GameScene/RtypeEntityFactory.hpp"
 #include "GameScene/RtypeGameScene.hpp"
 #include "SceneException.hpp"
+#include "Scenes/GameOverScene/GameOverScene.hpp"
 #include "Scenes/GameScene/GameScene.hpp"
 #include "Scenes/HowToPlayScene/HowToPlayScene.hpp"
 #include "Scenes/Lobby/Lobby.hpp"
@@ -47,6 +49,15 @@ void SceneManager::setCurrentScene(const Scene scene) {
     }
     LOG_DEBUG("[SceneManager] Scene change requested to: "
               << static_cast<int>(scene));
+    if (scene == IN_GAME && this->_networkSystem && this->_registry &&
+        this->_assetManager) {
+        LOG_DEBUG(
+            "[SceneManager] Pre-configuring entity factory for IN_GAME scene");
+        this->_networkSystem->setEntityFactory(
+            rtype::games::rtype::client::RtypeEntityFactory::
+                createNetworkEntityFactory(this->_registry,
+                                           this->_assetManager));
+    }
     this->_nextScene = scene;
 }
 
@@ -88,6 +99,8 @@ SceneManager::SceneManager(
       _keybinds(keybinds),
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)),
+      _registry(ecs),
+      _assetManager(texture),
       _audio(audioLib) {
     this->_switchToScene = [this](const Scene& scene) {
         this->setCurrentScene(scene);
@@ -112,7 +125,19 @@ SceneManager::SceneManager(
             ecs, texture, this->_window, this->_switchToScene,
             this->_networkClient, this->_networkSystem, this->_audio);
     });
+    this->_sceneList.emplace(GAME_OVER, [ecs, texture, this]() {
+        return std::make_unique<GameOverScene>(
+            ecs, texture, this->_window, this->_audio, this->_switchToScene);
+    });
     this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
+        if (this->_networkSystem) {
+            LOG_DEBUG(
+                "[SceneManager] Setting up entity factory before scene "
+                "creation");
+            this->_networkSystem->setEntityFactory(
+                rtype::games::rtype::client::RtypeEntityFactory::
+                    createNetworkEntityFactory(ecs, texture));
+        }
         auto rtypeGameScene =
             std::make_unique<rtype::games::rtype::client::RtypeGameScene>(
                 ecs, texture, this->_window, this->_keybinds,
