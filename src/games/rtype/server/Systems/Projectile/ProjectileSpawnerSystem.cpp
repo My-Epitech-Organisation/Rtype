@@ -11,8 +11,9 @@
 #include <numbers>
 #include <utility>
 
+#include <rtype/network/Protocol.hpp>
+
 #include "../../../shared/Components.hpp"
-#include "protocol/Payloads.hpp"
 
 namespace rtype::games::rtype::server {
 using ::rtype::network::EntityType;
