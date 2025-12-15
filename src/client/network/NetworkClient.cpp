@@ -289,7 +289,7 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
     auto opcode = static_cast<network::OpCode>(header.opcode);
 
     if (network::isReliable(opcode)) {
-        connection_.sendAck();
+        sendAck();
     }
 
     switch (opcode) {
@@ -573,6 +573,19 @@ void NetworkClient::flushOutgoing() {
                                  // Fire and forget for now
                                  (void)result;
                              });
+    }
+}
+
+void NetworkClient::sendAck() {
+    if (!serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return;
+    }
+
+    auto ackPacket = connection_.buildAckPacket();
+    if (ackPacket.has_value()) {
+        socket_->asyncSendTo(
+            ackPacket.value(), *serverEndpoint_,
+            [](network::Result<std::size_t> result) { (void)result; });
     }
 }
 

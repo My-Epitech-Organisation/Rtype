@@ -302,6 +302,14 @@ class NetworkClient {
 
     void flushOutgoing();
 
+    /**
+     * @brief Send an ACK packet immediately to acknowledge reliable messages
+     *
+     * This is called right after receiving a reliable message to ensure
+     * the server receives acknowledgment promptly, preventing retry timeouts.
+     */
+    void sendAck();
+
     Config config_;
 
     network::IoContext ioContext_;

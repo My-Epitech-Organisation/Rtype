@@ -75,7 +75,7 @@ Result<void> Connection::processPacket(const Buffer& data,
         if (header.flags & Flags::kReliable) {
             auto uid = stateMachine_.userId();
             if (uid) {
-                Buffer ackPacket = buildAckPacket(*uid);
+                Buffer ackPacket = buildAckPacketInternal(*uid);
                 queuePacket(std::move(ackPacket), false);
             }
         }
@@ -86,7 +86,7 @@ Result<void> Connection::processPacket(const Buffer& data,
         reliableChannel_.recordReceived(header.seqId);
         auto uid = stateMachine_.userId();
         if (uid) {
-            Buffer ackPacket = buildAckPacket(*uid);
+            Buffer ackPacket = buildAckPacketInternal(*uid);
             queuePacket(std::move(ackPacket), false);
         }
     }
@@ -209,7 +209,7 @@ void Connection::sendAck() {
     if (!uid.has_value()) {
         return;
     }
-    Buffer ackPacket = buildAckPacket(*uid);
+    Buffer ackPacket = buildAckPacketInternal(*uid);
     queuePacket(std::move(ackPacket), false);
 }
 
@@ -292,7 +292,7 @@ Buffer Connection::buildDisconnectPacket() {
     return packet;
 }
 
-Buffer Connection::buildAckPacket(std::uint32_t userId) {
+Buffer Connection::buildAckPacketInternal(std::uint32_t userId) {
     Header header;
     header.magic = kMagicByte;
     header.opcode = static_cast<std::uint8_t>(OpCode::PING);
@@ -308,6 +308,14 @@ Buffer Connection::buildAckPacket(std::uint32_t userId) {
     std::memcpy(packet.data(), &header, kHeaderSize);
 
     return packet;
+}
+
+std::optional<Buffer> Connection::buildAckPacket() {
+    auto uid = stateMachine_.userId();
+    if (!uid.has_value()) {
+        return std::nullopt;
+    }
+    return buildAckPacketInternal(*uid);
 }
 
 Result<void> Connection::handleConnectAccept(const Header& header,
@@ -331,7 +339,7 @@ Result<void> Connection::handleConnectAccept(const Header& header,
 
     auto result = stateMachine_.handleAccept(newUserId);
     if (result) {
-        Buffer ackPacket = buildAckPacket(newUserId);
+        Buffer ackPacket = buildAckPacketInternal(newUserId);
         queuePacket(std::move(ackPacket), false);
     }
 
