@@ -10,8 +10,9 @@
 #include <algorithm>
 #include <vector>
 
+#include <rtype/network/Protocol.hpp>
+
 #include "../../../shared/Components.hpp"
-#include "protocol/Payloads.hpp"
 
 namespace rtype::games::rtype::server {
 
