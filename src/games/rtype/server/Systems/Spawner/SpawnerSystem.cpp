@@ -14,6 +14,7 @@
 #include <rtype/network/Protocol.hpp>
 
 #include "../../../shared/Components.hpp"
+#include "Logger/Macros.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -51,14 +52,62 @@ SpawnerSystem::SpawnerSystem(EventEmitter emitter, SpawnerConfig config)
 }
 
 void SpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
+    if (_gameOverEmitted) {
+        return;
+    }
+
     _spawnTimer += deltaTime;
     _obstacleSpawnTimer += deltaTime;
     _powerUpSpawnTimer += deltaTime;
 
-    if (_spawnTimer >= _nextSpawnTime && _enemyCount < _config.maxEnemies) {
-        spawnBydosSlave(registry);
-        _spawnTimer = 0.0F;
-        generateNextSpawnTime();
+    std::size_t aliveEnemies = 0;
+    auto enemyView = registry.view<shared::EnemyTag>();
+    enemyView.each([&aliveEnemies](ECS::Entity, const shared::EnemyTag&) {
+        aliveEnemies++;
+    });
+
+    static float logTimer = 0.0F;
+    logTimer += deltaTime;
+    if (logTimer >= 2.0F) {
+        LOG_DEBUG("[SpawnerSystem] Update: timer=" << _spawnTimer << "/" << _nextSpawnTime
+                  << " enemyCount=" << _enemyCount << "/" << _config.maxEnemies
+                  << " wave=" << _currentWave << "/" << _config.maxWaves
+                  << " spawned=" << _enemiesSpawnedThisWave << "/" << _config.enemiesPerWave
+                  << " alive=" << aliveEnemies);
+        logTimer = 0.0F;
+    }
+
+    if (_config.maxWaves > 0 && _enemiesSpawnedThisWave >= _config.enemiesPerWave && aliveEnemies == 0) {
+        LOG_INFO("[SpawnerSystem] Wave " << _currentWave << " complete! All enemies eliminated.");
+
+        if (_currentWave >= _config.maxWaves) {
+            LOG_INFO("[SpawnerSystem] All waves completed! Emitting GameOver event");
+            _gameOverEmitted = true;
+            engine::GameEvent event{};
+            event.type = engine::GameEventType::GameOver;
+            _emitEvent(event);
+            return;
+        }
+
+        _currentWave++;
+        _enemiesSpawnedThisWave = 0;
+        LOG_INFO("[SpawnerSystem] Starting wave " << _currentWave);
+    }
+
+    if (_spawnTimer >= _nextSpawnTime && _enemiesSpawnedThisWave < _config.enemiesPerWave) {
+        if (_enemyCount >= _config.maxEnemies) {
+            LOG_DEBUG("[SpawnerSystem] Cannot spawn: enemyCount=" << _enemyCount
+                      << " >= maxEnemies=" << _config.maxEnemies);
+        } else {
+            spawnBydosSlave(registry);
+            _enemiesSpawnedThisWave++;
+            LOG_DEBUG("[SpawnerSystem] Enemy spawned. Total this wave: "
+                      << _enemiesSpawnedThisWave << "/" << _config.enemiesPerWave
+                      << " | Current wave: " << _currentWave << "/"
+                      << _config.maxWaves << " | Alive: " << aliveEnemies);
+            _spawnTimer = 0.0F;
+            generateNextSpawnTime();
+        }
     }
 
     if (_obstacleSpawnTimer >= _nextObstacleSpawnTime) {
@@ -115,7 +164,7 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
 
     switch (chosenBehavior) {
         case AIBehavior::Chase:
-            ai.targetX = 0.0F;
+            ai.targetX = -200.0F;
             ai.targetY = _spawnYDist(_rng);
             break;
         case AIBehavior::DiveBomb:
