@@ -18,6 +18,7 @@
 #include "Logger/Macros.hpp"
 #include "Serializer.hpp"
 #include "protocol/ByteOrderSpec.hpp"
+#include "protocol/OpCode.hpp"
 
 namespace rtype::client {
 
@@ -33,8 +34,10 @@ NetworkClient::NetworkClient(const Config& config)
 
     connCallbacks.onConnected = [this](std::uint32_t userId) {
         queueCallback([this, userId]() {
-            if (onConnectedCallback_) {
-                onConnectedCallback_(userId);
+            for (const auto& callback : onConnectedCallbacks_) {
+                if (callback) {
+                    callback(userId);
+                }
             }
         });
     };
@@ -146,7 +149,7 @@ bool NetworkClient::sendInput(std::uint8_t inputMask) {
 
 void NetworkClient::onConnected(
     std::function<void(std::uint32_t myUserId)> callback) {
-    onConnectedCallback_ = std::move(callback);
+    onConnectedCallbacks_.push_back(std::move(callback));
 }
 
 void NetworkClient::onDisconnected(
@@ -174,6 +177,10 @@ void NetworkClient::onEntityHealth(
     onEntityHealthCallback_ = std::move(callback);
 }
 
+void NetworkClient::onPowerUpEvent(std::function<void(PowerUpEvent)> callback) {
+    onPowerUpCallback_ = std::move(callback);
+}
+
 void NetworkClient::onPositionCorrection(
     std::function<void(float x, float y)> callback) {
     onPositionCorrectionCallback_ = std::move(callback);
@@ -182,6 +189,10 @@ void NetworkClient::onPositionCorrection(
 void NetworkClient::onGameStateChange(
     std::function<void(GameStateEvent)> callback) {
     onGameStateChangeCallback_ = std::move(callback);
+}
+
+void NetworkClient::onGameOver(std::function<void(GameOverEvent)> callback) {
+    onGameOverCallback_ = std::move(callback);
 }
 
 void NetworkClient::poll() {
@@ -277,6 +288,14 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
 
     auto opcode = static_cast<network::OpCode>(header.opcode);
 
+    if (network::isReliable(opcode)) {
+        LOG_DEBUG("[NetworkClient] Received reliable packet: opcode="
+                  << static_cast<int>(opcode) << " seqId=" << header.seqId
+                  << " flags=0x" << std::hex << static_cast<int>(header.flags)
+                  << std::dec);
+        sendAck(header.seqId);
+    }
+
     switch (opcode) {
         case network::OpCode::S_ENTITY_SPAWN:
             handleEntitySpawn(header, payload);
@@ -294,12 +313,20 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
             handleEntityHealth(header, payload);
             break;
 
+        case network::OpCode::S_POWERUP_EVENT:
+            handlePowerUpEvent(header, payload);
+            break;
+
         case network::OpCode::S_UPDATE_POS:
             handleUpdatePos(header, payload);
             break;
 
         case network::OpCode::S_UPDATE_STATE:
             handleUpdateState(header, payload);
+            break;
+
+        case network::OpCode::S_GAME_OVER:
+            handleGameOver(header, payload);
             break;
 
         default:
@@ -406,13 +433,21 @@ void NetworkClient::handleEntityHealth(const network::Header& header,
                                        const network::Buffer& payload) {
     (void)header;
 
+    LOG_DEBUG("[NetworkClient] handleEntityHealth called, payload size="
+              << payload.size());
+
     if (payload.size() < sizeof(network::EntityHealthPayload)) {
+        LOG_DEBUG("[NetworkClient] Payload too small for EntityHealthPayload");
         return;
     }
 
     try {
         auto deserialized = network::Serializer::deserializeFromNetwork<
             network::EntityHealthPayload>(payload);
+
+        LOG_DEBUG("[NetworkClient] Deserialized health: entityId="
+                  << deserialized.entityId << " current="
+                  << deserialized.current << " max=" << deserialized.max);
 
         EntityHealthEvent event{};
         event.entityId = deserialized.entityId;
@@ -422,6 +457,33 @@ void NetworkClient::handleEntityHealth(const network::Header& header,
         queueCallback([this, event]() {
             if (onEntityHealthCallback_) {
                 onEntityHealthCallback_(event);
+            }
+        });
+    } catch (...) {
+        LOG_DEBUG("[NetworkClient] Exception deserializing health payload");
+    }
+}
+
+void NetworkClient::handlePowerUpEvent(const network::Header& header,
+                                       const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::PowerUpEventPayload)) {
+        return;
+    }
+
+    try {
+        auto deserialized = network::Serializer::deserializeFromNetwork<
+            network::PowerUpEventPayload>(payload);
+
+        PowerUpEvent event{};
+        event.playerId = deserialized.playerId;
+        event.powerUpType = deserialized.powerUpType;
+        event.duration = deserialized.duration;
+
+        queueCallback([this, event]() {
+            if (onPowerUpCallback_) {
+                onPowerUpCallback_(event);
             }
         });
     } catch (...) {
@@ -479,6 +541,30 @@ void NetworkClient::handleUpdateState(const network::Header& header,
     }
 }
 
+void NetworkClient::handleGameOver(const network::Header& header,
+                                   const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::GameOverPayload)) {
+        return;
+    }
+
+    try {
+        auto deserialized = network::Serializer::deserializeFromNetwork<
+            network::GameOverPayload>(payload);
+
+        GameOverEvent event{deserialized.finalScore};
+
+        queueCallback([this, event]() {
+            if (onGameOverCallback_) {
+                onGameOverCallback_(event);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
 void NetworkClient::flushOutgoing() {
     if (!serverEndpoint_.has_value() || !socket_->isOpen()) {
         return;
@@ -491,6 +577,32 @@ void NetworkClient::flushOutgoing() {
                                  // Fire and forget for now
                                  (void)result;
                              });
+    }
+}
+
+void NetworkClient::sendAck(std::uint16_t ackSeqId) {
+    if (!serverEndpoint_.has_value() || !socket_->isOpen()) {
+        LOG_DEBUG("[NetworkClient] sendAck: no endpoint or socket not open");
+        return;
+    }
+
+    auto ackPacket = connection_.buildAckPacket(ackSeqId);
+    if (ackPacket.has_value()) {
+        LOG_DEBUG("[NetworkClient] sendAck: sending ACK for seqId="
+                  << ackSeqId << " packet size=" << ackPacket.value().size());
+        socket_->asyncSendTo(
+            ackPacket.value(), *serverEndpoint_,
+            [ackSeqId](network::Result<std::size_t> result) {
+                if (result) {
+                    LOG_DEBUG("[NetworkClient] ACK sent successfully for seqId="
+                              << ackSeqId << " bytes=" << result.value());
+                } else {
+                    LOG_WARNING("[NetworkClient] ACK send failed for seqId="
+                                << ackSeqId);
+                }
+            });
+    } else {
+        LOG_WARNING("[NetworkClient] sendAck: buildAckPacket returned nullopt");
     }
 }
 

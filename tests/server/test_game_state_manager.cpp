@@ -135,7 +135,7 @@ TEST_F(GameStateManagerTest, PlayerLeft_LastPlayer_PausesGame) {
     EXPECT_TRUE(manager.isPlaying());
 
     manager.playerLeft(1);
-    EXPECT_TRUE(manager.isPaused());
+    EXPECT_TRUE(manager.isGameOver());
     EXPECT_EQ(manager.getReadyPlayerCount(), 0u);
 }
 

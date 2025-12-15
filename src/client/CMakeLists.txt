@@ -79,8 +79,10 @@ target_link_libraries(rtype-graphic-SFML
     rtype_game_client_systems
 )
 
-execute_process(
-        COMMAND ${CMAKE_COMMAND} -E create_symlink
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/assets)
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/assets
         ${CMAKE_BINARY_DIR}/assets
-)
+    )
+endif()

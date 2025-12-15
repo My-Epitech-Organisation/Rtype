@@ -27,7 +27,7 @@ tickrate = 60
 difficulty = "normal"
 startingLives = 3
 waves = 10
-playerSpeed = 200.0
+playerSpeed = 260.0
 enemySpeedMultiplier = 1.0
 friendlyFire = false
 

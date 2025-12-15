@@ -26,7 +26,7 @@ struct PowerUpConfig {
         SpeedBoost,
         WeaponUpgrade,
         Shield,
-        ExtraLife
+        HealthBoost
     };
     EffectType effect = EffectType::Health;
 

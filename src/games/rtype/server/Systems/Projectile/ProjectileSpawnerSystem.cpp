@@ -11,15 +11,19 @@
 #include <numbers>
 #include <utility>
 
+#include <rtype/network/Protocol.hpp>
+
 #include "../../../shared/Components.hpp"
 
 namespace rtype::games::rtype::server {
+using ::rtype::network::EntityType;
+using shared::ActivePowerUpComponent;
 using shared::BoundingBoxComponent;
 using shared::EnemyProjectileTag;
-using shared::EntityType;
 using shared::LifetimeComponent;
 using shared::NetworkIdComponent;
 using shared::PlayerProjectileTag;
+using shared::PlayerTag;
 using shared::ProjectileComponent;
 using shared::ProjectileOwner;
 using shared::ProjectileTag;
@@ -52,6 +56,21 @@ uint32_t ProjectileSpawnerSystem::spawnPlayerProjectile(
     ECS::Registry& registry, uint32_t playerNetworkId, float playerX,
     float playerY) {
     WeaponConfig weaponConfig = BasicBullet;
+
+    float damageMultiplier = 1.0F;
+    auto powerView = registry.view<NetworkIdComponent, shared::PlayerTag,
+                                   shared::ActivePowerUpComponent>();
+    powerView.each([playerNetworkId, &damageMultiplier](
+                       ECS::Entity /*entity*/, const NetworkIdComponent& net,
+                       const shared::PlayerTag& /*player*/,
+                       const shared::ActivePowerUpComponent& active) {
+        if (net.networkId == playerNetworkId) {
+            damageMultiplier = active.damageMultiplier;
+        }
+    });
+
+    weaponConfig.damage = static_cast<int32_t>(
+        static_cast<float>(weaponConfig.damage) * damageMultiplier);
 
     float spawnX = playerX + _config.playerProjectileOffsetX;
     float spawnY = playerY + _config.playerProjectileOffsetY;
@@ -137,7 +156,7 @@ uint32_t ProjectileSpawnerSystem::spawnProjectileWithConfig(
     event.x = x;
     event.y = y;
     event.rotation = 0.0F;
-    event.entityType = static_cast<uint8_t>(EntityType::Projectile);
+    event.entityType = static_cast<uint8_t>(EntityType::Missile);
     event.subType = static_cast<uint8_t>(config.projectileType);
     _emitEvent(event);
 

@@ -15,7 +15,7 @@ R-Type is a multiplayer space shooter game built with a custom Entity Component 
 Choose your path:
 
 - **[Architecture](./category/architecture)** - Learn about the system design and components
-- **[API Reference](/api/index.html)** - Browse the complete C++ API documentation (Doxygen)
+- **[API Reference](/api/)** - Browse the complete C++ API documentation (Doxygen)
 - **[Getting Started](./getting-started)** - Set up your development environment
 
 ## Features

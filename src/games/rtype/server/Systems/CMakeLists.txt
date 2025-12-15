@@ -4,6 +4,7 @@ add_library(rtype_game_server_systems OBJECT
     Cleanup/CleanupSystem.cpp
     Destroy/DestroySystem.cpp
     Projectile/ProjectileSpawnerSystem.cpp
+    EnemyShooting/EnemyShootingSystem.cpp
 )
 
 target_include_directories(rtype_game_server_systems PUBLIC
@@ -14,4 +15,5 @@ target_include_directories(rtype_game_server_systems PUBLIC
 target_link_libraries(rtype_game_server_systems PUBLIC
     engine
     rtype_toml_parser
+    network
 )

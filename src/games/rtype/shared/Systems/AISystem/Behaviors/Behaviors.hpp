@@ -15,10 +15,12 @@
 
 // Built-in behaviors
 #include "Chase/ChaseBehavior.hpp"
+#include "DiveBomb/DiveBombBehavior.hpp"
 #include "MoveLeft/MoveLeftBehavior.hpp"
 #include "Patrol/PatrolBehavior.hpp"
 #include "SineWave/SineWaveBehavior.hpp"
 #include "Stationary/StationaryBehavior.hpp"
+#include "ZigZag/ZigZagBehavior.hpp"
 
 /**
  * @file Behaviors.hpp
