@@ -80,20 +80,40 @@ feat(network): add reliable channel statistics counters
 
 We use CMake + vcpkg. There are cross-platform CMake presets available.
 
-1. Install dependencies (first time only):
+1. Clone with submodules:
+
+```bash
+git clone --recursive https://github.com/My-Epitech-Organisation/Rtype.git
+cd Rtype
+```
+
+2. Install dependencies (first time only):
 
 ```bash
 ./scripts/setup-vcpkg.sh
 ```
 
-1. Configure & build (Linux example):
+3. Configure & build:
 
 ```bash
+# Linux Debug
 cmake --preset linux-debug
+# or Linux Release
+cmake --preset linux-release
+
+# Windows Debug (MSVC)
+cmake --preset windows-debug
+# or Windows Release
+cmake --preset windows-release
+
+# Build
 cmake --build build
+
+# Run tests
+ctest --test-dir build --output-on-failure
 ```
 
-1. Run the server and client (in separate terminals):
+4. Run the server and client (in separate terminals):
 
 ```bash
 # Start server in one terminal
@@ -102,11 +122,13 @@ cmake --build build
 ./scripts/run_client.sh
 ```
 
-1. Running specific binaries manually (e.g., debugging):
+5. Running specific binaries manually (e.g., debugging):
 
 ```bash
-./build/server/ServerApp
-./build/client/ClientApp
+# Server binary path depends on your build configuration
+./build/bin/r-type_server
+# Client binary
+./build/bin/r-type_client
 ```
 
 ---
