@@ -41,6 +41,8 @@ NetworkClient::NetworkClient(const Config& config)
 
     connCallbacks.onDisconnected = [this](network::DisconnectReason reason) {
         queueCallback([this, reason]() {
+            connection_.reset();
+            serverEndpoint_.reset();
             if (onDisconnectedCallback_) {
                 onDisconnectedCallback_(reason);
             }
@@ -50,6 +52,8 @@ NetworkClient::NetworkClient(const Config& config)
     connCallbacks.onConnectFailed = [this](network::NetworkError error) {
         (void)error;
         queueCallback([this]() {
+            connection_.reset();
+            serverEndpoint_.reset();
             if (onDisconnectedCallback_) {
                 onDisconnectedCallback_(DisconnectReason::ProtocolError);
             }
