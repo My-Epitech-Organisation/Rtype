@@ -153,6 +153,13 @@ class Connection {
      */
     [[nodiscard]] std::optional<Buffer> buildAckPacket();
 
+    /**
+     * @brief Build an ACK packet for a specific sequence ID
+     * @param ackSeqId The specific sequence ID to acknowledge
+     * @return ACK packet buffer, or nullopt if not connected
+     */
+    [[nodiscard]] std::optional<Buffer> buildAckPacket(std::uint16_t ackSeqId);
+
     void setCallbacks(ConnectionCallbacks callbacks) noexcept;
 
     void reset() noexcept;
@@ -161,6 +168,8 @@ class Connection {
     [[nodiscard]] Buffer buildConnectPacket();
     [[nodiscard]] Buffer buildDisconnectPacket();
     [[nodiscard]] Buffer buildAckPacketInternal(std::uint32_t userId);
+    [[nodiscard]] Buffer buildAckPacketInternal(std::uint32_t userId,
+                                                std::uint16_t ackSeqId);
     [[nodiscard]] Result<void> handleConnectAccept(const Header& header,
                                                    const Buffer& payload,
                                                    const Endpoint& sender);
