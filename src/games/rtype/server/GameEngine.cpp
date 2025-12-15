@@ -14,6 +14,7 @@
 
 #include <rtype/network/Protocol.hpp>
 
+#include "Logger/Macros.hpp"
 #include "../shared/Components/EntityType.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
 #include "../shared/Components/PositionComponent.hpp"
@@ -57,6 +58,8 @@ bool GameEngine::initialize() {
     spawnerConfig.weightStationary = 1.2F;
     spawnerConfig.weightChase = 1.5F;
     spawnerConfig.stationarySpawnInset = GameConfig::STATIONARY_SPAWN_INSET;
+    spawnerConfig.maxWaves = 1;
+    spawnerConfig.enemiesPerWave = 5;
     _spawnerSystem =
         std::make_unique<SpawnerSystem>(eventEmitter, spawnerConfig);
     ProjectileSpawnConfig projConfig{};
@@ -117,26 +120,40 @@ void GameEngine::update(float deltaTime) {
 }
 
 void GameEngine::shutdown() {
+    LOG_DEBUG("[GameEngine] Shutdown: Checking running state");
     if (!_running) {
+        LOG_DEBUG("[GameEngine] Already shut down, returning");
         return;
     }
     _running = false;
+    LOG_DEBUG("[GameEngine] Shutdown: Clearing system scheduler");
     if (_systemScheduler) {
         _systemScheduler->clear();
     }
+    LOG_DEBUG("[GameEngine] Shutdown: Resetting spawner system");
     _spawnerSystem.reset();
+    LOG_DEBUG("[GameEngine] Shutdown: Resetting projectile spawner system");
     _projectileSpawnerSystem.reset();
+    LOG_DEBUG("[GameEngine] Shutdown: Resetting enemy shooting system");
     _enemyShootingSystem.reset();
+    LOG_DEBUG("[GameEngine] Shutdown: Resetting AI system");
     _aiSystem.reset();
+    LOG_DEBUG("[GameEngine] Shutdown: Resetting movement system");
     _movementSystem.reset();
+    LOG_DEBUG("[GameEngine] Shutdown: Resetting lifetime system");
     _lifetimeSystem.reset();
+    LOG_DEBUG("[GameEngine] Shutdown: Resetting power up system");
     _powerUpSystem.reset();
+    LOG_DEBUG("[GameEngine] Shutdown: Resetting cleanup system");
     _cleanupSystem.reset();
+    LOG_DEBUG("[GameEngine] Shutdown: Resetting destroy system");
     _destroySystem.reset();
+    LOG_DEBUG("[GameEngine] Shutdown: Clearing pending events");
     {
         std::lock_guard<std::mutex> lock(_eventMutex);
         _pendingEvents.clear();
     }
+    LOG_DEBUG("[GameEngine] Shutdown: Complete");
 }
 
 void GameEngine::setEventCallback(EventCallback callback) {
@@ -217,6 +234,9 @@ engine::ProcessedEvent GameEngine::processEvent(
         case engine::GameEventType::PowerUpApplied:
             result.valid = true;
             break;
+        case engine::GameEventType::GameOver:
+            result.valid = false;
+            break;
     }
 
     return result;
@@ -256,10 +276,15 @@ uint32_t GameEngine::spawnProjectile(uint32_t playerNetworkId, float playerX,
 }
 
 void GameEngine::emitEvent(const engine::GameEvent& event) {
-    std::lock_guard<std::mutex> lock(_eventMutex);
-    _pendingEvents.push_back(event);
-    if (_eventCallback) {
-        _eventCallback(event);
+    EventCallback callbackCopy;
+    {
+        std::lock_guard<std::mutex> lock(_eventMutex);
+        _pendingEvents.push_back(event);
+        callbackCopy = _eventCallback;
+    }
+    // Call callback outside the lock to avoid deadlock
+    if (callbackCopy) {
+        callbackCopy(event);
     }
 }
 
