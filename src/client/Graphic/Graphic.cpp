@@ -74,12 +74,14 @@ void Graphic::_update() {
         }
     }
 
+    // Keep view scrolling and parallax even when paused for visual continuity
+    _updateViewScrolling();
+    this->_systemScheduler->runSystem("parallax");
+
     if (!isPaused) {
-        _updateViewScrolling();
         this->_systemScheduler->runSystem("movement");
         this->_systemScheduler->runSystem("player_animation");
         this->_systemScheduler->runSystem("powerup_visuals");
-        this->_systemScheduler->runSystem("parallax");
         this->_systemScheduler->runSystem("projectile");
     }
 
