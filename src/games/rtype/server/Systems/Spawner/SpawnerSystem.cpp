@@ -66,18 +66,6 @@ void SpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
         aliveEnemies++;
     });
 
-    static float logTimer = 0.0F;
-    logTimer += deltaTime;
-    if (logTimer >= 2.0F) {
-        LOG_DEBUG("[SpawnerSystem] Update: timer="
-                  << _spawnTimer << "/" << _nextSpawnTime
-                  << " enemyCount=" << _enemyCount << "/" << _config.maxEnemies
-                  << " wave=" << _currentWave << "/" << _config.maxWaves
-                  << " spawned=" << _enemiesSpawnedThisWave << "/"
-                  << _config.enemiesPerWave << " alive=" << aliveEnemies);
-        logTimer = 0.0F;
-    }
-
     if (_config.maxWaves > 0 &&
         _enemiesSpawnedThisWave >= _config.enemiesPerWave &&
         aliveEnemies == 0) {
