@@ -257,6 +257,11 @@ void Graphic::_initializeCommonAssets() {
     manager->fontManager->load("main_font", config.assets.fonts.MainFont);
 
     manager->textureManager->load("bg_menu", config.assets.textures.background);
+    manager->textureManager->load("bg_sun", config.assets.textures.sun);
+    manager->textureManager->load("bg_big_asteroids", config.assets.textures.bigAsteroids);
+    manager->textureManager->load("bg_small_asteroids", config.assets.textures.smallAsteroids);
+    manager->textureManager->load("bg_fst_plan_asteroids", config.assets.textures.fstPlanAsteroids);
+    manager->textureManager->load("bg_snd_plan_asteroids", config.assets.textures.sndPlanAsteroids);
     manager->textureManager->load("bg_planet_1",
                                   config.assets.textures.planet1);
     manager->textureManager->load("bg_planet_2",
@@ -283,6 +288,10 @@ void Graphic::_initializeCommonAssets() {
     manager->textureManager->get("bg_planet_1").setRepeated(true);
     manager->textureManager->get("bg_planet_2").setRepeated(true);
     manager->textureManager->get("bg_planet_3").setRepeated(true);
+    manager->textureManager->get("bg_small_asteroids").setRepeated(true);
+    manager->textureManager->get("bg_big_asteroids").setRepeated(true);
+    manager->textureManager->get("bg_fst_plan_asteroids").setRepeated(true);
+    manager->textureManager->get("bg_snd_plan_asteroids").setRepeated(true);
 }
 
 Graphic::Graphic(
