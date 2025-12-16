@@ -66,7 +66,7 @@ using TextInputTag = ::rtype::games::rtype::client::TextInputTag;
 using TextInput = ::rtype::games::rtype::client::TextInput;
 
 // Position and movement (from shared)
-using Position = ::rtype::games::rtype::shared::TransformComponent;
+using Transform = ::rtype::games::rtype::shared::TransformComponent;
 using Velocity = ::rtype::games::rtype::shared::VelocityComponent;
 
 }  // namespace rtype::client
