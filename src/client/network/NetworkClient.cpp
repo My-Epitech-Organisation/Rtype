@@ -18,6 +18,7 @@
 #include "Logger/Macros.hpp"
 #include "Serializer.hpp"
 #include "protocol/ByteOrderSpec.hpp"
+#include "protocol/Header.hpp"
 #include "protocol/OpCode.hpp"
 
 namespace rtype::client {
@@ -44,8 +45,8 @@ NetworkClient::NetworkClient(const Config& config)
 
     connCallbacks.onDisconnected = [this](network::DisconnectReason reason) {
         queueCallback([this, reason]() {
-            if (onDisconnectedCallback_) {
-                onDisconnectedCallback_(reason);
+            for (const auto& cb : onDisconnectedCallbacks_) {
+                if (cb) cb(reason);
             }
         });
     };
@@ -53,8 +54,8 @@ NetworkClient::NetworkClient(const Config& config)
     connCallbacks.onConnectFailed = [this](network::NetworkError error) {
         (void)error;
         queueCallback([this]() {
-            if (onDisconnectedCallback_) {
-                onDisconnectedCallback_(DisconnectReason::ProtocolError);
+            for (const auto& cb : onDisconnectedCallbacks_) {
+                if (cb) cb(DisconnectReason::ProtocolError);
             }
         });
     };
@@ -125,6 +126,10 @@ std::optional<std::uint32_t> NetworkClient::userId() const noexcept {
     return connection_.userId();
 }
 
+std::uint32_t NetworkClient::latencyMs() const noexcept {
+    return connection_.latencyMs();
+}
+
 bool NetworkClient::sendInput(std::uint8_t inputMask) {
     if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
         return false;
@@ -154,7 +159,7 @@ void NetworkClient::onConnected(
 
 void NetworkClient::onDisconnected(
     std::function<void(DisconnectReason)> callback) {
-    onDisconnectedCallback_ = std::move(callback);
+    onDisconnectedCallbacks_.push_back(std::move(callback));
 }
 
 void NetworkClient::onEntitySpawn(
@@ -332,6 +337,30 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
         case network::OpCode::PONG:
             handlePong(header, payload);
             break;
+
+        case network::OpCode::DISCONNECT: {
+            LOG_DEBUG("[NetworkClient] Received DISCONNECT from server");
+            network::DisconnectReason reason = DisconnectReason::RemoteRequest;
+            if (payload.size() >= sizeof(network::DisconnectPayload)) {
+                try {
+                    auto deserialized =
+                        network::Serializer::deserializeFromNetwork<
+                            network::DisconnectPayload>(payload);
+                    reason = static_cast<DisconnectReason>(deserialized.reason);
+                } catch (...) {
+                    // If deserialization fails, keep default reason
+                }
+            }
+
+            queueCallback([this, reason]() {
+                for (const auto& cb : onDisconnectedCallbacks_) {
+                    if (cb) cb(reason);
+                }
+            });
+            connection_.reset();
+            serverEndpoint_.reset();
+            break;
+        }
 
         default:
             break;
@@ -584,6 +613,18 @@ void NetworkClient::flushOutgoing() {
 
     auto packets = connection_.getOutgoingPackets();
     for (auto& pkt : packets) {
+        if (pkt.data.size() >= network::kHeaderSize) {
+            network::Header hdr;
+            std::memcpy(&hdr, pkt.data.data(), network::kHeaderSize);
+            auto opcode = static_cast<network::OpCode>(hdr.opcode);
+            if (opcode == network::OpCode::PING && connection_.isConnected()) {
+                auto seq = network::ByteOrderSpec::fromNetwork(hdr.seqId);
+                auto ack = network::ByteOrderSpec::fromNetwork(hdr.ackId);
+                LOG_DEBUG("[NetworkClient] Sending PING keepalive seqId="
+                          << seq << " ack=" << ack
+                          << " missedPongs=" << connection_.missedPingCount());
+            }
+        }
         socket_->asyncSendTo(pkt.data, *serverEndpoint_,
                              [](network::Result<std::size_t> result) {
                                  // Fire and forget for now
