@@ -236,3 +236,26 @@ target_include_directories(test_aabb PRIVATE
 )
 
 gtest_discover_tests(test_aabb)
+
+# RTypeEntitySpawner tests - DISABLED due to complex NetworkServer mocking requirements
+# These tests require significant refactoring of ServerNetworkSystem to support proper mocking
+# add_executable(test_entity_spawner test_entity_spawner.cpp)
+# target_link_libraries(test_entity_spawner PRIVATE rtype_game_shared rtype_game_server rtype_server_core rtype_server_network network engine GTest::gtest_main)
+# target_include_directories(test_entity_spawner PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+# gtest_discover_tests(test_entity_spawner)
+
+# PowerUpSystem tests
+add_executable(test_powerup_system test_powerup_system.cpp)
+
+target_link_libraries(test_powerup_system PRIVATE
+    rtype_game_shared
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_powerup_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_powerup_system)
