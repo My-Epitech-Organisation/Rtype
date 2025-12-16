@@ -157,10 +157,8 @@ void RtypeGameScene::update() {
     std::uint8_t inputMask = getInputMask();
 
     if (_networkSystem && _networkSystem->isConnected()) {
-        if (inputMask != _lastInputMask) {
-            _networkSystem->sendInput(inputMask);
-            _lastInputMask = inputMask;
-        }
+        _networkSystem->sendInput(inputMask);
+        _lastInputMask = inputMask;
     }
 }
 
