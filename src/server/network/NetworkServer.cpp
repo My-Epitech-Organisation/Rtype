@@ -70,8 +70,12 @@ void NetworkServer::stop() {
     }
 
     if (socket_) {
+        socket_->cancel();
+        ioContext_.poll();
         socket_->close();
     }
+
+    ioContext_.stop();
 }
 
 bool NetworkServer::isRunning() const noexcept { return running_; }
@@ -408,11 +412,12 @@ void NetworkServer::queueCallback(std::function<void()> callback) {
 }
 
 void NetworkServer::startReceive() {
-    if (receiveInProgress_ || !socket_->isOpen()) {
+    if (receiveInProgress_.load(std::memory_order_acquire) ||
+        !socket_->isOpen()) {
         return;
     }
 
-    receiveInProgress_ = true;
+    receiveInProgress_.store(true, std::memory_order_release);
     receiveBuffer_->resize(network::kMaxPacketSize);
 
     socket_->asyncReceiveFrom(receiveBuffer_, receiveSender_,
@@ -422,7 +427,7 @@ void NetworkServer::startReceive() {
 }
 
 void NetworkServer::handleReceive(network::Result<std::size_t> result) {
-    receiveInProgress_ = false;
+    receiveInProgress_.store(false, std::memory_order_release);
 
     if (result && running_) {
         std::size_t bytesReceived = result.value();
@@ -721,6 +726,8 @@ void NetworkServer::removeClient(std::uint32_t userId) {
     std::string key = keyIt->second;
     userIdToKey_.erase(keyIt);
     clients_.erase(key);
+
+    freeUserIds_.push_back(userId);
 }
 
 void NetworkServer::checkTimeouts() {
@@ -818,6 +825,14 @@ void NetworkServer::broadcastToAll(network::OpCode opcode,
 }
 
 std::uint32_t NetworkServer::nextUserId() {
+    std::lock_guard<std::mutex> lock(clientsMutex_);
+
+    if (!freeUserIds_.empty()) {
+        std::uint32_t id = freeUserIds_.back();
+        freeUserIds_.pop_back();
+        return id;
+    }
+
     std::uint32_t id = nextUserIdCounter_++;
 
     if (nextUserIdCounter_ >= network::kMaxClientUserId) {
