@@ -5,4 +5,4 @@
 
 #pragma once
 
-#include "../../lib/ecs/src/ECS.hpp"
+#include "ECS.hpp"

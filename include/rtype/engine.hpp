@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "../../lib/engine/src/AGameEngine.hpp"
-#include "../../lib/engine/src/ASystem.hpp"
-#include "../../lib/engine/src/IGameEngine.hpp"
-#include "../../lib/engine/src/ISystem.hpp"
-#include "../../lib/engine/src/GameEngineFactory.hpp"
+#include "AGameEngine.hpp"
+#include "ASystem.hpp"
+#include "IGameEngine.hpp"
+#include "ISystem.hpp"
+#include "GameEngineFactory.hpp"

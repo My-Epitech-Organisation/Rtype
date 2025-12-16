@@ -4,6 +4,6 @@
 
 #pragma once
 
-#include "../../lib/network/src/Packet.hpp"
-#include "../../lib/network/src/Protocol.hpp"
-#include "../../lib/network/src/Serializer.hpp"
+#include "Packet.hpp"
+#include "Protocol.hpp"
+#include "Serializer.hpp"

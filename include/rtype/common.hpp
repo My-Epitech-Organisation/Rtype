@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "../../lib/common/src/Logger/Logger.hpp"
-#include "../../lib/common/src/SafeQueue/SafeQueue.hpp"
-#include "../../lib/common/src/Types.hpp"
-#include "../../lib/common/src/Config/TomlParser.hpp"
-#include "../../lib/common/src/ArgParser/ArgParser.hpp"
-#include "../../lib/common/src/ArgParser/NumberParser.hpp"
+#include "Logger/Logger.hpp"
+#include "SafeQueue/SafeQueue.hpp"
+#include "Types.hpp"
+#include "Config/TomlParser.hpp"
+#include "ArgParser/ArgParser.hpp"
+#include "ArgParser/NumberParser.hpp"
