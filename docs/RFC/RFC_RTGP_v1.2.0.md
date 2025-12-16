@@ -32,6 +32,18 @@ document are to be interpreted as described in
 * **String:** NOT SUPPORTED in standard packets to avoid allocation
   overhead, unless specified in the payload.
 
+#### **DisconnectReason Enum**
+
+The `DisconnectReason` is a uint8 value indicating why a connection was terminated:
+
+| Value | Name | Description |
+| :---- | :---- | :---- |
+| 0 | Timeout | Connection timed out due to lack of response |
+| 1 | MaxRetriesExceeded | Maximum retry attempts exceeded |
+| 2 | ProtocolError | Protocol violation or invalid packet |
+| 3 | RemoteRequest | Disconnect requested by remote peer |
+| 4 | LocalRequest | Disconnect requested locally |
+
 ### **2.2. Byte Order**
 
 All multi-byte numeric fields **MUST** be transmitted in **Network Byte
@@ -135,7 +147,8 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 * **Sender:** Client OR Server
 * **Reliability:** **RELIABLE** (Flag 0x01)
 * **Description:** Graceful termination of the session.
-* **Payload:** Empty.
+* **Payload:**
+  * Reason (uint8): DisconnectReason enum value indicating why the connection is being terminated.
 
 #### **0x04 - C\_GET\_USERS**
 
