@@ -91,6 +91,7 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
         socket_->cancel();
         socket_->close();
         socket_ = network::createAsyncSocket(ioContext_.get());
+        receiveInProgress_.store(false, std::memory_order_release);
     }
 
     auto bindResult = socket_->bind(0);
@@ -98,6 +99,7 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
         LOG_ERROR("[NetworkClient] Failed to bind socket");
         socket_->close();
         socket_ = network::createAsyncSocket(ioContext_.get());
+        receiveInProgress_.store(false, std::memory_order_release);
         return false;
     }
 
@@ -111,6 +113,7 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
         socket_->cancel();
         socket_->close();
         socket_ = network::createAsyncSocket(ioContext_.get());
+        receiveInProgress_.store(false, std::memory_order_release);
         serverEndpoint_.reset();
         connection_.reset();
         return false;
@@ -138,6 +141,7 @@ void NetworkClient::disconnect() {
         socket_->cancel();
         socket_->close();
         socket_ = network::createAsyncSocket(ioContext_.get());
+        receiveInProgress_.store(false, std::memory_order_release);
     }
 }
 
