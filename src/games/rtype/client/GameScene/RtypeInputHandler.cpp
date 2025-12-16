@@ -150,13 +150,12 @@ bool RtypeInputHandler::handleKeyReleasedEvent(
 void RtypeInputHandler::handleKeyPressedEvent(const sf::Event& event) {
     if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
         pressedKeys_.insert(keyPressed->code);
-    } else if (const auto* keyReleased = event.getIf<sf::Event::KeyReleased>()) {
+    } else if (const auto* keyReleased =
+                   event.getIf<sf::Event::KeyReleased>()) {
         pressedKeys_.erase(keyReleased->code);
     }
 }
 
-void RtypeInputHandler::clearKeyStates() {
-    pressedKeys_.clear();
-}
+void RtypeInputHandler::clearKeyStates() { pressedKeys_.clear(); }
 
 }  // namespace rtype::games::rtype::client
