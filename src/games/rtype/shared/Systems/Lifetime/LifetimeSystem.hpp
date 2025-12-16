@@ -13,8 +13,6 @@
 
 namespace rtype::games::rtype::shared {
 
-static constexpr size_t PARALLEL_THRESHOLD = 100;
-
 /**
  * @class LifetimeSystem
  * @brief System that destroys entities when their lifetime expires

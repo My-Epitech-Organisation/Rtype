@@ -12,6 +12,10 @@
 
 namespace rtype::games::rtype::shared {
 
+namespace {
+    constexpr size_t PARALLEL_THRESHOLD = 100;
+}
+
 void LifetimeSystem::update(ECS::Registry& registry, float deltaTime) {
     if (deltaTime < 0) {
         return;

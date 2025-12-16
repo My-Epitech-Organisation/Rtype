@@ -9,6 +9,10 @@
 
 namespace rtype::games::rtype::shared {
 
+namespace {
+    constexpr size_t PARALLEL_THRESHOLD = 100;
+}
+
 void MovementSystem::update(ECS::Registry& registry, float deltaTime) {
     const size_t entityCount = registry.countComponents<TransformComponent>();
 

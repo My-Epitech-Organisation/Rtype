@@ -11,6 +11,10 @@
 
 namespace rtype::games::rtype::shared {
 
+namespace {
+    constexpr size_t PARALLEL_THRESHOLD = 50;
+}
+
 void AISystem::update(ECS::Registry& registry, float deltaTime) {
     const size_t entityCount = registry.countComponents<AIComponent>();
     const auto& behaviorRegistry = BehaviorRegistry::instance();

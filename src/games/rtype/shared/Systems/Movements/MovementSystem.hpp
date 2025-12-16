@@ -13,7 +13,6 @@
 #include "../../Components/VelocityComponent.hpp"
 
 namespace rtype::games::rtype::shared {
-static constexpr size_t PARALLEL_THRESHOLD = 100;
 /**
  * @class MovementSystem
  * @brief System that updates entity positions based on velocity

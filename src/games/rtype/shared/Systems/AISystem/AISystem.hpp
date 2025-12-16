@@ -16,8 +16,6 @@
 
 namespace rtype::games::rtype::shared {
 
-static constexpr size_t PARALLEL_THRESHOLD = 50;
-
 /**
  * @class AISystem
  * @brief System that processes AI behavior for entities
