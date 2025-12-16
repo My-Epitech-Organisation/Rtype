@@ -14,7 +14,7 @@
 #include "../shared/Components/HealthComponent.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
 #include "../shared/Components/PlayerIdComponent.hpp"
-#include "../shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "../shared/Components/PowerUpComponent.hpp"
 #include "../shared/Components/Tags.hpp"
 #include "../shared/Components/TransformComponent.hpp"
@@ -41,7 +41,7 @@ RTypeEntitySpawner::RTypeEntitySpawner(
     using shared::NetworkIdComponent;
     using shared::PlayerIdComponent;
     using shared::PlayerTag;
-    using shared::Position;
+    using shared::TransformComponent;
     using shared::ShootCooldownComponent;
     using shared::TransformComponent;
     using shared::VelocityComponent;
@@ -59,7 +59,6 @@ RTypeEntitySpawner::RTypeEntitySpawner(
     float spawnY =
         kSpawnBaseY + static_cast<float>(config.playerIndex) * kSpawnYOffset;
 
-    _registry->emplaceComponent<Position>(playerEntity, spawnX, spawnY);
     _registry->emplaceComponent<TransformComponent>(playerEntity, spawnX,
                                                     spawnY, 0.0F);
     _registry->emplaceComponent<VelocityComponent>(playerEntity, 0.0F, 0.0F);
@@ -197,11 +196,11 @@ RTypeEntitySpawner::getEntityPosition(ECS::Entity entity) const {
         return std::nullopt;
     }
 
-    if (!_registry->hasComponent<shared::Position>(entity)) {
+    if (!_registry->hasComponent<shared::TransformComponent>(entity)) {
         return std::nullopt;
     }
 
-    const auto& pos = _registry->getComponent<shared::Position>(entity);
+    const auto& pos = _registry->getComponent<shared::TransformComponent>(entity);
     return ::rtype::server::EntityPosition{pos.x, pos.y};
 }
 
@@ -242,9 +241,9 @@ void RTypeEntitySpawner::updateAllPlayersMovement(
         return;
     }
 
-    auto view = _registry->view<shared::Position, shared::VelocityComponent>();
+    auto view = _registry->view<shared::TransformComponent, shared::VelocityComponent>();
     view.each([this, deltaTime, &callback](ECS::Entity entity,
-                                           shared::Position& pos,
+                                           shared::TransformComponent& pos,
                                            shared::VelocityComponent& vel) {
         if (vel.vx == 0.0F && vel.vy == 0.0F) {
             return;

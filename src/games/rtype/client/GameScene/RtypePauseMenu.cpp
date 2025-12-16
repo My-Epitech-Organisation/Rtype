@@ -45,7 +45,7 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
     sf::FloatRect bounds = titleText.text.getLocalBounds();
     float centeredX = sectionX + (kSizeXPauseMenu - bounds.size.x) / 2;
     auto& titlePos =
-        registry->getComponent<::rtype::games::rtype::shared::Position>(
+        registry->getComponent<::rtype::games::rtype::shared::TransformComponent>(
             titleEntity);
     titlePos.x = centeredX;
     pauseEntities.push_back(titleEntity);
@@ -54,7 +54,7 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
         registry,
         Text(assetsManager->fontManager->get("main_font"), sf::Color::White, 30,
              "Menu"),
-        ::rtype::games::rtype::shared::Position(
+        ::rtype::games::rtype::shared::TransformComponent(
             sectionX + ((kSizeXPauseMenu / 2) - (150 / 2)),
             sectionY + kSizeYPauseMenu - 75),
         Rectangle({150, 55}, sf::Color::Blue, sf::Color::Red), assetsManager,
@@ -71,7 +71,7 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
         registry,
         Text(assetsManager->fontManager->get("main_font"), sf::Color::White, 30,
              "Resume"),
-        ::rtype::games::rtype::shared::Position(
+        ::rtype::games::rtype::shared::TransformComponent(
             sectionX + ((kSizeXPauseMenu / 2) - (150 / 2)),
             sectionY + kSizeYPauseMenu - 150),
         Rectangle({150, 55}, sf::Color(0, 100, 200), sf::Color(0, 140, 255)),

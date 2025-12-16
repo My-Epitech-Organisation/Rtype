@@ -39,7 +39,7 @@ void MainMenuScene::_createAstroneerVessel() {
     this->_registry->emplaceComponent<rtype::games::rtype::client::Image>(
         astroneerVessel,
         this->_assetsManager->textureManager->get("astro_vessel"));
-    this->_registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    this->_registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         astroneerVessel, 1900, 1060);
     this->_registry->emplaceComponent<rtype::games::rtype::client::Size>(
         astroneerVessel, 0.3, 0.3);
@@ -67,7 +67,7 @@ void MainMenuScene::_createFakePlayer() {
                 fakePlayer, std::pair<int, int>({0, 0}),
                 std::pair<int, int>({33, 17}));
         this->_registry
-            ->emplaceComponent<rtype::games::rtype::shared::Position>(
+            ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
                 fakePlayer, (-10 * (distrib150(gen) + 50)),
                 72 * (distrib15(gen) % 15));
         this->_registry->emplaceComponent<rtype::games::rtype::client::Size>(
@@ -149,7 +149,7 @@ void MainMenuScene::_createConnectionPanel(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 28, "Connect"),
-        rtype::games::rtype::shared::Position(kConnectionPanelX + 125.f,
+        rtype::games::rtype::shared::TransformComponent(kConnectionPanelX + 125.f,
                                               kConnectionPanelY + 260.f),
         rtype::games::rtype::client::Rectangle({200, 60}, sf::Color(0, 150, 0),
                                                sf::Color(0, 200, 0)),
@@ -289,7 +289,7 @@ void MainMenuScene::update(float dt) {
 
 void MainMenuScene::render(std::shared_ptr<sf::RenderWindow> window) {
     auto view = _registry->view<rtype::games::rtype::client::TextInput,
-                                rtype::games::rtype::shared::Position,
+                                rtype::games::rtype::shared::TransformComponent,
                                 rtype::games::rtype::client::TextInputTag>();
 
     view.each([window, this](auto entity, auto& input, auto& pos, auto) {
@@ -330,7 +330,7 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Play"),
-        rtype::games::rtype::shared::Position(100, 350),
+        rtype::games::rtype::shared::TransformComponent(100, 350),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager, std::function<void()>([switchToScene]() {
@@ -346,7 +346,7 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "How to Play"),
-        rtype::games::rtype::shared::Position(100, 470),
+        rtype::games::rtype::shared::TransformComponent(100, 470),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager, std::function<void()>([switchToScene]() {
@@ -362,7 +362,7 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Settings"),
-        rtype::games::rtype::shared::Position(100, 590),
+        rtype::games::rtype::shared::TransformComponent(100, 590),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager, std::function<void()>([switchToScene]() {
@@ -378,7 +378,7 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Quit"),
-        rtype::games::rtype::shared::Position(100, 710),
+        rtype::games::rtype::shared::TransformComponent(100, 710),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager,

@@ -13,7 +13,7 @@
 #include "../Components/BoxingComponent.hpp"
 #include "../Components/ImageComponent.hpp"
 #include "../shared/Components/BoundingBoxComponent.hpp"
-#include "../shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "Graphic/Accessibility.hpp"
 
 namespace rtype::games::rtype::client {
@@ -32,7 +32,7 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
     }
 
     registry
-        .view<::rtype::games::rtype::shared::Position,
+        .view<::rtype::games::rtype::shared::TransformComponent,
               ::rtype::games::rtype::shared::BoundingBoxComponent>()
         .each([this](auto /*entt*/, const auto& pos, const auto& bbox) {
             sf::RectangleShape hitbox;

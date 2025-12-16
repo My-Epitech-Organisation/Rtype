@@ -14,9 +14,9 @@ void ProjectileSystem::update(ECS::Registry& registry, float deltaTime) {
         return;
     }
 
-    auto view = registry.view<Position, VelocityComponent, ProjectileTag>();
+    auto view = registry.view<TransformComponent, VelocityComponent, ProjectileTag>();
 
-    view.each([deltaTime](ECS::Entity /*entity*/, Position& position,
+    view.each([deltaTime](ECS::Entity /*entity*/, TransformComponent& position,
                           const VelocityComponent& velocity,
                           const ProjectileTag& /*tag*/) {
         position.x += velocity.vx * deltaTime;

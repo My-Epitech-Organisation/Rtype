@@ -13,7 +13,7 @@
 #include <SFML/Graphics/Color.hpp>
 
 #include "Components/HealthComponent.hpp"
-#include "Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "Components/SoundComponent.hpp"
 #include "Components/VelocityComponent.hpp"
 #include "Logger/Macros.hpp"
@@ -29,7 +29,7 @@
 
 namespace rtype::client {
 
-using Position = rtype::games::rtype::shared::Position;
+using Position = rtype::games::rtype::shared::TransformComponent;
 using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
 ClientNetworkSystem::ClientNetworkSystem(
@@ -254,9 +254,9 @@ void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
         auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
         audioLib->playSFX(*soundComp.deathSFX);
     }
-    if (registry_->hasComponent<games::rtype::shared::Position>(entity)) {
+    if (registry_->hasComponent<games::rtype::shared::TransformComponent>(entity)) {
         const auto& pos =
-            registry_->getComponent<games::rtype::shared::Position>(entity);
+            registry_->getComponent<games::rtype::shared::TransformComponent>(entity);
         games::rtype::client::VisualCueFactory::createFlash(
             *registry_, {pos.x, pos.y}, sf::Color(255, 80, 0), 90.f, 0.45f, 20);
     }
@@ -362,10 +362,10 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
     }
 
     if (previousHealth.has_value() && previousHealth.value() > event.current &&
-        registry_->hasComponent<rtype::games::rtype::shared::Position>(
+        registry_->hasComponent<rtype::games::rtype::shared::TransformComponent>(
             entity)) {
         const auto& pos =
-            registry_->getComponent<rtype::games::rtype::shared::Position>(
+            registry_->getComponent<rtype::games::rtype::shared::TransformComponent>(
                 entity);
         games::rtype::client::VisualCueFactory::createFlash(
             *registry_, {pos.x, pos.y}, sf::Color(255, 80, 80), 70.f, 0.25f,
@@ -415,10 +415,10 @@ void ClientNetworkSystem::handlePowerUpEvent(const PowerUpEvent& event) {
         powerUpType == rtype::games::rtype::shared::PowerUpType::Shield;
     active.hasOriginalCooldown = false;
 
-    if (registry_->hasComponent<rtype::games::rtype::shared::Position>(
+    if (registry_->hasComponent<rtype::games::rtype::shared::TransformComponent>(
             entity)) {
         const auto& pos =
-            registry_->getComponent<rtype::games::rtype::shared::Position>(
+            registry_->getComponent<rtype::games::rtype::shared::TransformComponent>(
                 entity);
         sf::Color cueColor = sf::Color(180, 240, 255);
         switch (powerUpType) {

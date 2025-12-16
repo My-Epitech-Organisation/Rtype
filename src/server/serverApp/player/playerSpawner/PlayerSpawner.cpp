@@ -13,7 +13,7 @@
 #include "games/rtype/shared/Components/CooldownComponent.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
@@ -22,7 +22,7 @@
 
 namespace rtype::server {
 
-using Position = rtype::games::rtype::shared::Position;
+using Position = rtype::games::rtype::shared::TransformComponent;
 using TransformComponent = rtype::games::rtype::shared::TransformComponent;
 using Velocity = rtype::games::rtype::shared::VelocityComponent;
 using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;

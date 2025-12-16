@@ -16,7 +16,7 @@
 
 #include "../shared/Components/EntityType.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
-#include "../shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "../shared/Components/Tags.hpp"
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"

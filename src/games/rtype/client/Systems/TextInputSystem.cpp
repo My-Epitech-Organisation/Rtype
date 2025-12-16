@@ -40,10 +40,10 @@ bool TextInputSystem::handleEvent(ECS::Registry& registry,
 }
 
 void TextInputSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
-    auto view = registry.view<TextInput, shared::Position, TextInputTag>();
+    auto view = registry.view<TextInput, shared::TransformComponent, TextInputTag>();
 
     view.each(
-        [this](auto /*entity*/, TextInput& input, shared::Position& pos, auto) {
+        [this](auto /*entity*/, TextInput& input, shared::TransformComponent& pos, auto) {
             input.background.setPosition({pos.x, pos.y});
             input.text.setPosition({pos.x + 10.f, pos.y + 5.f});
             _window->draw(input.background);
@@ -57,7 +57,7 @@ std::optional<ECS::Entity> TextInputSystem::getFocusedInput() const {
 
 void TextInputSystem::handleClick(ECS::Registry& registry, float mouseX,
                                   float mouseY) {
-    auto view = registry.view<TextInput, shared::Position, TextInputTag>();
+    auto view = registry.view<TextInput, shared::TransformComponent, TextInputTag>();
     view.each(
         [](auto, TextInput& input, auto, auto) { input.setFocus(false); });
     _focusedInput = std::nullopt;
@@ -68,7 +68,7 @@ void TextInputSystem::handleClick(ECS::Registry& registry, float mouseX,
 
     view.each([this, mouseX, mouseY, &topInput, &highestZIndex, &foundInput,
                &registry](ECS::Entity entity, TextInput& input,
-                          shared::Position& pos, auto) {
+                          shared::TransformComponent& pos, auto) {
         sf::FloatRect bounds = input.background.getGlobalBounds();
         bounds.position = {pos.x, pos.y};
 
@@ -87,12 +87,12 @@ void TextInputSystem::handleClick(ECS::Registry& registry, float mouseX,
 
     if (foundInput) {
         auto interactiveView =
-            registry.view<Rectangle, shared::Position, UserEvent>();
+            registry.view<Rectangle, shared::TransformComponent, UserEvent>();
         bool blockedByOther = false;
 
         interactiveView.each([mouseX, mouseY, highestZIndex, &blockedByOther,
                               &registry](ECS::Entity entity, Rectangle& rect,
-                                         shared::Position& pos, auto) {
+                                         shared::TransformComponent& pos, auto) {
             if (registry.hasComponent<TextInputTag>(entity)) {
                 return;
             }

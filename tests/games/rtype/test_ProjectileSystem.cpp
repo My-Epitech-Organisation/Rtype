@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 #include "../../../src/games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
-#include "../../../src/games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "../../../src/games/rtype/shared/Components/VelocityComponent.hpp"
 #include "../../../src/games/rtype/shared/Components/Tags.hpp"
 #include "../../../../lib/ecs/src/ECS.hpp"

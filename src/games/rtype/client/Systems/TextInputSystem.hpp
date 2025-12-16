@@ -15,7 +15,7 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 
-#include "Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "Components/TextInputComponent.hpp"
 #include "ECS.hpp"
 

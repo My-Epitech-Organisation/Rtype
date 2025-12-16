@@ -223,7 +223,7 @@ void RtypeGameScene::setupHud() {
     const sf::Vector2f barPos{20.f, 20.f};
 
     auto bg = _registry->spawnEntity();
-    _registry->emplaceComponent<rs::Position>(bg, barPos.x, barPos.y);
+    _registry->emplaceComponent<rs::TransformComponent>(bg, barPos.x, barPos.y);
     _registry->emplaceComponent<Rectangle>(
         bg, std::pair<float, float>{barWidth, barHeight},
         sf::Color(30, 35, 45, 220), sf::Color(30, 35, 45, 220));
@@ -233,7 +233,7 @@ void RtypeGameScene::setupHud() {
     _healthBarBgEntity = bg;
 
     auto fill = _registry->spawnEntity();
-    _registry->emplaceComponent<rs::Position>(fill, barPos.x, barPos.y);
+    _registry->emplaceComponent<rs::TransformComponent>(fill, barPos.x, barPos.y);
     _registry->emplaceComponent<Rectangle>(
         fill, std::pair<float, float>{barWidth, barHeight},
         sf::Color(90, 220, 140, 240), sf::Color(90, 220, 140, 240));
@@ -323,7 +323,7 @@ void RtypeGameScene::setupDamageVignette() {
         const sf::Color vignetteColor(255, 0, 0, 0);
 
         auto top = _registry->spawnEntity();
-        _registry->emplaceComponent<rs::Position>(top, 0.f, inset);
+        _registry->emplaceComponent<rs::TransformComponent>(top, 0.f, inset);
         _registry->emplaceComponent<Rectangle>(
             top, std::pair<float, float>{screenWidth, thickness}, vignetteColor,
             vignetteColor);
@@ -334,7 +334,7 @@ void RtypeGameScene::setupDamageVignette() {
         _vignetteEntities.push_back(top);
 
         auto bottom = _registry->spawnEntity();
-        _registry->emplaceComponent<rs::Position>(
+        _registry->emplaceComponent<rs::TransformComponent>(
             bottom, 0.f, screenHeight - inset - thickness);
         _registry->emplaceComponent<Rectangle>(
             bottom, std::pair<float, float>{screenWidth, thickness},
@@ -346,7 +346,7 @@ void RtypeGameScene::setupDamageVignette() {
         _vignetteEntities.push_back(bottom);
 
         auto left = _registry->spawnEntity();
-        _registry->emplaceComponent<rs::Position>(left, inset, 0.f);
+        _registry->emplaceComponent<rs::TransformComponent>(left, inset, 0.f);
         _registry->emplaceComponent<Rectangle>(
             left, std::pair<float, float>{thickness, screenHeight},
             vignetteColor, vignetteColor);
@@ -357,7 +357,7 @@ void RtypeGameScene::setupDamageVignette() {
         _vignetteEntities.push_back(left);
 
         auto right = _registry->spawnEntity();
-        _registry->emplaceComponent<rs::Position>(
+        _registry->emplaceComponent<rs::TransformComponent>(
             right, screenWidth - inset - thickness, 0.f);
         _registry->emplaceComponent<Rectangle>(
             right, std::pair<float, float>{thickness, screenHeight},
@@ -397,9 +397,9 @@ void RtypeGameScene::refreshDamageVignetteLayout() {
         if (entityIndex < static_cast<int>(_vignetteEntities.size())) {
             auto ent = _vignetteEntities[entityIndex++];
             if (_registry->isAlive(ent) &&
-                _registry->hasComponent<rs::Position>(ent) &&
+                _registry->hasComponent<rs::TransformComponent>(ent) &&
                 _registry->hasComponent<Rectangle>(ent)) {
-                auto& pos = _registry->getComponent<rs::Position>(ent);
+                auto& pos = _registry->getComponent<rs::TransformComponent>(ent);
                 pos.x = viewLeft;
                 pos.y = viewTop + inset;
                 auto& rect = _registry->getComponent<Rectangle>(ent);
@@ -410,9 +410,9 @@ void RtypeGameScene::refreshDamageVignetteLayout() {
         if (entityIndex < static_cast<int>(_vignetteEntities.size())) {
             auto ent = _vignetteEntities[entityIndex++];
             if (_registry->isAlive(ent) &&
-                _registry->hasComponent<rs::Position>(ent) &&
+                _registry->hasComponent<rs::TransformComponent>(ent) &&
                 _registry->hasComponent<Rectangle>(ent)) {
-                auto& pos = _registry->getComponent<rs::Position>(ent);
+                auto& pos = _registry->getComponent<rs::TransformComponent>(ent);
                 pos.x = viewLeft;
                 pos.y = viewTop + screenHeight - inset - thickness;
                 auto& rect = _registry->getComponent<Rectangle>(ent);
@@ -423,9 +423,9 @@ void RtypeGameScene::refreshDamageVignetteLayout() {
         if (entityIndex < static_cast<int>(_vignetteEntities.size())) {
             auto ent = _vignetteEntities[entityIndex++];
             if (_registry->isAlive(ent) &&
-                _registry->hasComponent<rs::Position>(ent) &&
+                _registry->hasComponent<rs::TransformComponent>(ent) &&
                 _registry->hasComponent<Rectangle>(ent)) {
-                auto& pos = _registry->getComponent<rs::Position>(ent);
+                auto& pos = _registry->getComponent<rs::TransformComponent>(ent);
                 pos.x = viewLeft + inset;
                 pos.y = viewTop;
                 auto& rect = _registry->getComponent<Rectangle>(ent);
@@ -436,9 +436,9 @@ void RtypeGameScene::refreshDamageVignetteLayout() {
         if (entityIndex < static_cast<int>(_vignetteEntities.size())) {
             auto ent = _vignetteEntities[entityIndex++];
             if (_registry->isAlive(ent) &&
-                _registry->hasComponent<rs::Position>(ent) &&
+                _registry->hasComponent<rs::TransformComponent>(ent) &&
                 _registry->hasComponent<Rectangle>(ent)) {
-                auto& pos = _registry->getComponent<rs::Position>(ent);
+                auto& pos = _registry->getComponent<rs::TransformComponent>(ent);
                 pos.x = viewLeft + screenWidth - inset - thickness;
                 pos.y = viewTop;
                 auto& rect = _registry->getComponent<Rectangle>(ent);
@@ -564,13 +564,13 @@ void RtypeGameScene::spawnDamagePopup(int damage) {
         return;
     }
 
-    if (!_registry->hasComponent<rs::Position>(*playerEntity)) {
+    if (!_registry->hasComponent<rs::TransformComponent>(*playerEntity)) {
         LOG_DEBUG(
             "[RtypeGameScene] Player entity has no Position for damage popup");
         return;
     }
 
-    const auto& pos = _registry->getComponent<rs::Position>(*playerEntity);
+    const auto& pos = _registry->getComponent<rs::TransformComponent>(*playerEntity);
     LOG_DEBUG("[RtypeGameScene] Player position for popup: (" << pos.x << ", "
                                                               << pos.y << ")");
 
