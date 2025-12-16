@@ -15,6 +15,8 @@
 
 namespace rtype::games::rtype::shared {
 
+static constexpr size_t PARALLEL_THRESHOLD = 200;
+
 /**
  * @class ProjectileSystem
  * @brief System that handles projectile movement and updates

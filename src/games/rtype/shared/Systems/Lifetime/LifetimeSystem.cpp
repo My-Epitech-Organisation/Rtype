@@ -16,19 +16,34 @@ void LifetimeSystem::update(ECS::Registry& registry, float deltaTime) {
     if (deltaTime < 0) {
         return;
     }
-    auto view = registry.view<LifetimeComponent>();
+    ECS::CommandBuffer cmdBuffer(std::ref(registry));
+    const size_t entityCount = registry.countComponents<LifetimeComponent>();
 
-    view.each([deltaTime, &registry](auto entity, LifetimeComponent& lifetime) {
-        lifetime.remainingTime -= deltaTime;
-        if (lifetime.remainingTime <= 0.0F) {
-            if (!registry.hasComponent<DestroyTag>(entity)) {
+    if (entityCount >= PARALLEL_THRESHOLD) {
+        auto view = registry.parallelView<LifetimeComponent>();
+        view.each([deltaTime, &cmdBuffer](auto entity, LifetimeComponent& lifetime) {
+            lifetime.remainingTime -= deltaTime;
+            if (lifetime.remainingTime <= 0.0F) {
                 LOG_DEBUG("[LifetimeSystem] Entity " +
                           std::to_string(entity.id) +
                           " expired (lifetime <= 0)");
-                registry.emplaceComponent<DestroyTag>(entity, DestroyTag{});
+                cmdBuffer.emplaceComponentDeferred<DestroyTag>(entity, DestroyTag{});
             }
-        }
-    });
+        });
+    } else {
+        auto view = registry.view<LifetimeComponent>();
+        view.each([deltaTime, &cmdBuffer](auto entity, LifetimeComponent& lifetime) {
+            lifetime.remainingTime -= deltaTime;
+            if (lifetime.remainingTime <= 0.0F) {
+                LOG_DEBUG("[LifetimeSystem] Entity " +
+                          std::to_string(entity.id) +
+                          " expired (lifetime <= 0)");
+                cmdBuffer.emplaceComponentDeferred<DestroyTag>(entity, DestroyTag{});
+            }
+        });
+    }
+
+    cmdBuffer.flush();
 }
 
 }  // namespace rtype::games::rtype::shared
