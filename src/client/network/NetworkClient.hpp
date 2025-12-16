@@ -8,6 +8,7 @@
 #ifndef SRC_CLIENT_NETWORK_NETWORKCLIENT_HPP_
 #define SRC_CLIENT_NETWORK_NETWORKCLIENT_HPP_
 
+#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -323,7 +324,7 @@ class NetworkClient {
 
     std::shared_ptr<network::Buffer> receiveBuffer_;
     std::shared_ptr<network::Endpoint> receiveSender_;
-    bool receiveInProgress_{false};
+    std::atomic<bool> receiveInProgress_{false};
 
     std::mutex callbackMutex_;
     std::queue<std::function<void()>> callbackQueue_;

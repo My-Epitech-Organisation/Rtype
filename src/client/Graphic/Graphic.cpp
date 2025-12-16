@@ -19,6 +19,7 @@
 #include "SceneManager/SceneException.hpp"
 #include "games/rtype/client/AllComponents.hpp"
 #include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"
+#include "games/rtype/client/GameScene/RtypeInputHandler.hpp"
 #include "games/rtype/client/PauseState.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
@@ -29,6 +30,9 @@ void Graphic::_pollEvents() {
         if (!event) return;
         if (event->is<sf::Event::Closed>()) {
             this->_window->close();
+        }
+        if (event->is<sf::Event::FocusLost>()) {
+            rtype::games::rtype::client::RtypeInputHandler::clearKeyStates();
         }
         this->_eventSystem->setEvent(*event);
         this->_eventSystem->update(*this->_registry, 0.f);
