@@ -477,9 +477,7 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
                       << header.userId << " ackId=" << header.ackId
                       << " (seqId=" << header.seqId << ")");
             client->reliableChannel.recordAck(header.ackId);
-            if (opcode != network::OpCode::PING) {
-                client->lastActivity = std::chrono::steady_clock::now();
-            }
+            client->lastActivity = std::chrono::steady_clock::now();
         }
     }
 
