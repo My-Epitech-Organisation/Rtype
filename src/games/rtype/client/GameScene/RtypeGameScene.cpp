@@ -169,6 +169,9 @@ void RtypeGameScene::render(std::shared_ptr<sf::RenderWindow> window) {
 }
 
 void RtypeGameScene::pollEvents(const sf::Event& event) {
+    if (event.is<sf::Event::KeyPressed>() || event.is<sf::Event::KeyReleased>()) {
+        RtypeInputHandler::handleKeyPressedEvent(event);
+    }
     if (event.is<sf::Event::KeyReleased>() ||
         event.is<sf::Event::JoystickButtonReleased>()) {
         RtypeInputHandler::handleKeyReleasedEvent(event, _keybinds, _registry);
