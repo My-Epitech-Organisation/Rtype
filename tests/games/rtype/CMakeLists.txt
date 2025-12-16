@@ -88,6 +88,23 @@ target_include_directories(test_systems PRIVATE
 
 gtest_discover_tests(test_systems)
 
+# Wave System tests (wave-based spawning and GameOver logic)
+add_executable(test_wave_system test_wave_system.cpp)
+
+target_link_libraries(test_wave_system PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_wave_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+gtest_discover_tests(test_wave_system)
+
 # Collision tests
 add_executable(test_collision test_collision.cpp)
 
