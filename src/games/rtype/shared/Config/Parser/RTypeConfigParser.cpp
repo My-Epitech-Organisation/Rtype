@@ -220,20 +220,22 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
         "assets/" + _parser.getString(table, "Textures", "Background",
                                       defaults.assets.textures.background);
     config.assets.textures.sun =
-    "assets/" + _parser.getString(table, "Textures", "Sun",
-                                  defaults.assets.textures.sun);
+        "assets/" + _parser.getString(table, "Textures", "Sun",
+                                      defaults.assets.textures.sun);
     config.assets.textures.bigAsteroids =
-    "assets/" + _parser.getString(table, "Textures", "BigAsteroids",
-                              defaults.assets.textures.bigAsteroids);
+        "assets/" + _parser.getString(table, "Textures", "BigAsteroids",
+                                      defaults.assets.textures.bigAsteroids);
     config.assets.textures.smallAsteroids =
-    "assets/" + _parser.getString(table, "Textures", "SmallAsteroids",
-                              defaults.assets.textures.smallAsteroids);
+        "assets/" + _parser.getString(table, "Textures", "SmallAsteroids",
+                                      defaults.assets.textures.smallAsteroids);
     config.assets.textures.fstPlanAsteroids =
-    "assets/" + _parser.getString(table, "Textures", "FstPlanAsteroids",
-                              defaults.assets.textures.fstPlanAsteroids);
+        "assets/" +
+        _parser.getString(table, "Textures", "FstPlanAsteroids",
+                          defaults.assets.textures.fstPlanAsteroids);
     config.assets.textures.sndPlanAsteroids =
-    "assets/" + _parser.getString(table, "Textures", "SndPlanAsteroids",
-                              defaults.assets.textures.sndPlanAsteroids);
+        "assets/" +
+        _parser.getString(table, "Textures", "SndPlanAsteroids",
+                          defaults.assets.textures.sndPlanAsteroids);
     config.assets.textures.planet1 =
         "assets/" + _parser.getString(table, "Textures", "Planet1",
                                       defaults.assets.textures.planet1);

@@ -39,8 +39,17 @@ inline constexpr float PARALLAX_BACKGROUND = 0.2f;
 /// @brief Planet layer 1 scroll factor (fastest parallax layer)
 inline constexpr float PARALLAX_PLANET_1 = 0.7f;
 
-/// @brief Planet layer 1 scroll factor (fastest parallax layer)
-inline constexpr float PARALLAX_ASTEROIDS_FST_PLAN = 0.4f;
+/// @brief Big Asteroids plan layer 1 scroll factor (fastest parallax layer)
+inline constexpr float PARALLAX_BIG_ASTEROIDS = 0.7f;
+
+/// @brief Small Asteroids plan layer 1 scroll factor (fastest parallax layer)
+inline constexpr float PARALLAX_SMALL_ASTEROIDS = 0.42f;
+
+/// @brief Asteroids fst plan layer 1 scroll factor (fastest parallax layer)
+inline constexpr float PARALLAX_ASTEROIDS_FST_PLAN = 0.44f;
+
+/// @brief Asteroids snd plan layer 1 scroll factor (fastest parallax layer)
+inline constexpr float PARALLAX_ASTEROIDS_SND_PLAN = 0.35f;
 
 /// @brief Planet layer 2 scroll factor (medium)
 inline constexpr float PARALLAX_PLANET_2 = 0.4f;
@@ -82,7 +91,6 @@ inline constexpr int ZINDEX_SUN = -9;
 
 /// @brief Z-index for first planet asteroids layer
 inline constexpr int ZINDEX_SND_PLAN_ASTEROIDS = -6;
-
 
 /// @brief Z-index for parallax planet layers
 inline constexpr int ZINDEX_PLANETS = -5;
