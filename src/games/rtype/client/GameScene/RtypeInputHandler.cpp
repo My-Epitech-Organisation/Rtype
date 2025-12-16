@@ -23,6 +23,9 @@
 
 namespace rtype::games::rtype::client {
 
+// Initialize static member
+std::unordered_set<sf::Keyboard::Key> RtypeInputHandler::pressedKeys_;
+
 std::uint8_t RtypeInputHandler::getInputMask(
     std::shared_ptr<KeyboardActions> keybinds) {
     sf::Joystick::update();
@@ -34,30 +37,27 @@ std::uint8_t RtypeInputHandler::getInputMask(
 
     if (mode == InputMode::Keyboard) {
         auto keyMoveUp = keybinds->getKeyBinding(GameAction::MOVE_UP);
-        if (keyMoveUp.has_value() && sf::Keyboard::isKeyPressed(*keyMoveUp)) {
+        if (keyMoveUp.has_value() && pressedKeys_.count(*keyMoveUp) > 0) {
             inputMask |= ::rtype::network::InputMask::kUp;
         }
 
         auto keyMoveDown = keybinds->getKeyBinding(GameAction::MOVE_DOWN);
-        if (keyMoveDown.has_value() &&
-            sf::Keyboard::isKeyPressed(*keyMoveDown)) {
+        if (keyMoveDown.has_value() && pressedKeys_.count(*keyMoveDown) > 0) {
             inputMask |= ::rtype::network::InputMask::kDown;
         }
 
         auto keyMoveLeft = keybinds->getKeyBinding(GameAction::MOVE_LEFT);
-        if (keyMoveLeft.has_value() &&
-            sf::Keyboard::isKeyPressed(*keyMoveLeft)) {
+        if (keyMoveLeft.has_value() && pressedKeys_.count(*keyMoveLeft) > 0) {
             inputMask |= ::rtype::network::InputMask::kLeft;
         }
 
         auto keyMoveRight = keybinds->getKeyBinding(GameAction::MOVE_RIGHT);
-        if (keyMoveRight.has_value() &&
-            sf::Keyboard::isKeyPressed(*keyMoveRight)) {
+        if (keyMoveRight.has_value() && pressedKeys_.count(*keyMoveRight) > 0) {
             inputMask |= ::rtype::network::InputMask::kRight;
         }
 
         auto keyShoot = keybinds->getKeyBinding(GameAction::SHOOT);
-        if (keyShoot.has_value() && sf::Keyboard::isKeyPressed(*keyShoot)) {
+        if (keyShoot.has_value() && pressedKeys_.count(*keyShoot) > 0) {
             inputMask |= ::rtype::network::InputMask::kShoot;
         }
     } else {
@@ -145,6 +145,18 @@ bool RtypeInputHandler::handleKeyReleasedEvent(
     }
 
     return false;
+}
+
+void RtypeInputHandler::handleKeyPressedEvent(const sf::Event& event) {
+    if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
+        pressedKeys_.insert(keyPressed->code);
+    } else if (const auto* keyReleased = event.getIf<sf::Event::KeyReleased>()) {
+        pressedKeys_.erase(keyReleased->code);
+    }
+}
+
+void RtypeInputHandler::clearKeyStates() {
+    pressedKeys_.clear();
 }
 
 }  // namespace rtype::games::rtype::client
