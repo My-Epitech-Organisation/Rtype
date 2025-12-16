@@ -37,27 +37,27 @@ std::uint8_t RtypeInputHandler::getInputMask(
 
     if (mode == InputMode::Keyboard) {
         auto keyMoveUp = keybinds->getKeyBinding(GameAction::MOVE_UP);
-        if (keyMoveUp.has_value() && pressedKeys_.count(*keyMoveUp) > 0) {
+        if (keyMoveUp.has_value() && pressedKeys_.contains(*keyMoveUp)) {
             inputMask |= ::rtype::network::InputMask::kUp;
         }
 
         auto keyMoveDown = keybinds->getKeyBinding(GameAction::MOVE_DOWN);
-        if (keyMoveDown.has_value() && pressedKeys_.count(*keyMoveDown) > 0) {
+        if (keyMoveDown.has_value() && pressedKeys_.contains(*keyMoveDown)) {
             inputMask |= ::rtype::network::InputMask::kDown;
         }
 
         auto keyMoveLeft = keybinds->getKeyBinding(GameAction::MOVE_LEFT);
-        if (keyMoveLeft.has_value() && pressedKeys_.count(*keyMoveLeft) > 0) {
+        if (keyMoveLeft.has_value() && pressedKeys_.contains(*keyMoveLeft)) {
             inputMask |= ::rtype::network::InputMask::kLeft;
         }
 
         auto keyMoveRight = keybinds->getKeyBinding(GameAction::MOVE_RIGHT);
-        if (keyMoveRight.has_value() && pressedKeys_.count(*keyMoveRight) > 0) {
+        if (keyMoveRight.has_value() && pressedKeys_.contains(*keyMoveRight)) {
             inputMask |= ::rtype::network::InputMask::kRight;
         }
 
         auto keyShoot = keybinds->getKeyBinding(GameAction::SHOOT);
-        if (keyShoot.has_value() && pressedKeys_.count(*keyShoot) > 0) {
+        if (keyShoot.has_value() && pressedKeys_.contains(*keyShoot)) {
             inputMask |= ::rtype::network::InputMask::kShoot;
         }
     } else {
@@ -147,7 +147,7 @@ bool RtypeInputHandler::handleKeyReleasedEvent(
     return false;
 }
 
-void RtypeInputHandler::handleKeyPressedEvent(const sf::Event& event) {
+void RtypeInputHandler::updateKeyState(const sf::Event& event) {
     if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
         pressedKeys_.insert(keyPressed->code);
     } else if (const auto* keyReleased =

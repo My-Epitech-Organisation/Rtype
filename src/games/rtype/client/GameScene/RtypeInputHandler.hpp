@@ -46,11 +46,15 @@ class RtypeInputHandler {
         std::shared_ptr<ECS::Registry> registry);
 
     /**
-     * @brief Handle key pressed events to track keyboard state
+     * @brief Update keyboard state based on press/release events
      *
-     * @param event The SFML event
+     * Tracks which keys are currently pressed by listening to both
+     * KeyPressed and KeyReleased events. This ensures input is only
+     * captured from the focused window.
+     *
+     * @param event The SFML event (KeyPressed or KeyReleased)
      */
-    static void handleKeyPressedEvent(const sf::Event& event);
+    static void updateKeyState(const sf::Event& event);
 
     /**
      * @brief Clear all pressed keys state
@@ -58,7 +62,14 @@ class RtypeInputHandler {
     static void clearKeyStates();
 
    private:
-    // Track currently pressed keys (only for focused window)
+    /**
+     * @brief Track currently pressed keys (only for focused window)
+     *
+     * @note Thread-safety: This is accessed only from the main game loop
+     * thread. No mutex needed as all input processing is single-threaded.
+     * If multi-threaded input handling is added in the future, synchronization
+     * will be required.
+     */
     static std::unordered_set<sf::Keyboard::Key> pressedKeys_;
 };
 
