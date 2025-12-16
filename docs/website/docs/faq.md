@@ -49,7 +49,7 @@ See the [Getting Started Guide](./getting-started.md) for detailed instructions.
 - RAM: 4 GB
 - GPU: Dedicated graphics card
 - Storage: 500 MB (SSD preferred)
-- Network: Low-latency connection (<50ms ping)
+- Network: Low-latency connection (&lt;50ms ping)
 
 ### Do I need to install dependencies?
 
