@@ -282,7 +282,6 @@ void GameEngine::emitEvent(const engine::GameEvent& event) {
         _pendingEvents.push_back(event);
         callbackCopy = _eventCallback;
     }
-    // Call callback outside the lock to avoid deadlock
     if (callbackCopy) {
         callbackCopy(event);
     }
