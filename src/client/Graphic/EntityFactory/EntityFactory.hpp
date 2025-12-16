@@ -79,9 +79,10 @@ std::vector<ECS::Entity> createBackground(
     std::shared_ptr<AssetManager> assetManager, std::string_view PageName);
 
 ECS::Entity createLobbyPlayer(std::shared_ptr<ECS::Registry> registry,
-                         std::shared_ptr<AssetManager> assetManager, sf::Vector2f position,
-                         sf::Vector2i scale = sf::Vector2i(1, 1),
-                         bool isControllable = false);
+                              std::shared_ptr<AssetManager> assetManager,
+                              sf::Vector2f position,
+                              sf::Vector2i scale = sf::Vector2i(1, 1),
+                              bool isControllable = false);
 
 ECS::Entity createRectangle(std::shared_ptr<ECS::Registry> registry,
                             sf::Vector2i size = sf::Vector2i(1, 1),

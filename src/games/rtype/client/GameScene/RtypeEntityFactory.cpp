@@ -105,7 +105,7 @@ void RtypeEntityFactory::setupPlayerEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity, std::uint32_t userId) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Player components for entity "
-              << entity.id);
+              << entity.id << ", userid =  " << userId);
 
     uint32_t playerId = 1;
     if (userId < 1 || userId > ::rtype::game::config::MAX_PLAYER_COUNT) {

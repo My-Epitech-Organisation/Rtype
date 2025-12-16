@@ -349,9 +349,8 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::shared::Position(100, 350),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
-        this->_assetsManager, std::function<void()>([this]() {
-            this->_connectPopUpVisible = true;
-        }));
+        this->_assetsManager,
+        std::function<void()>([this]() { this->_connectPopUpVisible = true; }));
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         btnPlay, 1);
     this->_listEntity.push_back(btnPlay);
