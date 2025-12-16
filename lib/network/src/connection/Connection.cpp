@@ -105,6 +105,10 @@ Result<void> Connection::processPacket(const Buffer& data,
         case OpCode::DISCONNECT:
             return handleDisconnect(header);
 
+        case OpCode::PONG:
+            processPong(header);
+            break;
+
         default:
             break;
     }
@@ -138,6 +142,8 @@ void Connection::update() {
         outgoing.isReliable = true;
         outgoingQueue_.push(std::move(outgoing));
     }
+
+    updatePingTracking();
 
     if (shouldSendKeepalive()) {
         Buffer pingPacket = buildPingPacket();
@@ -249,6 +255,9 @@ void Connection::reset() noexcept {
     }
     sequenceId_ = 0;
     serverEndpoint_.reset();
+    lastPingSent_.reset();
+    currentLatencyMs_ = 0;
+    missedPingCount_ = 0;
 }
 
 Buffer Connection::buildConnectPacket() {
@@ -373,7 +382,8 @@ Result<void> Connection::handleConnectAccept(const Header& header,
 Result<void> Connection::handleDisconnect(const Header& header) {
     (void)header;
 
-    return stateMachine_.handleRemoteDisconnect();
+    auto result = stateMachine_.handleRemoteDisconnect();
+    return result;
 }
 
 void Connection::processReliabilityAck(const Header& header) {
@@ -409,12 +419,14 @@ bool Connection::shouldSendKeepalive() const noexcept {
 Buffer Connection::buildPingPacket() {
     auto uid = stateMachine_.userId().value_or(kUnassignedUserId);
 
+    std::uint16_t seqId = nextSequenceId();
+
     Header header;
     header.magic = kMagicByte;
     header.opcode = static_cast<std::uint8_t>(OpCode::PING);
     header.payloadSize = 0;
     header.userId = ByteOrderSpec::toNetwork(uid);
-    header.seqId = ByteOrderSpec::toNetwork(nextSequenceId());
+    header.seqId = ByteOrderSpec::toNetwork(seqId);
     header.ackId =
         ByteOrderSpec::toNetwork(reliableChannel_.getLastReceivedSeqId());
     header.flags = Flags::kIsAck;
@@ -423,7 +435,47 @@ Buffer Connection::buildPingPacket() {
     Buffer packet(kHeaderSize);
     std::memcpy(packet.data(), &header, kHeaderSize);
 
+    lastPingSent_ = PingTracker{seqId, Clock::now()};
+    missedPingCount_++;
+
     return packet;
+}
+
+void Connection::processPong(const Header& header) noexcept {
+    if (!lastPingSent_.has_value()) {
+        return;
+    }
+
+    if (header.ackId != lastPingSent_->seqId) {
+        return;
+    }
+
+    auto now = Clock::now();
+    auto elapsed = std::chrono::duration_cast<Duration>(
+        now - lastPingSent_->sentTime);
+
+    currentLatencyMs_ = static_cast<std::uint32_t>(elapsed.count());
+    missedPingCount_ = 0;
+    lastPingSent_.reset();
+}
+
+void Connection::updatePingTracking() noexcept {
+    if (!lastPingSent_.has_value()) {
+        return;
+    }
+
+    auto now = Clock::now();
+    auto elapsed = std::chrono::duration_cast<Duration>(
+        now - lastPingSent_->sentTime);
+
+    constexpr auto kPingTimeout = kKeepaliveInterval * 2;
+
+    if (elapsed >= kPingTimeout) {
+        lastPingSent_.reset();
+        if (missedPingCount_ >= kMaxMissedPings && isConnected()) {
+            stateMachine_.forceDisconnect(DisconnectReason::Timeout);
+        }
+    }
 }
 
 }  // namespace rtype::network

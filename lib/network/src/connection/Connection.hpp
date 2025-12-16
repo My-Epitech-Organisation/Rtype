@@ -146,11 +146,35 @@ class Connection {
      */
     [[nodiscard]] std::optional<Buffer> buildAckPacket(std::uint16_t ackSeqId);
 
+    /**
+     * @brief Get the current latency (RTT) in milliseconds
+     * @return Current latency, or 0 if no PONG received yet
+     */
+    [[nodiscard]] std::uint32_t latencyMs() const noexcept {
+        return currentLatencyMs_;
+    }
+
+    /**
+     * @brief Get the count of consecutive PINGs without PONG responses
+     * @return Number of consecutive unanswered PINGs
+     */
+    [[nodiscard]] int missedPingCount() const noexcept {
+        return missedPingCount_;
+    }
+
     void setCallbacks(ConnectionCallbacks callbacks) noexcept;
 
     void reset() noexcept;
 
    private:
+    /**
+     * @brief Tracks sent PING packets for latency measurement
+     */
+    struct PingTracker {
+        std::uint16_t seqId;
+        Clock::time_point sentTime;
+    };
+
     [[nodiscard]] Buffer buildConnectPacket();
     [[nodiscard]] Buffer buildDisconnectPacket();
     [[nodiscard]] Buffer buildAckPacketInternal(std::uint32_t userId);
@@ -161,13 +185,16 @@ class Connection {
                                                    const Buffer& payload,
                                                    const Endpoint& sender);
     [[nodiscard]] Result<void> handleDisconnect(const Header& header);
+    void processPong(const Header& header) noexcept;
     void processReliabilityAck(const Header& header);
     void queuePacket(Buffer data, bool reliable);
     [[nodiscard]] std::uint16_t nextSequenceId() noexcept;
     void recordPacketSent() noexcept;
     [[nodiscard]] bool shouldSendKeepalive() const noexcept;
+    void updatePingTracking() noexcept;
 
     static constexpr Duration kKeepaliveInterval{3000};  // 3 seconds
+    static constexpr int kMaxMissedPings{3};
 
     Config config_;
     ConnectionStateMachine stateMachine_;
@@ -176,6 +203,9 @@ class Connection {
     std::uint16_t sequenceId_{0};
     std::optional<Endpoint> serverEndpoint_;
     Clock::time_point lastPacketSentTime_{Clock::now()};
+    std::optional<PingTracker> lastPingSent_;
+    std::uint32_t currentLatencyMs_{0};
+    int missedPingCount_{0};
 };
 
 }  // namespace rtype::network
