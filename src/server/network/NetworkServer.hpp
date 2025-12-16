@@ -17,6 +17,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <atomic>
 
 #include <asio.hpp>
 
@@ -414,7 +415,7 @@ class NetworkServer {
 
     std::shared_ptr<network::Buffer> receiveBuffer_;
     std::shared_ptr<network::Endpoint> receiveSender_;
-    bool receiveInProgress_{false};
+    std::atomic<bool> receiveInProgress_{false};
 
     mutable std::mutex callbackMutex_;
     std::queue<std::function<void()>> callbackQueue_;

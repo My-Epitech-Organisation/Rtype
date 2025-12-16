@@ -405,11 +405,11 @@ void NetworkServer::queueCallback(std::function<void()> callback) {
 }
 
 void NetworkServer::startReceive() {
-    if (receiveInProgress_ || !socket_->isOpen()) {
+    if (receiveInProgress_.load(std::memory_order_acquire) || !socket_->isOpen()) {
         return;
     }
 
-    receiveInProgress_ = true;
+    receiveInProgress_.store(true, std::memory_order_release);
     receiveBuffer_->resize(network::kMaxPacketSize);
 
     socket_->asyncReceiveFrom(receiveBuffer_, receiveSender_,
@@ -419,7 +419,7 @@ void NetworkServer::startReceive() {
 }
 
 void NetworkServer::handleReceive(network::Result<std::size_t> result) {
-    receiveInProgress_ = false;
+    receiveInProgress_.store(false, std::memory_order_release);
 
     if (result && running_) {
         std::size_t bytesReceived = result.value();
