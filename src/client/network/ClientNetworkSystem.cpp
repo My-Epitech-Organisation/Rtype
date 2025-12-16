@@ -339,25 +339,26 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
     ECS::Entity entity = it->second;
 
     if (!registry_->isAlive(entity)) {
-        LOG_DEBUG(
-            "[ClientNetworkSystem] Entity " << event.entityId
-                                             << " not alive, ignoring health");
+        LOG_DEBUG("[ClientNetworkSystem] Entity "
+                  << event.entityId << " not alive, ignoring health");
         networkIdToEntity_.erase(it);
         lastKnownHealth_.erase(event.entityId);
         return;
     }
 
-    if (registry_->hasComponent<
-            rtype::games::rtype::shared::HealthComponent>(entity)) {
-        auto& health = registry_->getComponent<
-            rtype::games::rtype::shared::HealthComponent>(entity);
+    if (registry_->hasComponent<rtype::games::rtype::shared::HealthComponent>(
+            entity)) {
+        auto& health =
+            registry_
+                ->getComponent<rtype::games::rtype::shared::HealthComponent>(
+                    entity);
         previousHealth = health.current;
         health.current = event.current;
         health.max = event.max;
     } else {
-        registry_->emplaceComponent<
-            rtype::games::rtype::shared::HealthComponent>(
-            entity, event.current, event.max);
+        registry_
+            ->emplaceComponent<rtype::games::rtype::shared::HealthComponent>(
+                entity, event.current, event.max);
     }
 
     if (previousHealth.has_value() && previousHealth.value() > event.current &&

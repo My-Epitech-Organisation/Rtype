@@ -200,32 +200,30 @@ void MainMenuScene::_onConnectClicked(
     std::weak_ptr<ECS::Registry> weakRegistry = _registry;
     ECS::Entity statusEntity = _statusEntity;
 
-    _networkClient->onConnected(
-        [weakRegistry, switchToScene, statusEntity](std::uint32_t userId) {
-            auto reg = weakRegistry.lock();
-            if (!reg) return;
+    _networkClient->onConnected([weakRegistry, switchToScene,
+                                 statusEntity](std::uint32_t userId) {
+        auto reg = weakRegistry.lock();
+        if (!reg) return;
 
-            LOG_INFO("[Client] Connected with user ID: "
-                     << std::to_string(userId));
+        LOG_INFO("[Client] Connected with user ID: " << std::to_string(userId));
 
-            if (reg->isAlive(statusEntity) &&
-                reg->hasComponent<rtype::games::rtype::client::Text>(
-                    statusEntity)) {
-                auto& text =
-                    reg->getComponent<rtype::games::rtype::client::Text>(
-                        statusEntity);
-                text.textContent = "Connected! Starting game...";
-                text.text.setString("Connected! Starting game...");
-                text.text.setFillColor(sf::Color::Green);
-            }
+        if (reg->isAlive(statusEntity) &&
+            reg->hasComponent<rtype::games::rtype::client::Text>(
+                statusEntity)) {
+            auto& text = reg->getComponent<rtype::games::rtype::client::Text>(
+                statusEntity);
+            text.textContent = "Connected! Starting game...";
+            text.text.setString("Connected! Starting game...");
+            text.text.setFillColor(sf::Color::Green);
+        }
 
-            try {
-                switchToScene(SceneManager::IN_GAME);
-            } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Game: ") +
-                          std::string(e.what()));
-            }
-        });
+        try {
+            switchToScene(SceneManager::IN_GAME);
+        } catch (SceneNotFound& e) {
+            LOG_ERROR(std::string("Error switching to Game: ") +
+                      std::string(e.what()));
+        }
+    });
 
     _networkClient->onDisconnected(
         [weakRegistry,
