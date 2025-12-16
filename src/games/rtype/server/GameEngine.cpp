@@ -126,29 +126,18 @@ void GameEngine::shutdown() {
         return;
     }
     _running = false;
-    LOG_DEBUG("[GameEngine] Shutdown: Clearing system scheduler");
     if (_systemScheduler) {
         _systemScheduler->clear();
     }
-    LOG_DEBUG("[GameEngine] Shutdown: Resetting spawner system");
     _spawnerSystem.reset();
-    LOG_DEBUG("[GameEngine] Shutdown: Resetting projectile spawner system");
     _projectileSpawnerSystem.reset();
-    LOG_DEBUG("[GameEngine] Shutdown: Resetting enemy shooting system");
     _enemyShootingSystem.reset();
-    LOG_DEBUG("[GameEngine] Shutdown: Resetting AI system");
     _aiSystem.reset();
-    LOG_DEBUG("[GameEngine] Shutdown: Resetting movement system");
     _movementSystem.reset();
-    LOG_DEBUG("[GameEngine] Shutdown: Resetting lifetime system");
     _lifetimeSystem.reset();
-    LOG_DEBUG("[GameEngine] Shutdown: Resetting power up system");
     _powerUpSystem.reset();
-    LOG_DEBUG("[GameEngine] Shutdown: Resetting cleanup system");
     _cleanupSystem.reset();
-    LOG_DEBUG("[GameEngine] Shutdown: Resetting destroy system");
     _destroySystem.reset();
-    LOG_DEBUG("[GameEngine] Shutdown: Clearing pending events");
     {
         std::lock_guard<std::mutex> lock(_eventMutex);
         _pendingEvents.clear();

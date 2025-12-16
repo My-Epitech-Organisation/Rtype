@@ -465,44 +465,28 @@ void ServerApp::checkGameOverCondition() {
 void ServerApp::resetToLobby() {
     LOG_INFO("[Server] Resetting session to lobby");
 
-    LOG_DEBUG("[Server] Step 1: Clearing registry");
     if (_registry) {
         _registry->removeEntitiesIf([](ECS::Entity) { return true; });
         _registry->cleanupTombstones();
     }
-    LOG_DEBUG("[Server] Step 1: Complete");
-
-    LOG_DEBUG("[Server] Step 2: Updating network state");
     if (_networkSystem) {
         _networkSystem->resetState();
         _networkSystem->broadcastGameState(NetworkServer::GameState::Lobby);
     } else if (_networkServer) {
         _networkServer->updateGameState(NetworkServer::GameState::Lobby);
     }
-    LOG_DEBUG("[Server] Step 2: Complete");
 
     _score = 0;
 
-    LOG_DEBUG("[Server] Step 3: Resetting game engine");
     if (_gameEngine) {
         if (_gameEngine->isRunning()) {
-            LOG_DEBUG("[Server] Step 3a: Shutting down engine");
             _gameEngine->shutdown();
-            LOG_DEBUG("[Server] Step 3a: Complete");
         }
-        LOG_DEBUG("[Server] Step 3b: Initializing engine");
         _gameEngine->initialize();
-        LOG_DEBUG("[Server] Step 3b: Complete");
     }
-    LOG_DEBUG("[Server] Step 3: Complete");
-
-    LOG_DEBUG("[Server] Step 4: Resetting state manager");
     if (_stateManager) {
         _stateManager->reset();
     }
-    LOG_DEBUG("[Server] Step 4: Complete");
-
-    LOG_DEBUG("[Server] Step 5: Respawning players");
     if (_entitySpawner) {
         auto connected = getConnectedClientIds();
         std::size_t idx = 0;
@@ -515,7 +499,6 @@ void ServerApp::resetToLobby() {
             }
         }
     }
-    LOG_DEBUG("[Server] Step 5: Complete");
     LOG_INFO("[Server] Reset to lobby complete");
 }
 
