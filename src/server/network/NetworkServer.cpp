@@ -74,6 +74,8 @@ void NetworkServer::stop() {
         ioContext_.poll();
         socket_->close();
     }
+
+    ioContext_.stop();
 }
 
 bool NetworkServer::isRunning() const noexcept { return running_; }

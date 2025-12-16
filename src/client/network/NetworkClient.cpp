@@ -75,6 +75,7 @@ NetworkClient::~NetworkClient() {
         ioContext_.poll();
     }
 
+    ioContext_.stop();
     networkThreadRunning_.store(false, std::memory_order_release);
     if (networkThread_.joinable()) {
         networkThread_.join();
