@@ -66,14 +66,20 @@ NetworkClient::NetworkClient(const Config& config)
 }
 
 NetworkClient::~NetworkClient() {
+    if (isConnected()) {
+        disconnect();
+    }
+
+    if (socket_) {
+        socket_->cancel();
+        ioContext_.poll();
+    }
+
     networkThreadRunning_.store(false, std::memory_order_release);
     if (networkThread_.joinable()) {
         networkThread_.join();
     }
 
-    if (isConnected()) {
-        disconnect();
-    }
     if (socket_) {
         socket_->close();
     }

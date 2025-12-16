@@ -70,6 +70,8 @@ void NetworkServer::stop() {
     }
 
     if (socket_) {
+        socket_->cancel();
+        ioContext_.poll();
         socket_->close();
     }
 }
