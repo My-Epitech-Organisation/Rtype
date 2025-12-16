@@ -23,7 +23,6 @@
 
 namespace rtype::games::rtype::client {
 
-// Initialize static member
 std::unordered_set<sf::Keyboard::Key> RtypeInputHandler::pressedKeys_;
 
 std::uint8_t RtypeInputHandler::getInputMask(
