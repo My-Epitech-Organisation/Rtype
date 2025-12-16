@@ -299,6 +299,8 @@ class NetworkClient {
                            const network::Buffer& payload);
     void handleGameOver(const network::Header& header,
                         const network::Buffer& payload);
+    void handlePong(const network::Header& header,
+                    const network::Buffer& payload);
 
     void flushOutgoing();
 

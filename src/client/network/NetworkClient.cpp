@@ -329,6 +329,10 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
             handleGameOver(header, payload);
             break;
 
+        case network::OpCode::PONG:
+            handlePong(header, payload);
+            break;
+
         default:
             break;
     }
@@ -563,6 +567,14 @@ void NetworkClient::handleGameOver(const network::Header& header,
     } catch (...) {
         // Invalid payload, ignore
     }
+}
+
+void NetworkClient::handlePong(const network::Header& header,
+                               const network::Buffer& payload) {
+    (void)header;
+    (void)payload;
+
+    LOG_DEBUG("[NetworkClient] Received PONG from server - connection alive");
 }
 
 void NetworkClient::flushOutgoing() {
