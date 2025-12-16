@@ -205,7 +205,7 @@ void MainMenuScene::_onConnectClicked(
         auto reg = weakRegistry.lock();
         if (!reg) return;
 
-        LOG_INFO("[Client] Connected with user ID: " << std::to_string(userId));
+        LOG_INFO("[Client] Connected with user ID: " << userId);
 
         if (reg->isAlive(statusEntity) &&
             reg->hasComponent<rtype::games::rtype::client::Text>(
