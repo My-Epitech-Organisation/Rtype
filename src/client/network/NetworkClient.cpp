@@ -90,7 +90,7 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
     if (socket_) {
         socket_->close();
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        receiveInProgress_ = false;
+        receiveInProgress_.store(false, std::memory_order_release);
         socket_ = network::createAsyncSocket(ioContext_.get());
     }
 
@@ -111,7 +111,7 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
         LOG_ERROR("[NetworkClient] Failed to initiate connection");
         socket_->close();
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        receiveInProgress_ = false;
+        receiveInProgress_.store(false, std::memory_order_release);
         socket_ = network::createAsyncSocket(ioContext_.get());
         serverEndpoint_.reset();
         connection_.reset();
@@ -139,7 +139,7 @@ void NetworkClient::disconnect() {
     if (socket_) {
         socket_->close();
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        receiveInProgress_ = false;
+        receiveInProgress_.store(false, std::memory_order_release);
         socket_ = network::createAsyncSocket(ioContext_.get());
     }
 }
@@ -258,11 +258,11 @@ void NetworkClient::queueCallback(std::function<void()> callback) {
 }
 
 void NetworkClient::startReceive() {
-    if (receiveInProgress_ || !socket_->isOpen()) {
+    if (receiveInProgress_.load(std::memory_order_acquire) || !socket_->isOpen()) {
         return;
     }
 
-    receiveInProgress_ = true;
+    receiveInProgress_.store(true, std::memory_order_release);
     receiveBuffer_->resize(network::kMaxPacketSize);
 
     socket_->asyncReceiveFrom(receiveBuffer_, receiveSender_,
@@ -272,7 +272,7 @@ void NetworkClient::startReceive() {
 }
 
 void NetworkClient::handleReceive(network::Result<std::size_t> result) {
-    receiveInProgress_ = false;
+    receiveInProgress_.store(false, std::memory_order_release);
 
     if (result) {
         std::size_t bytesReceived = result.value();

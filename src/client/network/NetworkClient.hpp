@@ -16,6 +16,7 @@
 #include <queue>
 #include <string>
 #include <vector>
+#include <atomic>
 
 #include <asio.hpp>
 
@@ -323,7 +324,7 @@ class NetworkClient {
 
     std::shared_ptr<network::Buffer> receiveBuffer_;
     std::shared_ptr<network::Endpoint> receiveSender_;
-    bool receiveInProgress_{false};
+    std::atomic<bool> receiveInProgress_{false};
 
     std::mutex callbackMutex_;
     std::queue<std::function<void()>> callbackQueue_;
