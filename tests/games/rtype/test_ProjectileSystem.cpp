@@ -32,85 +32,85 @@ class ProjectileSystemTest : public ::testing::Test {
 };
 
 TEST_F(ProjectileSystemTest, UpdateMovesProjectileWithPositiveVelocity) {
-    registry.emplaceComponent<Position>(entity, 0.0f, 0.0f);
+    registry.emplaceComponent<TransformComponent>(entity, 0.0f, 0.0f);
     registry.emplaceComponent<VelocityComponent>(entity, 100.0f, 50.0f);
     registry.emplaceComponent<ProjectileTag>(entity);
 
     projectileSystem.update(registry, 1.0f);
 
-    auto& position = registry.getComponent<Position>(entity);
+    auto& position = registry.getComponent<TransformComponent>(entity);
     EXPECT_FLOAT_EQ(position.x, 100.0f);
     EXPECT_FLOAT_EQ(position.y, 50.0f);
 }
 
 TEST_F(ProjectileSystemTest, UpdateMovesProjectileWithNegativeVelocity) {
-    registry.emplaceComponent<Position>(entity, 100.0f, 100.0f);
+    registry.emplaceComponent<TransformComponent>(entity, 100.0f, 100.0f);
     registry.emplaceComponent<VelocityComponent>(entity, -50.0f, -25.0f);
     registry.emplaceComponent<ProjectileTag>(entity);
 
     projectileSystem.update(registry, 1.0f);
 
-    auto& position = registry.getComponent<Position>(entity);
+    auto& position = registry.getComponent<TransformComponent>(entity);
     EXPECT_FLOAT_EQ(position.x, 50.0f);
     EXPECT_FLOAT_EQ(position.y, 75.0f);
 }
 
 TEST_F(ProjectileSystemTest, UpdateWithZeroVelocity) {
-    registry.emplaceComponent<Position>(entity, 100.0f, 100.0f);
+    registry.emplaceComponent<TransformComponent>(entity, 100.0f, 100.0f);
     registry.emplaceComponent<VelocityComponent>(entity, 0.0f, 0.0f);
     registry.emplaceComponent<ProjectileTag>(entity);
 
     projectileSystem.update(registry, 1.0f);
 
-    auto& position = registry.getComponent<Position>(entity);
+    auto& position = registry.getComponent<TransformComponent>(entity);
     EXPECT_FLOAT_EQ(position.x, 100.0f);
     EXPECT_FLOAT_EQ(position.y, 100.0f);
 }
 
 TEST_F(ProjectileSystemTest, UpdateWithZeroDeltaTime) {
-    registry.emplaceComponent<Position>(entity, 50.0f, 50.0f);
+    registry.emplaceComponent<TransformComponent>(entity, 50.0f, 50.0f);
     registry.emplaceComponent<VelocityComponent>(entity, 100.0f, 100.0f);
     registry.emplaceComponent<ProjectileTag>(entity);
 
     projectileSystem.update(registry, 0.0f);
 
-    auto& position = registry.getComponent<Position>(entity);
+    auto& position = registry.getComponent<TransformComponent>(entity);
     EXPECT_FLOAT_EQ(position.x, 50.0f);
     EXPECT_FLOAT_EQ(position.y, 50.0f);
 }
 
 TEST_F(ProjectileSystemTest, UpdateIgnoresNonProjectileEntities) {
-    registry.emplaceComponent<Position>(entity, 0.0f, 0.0f);
+    registry.emplaceComponent<TransformComponent>(entity, 0.0f, 0.0f);
     registry.emplaceComponent<VelocityComponent>(entity, 100.0f, 100.0f);
     // No ProjectileTag
 
     projectileSystem.update(registry, 1.0f);
 
-    auto& position = registry.getComponent<Position>(entity);
+    auto& position = registry.getComponent<TransformComponent>(entity);
     EXPECT_FLOAT_EQ(position.x, 0.0f);
     EXPECT_FLOAT_EQ(position.y, 0.0f);
 }
 
 TEST_F(ProjectileSystemTest, UpdateGracefullyHandlesMissingVelocity) {
-    registry.emplaceComponent<Position>(entity, 0.0f, 0.0f);
+    registry.emplaceComponent<TransformComponent>(entity, 0.0f, 0.0f);
     registry.emplaceComponent<ProjectileTag>(entity);
     // No VelocityComponent
 
     projectileSystem.update(registry, 1.0f);
 
-    auto& position = registry.getComponent<Position>(entity);
+    auto& position = registry.getComponent<TransformComponent>(entity);
     EXPECT_FLOAT_EQ(position.x, 0.0f);
     EXPECT_FLOAT_EQ(position.y, 0.0f);
 }
 
 TEST_F(ProjectileSystemTest, UpdateWithNegativeDeltaTime) {
-    registry.emplaceComponent<Position>(entity, 50.0f, 50.0f);
+    registry.emplaceComponent<TransformComponent>(entity, 50.0f, 50.0f);
     registry.emplaceComponent<VelocityComponent>(entity, 100.0f, 100.0f);
     registry.emplaceComponent<ProjectileTag>(entity);
 
     projectileSystem.update(registry, -1.0f);
 
-    auto& position = registry.getComponent<Position>(entity);
+    auto& position = registry.getComponent<TransformComponent>(entity);
     EXPECT_FLOAT_EQ(position.x, 50.0f);
     EXPECT_FLOAT_EQ(position.y, 50.0f);
 }
