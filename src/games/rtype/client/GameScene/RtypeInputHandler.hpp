@@ -10,8 +10,10 @@
 
 #include <cstdint>
 #include <memory>
+#include <unordered_set>
 
 #include <SFML/Window/Event.hpp>
+#include <SFML/Window/Keyboard.hpp>
 
 #include "ECS.hpp"
 #include "Graphic/KeyboardActions.hpp"
@@ -42,6 +44,22 @@ class RtypeInputHandler {
     static bool handleKeyReleasedEvent(
         const sf::Event& event, std::shared_ptr<KeyboardActions> keybinds,
         std::shared_ptr<ECS::Registry> registry);
+
+    /**
+     * @brief Handle key pressed events to track keyboard state
+     *
+     * @param event The SFML event
+     */
+    static void handleKeyPressedEvent(const sf::Event& event);
+
+    /**
+     * @brief Clear all pressed keys state
+     */
+    static void clearKeyStates();
+
+   private:
+    // Track currently pressed keys (only for focused window)
+    static std::unordered_set<sf::Keyboard::Key> pressedKeys_;
 };
 
 }  // namespace rtype::games::rtype::client
