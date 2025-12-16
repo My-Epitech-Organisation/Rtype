@@ -139,6 +139,15 @@ void Connection::update() {
         outgoingQueue_.push(std::move(outgoing));
     }
 
+    if (shouldSendKeepalive()) {
+        Buffer pingPacket = buildPingPacket();
+        OutgoingPacket outgoing;
+        outgoing.data = std::move(pingPacket);
+        outgoing.isReliable = false;
+        outgoingQueue_.push(std::move(outgoing));
+        recordPacketSent();
+    }
+
     auto cleanupResult = reliableChannel_.cleanup();
     if (!cleanupResult) {
         stateMachine_.forceDisconnect(DisconnectReason::MaxRetriesExceeded);
@@ -193,6 +202,8 @@ Result<Connection::OutgoingPacket> Connection::buildPacket(
         std::uint16_t seqId = ByteOrderSpec::fromNetwork(header.seqId);
         (void)reliableChannel_.trackOutgoing(seqId, packet);
     }
+
+    recordPacketSent();
 
     OutgoingPacket outgoing;
     outgoing.data = std::move(packet);
@@ -258,6 +269,8 @@ Buffer Connection::buildConnectPacket() {
     std::uint16_t seqId = ByteOrderSpec::fromNetwork(header.seqId);
     (void)reliableChannel_.trackOutgoing(seqId, packet);
 
+    recordPacketSent();
+
     return packet;
 }
 
@@ -280,6 +293,8 @@ Buffer Connection::buildDisconnectPacket() {
 
     std::uint16_t seqId = ByteOrderSpec::fromNetwork(header.seqId);
     (void)reliableChannel_.trackOutgoing(seqId, packet);
+
+    recordPacketSent();
 
     return packet;
 }
@@ -375,5 +390,40 @@ void Connection::queuePacket(Buffer data, bool reliable) {
 }
 
 std::uint16_t Connection::nextSequenceId() noexcept { return sequenceId_++; }
+
+void Connection::recordPacketSent() noexcept {
+    lastPacketSentTime_ = Clock::now();
+}
+
+bool Connection::shouldSendKeepalive() const noexcept {
+    if (!isConnected()) {
+        return false;
+    }
+
+    auto elapsed = std::chrono::duration_cast<Duration>(
+        Clock::now() - lastPacketSentTime_);
+
+    return elapsed >= kKeepaliveInterval;
+}
+
+Buffer Connection::buildPingPacket() {
+    auto uid = stateMachine_.userId().value_or(kUnassignedUserId);
+
+    Header header;
+    header.magic = kMagicByte;
+    header.opcode = static_cast<std::uint8_t>(OpCode::PING);
+    header.payloadSize = 0;
+    header.userId = ByteOrderSpec::toNetwork(uid);
+    header.seqId = ByteOrderSpec::toNetwork(nextSequenceId());
+    header.ackId =
+        ByteOrderSpec::toNetwork(reliableChannel_.getLastReceivedSeqId());
+    header.flags = Flags::kIsAck;
+    header.reserved = {0, 0, 0};
+
+    Buffer packet(kHeaderSize);
+    std::memcpy(packet.data(), &header, kHeaderSize);
+
+    return packet;
+}
 
 }  // namespace rtype::network

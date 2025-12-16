@@ -156,6 +156,7 @@ class Connection {
     [[nodiscard]] Buffer buildAckPacketInternal(std::uint32_t userId);
     [[nodiscard]] Buffer buildAckPacketInternal(std::uint32_t userId,
                                                 std::uint16_t ackSeqId);
+    [[nodiscard]] Buffer buildPingPacket();
     [[nodiscard]] Result<void> handleConnectAccept(const Header& header,
                                                    const Buffer& payload,
                                                    const Endpoint& sender);
@@ -163,6 +164,10 @@ class Connection {
     void processReliabilityAck(const Header& header);
     void queuePacket(Buffer data, bool reliable);
     [[nodiscard]] std::uint16_t nextSequenceId() noexcept;
+    void recordPacketSent() noexcept;
+    [[nodiscard]] bool shouldSendKeepalive() const noexcept;
+
+    static constexpr Duration kKeepaliveInterval{3000};  // 3 seconds
 
     Config config_;
     ConnectionStateMachine stateMachine_;
@@ -170,6 +175,7 @@ class Connection {
     std::queue<OutgoingPacket> outgoingQueue_;
     std::uint16_t sequenceId_{0};
     std::optional<Endpoint> serverEndpoint_;
+    Clock::time_point lastPacketSentTime_{Clock::now()};
 };
 
 }  // namespace rtype::network
