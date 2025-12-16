@@ -49,7 +49,7 @@ See the [Getting Started Guide](./getting-started.md) for detailed instructions.
 - RAM: 4 GB
 - GPU: Dedicated graphics card
 - Storage: 500 MB (SSD preferred)
-- Network: Low-latency connection (<50ms ping)
+- Network: Low-latency connection (&lt;50ms ping)
 
 ### Do I need to install dependencies?
 
@@ -157,7 +157,7 @@ The game caps at 144 FPS by default but this can be changed.
 
 ### Network lag in multiplayer?
 
-- **Check ping**: Should be <100ms for smooth gameplay
+- **Check ping**: Should be &lt;100ms for smooth gameplay
 - **Use wired connection**: WiFi can introduce latency
 - **Close bandwidth-heavy apps**: Streaming, downloads, etc.
 - **Play on nearby servers**: Physical distance affects latency
