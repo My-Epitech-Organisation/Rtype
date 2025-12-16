@@ -88,9 +88,8 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
     connection_.reset();
 
     if (socket_) {
+        socket_->cancel();
         socket_->close();
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        receiveInProgress_.store(false, std::memory_order_release);
         socket_ = network::createAsyncSocket(ioContext_.get());
     }
 
@@ -109,9 +108,8 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
     auto result = connection_.connect();
     if (!result) {
         LOG_ERROR("[NetworkClient] Failed to initiate connection");
+        socket_->cancel();
         socket_->close();
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        receiveInProgress_.store(false, std::memory_order_release);
         socket_ = network::createAsyncSocket(ioContext_.get());
         serverEndpoint_.reset();
         connection_.reset();
@@ -137,9 +135,8 @@ void NetworkClient::disconnect() {
     serverEndpoint_.reset();
 
     if (socket_) {
+        socket_->cancel();
         socket_->close();
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        receiveInProgress_.store(false, std::memory_order_release);
         socket_ = network::createAsyncSocket(ioContext_.get());
     }
 }
