@@ -405,7 +405,8 @@ void NetworkServer::queueCallback(std::function<void()> callback) {
 }
 
 void NetworkServer::startReceive() {
-    if (receiveInProgress_.load(std::memory_order_acquire) || !socket_->isOpen()) {
+    if (receiveInProgress_.load(std::memory_order_acquire) ||
+        !socket_->isOpen()) {
         return;
     }
 

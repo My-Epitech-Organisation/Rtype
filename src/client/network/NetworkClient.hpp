@@ -8,6 +8,7 @@
 #ifndef SRC_CLIENT_NETWORK_NETWORKCLIENT_HPP_
 #define SRC_CLIENT_NETWORK_NETWORKCLIENT_HPP_
 
+#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -16,7 +17,6 @@
 #include <queue>
 #include <string>
 #include <vector>
-#include <atomic>
 
 #include <asio.hpp>
 
