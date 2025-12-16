@@ -279,9 +279,6 @@ void ServerNetworkSystem::handleClientConnected(std::uint32_t userId) {
         if (pending.networkId != 0) {
             unregisterNetworkedEntityById(pending.networkId);
         }
-        if (registry_ && registry_->isAlive(pending.playerEntity)) {
-            registry_->killEntity(pending.playerEntity);
-        }
         pendingDisconnections_.erase(pendingIt);
     }
 
