@@ -21,7 +21,7 @@ add_library(network STATIC
 # - protocol/Validator.hpp
 
 # Find Asio (standalone, non-Boost)
-find_package(asio CONFIG REQUIRED)
+rtype_find_asio()
 
 target_include_directories(network PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

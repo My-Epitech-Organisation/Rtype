@@ -1,18 +1,8 @@
-find_package(SFML
-        COMPONENTS
-        Network
-        Graphics
-        Window
-        Audio
-        System
-        CONFIG
-        REQUIRED
-)
-
-find_package(PNG QUIET)
-find_package(ZLIB QUIET)
-find_package(BZip2 QUIET)
-find_package(unofficial-brotli CONFIG QUIET)
+rtype_find_sfml()
+rtype_find_png()
+rtype_find_zlib()
+rtype_find_bzip2()
+rtype_find_brotli()
 
 add_library(rtype_client_network STATIC
     network/NetworkClient.cpp
@@ -55,13 +45,14 @@ target_link_libraries(r-type_client PUBLIC
     rtype_client_network
 )
 
-if(PNG_FOUND)
+# Conditionally link optional compression/image libraries
+if(TARGET PNG::PNG)
     target_link_libraries(r-type_client PRIVATE PNG::PNG)
 endif()
-if(ZLIB_FOUND)
+if(TARGET ZLIB::ZLIB)
     target_link_libraries(r-type_client PRIVATE ZLIB::ZLIB)
 endif()
-if(BZip2_FOUND)
+if(TARGET BZip2::BZip2)
     target_link_libraries(r-type_client PRIVATE BZip2::BZip2)
 endif()
 if(TARGET unofficial::brotli::brotlidec)

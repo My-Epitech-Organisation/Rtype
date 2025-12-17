@@ -65,6 +65,32 @@
       }
     },
     {
+      "name": "cpm-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-cpm",
+      "cacheVariables": {
+        "RTYPE_FORCE_CPM": "ON"
+      }
+    },
+    {
+      "name": "linux-release-cpm",
+      "displayName": "Linux Release (CPM Fallback)",
+      "inherits": "cpm-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_GRAPHICAL_TESTS": "OFF"
+      }
+    },
+    {
+      "name": "linux-debug-cpm",
+      "displayName": "Linux Debug (CPM Fallback)",
+      "inherits": "cpm-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
       "name": "window-linux-debug",
       "displayName": "Windows (MinGW) on Linux",
       "description": "Cross-compilation pour Windows depuis Linux via MinGW",
@@ -86,6 +112,14 @@
     {
       "name": "linux-release",
       "configurePreset": "linux-release"
+    },
+    {
+      "name": "linux-debug-cpm",
+      "configurePreset": "linux-debug-cpm"
+    },
+    {
+      "name": "linux-release-cpm",
+      "configurePreset": "linux-release-cpm"
     },
     {
       "name": "windows-debug",
