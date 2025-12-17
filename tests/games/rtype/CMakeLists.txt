@@ -21,7 +21,8 @@ target_include_directories(test_spawning PRIVATE
 
 include(GoogleTest)
 if(WIN32 OR MSVC)
-    set_tests_properties(test_spawning test_movement_system PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_spawning WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_movement_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_spawning)
     gtest_discover_tests(test_movement_system)
@@ -42,7 +43,7 @@ target_include_directories(test_components PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_components PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_components WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_components)
 endif()
@@ -62,7 +63,7 @@ target_include_directories(test_behaviors PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_behaviors PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_behaviors WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_behaviors)
 endif()
@@ -82,7 +83,7 @@ target_include_directories(test_behavior_registry PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_behavior_registry PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_behavior_registry WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_behavior_registry)
 endif()
@@ -103,7 +104,7 @@ target_include_directories(test_systems PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_systems PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_systems WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_systems)
 endif()
@@ -124,7 +125,7 @@ target_include_directories(test_wave_system PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_wave_system PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_wave_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_wave_system)
 endif()
@@ -145,7 +146,7 @@ target_include_directories(test_collision PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_collision PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_collision WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_collision)
 endif()
@@ -164,7 +165,7 @@ target_include_directories(test_engine PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_engine PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_engine WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_engine)
 endif()
@@ -184,7 +185,7 @@ target_include_directories(test_projectile_system PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_projectile_system PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_projectile_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_projectile_system)
 endif()
@@ -204,7 +205,7 @@ target_include_directories(test_lifetime_system PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_lifetime_system PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_lifetime_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_lifetime_system)
 endif()
@@ -225,7 +226,7 @@ target_include_directories(test_quadtree PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_quadtree PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_quadtree WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_quadtree)
 endif()
@@ -246,7 +247,7 @@ target_include_directories(test_quadtree_integration PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_quadtree_integration PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_quadtree_integration WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_quadtree_integration)
 endif()
@@ -268,7 +269,7 @@ target_include_directories(test_projectile_spawner_system PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_projectile_spawner_system PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_projectile_spawner_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_projectile_spawner_system)
 endif()
@@ -288,7 +289,7 @@ target_include_directories(test_aabb PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_aabb PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_aabb WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_aabb)
 endif()
@@ -315,7 +316,7 @@ target_include_directories(test_powerup_system PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_powerup_system PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_powerup_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_powerup_system)
 endif()
