@@ -28,9 +28,11 @@ if(EXISTS "${VCPKG_SUBMODULE_PATH}/scripts/buildsystems/vcpkg.cmake")
     return()
 endif()
 
-# No option found - keep going and let CMake fall back to CPM
+# No option found - record that vcpkg is unavailable and let top-level CMake logic decide how to fall back
+# (for example, to CPM-based dependency management if enabled in this project)
 message(WARNING
-    "[vcpkg] vcpkg not found. Continuing without vcpkg; the build will fall back to CPM.\n"
-    "If you prefer vcpkg, set VCPKG_ROOT or initialize external/vcpkg."
+    "[vcpkg] vcpkg toolchain not found during configuration. Continuing without vcpkg; "
+    "the top-level build logic will automatically fall back to CPM-based dependency management if enabled.\n"
+    "If you prefer vcpkg, set VCPKG_ROOT or initialize external/vcpkg before configuring the project."
 )
 set(RTYPE_VCPKG_FOUND OFF CACHE BOOL "True when vcpkg toolchain is available" FORCE)
