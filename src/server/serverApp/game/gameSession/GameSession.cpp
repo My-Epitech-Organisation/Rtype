@@ -290,6 +290,8 @@ void GameSession::processGameEvents() {
                 _networkSystem->broadcastPowerUp(event.entityNetworkId,
                                                  event.subType, event.duration);
                 break;
+            case engine::GameEventType::GameOver:
+                break;
         }
     }
 

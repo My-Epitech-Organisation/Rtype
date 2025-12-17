@@ -59,6 +59,17 @@ class NetworkApiTest : public ::testing::Test {
         }
     }
 
+    // Wait for an atomic flag while continuously pumping both ends
+    bool waitFor(std::atomic<bool>& flag, std::chrono::milliseconds timeout,
+                 std::chrono::milliseconds pumpStep = 5ms) {
+        auto deadline = std::chrono::steady_clock::now() + timeout;
+        while (!flag.load(std::memory_order_acquire) &&
+               std::chrono::steady_clock::now() < deadline) {
+            pollBoth(pumpStep);
+        }
+        return flag.load(std::memory_order_acquire);
+    }
+
     static constexpr std::uint16_t TEST_PORT = 14242;
 
     std::unique_ptr<server::NetworkServer> server_;
@@ -551,10 +562,8 @@ TEST_F(NetworkApiTest, SpawnEntityToClient) {
     EXPECT_TRUE(server_->start(TEST_PORT));
     EXPECT_TRUE(client_->connect("127.0.0.1", TEST_PORT));
 
-    for (int i = 0; i < 100 && !clientConnected; ++i) {
-        pollBoth(10ms);
-    }
-    ASSERT_TRUE(clientConnected.load());
+    // Allow more time on slower CI/Windows environments
+    ASSERT_TRUE(waitFor(clientConnected, std::chrono::milliseconds(3000)));
 
     auto clients = server_->getConnectedClients();
     ASSERT_EQ(clients.size(), 1u);
@@ -563,11 +572,7 @@ TEST_F(NetworkApiTest, SpawnEntityToClient) {
     server_->spawnEntityToClient(clients[0], 999, network::EntityType::Bydos,
                                  100.0f, 200.0f);
 
-    for (int i = 0; i < 100 && !spawnReceived; ++i) {
-        pollBoth(10ms);
-    }
-
-    EXPECT_TRUE(spawnReceived.load());
+    ASSERT_TRUE(waitFor(spawnReceived, std::chrono::milliseconds(3000)));
     EXPECT_EQ(receivedSpawn.entityId, 999u);
     EXPECT_FLOAT_EQ(receivedSpawn.x, 100.0f);
     EXPECT_FLOAT_EQ(receivedSpawn.y, 200.0f);

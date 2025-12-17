@@ -108,6 +108,11 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
         LOG_DEBUG("[RtypeGameScene] Network callbacks configured");
     }
 
+    LOG_DEBUG("[RtypeGameScene] Constructor started");
+    LOG_DEBUG("[RtypeGameScene] _networkClient is "
+              << (_networkClient ? "valid" : "NULL"));
+    LOG_DEBUG("[RtypeGameScene] _registry is "
+              << (_registry ? "valid" : "NULL"));
     LOG_DEBUG("[RtypeGameScene] Setting up HUD");
     setupHud();
     setupDamageVignette();
@@ -179,6 +184,10 @@ void RtypeGameScene::render(std::shared_ptr<sf::RenderWindow> window) {
 }
 
 void RtypeGameScene::pollEvents(const sf::Event& event) {
+    if (event.is<sf::Event::KeyPressed>() ||
+        event.is<sf::Event::KeyReleased>()) {
+        RtypeInputHandler::updateKeyState(event);
+    }
     if (event.is<sf::Event::KeyReleased>() ||
         event.is<sf::Event::JoystickButtonReleased>()) {
         RtypeInputHandler::handleKeyReleasedEvent(event, _keybinds, _registry);

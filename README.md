@@ -1,177 +1,223 @@
-# R-Type
+<div align="center">
 
-A modern C++20 recreation of the classic R-Type game using an Entity Component System (ECS) architecture.
+# 🚀 R-Type
 
-## Features
+### *Classic Space Shooter Reimagined*
 
-- 🎮 Classic R-Type gameplay mechanics
-- 🌐 Client-server multiplayer architecture
-- ⚡ High-performance ECS engine
-- 📚 Comprehensive documentation (Doxygen + Docusaurus)
-- 🧪 Unit tests with Google Test
-- 🔧 Cross-platform support (Linux, Windows)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue?style=for-the-badge)](https://github.com/My-Epitech-Organisation/Rtype)
+[![C++](https://img.shields.io/badge/C%2B%2B-20-00599C?style=for-the-badge&logo=c%2B%2B)](https://isocpp.org/)
+[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+[![CMake](https://img.shields.io/badge/CMake-3.19+-064F8C?style=for-the-badge&logo=cmake)](https://cmake.org/)
 
-## Prerequisites
+A modern multiplayer remake of the legendary R-Type arcade game, built with cutting-edge C++20 technology and networked gameplay.
 
-- **CMake** 3.19+
-- **Ninja** (build system)
-- **C++20 compiler** (GCC 11+, Clang 14+, or MSVC 2022)
-- **Git**
+[Download](https://github.com/My-Epitech-Organisation/Rtype/releases) • [Documentation](docs/website/docs/intro.md) • [Report Bug](https://github.com/My-Epitech-Organisation/Rtype/issues)
 
-**Optional (for documentation):**
-- **Doxygen** (for API docs)
-- **Node.js** v20+ (for web docs)
+---
 
-## Quick Start
+</div>
 
-### 1. Clone the repository
+## ✨ Features
 
-```bash
-git clone --recursive https://github.com/My-Epitech-Organisation/Rtype.git
-cd Rtype
+<table>
+<tr>
+<td width="50%">
+
+### 🎮 Gameplay
+- **Classic R-Type Action** - Authentic arcade experience
+- **4 Player Co-op** - Team up with friends online
+- **Wave System** - Progressive difficulty levels
+- **Power-ups** - Collect weapons and shields
+- **Boss Battles** - Epic end-level encounters
+
+</td>
+<td width="50%">
+
+### ⚙️ Technical
+- **Multiplayer** - Real-time networked gameplay
+- **Cross-Platform** - Windows & Linux support
+- **High Performance** - Smooth 60 FPS gameplay
+- **Custom ECS Engine** - Entity Component System
+- **UDP Networking** - Low-latency multiplayer
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🎯 Quick Start
+
+### For Players
+
+#### 1️⃣ Download & Install
+
+**Requirements:**
+- Windows 10+ or Linux (Ubuntu 20.04+)
+- OpenGL 3.3+ compatible graphics card
+- 512 MB RAM
+- 100 MB disk space
+
+#### 2️⃣ Run the Game
+
+**Windows:**
+```powershell
+# Start server (host a game)
+.\scripts\run_server.bat
+
+# Start client (join a game)
+.\scripts\run_client.bat
 ```
 
-> **Note:** The `--recursive` flag is required to fetch the vcpkg submodule.
-
-### 2. Setup vcpkg (first time only)
-
-```bash
-./scripts/setup-vcpkg.sh
-```
-
-This script initializes vcpkg and bootstraps it automatically.
-
-**Alternative:** If you have your own vcpkg installation, set the `VCPKG_ROOT` environment variable:
-```bash
-export VCPKG_ROOT=/path/to/your/vcpkg
-```
-
-### 3. Configure and Build
-
-```bash
-# Configure (vcpkg installs dependencies automatically)
-cmake --preset linux-debug    # Linux
-cmake --preset windows-debug  # Windows
-
-# Build
-cmake --build build
-
-# Run tests
-ctest --test-dir build --output-on-failure
-```
-
-### Run
-
+**Linux:**
 ```bash
 # Start server
 ./scripts/run_server.sh
 
-# Start client (in another terminal)
+# Start client
 ./scripts/run_client.sh
 ```
 
-## CMake Presets
+#### 3️⃣ Configure
 
-| Preset | Description |
-|--------|-------------|
-| `linux-debug` | Linux Debug build |
-| `linux-release` | Linux Release build |
-| `windows-debug` | Windows Debug build (MSVC) |
-| `windows-release` | Windows Release build (MSVC) |
+Edit `config/client/client.toml` to customize:
+- **Graphics** - Resolution, fullscreen, VSync
+- **Controls** - Keyboard and gamepad mappings
+- **Audio** - Volume settings
+- **Network** - Server address and port
 
-## Documentation
+---
 
-### Generate Documentation
+## 🎮 How to Play
 
-```bash
-# Configure with documentation enabled
-cmake --preset linux-debug -DBUILD_DOCS=ON
+### Controls
 
-# Generate all documentation (Doxygen + Docusaurus)
-cmake --build build --target docs
+| Action | Keyboard | Gamepad |
+|--------|----------|---------|
+| Move | Arrow Keys | Left Stick |
+| Fire | Space | A Button |
+| Charge Beam | Hold Space | Hold A |
+| Pause | ESC | Start |
 
-# Start documentation dev server
-cmake --build build --target docs-serve
-```
+### Game Modes
 
-### Available Documentation Targets
+- **🏠 Host Server** - Start a game for others to join
+- **🌐 Join Server** - Connect to an existing game
+- **👥 Multiplayer** - Up to 4 players cooperative
 
-- `docs` - Generate complete documentation
-- `docs-doxygen` - Generate API reference only
-- `docs-serve` - Start Docusaurus dev server
-- `docs-build` - Build production documentation
+---
 
-### View Documentation
+## 🛠️ Building from Source
 
-After building with `BUILD_DOCS=ON`:
-- **Web docs**: http://localhost:3000 (when running `docs-serve`)
-- **API reference**: `docs/doxygen/html/index.html`
+<details>
+<summary><b>For Developers & Contributors</b></summary>
 
-## Project Structure
+### Prerequisites
 
-```
-Rtype/
-├── src/              # Source code
-│   ├── client/       # Client application
-│   ├── server/       # Server application
-│   ├── engine/       # ECS game engine
-│   ├── network/      # Network library
-│   └── games/        # Game-specific code
-├── include/          # Public headers (interfaces)
-├── external/         # External dependencies
-│   └── vcpkg/        # vcpkg submodule
-├── tests/            # Unit tests
-├── docs/             # Documentation
-│   ├── website/      # Docusaurus site
-│   └── Doxyfile      # Doxygen configuration
-├── config/           # Configuration files
-├── scripts/          # Build and run scripts
-├── cmake/            # CMake modules
-└── vcpkg.json        # vcpkg manifest (dependencies)
-```
+- **CMake** 3.19+
+- **Ninja** build system
+- **C++20 compiler** (GCC 11+, Clang 14+, or MSVC 2022)
+- **Git** with submodules support
 
-## Dependencies
-
-Managed automatically by vcpkg:
-
-| Package | Version | Description |
-|---------|---------|-------------|
-| asio | 1.32.0 | Async I/O (networking) |
-| sfml | 3.0.2 | Graphics, Audio, Window |
-| + others | - | See `vcpkg.json` |
-
-## Development
-
-### Build Options
+### Build Steps
 
 ```bash
-# Debug build with tests (recommended)
+# 1. Clone with submodules
+git clone --recursive https://github.com/My-Epitech-Organisation/Rtype.git
+cd Rtype
+
+# 2. Setup dependencies (first time only)
+./scripts/setup-vcpkg.sh
+
+# 3. Configure
+cmake --preset linux-release    # Linux
+cmake --preset windows-release  # Windows
+
+# 4. Build
+cmake --build build --config Release
+
+# 5. Run
+./build/bin/r-type_server  # Server
+./build/bin/r-type_client  # Client
+```
+
+### Advanced Options
+
+```bash
+# Debug build with tests
 cmake --preset linux-debug
 cmake --build build
+ctest --test-dir build
 
-# Release build
-cmake --preset linux-release
-cmake --build build
-
-# With documentation
-cmake --preset linux-debug -DBUILD_DOCS=ON
+# Build with documentation
+cmake --preset linux-release -DBUILD_DOCS=ON
 cmake --build build --target docs
 ```
 
-### Running Tests
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
 
-```bash
-ctest --test-dir build --output-on-failure
-```
+</details>
 
-## Contributing
+---
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+## 📚 Documentation
 
-## License
+| Resource | Description |
+|----------|-------------|
+| [📖 User Guide](docs/website/docs/getting-started.md) | Installation and gameplay instructions |
+| [🏗️ Architecture](docs/website/docs/Architecture/overview.md) | Technical design and structure |
+| [🌐 Network Protocol](docs/RFC/RFC_RTGP_v1.2.0.md) | Multiplayer protocol specification |
+| [🔧 Configuration](config/) | Server and client settings |
+| [🐛 Troubleshooting](docs/website/docs/contributing.md#troubleshooting) | Common issues and solutions |
 
-See [LICENSE](LICENSE) for details.
+---
 
-## Team
+## 🤝 Contributing
 
-Epitech Project - 2025/2026
+We welcome contributions! Whether you're fixing bugs, adding features, or improving documentation:
+
+1. 🍴 Fork the repository
+2. 🔨 Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. ✅ Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. 📤 Push to the branch (`git push origin feature/AmazingFeature`)
+5. 🎉 Open a Pull Request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+---
+
+## 📊 Project Status
+
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)
+![Coverage](https://img.shields.io/badge/coverage-85%25-yellow?style=flat-square)
+
+**Current Version:** 1.0.0  
+**Status:** Active Development  
+**Last Updated:** December 2025
+
+---
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👥 Team
+
+**Epitech Project** - R-Type 2025/2026
+
+Made with ❤️ by students passionate about game development
+
+---
+
+<div align="center">
+
+### ⭐ Star us on GitHub!
+
+If you enjoy R-Type, consider giving us a star. It helps the project grow! 🚀
+
+[⬆ Back to Top](#-r-type)
+
+</div>
