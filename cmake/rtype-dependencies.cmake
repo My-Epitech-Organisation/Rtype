@@ -4,14 +4,12 @@
 
 include(${CMAKE_CURRENT_LIST_DIR}/CPM.cmake)
 
-# Cache the CPM source tree to avoid repeated downloads across builds
 if(NOT DEFINED CPM_SOURCE_CACHE)
     set(CPM_SOURCE_CACHE "${CMAKE_SOURCE_DIR}/.cpm-cache" CACHE PATH "CPM download cache" FORCE)
 endif()
 
 option(RTYPE_FORCE_CPM "Force CPM even if a package manager is available" OFF)
 
-# Decide whether we rely on CPM (no vcpkg/toolchain) or use existing packages
 if(NOT DEFINED RTYPE_VCPKG_FOUND)
     set(RTYPE_VCPKG_FOUND OFF)
 endif()
@@ -20,7 +18,6 @@ if(NOT RTYPE_USE_CPM AND NOT RTYPE_VCPKG_FOUND)
     set(RTYPE_USE_CPM ON CACHE BOOL "Use CPM instead of vcpkg/system packages" FORCE)
 endif()
 
-# When forcing CPM, skip probing local packages to guarantee a CPM download path
 if(RTYPE_FORCE_CPM)
     set(CPM_USE_LOCAL_PACKAGES OFF CACHE BOOL "Prefer already-available packages" FORCE)
 endif()
@@ -33,20 +30,29 @@ endif()
 
 # === Helper functions ===
 function(rtype_find_asio)
-    # First try system/vcpkg package (non-CPM path)
     if(NOT RTYPE_FORCE_CPM)
         find_package(asio CONFIG QUIET)
         if(asio_FOUND)
-            # Ensure the asio::asio target exists
             if(NOT TARGET asio::asio)
-                add_library(asio::asio INTERFACE IMPORTED)
-                set_target_properties(asio::asio PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "/usr/include")
+                find_path(ASIO_INCLUDE_DIR
+                    NAMES asio.hpp
+                    PATHS ${asio_INCLUDE_DIRS} /usr/include /usr/local/include
+                    PATH_SUFFIXES asio
+                )
+
+                if(ASIO_INCLUDE_DIR)
+                    add_library(asio::asio INTERFACE IMPORTED)
+                    set_target_properties(asio::asio PROPERTIES
+                        INTERFACE_INCLUDE_DIRECTORIES "${ASIO_INCLUDE_DIR}"
+                    )
+                else()
+                    message(WARNING "[deps] asio found but include directory could not be determined")
+                endif()
             endif()
             return()
         endif()
     endif()
 
-    # Fall back to CPM
     CPMAddPackage(
         NAME asio
         VERSION 1.28.0
@@ -59,7 +65,6 @@ function(rtype_find_asio)
             "ASIO_USE_BOOST=OFF"
     )
 
-    # Ensure asio::asio target exists for linking
     if(NOT TARGET asio::asio)
         add_library(asio::asio INTERFACE IMPORTED)
         target_include_directories(asio::asio INTERFACE ${asio_SOURCE_DIR}/asio/include)
@@ -67,7 +72,6 @@ function(rtype_find_asio)
 endfunction()
 
 function(rtype_find_tomlplusplus)
-    # First try system/vcpkg package (non-CPM path)
     if(NOT RTYPE_FORCE_CPM)
         find_package(tomlplusplus CONFIG QUIET)
         if(tomlplusplus_FOUND)
@@ -75,7 +79,6 @@ function(rtype_find_tomlplusplus)
         endif()
     endif()
 
-    # Fall back to CPM
     CPMAddPackage(
         NAME tomlplusplus
         VERSION 3.4.0
@@ -87,7 +90,6 @@ function(rtype_find_tomlplusplus)
             "TOMLPP_BUILD_BENCHMARKS=OFF"
     )
 
-    # Ensure tomlplusplus::tomlplusplus target exists for linking (header-only)
     if(NOT TARGET tomlplusplus::tomlplusplus)
         add_library(tomlplusplus::tomlplusplus INTERFACE IMPORTED)
         target_include_directories(tomlplusplus::tomlplusplus INTERFACE ${tomlplusplus_SOURCE_DIR}/include)
@@ -95,15 +97,12 @@ function(rtype_find_tomlplusplus)
 endfunction()
 
 function(rtype_find_sfml)
-    # Avoid duplicate target creation by checking if already found
     if(TARGET SFML::Network)
-        message(STATUS "[deps] SFML already configured, skipping retype_find_sfml()")
+        message(STATUS "[deps] SFML already configured, skipping rtype_find_sfml()")
         return()
     endif()
 
-    # When NOT forcing CPM, use vcpkg/system packages with CONFIG mode
     if(NOT RTYPE_FORCE_CPM)
-        # Try VCPKG_FIND_PACKAGE_CONFIGURATION mode to prioritize vcpkg
         find_package(SFML
             COMPONENTS
             Network
@@ -112,26 +111,20 @@ function(rtype_find_sfml)
             Audio
             System
             CONFIG
-            REQUIRED
         )
-        # If successful, return (vcpkg found it)
         if(SFML_FOUND)
             return()
         endif()
     endif()
 
-    # If forcing CPM or vcpkg SFML not found, use CPM
     message(STATUS "[deps] Building SFML from source via CPM...")
-
-    # Tell CPM to skip system package search when using CPM
-    set(CPM_USE_FIND_PACKAGE_FALLBACK OFF)
 
     CPMAddPackage(
         NAME SFML
         VERSION 3.0.2
         GITHUB_REPOSITORY SFML/SFML
         GIT_TAG 3.0.2
-        FIND_PACKAGE_ARGUMENTS "COMPONENTS Network Graphics Window Audio System CONFIG REQUIRED"
+        FIND_PACKAGE_ARGUMENTS "COMPONENTS Network Graphics Window Audio System CONFIG"
         OPTIONS
             "BUILD_SHARED_LIBS=OFF"
             "SFML_BUILD_EXAMPLES=OFF"
@@ -141,7 +134,6 @@ function(rtype_find_sfml)
 endfunction()
 
 function(rtype_find_sdl2)
-    # First try system/vcpkg package (non-CPM path)
     if(NOT RTYPE_FORCE_CPM)
         find_package(SDL2 CONFIG QUIET)
         if(SDL2_FOUND)
@@ -149,8 +141,7 @@ function(rtype_find_sdl2)
         endif()
     endif()
 
-    # Fall back to CPM
-    CPMFindPackage(
+    CPMAddPackage(
         NAME SDL2
         VERSION 2.32.4
         GITHUB_REPOSITORY libsdl-org/SDL
@@ -165,7 +156,6 @@ function(rtype_find_sdl2)
 endfunction()
 
 function(rtype_find_zlib)
-    # First try system/vcpkg package (non-CPM path)
     if(NOT RTYPE_FORCE_CPM)
         find_package(ZLIB QUIET)
         if(ZLIB_FOUND)
@@ -173,8 +163,7 @@ function(rtype_find_zlib)
         endif()
     endif()
 
-    # Fall back to CPM
-    CPMFindPackage(
+    CPMAddPackage(
         NAME ZLIB
         VERSION 1.3.1
         GITHUB_REPOSITORY madler/zlib
@@ -187,7 +176,6 @@ function(rtype_find_zlib)
 endfunction()
 
 function(rtype_find_png)
-    # First try system/vcpkg package (non-CPM path)
     if(NOT RTYPE_FORCE_CPM)
         find_package(PNG QUIET)
         if(PNG_FOUND)
@@ -195,12 +183,11 @@ function(rtype_find_png)
         endif()
     endif()
 
-    # Fall back to CPM
-    CPMFindPackage(
+    CPMAddPackage(
         NAME PNG
-        VERSION 1.6.44
+        VERSION 1.6.51
         GITHUB_REPOSITORY glennrp/libpng
-        GIT_TAG v1.6.44
+        GIT_TAG v1.6.51
         OPTIONS
             "PNG_SHARED=OFF"
             "PNG_TESTS=OFF"
@@ -209,7 +196,6 @@ function(rtype_find_png)
 endfunction()
 
 function(rtype_find_bzip2)
-    # First try system/vcpkg package (non-CPM path)
     if(NOT RTYPE_FORCE_CPM)
         find_package(BZip2 QUIET)
         if(BZip2_FOUND)
@@ -217,8 +203,7 @@ function(rtype_find_bzip2)
         endif()
     endif()
 
-    # Fall back to CPM
-    CPMFindPackage(
+    CPMAddPackage(
         NAME BZip2
         VERSION 1.0.8
         GIT_REPOSITORY https://gitlab.com/bzip2/bzip2.git
@@ -231,7 +216,6 @@ function(rtype_find_bzip2)
 endfunction()
 
 function(rtype_find_brotli)
-    # First try system/vcpkg package (non-CPM path)
     if(NOT RTYPE_FORCE_CPM)
         find_package(brotli CONFIG QUIET)
         if(brotli_FOUND)
@@ -239,18 +223,16 @@ function(rtype_find_brotli)
         endif()
     endif()
 
-    # Fall back to CPM
-    CPMFindPackage(
+    CPMAddPackage(
         NAME brotli
-        VERSION 1.1.0
+        VERSION 1.2.0
         GITHUB_REPOSITORY google/brotli
-        GIT_TAG v1.1.0
+        GIT_TAG v1.2.0
         OPTIONS
             "BROTLI_BUNDLED_MODE=OFF"
             "BUILD_SHARED_LIBS=OFF"
     )
 
-    # Align target names with the ones provided by the vcpkg port for seamless linking
     if(TARGET brotlidec-static AND NOT TARGET unofficial::brotli::brotlidec)
         add_library(unofficial::brotli::brotlidec ALIAS brotlidec-static)
     endif()
