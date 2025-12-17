@@ -35,10 +35,65 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
                                                                    bgTexture);
     registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         background, 0, 0);
-    registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
-        background, cfg::PARALLAX_BACKGROUND, true);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         background, cfg::ZINDEX_BACKGROUND);
+
+    auto sun = registry->spawnEntity();
+    auto& sunTexture = assetManager->textureManager->get("bg_sun");
+    registry->emplaceComponent<rtype::games::rtype::client::Image>(sun,
+                                                                   sunTexture);
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(sun, 0,
+                                                                      0);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        sun, cfg::ZINDEX_SUN);
+
+    auto bigAsteroids = registry->spawnEntity();
+    auto& bigAsteroidsTexture =
+        assetManager->textureManager->get("bg_big_asteroids");
+    registry->emplaceComponent<rtype::games::rtype::client::Image>(
+        bigAsteroids, bigAsteroidsTexture);
+    registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
+        bigAsteroids, cfg::PARALLAX_BIG_ASTEROIDS, true);
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+        bigAsteroids, 0, 0);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        bigAsteroids, cfg::ZINDEX_BIG_SMALL_ASTEROIDS);
+
+    auto smallAsteroids = registry->spawnEntity();
+    auto& smallAsteroidsTexture =
+        assetManager->textureManager->get("bg_small_asteroids");
+    registry->emplaceComponent<rtype::games::rtype::client::Image>(
+        smallAsteroids, smallAsteroidsTexture);
+    registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
+        smallAsteroids, cfg::PARALLAX_SMALL_ASTEROIDS, true);
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+        smallAsteroids, 0, 0);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        smallAsteroids, cfg::ZINDEX_BIG_SMALL_ASTEROIDS);
+
+    auto firstPlanAsteroids = registry->spawnEntity();
+    auto& firstPlanAsteroidsTexture =
+        assetManager->textureManager->get("bg_fst_plan_asteroids");
+    registry->emplaceComponent<rtype::games::rtype::client::Image>(
+        firstPlanAsteroids, firstPlanAsteroidsTexture);
+    registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
+        firstPlanAsteroids, cfg::PARALLAX_ASTEROIDS_FST_PLAN, true);
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+        firstPlanAsteroids, 0, 0);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        firstPlanAsteroids, cfg::ZINDEX_FST_PLAN_ASTEROIDS);
+
+    auto secondPlanAsteroids = registry->spawnEntity();
+    auto& secondPlanAsteroidsTexture =
+        assetManager->textureManager->get("bg_snd_plan_asteroids");
+    registry->emplaceComponent<rtype::games::rtype::client::Image>(
+        secondPlanAsteroids, secondPlanAsteroidsTexture);
+    registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
+        secondPlanAsteroids, cfg::PARALLAX_ASTEROIDS_SND_PLAN, true);
+    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+        secondPlanAsteroids, 0, 0);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        secondPlanAsteroids, cfg::ZINDEX_SND_PLAN_ASTEROIDS);
 
     auto planet1 = registry->spawnEntity();
     auto& planet1Texture = assetManager->textureManager->get("bg_planet_1");
