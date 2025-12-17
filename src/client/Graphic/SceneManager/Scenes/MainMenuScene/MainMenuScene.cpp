@@ -341,7 +341,8 @@ MainMenuScene::MainMenuScene(
                           std::string(e.what()));
             }
         }));
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(playBtn, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        playBtn, 1);
     this->_listEntity.push_back(playBtn);
     auto howToPlayBtn = EntityFactory::createButton(
         this->_registry,
@@ -359,7 +360,8 @@ MainMenuScene::MainMenuScene(
                           std::string(e.what()));
             }
         }));
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(howToPlayBtn, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        howToPlayBtn, 1);
     this->_listEntity.push_back(howToPlayBtn);
     auto settingsBtn = EntityFactory::createButton(
         this->_registry,
@@ -377,7 +379,8 @@ MainMenuScene::MainMenuScene(
                           std::string(e.what()));
             }
         }));
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(settingsBtn, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        settingsBtn, 1);
     this->_listEntity.push_back(settingsBtn);
     auto quitBtn = EntityFactory::createButton(
         this->_registry,
@@ -388,9 +391,9 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager,
-        std::function<void()>([this]() { this->_window->close(); })
-    );
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(quitBtn, 1);
+        std::function<void()>([this]() { this->_window->close(); }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        quitBtn, 1);
     this->_listEntity.push_back(quitBtn);
     this->_assetsManager->audioManager->load(
         "main_menu_music",

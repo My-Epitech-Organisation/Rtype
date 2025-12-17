@@ -176,7 +176,8 @@ std::vector<ECS::Entity> EntityFactory::createSection(
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         titleEnt);
     entities.push_back(titleEnt);
-    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(titleEnt, 1);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(titleEnt,
+                                                                    1);
 
     return entities;
 }
@@ -207,7 +208,8 @@ ECS::Entity EntityFactory::createStaticText(
         sf::Color::White, size, title);
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         titleEnt);
-    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(titleEnt, 1);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(titleEnt,
+                                                                    1);
     return titleEnt;
 }
 

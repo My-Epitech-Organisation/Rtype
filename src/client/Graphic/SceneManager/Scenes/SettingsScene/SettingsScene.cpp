@@ -89,7 +89,8 @@ void SettingsScene::_initKeybindSection() {
                     }
                 }
             }));
-        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(btn, 2);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            btn, 2);
         this->_actionButtons[action] = btn;
         this->_keybindSectionEntities.push_back(btn);
         this->_listEntity.push_back(btn);
@@ -191,7 +192,8 @@ void SettingsScene::_initAudioSection() {
             ->emplaceComponent<rtype::games::rtype::shared::Position>(
                 valueEntity,
                 rtype::games::rtype::shared::Position(labelX, y + 10));
-        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(valueEntity, 1);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            valueEntity, 1);
         this->_listEntity.push_back(valueEntity);
 
         auto minusBtn = EntityFactory::createButton(
@@ -223,7 +225,8 @@ void SettingsScene::_initAudioSection() {
                     textComp.text.setString(s);
                 }
             }));
-        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(minusBtn);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            minusBtn);
         this->_listEntity.push_back(minusBtn);
 
         auto plusBtn = EntityFactory::createButton(
@@ -255,7 +258,8 @@ void SettingsScene::_initAudioSection() {
                     textComp.text.setString(s);
                 }
             }));
-        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(plusBtn);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            plusBtn);
         this->_listEntity.push_back(plusBtn);
     };
 

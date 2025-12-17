@@ -52,7 +52,8 @@ HowToPlayScene::HowToPlayScene(
                           std::string(e.what()));
             }
         }));
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(backBtn, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        backBtn, 1);
     this->_listEntity.push_back(backBtn);
 }
 

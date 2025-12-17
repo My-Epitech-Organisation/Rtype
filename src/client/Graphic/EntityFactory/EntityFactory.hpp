@@ -24,8 +24,8 @@
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
 #include "Components/TextInputComponent.hpp"
-#include "Components/ZIndexComponent.hpp"
 #include "Components/UserEventComponent.hpp"
+#include "Components/ZIndexComponent.hpp"
 #include "ECS.hpp"
 
 namespace EntityFactory {
@@ -86,14 +86,13 @@ ECS::Entity createPlayer(std::shared_ptr<ECS::Registry> registry,
                          bool isControllable = false);
 
 /**
-* @brief Create a rectangle entity
-* @param registry ECS registry
-* @param size a sf::Vector2i defining the size of the rectangle
-* @param fill Fill color of the rectangle
-* @param position Position of the rectangle
-* @return Created entity
-*/
-
+ * @brief Create a rectangle entity
+ * @param registry ECS registry
+ * @param size a sf::Vector2i defining the size of the rectangle
+ * @param fill Fill color of the rectangle
+ * @param position Position of the rectangle
+ * @return Created entity
+ */
 
 ECS::Entity createRectangle(std::shared_ptr<ECS::Registry> registry,
                             sf::Vector2i size = sf::Vector2i(1, 1),

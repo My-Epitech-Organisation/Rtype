@@ -28,7 +28,7 @@ bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
     return false;
 }
 
-    void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
+void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
     if (!registry.hasComponent<Image>(entity) ||
         !registry.hasComponent<rs::Position>(entity) ||
         registry.hasComponent<rs::DestroyTag>(entity))
