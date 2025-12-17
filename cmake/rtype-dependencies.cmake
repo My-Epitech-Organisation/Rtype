@@ -1,6 +1,17 @@
 # Centralized dependency helpers for the R-Type project.
 # - Prefer vcpkg/toolchain-provided packages when available.
 # - Fall back to CPM.cmake to fetch the same dependencies from source.
+#
+# SECURITY NOTE:
+# CPM dependencies are pinned to version tags (e.g., v3.0.2, 1.28.0) from upstream
+# GitHub/GitLab repositories. While convenient, tags are mutable and can be
+# force-pushed or modified on the upstream repository. For production builds,
+# consider:
+#   1. Pinning to immutable commit SHAs instead of tags
+#   2. Verifying integrity with checksums (e.g., GIT_TAG + GIT_SHALLOW_COMMIT_HASH)
+#   3. Mirroring or vendoring critical build-time dependencies
+#   4. Regularly auditing upstream repositories for security advisories
+# See CPM.cmake documentation for options: https://github.com/cpm-cmake/CPM.cmake
 
 include(${CMAKE_CURRENT_LIST_DIR}/CPM.cmake)
 
@@ -29,6 +40,23 @@ else()
 endif()
 
 # === Helper functions ===
+#
+# TARGET NAMES CONTRACT:
+# Each rtype_find_*() helper ensures that a well-known CMake target exists after
+# the function completes. Callers can assume these targets are present and use them
+# without conditional checks. The expected targets are:
+#   - asio::asio (asio)
+#   - tomlplusplus::tomlplusplus (tomlplusplus)
+#   - SFML::Network, SFML::Graphics, SFML::Window, SFML::Audio, SFML::System (SFML)
+#   - SDL2::SDL2 (SDL2)
+#   - ZLIB::ZLIB (zlib)
+#   - PNG::PNG (libpng)
+#   - BZip2::BZip2 (bzip2)
+#   - unofficial::brotli::brotlidec, unofficial::brotli::brotlicommon (brotli)
+#
+# This works consistently across vcpkg, CPM, and system packages, allowing
+# downstream CMakeLists (e.g., src/client) to use TARGET checks without *_FOUND guards.
+#
 function(rtype_find_asio)
     if(NOT RTYPE_FORCE_CPM)
         find_package(asio CONFIG QUIET)
@@ -37,11 +65,25 @@ function(rtype_find_asio)
                 return()
             endif()
 
+            # asio was found but target not created; try to construct it from headers
+            # Asio is header-only, so we just need to find the include directory.
+            # The include path may vary:
+            #   - Some installs: /usr/include/asio/asio.hpp
+            #   - Others: /usr/include/asio.hpp
             find_path(ASIO_INCLUDE_DIR
                 NAMES asio.hpp
                 PATHS ${asio_INCLUDE_DIRS} /usr/include /usr/local/include
                 PATH_SUFFIXES asio
+                NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH
             )
+
+            if(NOT ASIO_INCLUDE_DIR)
+                find_path(ASIO_INCLUDE_DIR
+                    NAMES asio.hpp
+                    PATHS ${asio_INCLUDE_DIRS} /usr/include /usr/local/include
+                    NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH
+                )
+            endif()
 
             if(ASIO_INCLUDE_DIR)
                 add_library(asio::asio INTERFACE IMPORTED)
@@ -50,7 +92,13 @@ function(rtype_find_asio)
                 )
                 return()
             else()
-                message(WARNING "[deps] asio found but include directory could not be determined; falling back to CPM")
+                message(WARNING
+                    "[deps] asio found but include directory (asio.hpp) could not be located in:\n"
+                    "  - ${asio_INCLUDE_DIRS}\n"
+                    "  - /usr/include\n"
+                    "  - /usr/local/include\n"
+                    "Falling back to CPM to fetch asio from source."
+                )
                 # do not return; proceed to CPM fallback below
             endif()
         endif()
@@ -69,8 +117,33 @@ function(rtype_find_asio)
     )
 
     if(NOT TARGET asio::asio)
+        # Determine the correct include directory for standalone asio.
+        # CPM may fetch asio from different repository forks or versions with varying layouts.
+        # Try the primary expected layout first, then fall back to alternatives.
+        set(ASIO_CANDIDATE_INCLUDE_DIRS
+            "${asio_SOURCE_DIR}/asio/include"
+            "${asio_SOURCE_DIR}/include"
+        )
+        set(ASIO_INCLUDE_DIR "")
+        foreach(dir IN LISTS ASIO_CANDIDATE_INCLUDE_DIRS)
+            if(EXISTS "${dir}/asio.hpp" OR EXISTS "${dir}/asio/asio.hpp")
+                set(ASIO_INCLUDE_DIR "${dir}")
+                message(STATUS "[deps] Found asio headers in: ${ASIO_INCLUDE_DIR}")
+                break()
+            endif()
+        endforeach()
+
+        if(NOT ASIO_INCLUDE_DIR)
+            message(FATAL_ERROR
+                "[deps] Unable to locate asio headers in fetched source directory.\n"
+                "Checked: ${ASIO_CANDIDATE_INCLUDE_DIRS}\n"
+                "asio_SOURCE_DIR: ${asio_SOURCE_DIR}\n"
+                "Please verify the asio repository structure or try using vcpkg instead."
+            )
+        endif()
+
         add_library(asio::asio INTERFACE IMPORTED)
-        target_include_directories(asio::asio INTERFACE ${asio_SOURCE_DIR}/asio/include)
+        target_include_directories(asio::asio INTERFACE "${ASIO_INCLUDE_DIR}")
     endif()
 endfunction()
 
@@ -142,6 +215,11 @@ function(rtype_find_sfml)
         VERSION 3.0.2
         GITHUB_REPOSITORY SFML/SFML
         GIT_TAG 3.0.2
+        # NOTE:
+        # - FIND_PACKAGE_ARGUMENTS are only used by CPM when it can satisfy SFML
+        #   via an existing/local package and calls find_package(SFML ...) for us.
+        # - When CPM actually fetches and builds SFML from source, these arguments
+        #   are ignored; the build configuration is instead driven by the OPTIONS below.
         FIND_PACKAGE_ARGUMENTS "COMPONENTS Network Graphics Window Audio System CONFIG"
         OPTIONS
             "BUILD_SHARED_LIBS=OFF"
