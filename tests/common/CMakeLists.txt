@@ -141,7 +141,7 @@ target_include_directories(test_scene_exception PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_scene_exception PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_scene_exception WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_scene_exception)
 endif()
@@ -160,7 +160,7 @@ target_include_directories(test_savemanager_branches PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_savemanager_branches PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_savemanager_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_savemanager_branches)
 endif()
@@ -179,7 +179,7 @@ target_include_directories(test_fileoperations_branches PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_fileoperations_branches PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_fileoperations_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_fileoperations_branches)
 endif()
@@ -198,7 +198,7 @@ target_include_directories(test_configparser_branches PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_configparser_branches PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_configparser_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_configparser_branches)
 endif()
@@ -217,7 +217,7 @@ target_include_directories(test_binaryserializer_branches PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_binaryserializer_branches PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_binaryserializer_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_binaryserializer_branches)
 endif()
