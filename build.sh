@@ -83,7 +83,6 @@ VCPKG_DIR="$PROJECT_ROOT/external/vcpkg"
 CMAKE_PRESET="linux-release"
 BUILD_DIR="build"
 
-# Check for vcpkg availability (unless forced to CPM)
 if [ "$FORCE_CPM" = false ]; then
     if [ -n "$VCPKG_ROOT" ] && [ -f "$VCPKG_ROOT/vcpkg" ]; then
         echo "  ✓ Using personal vcpkg from VCPKG_ROOT: $VCPKG_ROOT"
@@ -91,6 +90,12 @@ if [ "$FORCE_CPM" = false ]; then
     elif [ -f "$VCPKG_DIR/vcpkg" ]; then
         echo "  ✓ vcpkg found in project: $VCPKG_DIR"
         VCPKG_AVAILABLE=true
+    elif [ -d "$VCPKG_DIR" ] && [ ! -f "$VCPKG_DIR/vcpkg" ]; then
+        echo "  ⚠ vcpkg directory exists but not bootstrapped."
+        echo "    Run: cd $VCPKG_DIR && ./bootstrap-vcpkg.sh"
+        echo "    Or use -c flag to force CPM."
+        echo "  → Falling back to CPM..."
+        VCPKG_AVAILABLE=false
     else
         echo "  ⚠ vcpkg not found. Will use CPM as fallback."
         VCPKG_AVAILABLE=false
@@ -100,7 +105,6 @@ else
     VCPKG_AVAILABLE=false
 fi
 
-# Set preset and build dir based on availability
 if [ "$VCPKG_AVAILABLE" = true ]; then
     echo "  → Using vcpkg-based build"
     CMAKE_PRESET="linux-release"
