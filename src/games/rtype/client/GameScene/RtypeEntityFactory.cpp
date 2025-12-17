@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <utility>
+#include <random>
 
 #include "../Components/RectangleComponent.hpp"
 #include "../Systems/PlayerAnimationSystem.hpp"
@@ -93,7 +94,7 @@ RtypeEntityFactory::createNetworkEntityFactory(
                 break;
 
             case ::rtype::network::EntityType::Obstacle:
-                setupObstacleEntity(reg, entity, event.entityId);
+                setupObstacleEntity(reg, assetsManager, entity, event.entityId);
                 break;
         }
 
@@ -246,26 +247,23 @@ void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
 }
 
 void RtypeEntityFactory::setupObstacleEntity(ECS::Registry& reg,
+                                             std::shared_ptr<AssetManager> assetsManager,
                                              ECS::Entity entity,
                                              std::uint32_t /*networkId*/) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Obstacle components");
-    const sf::Color main = sf::Color(110, 110, 120);
-    const sf::Color outline = sf::Color(200, 200, 210);
 
-    reg.emplaceComponent<Rectangle>(entity, std::pair<float, float>{64.f, 64.f},
-                                    main, main);
-    reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
-    reg.getComponent<Rectangle>(entity).outlineColor = outline;
-    reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {64.f, 64.f}));
-    reg.getComponent<BoxingComponent>(entity).outlineColor = outline;
-    reg.getComponent<BoxingComponent>(entity).fillColor =
-        sf::Color(outline.r, outline.g, outline.b, 35);
+    std::random_device rd;              // Seed
+    std::mt19937 gen(rd());              // Mersenne Twister engine
+    std::uniform_int_distribution<> dist(1, GraphicsConfig::NBR_MAX_OBSTACLES);
+
+    int value = dist(gen);
+    std::string textureName = "projectile" + std::to_string(value);
+
+    auto& projectileTexture = assetsManager->textureManager->get(textureName);
+    reg.emplaceComponent<Image>(entity, projectileTexture);
+    reg.emplaceComponent<Size>(entity, 0.5, 0.5);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
-
-    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, 64.0f, 64.0f);
 }
 
 }  // namespace rtype::games::rtype::client

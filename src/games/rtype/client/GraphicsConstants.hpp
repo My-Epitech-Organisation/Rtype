@@ -149,6 +149,13 @@ inline constexpr float FAKE_PLAYER_SCALE = 2.2f;
 /// @brief Maximum number of player sprites (colors) available
 inline constexpr unsigned int MAX_PLAYER_SPRITES = 4;
 
+// ==========================================================================
+// Obstacle Configuration
+// ==========================================================================
+
+/// @brief Obstacle nbr of sprites (variety)
+inline constexpr unsigned int NBR_MAX_OBSTACLES = 11;
+
 }  // namespace GraphicsConfig
 
 }  // namespace rtype::games::rtype::client
