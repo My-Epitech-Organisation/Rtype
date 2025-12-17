@@ -72,7 +72,7 @@ struct AcceptPayload {
  * @note Contains a reason code (maps to DisconnectReason)
  */
 struct DisconnectPayload {
-    std::uint8_t reason{static_cast<std::uint8_t>(0)};  // Default LocalRequest
+    std::uint8_t reason{static_cast<std::uint8_t>(4)};  // Default LocalRequest
 };
 
 /**
