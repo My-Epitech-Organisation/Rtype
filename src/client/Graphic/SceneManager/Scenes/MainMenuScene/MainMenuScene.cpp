@@ -325,7 +325,7 @@ MainMenuScene::MainMenuScene(
     this->_createAstroneerVessel();
     this->_createFakePlayer();
     this->_createConnectionPanel(switchToScene);
-    this->_listEntity.push_back(EntityFactory::createButton(
+    auto playBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
@@ -340,8 +340,10 @@ MainMenuScene::MainMenuScene(
                 LOG_ERROR(std::string("Error switching to Game Menu: ") +
                           std::string(e.what()));
             }
-        })));
-    this->_listEntity.push_back(EntityFactory::createButton(
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(playBtn, 1);
+    this->_listEntity.push_back(playBtn);
+    auto howToPlayBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
@@ -356,8 +358,10 @@ MainMenuScene::MainMenuScene(
                 LOG_ERROR(std::string("Error switching to How To Play: ") +
                           std::string(e.what()));
             }
-        })));
-    this->_listEntity.push_back(EntityFactory::createButton(
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(howToPlayBtn, 1);
+    this->_listEntity.push_back(howToPlayBtn);
+    auto settingsBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
@@ -372,8 +376,10 @@ MainMenuScene::MainMenuScene(
                 LOG_ERROR(std::string("Error switching to Settings Menu: ") +
                           std::string(e.what()));
             }
-        })));
-    this->_listEntity.push_back(EntityFactory::createButton(
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(settingsBtn, 1);
+    this->_listEntity.push_back(settingsBtn);
+    auto quitBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
@@ -383,8 +389,9 @@ MainMenuScene::MainMenuScene(
                                                sf::Color::Red),
         this->_assetsManager,
         std::function<void()>([this]() { this->_window->close(); })
-
-            ));
+    );
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(quitBtn, 1);
+    this->_listEntity.push_back(quitBtn);
     this->_assetsManager->audioManager->load(
         "main_menu_music",
         this->_assetsManager->configGameAssets.assets.music.mainMenu);

@@ -137,6 +137,8 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
                                                                       50, 50);
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         appTitle);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        appTitle, cfg::ZINDEX_APP_TITLE);
     return {planet1, planet2, planet3, background, appTitle};
 }
 
@@ -158,6 +160,7 @@ std::vector<ECS::Entity> EntityFactory::createSection(
         rect.outlineThickness = cfg::UI_OUTLINE_THICKNESS;
         rect.outlineColor = sf::Color::White;
     }
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(bg, 0);
 
     if (title.empty()) return {bg};
 
@@ -173,6 +176,8 @@ std::vector<ECS::Entity> EntityFactory::createSection(
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         titleEnt);
     entities.push_back(titleEnt);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(titleEnt, 1);
+
     return entities;
 }
 
@@ -202,6 +207,7 @@ ECS::Entity EntityFactory::createStaticText(
         sf::Color::White, size, title);
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         titleEnt);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(titleEnt, 1);
     return titleEnt;
 }
 
@@ -227,6 +233,6 @@ ECS::Entity EntityFactory::createTextInput(
         entity);
 
     registry->emplaceComponent<rtype::games::rtype::client::UserEvent>(entity);
-
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entity, 1);
     return entity;
 }

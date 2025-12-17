@@ -95,6 +95,9 @@ inline constexpr int ZINDEX_SND_PLAN_ASTEROIDS = -6;
 /// @brief Z-index for parallax planet layers
 inline constexpr int ZINDEX_PLANETS = -5;
 
+/// @brief Z-index for app title
+inline constexpr int ZINDEX_APP_TITLE = -1;
+
 /// @brief Z-index for Big and small asteroids layers
 inline constexpr int ZINDEX_BIG_SMALL_ASTEROIDS = -4;
 

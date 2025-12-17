@@ -15,6 +15,7 @@
 #include "AudioLib/AudioLib.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
+#include "Components/ZIndexComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "Graphic/Accessibility.hpp"
 #include "Logger/Macros.hpp"
@@ -88,6 +89,7 @@ void SettingsScene::_initKeybindSection() {
                     }
                 }
             }));
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(btn, 2);
         this->_actionButtons[action] = btn;
         this->_keybindSectionEntities.push_back(btn);
         this->_listEntity.push_back(btn);
@@ -171,7 +173,6 @@ void SettingsScene::_initAudioSection() {
     auto createVolumeControl = [&](std::string label, float y, bool isMusic) {
         float labelX = sectionX + 30;
         float minusX = sectionX + 250;
-        float valueX = sectionX + 320;
         float plusX = sectionX + 400;
 
         auto valueEntity = this->_registry->spawnEntity();
@@ -190,6 +191,7 @@ void SettingsScene::_initAudioSection() {
             ->emplaceComponent<rtype::games::rtype::shared::Position>(
                 valueEntity,
                 rtype::games::rtype::shared::Position(labelX, y + 10));
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(valueEntity, 1);
         this->_listEntity.push_back(valueEntity);
 
         auto minusBtn = EntityFactory::createButton(
@@ -221,6 +223,7 @@ void SettingsScene::_initAudioSection() {
                     textComp.text.setString(s);
                 }
             }));
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(minusBtn);
         this->_listEntity.push_back(minusBtn);
 
         auto plusBtn = EntityFactory::createButton(
@@ -252,6 +255,7 @@ void SettingsScene::_initAudioSection() {
                     textComp.text.setString(s);
                 }
             }));
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(plusBtn);
         this->_listEntity.push_back(plusBtn);
     };
 
