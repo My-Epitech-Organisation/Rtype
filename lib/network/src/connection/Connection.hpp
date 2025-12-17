@@ -196,7 +196,7 @@ class Connection {
     [[nodiscard]] Result<void> handleConnectAccept(const Header& header,
                                                    const Buffer& payload,
                                                    const Endpoint& sender);
-    [[nodiscard]] Result<void> handleDisconnect(const Header& header);
+    [[nodiscard]] Result<void> handleDisconnect(const Header& header, const Buffer& payload);
     void processPong(const Header& header) noexcept;
     void processReliabilityAck(const Header& header);
     void queuePacket(Buffer data, bool reliable);

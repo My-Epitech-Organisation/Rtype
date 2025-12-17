@@ -11,6 +11,7 @@
 #include <vector>
 #include <utility>
 #include "protocol/ByteOrderSpec.hpp"
+#include "Serializer.hpp"
 
 namespace rtype::network {
 
@@ -69,7 +70,6 @@ Result<void> Connection::processPacket(const Buffer& data,
     }
 
     stateMachine_.recordActivity();
-    missedPingCount_ = 0;
     processReliabilityAck(header);
 
     if (reliableChannel_.isDuplicate(header.seqId)) {
@@ -104,7 +104,7 @@ Result<void> Connection::processPacket(const Buffer& data,
             return handleConnectAccept(header, payload, sender);
 
         case OpCode::DISCONNECT:
-            return handleDisconnect(header);
+            return handleDisconnect(header, payload);
 
         case OpCode::PONG:
             processPong(header);
@@ -380,10 +380,20 @@ Result<void> Connection::handleConnectAccept(const Header& header,
     return result;
 }
 
-Result<void> Connection::handleDisconnect(const Header& header) {
+Result<void> Connection::handleDisconnect(const Header& header, const Buffer& payload) {
     (void)header;
 
-    auto result = stateMachine_.handleRemoteDisconnect();
+    DisconnectReason reason = DisconnectReason::RemoteRequest;
+    if (payload.size() >= sizeof(network::DisconnectPayload)) {
+        try {
+            auto deserialized = network::Serializer::deserializeFromNetwork<network::DisconnectPayload>(payload);
+            reason = static_cast<DisconnectReason>(deserialized.reason);
+        } catch (...) {
+            // If deserialization fails, keep default reason
+        }
+    }
+
+    auto result = stateMachine_.handleRemoteDisconnect(reason);
     return result;
 }
 
@@ -457,24 +467,12 @@ void Connection::processPong(const Header& header) noexcept {
 
     currentLatencyMs_ = static_cast<std::uint32_t>(elapsed.count());
     lastPingSent_.reset();
+    missedPingCount_ = 0;
 }
 
 void Connection::updatePingTracking() noexcept {
-    if (!lastPingSent_.has_value()) {
-        return;
-    }
-
-    auto now = Clock::now();
-    auto elapsed = std::chrono::duration_cast<Duration>(
-        now - lastPingSent_->sentTime);
-
-    constexpr auto kPingTimeout = kKeepaliveInterval * 2;
-
-    if (elapsed >= kPingTimeout) {
-        lastPingSent_.reset();
-        if (missedPingCount_ >= kMaxMissedPings && isConnected()) {
-            stateMachine_.forceDisconnect(DisconnectReason::Timeout);
-        }
+    if (missedPingCount_ >= kMaxMissedPings && isConnected()) {
+        stateMachine_.forceDisconnect(DisconnectReason::Timeout);
     }
 }
 
