@@ -83,17 +83,43 @@ VCPKG_DIR="$PROJECT_ROOT/external/vcpkg"
 CMAKE_PRESET="linux-release"
 BUILD_DIR="build"
 
+verify_vcpkg_ready() {
+    local vcpkg_path="$1"
+
+    if [ ! -f "$vcpkg_path/vcpkg" ]; then
+        return 1
+    fi
+
+    if ! "$vcpkg_path/vcpkg" version >/dev/null 2>&1; then
+        return 1
+    fi
+
+    return 0
+}
+
 if [ "$FORCE_CPM" = false ]; then
-    if [ -n "$VCPKG_ROOT" ] && [ -f "$VCPKG_ROOT/vcpkg" ]; then
+    if [ -n "$VCPKG_ROOT" ] && verify_vcpkg_ready "$VCPKG_ROOT"; then
         echo "  ✓ Using personal vcpkg from VCPKG_ROOT: $VCPKG_ROOT"
         VCPKG_AVAILABLE=true
-    elif [ -f "$VCPKG_DIR/vcpkg" ]; then
-        echo "  ✓ vcpkg found in project: $VCPKG_DIR"
+    elif verify_vcpkg_ready "$VCPKG_DIR"; then
+        echo "  ✓ vcpkg found and bootstrapped in project: $VCPKG_DIR"
         VCPKG_AVAILABLE=true
     elif [ -d "$VCPKG_DIR" ] && [ ! -f "$VCPKG_DIR/vcpkg" ]; then
         echo "  ⚠ vcpkg directory exists but not bootstrapped."
-        echo "    Run: cd $VCPKG_DIR && ./bootstrap-vcpkg.sh"
-        echo "    Or use -c flag to force CPM."
+        echo "    Bootstrap vcpkg by running:"
+        echo "      cd $VCPKG_DIR && ./bootstrap-vcpkg.sh"
+        echo "    Then install dependencies:"
+        echo "      $VCPKG_DIR/vcpkg install"
+        echo "    Or use -c flag to skip vcpkg and use CPM instead."
+        echo "  → Falling back to CPM..."
+        VCPKG_AVAILABLE=false
+    elif [ -f "$VCPKG_DIR/vcpkg" ] && ! verify_vcpkg_ready "$VCPKG_DIR"; then
+        echo "  ⚠ vcpkg executable found but failed to run (not properly bootstrapped)."
+        echo "    Bootstrap vcpkg by running:"
+        echo "      cd $VCPKG_DIR && ./bootstrap-vcpkg.sh"
+        echo "    Then install dependencies:"
+        echo "      $VCPKG_DIR/vcpkg install"
+        echo "    Or use -c flag to skip vcpkg and use CPM instead."
         echo "  → Falling back to CPM..."
         VCPKG_AVAILABLE=false
     else

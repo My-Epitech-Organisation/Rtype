@@ -83,11 +83,11 @@ CPM fallback includes configurations for:
 | asio | 1.28.0+ | GitHub (chriskohlhoff/asio) |
 | tomlplusplus | 3.4.0+ | GitHub (marzer/tomlplusplus) |
 | SFML | 3.0.2+ | GitHub (SFML/SFML) |
-| SDL2 | 2.32.4+ | GitHub (libsdl-org/SDL) |
+| SDL2 | 2.32.4 | GitHub (libsdl-org/SDL) |
 | zlib | 1.3.1+ | GitHub (madler/zlib) |
-| libpng | 1.6.44+ | GitHub (glennrp/libpng) |
+| libpng | 1.6.51+ | GitHub (glennrp/libpng) |
 | bzip2 | 1.0.8+ | GitLab (bzip2/bzip2) |
-| brotli | 1.1.0+ | GitHub (google/brotli) |
+| brotli | 1.2.0+ | GitHub (google/brotli) |
 
 All other dependencies (threads, etc.) are system-provided or optional.
 
@@ -122,6 +122,8 @@ The following now use `rtype_find_*()` helpers instead of `find_package()`:
 | `linux-release-cpm` | CPM-based, release build (build-cpm/) |
 | `linux-debug-cpm` | CPM-based, debug build (build-cpm/) |
 | `windows-release`, `windows-debug` | MSVC builds (vcpkg-based) |
+
+Note: CPM presets intentionally do not load the vcpkg toolchain. They rely solely on `RTYPE_FORCE_CPM=ON` and the CPM downloader to fetch and build dependencies from source.
 
 ---
 

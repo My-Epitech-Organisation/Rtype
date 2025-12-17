@@ -71,13 +71,15 @@
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-cpm",
+      "description": "CPM-only base: intentionally does not load the vcpkg toolchain.",
       "cacheVariables": {
         "RTYPE_FORCE_CPM": "ON"
       }
     },
     {
       "name": "linux-release-cpm",
-      "displayName": "Linux Release (CPM Fallback)",
+      "displayName": "Linux Release (CPM)",
+      "description": "Pure CPM build: no vcpkg toolchain loaded; uses build-cpm/.",
       "inherits": "cpm-base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
@@ -86,7 +88,8 @@
     },
     {
       "name": "linux-debug-cpm",
-      "displayName": "Linux Debug (CPM Fallback)",
+      "displayName": "Linux Debug (CPM)",
+      "description": "Pure CPM build: no vcpkg toolchain loaded; uses build-cpm/.",
       "inherits": "cpm-base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"

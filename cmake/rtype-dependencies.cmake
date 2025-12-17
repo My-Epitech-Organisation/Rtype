@@ -33,23 +33,26 @@ function(rtype_find_asio)
     if(NOT RTYPE_FORCE_CPM)
         find_package(asio CONFIG QUIET)
         if(asio_FOUND)
-            if(NOT TARGET asio::asio)
-                find_path(ASIO_INCLUDE_DIR
-                    NAMES asio.hpp
-                    PATHS ${asio_INCLUDE_DIRS} /usr/include /usr/local/include
-                    PATH_SUFFIXES asio
-                )
-
-                if(ASIO_INCLUDE_DIR)
-                    add_library(asio::asio INTERFACE IMPORTED)
-                    set_target_properties(asio::asio PROPERTIES
-                        INTERFACE_INCLUDE_DIRECTORIES "${ASIO_INCLUDE_DIR}"
-                    )
-                else()
-                    message(WARNING "[deps] asio found but include directory could not be determined")
-                endif()
+            if(TARGET asio::asio)
+                return()
             endif()
-            return()
+
+            find_path(ASIO_INCLUDE_DIR
+                NAMES asio.hpp
+                PATHS ${asio_INCLUDE_DIRS} /usr/include /usr/local/include
+                PATH_SUFFIXES asio
+            )
+
+            if(ASIO_INCLUDE_DIR)
+                add_library(asio::asio INTERFACE IMPORTED)
+                set_target_properties(asio::asio PROPERTIES
+                    INTERFACE_INCLUDE_DIRECTORIES "${ASIO_INCLUDE_DIR}"
+                )
+                return()
+            else()
+                message(WARNING "[deps] asio found but include directory could not be determined; falling back to CPM")
+                # do not return; proceed to CPM fallback below
+            endif()
         endif()
     endif()
 
@@ -97,7 +100,22 @@ function(rtype_find_tomlplusplus)
 endfunction()
 
 function(rtype_find_sfml)
-    if(TARGET SFML::Network)
+    set(required_sfml_targets
+        SFML::Network
+        SFML::Graphics
+        SFML::Window
+        SFML::Audio
+        SFML::System
+    )
+    set(all_sfml_targets_present TRUE)
+    foreach(_sfml_tgt IN LISTS required_sfml_targets)
+        if(NOT TARGET ${_sfml_tgt})
+            set(all_sfml_targets_present FALSE)
+            break()
+        endif()
+    endforeach()
+
+    if(all_sfml_targets_present)
         message(STATUS "[deps] SFML already configured, skipping rtype_find_sfml()")
         return()
     endif()
