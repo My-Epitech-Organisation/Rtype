@@ -250,7 +250,9 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.music.settings =
         "assets/" + _parser.getString(table, "Music", "Settings",
                                       defaults.assets.music.settings);
-
+    config.assets.music.gameOver =
+        "assets/" + _parser.getString(table, "Music", "GameOver",
+                                      defaults.assets.music.gameOver);
     // SFX
     config.assets.sfx.clickButton =
         "assets/" + _parser.getString(table, "SFX", "ClickButton",

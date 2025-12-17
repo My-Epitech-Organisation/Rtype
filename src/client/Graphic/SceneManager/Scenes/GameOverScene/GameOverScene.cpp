@@ -31,8 +31,11 @@ GameOverScene::GameOverScene(
       _switchToScene(std::move(switchToScene)) {
     LOG_DEBUG("[GameOverScene] Constructing Game Over scene");
     _buildLayout();
-    if (_audio) {
-        _audio->pauseMusic();
+    if (this->_audio) {
+        this->_audio->pauseMusic();
+        this->_assetsManager->audioManager->load("gameover_music", this->_assetsManager->configGameAssets.assets.music.gameOver);
+        this->_audio->loadMusic(this->_assetsManager->audioManager->get("gameover_music"));
+        this->_audio->play();
     }
 }
 

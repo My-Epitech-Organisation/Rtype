@@ -3,6 +3,7 @@
 MainMenu = "audio/mainMenuMusic.mp3"
 Game = "audio/gameMusic.mp3"
 Settings = "audio/settingsMusic.mp3"
+GameOver = "audio/gongGameOver.mp3"
 
 [SFX]
 HoverButton = "audio/hoverButton.mp3"

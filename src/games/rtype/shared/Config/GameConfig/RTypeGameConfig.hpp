@@ -97,6 +97,7 @@ struct MusicConfig {
     std::string mainMenu;
     std::string game;
     std::string settings;
+    std::string gameOver;
 
     bool operator==(const MusicConfig&) const = default;
 };
