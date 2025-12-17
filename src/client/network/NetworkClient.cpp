@@ -372,23 +372,6 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
 
         case network::OpCode::DISCONNECT: {
             LOG_DEBUG("[NetworkClient] Received DISCONNECT from server");
-            network::DisconnectReason reason = DisconnectReason::RemoteRequest;
-            if (payload.size() >= sizeof(network::DisconnectPayload)) {
-                try {
-                    auto deserialized =
-                        network::Serializer::deserializeFromNetwork<
-                            network::DisconnectPayload>(payload);
-                    reason = static_cast<DisconnectReason>(deserialized.reason);
-                } catch (...) {
-                    // If deserialization fails, keep default reason
-                }
-            }
-
-            queueCallback([this, reason]() {
-                for (const auto& cb : onDisconnectedCallbacks_) {
-                    if (cb) cb(reason);
-                }
-            });
             connection_.reset();
             serverEndpoint_.reset();
             break;
