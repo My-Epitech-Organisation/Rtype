@@ -21,77 +21,134 @@ target_include_directories(test_spawning PRIVATE
 
 include(GoogleTest)
 if(WIN32 OR MSVC)
-    set_tests_properties(test_spawning test_movement_system PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_spawning WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_movement_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_spawning)
     gtest_discover_tests(test_movement_system)
 endif()
-
-# Component tests
-add_executable(test_components test_components.cpp)
-
-target_link_libraries(test_components PRIVATE
-    rtype_game_shared
-    engine
-    GTest::gtest_main
-)
-
-target_include_directories(test_components PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/src
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_components PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_components WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_components)
 endif()
-
-# AI Behavior tests
-add_executable(test_behaviors test_behaviors.cpp)
-
-target_link_libraries(test_behaviors PRIVATE
-    rtype_game_shared
-    engine
-    GTest::gtest_main
-)
-
-target_include_directories(test_behaviors PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/src
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_behaviors PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_behaviors WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_behaviors)
 endif()
-
-# Behavior Registry tests
-add_executable(test_behavior_registry test_behavior_registry.cpp)
-
-target_link_libraries(test_behavior_registry PRIVATE
-    rtype_game_shared
     engine
     GTest::gtest_main
 )
-
-target_include_directories(test_behavior_registry PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/src
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_behavior_registry PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_behavior_registry WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_behavior_registry)
 endif()
+    ${CMAKE_SOURCE_DIR}/src
+)
+)
 
-# Systems tests (AISystem, MovementSystem, CleanupSystem, DestroySystem, SpawnerSystem)
-add_executable(test_systems test_systems.cpp)
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_systems WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_systems)
+endif()
+else()
+    gtest_discover_tests(test_components)
+endif()
+)
 
-target_link_libraries(test_systems PRIVATE
-    rtype_game_shared
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_wave_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_wave_system)
+endif()
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_collision WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_collision)
+endif()
+    engine
+    GTest::gtest_main
+)
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_engine WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_engine)
+endif()
+    ${CMAKE_SOURCE_DIR}/src
+)
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_projectile_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_projectile_system)
+endif()
+else()
+    gtest_discover_tests(test_behaviors)
+endif()
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_lifetime_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_lifetime_system)
+endif()
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_quadtree WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_quadtree)
+endif()
+    engine
+    GTest::gtest_main
+)
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_quadtree_integration WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_quadtree_integration)
+endif()
+    ${CMAKE_SOURCE_DIR}/src
+)
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_projectile_spawner_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_projectile_spawner_system)
+endif()
+else()
+    gtest_discover_tests(test_behavior_registry)
+endif()
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_aabb WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_aabb)
+endif()
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_powerup_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_powerup_system)
+endif()
     rtype_game_server
     engine
     GTest::gtest_main

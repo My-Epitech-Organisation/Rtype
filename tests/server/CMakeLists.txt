@@ -335,13 +335,18 @@ target_link_libraries(test_game_state_manager PRIVATE
 
 include(GoogleTest)
 if(WIN32 OR MSVC)
-    set_tests_properties(
-        test_server_network_messages test_client_manager test_server_app
-        test_server_app_gameconfig test_server_network_system test_server_app_unit
-        test_server_loop test_player_input_handler test_player_spawner
-        test_game_event_processor test_packet_processor test_game_state_manager
-        PROPERTIES SKIP_GTEST_DISCOVERY TRUE
-    )
+    gtest_discover_tests(test_server_network_messages WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_client_manager WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_server_app WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_server_app_gameconfig WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_server_network_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_server_app_unit WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_server_loop WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_player_input_handler WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_player_spawner WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_game_event_processor WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_packet_processor WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_game_state_manager WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_server_network_messages)
     gtest_discover_tests(test_client_manager)

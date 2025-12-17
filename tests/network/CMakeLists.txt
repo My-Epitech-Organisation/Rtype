@@ -207,19 +207,37 @@ target_link_libraries(test_asio_socket_misc PRIVATE
 # Enable test discovery
 include(GoogleTest)
 if(WIN32 OR MSVC)
-    set_tests_properties(
-        test_protocol test_serialization test_error test_asio_socket
-        test_reliable_channel test_connection_state test_connection
-        test_packet_validation test_opcode test_validator test_byteorderspec_extra
-        test_coverage_harness test_serializer_branches test_byteorderspec_branches
-        test_header_branches test_validator_additional test_serializer_template
-        test_byteorderspec_various_sizes test_opcode_exhaustive test_validator_success
-        test_asio_error_mapping_extra test_asio_error_mapping_all
-        test_serializer_and_validator_errors test_serializer_string_roundtrip
-        test_validator_extra test_serializer_endian test_asio_socket_misc
-        test_serializer_validate_extract_server_userid test_serializer_validate_extract_extra
-        PROPERTIES SKIP_GTEST_DISCOVERY TRUE
-    )
+    gtest_discover_tests(test_protocol WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_serialization WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_error WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_asio_socket WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_reliable_channel WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_connection_state WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_connection WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_packet_validation WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+    gtest_discover_tests(test_opcode WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_validator WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_byteorderspec_extra WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_coverage_harness WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_serializer_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_byteorderspec_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_header_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_validator_additional WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_serializer_template WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_byteorderspec_various_sizes WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_opcode_exhaustive WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_validator_success WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_asio_error_mapping_extra WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_asio_error_mapping_all WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_serializer_and_validator_errors WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_serializer_string_roundtrip WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_validator_extra WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_serializer_endian WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_asio_socket_misc WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_serializer_validate_extract_server_userid WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_serializer_validate_extract_extra WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_asio_error_mapping_all WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_protocol)
     gtest_discover_tests(test_serialization)

@@ -18,7 +18,7 @@ target_link_libraries(test_engine_factory PRIVATE
 
 include(GoogleTest)
 if(WIN32 OR MSVC)
-    set_tests_properties(test_engine_factory PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_engine_factory WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_engine_factory)
 endif()

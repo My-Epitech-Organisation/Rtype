@@ -12,7 +12,7 @@ target_include_directories(test_argparser PRIVATE
 
 include(GoogleTest)
 if(WIN32 OR MSVC)
-    set_tests_properties(test_argparser PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_argparser WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_argparser)
 endif()
@@ -30,7 +30,7 @@ target_include_directories(test_logger PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_logger PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_logger WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_logger)
 endif()
@@ -48,7 +48,7 @@ target_include_directories(test_safe_queue PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_safe_queue PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_safe_queue WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_safe_queue)
 endif()
@@ -67,7 +67,7 @@ target_include_directories(test_config PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_config PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_config WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_config)
 endif()
@@ -85,7 +85,7 @@ target_include_directories(test_savemanager PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_savemanager PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_savemanager WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_savemanager)
 endif()
@@ -104,7 +104,7 @@ target_include_directories(test_config_branches PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_config_branches PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_config_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_config_branches)
 endif()
@@ -123,7 +123,7 @@ target_include_directories(test_tomlparser_branches PRIVATE
 )
 
 if(WIN32 OR MSVC)
-    set_tests_properties(test_tomlparser_branches PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+    gtest_discover_tests(test_tomlparser_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_tomlparser_branches)
 endif()
