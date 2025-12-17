@@ -10,7 +10,8 @@
       "hidden": true,
       "toolchainFile": "${sourceDir}/cmake/vcpkg-toolchain.cmake",
       "cacheVariables": {
-        "VCPKG_MANIFEST_MODE": "ON"
+        "VCPKG_MANIFEST_MODE": "ON",
+        "VCPKG_LIBRARY_LINKAGE": "static"
       }
     },
     {
