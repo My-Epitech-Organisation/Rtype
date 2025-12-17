@@ -38,7 +38,7 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         background, cfg::ZINDEX_BACKGROUND);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
-    background, cfg::PARALLAX_BACKGROUND, true);
+        background, cfg::PARALLAX_BACKGROUND, true);
 
     auto sun = registry->spawnEntity();
     auto& sunTexture = assetManager->textureManager->get("bg_sun");
