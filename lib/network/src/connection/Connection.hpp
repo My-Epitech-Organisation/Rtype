@@ -162,6 +162,18 @@ class Connection {
         return missedPingCount_;
     }
 
+    void setLastPingSentForTesting(std::uint16_t seqId, Clock::time_point sentTime) {
+        lastPingSent_ = PingTracker{seqId, sentTime};
+    }
+
+    void setMissedPingCountForTesting(int count) {
+        missedPingCount_ = count;
+    }
+
+    void setLastPacketSentTimeForTesting(Clock::time_point time) {
+        lastPacketSentTime_ = time;
+    }
+
     void setCallbacks(ConnectionCallbacks callbacks) noexcept;
 
     void reset() noexcept;

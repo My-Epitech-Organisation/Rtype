@@ -69,6 +69,7 @@ Result<void> Connection::processPacket(const Buffer& data,
     }
 
     stateMachine_.recordActivity();
+    missedPingCount_ = 0;
     processReliabilityAck(header);
 
     if (reliableChannel_.isDuplicate(header.seqId)) {
@@ -455,7 +456,6 @@ void Connection::processPong(const Header& header) noexcept {
         now - lastPingSent_->sentTime);
 
     currentLatencyMs_ = static_cast<std::uint32_t>(elapsed.count());
-    missedPingCount_ = 0;
     lastPingSent_.reset();
 }
 
