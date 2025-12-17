@@ -11,6 +11,7 @@
 #include <vector>
 #include <utility>
 #include "protocol/ByteOrderSpec.hpp"
+#include "Serializer.hpp"
 
 namespace rtype::network {
 
@@ -103,7 +104,11 @@ Result<void> Connection::processPacket(const Buffer& data,
             return handleConnectAccept(header, payload, sender);
 
         case OpCode::DISCONNECT:
-            return handleDisconnect(header);
+            return handleDisconnect(header, payload);
+
+        case OpCode::PONG:
+            processPong(header);
+            break;
 
         default:
             break;
@@ -137,6 +142,17 @@ void Connection::update() {
         outgoing.data = std::move(pkt.data);
         outgoing.isReliable = true;
         outgoingQueue_.push(std::move(outgoing));
+    }
+
+    updatePingTracking();
+
+    if (shouldSendKeepalive()) {
+        Buffer pingPacket = buildPingPacket();
+        OutgoingPacket outgoing;
+        outgoing.data = std::move(pingPacket);
+        outgoing.isReliable = false;
+        outgoingQueue_.push(std::move(outgoing));
+        recordPacketSent();
     }
 
     auto cleanupResult = reliableChannel_.cleanup();
@@ -194,6 +210,8 @@ Result<Connection::OutgoingPacket> Connection::buildPacket(
         (void)reliableChannel_.trackOutgoing(seqId, packet);
     }
 
+    recordPacketSent();
+
     OutgoingPacket outgoing;
     outgoing.data = std::move(packet);
     outgoing.isReliable = reliable;
@@ -238,6 +256,9 @@ void Connection::reset() noexcept {
     }
     sequenceId_ = 0;
     serverEndpoint_.reset();
+    lastPingSent_.reset();
+    currentLatencyMs_ = 0;
+    missedPingCount_ = 0;
 }
 
 Buffer Connection::buildConnectPacket() {
@@ -257,6 +278,8 @@ Buffer Connection::buildConnectPacket() {
 
     std::uint16_t seqId = ByteOrderSpec::fromNetwork(header.seqId);
     (void)reliableChannel_.trackOutgoing(seqId, packet);
+
+    recordPacketSent();
 
     return packet;
 }
@@ -280,6 +303,8 @@ Buffer Connection::buildDisconnectPacket() {
 
     std::uint16_t seqId = ByteOrderSpec::fromNetwork(header.seqId);
     (void)reliableChannel_.trackOutgoing(seqId, packet);
+
+    recordPacketSent();
 
     return packet;
 }
@@ -355,10 +380,21 @@ Result<void> Connection::handleConnectAccept(const Header& header,
     return result;
 }
 
-Result<void> Connection::handleDisconnect(const Header& header) {
+Result<void> Connection::handleDisconnect(const Header& header, const Buffer& payload) {
     (void)header;
 
-    return stateMachine_.handleRemoteDisconnect();
+    DisconnectReason reason = DisconnectReason::RemoteRequest;
+    if (payload.size() >= sizeof(network::DisconnectPayload)) {
+        try {
+            auto deserialized = network::Serializer::deserializeFromNetwork<network::DisconnectPayload>(payload);
+            reason = static_cast<DisconnectReason>(deserialized.reason);
+        } catch (...) {
+            // If deserialization fails, keep default reason
+        }
+    }
+
+    auto result = stateMachine_.handleRemoteDisconnect(reason);
+    return result;
 }
 
 void Connection::processReliabilityAck(const Header& header) {
@@ -375,5 +411,69 @@ void Connection::queuePacket(Buffer data, bool reliable) {
 }
 
 std::uint16_t Connection::nextSequenceId() noexcept { return sequenceId_++; }
+
+void Connection::recordPacketSent() noexcept {
+    lastPacketSentTime_ = Clock::now();
+}
+
+bool Connection::shouldSendKeepalive() const noexcept {
+    if (!isConnected()) {
+        return false;
+    }
+
+    auto elapsed = std::chrono::duration_cast<Duration>(
+        Clock::now() - lastPacketSentTime_);
+
+    return elapsed >= kKeepaliveInterval;
+}
+
+Buffer Connection::buildPingPacket() {
+    auto uid = stateMachine_.userId().value_or(kUnassignedUserId);
+
+    std::uint16_t seqId = nextSequenceId();
+
+    Header header;
+    header.magic = kMagicByte;
+    header.opcode = static_cast<std::uint8_t>(OpCode::PING);
+    header.payloadSize = 0;
+    header.userId = ByteOrderSpec::toNetwork(uid);
+    header.seqId = ByteOrderSpec::toNetwork(seqId);
+    header.ackId =
+        ByteOrderSpec::toNetwork(reliableChannel_.getLastReceivedSeqId());
+    header.flags = Flags::kIsAck;
+    header.reserved = {0, 0, 0};
+
+    Buffer packet(kHeaderSize);
+    std::memcpy(packet.data(), &header, kHeaderSize);
+
+    lastPingSent_ = PingTracker{seqId, Clock::now()};
+    missedPingCount_++;
+
+    return packet;
+}
+
+void Connection::processPong(const Header& header) noexcept {
+    if (!lastPingSent_.has_value()) {
+        return;
+    }
+
+    if (header.ackId != lastPingSent_->seqId) {
+        return;
+    }
+
+    auto now = Clock::now();
+    auto elapsed = std::chrono::duration_cast<Duration>(
+        now - lastPingSent_->sentTime);
+
+    currentLatencyMs_ = static_cast<std::uint32_t>(elapsed.count());
+    lastPingSent_.reset();
+    missedPingCount_ = 0;
+}
+
+void Connection::updatePingTracking() noexcept {
+    if (missedPingCount_ >= kMaxMissedPings && isConnected()) {
+        stateMachine_.forceDisconnect(DisconnectReason::Timeout);
+    }
+}
 
 }  // namespace rtype::network

@@ -190,6 +190,12 @@ class NetworkClient {
     [[nodiscard]] std::optional<std::uint32_t> userId() const noexcept;
 
     /**
+     * @brief Get the current network latency (RTT) in milliseconds
+     * @return Current latency, or 0 if no PONG received yet
+     */
+    [[nodiscard]] std::uint32_t latencyMs() const noexcept;
+
+    /**
      * @brief Send player input to server
      *
      * Input is sent unreliably (latest state matters, old inputs discarded).
@@ -300,6 +306,8 @@ class NetworkClient {
                            const network::Buffer& payload);
     void handleGameOver(const network::Header& header,
                         const network::Buffer& payload);
+    void handlePong(const network::Header& header,
+                    const network::Buffer& payload);
 
     void flushOutgoing();
 
@@ -330,7 +338,7 @@ class NetworkClient {
     std::queue<std::function<void()>> callbackQueue_;
 
     std::vector<std::function<void(std::uint32_t)>> onConnectedCallbacks_;
-    std::function<void(DisconnectReason)> onDisconnectedCallback_;
+    std::vector<std::function<void(DisconnectReason)>> onDisconnectedCallbacks_;
     std::function<void(EntitySpawnEvent)> onEntitySpawnCallback_;
     std::function<void(EntityMoveEvent)> onEntityMoveCallback_;
     std::function<void(std::uint32_t)> onEntityDestroyCallback_;

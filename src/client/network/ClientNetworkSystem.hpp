@@ -117,6 +117,12 @@ class ClientNetworkSystem {
     void onHealthUpdate(std::function<void(const EntityHealthEvent&)> callback);
 
     /**
+     * @brief Register callback for disconnection events
+     * @param callback Function receiving the disconnect reason
+     */
+    void onDisconnect(std::function<void(network::DisconnectReason)> callback);
+
+    /**
      * @brief Update the network system
      *
      * Polls the network client and processes any pending events.
@@ -196,6 +202,7 @@ class ClientNetworkSystem {
     std::function<void(std::uint32_t, ECS::Entity)>
         onLocalPlayerAssignedCallback_;
     std::function<void(const EntityHealthEvent&)> onHealthUpdateCallback_;
+    std::function<void(network::DisconnectReason)> onDisconnectCallback_;
 
     struct HealthCache {
         std::int32_t current;
@@ -204,6 +211,8 @@ class ClientNetworkSystem {
     std::unordered_map<std::uint32_t, HealthCache> lastKnownHealth_;
 
     std::unordered_map<std::uint32_t, ECS::Entity> pendingPlayerSpawns_;
+
+    bool disconnectedHandled_{false};
 };
 
 }  // namespace rtype::client

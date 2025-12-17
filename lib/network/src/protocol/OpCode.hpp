@@ -65,10 +65,10 @@ enum class OpCode : std::uint8_t {
     /// Server sends authoritative position (UNRELIABLE)
     S_UPDATE_POS = 0x21,
 
-    /// Latency measurement request
+    /// Latency measurement request (UNRELIABLE)
     PING = 0xF0,
 
-    /// Latency measurement response
+    /// Latency measurement response (UNRELIABLE)
     PONG = 0xF1,
 };
 
@@ -91,7 +91,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
  * As per RFC RTGP v1.0.0:
  * - All session management ops are RELIABLE
  * - S_ENTITY_SPAWN and S_ENTITY_DESTROY are RELIABLE
- * - S_ENTITY_MOVE, C_INPUT, S_UPDATE_POS are UNRELIABLE
+ * - S_ENTITY_MOVE, C_INPUT, S_UPDATE_POS, PING, PONG are UNRELIABLE
  */
 [[nodiscard]] constexpr bool isReliable(OpCode opcode) noexcept {
     switch (opcode) {

@@ -87,9 +87,10 @@ class ConnectionStateMachine {
 
     /**
      * @brief Handle remote DISCONNECT packet received
+     * @param reason The reason for disconnection
      * @return Ok if processed, Err if invalid state
      */
-    [[nodiscard]] Result<void> handleRemoteDisconnect();
+    [[nodiscard]] Result<void> handleRemoteDisconnect(DisconnectReason reason);
 
     /**
      * @brief Force immediate transition to DISCONNECTED
