@@ -15,7 +15,6 @@
 #include "Components/ImageComponent.hpp"
 #include "Components/LifetimeComponent.hpp"
 #include "Components/ParallaxComponent.hpp"
-#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "Components/SizeComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/Tags.hpp"
@@ -23,6 +22,7 @@
 #include "Components/TextureRectComponent.hpp"
 #include "Components/VelocityComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace cfg = ::rtype::games::rtype::client::GraphicsConfig;
 
@@ -44,8 +44,8 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     auto& planet1Texture = assetManager->textureManager->get("bg_planet_1");
     registry->emplaceComponent<rtype::games::rtype::client::Image>(
         planet1, planet1Texture);
-    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(planet1,
-                                                                      0, 0);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        planet1, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         planet1, cfg::PARALLAX_PLANET_1, true);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
@@ -55,8 +55,8 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     auto& planet2Texture = assetManager->textureManager->get("bg_planet_2");
     registry->emplaceComponent<rtype::games::rtype::client::Image>(
         planet2, planet2Texture);
-    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(planet2,
-                                                                      0, 0);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        planet2, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         planet2, cfg::PARALLAX_PLANET_2, true);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
@@ -66,8 +66,8 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     auto& planet3Texture = assetManager->textureManager->get("bg_planet_3");
     registry->emplaceComponent<rtype::games::rtype::client::Image>(
         planet3, planet3Texture);
-    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(planet3,
-                                                                      0, 0);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        planet3, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         planet3, cfg::PARALLAX_PLANET_3, true);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
@@ -78,8 +78,8 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     registry->emplaceComponent<rtype::games::rtype::client::Text>(
         appTitle, assetManager->fontManager->get("title_font"),
         sf::Color::White, 72, PageName);
-    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(appTitle,
-                                                                      50, 50);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        appTitle, 50, 50);
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         appTitle);
     return {planet1, planet2, planet3, background, appTitle};

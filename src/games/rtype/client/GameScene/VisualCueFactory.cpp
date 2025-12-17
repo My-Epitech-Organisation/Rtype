@@ -43,8 +43,9 @@ void VisualCueFactory::createFlash(ECS::Registry& registry,
     rect.outlineColor = sf::Color::White;
     rect.outlineThickness = 3.f;
 
-    registry.emplaceComponent<::rtype::games::rtype::shared::TransformComponent>(
-        entity, center.x - (size / 2.f), center.y - (size / 2.f));
+    registry
+        .emplaceComponent<::rtype::games::rtype::shared::TransformComponent>(
+            entity, center.x - (size / 2.f), center.y - (size / 2.f));
     registry.emplaceComponent<ZIndex>(entity, zIndex);
     registry.emplaceComponent<::rtype::games::rtype::shared::LifetimeComponent>(
         entity, lifetime);
@@ -68,8 +69,9 @@ void VisualCueFactory::createDamagePopup(ECS::Registry& registry,
     static thread_local std::mt19937 gen(rd());
     std::uniform_int_distribution<int> dist(-20, 20);
     float offsetX = static_cast<float>(dist(gen));
-    registry.emplaceComponent<::rtype::games::rtype::shared::TransformComponent>(
-        entity, position.x + offsetX, position.y - 20.f);
+    registry
+        .emplaceComponent<::rtype::games::rtype::shared::TransformComponent>(
+            entity, position.x + offsetX, position.y - 20.f);
 
     registry.emplaceComponent<::rtype::games::rtype::shared::VelocityComponent>(
         entity, 0.f, -80.f);

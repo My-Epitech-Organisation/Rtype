@@ -13,8 +13,8 @@
 #include "../Components/BoxingComponent.hpp"
 #include "../Components/ImageComponent.hpp"
 #include "../shared/Components/BoundingBoxComponent.hpp"
-#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "Graphic/Accessibility.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace rtype::games::rtype::client {
 

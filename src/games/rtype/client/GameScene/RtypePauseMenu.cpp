@@ -45,8 +45,9 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
     sf::FloatRect bounds = titleText.text.getLocalBounds();
     float centeredX = sectionX + (kSizeXPauseMenu - bounds.size.x) / 2;
     auto& titlePos =
-        registry->getComponent<::rtype::games::rtype::shared::TransformComponent>(
-            titleEntity);
+        registry
+            ->getComponent<::rtype::games::rtype::shared::TransformComponent>(
+                titleEntity);
     titlePos.x = centeredX;
     pauseEntities.push_back(titleEntity);
 

@@ -14,13 +14,13 @@
 #include "../shared/Components/HealthComponent.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
 #include "../shared/Components/PlayerIdComponent.hpp"
-#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "../shared/Components/PowerUpComponent.hpp"
 #include "../shared/Components/Tags.hpp"
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
 #include "../shared/Components/WeaponComponent.hpp"
 #include "GameEngine.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "server/serverApp/game/entitySpawnerFactory/EntitySpawnerFactory.hpp"
 
 namespace rtype::games::rtype::server {
@@ -41,7 +41,6 @@ RTypeEntitySpawner::RTypeEntitySpawner(
     using shared::NetworkIdComponent;
     using shared::PlayerIdComponent;
     using shared::PlayerTag;
-    using shared::TransformComponent;
     using shared::ShootCooldownComponent;
     using shared::TransformComponent;
     using shared::VelocityComponent;
@@ -200,7 +199,8 @@ RTypeEntitySpawner::getEntityPosition(ECS::Entity entity) const {
         return std::nullopt;
     }
 
-    const auto& pos = _registry->getComponent<shared::TransformComponent>(entity);
+    const auto& pos =
+        _registry->getComponent<shared::TransformComponent>(entity);
     return ::rtype::server::EntityPosition{pos.x, pos.y};
 }
 
@@ -241,7 +241,9 @@ void RTypeEntitySpawner::updateAllPlayersMovement(
         return;
     }
 
-    auto view = _registry->view<shared::TransformComponent, shared::VelocityComponent>();
+    auto view =
+        _registry
+            ->view<shared::TransformComponent, shared::VelocityComponent>();
     view.each([this, deltaTime, &callback](ECS::Entity entity,
                                            shared::TransformComponent& pos,
                                            shared::VelocityComponent& vel) {

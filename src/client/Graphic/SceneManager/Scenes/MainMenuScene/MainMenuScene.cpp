@@ -39,8 +39,9 @@ void MainMenuScene::_createAstroneerVessel() {
     this->_registry->emplaceComponent<rtype::games::rtype::client::Image>(
         astroneerVessel,
         this->_assetsManager->textureManager->get("astro_vessel"));
-    this->_registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
-        astroneerVessel, 1900, 1060);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+            astroneerVessel, 1900, 1060);
     this->_registry->emplaceComponent<rtype::games::rtype::client::Size>(
         astroneerVessel, 0.3, 0.3);
     this->_registry
@@ -149,8 +150,8 @@ void MainMenuScene::_createConnectionPanel(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 28, "Connect"),
-        rtype::games::rtype::shared::TransformComponent(kConnectionPanelX + 125.f,
-                                              kConnectionPanelY + 260.f),
+        rtype::games::rtype::shared::TransformComponent(
+            kConnectionPanelX + 125.f, kConnectionPanelY + 260.f),
         rtype::games::rtype::client::Rectangle({200, 60}, sf::Color(0, 150, 0),
                                                sf::Color(0, 200, 0)),
         this->_assetsManager, std::function<void()>([this, switchToScene]() {

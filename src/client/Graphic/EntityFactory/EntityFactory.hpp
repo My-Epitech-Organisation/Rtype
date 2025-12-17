@@ -18,7 +18,6 @@
 
 #include "AssetManager/AssetManager.hpp"
 #include "Components/ButtonComponent.hpp"
-#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "Components/RectangleComponent.hpp"
 #include "Components/SoundComponent.hpp"
 #include "Components/TagComponent.hpp"
@@ -26,6 +25,7 @@
 #include "Components/TextInputComponent.hpp"
 #include "Components/UserEventComponent.hpp"
 #include "ECS.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace EntityFactory {
 template <typename... Args>
@@ -38,8 +38,8 @@ static ECS::Entity createButton(
     std::function<void(Args...)> onClick) {
     auto entity = registry->spawnEntity();
     registry->emplaceComponent<rtype::games::rtype::client::Text>(entity, text);
-    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(entity,
-                                                                      position);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        entity, position);
     registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
         entity, rectangle);
     registry->emplaceComponent<rtype::games::rtype::client::Button<Args...>>(

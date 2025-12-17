@@ -17,12 +17,12 @@
 #include "../../games/rtype/client/Systems/BoxingSystem.hpp"
 #include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
 #include "../../games/rtype/client/Systems/EventSystem.hpp"
-#include "../../games/rtype/client/Systems/SpritePositionSystem.hpp"
 #include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
 #include "../../games/rtype/client/Systems/PlayerAnimationSystem.hpp"
 #include "../../games/rtype/client/Systems/PlayerPowerUpVisualSystem.hpp"
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
+#include "../../games/rtype/client/Systems/SpritePositionSystem.hpp"
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
 #include "../network/ClientNetworkSystem.hpp"
@@ -45,7 +45,8 @@
  * System execution order:
  * 1. ResetTriggers - Resets input states
  * 2. Network - Polls network and processes incoming packets
- * 3. SpritePosition - Syncs SFML sprite positions with Position components (depends on ResetTriggers)
+ * 3. SpritePosition - Syncs SFML sprite positions with Position components
+ * (depends on ResetTriggers)
  * 4. PlayerAnimation - Selects sprite frame by velocity/id (depends on
  * SpritePosition)
  * 5. PowerUpVisuals - Applies tint to players with active power-ups (depends on

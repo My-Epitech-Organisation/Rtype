@@ -40,15 +40,16 @@ bool TextInputSystem::handleEvent(ECS::Registry& registry,
 }
 
 void TextInputSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
-    auto view = registry.view<TextInput, shared::TransformComponent, TextInputTag>();
+    auto view =
+        registry.view<TextInput, shared::TransformComponent, TextInputTag>();
 
-    view.each(
-        [this](auto /*entity*/, TextInput& input, shared::TransformComponent& pos, auto) {
-            input.background.setPosition({pos.x, pos.y});
-            input.text.setPosition({pos.x + 10.f, pos.y + 5.f});
-            _window->draw(input.background);
-            _window->draw(input.text);
-        });
+    view.each([this](auto /*entity*/, TextInput& input,
+                     shared::TransformComponent& pos, auto) {
+        input.background.setPosition({pos.x, pos.y});
+        input.text.setPosition({pos.x + 10.f, pos.y + 5.f});
+        _window->draw(input.background);
+        _window->draw(input.text);
+    });
 }
 
 std::optional<ECS::Entity> TextInputSystem::getFocusedInput() const {
@@ -57,7 +58,8 @@ std::optional<ECS::Entity> TextInputSystem::getFocusedInput() const {
 
 void TextInputSystem::handleClick(ECS::Registry& registry, float mouseX,
                                   float mouseY) {
-    auto view = registry.view<TextInput, shared::TransformComponent, TextInputTag>();
+    auto view =
+        registry.view<TextInput, shared::TransformComponent, TextInputTag>();
     view.each(
         [](auto, TextInput& input, auto, auto) { input.setFocus(false); });
     _focusedInput = std::nullopt;
@@ -92,7 +94,8 @@ void TextInputSystem::handleClick(ECS::Registry& registry, float mouseX,
 
         interactiveView.each([mouseX, mouseY, highestZIndex, &blockedByOther,
                               &registry](ECS::Entity entity, Rectangle& rect,
-                                         shared::TransformComponent& pos, auto) {
+                                         shared::TransformComponent& pos,
+                                         auto) {
             if (registry.hasComponent<TextInputTag>(entity)) {
                 return;
             }

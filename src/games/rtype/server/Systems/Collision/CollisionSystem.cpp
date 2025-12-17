@@ -13,9 +13,9 @@
 #include <utility>
 #include <vector>
 
+#include <rtype/ecs.hpp>
 #include <rtype/engine.hpp>
 #include <rtype/network/Protocol.hpp>
-#include <rtype/ecs.hpp>
 
 #include "../../../shared/Components.hpp"
 #include "../../../shared/Systems/Collision/AABB.hpp"
@@ -58,7 +58,8 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
     _quadTreeSystem->update(registry, deltaTime);
     auto collisionPairs = _quadTreeSystem->queryCollisionPairs(registry);
 
-    // CommandBuffer pour différer les ajouts/suppressions de composants durant l'itération
+    // CommandBuffer pour différer les ajouts/suppressions de composants durant
+    // l'itération
     ECS::CommandBuffer cmdBuffer(std::ref(registry));
 
     for (const auto& pair : collisionPairs) {
@@ -114,18 +115,22 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         }
 
         if (aIsObstacle && (bIsPlayer || bIsProjectile)) {
-            handleObstacleCollision(registry, cmdBuffer, entityA, entityB, bIsPlayer);
+            handleObstacleCollision(registry, cmdBuffer, entityA, entityB,
+                                    bIsPlayer);
             continue;
         }
         if (bIsObstacle && (aIsPlayer || aIsProjectile)) {
-            handleObstacleCollision(registry, cmdBuffer, entityB, entityA, aIsPlayer);
+            handleObstacleCollision(registry, cmdBuffer, entityB, entityA,
+                                    aIsPlayer);
             continue;
         }
 
         if (aIsProjectile && (bIsEnemy || bIsPlayer || bHasHealth)) {
-            handleProjectileCollision(registry, cmdBuffer, entityA, entityB, bIsPlayer);
+            handleProjectileCollision(registry, cmdBuffer, entityA, entityB,
+                                      bIsPlayer);
         } else if (bIsProjectile && (aIsEnemy || aIsPlayer || aHasHealth)) {
-            handleProjectileCollision(registry, cmdBuffer, entityB, entityA, aIsPlayer);
+            handleProjectileCollision(registry, cmdBuffer, entityB, entityA,
+                                      aIsPlayer);
         }
     }
 
@@ -210,7 +215,8 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
         if (!health.isAlive()) {
             LOG_DEBUG("[CollisionSystem] Target " << target.id
                                                   << " destroyed (no health)");
-            cmdBuffer.emplaceComponentDeferred<DestroyTag>(target, DestroyTag{});
+            cmdBuffer.emplaceComponentDeferred<DestroyTag>(target,
+                                                           DestroyTag{});
         }
     } else {
         LOG_DEBUG("[CollisionSystem] Target "
@@ -221,13 +227,15 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
     if (!piercing) {
         LOG_DEBUG("[CollisionSystem] Projectile "
                   << projectile.id << " destroyed (non-piercing)");
-        cmdBuffer.emplaceComponentDeferred<DestroyTag>(projectile, DestroyTag{});
+        cmdBuffer.emplaceComponentDeferred<DestroyTag>(projectile,
+                                                       DestroyTag{});
     } else if (registry.hasComponent<ProjectileComponent>(projectile)) {
         auto& projComp = registry.getComponent<ProjectileComponent>(projectile);
         if (projComp.registerHit()) {
             LOG_DEBUG("[CollisionSystem] Projectile "
                       << projectile.id << " destroyed (max hits)");
-            cmdBuffer.emplaceComponentDeferred<DestroyTag>(projectile, DestroyTag{});
+            cmdBuffer.emplaceComponentDeferred<DestroyTag>(projectile,
+                                                           DestroyTag{});
         }
     }
 }
@@ -363,7 +371,8 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
             auto& health = registry.getComponent<HealthComponent>(other);
             health.takeDamage(damage);
             if (!health.isAlive()) {
-                cmdBuffer.emplaceComponentDeferred<DestroyTag>(other, DestroyTag{});
+                cmdBuffer.emplaceComponentDeferred<DestroyTag>(other,
+                                                               DestroyTag{});
             }
             if (_emitEvent &&
                 registry.hasComponent<NetworkIdComponent>(other) &&

@@ -2,7 +2,8 @@
 ** EPITECH PROJECT, 2025
 ** Rtype
 ** File description:
-** SpritePositionSystem - Synchronizes sprite rendering positions with game state
+** SpritePositionSystem - Synchronizes sprite rendering positions with game
+* state
 */
 
 #include "SpritePositionSystem.hpp"

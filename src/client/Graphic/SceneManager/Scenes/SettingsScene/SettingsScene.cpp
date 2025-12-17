@@ -188,8 +188,8 @@ void SettingsScene::_initAudioSection() {
                 valueEntity);
         this->_registry
             ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
-                valueEntity,
-                rtype::games::rtype::shared::TransformComponent(labelX, y + 10));
+                valueEntity, rtype::games::rtype::shared::TransformComponent(
+                                 labelX, y + 10));
         this->_listEntity.push_back(valueEntity);
 
         auto minusBtn = EntityFactory::createButton(
@@ -291,7 +291,8 @@ void SettingsScene::_initInputModeSection() {
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 28, "Keyboard"),
-        rtype::games::rtype::shared::TransformComponent(sectionX + 50, sectionY + 60),
+        rtype::games::rtype::shared::TransformComponent(sectionX + 50,
+                                                        sectionY + 60),
         rtype::games::rtype::client::Rectangle({200, 60}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager, std::function<void()>([this]() {
@@ -305,7 +306,8 @@ void SettingsScene::_initInputModeSection() {
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 28, "Controller"),
-        rtype::games::rtype::shared::TransformComponent(sectionX + 280, sectionY + 60),
+        rtype::games::rtype::shared::TransformComponent(sectionX + 280,
+                                                        sectionY + 60),
         rtype::games::rtype::client::Rectangle({250, 60}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager, std::function<void()>([this]() {

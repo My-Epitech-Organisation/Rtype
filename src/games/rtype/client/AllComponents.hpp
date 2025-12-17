@@ -23,8 +23,8 @@
 #include "Components/ZIndexComponent.hpp"
 
 // Include shared components commonly used with client components
-#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace rtype::client {
 

@@ -25,8 +25,9 @@ namespace rtype::games::rtype::server {
  *
  * Uses the QuadTree for broad-phase collision detection (O(n log n))
  * and AABB overlap checks for narrow-phase collision validation.
- * 
- * Uses CommandBuffer pour différer les modifications d'entités durant l'itération.
+ *
+ * Uses CommandBuffer pour différer les modifications d'entités durant
+ * l'itération.
  */
 class CollisionSystem : public ::rtype::engine::ASystem {
    public:
@@ -59,13 +60,12 @@ class CollisionSystem : public ::rtype::engine::ASystem {
 
     void handlePickupCollision(ECS::Registry& registry,
                                ECS::CommandBuffer& cmdBuffer,
-                               ECS::Entity player,
-                               ECS::Entity pickup);
+                               ECS::Entity player, ECS::Entity pickup);
 
     void handleObstacleCollision(ECS::Registry& registry,
                                  ECS::CommandBuffer& cmdBuffer,
-                                 ECS::Entity obstacle,
-                                 ECS::Entity other, bool otherIsPlayer);
+                                 ECS::Entity obstacle, ECS::Entity other,
+                                 bool otherIsPlayer);
 
     EventEmitter _emitEvent;
     std::unique_ptr<shared::QuadTreeSystem> _quadTreeSystem;

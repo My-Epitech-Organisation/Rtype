@@ -16,12 +16,12 @@
 
 #include "../shared/Components/EntityType.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
-#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "../shared/Components/Tags.hpp"
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 #include "Logger/Macros.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 namespace rtype::games::rtype::server {
 
 GameEngine::GameEngine(std::shared_ptr<ECS::Registry> registry)
@@ -104,33 +104,49 @@ bool GameEngine::initialize() {
     _systemScheduler->addSystem("Spawner", [this](ECS::Registry& reg) {
         _spawnerSystem->update(reg, _lastDeltaTime);
     });
-    _systemScheduler->addSystem("ProjectileSpawner", [this](ECS::Registry& reg) {
-        _projectileSpawnerSystem->update(reg, _lastDeltaTime);
-    });
-    _systemScheduler->addSystem("EnemyShooting", [this](ECS::Registry& reg) {
-        _enemyShootingSystem->update(reg, _lastDeltaTime);
-    }, {"Spawner"});
-    _systemScheduler->addSystem("AI", [this](ECS::Registry& reg) {
-        _aiSystem->update(reg, _lastDeltaTime);
-    }, {"EnemyShooting"});
-    _systemScheduler->addSystem("Movement", [this](ECS::Registry& reg) {
-        _movementSystem->update(reg, _lastDeltaTime);
-    }, {"AI"});
+    _systemScheduler->addSystem(
+        "ProjectileSpawner", [this](ECS::Registry& reg) {
+            _projectileSpawnerSystem->update(reg, _lastDeltaTime);
+        });
+    _systemScheduler->addSystem("EnemyShooting",
+                                [this](ECS::Registry& reg) {
+                                    _enemyShootingSystem->update(
+                                        reg, _lastDeltaTime);
+                                },
+                                {"Spawner"});
+    _systemScheduler->addSystem(
+        "AI",
+        [this](ECS::Registry& reg) { _aiSystem->update(reg, _lastDeltaTime); },
+        {"EnemyShooting"});
+    _systemScheduler->addSystem("Movement",
+                                [this](ECS::Registry& reg) {
+                                    _movementSystem->update(reg,
+                                                            _lastDeltaTime);
+                                },
+                                {"AI"});
     _systemScheduler->addSystem("Lifetime", [this](ECS::Registry& reg) {
         _lifetimeSystem->update(reg, _lastDeltaTime);
     });
     _systemScheduler->addSystem("PowerUp", [this](ECS::Registry& reg) {
         _powerUpSystem->update(reg, _lastDeltaTime);
     });
-    _systemScheduler->addSystem("Collision", [this](ECS::Registry& reg) {
-        _collisionSystem->update(reg, _lastDeltaTime);
-    }, {"Movement"});
-    _systemScheduler->addSystem("Cleanup", [this](ECS::Registry& reg) {
-        _cleanupSystem->update(reg, _lastDeltaTime);
-    }, {"Collision"});
-    _systemScheduler->addSystem("Destroy", [this](ECS::Registry& reg) {
-        _destroySystem->update(reg, _lastDeltaTime);
-    }, {"Cleanup", "Collision", "Lifetime", "PowerUp"});
+    _systemScheduler->addSystem("Collision",
+                                [this](ECS::Registry& reg) {
+                                    _collisionSystem->update(reg,
+                                                             _lastDeltaTime);
+                                },
+                                {"Movement"});
+    _systemScheduler->addSystem("Cleanup",
+                                [this](ECS::Registry& reg) {
+                                    _cleanupSystem->update(reg, _lastDeltaTime);
+                                },
+                                {"Collision"});
+    _systemScheduler->addSystem(
+        "Destroy",
+        [this](ECS::Registry& reg) {
+            _destroySystem->update(reg, _lastDeltaTime);
+        },
+        {"Cleanup", "Collision", "Lifetime", "PowerUp"});
 
     _running = true;
     return true;
@@ -302,44 +318,41 @@ void GameEngine::emitEvent(const engine::GameEvent& event) {
 }
 
 void GameEngine::setupECSSignals() {
-    using shared::NetworkIdComponent;
     using shared::EnemyTag;
+    using shared::NetworkIdComponent;
     using shared::PlayerTag;
     using shared::ProjectileTag;
 
-    _registry->onConstruct<NetworkIdComponent>(
-        [this](ECS::Entity entity) {
-            _totalEntitiesCreated.fetch_add(1, std::memory_order_relaxed);
-            if (_registry->hasComponent<NetworkIdComponent>(entity)) {
-                const auto& netId = _registry->getComponent<NetworkIdComponent>(entity);
-                LOG_DEBUG("[GameEngine] Entity created: ID="
-                          << entity.id << ", NetworkID=" << netId.networkId);
-            }
-        });
+    _registry->onConstruct<NetworkIdComponent>([this](ECS::Entity entity) {
+        _totalEntitiesCreated.fetch_add(1, std::memory_order_relaxed);
+        if (_registry->hasComponent<NetworkIdComponent>(entity)) {
+            const auto& netId =
+                _registry->getComponent<NetworkIdComponent>(entity);
+            LOG_DEBUG("[GameEngine] Entity created: ID="
+                      << entity.id << ", NetworkID=" << netId.networkId);
+        }
+    });
 
-    _registry->onDestroy<NetworkIdComponent>(
-        [this](ECS::Entity entity) {
-            _totalEntitiesDestroyed.fetch_add(1, std::memory_order_relaxed);
-            LOG_DEBUG("[GameEngine] Entity with NetworkIdComponent destroyed: ID=" << entity.id);
-        });
-    _registry->onConstruct<EnemyTag>(
-        [](ECS::Entity entity) {
-            LOG_DEBUG("[GameEngine] Enemy spawned: EntityID=" << entity.id);
-        });
-    _registry->onDestroy<EnemyTag>(
-        [](ECS::Entity entity) {
-            LOG_DEBUG("[GameEngine] Enemy destroyed: EntityID=" << entity.id);
-        });
-    _registry->onConstruct<ProjectileTag>(
-        [](ECS::Entity entity) {
-            LOG_DEBUG("[GameEngine] Projectile spawned: EntityID=" << entity.id);
-        });
-    _registry->onDestroy<ProjectileTag>(
-        [](ECS::Entity entity) {
-            LOG_DEBUG("[GameEngine] Projectile destroyed: EntityID=" << entity.id);
-        });
+    _registry->onDestroy<NetworkIdComponent>([this](ECS::Entity entity) {
+        _totalEntitiesDestroyed.fetch_add(1, std::memory_order_relaxed);
+        LOG_DEBUG("[GameEngine] Entity with NetworkIdComponent destroyed: ID="
+                  << entity.id);
+    });
+    _registry->onConstruct<EnemyTag>([](ECS::Entity entity) {
+        LOG_DEBUG("[GameEngine] Enemy spawned: EntityID=" << entity.id);
+    });
+    _registry->onDestroy<EnemyTag>([](ECS::Entity entity) {
+        LOG_DEBUG("[GameEngine] Enemy destroyed: EntityID=" << entity.id);
+    });
+    _registry->onConstruct<ProjectileTag>([](ECS::Entity entity) {
+        LOG_DEBUG("[GameEngine] Projectile spawned: EntityID=" << entity.id);
+    });
+    _registry->onDestroy<ProjectileTag>([](ECS::Entity entity) {
+        LOG_DEBUG("[GameEngine] Projectile destroyed: EntityID=" << entity.id);
+    });
 
-    LOG_INFO("[GameEngine] ECS signals configured for entity lifecycle tracking");
+    LOG_INFO(
+        "[GameEngine] ECS signals configured for entity lifecycle tracking");
 }
 
 void registerRTypeGameEngine() {
