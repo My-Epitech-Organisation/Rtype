@@ -17,7 +17,7 @@
 
 #include "../../src/games/rtype/client/AllComponents.hpp"
 #include "../../src/games/rtype/client/GraphicsConstants.hpp"
-#include "../../src/games/rtype/client/Systems/MovementSystem.hpp"
+#include "../../src/games/rtype/client/Systems/SpritePositionSystem.hpp"
 #include "../../src/games/rtype/client/Systems/RenderSystem.hpp"
 
 // Namespace aliases for readability
@@ -36,7 +36,7 @@ class RenderStressTest : public ::testing::Test {
     std::shared_ptr<ECS::Registry> registry;
     std::shared_ptr<sf::RenderWindow> window;
     std::unique_ptr<rc::RenderSystem> renderSystem;
-    std::unique_ptr<rc::MovementSystem> movementSystem;
+    std::unique_ptr<rc::SpritePositionSystem> spritePositionSystem;
 
     // Test texture for sprites
     sf::Texture testTexture;
@@ -58,7 +58,7 @@ class RenderStressTest : public ::testing::Test {
 
         // Initialize systems
         renderSystem = std::make_unique<rc::RenderSystem>(window);
-        movementSystem = std::make_unique<rc::MovementSystem>();
+        spritePositionSystem = std::make_unique<rc::SpritePositionSystem>();
     }
 
     void TearDown() override {
@@ -83,7 +83,7 @@ class RenderStressTest : public ::testing::Test {
             auto entity = registry->spawnEntity();
 
             registry->emplaceComponent<rc::Image>(entity, testTexture);
-            registry->emplaceComponent<rs::Position>(entity, posDistX(rng),
+            registry->emplaceComponent<rs::TransformComponent>(entity, posDistX(rng),
                                                      posDistY(rng));
             registry->emplaceComponent<rc::ZIndex>(entity, zDist(rng));
 
@@ -111,7 +111,7 @@ class RenderStressTest : public ::testing::Test {
             auto entity = registry->spawnEntity();
 
             registry->emplaceComponent<rc::Image>(entity, testTexture);
-            registry->emplaceComponent<rs::Position>(entity, posDistX(rng),
+            registry->emplaceComponent<rs::TransformComponent>(entity, posDistX(rng),
                                                      posDistY(rng));
             registry->emplaceComponent<rs::VelocityComponent>(
                 entity, rs::VelocityComponent{velDist(rng), velDist(rng)});
@@ -138,7 +138,7 @@ class RenderStressTest : public ::testing::Test {
         for (std::size_t i = 0; i < count; ++i) {
             auto entity = registry->spawnEntity();
 
-            registry->emplaceComponent<rs::Position>(entity, posDist(rng),
+            registry->emplaceComponent<rs::TransformComponent>(entity, posDist(rng),
                                                      posDist(rng));
             registry->emplaceComponent<rc::Rectangle>(
                 entity,
@@ -308,44 +308,44 @@ TEST_F(RenderStressTest, RenderSystem_500Sprites_60Frames) {
 // Movement System Stress Tests
 // =============================================================================
 
-TEST_F(RenderStressTest, MovementSystem_1000Entities_SingleUpdate) {
+TEST_F(RenderStressTest, SpritePositionSystem_1000Entities_SingleUpdate) {
     spawnMovingEntities(1000);
 
     double time = measureTime([this]() {
-        movementSystem->update(*registry, 0.016f);
+        spritePositionSystem->update(*registry, 0.016f);
     });
 
-    std::cout << "[PERF] Movement update (1000 entities): "
+    std::cout << "[PERF] Sprite position sync (1000 entities): "
               << time << " ms" << std::endl;
 
-    EXPECT_LT(time, 10.0) << "Movement system too slow";
+    EXPECT_LT(time, 10.0) << "Sprite position system too slow";
 }
 
-TEST_F(RenderStressTest, MovementSystem_5000Entities_SingleUpdate) {
+TEST_F(RenderStressTest, SpritePositionSystem_5000Entities_SingleUpdate) {
     spawnMovingEntities(5000);
 
     double time = measureTime([this]() {
-        movementSystem->update(*registry, 0.016f);
+        spritePositionSystem->update(*registry, 0.016f);
     });
 
-    std::cout << "[PERF] Movement update (5000 entities): "
+    std::cout << "[PERF] Sprite position sync (5000 entities): "
               << time << " ms" << std::endl;
 
-    EXPECT_LT(time, 50.0) << "Movement system too slow";
+    EXPECT_LT(time, 50.0) << "Sprite position system too slow";
 }
 
-TEST_F(RenderStressTest, MovementSystem_1000Entities_60Updates) {
+TEST_F(RenderStressTest, SpritePositionSystem_1000Entities_60Updates) {
     constexpr std::size_t UPDATE_COUNT = 60;
     spawnMovingEntities(1000);
 
     double avgTime = measureAverageTime(UPDATE_COUNT, [this]() {
-        movementSystem->update(*registry, 0.016f);
+        spritePositionSystem->update(*registry, 0.016f);
     });
 
     std::cout << "[PERF] Avg movement time (1000 entities, 60 updates): "
               << avgTime << " ms" << std::endl;
 
-    EXPECT_LT(avgTime, 5.0) << "Movement system average too slow";
+    EXPECT_LT(avgTime, 5.0) << "Sprite position system average too slow";
 }
 
 // =============================================================================
@@ -358,7 +358,7 @@ TEST_F(RenderStressTest, FullFrame_500Sprites_Movement_60Frames) {
 
     double avgTime = measureAverageTime(FRAME_COUNT, [this]() {
         // Simulate a full frame
-        movementSystem->update(*registry, 0.016f);
+        spritePositionSystem->update(*registry, 0.016f);
         window->clear();
         renderSystem->update(*registry, 0.016f);
         window->display();
@@ -376,7 +376,7 @@ TEST_F(RenderStressTest, FullFrame_1000Sprites_Movement_60Frames) {
     spawnMovingEntities(1000);
 
     double avgTime = measureAverageTime(FRAME_COUNT, [this]() {
-        movementSystem->update(*registry, 0.016f);
+        spritePositionSystem->update(*registry, 0.016f);
         window->clear();
         renderSystem->update(*registry, 0.016f);
         window->display();
@@ -423,7 +423,7 @@ TEST_F(RenderStressTest, ZIndexSorting_1000Entities_RandomDepths) {
     for (std::size_t i = 0; i < 1000; ++i) {
         auto entity = registry->spawnEntity();
         registry->emplaceComponent<rc::Image>(entity, testTexture);
-        registry->emplaceComponent<rs::Position>(entity, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(entity, 0.0f, 0.0f);
         registry->emplaceComponent<rc::ZIndex>(entity, zDist(rng));
     }
 
@@ -563,7 +563,7 @@ TEST_F(RenderStressTest, SustainedLoad_500Sprites_300Frames) {
 
     // Warmup phase - let GPU/driver stabilize
     for (std::size_t i = 0; i < WARMUP_FRAMES; ++i) {
-        movementSystem->update(*registry, 0.016f);
+        spritePositionSystem->update(*registry, 0.016f);
         window->clear();
         renderSystem->update(*registry, 0.016f);
         window->display();
@@ -574,7 +574,7 @@ TEST_F(RenderStressTest, SustainedLoad_500Sprites_300Frames) {
 
     for (std::size_t i = 0; i < MEASURE_FRAMES; ++i) {
         double time = measureTime([this]() {
-            movementSystem->update(*registry, 0.016f);
+            spritePositionSystem->update(*registry, 0.016f);
             window->clear();
             renderSystem->update(*registry, 0.016f);
             window->display();

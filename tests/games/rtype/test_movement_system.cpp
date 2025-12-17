@@ -159,3 +159,29 @@ TEST_F(MovementSystemTest, UpdateMovement_NegativeDeltaTime) {
     EXPECT_FLOAT_EQ(transform.x, -10.0f);
     EXPECT_FLOAT_EQ(transform.y, -10.0f);
 }
+
+TEST_F(MovementSystemTest, UpdateMovement_ParallelPath_ManyEntities) {
+    // Create 101 entities to trigger parallel execution path (threshold is 100)
+    std::vector<ECS::Entity> entities;
+    for (int i = 0; i < 101; ++i) {
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<TransformComponent>(e, static_cast<float>(i), static_cast<float>(i * 2), 0.0f);
+        registry.emplaceComponent<VelocityComponent>(e, 5.0f, 10.0f);
+        entities.push_back(e);
+    }
+
+    movementSystem.update(registry, 1.0f);
+
+    // Verify first and last entities moved correctly
+    auto& t0 = registry.getComponent<TransformComponent>(entities[0]);
+    EXPECT_FLOAT_EQ(t0.x, 5.0f);
+    EXPECT_FLOAT_EQ(t0.y, 10.0f);
+    
+    auto& t100 = registry.getComponent<TransformComponent>(entities[100]);
+    EXPECT_FLOAT_EQ(t100.x, 105.0f);
+    EXPECT_FLOAT_EQ(t100.y, 210.0f);
+
+    for (auto e : entities) {
+        registry.killEntity(e);
+    }
+}

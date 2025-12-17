@@ -21,7 +21,7 @@
 #include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"
 #include "games/rtype/client/GameScene/RtypeInputHandler.hpp"
 #include "games/rtype/client/PauseState.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 
 void Graphic::_pollEvents() {
@@ -135,8 +135,8 @@ void Graphic::_setupNetworkEntityFactory() {
 }
 
 void Graphic::_initializeSystems() {
-    this->_movementSystem =
-        std::make_unique<::rtype::games::rtype::client::MovementSystem>();
+    this->_spritePositionSystem =
+        std::make_unique<::rtype::games::rtype::client::SpritePositionSystem>();
     this->_playerAnimationSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerAnimationSystem>();
     this->_playerPowerUpVisualSystem = std::make_unique<
@@ -177,9 +177,9 @@ void Graphic::_initializeSystems() {
             this->_resetTriggersSystem->update(reg, 0.f);
         });
 
-    this->_systemScheduler->addSystem("movement",
+    this->_systemScheduler->addSystem("sprite_position",
                                       [this](ECS::Registry& reg) {
-                                          _movementSystem->update(
+                                          _spritePositionSystem->update(
                                               reg, _currentDeltaTime);
                                       },
                                       {"reset_triggers"});
@@ -189,14 +189,14 @@ void Graphic::_initializeSystems() {
                                           _playerAnimationSystem->update(
                                               reg, _currentDeltaTime);
                                       },
-                                      {"movement"});
+                                      {"sprite_position"});
 
     this->_systemScheduler->addSystem("powerup_visuals",
                                       [this](ECS::Registry& reg) {
                                           _playerPowerUpVisualSystem->update(
                                               reg, _currentDeltaTime);
                                       },
-                                      {"movement"});
+                                      {"sprite_position"});
 
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {

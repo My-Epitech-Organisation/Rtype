@@ -18,9 +18,8 @@
 #include "games/rtype/shared/Components/CooldownComponent.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
-#include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
+#include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 #include "games/rtype/shared/Components/WeaponComponent.hpp"
 
@@ -129,7 +128,7 @@ TEST_F(PlayerSpawnerTest, SpawnPlayer_MultiplePlayersWithDifferentIndices) {
 }
 
 TEST_F(PlayerSpawnerTest, SpawnPlayer_HasAllComponents) {
-    using Position = rtype::games::rtype::shared::Position;
+    using Transform = rtype::games::rtype::shared::TransformComponent;
     using TransformComponent = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
     using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
@@ -147,7 +146,7 @@ TEST_F(PlayerSpawnerTest, SpawnPlayer_HasAllComponents) {
 
     ECS::Entity entity = result.entity;
 
-    EXPECT_TRUE(registry_->hasComponent<Position>(entity));
+    EXPECT_TRUE(registry_->hasComponent<Transform>(entity));
     EXPECT_TRUE(registry_->hasComponent<TransformComponent>(entity));
     EXPECT_TRUE(registry_->hasComponent<Velocity>(entity));
     EXPECT_TRUE(registry_->hasComponent<ShootCooldown>(entity));

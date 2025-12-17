@@ -8,6 +8,11 @@
 #ifndef SRC_COMMON_ARGPARSER_NUMBERPARSER_HPP_
 #define SRC_COMMON_ARGPARSER_NUMBERPARSER_HPP_
 
+// Prevent Windows.h from defining min/max macros
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <cstdint>
 #include <format>
 #include <limits>
@@ -39,8 +44,8 @@ namespace rtype {
 template <typename T>
 [[nodiscard]] std::optional<T> parseNumber(
     std::string_view str, std::string_view name,
-    T minVal = std::numeric_limits<T>::min(),
-    T maxVal = std::numeric_limits<T>::max()) noexcept {
+    T minVal = (std::numeric_limits<T>::min)(),
+    T maxVal = (std::numeric_limits<T>::max)()) noexcept {
     try {
         const std::string input(str);
         std::size_t pos = 0;

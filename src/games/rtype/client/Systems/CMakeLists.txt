@@ -7,8 +7,8 @@ add_library(rtype_game_client_systems STATIC
     ButtonUpdateSystem.hpp
     ParallaxScrolling.cpp
     ParallaxScrolling.hpp
-    MovementSystem.cpp
-    MovementSystem.hpp
+    SpritePositionSystem.cpp
+    SpritePositionSystem.hpp
     BoxingSystem.cpp
     BoxingSystem.hpp
     ResetTriggersSystem.cpp

@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include <ECS.hpp>
 #include "../src/client/Graphic/EntityFactory/EntityFactory.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/client/Components/TextComponent.hpp"
 #include "../src/client/Graphic/AssetManager/AssetManager.hpp"
 #include "games/rtype/client/Components/RectangleComponent.hpp"
@@ -20,14 +20,14 @@ TEST(EntityFactoryTest, CreateButton_AddsComponents) {
     std::shared_ptr<ECS::Registry> registry = std::make_shared<ECS::Registry>();
     sf::Font font;
     rtype::games::rtype::client::Text text{font, sf::Color::White, 24, "Test"};
-    rtype::games::rtype::shared::Position pos{0.0f, 0.0f};
+    rtype::games::rtype::shared::TransformComponent pos{0.0f, 0.0f};
     rtype::games::rtype::client::Rectangle rect{{100.0f, 50.0f}, sf::Color::Blue, sf::Color::Red};
     std::function<void()> onClick = []() {};
 
     auto entity = EntityFactory::createButton(registry, text, pos, rect, nullptr, onClick);
 
     EXPECT_TRUE(registry->hasComponent<rtype::games::rtype::client::Text>(entity));
-    EXPECT_TRUE(registry->hasComponent<rtype::games::rtype::shared::Position>(entity));
+    EXPECT_TRUE(registry->hasComponent<rtype::games::rtype::shared::TransformComponent>(entity));
     EXPECT_TRUE(registry->hasComponent<rtype::games::rtype::client::Rectangle>(entity));
     EXPECT_TRUE(registry->hasComponent<rtype::games::rtype::client::Button<>>(entity));
     EXPECT_TRUE(registry->hasComponent<rtype::games::rtype::client::UserEvent>(entity));
@@ -38,7 +38,7 @@ TEST(EntityFactoryTest, CreateButton_ReturnsValidEntity) {
     std::shared_ptr<ECS::Registry> registry = std::make_shared<ECS::Registry>();
     sf::Font font;
     rtype::games::rtype::client::Text text{font, sf::Color::White, 24, "Test"};
-    rtype::games::rtype::shared::Position pos{0.0f, 0.0f};
+    rtype::games::rtype::shared::TransformComponent pos{0.0f, 0.0f};
     rtype::games::rtype::client::Rectangle rect{{100.0f, 50.0f}, sf::Color::Blue, sf::Color::Red};
     std::function<void()> onClick = []() {};
 

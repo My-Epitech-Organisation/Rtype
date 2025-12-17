@@ -132,3 +132,26 @@ TEST_F(LifetimeSystemTest, LifetimeExactlyZero) {
     // 1.0 - 1.0 = 0.0, which is <= 0, so should be destroyed
     EXPECT_TRUE(registry.hasComponent<DestroyTag>(entity));
 }
+
+TEST_F(LifetimeSystemTest, UpdateParallelPath_ManyEntities) {
+    // Create 101 entities to trigger parallel execution path (threshold is 100)
+    std::vector<ECS::Entity> entities;
+    for (int i = 0; i < 101; ++i) {
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<LifetimeComponent>(e, 5.0f);
+        entities.push_back(e);
+    }
+
+    lifetimeSystem.update(registry, 1.0f);
+
+    // Verify all entities had their lifetime reduced
+    for (auto e : entities) {
+        auto& lifetime = registry.getComponent<LifetimeComponent>(e);
+        EXPECT_FLOAT_EQ(lifetime.remainingTime, 4.0f);
+        EXPECT_FALSE(registry.hasComponent<DestroyTag>(e));
+    }
+
+    for (auto e : entities) {
+        registry.killEntity(e);
+    }
+}

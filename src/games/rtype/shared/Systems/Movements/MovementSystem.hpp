@@ -13,7 +13,6 @@
 #include "../../Components/VelocityComponent.hpp"
 
 namespace rtype::games::rtype::shared {
-
 /**
  * @class MovementSystem
  * @brief System that updates entity positions based on velocity

@@ -86,7 +86,7 @@ TEST_F(ECSComponentStressTest, AddSingleComponent_1000Entities) {
 
     double time = measureTime([this, &entities]() {
         for (auto entity : entities) {
-            registry->emplaceComponent<rs::Position>(entity, 0.0f, 0.0f);
+            registry->emplaceComponent<rs::TransformComponent>(entity, 0.0f, 0.0f);
         }
     });
 
@@ -107,7 +107,7 @@ TEST_F(ECSComponentStressTest, AddMultipleComponents_1000Entities) {
 
     double time = measureTime([this, &entities]() {
         for (auto entity : entities) {
-            registry->emplaceComponent<rs::Position>(entity, 0.0f, 0.0f);
+            registry->emplaceComponent<rs::TransformComponent>(entity, 0.0f, 0.0f);
             registry->emplaceComponent<rs::VelocityComponent>(
                 entity, rs::VelocityComponent{1.0f, 1.0f});
             registry->emplaceComponent<rc::ZIndex>(entity, 0);
@@ -155,7 +155,7 @@ TEST_F(ECSComponentStressTest, AddComponents_5000Entities_AllTypes) {
 
     double componentTime = measureTime([this, &entities]() {
         for (auto entity : entities) {
-            registry->emplaceComponent<rs::Position>(entity, 0.0f, 0.0f);
+            registry->emplaceComponent<rs::TransformComponent>(entity, 0.0f, 0.0f);
             registry->emplaceComponent<rs::VelocityComponent>(
                 entity, rs::VelocityComponent{0.0f, 0.0f});
             registry->emplaceComponent<rc::ZIndex>(entity, 0);
@@ -181,13 +181,13 @@ TEST_F(ECSComponentStressTest, QuerySingleComponent_1000Entities) {
     // Setup: create entities with Position
     for (std::size_t i = 0; i < COUNT; ++i) {
         auto entity = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(entity,
+        registry->emplaceComponent<rs::TransformComponent>(entity,
             static_cast<float>(i), static_cast<float>(i));
     }
 
     std::size_t iterationCount = 0;
     double time = measureTime([this, &iterationCount]() {
-        registry->view<rs::Position>().each(
+        registry->view<rs::TransformComponent>().each(
             [&iterationCount](auto entity, auto& pos) {
                 ++iterationCount;
                 pos.x += 1.0f;  // Modify to prevent optimization
@@ -206,7 +206,7 @@ TEST_F(ECSComponentStressTest, QueryMultipleComponents_1000Entities) {
 
     for (std::size_t i = 0; i < COUNT; ++i) {
         auto entity = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(entity, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(entity, 0.0f, 0.0f);
         registry->emplaceComponent<rs::VelocityComponent>(
             entity, rs::VelocityComponent{1.0f, 1.0f});
         registry->emplaceComponent<rc::ZIndex>(entity, 0);
@@ -214,7 +214,7 @@ TEST_F(ECSComponentStressTest, QueryMultipleComponents_1000Entities) {
 
     std::size_t iterationCount = 0;
     double time = measureTime([this, &iterationCount]() {
-        registry->view<rs::Position, rs::VelocityComponent, rc::ZIndex>().each(
+        registry->view<rs::TransformComponent, rs::VelocityComponent, rc::ZIndex>().each(
             [&iterationCount](auto entity, auto& pos, auto& vel, auto& z) {
                 ++iterationCount;
                 pos.x += vel.vx;
@@ -237,7 +237,7 @@ TEST_F(ECSComponentStressTest, QueryWithFilter_5000Entities) {
 
     for (std::size_t i = 0; i < COUNT; ++i) {
         auto entity = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(entity, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(entity, 0.0f, 0.0f);
 
         // Only half get velocity
         if (i < MATCHING) {
@@ -248,7 +248,7 @@ TEST_F(ECSComponentStressTest, QueryWithFilter_5000Entities) {
 
     std::size_t matchCount = 0;
     double time = measureTime([this, &matchCount]() {
-        registry->view<rs::Position, rs::VelocityComponent>().each(
+        registry->view<rs::TransformComponent, rs::VelocityComponent>().each(
             [&matchCount](auto entity, auto& pos, auto& vel) {
                 ++matchCount;
             });
@@ -267,13 +267,13 @@ TEST_F(ECSComponentStressTest, RepeatedQueries_100Iterations) {
 
     for (std::size_t i = 0; i < COUNT; ++i) {
         auto entity = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(entity, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(entity, 0.0f, 0.0f);
         registry->emplaceComponent<rs::VelocityComponent>(
             entity, rs::VelocityComponent{1.0f, 1.0f});
     }
 
     double avgTime = measureAverageTime(ITERATIONS, [this]() {
-        registry->view<rs::Position, rs::VelocityComponent>().each(
+        registry->view<rs::TransformComponent, rs::VelocityComponent>().each(
             [](auto entity, auto& pos, auto& vel) {
                 pos.x += vel.vx;
                 pos.y += vel.vy;
@@ -297,7 +297,7 @@ TEST_F(ECSComponentStressTest, RemoveComponent_1000Entities) {
 
     for (std::size_t i = 0; i < COUNT; ++i) {
         auto entity = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(entity, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(entity, 0.0f, 0.0f);
         registry->emplaceComponent<rs::VelocityComponent>(
             entity, rs::VelocityComponent{0.0f, 0.0f});
         entities.push_back(entity);
@@ -328,7 +328,7 @@ TEST_F(ECSComponentStressTest, EntityDestruction_1000Entities) {
 
     for (std::size_t i = 0; i < COUNT; ++i) {
         auto entity = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(entity, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(entity, 0.0f, 0.0f);
         registry->emplaceComponent<rs::VelocityComponent>(
             entity, rs::VelocityComponent{0.0f, 0.0f});
         registry->emplaceComponent<rc::ZIndex>(entity, 0);
@@ -359,7 +359,7 @@ TEST_F(ECSComponentStressTest, HasComponent_10000Checks) {
 
     for (std::size_t i = 0; i < COUNT; ++i) {
         auto entity = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(entity, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(entity, 0.0f, 0.0f);
         if (i % 2 == 0) {
             registry->emplaceComponent<rs::VelocityComponent>(
                 entity, rs::VelocityComponent{0.0f, 0.0f});
@@ -395,13 +395,13 @@ TEST_F(ECSComponentStressTest, ModifyComponents_1000Entities_100Iterations) {
 
     for (std::size_t i = 0; i < COUNT; ++i) {
         auto entity = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(entity, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(entity, 0.0f, 0.0f);
         registry->emplaceComponent<rs::VelocityComponent>(
             entity, rs::VelocityComponent{1.0f, 2.0f});
     }
 
     double avgTime = measureAverageTime(ITERATIONS, [this]() {
-        registry->view<rs::Position, rs::VelocityComponent>().each(
+        registry->view<rs::TransformComponent, rs::VelocityComponent>().each(
             [](auto entity, auto& pos, auto& vel) {
                 pos.x += vel.vx * 0.016f;
                 pos.y += vel.vy * 0.016f;
@@ -427,13 +427,13 @@ TEST_F(ECSComponentStressTest, FragmentedArchetypes_ManyComponentCombinations) {
     // Type 1: Position only
     for (std::size_t i = 0; i < ENTITIES_PER_TYPE; ++i) {
         auto e = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(e, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(e, 0.0f, 0.0f);
     }
 
     // Type 2: Position + Velocity
     for (std::size_t i = 0; i < ENTITIES_PER_TYPE; ++i) {
         auto e = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(e, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(e, 0.0f, 0.0f);
         registry->emplaceComponent<rs::VelocityComponent>(
             e, rs::VelocityComponent{0.0f, 0.0f});
     }
@@ -441,14 +441,14 @@ TEST_F(ECSComponentStressTest, FragmentedArchetypes_ManyComponentCombinations) {
     // Type 3: Position + ZIndex
     for (std::size_t i = 0; i < ENTITIES_PER_TYPE; ++i) {
         auto e = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(e, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(e, 0.0f, 0.0f);
         registry->emplaceComponent<rc::ZIndex>(e, 0);
     }
 
     // Type 4: Position + Velocity + ZIndex
     for (std::size_t i = 0; i < ENTITIES_PER_TYPE; ++i) {
         auto e = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(e, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(e, 0.0f, 0.0f);
         registry->emplaceComponent<rs::VelocityComponent>(
             e, rs::VelocityComponent{0.0f, 0.0f});
         registry->emplaceComponent<rc::ZIndex>(e, 0);
@@ -457,7 +457,7 @@ TEST_F(ECSComponentStressTest, FragmentedArchetypes_ManyComponentCombinations) {
     // Type 5: All components including Image
     for (std::size_t i = 0; i < ENTITIES_PER_TYPE; ++i) {
         auto e = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(e, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(e, 0.0f, 0.0f);
         registry->emplaceComponent<rs::VelocityComponent>(
             e, rs::VelocityComponent{0.0f, 0.0f});
         registry->emplaceComponent<rc::ZIndex>(e, 0);
@@ -467,7 +467,7 @@ TEST_F(ECSComponentStressTest, FragmentedArchetypes_ManyComponentCombinations) {
     // Query that spans multiple archetypes
     std::size_t count = 0;
     double time = measureTime([this, &count]() {
-        registry->view<rs::Position>().each([&count](auto, auto&) {
+        registry->view<rs::TransformComponent>().each([&count](auto, auto&) {
             ++count;
         });
     });
@@ -494,7 +494,7 @@ TEST_F(ECSComponentStressTest, InterleavedOperations_SimulateGameLoop) {
     // Initial spawn
     for (std::size_t i = 0; i < INITIAL_ENTITIES; ++i) {
         auto e = registry->spawnEntity();
-        registry->emplaceComponent<rs::Position>(e, 0.0f, 0.0f);
+        registry->emplaceComponent<rs::TransformComponent>(e, 0.0f, 0.0f);
         registry->emplaceComponent<rs::VelocityComponent>(
             e, rs::VelocityComponent{1.0f, 1.0f});
         entities.push_back(e);
@@ -508,14 +508,14 @@ TEST_F(ECSComponentStressTest, InterleavedOperations_SimulateGameLoop) {
             // 1. Spawn new entities
             for (std::size_t i = 0; i < SPAWN_PER_FRAME; ++i) {
                 auto e = registry->spawnEntity();
-                registry->emplaceComponent<rs::Position>(e, 0.0f, 0.0f);
+                registry->emplaceComponent<rs::TransformComponent>(e, 0.0f, 0.0f);
                 registry->emplaceComponent<rs::VelocityComponent>(
                     e, rs::VelocityComponent{1.0f, 1.0f});
                 entities.push_back(e);
             }
 
             // 2. Update all entities
-            registry->view<rs::Position, rs::VelocityComponent>().each(
+            registry->view<rs::TransformComponent, rs::VelocityComponent>().each(
                 [](auto, auto& pos, auto& vel) {
                     pos.x += vel.vx * 0.016f;
                     pos.y += vel.vy * 0.016f;

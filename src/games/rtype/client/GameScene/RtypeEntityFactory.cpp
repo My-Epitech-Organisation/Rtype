@@ -68,7 +68,7 @@ RtypeEntityFactory::createNetworkEntityFactory(
 
         auto entity = reg.spawnEntity();
 
-        reg.emplaceComponent<::rtype::games::rtype::shared::Position>(
+        reg.emplaceComponent<::rtype::games::rtype::shared::TransformComponent>(
             entity, event.x, event.y);
         reg.emplaceComponent<::rtype::games::rtype::shared::VelocityComponent>(
             entity, 0.f, 0.f);
@@ -214,8 +214,8 @@ void RtypeEntityFactory::setupMissileEntity(
     auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
     lib->playSFX(*assetsManager->soundManager->get("laser_sfx"));
 
-    if (reg.hasComponent<shared::Position>(entity)) {
-        const auto& pos = reg.getComponent<shared::Position>(entity);
+    if (reg.hasComponent<shared::TransformComponent>(entity)) {
+        const auto& pos = reg.getComponent<shared::TransformComponent>(entity);
         VisualCueFactory::createFlash(reg, {pos.x, pos.y},
                                       sf::Color(0, 255, 220), 52.f, 0.25f, 10);
     }

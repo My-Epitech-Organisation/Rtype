@@ -17,7 +17,6 @@ add_library(network STATIC ${NETWORK_SOURCES})
 target_include_directories(network PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../engine/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../engine_core/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/src/Logger
     ${CMAKE_SOURCE_DIR}/include

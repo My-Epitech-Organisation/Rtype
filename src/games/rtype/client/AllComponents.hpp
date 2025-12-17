@@ -23,8 +23,8 @@
 #include "Components/ZIndexComponent.hpp"
 
 // Include shared components commonly used with client components
-#include "../shared/Components/PositionComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace rtype::client {
 
@@ -66,7 +66,7 @@ using TextInputTag = ::rtype::games::rtype::client::TextInputTag;
 using TextInput = ::rtype::games::rtype::client::TextInput;
 
 // Position and movement (from shared)
-using Position = ::rtype::games::rtype::shared::Position;
+using Transform = ::rtype::games::rtype::shared::TransformComponent;
 using Velocity = ::rtype::games::rtype::shared::VelocityComponent;
 
 }  // namespace rtype::client
