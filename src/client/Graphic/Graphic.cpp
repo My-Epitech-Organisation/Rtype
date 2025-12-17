@@ -256,22 +256,22 @@ void Graphic::_initializeCommonAssets() {
     manager->fontManager->load("title_font", config.assets.fonts.TitleFont);
     manager->fontManager->load("main_font", config.assets.fonts.MainFont);
 
-    manager->textureManager->load("bg_menu", config.assets.textures.background);
-    manager->textureManager->load("bg_sun", config.assets.textures.sun);
+    manager->textureManager->load("bg_menu", config.assets.textures.backgroundTexture.background);
+    manager->textureManager->load("bg_sun", config.assets.textures.backgroundTexture.sun);
     manager->textureManager->load("bg_big_asteroids",
-                                  config.assets.textures.bigAsteroids);
+                                  config.assets.textures.backgroundTexture.bigAsteroids);
     manager->textureManager->load("bg_small_asteroids",
-                                  config.assets.textures.smallAsteroids);
+                                  config.assets.textures.backgroundTexture.smallAsteroids);
     manager->textureManager->load("bg_fst_plan_asteroids",
-                                  config.assets.textures.fstPlanAsteroids);
+                                  config.assets.textures.backgroundTexture.fstPlanAsteroids);
     manager->textureManager->load("bg_snd_plan_asteroids",
-                                  config.assets.textures.sndPlanAsteroids);
+                                  config.assets.textures.backgroundTexture.sndPlanAsteroids);
     manager->textureManager->load("bg_planet_1",
-                                  config.assets.textures.planet1);
+                                  config.assets.textures.backgroundTexture.planet1);
     manager->textureManager->load("bg_planet_2",
-                                  config.assets.textures.planet2);
+                                  config.assets.textures.backgroundTexture.planet2);
     manager->textureManager->load("bg_planet_3",
-                                  config.assets.textures.planet3);
+                                  config.assets.textures.backgroundTexture.planet3);
     manager->textureManager->load("astro_vessel",
                                   config.assets.textures.astroVessel);
     manager->textureManager->load("player_vessel",
@@ -279,6 +279,18 @@ void Graphic::_initializeCommonAssets() {
     manager->textureManager->load("bdos_enemy", config.assets.textures.Enemy);
     manager->textureManager->load("projectile_player_laser",
                                   config.assets.textures.missileLaser);
+
+    manager->textureManager->load("projectile1", config.assets.textures.wallTexture.engrenage1);
+    manager->textureManager->load("projectile2", config.assets.textures.wallTexture.engrenage2);
+    manager->textureManager->load("projectile3", config.assets.textures.wallTexture.panneau1);
+    manager->textureManager->load("projectile4", config.assets.textures.wallTexture.panneau2);
+    manager->textureManager->load("projectile5", config.assets.textures.wallTexture.panneau3);
+    manager->textureManager->load("projectile6", config.assets.textures.wallTexture.metal1);
+    manager->textureManager->load("projectile7", config.assets.textures.wallTexture.metal2);
+    manager->textureManager->load("projectile8", config.assets.textures.wallTexture.metal3);
+    manager->textureManager->load("projectile9", config.assets.textures.wallTexture.metal4);
+    manager->textureManager->load("projectile10", config.assets.textures.wallTexture.truc);
+    manager->textureManager->load("projectile11", config.assets.textures.wallTexture.tubeMetal);
 
     manager->soundManager->load("hover_button", config.assets.sfx.hoverButton);
     manager->soundManager->load("click_button", config.assets.sfx.clickButton);

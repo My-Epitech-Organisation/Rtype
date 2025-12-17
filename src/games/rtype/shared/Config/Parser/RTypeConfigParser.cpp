@@ -216,35 +216,35 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
                                       defaults.assets.fonts.TitleFont);
 
     // Textures
-    config.assets.textures.background =
+    config.assets.textures.backgroundTexture.background =
         "assets/" + _parser.getString(table, "Textures", "Background",
-                                      defaults.assets.textures.background);
-    config.assets.textures.sun =
+                                      defaults.assets.textures.backgroundTexture.background);
+    config.assets.textures.backgroundTexture.sun =
         "assets/" + _parser.getString(table, "Textures", "Sun",
-                                      defaults.assets.textures.sun);
-    config.assets.textures.bigAsteroids =
+                                      defaults.assets.textures.backgroundTexture.sun);
+    config.assets.textures.backgroundTexture.bigAsteroids =
         "assets/" + _parser.getString(table, "Textures", "BigAsteroids",
-                                      defaults.assets.textures.bigAsteroids);
-    config.assets.textures.smallAsteroids =
+                                      defaults.assets.textures.backgroundTexture.bigAsteroids);
+    config.assets.textures.backgroundTexture.smallAsteroids =
         "assets/" + _parser.getString(table, "Textures", "SmallAsteroids",
-                                      defaults.assets.textures.smallAsteroids);
-    config.assets.textures.fstPlanAsteroids =
+                                      defaults.assets.textures.backgroundTexture.smallAsteroids);
+    config.assets.textures.backgroundTexture.fstPlanAsteroids =
         "assets/" +
         _parser.getString(table, "Textures", "FstPlanAsteroids",
-                          defaults.assets.textures.fstPlanAsteroids);
-    config.assets.textures.sndPlanAsteroids =
+                          defaults.assets.textures.backgroundTexture.fstPlanAsteroids);
+    config.assets.textures.backgroundTexture.sndPlanAsteroids =
         "assets/" +
         _parser.getString(table, "Textures", "SndPlanAsteroids",
-                          defaults.assets.textures.sndPlanAsteroids);
-    config.assets.textures.planet1 =
+                          defaults.assets.textures.backgroundTexture.sndPlanAsteroids);
+    config.assets.textures.backgroundTexture.planet1 =
         "assets/" + _parser.getString(table, "Textures", "Planet1",
-                                      defaults.assets.textures.planet1);
-    config.assets.textures.planet2 =
+                                      defaults.assets.textures.backgroundTexture.planet1);
+    config.assets.textures.backgroundTexture.planet2 =
         "assets/" + _parser.getString(table, "Textures", "Planet2",
-                                      defaults.assets.textures.planet2);
-    config.assets.textures.planet3 =
+                                      defaults.assets.textures.backgroundTexture.planet2);
+    config.assets.textures.backgroundTexture.planet3 =
         "assets/" + _parser.getString(table, "Textures", "Planet3",
-                                      defaults.assets.textures.planet3);
+                                      defaults.assets.textures.backgroundTexture.planet3);
     config.assets.textures.astroVessel =
         "assets/" + _parser.getString(table, "Textures", "AstroVessel",
                                       defaults.assets.textures.astroVessel);
@@ -257,6 +257,40 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.textures.missileLaser =
         "assets/" + _parser.getString(table, "Textures", "MissileLaser",
                                       defaults.assets.textures.missileLaser);
+    // Wall - Textures
+    config.assets.textures.wallTexture.engrenage1 =
+        "assets/" + _parser.getString(table, "Textures", "Engrenage1",
+                                      defaults.assets.textures.wallTexture.engrenage1);
+    config.assets.textures.wallTexture.engrenage2 =
+        "assets/" + _parser.getString(table, "Textures", "Engrenage2",
+                                      defaults.assets.textures.wallTexture.engrenage2);
+    config.assets.textures.wallTexture.metal1 =
+        "assets/" + _parser.getString(table, "Textures", "Metal1",
+                                      defaults.assets.textures.wallTexture.metal1);
+    config.assets.textures.wallTexture.metal2 =
+        "assets/" + _parser.getString(table, "Textures", "Metal2",
+                                      defaults.assets.textures.wallTexture.metal2);
+    config.assets.textures.wallTexture.metal3 =
+        "assets/" + _parser.getString(table, "Textures", "Metal3",
+                                      defaults.assets.textures.wallTexture.metal3);
+    config.assets.textures.wallTexture.metal4 =
+        "assets/" + _parser.getString(table, "Textures", "Metal4",
+                                      defaults.assets.textures.wallTexture.metal4);
+    config.assets.textures.wallTexture.panneau1 =
+        "assets/" + _parser.getString(table, "Textures", "Panneau1",
+                                      defaults.assets.textures.wallTexture.panneau1);
+    config.assets.textures.wallTexture.panneau2 =
+        "assets/" + _parser.getString(table, "Textures", "Panneau2",
+                                      defaults.assets.textures.wallTexture.panneau2);
+    config.assets.textures.wallTexture.panneau3 =
+        "assets/" + _parser.getString(table, "Textures", "Panneau3",
+                                      defaults.assets.textures.wallTexture.panneau3);
+    config.assets.textures.wallTexture.truc =
+        "assets/" + _parser.getString(table, "Textures", "Truc",
+                                      defaults.assets.textures.wallTexture.truc);
+    config.assets.textures.wallTexture.tubeMetal =
+        "assets/" + _parser.getString(table, "Textures", "TubeMetal",
+                                      defaults.assets.textures.wallTexture.tubeMetal);
     // Music
     config.assets.music.mainMenu =
         "assets/" + _parser.getString(table, "Music", "MainMenu",

@@ -31,6 +31,18 @@ Planet3 = "img/planet3.png"
 AstroVessel = "img/astroVessel.png"
 # Projectile assets
 MissileLaser = "img/missileLaser.gif"
+# Trap
+Engrenage1 = "img/Engrenage1.png"
+Engrenage2 = "img/Engrenage2.png"
+Metal1 = "img/Metal1.png"
+Metal2 = "img/Metal2.png"
+Metal3 = "img/Metal3.png"
+Metal4 = "img/Metal4.png"
+Panneau1 = "img/Panneau1.png"
+Panneau2 = "img/Panneau2.png"
+Panneau3 = "img/Panneau3.png"
+Truc = "img/Truc.png"
+TubeMetal = "img/tubeMetal.png"
 
 [Fonts]
 MainFont = "fonts/Orbitron-VariableFont_wght.ttf"
