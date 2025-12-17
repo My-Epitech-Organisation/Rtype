@@ -53,4 +53,8 @@ target_include_directories(test_integration
         ${CMAKE_SOURCE_DIR}/lib/ecs/src
 )
 
-add_test(NAME IntegrationTests COMMAND test_integration)
+if(WIN32 OR MSVC)
+    add_test(NAME IntegrationTests COMMAND test_integration WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    add_test(NAME IntegrationTests COMMAND test_integration)
+endif()
