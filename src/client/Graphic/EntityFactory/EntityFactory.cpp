@@ -42,7 +42,7 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     auto& sunTexture = assetManager->textureManager->get("bg_sun");
     registry->emplaceComponent<rtype::games::rtype::client::Image>(sun,
                                                                    sunTexture);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(sun, 0,
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(sun, 0,
                                                                       0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         sun, cfg::ZINDEX_SUN);
@@ -54,7 +54,7 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
         bigAsteroids, bigAsteroidsTexture);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         bigAsteroids, cfg::PARALLAX_BIG_ASTEROIDS, true);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         bigAsteroids, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         bigAsteroids, cfg::ZINDEX_BIG_SMALL_ASTEROIDS);
@@ -66,7 +66,7 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
         smallAsteroids, smallAsteroidsTexture);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         smallAsteroids, cfg::PARALLAX_SMALL_ASTEROIDS, true);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         smallAsteroids, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         smallAsteroids, cfg::ZINDEX_BIG_SMALL_ASTEROIDS);
@@ -78,7 +78,7 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
         firstPlanAsteroids, firstPlanAsteroidsTexture);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         firstPlanAsteroids, cfg::PARALLAX_ASTEROIDS_FST_PLAN, true);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         firstPlanAsteroids, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         firstPlanAsteroids, cfg::ZINDEX_FST_PLAN_ASTEROIDS);
@@ -90,7 +90,7 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
         secondPlanAsteroids, secondPlanAsteroidsTexture);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         secondPlanAsteroids, cfg::PARALLAX_ASTEROIDS_SND_PLAN, true);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         secondPlanAsteroids, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         secondPlanAsteroids, cfg::ZINDEX_SND_PLAN_ASTEROIDS);

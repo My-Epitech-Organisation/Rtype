@@ -21,7 +21,6 @@
 #include "../shared/Components/VelocityComponent.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 #include "Logger/Macros.hpp"
-#include "games/rtype/shared/Components/TransformComponent.hpp"
 namespace rtype::games::rtype::server {
 
 GameEngine::GameEngine(std::shared_ptr<ECS::Registry> registry)

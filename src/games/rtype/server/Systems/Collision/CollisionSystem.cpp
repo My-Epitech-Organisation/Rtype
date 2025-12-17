@@ -57,9 +57,6 @@ CollisionSystem::CollisionSystem(EventEmitter emitter, float worldWidth,
 void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
     _quadTreeSystem->update(registry, deltaTime);
     auto collisionPairs = _quadTreeSystem->queryCollisionPairs(registry);
-
-    // CommandBuffer pour différer les ajouts/suppressions de composants durant
-    // l'itération
     ECS::CommandBuffer cmdBuffer(std::ref(registry));
 
     for (const auto& pair : collisionPairs) {
@@ -133,8 +130,6 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
                                       aIsPlayer);
         }
     }
-
-    // Appliquer toutes les modifications différées en une seule fois
     cmdBuffer.flush();
 }
 

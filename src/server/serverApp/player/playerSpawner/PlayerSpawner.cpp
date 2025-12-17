@@ -21,8 +21,7 @@
 
 namespace rtype::server {
 
-using Position = rtype::games::rtype::shared::TransformComponent;
-using TransformComponent = rtype::games::rtype::shared::TransformComponent;
+using Transform = rtype::games::rtype::shared::TransformComponent;
 using Velocity = rtype::games::rtype::shared::VelocityComponent;
 using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
 using Weapon = rtype::games::rtype::shared::WeaponComponent;
@@ -50,9 +49,7 @@ PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
     ECS::Entity playerEntity = _registry->spawnEntity();
     result.entity = playerEntity;
 
-    _registry->emplaceComponent<Position>(playerEntity, result.x, result.y);
-    _registry->emplaceComponent<TransformComponent>(playerEntity, result.x,
-                                                    result.y, 0.0F);
+    _registry->emplaceComponent<Transform>(playerEntity, result.x, result.y, 0.0F);
     _registry->emplaceComponent<Velocity>(playerEntity, 0.0F, 0.0F);
 
     _registry->emplaceComponent<ShootCooldown>(playerEntity,

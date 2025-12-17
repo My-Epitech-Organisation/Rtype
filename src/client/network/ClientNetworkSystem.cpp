@@ -29,7 +29,7 @@
 
 namespace rtype::client {
 
-using Position = rtype::games::rtype::shared::TransformComponent;
+using Transform = rtype::games::rtype::shared::TransformComponent;
 using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
 ClientNetworkSystem::ClientNetworkSystem(
@@ -210,8 +210,8 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
         return;
     }
 
-    if (registry_->hasComponent<Position>(entity)) {
-        auto& pos = registry_->getComponent<Position>(entity);
+    if (registry_->hasComponent<Transform>(entity)) {
+        auto& pos = registry_->getComponent<Transform>(entity);
         pos.x = event.x;
         pos.y = event.y;
     }
@@ -311,8 +311,8 @@ void ClientNetworkSystem::handlePositionCorrection(float x, float y) {
         return;
     }
 
-    if (registry_->hasComponent<Position>(entity)) {
-        auto& pos = registry_->getComponent<Position>(entity);
+    if (registry_->hasComponent<Transform>(entity)) {
+        auto& pos = registry_->getComponent<Transform>(entity);
         pos.x = x;
         pos.y = y;
     }
@@ -506,7 +506,7 @@ ECS::Entity ClientNetworkSystem::defaultEntityFactory(
     ECS::Registry& registry, const EntitySpawnEvent& event) {
     auto entity = registry.spawnEntity();
 
-    registry.emplaceComponent<Position>(entity, event.x, event.y);
+    registry.emplaceComponent<Transform>(entity, event.x, event.y);
     registry.emplaceComponent<Velocity>(entity, 0.f, 0.f);
     registry.emplaceComponent<rtype::games::rtype::shared::NetworkIdComponent>(
         entity, event.entityId);

@@ -20,7 +20,6 @@
 #include "../shared/Components/VelocityComponent.hpp"
 #include "../shared/Components/WeaponComponent.hpp"
 #include "GameEngine.hpp"
-#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "server/serverApp/game/entitySpawnerFactory/EntitySpawnerFactory.hpp"
 
 namespace rtype::games::rtype::server {
