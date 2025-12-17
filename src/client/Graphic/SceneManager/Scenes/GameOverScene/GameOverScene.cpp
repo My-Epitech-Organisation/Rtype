@@ -109,10 +109,10 @@ void GameOverScene::_buildLayout() {
             _assetsManager->fontManager->get("main_font"), sf::Color::White, 36,
             "Back to Menu"),
         rtype::games::rtype::shared::Position(
-            btnX, 650.f),  // Utilise la variable calculée
-        rtype::games::rtype::client::Rectangle({(int)btnWidth, (int)btnHeight},
-                                               sf::Color(0, 150, 200),
-                                               sf::Color(0, 200, 255)),
+            btnX, 650.f),
+        rtype::games::rtype::client::Rectangle(
+            {static_cast<int>(btnWidth), static_cast<int>(btnHeight)},
+            sf::Color(0, 150, 200), sf::Color(0, 200, 255)),
         _assetsManager, std::function<void()>{[this]() {
             if (_switchToScene) {
                 _switchToScene(SceneManager::MAIN_MENU);
