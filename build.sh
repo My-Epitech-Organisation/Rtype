@@ -90,7 +90,9 @@ verify_vcpkg_ready() {
         return 1
     fi
 
-    if ! "$vcpkg_path/vcpkg" version >/dev/null 2>&1; then
+    local vcpkg_output
+    if ! vcpkg_output=$("$vcpkg_path/vcpkg" version 2>&1); then
+        printf '%s\n' "$vcpkg_output" > "$PROJECT_ROOT/vcpkg_version_error.log"
         return 1
     fi
 
