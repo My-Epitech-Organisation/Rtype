@@ -45,7 +45,11 @@ target_link_libraries(r-type_client PUBLIC
     rtype_client_network
 )
 
-# Conditionally link optional compression/image libraries
+# Conditionally link optional compression/image libraries.
+# This uses TARGET checks instead of *_FOUND variables for robustness:
+# - Ensures the library was not only found, but also had its targets created
+# - Works consistently across vcpkg, CPM, and system packages
+# - Targets must exist with these exact names (PNG::PNG, ZLIB::ZLIB, etc.)
 if(TARGET PNG::PNG)
     target_link_libraries(r-type_client PRIVATE PNG::PNG)
 endif()

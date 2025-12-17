@@ -37,7 +37,11 @@ target_link_libraries(rtype_toml_parser PUBLIC
     tomlplusplus::tomlplusplus
 )
 
-# Ensure consumers of common also get tomlplusplus includes
+# Ensure consumers of common also get tomlplusplus includes.
+# This allows downstream targets (e.g., src/client, src/server) that link against
+# common to access tomlplusplus headers without explicitly depending on it.
+# Existing consumers should continue to compile correctly, as this only adds
+# an interface dependency; it does not remove or change existing exports.
 target_link_libraries(common INTERFACE
     tomlplusplus::tomlplusplus
 )

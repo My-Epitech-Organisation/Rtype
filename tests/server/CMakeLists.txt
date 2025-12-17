@@ -334,7 +334,7 @@ target_link_libraries(test_game_state_manager PRIVATE
 )
 
 include(GoogleTest)
-if(WIN32 OR MSVC)
+if(WIN32)
     gtest_discover_tests(test_server_network_messages WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_client_manager WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_server_app WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
