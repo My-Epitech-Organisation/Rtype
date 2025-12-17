@@ -26,7 +26,7 @@ void ButtonUpdateSystem::update(ECS::Registry& registry, float /*dt*/) {
     registry.view<Button<>, UserEvent>().each(
         [](ECS::Entity /*entity*/, auto& buttonAct, auto& actionType) {
             if (!actionType.idle && actionType.isReleased &&
-                actionType.isHovered) {
+                actionType.isHovered && !actionType.isDisabled) {
                 LOG_DEBUG(
                     "[ButtonUpdateSystem] Button clicked, executing callback");
                 try {
@@ -41,8 +41,9 @@ void ButtonUpdateSystem::update(ECS::Registry& registry, float /*dt*/) {
 
     registry.view<Rectangle, UserEvent, ButtonTag>().each(
         [](auto /*entity*/, auto& rect, auto& actionType, auto /*tag*/) {
-            rect.currentColor =
-                actionType.isHovered ? rect.hoveredColor : rect.mainColor;
+            rect.currentColor = actionType.isHovered && !actionType.isDisabled
+                                    ? rect.hoveredColor
+                                    : rect.mainColor;
         });
 }
 

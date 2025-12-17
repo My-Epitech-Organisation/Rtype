@@ -16,6 +16,7 @@
 #include "Scenes/GameOverScene/GameOverScene.hpp"
 #include "Scenes/GameScene/GameScene.hpp"
 #include "Scenes/HowToPlayScene/HowToPlayScene.hpp"
+#include "Scenes/Lobby/Lobby.hpp"
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
 #include "Scenes/SettingsScene/SettingsScene.hpp"
 
@@ -119,6 +120,11 @@ SceneManager::SceneManager(
                                                 this->_keybinds, this->_audio,
                                                 this->_switchToScene);
     });
+    this->_sceneList.emplace(LOBBY, [ecs, texture, this]() {
+        return std::make_unique<Lobby>(
+            ecs, texture, this->_window, this->_switchToScene,
+            this->_networkClient, this->_networkSystem, this->_audio);
+    });
     this->_sceneList.emplace(GAME_OVER, [ecs, texture, this]() {
         return std::make_unique<GameOverScene>(
             ecs, texture, this->_window, this->_audio, this->_switchToScene);
@@ -142,6 +148,6 @@ SceneManager::SceneManager(
             std::move(rtypeGameScene), this->_networkClient,
             this->_networkSystem, this->_audio);
     });
-    this->setCurrentScene(MAIN_MENU);
+    this->setCurrentScene(LOBBY);
     this->_applySceneChange();
 }

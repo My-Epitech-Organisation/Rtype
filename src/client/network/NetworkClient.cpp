@@ -44,6 +44,8 @@ NetworkClient::NetworkClient(const Config& config)
 
     connCallbacks.onDisconnected = [this](network::DisconnectReason reason) {
         queueCallback([this, reason]() {
+            connection_.reset();
+            serverEndpoint_.reset();
             if (onDisconnectedCallback_) {
                 onDisconnectedCallback_(reason);
             }
@@ -53,6 +55,8 @@ NetworkClient::NetworkClient(const Config& config)
     connCallbacks.onConnectFailed = [this](network::NetworkError error) {
         (void)error;
         queueCallback([this]() {
+            connection_.reset();
+            serverEndpoint_.reset();
             if (onDisconnectedCallback_) {
                 onDisconnectedCallback_(DisconnectReason::ProtocolError);
             }
@@ -167,6 +171,23 @@ bool NetworkClient::sendInput(std::uint8_t inputMask) {
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
     auto result = connection_.buildPacket(network::OpCode::C_INPUT, serialized);
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    return true;
+}
+
+bool NetworkClient::ping() {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    auto result = connection_.buildPacket(network::OpCode::PING, {});
     if (!result) {
         return false;
     }

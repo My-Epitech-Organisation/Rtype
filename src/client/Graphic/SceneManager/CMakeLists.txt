@@ -23,6 +23,7 @@ target_link_libraries(rtype-graphic-scene-manager
     rtype-graphic-settings-scene
     rtype-graphic-game-scene
     rtype-graphic-how-to-play-scene
+    rtype-graphic-lobby-scene
     rtype-graphic-game-over-scene
     rtype_game_client
 )

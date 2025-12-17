@@ -27,6 +27,7 @@ struct UserEvent {
     bool isHovered = false;
     bool isPressed = false;
     bool isReleased = false;
+    bool isDisabled = false;
 };
 
 }  // namespace rtype::games::rtype::client
