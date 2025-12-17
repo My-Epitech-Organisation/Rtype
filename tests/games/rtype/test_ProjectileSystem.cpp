@@ -114,3 +114,30 @@ TEST_F(ProjectileSystemTest, UpdateWithNegativeDeltaTime) {
     EXPECT_FLOAT_EQ(position.x, 50.0f);
     EXPECT_FLOAT_EQ(position.y, 50.0f);
 }
+
+TEST_F(ProjectileSystemTest, UpdateParallelPath_ManyProjectiles) {
+    // Create 201 projectiles to trigger parallel execution path (threshold is 200)
+    std::vector<ECS::Entity> projectiles;
+    for (int i = 0; i < 201; ++i) {
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<TransformComponent>(e, static_cast<float>(i * 10), static_cast<float>(i * 5), 0.0f);
+        registry.emplaceComponent<VelocityComponent>(e, 20.0f, 15.0f);
+        registry.emplaceComponent<ProjectileTag>(e);
+        projectiles.push_back(e);
+    }
+
+    projectileSystem.update(registry, 1.0f);
+
+    // Verify first and last projectiles moved correctly
+    auto& p0 = registry.getComponent<TransformComponent>(projectiles[0]);
+    EXPECT_FLOAT_EQ(p0.x, 20.0f);
+    EXPECT_FLOAT_EQ(p0.y, 15.0f);
+    
+    auto& p200 = registry.getComponent<TransformComponent>(projectiles[200]);
+    EXPECT_FLOAT_EQ(p200.x, 2020.0f);
+    EXPECT_FLOAT_EQ(p200.y, 1015.0f);
+
+    for (auto e : projectiles) {
+        registry.killEntity(e);
+    }
+}

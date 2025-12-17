@@ -17,7 +17,6 @@
 #include "games/rtype/shared/Components/PlayerIdComponent.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
-#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 #include "games/rtype/shared/Components/WeaponComponent.hpp"
 #include "server/network/ServerNetworkSystem.hpp"
