@@ -108,8 +108,7 @@ void GameOverScene::_buildLayout() {
         rtype::games::rtype::client::Text(
             _assetsManager->fontManager->get("main_font"), sf::Color::White, 36,
             "Back to Menu"),
-        rtype::games::rtype::shared::Position(
-            btnX, 650.f),
+        rtype::games::rtype::shared::Position(btnX, 650.f),
         rtype::games::rtype::client::Rectangle(
             {static_cast<int>(btnWidth), static_cast<int>(btnHeight)},
             sf::Color(0, 150, 200), sf::Color(0, 200, 255)),
