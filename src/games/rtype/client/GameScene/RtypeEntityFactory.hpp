@@ -84,7 +84,9 @@ class RtypeEntityFactory {
      * @param entity Entity to configure
      * @param networkId Network identifier for the entity
      */
-    static void setupObstacleEntity(ECS::Registry& registry, std::shared_ptr<AssetManager> assetsManager, ECS::Entity entity,
+    static void setupObstacleEntity(ECS::Registry& registry,
+                                    std::shared_ptr<AssetManager> assetsManager,
+                                    ECS::Entity entity,
                                     std::uint32_t networkId);
 };
 

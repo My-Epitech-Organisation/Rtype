@@ -8,8 +8,8 @@
 #include "RtypeEntityFactory.hpp"
 
 #include <memory>
-#include <utility>
 #include <random>
+#include <utility>
 
 #include "../Components/RectangleComponent.hpp"
 #include "../Systems/PlayerAnimationSystem.hpp"
@@ -246,14 +246,13 @@ void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
         entity, 24.0f, 24.0f);
 }
 
-void RtypeEntityFactory::setupObstacleEntity(ECS::Registry& reg,
-                                             std::shared_ptr<AssetManager> assetsManager,
-                                             ECS::Entity entity,
-                                             std::uint32_t /*networkId*/) {
+void RtypeEntityFactory::setupObstacleEntity(
+    ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
+    ECS::Entity entity, std::uint32_t /*networkId*/) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Obstacle components");
 
-    std::random_device rd;              // Seed
-    std::mt19937 gen(rd());              // Mersenne Twister engine
+    std::random_device rd;   // Seed
+    std::mt19937 gen(rd());  // Mersenne Twister engine
     std::uniform_int_distribution<> dist(1, GraphicsConfig::NBR_MAX_OBSTACLES);
 
     int value = dist(gen);

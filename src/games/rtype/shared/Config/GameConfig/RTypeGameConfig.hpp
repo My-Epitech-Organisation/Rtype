@@ -75,8 +75,8 @@ struct FontsConfig {
 };
 
 /**
-* @brief Background Textures configuration section
-*/
+ * @brief Background Textures configuration section
+ */
 
 struct BackgroundTextureConfig {
     std::string background;
@@ -93,8 +93,8 @@ struct BackgroundTextureConfig {
 };
 
 /**
-* @brief Wall Textures configuration section
-*/
+ * @brief Wall Textures configuration section
+ */
 
 struct WallTextureConfig {
     std::string engrenage1;
