@@ -37,6 +37,8 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
         background, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         background, cfg::ZINDEX_BACKGROUND);
+    registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
+    background, cfg::PARALLAX_BACKGROUND, true);
 
     auto sun = registry->spawnEntity();
     auto& sunTexture = assetManager->textureManager->get("bg_sun");
@@ -57,7 +59,7 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     registry->emplaceComponent<rtype::games::rtype::shared::Position>(
         bigAsteroids, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        bigAsteroids, cfg::ZINDEX_BIG_SMALL_ASTEROIDS);
+        bigAsteroids, cfg::ZINDEX_BIG_ASTEROIDS);
 
     auto smallAsteroids = registry->spawnEntity();
     auto& smallAsteroidsTexture =
@@ -69,7 +71,7 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     registry->emplaceComponent<rtype::games::rtype::shared::Position>(
         smallAsteroids, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        smallAsteroids, cfg::ZINDEX_BIG_SMALL_ASTEROIDS);
+        smallAsteroids, cfg::ZINDEX_SMALL_ASTEROIDS);
 
     auto firstPlanAsteroids = registry->spawnEntity();
     auto& firstPlanAsteroidsTexture =
