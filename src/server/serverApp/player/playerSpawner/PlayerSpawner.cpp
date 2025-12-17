@@ -49,7 +49,8 @@ PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
     ECS::Entity playerEntity = _registry->spawnEntity();
     result.entity = playerEntity;
 
-    _registry->emplaceComponent<Transform>(playerEntity, result.x, result.y, 0.0F);
+    _registry->emplaceComponent<Transform>(playerEntity, result.x, result.y,
+                                           0.0F);
     _registry->emplaceComponent<Velocity>(playerEntity, 0.0F, 0.0F);
 
     _registry->emplaceComponent<ShootCooldown>(playerEntity,

@@ -42,8 +42,8 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     auto& sunTexture = assetManager->textureManager->get("bg_sun");
     registry->emplaceComponent<rtype::games::rtype::client::Image>(sun,
                                                                    sunTexture);
-    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(sun, 0,
-                                                                      0);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        sun, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         sun, cfg::ZINDEX_SUN);
 
