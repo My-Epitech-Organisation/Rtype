@@ -8,6 +8,7 @@
     {
       "name": "vcpkg-base",
       "hidden": true,
+      "description": "vcpkg base preset: enables manifest mode and static library linkage for distribution of standalone executables without runtime dependencies.",
       "toolchainFile": "${sourceDir}/cmake/vcpkg-toolchain.cmake",
       "cacheVariables": {
         "VCPKG_MANIFEST_MODE": "ON",
@@ -58,6 +59,7 @@
     {
       "name": "linux-release",
       "displayName": "Linux Release",
+      "description": "Linux release with LTO enabled (CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON) for better runtime performance; increases build time and memory usage.",
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
