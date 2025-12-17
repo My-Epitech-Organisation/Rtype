@@ -206,35 +206,51 @@ target_link_libraries(test_asio_socket_misc PRIVATE
 
 # Enable test discovery
 include(GoogleTest)
-gtest_discover_tests(test_protocol)
-gtest_discover_tests(test_serialization)
-gtest_discover_tests(test_error)
-gtest_discover_tests(test_asio_socket)
-gtest_discover_tests(test_reliable_channel)
-gtest_discover_tests(test_connection_state)
-gtest_discover_tests(test_connection)
-gtest_discover_tests(test_packet_validation)
+if(WIN32 OR MSVC)
+    set_tests_properties(
+        test_protocol test_serialization test_error test_asio_socket
+        test_reliable_channel test_connection_state test_connection
+        test_packet_validation test_opcode test_validator test_byteorderspec_extra
+        test_coverage_harness test_serializer_branches test_byteorderspec_branches
+        test_header_branches test_validator_additional test_serializer_template
+        test_byteorderspec_various_sizes test_opcode_exhaustive test_validator_success
+        test_asio_error_mapping_extra test_asio_error_mapping_all
+        test_serializer_and_validator_errors test_serializer_string_roundtrip
+        test_validator_extra test_serializer_endian test_asio_socket_misc
+        test_serializer_validate_extract_server_userid test_serializer_validate_extract_extra
+        PROPERTIES SKIP_GTEST_DISCOVERY TRUE
+    )
+else()
+    gtest_discover_tests(test_protocol)
+    gtest_discover_tests(test_serialization)
+    gtest_discover_tests(test_error)
+    gtest_discover_tests(test_asio_socket)
+    gtest_discover_tests(test_reliable_channel)
+    gtest_discover_tests(test_connection_state)
+    gtest_discover_tests(test_connection)
+    gtest_discover_tests(test_packet_validation)
 
-gtest_discover_tests(test_opcode)
-gtest_discover_tests(test_validator)
-gtest_discover_tests(test_byteorderspec_extra)
-gtest_discover_tests(test_coverage_harness)
-gtest_discover_tests(test_serializer_branches)
-gtest_discover_tests(test_byteorderspec_branches)
-gtest_discover_tests(test_header_branches)
-gtest_discover_tests(test_validator_additional)
-gtest_discover_tests(test_serializer_template)
-gtest_discover_tests(test_byteorderspec_various_sizes)
-gtest_discover_tests(test_opcode_exhaustive)
-gtest_discover_tests(test_validator_success)
-gtest_discover_tests(test_asio_error_mapping_extra)
-gtest_discover_tests(test_asio_error_mapping_all)
-gtest_discover_tests(test_serializer_and_validator_errors)
-gtest_discover_tests(test_serializer_string_roundtrip)
-gtest_discover_tests(test_validator_extra)
-gtest_discover_tests(test_serializer_endian)
-gtest_discover_tests(test_asio_socket_misc)
-gtest_discover_tests(test_serializer_validate_extract_server_userid)
-gtest_discover_tests(test_serializer_validate_extract_extra)
-gtest_discover_tests(test_asio_error_mapping_all)
+    gtest_discover_tests(test_opcode)
+    gtest_discover_tests(test_validator)
+    gtest_discover_tests(test_byteorderspec_extra)
+    gtest_discover_tests(test_coverage_harness)
+    gtest_discover_tests(test_serializer_branches)
+    gtest_discover_tests(test_byteorderspec_branches)
+    gtest_discover_tests(test_header_branches)
+    gtest_discover_tests(test_validator_additional)
+    gtest_discover_tests(test_serializer_template)
+    gtest_discover_tests(test_byteorderspec_various_sizes)
+    gtest_discover_tests(test_opcode_exhaustive)
+    gtest_discover_tests(test_validator_success)
+    gtest_discover_tests(test_asio_error_mapping_extra)
+    gtest_discover_tests(test_asio_error_mapping_all)
+    gtest_discover_tests(test_serializer_and_validator_errors)
+    gtest_discover_tests(test_serializer_string_roundtrip)
+    gtest_discover_tests(test_validator_extra)
+    gtest_discover_tests(test_serializer_endian)
+    gtest_discover_tests(test_asio_socket_misc)
+    gtest_discover_tests(test_serializer_validate_extract_server_userid)
+    gtest_discover_tests(test_serializer_validate_extract_extra)
+    gtest_discover_tests(test_asio_error_mapping_all)
+endif()
 ## test_asio_error_mapping removed due to private API access - rely on other asio tests

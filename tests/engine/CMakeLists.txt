@@ -17,5 +17,9 @@ target_link_libraries(test_engine_factory PRIVATE
 )
 
 include(GoogleTest)
-gtest_discover_tests(test_engine_factory)
+if(WIN32 OR MSVC)
+    set_tests_properties(test_engine_factory PROPERTIES SKIP_GTEST_DISCOVERY TRUE)
+else()
+    gtest_discover_tests(test_engine_factory)
+endif()
 

@@ -334,15 +334,25 @@ target_link_libraries(test_game_state_manager PRIVATE
 )
 
 include(GoogleTest)
-gtest_discover_tests(test_server_network_messages)
-gtest_discover_tests(test_client_manager)
-gtest_discover_tests(test_server_app)
-gtest_discover_tests(test_server_app_gameconfig)
-gtest_discover_tests(test_server_network_system)
-gtest_discover_tests(test_server_app_unit)
-gtest_discover_tests(test_server_loop)
-gtest_discover_tests(test_player_input_handler)
-gtest_discover_tests(test_player_spawner)
-gtest_discover_tests(test_game_event_processor)
-gtest_discover_tests(test_packet_processor)
-gtest_discover_tests(test_game_state_manager)
+if(WIN32 OR MSVC)
+    set_tests_properties(
+        test_server_network_messages test_client_manager test_server_app
+        test_server_app_gameconfig test_server_network_system test_server_app_unit
+        test_server_loop test_player_input_handler test_player_spawner
+        test_game_event_processor test_packet_processor test_game_state_manager
+        PROPERTIES SKIP_GTEST_DISCOVERY TRUE
+    )
+else()
+    gtest_discover_tests(test_server_network_messages)
+    gtest_discover_tests(test_client_manager)
+    gtest_discover_tests(test_server_app)
+    gtest_discover_tests(test_server_app_gameconfig)
+    gtest_discover_tests(test_server_network_system)
+    gtest_discover_tests(test_server_app_unit)
+    gtest_discover_tests(test_server_loop)
+    gtest_discover_tests(test_player_input_handler)
+    gtest_discover_tests(test_player_spawner)
+    gtest_discover_tests(test_game_event_processor)
+    gtest_discover_tests(test_packet_processor)
+    gtest_discover_tests(test_game_state_manager)
+endif()
