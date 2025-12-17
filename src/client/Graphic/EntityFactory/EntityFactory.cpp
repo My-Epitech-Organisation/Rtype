@@ -35,8 +35,6 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
                                                                    bgTexture);
     registry->emplaceComponent<rtype::games::rtype::shared::Position>(
         background, 0, 0);
-    // registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
-    //     background, cfg::PARALLAX_BACKGROUND, true);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         background, cfg::ZINDEX_BACKGROUND);
 
