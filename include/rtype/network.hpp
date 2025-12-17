@@ -5,5 +5,5 @@
 #pragma once
 
 #include <Packet.hpp>
-#include <protocol/Protocol.hpp>
+#include <Protocol.hpp>
 #include <Serializer.hpp>
