@@ -62,7 +62,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "VCPKG_TARGET_TRIPLET": "x64-linux",
-        "BUILD_GRAPHICAL_TESTS": "OFF"
+        "BUILD_GRAPHICAL_TESTS": "OFF",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
       }
     },
     {
