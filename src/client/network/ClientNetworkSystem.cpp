@@ -440,6 +440,7 @@ void ClientNetworkSystem::handleConnected(std::uint32_t userId) {
     LOG_INFO("[ClientNetworkSystem] Connected with userId=" +
              std::to_string(userId));
     localUserId_ = userId;
+    disconnectedHandled_ = false;
 
     auto pendingIt = pendingPlayerSpawns_.find(userId);
     if (pendingIt != pendingPlayerSpawns_.end()) {
