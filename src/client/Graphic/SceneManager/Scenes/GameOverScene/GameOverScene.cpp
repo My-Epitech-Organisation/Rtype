@@ -33,8 +33,11 @@ GameOverScene::GameOverScene(
     _buildLayout();
     if (this->_audio) {
         this->_audio->pauseMusic();
-        this->_assetsManager->audioManager->load("gameover_music", this->_assetsManager->configGameAssets.assets.music.gameOver);
-        this->_audio->loadMusic(this->_assetsManager->audioManager->get("gameover_music"));
+        this->_assetsManager->audioManager->load(
+            "gameover_music",
+            this->_assetsManager->configGameAssets.assets.music.gameOver);
+        this->_audio->loadMusic(
+            this->_assetsManager->audioManager->get("gameover_music"));
         this->_audio->play();
     }
 }
@@ -66,54 +69,57 @@ void GameOverScene::_buildLayout() {
         sf::Vector2i{
             rtype::games::rtype::client::GraphicsConfig::WINDOW_WIDTH,
             rtype::games::rtype::client::GraphicsConfig::WINDOW_HEIGHT},
-        sf::Color(0, 0, 0, 200),
-        sf::Vector2f{100.f, 75.f});
+        sf::Color(0, 0, 0, 200), sf::Vector2f{100.f, 75.f});
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         popUpOverlay,
         rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
     this->_registry->emplaceComponent<rtype::games::rtype::shared::Position>(
-    popUpOverlay, 0, 0);
+        popUpOverlay, 0, 0);
     this->_listEntity.push_back(popUpOverlay);
 
-    const float centerX = static_cast<float>(rtype::games::rtype::client::GraphicsConfig::WINDOW_WIDTH) / 2.0f - 70.f;
+    const float centerX =
+        static_cast<float>(
+            rtype::games::rtype::client::GraphicsConfig::WINDOW_WIDTH) /
+            2.0f -
+        70.f;
 
-        auto title = EntityFactory::createStaticText(
-            _registry, _assetsManager, "GAME OVER", "title_font",
-            sf::Vector2f{centerX - 260.f, 180.f}, 96.f);
+    auto title = EntityFactory::createStaticText(
+        _registry, _assetsManager, "GAME OVER", "title_font",
+        sf::Vector2f{centerX - 260.f, 180.f}, 96.f);
 
-        _registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-            title, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
-        _listEntity.push_back(title);
+    _registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        title, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
+    _listEntity.push_back(title);
 
+    auto score = EntityFactory::createStaticText(
+        _registry, _assetsManager, "SCORE: " + std::to_string(finalScore),
+        "main_font", sf::Vector2f{centerX - 140.f, 320.f}, 72.f);
 
-        auto score = EntityFactory::createStaticText(
-            _registry, _assetsManager, "SCORE: " + std::to_string(finalScore),
-            "main_font", sf::Vector2f{centerX - 140.f, 320.f}, 72.f);
+    _registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        score, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
+    _listEntity.push_back(score);
 
-        _registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-            score, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
-        _listEntity.push_back(score);
+    float btnWidth = 300.f;
+    float btnHeight = 70.f;
+    float btnX = 1920 / 2 - (btnWidth / 2.0f) - 20.f;
 
+    auto button = EntityFactory::createButton(
+        _registry,
+        rtype::games::rtype::client::Text(
+            _assetsManager->fontManager->get("main_font"), sf::Color::White, 36,
+            "Back to Menu"),
+        rtype::games::rtype::shared::Position(
+            btnX, 650.f),  // Utilise la variable calculée
+        rtype::games::rtype::client::Rectangle({(int)btnWidth, (int)btnHeight},
+                                               sf::Color(0, 150, 200),
+                                               sf::Color(0, 200, 255)),
+        _assetsManager, std::function<void()>{[this]() {
+            if (_switchToScene) {
+                _switchToScene(SceneManager::MAIN_MENU);
+            }
+        }});
 
-        float btnWidth = 300.f;
-        float btnHeight = 70.f;
-        float btnX = 1920 / 2 - (btnWidth / 2.0f) - 20.f;
-
-        auto button = EntityFactory::createButton(
-            _registry,
-            rtype::games::rtype::client::Text(
-                _assetsManager->fontManager->get("main_font"), sf::Color::White, 36,
-                "Back to Menu"),
-            rtype::games::rtype::shared::Position(btnX, 650.f), // Utilise la variable calculée
-            rtype::games::rtype::client::Rectangle(
-                {(int)btnWidth, (int)btnHeight}, sf::Color(0, 150, 200), sf::Color(0, 200, 255)),
-            _assetsManager, std::function<void()>{[this]() {
-                if (_switchToScene) {
-                    _switchToScene(SceneManager::MAIN_MENU);
-                }
-            }});
-
-        _registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-            button, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
-        _listEntity.push_back(button);
+    _registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        button, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
+    _listEntity.push_back(button);
 }
