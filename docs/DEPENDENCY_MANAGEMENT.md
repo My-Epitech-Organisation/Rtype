@@ -68,7 +68,7 @@ cmake --preset linux-release-cpm
 cmake --build --preset linux-release-cpm
 
 # Or manually
-cmake -B build -DCMAKE_PRESET_NAME=linux-release -DRTYPE_FORCE_CPM=ON
+cmake -B build -DRTYPE_FORCE_CPM=ON
 cmake --build build
 ```
 
@@ -99,7 +99,7 @@ All other dependencies (threads, etc.) are system-provided or optional.
 cmake/
 ├── vcpkg-toolchain.cmake     # Modified: now warns instead of fails
 ├── rtype-dependencies.cmake  # NEW: CPM helpers and strategy logic
-└── CPM.cmake                 # NEW: CPM.cmake bootstrapper
+└── CPM.cmake                 # NEW: CPM.cmake downloader (fetches on demand)
 ```
 
 ### Modified CMakeLists Files
