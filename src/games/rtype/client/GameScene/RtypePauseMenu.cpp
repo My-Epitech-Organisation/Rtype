@@ -62,7 +62,8 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
             try {
                 switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
-                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                LOG_ERROR_CAT(
+                    ::rtype::LogCategory::UI,
                     "Error switching to Main Menu: " << std::string(e.what()));
             }
         })));

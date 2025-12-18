@@ -29,7 +29,8 @@ bool RTypeGameConfig::initialize(const std::string& configDir) {
     _configDir = configDir;
     _initialized = false;
 
-    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] Initializing from: " << configDir);
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[RTypeConfig] Initializing from: " << configDir);
 
     const auto serverConfigFile = _configDir / "config.toml";
     if (!loadServerConfig(serverConfigFile)) {
@@ -39,11 +40,13 @@ bool RTypeGameConfig::initialize(const std::string& configDir) {
     const auto gameConfigDir = _configDir.parent_path() / "game";
     if (fs::exists(gameConfigDir)) {
         if (!loadEntityConfigs(gameConfigDir)) {
-            LOG_WARNING_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] Some entity configs failed to load");
+            LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                            "[RTypeConfig] Some entity configs failed to load");
         }
     } else {
-        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] Game config directory not found: "
-                    << gameConfigDir.string());
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[RTypeConfig] Game config directory not found: "
+                            << gameConfigDir.string());
     }
 
     if (!initializeSaveManager()) {
@@ -55,18 +58,21 @@ bool RTypeGameConfig::initialize(const std::string& configDir) {
     }
 
     _initialized = true;
-    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] Initialization complete");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[RTypeConfig] Initialization complete");
     return true;
 }
 
 bool RTypeGameConfig::reloadConfiguration() {
-    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] Reloading configuration...");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[RTypeConfig] Reloading configuration...");
 
     auto backupConfig = _config;
 
     const auto serverConfigFile = _configDir / "config.toml";
     if (!loadServerConfig(serverConfigFile)) {
-        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] Reload failed, keeping previous config");
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[RTypeConfig] Reload failed, keeping previous config");
         _config = backupConfig;
         return false;
     }
@@ -78,12 +84,15 @@ bool RTypeGameConfig::reloadConfiguration() {
     }
 
     if (!validateConfiguration()) {
-        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] Validation failed, keeping previous config");
+        LOG_ERROR_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[RTypeConfig] Validation failed, keeping previous config");
         _config = backupConfig;
         return false;
     }
 
-    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] Configuration reloaded successfully");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[RTypeConfig] Configuration reloaded successfully");
     return true;
 }
 
@@ -110,25 +119,29 @@ std::string RTypeGameConfig::getSavesPath() const noexcept {
 bool RTypeGameConfig::loadServerConfig(const fs::path& configFile) {
     if (!fs::exists(configFile)) {
         _lastError = "Configuration file not found: " + configFile.string();
-        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] " << _lastError);
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[RTypeConfig] " << _lastError);
         return false;
     }
 
     auto loadedConfig = _configParser.loadFromFile(configFile);
     if (!loadedConfig) {
         _lastError = "Failed to parse configuration file";
-        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] " << _lastError);
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[RTypeConfig] " << _lastError);
         for (const auto& error : _configParser.getLastErrors()) {
-            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig]   - " << error.message);
+            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                          "[RTypeConfig]   - " << error.message);
         }
         return false;
     }
 
     _config = std::move(*loadedConfig);
-    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] Loaded config - Port: "
-             << _config.server.port
-             << ", Max Players: " << _config.server.maxPlayers
-             << ", Tick Rate: " << _config.server.tickrate << " Hz");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[RTypeConfig] Loaded config - Port: "
+                     << _config.server.port
+                     << ", Max Players: " << _config.server.maxPlayers
+                     << ", Tick Rate: " << _config.server.tickrate << " Hz");
 
     return true;
 }
@@ -138,10 +151,11 @@ bool RTypeGameConfig::loadEntityConfigs(const fs::path& gameConfigDir) {
 
     bool success = registry.loadFromDirectory(gameConfigDir.string());
 
-    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] Entity configs - Enemies: "
-             << registry.getAllEnemies().size()
-             << ", Players: " << registry.getAllPlayers().size()
-             << ", Projectiles: " << registry.getAllProjectiles().size());
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[RTypeConfig] Entity configs - Enemies: "
+                     << registry.getAllEnemies().size() << ", Players: "
+                     << registry.getAllPlayers().size() << ", Projectiles: "
+                     << registry.getAllProjectiles().size());
 
     return success;
 }
@@ -156,18 +170,21 @@ bool RTypeGameConfig::initializeSaveManager() {
     if (!fs::exists(savesPath)) {
         try {
             fs::create_directories(savesPath);
-            LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] Created saves directory: "
-                     << savesPath.string());
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "[RTypeConfig] Created saves directory: "
+                             << savesPath.string());
         } catch (const std::exception& e) {
             _lastError = "Failed to create saves directory: " +
                          std::string(std::string(e.what()));
-            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] " << _lastError);
+            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                          "[RTypeConfig] " << _lastError);
             return false;
         }
     }
 
     _saveManager = std::make_unique<config::RTypeSaveManager>(savesPath);
-    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+    LOG_INFO_CAT(
+        ::rtype::LogCategory::GameEngine,
         "[RTypeConfig] Save manager initialized at: " << savesPath.string());
 
     return true;
@@ -178,16 +195,19 @@ bool RTypeGameConfig::validateConfiguration() {
 
     if (!errors.empty()) {
         _lastError = "Configuration validation failed";
-        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] " << _lastError);
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[RTypeConfig] " << _lastError);
         for (const auto& error : errors) {
-            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig]   - " << error.toString());
+            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                          "[RTypeConfig]   - " << error.toString());
         }
         return false;
     }
 
     if (_config.server.port == 0 || _config.server.maxPlayers == 0) {
         _lastError = "Invalid server configuration";
-        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] " << _lastError);
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[RTypeConfig] " << _lastError);
         return false;
     }
 
@@ -317,7 +337,8 @@ bool RTypeGameConfig::createAutosave(const config::RTypeGameState& state) {
         return false;
     }
 
-    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[RTypeConfig] Created autosave: " << slot);
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                  "[RTypeConfig] Created autosave: " << slot);
     return true;
 }
 

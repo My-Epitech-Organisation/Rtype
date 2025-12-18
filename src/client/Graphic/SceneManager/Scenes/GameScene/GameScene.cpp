@@ -50,12 +50,15 @@ GameScene::GameScene(
       _gameScene(std::move(gameScene)) {
     LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Constructor started");
     if (_gameScene) {
-        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Calling initialize on game scene");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[GameScene] Calling initialize on game scene");
         this->_listEntity = _gameScene->initialize();
-        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Game scene initialized, entities created: "
-                  << _listEntity.size());
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[GameScene] Game scene initialized, entities created: "
+                          << _listEntity.size());
     }
-    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Loading game textures");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[GameScene] Loading game textures");
     this->_assetsManager->textureManager->load(
         "bdos_enemy",
         this->_assetsManager->configGameAssets.assets.textures.Enemy);
@@ -65,7 +68,8 @@ GameScene::GameScene(
     LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Game textures loaded");
     LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Setting up audio");
     if (!this->_audio) {
-        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] No audio library available");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[GameScene] No audio library available");
         return;
     }
     if (this->_assetsManager && this->_assetsManager->audioManager) {
@@ -75,13 +79,15 @@ GameScene::GameScene(
         auto bgMusic =
             this->_assetsManager->audioManager->get("main_game_music");
         if (bgMusic) {
-            LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Playing game music");
+            LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                          "[GameScene] Playing game music");
             this->_audio->loadMusic(bgMusic);
             this->_audio->setLoop(true);
             this->_audio->play();
         }
     }
-    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Constructor completed successfully");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[GameScene] Constructor completed successfully");
 }
 
 GameScene::~GameScene() {
@@ -95,7 +101,8 @@ GameScene::~GameScene() {
     }
 
     if (_networkClient && _networkClient->isConnected()) {
-        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Disconnecting from server");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[GameScene] Disconnecting from server");
         _networkClient->disconnect();
     }
 
@@ -105,7 +112,8 @@ GameScene::~GameScene() {
             this->_registry->killEntity(entity);
         });
 
-    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Cleaning up pause menu entities");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[GameScene] Cleaning up pause menu entities");
     this->_registry->view<rtype::games::rtype::client::PauseMenuTag>().each(
         [this](ECS::Entity entity,
                rtype::games::rtype::client::PauseMenuTag& /*tag*/) {
@@ -114,13 +122,15 @@ GameScene::~GameScene() {
 
     if (this->_registry
             ->hasSingleton<rtype::games::rtype::client::PauseState>()) {
-        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Removing PauseState singleton");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[GameScene] Removing PauseState singleton");
         this->_registry
             ->removeSingleton<rtype::games::rtype::client::PauseState>();
     }
 
     if (this->_registry->hasSingleton<AccessibilitySettings>()) {
-        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Removing AccessibilitySettings singleton");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[GameScene] Removing AccessibilitySettings singleton");
         this->_registry->removeSingleton<AccessibilitySettings>();
     }
 

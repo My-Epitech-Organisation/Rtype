@@ -40,9 +40,10 @@ ClientId ClientManager::handleNewConnection(const Endpoint& endpoint) {
     }
     if (const auto existingId = findClientByEndpointInternal(endpoint);
         existingId != INVALID_CLIENT_ID) {
-        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+        LOG_WARNING_CAT(
+            ::rtype::LogCategory::GameEngine,
             "[Server] Connection attempt from already connected endpoint: "
-            << endpoint.toString());
+                << endpoint.toString());
         return existingId;
     }
     if (isServerFull()) {
@@ -72,8 +73,10 @@ bool ClientManager::isRateLimitExceeded(const Endpoint& endpoint) noexcept {
         _connectionsThisSecond.load(std::memory_order_relaxed);
 
     if (connectionsThisSecond >= MAX_CONNECTIONS_PER_SECOND) {
-        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine, "[Server] Rate limit exceeded, rejecting connection from "
-                    << endpoint.toString());
+        LOG_WARNING_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[Server] Rate limit exceeded, rejecting connection from "
+                << endpoint.toString());
         if (auto metrics = _metrics.lock()) {
             metrics->connectionsRejected.fetch_add(1,
                                                    std::memory_order_relaxed);
@@ -85,8 +88,9 @@ bool ClientManager::isRateLimitExceeded(const Endpoint& endpoint) noexcept {
 
 bool ClientManager::isServerFull() const noexcept {
     if (_clients.size() >= _maxPlayers) {
-        LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[Server] Connection rejected: server full ("
-                 << _maxPlayers << "/" << _maxPlayers << " players)");
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[Server] Connection rejected: server full ("
+                         << _maxPlayers << "/" << _maxPlayers << " players)");
         if (auto metrics = _metrics.lock()) {
             metrics->connectionsRejected.fetch_add(1,
                                                    std::memory_order_relaxed);
@@ -102,7 +106,8 @@ ClientId ClientManager::generateNextClientId() noexcept {
     ClientId currentId = _nextClientId.load(std::memory_order_relaxed);
     do {
         if (currentId == std::numeric_limits<ClientId>::max()) {
-            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+            LOG_ERROR_CAT(
+                ::rtype::LogCategory::GameEngine,
                 "[Server] Client ID overflow! Cannot accept new connections.");
             if (auto metrics = _metrics.lock()) {
                 metrics->connectionsRejected.fetch_add(
@@ -132,8 +137,9 @@ void ClientManager::registerClient(ClientId clientId,
         metrics->totalConnections.fetch_add(1, std::memory_order_relaxed);
     }
 
-    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[Server] New client connected: ID=" << clientId << " from "
-                                                  << endpoint.toString());
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] New client connected: ID=" << clientId << " from "
+                                                      << endpoint.toString());
     printConnectedClients();
     notifyClientConnected(clientId);
 }
@@ -151,8 +157,9 @@ void ClientManager::handleClientDisconnectInternal(
         return;
     }
     const Endpoint endpoint = it->second.endpoint;
-    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[Server] Client " << clientId << " disconnected ("
-                                << toString(reason) << ")");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Client " << clientId << " disconnected ("
+                                    << toString(reason) << ")");
     removeClientFromMaps(clientId, endpoint);
     notifyClientDisconnected(clientId, reason);
     printConnectedClients();
@@ -232,7 +239,8 @@ void ClientManager::checkClientTimeouts(uint32_t timeoutSeconds) noexcept {
 void ClientManager::clearAllClients() noexcept {
     std::unique_lock lock(_clientsMutex);
     for (const auto& [id, client] : _clients) {
-        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[Server] Disconnecting client " << id);
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Disconnecting client " << id);
     }
     _clients.clear();
     _endpointToClient.clear();
@@ -245,8 +253,9 @@ void ClientManager::notifyClientConnected(ClientId newClientId) noexcept {
     // packet.setData(serialize(newClientId));
     // broadcastToAllExcept(packet, newClientId);
 
-    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[Server] Notifying other clients about new player "
-              << newClientId);
+    LOG_DEBUG_CAT(
+        ::rtype::LogCategory::GameEngine,
+        "[Server] Notifying other clients about new player " << newClientId);
 }
 
 void ClientManager::notifyClientDisconnected(ClientId clientId,
@@ -259,32 +268,39 @@ void ClientManager::notifyClientDisconnected(ClientId clientId,
     // packet.setData(serialize(clientId, reason));
     // broadcastToAll(packet);
 
-    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[Server] Notifying other clients about player "
-              << clientId << " leaving (" << toString(reason) << ")");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                  "[Server] Notifying other clients about player "
+                      << clientId << " leaving (" << toString(reason) << ")");
 }
 
 void ClientManager::printConnectedClients() const noexcept {
     if (!_verbose) {
         return;
     }
-    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[Server] === Connected Clients ===");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                  "[Server] === Connected Clients ===");
     if (_clients.empty()) {
-        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[Server]   (no clients connected)");
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server]   (no clients connected)");
     } else {
         const auto now = std::chrono::steady_clock::now();
         for (const auto& [id, client] : _clients) {
             const auto elapsed =
                 std::chrono::duration_cast<std::chrono::seconds>(
                     now - client.lastActivityTime);
-            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[Server]   Client "
-                      << id << " - " << client.endpoint.toString() << " ["
-                      << toString(client.state) << "]"
-                      << " (last seen: " << elapsed.count() << "s ago)");
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[Server]   Client "
+                              << id << " - " << client.endpoint.toString()
+                              << " [" << toString(client.state) << "]"
+                              << " (last seen: " << elapsed.count()
+                              << "s ago)");
         }
     }
-    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[Server] ==============================");
-    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[Server] Total: " << _clients.size() << "/" << _maxPlayers
-                                 << " players");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                  "[Server] ==============================");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                  "[Server] Total: " << _clients.size() << "/" << _maxPlayers
+                                     << " players");
 }
 
 }  // namespace rtype::server

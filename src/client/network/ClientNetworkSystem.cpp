@@ -72,9 +72,10 @@ void ClientNetworkSystem::onLocalPlayerAssigned(
 
     if (localUserId_.has_value() && localPlayerEntity_.has_value() &&
         onLocalPlayerAssignedCallback_) {
-        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+        LOG_DEBUG_CAT(
+            rtype::LogCategory::Network,
             "[ClientNetworkSystem] Replaying local player assignment: userId="
-            << *localUserId_ << " entity=" << localPlayerEntity_->id);
+                << *localUserId_ << " entity=" << localPlayerEntity_->id);
         onLocalPlayerAssignedCallback_(*localUserId_, *localPlayerEntity_);
     }
 }
@@ -90,10 +91,12 @@ void ClientNetworkSystem::onHealthUpdate(
             event.entityId = *localUserId_;
             event.current = it->second.current;
             event.max = it->second.max;
-            LOG_DEBUG_CAT(rtype::LogCategory::Network,
+            LOG_DEBUG_CAT(
+                rtype::LogCategory::Network,
                 "[ClientNetworkSystem] Replaying cached health event for local "
                 "user "
-                << *localUserId_ << ": " << event.current << "/" << event.max);
+                    << *localUserId_ << ": " << event.current << "/"
+                    << event.max);
             onHealthUpdateCallback_(event);
         }
     }
@@ -125,12 +128,14 @@ std::optional<ECS::Entity> ClientNetworkSystem::findEntityByNetworkId(
 bool ClientNetworkSystem::isConnected() const { return client_->isConnected(); }
 
 void ClientNetworkSystem::reset() {
-    LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] Resetting network system state");
+    LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                  "[ClientNetworkSystem] Resetting network system state");
     for (const auto& [networkId, entity] : networkIdToEntity_) {
         if (registry_->isAlive(entity)) {
-            LOG_DEBUG_CAT(rtype::LogCategory::Network,
+            LOG_DEBUG_CAT(
+                rtype::LogCategory::Network,
                 "[ClientNetworkSystem] Destroying network entity: networkId="
-                << networkId);
+                    << networkId);
             registry_->killEntity(entity);
         }
     }
@@ -139,27 +144,31 @@ void ClientNetworkSystem::reset() {
     localPlayerEntity_.reset();
     pendingPlayerSpawns_.clear();
     lastKnownHealth_.clear();
-    LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] Network system state reset complete");
+    LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                  "[ClientNetworkSystem] Network system state reset complete");
 }
 
 void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
     LOG_DEBUG_CAT(rtype::LogCategory::Network,
-        "[ClientNetworkSystem] Entity spawn received: entityId=" +
-        std::to_string(event.entityId) +
-        " type=" + std::to_string(static_cast<int>(event.type)) + " pos=(" +
-        std::to_string(event.x) + ", " + std::to_string(event.y) +
-        ") localUserId=" +
-        (localUserId_.has_value() ? std::to_string(*localUserId_) : "none"));
+                  "[ClientNetworkSystem] Entity spawn received: entityId=" +
+                      std::to_string(event.entityId) +
+                      " type=" + std::to_string(static_cast<int>(event.type)) +
+                      " pos=(" + std::to_string(event.x) + ", " +
+                      std::to_string(event.y) + ") localUserId=" +
+                      (localUserId_.has_value() ? std::to_string(*localUserId_)
+                                                : "none"));
 
     auto existingIt = networkIdToEntity_.find(event.entityId);
     if (existingIt != networkIdToEntity_.end()) {
         if (registry_->isAlive(existingIt->second)) {
-            LOG_DEBUG_CAT(rtype::LogCategory::Network,
+            LOG_DEBUG_CAT(
+                rtype::LogCategory::Network,
                 "[ClientNetworkSystem] Entity already exists and is alive, "
                 "skipping");
             return;
         } else {
-            LOG_DEBUG_CAT(rtype::LogCategory::Network,
+            LOG_DEBUG_CAT(
+                rtype::LogCategory::Network,
                 "[ClientNetworkSystem] Entity exists but is dead, removing and "
                 "recreating");
             networkIdToEntity_.erase(existingIt);
@@ -169,30 +178,35 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
     ECS::Entity entity;
 
     if (entityFactory_) {
-        LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] Using custom entityFactory");
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[ClientNetworkSystem] Using custom entityFactory");
         entity = entityFactory_(*registry_, event);
     } else {
-        LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] Using default entityFactory");
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[ClientNetworkSystem] Using default entityFactory");
         entity = defaultEntityFactory(*registry_, event);
     }
 
     networkIdToEntity_[event.entityId] = entity;
-    LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] Created entity id=" +
-              std::to_string(entity.id));
+    LOG_DEBUG_CAT(
+        rtype::LogCategory::Network,
+        "[ClientNetworkSystem] Created entity id=" + std::to_string(entity.id));
 
     if (event.type == network::EntityType::Player) {
         if (localUserId_.has_value() && event.entityId == *localUserId_) {
             localPlayerEntity_ = entity;
-            LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] This is our local player!");
+            LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                          "[ClientNetworkSystem] This is our local player!");
 
             if (onLocalPlayerAssignedCallback_) {
                 onLocalPlayerAssignedCallback_(*localUserId_, entity);
             }
         } else {
             pendingPlayerSpawns_[event.entityId] = entity;
-            LOG_DEBUG_CAT(rtype::LogCategory::Network,
+            LOG_DEBUG_CAT(
+                rtype::LogCategory::Network,
                 "[ClientNetworkSystem] Stored pending player spawn: entityId=" +
-                std::to_string(event.entityId));
+                    std::to_string(event.entityId));
         }
     }
 }
@@ -271,12 +285,15 @@ void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
 }
 
 void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
-    LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] Entity destroy received: entityId=" +
-              std::to_string(entityId));
+    LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                  "[ClientNetworkSystem] Entity destroy received: entityId=" +
+                      std::to_string(entityId));
 
     auto it = networkIdToEntity_.find(entityId);
     if (it == networkIdToEntity_.end()) {
-        LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] Entity not found in map, skipping");
+        LOG_DEBUG_CAT(
+            rtype::LogCategory::Network,
+            "[ClientNetworkSystem] Entity not found in map, skipping");
         return;
     }
 
@@ -285,7 +302,8 @@ void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
     if (registry_->isAlive(entity)) {
         _playDeathSound(entity);
         registry_->killEntity(entity);
-        LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] Entity killed");
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[ClientNetworkSystem] Entity killed");
     }
 
     this->networkIdToEntity_.erase(it);
@@ -293,7 +311,8 @@ void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
 
     if (localPlayerEntity_.has_value() && *localPlayerEntity_ == entity) {
         localPlayerEntity_.reset();
-        LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] Local player entity reset!");
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[ClientNetworkSystem] Local player entity reset!");
     }
 }
 
@@ -317,9 +336,10 @@ void ClientNetworkSystem::handlePositionCorrection(float x, float y) {
 }
 
 void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
-    LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] handleEntityHealth: entityId="
-              << event.entityId << " current=" << event.current
-              << " max=" << event.max);
+    LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                  "[ClientNetworkSystem] handleEntityHealth: entityId="
+                      << event.entityId << " current=" << event.current
+                      << " max=" << event.max);
 
     const auto prevIt = lastKnownHealth_.find(event.entityId);
     std::optional<int32_t> previousHealth = std::nullopt;
@@ -329,9 +349,11 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
 
     auto it = networkIdToEntity_.find(event.entityId);
     if (it == networkIdToEntity_.end()) {
-        LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] Entity "
-                  << event.entityId
-                  << " not found in networkIdToEntity_ map, ignoring health");
+        LOG_DEBUG_CAT(
+            rtype::LogCategory::Network,
+            "[ClientNetworkSystem] Entity "
+                << event.entityId
+                << " not found in networkIdToEntity_ map, ignoring health");
         lastKnownHealth_.erase(event.entityId);
         return;
     }
@@ -339,8 +361,9 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
     ECS::Entity entity = it->second;
 
     if (!registry_->isAlive(entity)) {
-        LOG_DEBUG_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] Entity "
-                  << event.entityId << " not alive, ignoring health");
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[ClientNetworkSystem] Entity "
+                          << event.entityId << " not alive, ignoring health");
         networkIdToEntity_.erase(it);
         lastKnownHealth_.erase(event.entityId);
         return;
@@ -376,7 +399,8 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
 
     if (onHealthUpdateCallback_ && localUserId_.has_value() &&
         event.entityId == *localUserId_) {
-        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+        LOG_DEBUG_CAT(
+            rtype::LogCategory::Network,
             "[ClientNetworkSystem] Calling onHealthUpdateCallback_ for "
             "local player");
         onHealthUpdateCallback_(event);
@@ -447,17 +471,19 @@ void ClientNetworkSystem::handlePowerUpEvent(const PowerUpEvent& event) {
 }
 
 void ClientNetworkSystem::handleConnected(std::uint32_t userId) {
-    LOG_INFO_CAT(rtype::LogCategory::Network, "[ClientNetworkSystem] Connected with userId=" +
-             std::to_string(userId));
+    LOG_INFO_CAT(rtype::LogCategory::Network,
+                 "[ClientNetworkSystem] Connected with userId=" +
+                     std::to_string(userId));
     localUserId_ = userId;
 
     auto pendingIt = pendingPlayerSpawns_.find(userId);
     if (pendingIt != pendingPlayerSpawns_.end()) {
         localPlayerEntity_ = pendingIt->second;
-        LOG_INFO_CAT(rtype::LogCategory::Network,
+        LOG_INFO_CAT(
+            rtype::LogCategory::Network,
             "[ClientNetworkSystem] Found pending player spawn for our userId=" +
-            std::to_string(userId) +
-            " -> entity=" + std::to_string(localPlayerEntity_->id));
+                std::to_string(userId) +
+                " -> entity=" + std::to_string(localPlayerEntity_->id));
 
         if (onLocalPlayerAssignedCallback_) {
             onLocalPlayerAssignedCallback_(*localUserId_, *localPlayerEntity_);
@@ -469,10 +495,11 @@ void ClientNetworkSystem::handleConnected(std::uint32_t userId) {
             event.entityId = userId;
             event.current = healthIt->second.current;
             event.max = healthIt->second.max;
-            LOG_INFO_CAT(rtype::LogCategory::Network,
+            LOG_INFO_CAT(
+                rtype::LogCategory::Network,
                 "[ClientNetworkSystem] Replaying cached health for newly "
                 "assigned player: "
-                << event.current << "/" << event.max);
+                    << event.current << "/" << event.max);
             onHealthUpdateCallback_(event);
         }
     }

@@ -33,10 +33,11 @@ void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
                            transform.y > _config.bottomBoundary;
 
         if (outOfBounds && !registry.hasComponent<DestroyTag>(entity)) {
-            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[CleanupSystem] Enemy "
-                      << entity.id << " escaped out of bounds at ("
-                      << transform.x << ", " << transform.y
-                      << ") - Damaging all players");
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[CleanupSystem] Enemy "
+                              << entity.id << " escaped out of bounds at ("
+                              << transform.x << ", " << transform.y
+                              << ") - Damaging all players");
             auto playerView =
                 registry.view<shared::PlayerTag, shared::HealthComponent,
                               shared::NetworkIdComponent>();
@@ -51,10 +52,11 @@ void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
                         health.current = 0;
                     }
 
-                    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[CleanupSystem] Player "
-                             << netId.networkId
-                             << " took 30 damage (enemy escaped): " << oldHealth
-                             << " -> " << health.current);
+                    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                                 "[CleanupSystem] Player "
+                                     << netId.networkId
+                                     << " took 30 damage (enemy escaped): "
+                                     << oldHealth << " -> " << health.current);
                     engine::GameEvent event{};
                     event.type = engine::GameEventType::EntityHealthChanged;
                     event.entityNetworkId = netId.networkId;

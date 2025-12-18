@@ -72,9 +72,12 @@ void Graphic::_update() {
                     ->getSingleton<rtype::games::rtype::client::PauseState>()
                     .isPaused;
         } catch (const std::exception& e) {
-            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[Graphic] Exception accessing PauseState: " << e.what());
+            LOG_ERROR_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[Graphic] Exception accessing PauseState: " << e.what());
         } catch (...) {
-            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[Graphic] Unknown exception accessing PauseState");
+            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                          "[Graphic] Unknown exception accessing PauseState");
         }
     }
 
@@ -129,7 +132,8 @@ void Graphic::_setupNetworkEntityFactory() {
         [registry](std::uint32_t /*userId*/, ECS::Entity entity) {
             if (registry->isAlive(entity)) {
                 registry->emplaceComponent<rc::ControllableTag>(entity);
-                LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[Graphic] Local player entity assigned");
+                LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                              "[Graphic] Local player entity assigned");
             }
         });
 }
@@ -324,7 +328,9 @@ Graphic::Graphic(
                                  sf::Shader::Type::Fragment)) {
             this->_colorShader = shader;
         } else {
-            LOG_ERROR_CAT(::rtype::LogCategory::Graphics, "Failed to load shader: assets/shaders/colorblind.frag");
+            LOG_ERROR_CAT(
+                ::rtype::LogCategory::Graphics,
+                "Failed to load shader: assets/shaders/colorblind.frag");
         }
     }
     this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value());

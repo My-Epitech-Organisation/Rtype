@@ -28,12 +28,14 @@
  */
 static void signalHandler(int signal) {
     if (signal == SIGINT || signal == SIGTERM) {
-        LOG_INFO_CAT(rtype::LogCategory::Main, "\n[Main] Received shutdown signal");
+        LOG_INFO_CAT(rtype::LogCategory::Main,
+                     "\n[Main] Received shutdown signal");
         ServerSignals::shutdown()->store(true);
     }
 #ifndef _WIN32
     if (signal == SIGHUP) {
-        LOG_INFO_CAT(rtype::LogCategory::Main, "\n[Main] Received SIGHUP - config reload requested");
+        LOG_INFO_CAT(rtype::LogCategory::Main,
+                     "\n[Main] Received SIGHUP - config reload requested");
         ServerSignals::reloadConfig()->store(true);
     }
 #endif
@@ -67,18 +69,22 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
                   }
                   return rtype::ParseResult::Exit;
               })
-        .flag("-v", "--verbose", "Enable verbose debug output for all categories",
+        .flag("-v", "--verbose",
+              "Enable verbose debug output for all categories",
               [config]() {
                   config->verbose = true;
                   config->verboseCategories = rtype::LogCategory::All;
                   return rtype::ParseResult::Success;
               })
         .option("-vc", "--verbose-category", "category",
-                "Enable verbose output for specific categories (main,network,game,ecs,input,audio,graphics,physics,ai,ui). Can be specified multiple times.",
+                "Enable verbose output for specific categories "
+                "(main,network,game,ecs,input,audio,graphics,physics,ai,ui). "
+                "Can be specified multiple times.",
                 [config](std::string_view val) {
                     rtype::LogCategory cat = rtype::categoryFromString(val);
                     if (cat == rtype::LogCategory::None) {
-                        LOG_ERROR_CAT(rtype::LogCategory::Main, "Unknown category: " << val);
+                        LOG_ERROR_CAT(rtype::LogCategory::Main,
+                                      "Unknown category: " << val);
                         return rtype::ParseResult::Error;
                     }
                     config->verbose = true;
@@ -137,19 +143,20 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
  * @param config The server configuration to display
  */
 static void printBanner(const ServerConfig& config) {
-    LOG_INFO_CAT(rtype::LogCategory::Main,
+    LOG_INFO_CAT(
+        rtype::LogCategory::Main,
         "\n==================================\n"
-        << "    R-Type Server\n"
-        << "==================================\n"
-        << std::format("  Config Dir:  {}\n", config.configPath)
-        << std::format("  Port:        {}{}\n", config.port,
-                       config.portOverride ? " (override)" : "")
-        << std::format("  Max Players: {}{}\n", config.maxPlayers,
-                       config.maxPlayersOverride ? " (override)" : "")
-        << std::format("  Tick Rate:   {} Hz{}\n", config.tickRate,
-                       config.tickRateOverride ? " (override)" : "")
-        << std::format("  Verbose:     {}\n", config.verbose ? "yes" : "no")
-        << "==================================");
+            << "    R-Type Server\n"
+            << "==================================\n"
+            << std::format("  Config Dir:  {}\n", config.configPath)
+            << std::format("  Port:        {}{}\n", config.port,
+                           config.portOverride ? " (override)" : "")
+            << std::format("  Max Players: {}{}\n", config.maxPlayers,
+                           config.maxPlayersOverride ? " (override)" : "")
+            << std::format("  Tick Rate:   {} Hz{}\n", config.tickRate,
+                           config.tickRateOverride ? " (override)" : "")
+            << std::format("  Verbose:     {}\n", config.verbose ? "yes" : "no")
+            << "==================================");
 }
 
 /**
@@ -165,8 +172,9 @@ static int runServer(const ServerConfig& config,
     auto gameConfig = rtype::games::rtype::server::createRTypeGameConfig();
 
     if (!gameConfig->initialize(config.configPath)) {
-        LOG_ERROR_CAT(rtype::LogCategory::Main, "[Main] Failed to initialize game configuration: "
-                  << gameConfig->getLastError());
+        LOG_ERROR_CAT(rtype::LogCategory::Main,
+                      "[Main] Failed to initialize game configuration: "
+                          << gameConfig->getLastError());
         return 1;
     }
 
@@ -177,7 +185,8 @@ static int runServer(const ServerConfig& config,
     (void)reloadConfigFlag;
 
     if (!server.run()) {
-        LOG_ERROR_CAT(rtype::LogCategory::Main, "[Main] Server failed to start.");
+        LOG_ERROR_CAT(rtype::LogCategory::Main,
+                      "[Main] Server failed to start.");
         return 1;
     }
 
@@ -221,9 +230,12 @@ int main(int argc, char** argv) {
         const auto logFile =
             rtype::Logger::generateLogFilename("server_session");
         if (logger.setLogFile(logFile, false)) {
-            LOG_INFO_CAT(rtype::LogCategory::Main, "[Main] Logging to file: " << logFile.string());
+            LOG_INFO_CAT(rtype::LogCategory::Main,
+                         "[Main] Logging to file: " << logFile.string());
         } else {
-            LOG_WARNING_CAT(rtype::LogCategory::Main, "[Main] Failed to open log file: " << logFile.string());
+            LOG_WARNING_CAT(
+                rtype::LogCategory::Main,
+                "[Main] Failed to open log file: " << logFile.string());
         }
 
         printBanner(*config);
@@ -231,10 +243,12 @@ int main(int argc, char** argv) {
         return runServer(*config, ServerSignals::shutdown(),
                          ServerSignals::reloadConfig());
     } catch (const std::exception& e) {
-        LOG_FATAL_CAT(rtype::LogCategory::Main, "[Main] Fatal error: " << std::string(e.what()));
+        LOG_FATAL_CAT(rtype::LogCategory::Main,
+                      "[Main] Fatal error: " << std::string(e.what()));
         return 1;
     } catch (...) {
-        LOG_FATAL_CAT(rtype::LogCategory::Main, "[Main] Unknown fatal error occurred");
+        LOG_FATAL_CAT(rtype::LogCategory::Main,
+                      "[Main] Unknown fatal error occurred");
         return 1;
     }
 }

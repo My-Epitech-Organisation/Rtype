@@ -27,8 +27,9 @@ void ClientDestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {
         });
 
     if (!toDestroy.empty()) {
-        LOG_DEBUG_CAT(::rtype::LogCategory::ECS, "[ClientDestroySystem] Destroying " +
-                  std::to_string(toDestroy.size()) + " entities");
+        LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                      "[ClientDestroySystem] Destroying " +
+                          std::to_string(toDestroy.size()) + " entities");
         for (auto entity : toDestroy) {
             registry.killEntity(entity);
         }

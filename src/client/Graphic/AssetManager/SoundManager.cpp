@@ -14,7 +14,8 @@ void SoundManager::load(const std::string& id, const std::string& filePath) {
     auto sound = std::make_shared<sf::SoundBuffer>();
 
     if (!sound->loadFromFile(filePath)) {
-        LOG_ERROR_CAT(::rtype::LogCategory::Audio, "Error unable to open sound: " + filePath);
+        LOG_ERROR_CAT(::rtype::LogCategory::Audio,
+                      "Error unable to open sound: " + filePath);
         throw std::runtime_error("Error while loading sound: " + filePath);
     }
 
@@ -26,7 +27,8 @@ std::shared_ptr<sf::SoundBuffer> SoundManager::get(const std::string& id) {
     auto it = this->_assets.find(id);
 
     if (it == this->_assets.end()) {
-        LOG_ERROR_CAT(::rtype::LogCategory::Audio, "Error sound not found: " + id);
+        LOG_ERROR_CAT(::rtype::LogCategory::Audio,
+                      "Error sound not found: " + id);
         throw std::out_of_range("Error sound not found: " + id);
     }
 
