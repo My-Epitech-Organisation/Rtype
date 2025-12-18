@@ -26,7 +26,7 @@
  */
 static std::shared_ptr<rtype::ArgParser> configureParser(
     std::shared_ptr<rtype::ArgParser> parser, ClientApp::Config& config,
-    bool& verbose, bool& noColor) {
+    bool& verbose, bool& noColor, rtype::LogCategory& verboseCategories) {
     (*parser)
         .flag("-h", "--help", "Show this help message",
               [weak_parser = std::weak_ptr<rtype::ArgParser>(parser)]() {
@@ -35,11 +35,28 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
                   }
                   return rtype::ParseResult::Exit;
               })
-        .flag("-v", "--verbose", "Enable verbose debug output",
-              [&verbose]() {
+        .flag("-v", "--verbose", "Enable verbose debug output for all categories",
+              [&verbose, &verboseCategories]() {
                   verbose = true;
+                  verboseCategories = rtype::LogCategory::All;
                   return rtype::ParseResult::Success;
               })
+        .option("-vc", "--verbose-category", "category",
+                "Enable verbose output for specific categories (main,network,game,ecs,input,audio,graphics,physics,ai,ui). Can be specified multiple times.",
+                [&verbose, &verboseCategories](std::string_view val) {
+                    rtype::LogCategory cat = rtype::categoryFromString(val);
+                    if (cat == rtype::LogCategory::None) {
+                        LOG_ERROR("Unknown category: " << val);
+                        return rtype::ParseResult::Error;
+                    }
+                    verbose = true;
+                    if (verboseCategories == rtype::LogCategory::All) {
+                        verboseCategories = cat;
+                    } else {
+                        verboseCategories |= cat;
+                    }
+                    return rtype::ParseResult::Success;
+                })
         .flag("-nc", "--no-color", "Disable colored console output",
               [&noColor]() {
                   noColor = true;
@@ -67,12 +84,13 @@ auto main(int argc, char** argv) -> int {
         ClientApp::Config config;
         bool verbose = false;
         bool noColor = false;
+        rtype::LogCategory verboseCategories = rtype::LogCategory::All;
 
         std::vector<std::string_view> args(argv + 1, argv + argc);
         {
             auto parser = std::make_shared<rtype::ArgParser>();
             parser->programName(argv[0]);
-            configureParser(parser, config, verbose, noColor);
+            configureParser(parser, config, verbose, noColor, verboseCategories);
             rtype::ParseResult parseResult = parser->parse(args);
             if (parseResult == rtype::ParseResult::Error) {
                 return 1;
@@ -87,6 +105,7 @@ auto main(int argc, char** argv) -> int {
 
         if (verbose) {
             logger.setLogLevel(rtype::LogLevel::Debug);
+            logger.setEnabledCategories(verboseCategories);
         } else {
             logger.setLogLevel(rtype::LogLevel::Info);
         }
