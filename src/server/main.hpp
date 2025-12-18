@@ -16,6 +16,8 @@
 #include <memory>
 #include <string>
 
+#include "Logger/LogCategory.hpp"
+
 /**
  * @brief Encapsulates server signal flags for thread-safe access
  *
@@ -49,6 +51,7 @@ struct ServerConfig {
     bool verbose = false;
     bool noColor = false;
     std::string configPath = "config/server";
+    rtype::LogCategory verboseCategories = rtype::LogCategory::All;
 
     bool portOverride = false;
     bool maxPlayersOverride = false;
