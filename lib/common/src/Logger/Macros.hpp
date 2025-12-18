@@ -86,4 +86,44 @@
 #define LOG_FATAL(...) \
     ::rtype::Logger::instance().fatal(LOG_TO_STRING(__VA_ARGS__))
 
+/**
+ * @brief Debug logging macro with category
+ * @param category The LogCategory to use for filtering
+ * @param ... The message to log
+ */
+#define LOG_DEBUG_CAT(category, ...) \
+    ::rtype::Logger::instance().debug(LOG_TO_STRING(__VA_ARGS__), category)
+
+/**
+ * @brief Info logging macro with category
+ * @param category The LogCategory to use for filtering
+ * @param ... The message to log
+ */
+#define LOG_INFO_CAT(category, ...) \
+    ::rtype::Logger::instance().info(LOG_TO_STRING(__VA_ARGS__), category)
+
+/**
+ * @brief Warning logging macro with category
+ * @param category The LogCategory to use for filtering
+ * @param ... The message to log
+ */
+#define LOG_WARNING_CAT(category, ...) \
+    ::rtype::Logger::instance().warning(LOG_TO_STRING(__VA_ARGS__), category)
+
+/**
+ * @brief Error logging macro with category
+ * @param category The LogCategory to use for filtering
+ * @param ... The message to log
+ */
+#define LOG_ERROR_CAT(category, ...) \
+    ::rtype::Logger::instance().error(LOG_TO_STRING(__VA_ARGS__), category)
+
+/**
+ * @brief Fatal error logging macro with category
+ * @param category The LogCategory to use for filtering
+ * @param ... The message to log
+ */
+#define LOG_FATAL_CAT(category, ...) \
+    ::rtype::Logger::instance().fatal(LOG_TO_STRING(__VA_ARGS__), category)
+
 #endif  // SRC_COMMON_LOGGER_MACROS_HPP_
