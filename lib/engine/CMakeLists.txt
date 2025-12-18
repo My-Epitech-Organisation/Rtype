@@ -13,10 +13,12 @@ target_sources(engine PRIVATE
     src/ISystem.hpp
     src/ASystem.hpp
 )
+find_package(Threads REQUIRED)
 
 target_link_libraries(engine PUBLIC
     ecs
     engine_core
+    Threads::Threads
 )
 
 target_include_directories(engine PUBLIC
