@@ -529,29 +529,29 @@ class MockLogger : public Logger {
    public:
     std::vector<std::pair<LogLevel, std::string>> loggedMessages;
 
-    void info(const std::string& msg) override {
+    void info(const std::string& msg, LogCategory category = LogCategory::Main) override {
         loggedMessages.emplace_back(LogLevel::Info, msg);
-        Logger::info(msg);
+        Logger::info(msg, category);
     }
 
-    void warning(const std::string& msg) override {
+    void warning(const std::string& msg, LogCategory category = LogCategory::Main) override {
         loggedMessages.emplace_back(LogLevel::Warning, msg);
-        Logger::warning(msg);
+        Logger::warning(msg, category);
     }
 
-    void error(const std::string& msg) override {
+    void error(const std::string& msg, LogCategory category = LogCategory::Main) override {
         loggedMessages.emplace_back(LogLevel::Error, msg);
-        Logger::error(msg);
+        Logger::error(msg, category);
     }
 
-    void debug(const std::string& msg) override {
+    void debug(const std::string& msg, LogCategory category = LogCategory::Main) override {
         loggedMessages.emplace_back(LogLevel::Debug, msg);
-        Logger::debug(msg);
+        Logger::debug(msg, category);
     }
 
-    void fatal(const std::string& msg) override {
+    void fatal(const std::string& msg, LogCategory category = LogCategory::Main) override {
         loggedMessages.emplace_back(LogLevel::Fatal, msg);
-        Logger::fatal(msg);
+        Logger::fatal(msg, category);
     }
 
     void clear() { loggedMessages.clear(); }
@@ -1193,4 +1193,145 @@ TEST(LoggerFilenameTest, GenerateLogFilenameUnique) {
     if (std::filesystem::exists("logs") && std::filesystem::is_empty("logs")) {
         std::filesystem::remove("logs");
     }
+}
+
+// ============================================================================
+// LogCategory Tests
+// ============================================================================
+
+#include "common/src/Logger/LogCategory.hpp"
+
+TEST(LogCategoryTest, EnumValues) {
+    EXPECT_EQ(static_cast<uint32_t>(LogCategory::None), 0u);
+    EXPECT_EQ(static_cast<uint32_t>(LogCategory::Main), 1u << 0);
+    EXPECT_EQ(static_cast<uint32_t>(LogCategory::Network), 1u << 1);
+    EXPECT_EQ(static_cast<uint32_t>(LogCategory::GameEngine), 1u << 2);
+    EXPECT_EQ(static_cast<uint32_t>(LogCategory::All), 0xFFFFFFFFu);
+}
+
+TEST(LogCategoryTest, BitwiseOperators) {
+    LogCategory cat1 = LogCategory::Main;
+    LogCategory cat2 = LogCategory::Network;
+    
+    LogCategory combined = cat1 | cat2;
+    EXPECT_TRUE(isCategoryEnabled(combined, LogCategory::Main));
+    EXPECT_TRUE(isCategoryEnabled(combined, LogCategory::Network));
+    EXPECT_FALSE(isCategoryEnabled(combined, LogCategory::GameEngine));
+}
+
+TEST(LogCategoryTest, IsCategoryEnabled) {
+    LogCategory mask = LogCategory::Main | LogCategory::Network;
+    
+    EXPECT_TRUE(isCategoryEnabled(mask, LogCategory::Main));
+    EXPECT_TRUE(isCategoryEnabled(mask, LogCategory::Network));
+    EXPECT_FALSE(isCategoryEnabled(mask, LogCategory::GameEngine));
+    EXPECT_FALSE(isCategoryEnabled(mask, LogCategory::ECS));
+}
+
+TEST(LogCategoryTest, AllCategoryEnablesEverything) {
+    LogCategory mask = LogCategory::All;
+    
+    EXPECT_TRUE(isCategoryEnabled(mask, LogCategory::Main));
+    EXPECT_TRUE(isCategoryEnabled(mask, LogCategory::Network));
+    EXPECT_TRUE(isCategoryEnabled(mask, LogCategory::GameEngine));
+    EXPECT_TRUE(isCategoryEnabled(mask, LogCategory::ECS));
+}
+
+TEST(LogCategoryTest, ToStringConversion) {
+    EXPECT_EQ(toString(LogCategory::Main), "Main");
+    EXPECT_EQ(toString(LogCategory::Network), "Network");
+    EXPECT_EQ(toString(LogCategory::GameEngine), "GameEngine");
+    EXPECT_EQ(toString(LogCategory::All), "All");
+}
+
+TEST(LogCategoryTest, FromStringConversion) {
+    EXPECT_EQ(categoryFromString("main"), LogCategory::Main);
+    EXPECT_EQ(categoryFromString("Main"), LogCategory::Main);
+    EXPECT_EQ(categoryFromString("MAIN"), LogCategory::Main);
+    
+    EXPECT_EQ(categoryFromString("network"), LogCategory::Network);
+    EXPECT_EQ(categoryFromString("Network"), LogCategory::Network);
+    
+    EXPECT_EQ(categoryFromString("gameengine"), LogCategory::GameEngine);
+    EXPECT_EQ(categoryFromString("game"), LogCategory::GameEngine);
+    
+    EXPECT_EQ(categoryFromString("all"), LogCategory::All);
+    EXPECT_EQ(categoryFromString("ALL"), LogCategory::All);
+    
+    EXPECT_EQ(categoryFromString("invalid"), LogCategory::None);
+}
+
+TEST(LoggerCategoryTest, SetEnabledCategories) {
+    Logger logger;
+    
+    logger.setEnabledCategories(LogCategory::Network);
+    EXPECT_TRUE(logger.isCategoryEnabled(LogCategory::Network));
+    EXPECT_FALSE(logger.isCategoryEnabled(LogCategory::Main));
+}
+
+TEST(LoggerCategoryTest, EnableCategory) {
+    Logger logger;
+    logger.setEnabledCategories(LogCategory::None);
+    
+    logger.enableCategory(LogCategory::Main);
+    EXPECT_TRUE(logger.isCategoryEnabled(LogCategory::Main));
+    EXPECT_FALSE(logger.isCategoryEnabled(LogCategory::Network));
+    
+    logger.enableCategory(LogCategory::Network);
+    EXPECT_TRUE(logger.isCategoryEnabled(LogCategory::Main));
+    EXPECT_TRUE(logger.isCategoryEnabled(LogCategory::Network));
+}
+
+TEST(LoggerCategoryTest, CategoryFiltering) {
+    const auto testFilePath = getUniqueTestFile("test_category");
+    Logger logger;
+    logger.setLogFile(testFilePath);
+    logger.setLogLevel(LogLevel::Debug);
+    
+    // Only enable Network category
+    logger.setEnabledCategories(LogCategory::Network);
+    
+    logger.debug("Main message", LogCategory::Main);
+    logger.debug("Network message", LogCategory::Network);
+    logger.closeFile();
+    
+    std::ifstream file(testFilePath);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    const std::string contents = buffer.str();
+    
+    // Only Network message should be logged
+    EXPECT_EQ(contents.find("Main message"), std::string::npos);
+    EXPECT_NE(contents.find("Network message"), std::string::npos);
+    
+    safeRemoveFile(testFilePath);
+}
+
+TEST(LoggerCategoryTest, MacroWithCategory) {
+    const auto testFilePath = getUniqueTestFile("test_category_macro");
+    Logger logger;
+    Logger::setInstance(logger);
+    
+    logger.setLogFile(testFilePath);
+    logger.setLogLevel(LogLevel::Debug);
+    logger.setEnabledCategories(LogCategory::GameEngine);
+    
+    LOG_DEBUG_CAT(LogCategory::Main, "Main debug");
+    LOG_DEBUG_CAT(LogCategory::GameEngine, "GameEngine debug");
+    LOG_INFO_CAT(LogCategory::Network, "Network info");
+    
+    logger.closeFile();
+    
+    std::ifstream file(testFilePath);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    const std::string contents = buffer.str();
+    
+    // Only GameEngine message should be logged
+    EXPECT_EQ(contents.find("Main debug"), std::string::npos);
+    EXPECT_NE(contents.find("GameEngine debug"), std::string::npos);
+    EXPECT_EQ(contents.find("Network info"), std::string::npos);
+    
+    Logger::resetInstance();
+    safeRemoveFile(testFilePath);
 }
