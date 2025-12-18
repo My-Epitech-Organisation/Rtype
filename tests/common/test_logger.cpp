@@ -549,6 +549,11 @@ class MockLogger : public Logger {
         Logger::debug(msg);
     }
 
+    void fatal(const std::string& msg) override {
+        loggedMessages.emplace_back(LogLevel::Fatal, msg);
+        Logger::fatal(msg);
+    }
+
     void clear() { loggedMessages.clear(); }
 };
 
@@ -953,4 +958,239 @@ TEST_F(LogMacrosTest, LogEmptyMessage) {
     LOG_INFO("");
     ASSERT_EQ(mockLogger.loggedMessages.size(), 1);
     EXPECT_EQ(mockLogger.loggedMessages[0].second, "");
+}
+
+// ============================================================================
+// LogLevel Fatal Tests
+// ============================================================================
+
+TEST(LogLevelTest, FatalLogLevelExists) {
+    EXPECT_EQ(static_cast<int>(LogLevel::Fatal), 4);
+    EXPECT_GT(LogLevel::Fatal, LogLevel::Error);
+    EXPECT_LT(LogLevel::Fatal, LogLevel::None);
+}
+
+TEST(LogLevelTest, ToStringFatal) {
+    EXPECT_EQ(toString(LogLevel::Fatal), "FATAL");
+}
+
+TEST(LoggerFatalTest, FatalWritesToFile) {
+    const auto testFilePath = getUniqueTestFile("test_fatal");
+    Logger logger;
+    logger.setLogFile(testFilePath);
+    logger.fatal("Fatal error occurred");
+    logger.closeFile();
+
+    std::ifstream file(testFilePath);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    const std::string contents = buffer.str();
+
+    EXPECT_NE(contents.find("FATAL"), std::string::npos);
+    EXPECT_NE(contents.find("Fatal error occurred"), std::string::npos);
+
+    safeRemoveFile(testFilePath);
+}
+
+TEST(LoggerFatalTest, FatalGoesToStderr) {
+    Logger logger;
+    testing::internal::CaptureStderr();
+    logger.fatal("Fatal test");
+    const std::string output = testing::internal::GetCapturedStderr();
+    EXPECT_NE(output.find("FATAL"), std::string::npos);
+}
+
+TEST_F(LogMacrosTest, LogFatalMacro) {
+    LOG_FATAL("Fatal error");
+
+    ASSERT_EQ(mockLogger.loggedMessages.size(), 1);
+    EXPECT_EQ(mockLogger.loggedMessages[0].first, LogLevel::Fatal);
+    EXPECT_EQ(mockLogger.loggedMessages[0].second, "Fatal error");
+}
+
+// ============================================================================
+// ColorFormatter Tests
+// ============================================================================
+
+#include "common/src/Logger/ColorFormatter.hpp"
+
+TEST(ColorFormatterTest, DefaultEnabledState) {
+#ifdef _WIN32
+    // Colors disabled by default on Windows
+    EXPECT_FALSE(ColorFormatter::isEnabled());
+#else
+    // Colors enabled by default on Unix/Linux
+    EXPECT_TRUE(ColorFormatter::isEnabled());
+#endif
+}
+
+TEST(ColorFormatterTest, SetEnabled) {
+    bool originalState = ColorFormatter::isEnabled();
+    
+    ColorFormatter::setEnabled(true);
+    EXPECT_TRUE(ColorFormatter::isEnabled());
+    
+    ColorFormatter::setEnabled(false);
+    EXPECT_FALSE(ColorFormatter::isEnabled());
+    
+    // Restore original state
+    ColorFormatter::setEnabled(originalState);
+}
+
+TEST(ColorFormatterTest, GetColorWhenEnabled) {
+    ColorFormatter::setEnabled(true);
+    
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Debug), "\033[36m");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Info), "\033[32m");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Warning), "\033[33m");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Error), "\033[31m");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Fatal), "\033[91m");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::None), "");
+}
+
+TEST(ColorFormatterTest, GetColorWhenDisabled) {
+    ColorFormatter::setEnabled(false);
+    
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Debug), "");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Info), "");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Warning), "");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Error), "");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Fatal), "");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::None), "");
+}
+
+TEST(ColorFormatterTest, GetResetWhenEnabled) {
+    ColorFormatter::setEnabled(true);
+    EXPECT_EQ(ColorFormatter::getReset(), "\033[0m");
+}
+
+TEST(ColorFormatterTest, GetResetWhenDisabled) {
+    ColorFormatter::setEnabled(false);
+    EXPECT_EQ(ColorFormatter::getReset(), "");
+}
+
+TEST(LoggerColorTest, ColoredOutputToConsole) {
+    Logger logger;
+    ColorFormatter::setEnabled(true);
+    
+    testing::internal::CaptureStdout();
+    logger.info("Test message");
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    // Should contain ANSI color codes
+    EXPECT_NE(output.find("\033["), std::string::npos);
+}
+
+TEST(LoggerColorTest, NoColoredOutputWhenDisabled) {
+    Logger logger;
+    ColorFormatter::setEnabled(false);
+    
+    testing::internal::CaptureStdout();
+    logger.info("Test message");
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    // Should not contain ANSI color codes
+    EXPECT_EQ(output.find("\033["), std::string::npos);
+}
+
+TEST(LoggerColorTest, SetColorEnabledMethod) {
+    Logger logger;
+    
+    logger.setColorEnabled(true);
+    EXPECT_TRUE(logger.isColorEnabled());
+    
+    logger.setColorEnabled(false);
+    EXPECT_FALSE(logger.isColorEnabled());
+}
+
+// ============================================================================
+// GenerateLogFilename Tests
+// ============================================================================
+
+TEST(LoggerFilenameTest, GenerateLogFilenameWithDefaults) {
+    const auto logFile = Logger::generateLogFilename();
+    
+    EXPECT_EQ(logFile.parent_path(), std::filesystem::path("logs"));
+    EXPECT_NE(logFile.filename().string().find("session_"), std::string::npos);
+    EXPECT_NE(logFile.filename().string().find(".log"), std::string::npos);
+    
+    // Clean up created directory if test created it
+    if (std::filesystem::exists("logs") && std::filesystem::is_empty("logs")) {
+        std::filesystem::remove("logs");
+    }
+}
+
+TEST(LoggerFilenameTest, GenerateLogFilenameWithPrefix) {
+    const auto logFile = Logger::generateLogFilename("server_session");
+    
+    EXPECT_NE(logFile.filename().string().find("server_session_"), 
+              std::string::npos);
+    EXPECT_NE(logFile.filename().string().find(".log"), std::string::npos);
+    
+    // Clean up created directory if test created it
+    if (std::filesystem::exists("logs") && std::filesystem::is_empty("logs")) {
+        std::filesystem::remove("logs");
+    }
+}
+
+TEST(LoggerFilenameTest, GenerateLogFilenameWithCustomDirectory) {
+    const auto testDir = std::filesystem::temp_directory_path() / "test_logs";
+    const auto logFile = Logger::generateLogFilename("client_session", testDir);
+    
+    EXPECT_EQ(logFile.parent_path(), testDir);
+    EXPECT_NE(logFile.filename().string().find("client_session_"), 
+              std::string::npos);
+    
+    // Clean up
+    if (std::filesystem::exists(testDir)) {
+        std::filesystem::remove_all(testDir);
+    }
+}
+
+TEST(LoggerFilenameTest, GenerateLogFilenameCreatesDirectory) {
+    const auto testDir = std::filesystem::temp_directory_path() / 
+                         "test_logs_create";
+    
+    // Ensure directory doesn't exist
+    if (std::filesystem::exists(testDir)) {
+        std::filesystem::remove_all(testDir);
+    }
+    
+    EXPECT_FALSE(std::filesystem::exists(testDir));
+    
+    const auto logFile = Logger::generateLogFilename("test", testDir);
+    
+    EXPECT_TRUE(std::filesystem::exists(testDir));
+    EXPECT_TRUE(std::filesystem::is_directory(testDir));
+    
+    // Clean up
+    std::filesystem::remove_all(testDir);
+}
+
+TEST(LoggerFilenameTest, GenerateLogFilenameTimestampFormat) {
+    const auto logFile = Logger::generateLogFilename("test");
+    const auto filename = logFile.filename().string();
+    
+    // Should match format: test_YYYY-MM-DD_HH-MM-SS.log
+    std::regex pattern(R"(test_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.log)");
+    EXPECT_TRUE(std::regex_match(filename, pattern));
+    
+    // Clean up created directory if test created it
+    if (std::filesystem::exists("logs") && std::filesystem::is_empty("logs")) {
+        std::filesystem::remove("logs");
+    }
+}
+
+TEST(LoggerFilenameTest, GenerateLogFilenameUnique) {
+    const auto logFile1 = Logger::generateLogFilename("test");
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    const auto logFile2 = Logger::generateLogFilename("test");
+    
+    // Files should have different names due to timestamp
+    EXPECT_NE(logFile1, logFile2);
+    
+    // Clean up created directory if test created it
+    if (std::filesystem::exists("logs") && std::filesystem::is_empty("logs")) {
+        std::filesystem::remove("logs");
+    }
 }
