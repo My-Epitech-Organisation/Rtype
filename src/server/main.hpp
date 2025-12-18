@@ -47,6 +47,7 @@ struct ServerConfig {
     size_t maxPlayers = 4;
     uint32_t tickRate = 60;
     bool verbose = false;
+    bool noColor = false;
     std::string configPath = "config/server";
 
     bool portOverride = false;
