@@ -52,15 +52,15 @@ void GameSession::update(float deltaTime) {
 }
 
 void GameSession::handleClientConnected(std::uint32_t userId) {
-    LOG_INFO("[GameSession] Client connected: userId=" << userId);
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Client connected: userId=" << userId);
 
     if (_state == GameState::WaitingForPlayers) {
-        LOG_INFO("[GameSession] Waiting for client " << userId
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Waiting for client " << userId
                                                      << " to signal ready");
     }
 
     if (!_entitySpawner) {
-        LOG_ERROR("[GameSession] No entity spawner available");
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[GameSession] No entity spawner available");
         return;
     }
 
@@ -70,20 +70,20 @@ void GameSession::handleClientConnected(std::uint32_t userId) {
 
     auto result = _entitySpawner->spawnPlayer(spawnConfig);
     if (result.success) {
-        LOG_INFO("[GameSession] Spawned player for userId="
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Spawned player for userId="
                  << userId << " networkId=" << result.networkId << " pos=("
                  << result.x << ", " << result.y << ")");
     } else {
-        LOG_ERROR("[GameSession] Failed to spawn player for userId=" << userId);
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Failed to spawn player for userId=" << userId);
     }
 }
 
 void GameSession::handleClientDisconnected(std::uint32_t userId) {
-    LOG_INFO("[GameSession] Client disconnected: userId=" << userId);
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Client disconnected: userId=" << userId);
     _readyPlayers.erase(userId);
 
     if (_state == GameState::Playing && _readyPlayers.empty()) {
-        LOG_WARNING(
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
             "[GameSession] All players disconnected during game. Stopping "
             "game...");
         stopGame();
@@ -94,7 +94,7 @@ void GameSession::handleClientDisconnected(std::uint32_t userId) {
         auto entityOpt = _networkSystem->getPlayerEntity(userId);
         if (entityOpt.has_value() && _entitySpawner) {
             _entitySpawner->destroyPlayer(*entityOpt);
-            LOG_INFO(
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                 "[GameSession] Destroyed player entity for userId=" << userId);
         }
     }
@@ -110,7 +110,7 @@ void GameSession::handleClientInput(std::uint32_t userId,
     }
 
     if (_config.verbose) {
-        LOG_DEBUG("[GameSession] Input from userId="
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Input from userId="
                   << userId << " inputMask=" << static_cast<int>(inputMask)
                   << " hasEntity=" << entity.has_value());
     }
@@ -162,7 +162,7 @@ void GameSession::handleClientInput(std::uint32_t userId,
                 if (projectileId != 0) {
                     _entitySpawner->triggerShootCooldown(playerEntity);
                     if (_config.verbose) {
-                        LOG_DEBUG("[GameSession] Player "
+                        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Player "
                                   << userId << " fired projectile "
                                   << projectileId);
                     }
@@ -175,14 +175,14 @@ void GameSession::handleClientInput(std::uint32_t userId,
 void GameSession::playerReady(std::uint32_t userId) {
     if (_state == GameState::Playing) {
         if (_config.verbose) {
-            LOG_DEBUG("[GameSession] Player "
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Player "
                       << userId << " signaled ready but game already running");
         }
         return;
     }
 
     _readyPlayers.insert(userId);
-    LOG_INFO("[GameSession] Player "
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Player "
              << userId << " is ready (" << _readyPlayers.size() << "/"
              << _config.minPlayersToStart << " needed to start)");
 
@@ -194,7 +194,7 @@ void GameSession::transitionToState(GameState newState) {
         return;
     }
 
-    LOG_INFO("[GameSession] State transition: " << toString(_state) << " -> "
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[GameSession] State transition: " << toString(_state) << " -> "
                                                 << toString(newState));
 
     GameState oldState = _state;
@@ -202,23 +202,23 @@ void GameSession::transitionToState(GameState newState) {
 
     switch (newState) {
         case GameState::Playing:
-            LOG_INFO("[GameSession] *** GAME STARTED *** ("
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[GameSession] *** GAME STARTED *** ("
                      << _readyPlayers.size() << " players)");
             if (_networkSystem) {
                 _networkSystem->broadcastGameStart();
             }
             break;
         case GameState::Paused:
-            LOG_INFO(
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                 "[GameSession] Game paused - waiting for players to reconnect");
             break;
         case GameState::WaitingForPlayers:
             if (oldState == GameState::Paused) {
-                LOG_INFO("[GameSession] Resuming wait for players");
+                LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Resuming wait for players");
             }
             break;
         case GameState::GameOver:
-            LOG_INFO("[GameSession] Game ended - session can be cleaned up");
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Game ended - session can be cleaned up");
             break;
     }
 
@@ -312,15 +312,15 @@ void GameSession::syncEntityPositions() {
 }
 
 void GameSession::stopGame() {
-    LOG_INFO("[GameSession] Stopping game session");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Stopping game session");
     for (const auto& userId : _readyPlayers) {
-        LOG_INFO(
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
             "[GameSession] Destroying player entity for userId=" << userId);
         _entitySpawner->destroyPlayerByUserId(userId);
     }
     _readyPlayers.clear();
     transitionToState(GameState::GameOver);
-    LOG_INFO("[GameSession] Game session stopped");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[GameSession] Game session stopped");
 }
 
 }  // namespace rtype::server

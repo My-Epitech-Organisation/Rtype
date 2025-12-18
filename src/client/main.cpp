@@ -46,7 +46,7 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
                 [&verbose, &verboseCategories](std::string_view val) {
                     rtype::LogCategory cat = rtype::categoryFromString(val);
                     if (cat == rtype::LogCategory::None) {
-                        LOG_ERROR("Unknown category: " << val);
+                        LOG_ERROR_CAT(rtype::LogCategory::Main, "Unknown category: " << val);
                         return rtype::ParseResult::Error;
                     }
                     verbose = true;
@@ -117,22 +117,22 @@ auto main(int argc, char** argv) -> int {
         const auto logFile =
             rtype::Logger::generateLogFilename("client_session");
         if (logger.setLogFile(logFile, false)) {
-            LOG_INFO("[Main] Logging to file: " << logFile.string());
+            LOG_INFO_CAT(rtype::LogCategory::Main, "[Main] Logging to file: " << logFile.string());
         } else {
-            LOG_WARNING("[Main] Failed to open log file: " << logFile.string());
+            LOG_WARNING_CAT(rtype::LogCategory::Main, "[Main] Failed to open log file: " << logFile.string());
         }
 
-        LOG_INFO("[Main] Starting R-Type client...");
-        LOG_DEBUG("[Main] Server: " << config.defaultServerHost << ":"
+        LOG_INFO_CAT(rtype::LogCategory::Main, "[Main] Starting R-Type client...");
+        LOG_DEBUG_CAT(rtype::LogCategory::Main, "[Main] Server: " << config.defaultServerHost << ":"
                                     << config.defaultServerPort);
 
         ClientApp client(config);
         client.run();
 
         ControllerRumble::cleanup();
-        LOG_INFO("[Main] Client terminated normally");
+        LOG_INFO_CAT(rtype::LogCategory::Main, "[Main] Client terminated normally");
     } catch (const std::exception& e) {
-        LOG_FATAL(std::string("Program exited with an error: ") +
+        LOG_FATAL_CAT(rtype::LogCategory::Main, std::string("Program exited with an error: ") +
                   std::string(e.what()));
         ControllerRumble::cleanup();
         return 1;

@@ -34,7 +34,7 @@ void GameEventProcessor::processEvents() {
 
         if (!processed.valid) {
             if (_verbose) {
-                LOG_DEBUG("[EventProcessor] Event not processed: type="
+                LOG_DEBUG_CAT(rtype::LogCategory::GameEngine, "[EventProcessor] Event not processed: type="
                           << static_cast<int>(event.type)
                           << " networkId=" << event.entityNetworkId);
             }
@@ -55,7 +55,7 @@ void GameEventProcessor::processEvents() {
                     processed.networkId, networkType, processed.x, processed.y);
 
                 if (_verbose) {
-                    LOG_DEBUG("[EventProcessor] Entity spawned & broadcast: "
+                    LOG_DEBUG_CAT(rtype::LogCategory::GameEngine, "[EventProcessor] Entity spawned & broadcast: "
                               << "networkId=" << processed.networkId << " type="
                               << static_cast<int>(processed.networkEntityType)
                               << " pos=(" << processed.x << ", " << processed.y
@@ -67,7 +67,7 @@ void GameEventProcessor::processEvents() {
                 _networkSystem->unregisterNetworkedEntityById(
                     processed.networkId);
                 if (_verbose) {
-                    LOG_DEBUG("[EventProcessor] Entity destroyed: networkId="
+                    LOG_DEBUG_CAT(rtype::LogCategory::GameEngine, "[EventProcessor] Entity destroyed: networkId="
                               << processed.networkId);
                 }
                 break;
@@ -81,7 +81,7 @@ void GameEventProcessor::processEvents() {
             case engine::GameEventType::GameOver:
                 break;
             case engine::GameEventType::EntityHealthChanged: {
-                LOG_DEBUG("[EventProcessor] Processing EntityHealthChanged: "
+                LOG_DEBUG_CAT(rtype::LogCategory::GameEngine, "[EventProcessor] Processing EntityHealthChanged: "
                           << "networkId=" << event.entityNetworkId << " health="
                           << event.healthCurrent << "/" << event.healthMax);
                 _networkSystem->updateEntityHealth(event.entityNetworkId,
@@ -93,7 +93,7 @@ void GameEventProcessor::processEvents() {
                 _networkSystem->broadcastPowerUp(event.entityNetworkId,
                                                  event.subType, event.duration);
                 if (_verbose) {
-                    LOG_DEBUG("[EventProcessor] Power-up applied: playerId="
+                    LOG_DEBUG_CAT(rtype::LogCategory::GameEngine, "[EventProcessor] Power-up applied: playerId="
                               << event.entityNetworkId
                               << " type=" << static_cast<int>(event.subType)
                               << " duration=" << event.duration);

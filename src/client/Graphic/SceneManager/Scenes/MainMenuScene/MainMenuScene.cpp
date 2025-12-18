@@ -205,7 +205,7 @@ void MainMenuScene::_onConnectClicked(
         auto reg = weakRegistry.lock();
         if (!reg) return;
 
-        LOG_INFO("[Client] Connected with user ID: " << userId);
+        LOG_INFO_CAT(::rtype::LogCategory::UI, "[Client] Connected with user ID: " << userId);
 
         if (reg->isAlive(statusEntity) &&
             reg->hasComponent<rtype::games::rtype::client::Text>(
@@ -220,7 +220,7 @@ void MainMenuScene::_onConnectClicked(
         try {
             switchToScene(SceneManager::IN_GAME);
         } catch (SceneNotFound& e) {
-            LOG_ERROR(std::string("Error switching to Game: ") +
+            LOG_ERROR_CAT(::rtype::LogCategory::UI, std::string("Error switching to Game: ") +
                       std::string(e.what()));
         }
     });
@@ -337,7 +337,7 @@ MainMenuScene::MainMenuScene(
             try {
                 switchToScene(SceneManager::IN_GAME);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Game Menu: ") +
+                LOG_ERROR_CAT(::rtype::LogCategory::UI, std::string("Error switching to Game Menu: ") +
                           std::string(e.what()));
             }
         })));
@@ -353,7 +353,7 @@ MainMenuScene::MainMenuScene(
             try {
                 switchToScene(SceneManager::HOW_TO_PLAY);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to How To Play: ") +
+                LOG_ERROR_CAT(::rtype::LogCategory::UI, std::string("Error switching to How To Play: ") +
                           std::string(e.what()));
             }
         })));
@@ -369,7 +369,7 @@ MainMenuScene::MainMenuScene(
             try {
                 switchToScene(SceneManager::SETTINGS_MENU);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Settings Menu: ") +
+                LOG_ERROR_CAT(::rtype::LogCategory::UI, std::string("Error switching to Settings Menu: ") +
                           std::string(e.what()));
             }
         })));

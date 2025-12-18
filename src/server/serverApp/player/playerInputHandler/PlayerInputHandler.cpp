@@ -47,7 +47,7 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
     }
 
     if (_verbose) {
-        LOG_DEBUG("[InputHandler] Input from userId="
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[InputHandler] Input from userId="
                   << userId << " inputMask=" << static_cast<int>(inputMask)
                   << " hasEntity=" << entity.has_value());
     }
@@ -114,7 +114,7 @@ void PlayerInputHandler::processShoot(std::uint32_t userId,
     if (!_registry->hasComponent<Position>(entity) ||
         !_registry->hasComponent<ShootCooldown>(entity)) {
         if (_verbose) {
-            LOG_DEBUG("[InputHandler] Player "
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[InputHandler] Player "
                       << userId << " missing Position or ShootCooldown");
         }
         return;
@@ -123,7 +123,7 @@ void PlayerInputHandler::processShoot(std::uint32_t userId,
     auto& cooldown = _registry->getComponent<ShootCooldown>(entity);
     if (!cooldown.canShoot()) {
         if (_verbose) {
-            LOG_DEBUG("[InputHandler] Player "
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[InputHandler] Player "
                       << userId
                       << " cooldown not ready: " << cooldown.currentCooldown);
         }
@@ -137,7 +137,7 @@ void PlayerInputHandler::processShoot(std::uint32_t userId,
     auto networkIdOpt = _networkSystem->getNetworkId(entity);
     if (!networkIdOpt.has_value()) {
         if (_verbose) {
-            LOG_DEBUG("[InputHandler] Player " << userId
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[InputHandler] Player " << userId
                                                << " has no networkId");
         }
         return;
@@ -148,7 +148,7 @@ void PlayerInputHandler::processShoot(std::uint32_t userId,
 
     if (projectileId != 0) {
         cooldown.triggerCooldown();
-        LOG_DEBUG("[InputHandler] Player " << userId << " fired projectile "
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[InputHandler] Player " << userId << " fired projectile "
                                            << projectileId);
     }
 }

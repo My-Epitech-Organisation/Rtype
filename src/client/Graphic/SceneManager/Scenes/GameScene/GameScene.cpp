@@ -48,24 +48,24 @@ GameScene::GameScene(
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)),
       _gameScene(std::move(gameScene)) {
-    LOG_DEBUG("[GameScene] Constructor started");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Constructor started");
     if (_gameScene) {
-        LOG_DEBUG("[GameScene] Calling initialize on game scene");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Calling initialize on game scene");
         this->_listEntity = _gameScene->initialize();
-        LOG_DEBUG("[GameScene] Game scene initialized, entities created: "
-                  << this->_listEntity.size());
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Game scene initialized, entities created: "
+                  << _listEntity.size());
     }
-    LOG_DEBUG("[GameScene] Loading game textures");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Loading game textures");
     this->_assetsManager->textureManager->load(
         "bdos_enemy",
         this->_assetsManager->configGameAssets.assets.textures.Enemy);
     this->_assetsManager->textureManager->load(
         "projectile_player_laser",
         this->_assetsManager->configGameAssets.assets.textures.missileLaser);
-    LOG_DEBUG("[GameScene] Game textures loaded");
-    LOG_DEBUG("[GameScene] Setting up audio");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Game textures loaded");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Setting up audio");
     if (!this->_audio) {
-        LOG_DEBUG("[GameScene] No audio library available");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] No audio library available");
         return;
     }
     if (this->_assetsManager && this->_assetsManager->audioManager) {
@@ -75,17 +75,17 @@ GameScene::GameScene(
         auto bgMusic =
             this->_assetsManager->audioManager->get("main_game_music");
         if (bgMusic) {
-            LOG_DEBUG("[GameScene] Playing game music");
+            LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Playing game music");
             this->_audio->loadMusic(bgMusic);
             this->_audio->setLoop(true);
             this->_audio->play();
         }
     }
-    LOG_DEBUG("[GameScene] Constructor completed successfully");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Constructor completed successfully");
 }
 
 GameScene::~GameScene() {
-    LOG_DEBUG("[GameScene] Destructor called");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Destructor called");
 
     if (_networkSystem) {
         _networkSystem->onLocalPlayerAssigned(nullptr);
@@ -95,7 +95,7 @@ GameScene::~GameScene() {
     }
 
     if (_networkClient && _networkClient->isConnected()) {
-        LOG_DEBUG("[GameScene] Disconnecting from server");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Disconnecting from server");
         _networkClient->disconnect();
     }
 
@@ -105,7 +105,7 @@ GameScene::~GameScene() {
             this->_registry->killEntity(entity);
         });
 
-    LOG_DEBUG("[GameScene] Cleaning up pause menu entities");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Cleaning up pause menu entities");
     this->_registry->view<rtype::games::rtype::client::PauseMenuTag>().each(
         [this](ECS::Entity entity,
                rtype::games::rtype::client::PauseMenuTag& /*tag*/) {
@@ -114,19 +114,19 @@ GameScene::~GameScene() {
 
     if (this->_registry
             ->hasSingleton<rtype::games::rtype::client::PauseState>()) {
-        LOG_DEBUG("[GameScene] Removing PauseState singleton");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Removing PauseState singleton");
         this->_registry
             ->removeSingleton<rtype::games::rtype::client::PauseState>();
     }
 
     if (this->_registry->hasSingleton<AccessibilitySettings>()) {
-        LOG_DEBUG("[GameScene] Removing AccessibilitySettings singleton");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Removing AccessibilitySettings singleton");
         this->_registry->removeSingleton<AccessibilitySettings>();
     }
 
     if (this->_audio) {
-        LOG_DEBUG("[GameScene] Pausing music");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Pausing music");
         this->_audio->pauseMusic();
     }
-    LOG_DEBUG("[GameScene] Destructor completed");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Destructor completed");
 }

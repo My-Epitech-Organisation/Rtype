@@ -29,7 +29,7 @@ GameOverScene::GameOverScene(
     : AScene(std::move(registry), std::move(assetsManager), std::move(window),
              std::move(audio)),
       _switchToScene(std::move(switchToScene)) {
-    LOG_DEBUG("[GameOverScene] Constructing Game Over scene");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameOverScene] Constructing Game Over scene");
     _buildLayout();
     if (_audio) {
         _audio->pauseMusic();

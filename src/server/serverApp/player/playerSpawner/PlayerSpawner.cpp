@@ -83,7 +83,7 @@ PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
     }
 
     result.success = true;
-    LOG_INFO("[PlayerSpawner] Spawned player for userId="
+    LOG_INFO_CAT(rtype::LogCategory::GameEngine, "[PlayerSpawner] Spawned player for userId="
              << userId << " networkId=" << result.networkId << " pos=("
              << result.x << ", " << result.y << ")");
 
@@ -104,7 +104,7 @@ bool PlayerSpawner::destroyPlayer(std::uint32_t userId) {
     _networkSystem->unregisterNetworkedEntity(playerEntity);
     _registry->killEntity(playerEntity);
 
-    LOG_INFO("[PlayerSpawner] Destroyed player entity for userId=" << userId);
+    LOG_INFO_CAT(rtype::LogCategory::GameEngine, "[PlayerSpawner] Destroyed player entity for userId=" << userId);
     return true;
 }
 

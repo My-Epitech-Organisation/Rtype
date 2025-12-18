@@ -78,58 +78,57 @@ RtypeGameScene::RtypeGameScene(
 }
 
 RtypeGameScene::~RtypeGameScene() {
-    LOG_DEBUG("[RtypeGameScene] Destructor called");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Destructor called");
     clearDamageVignette();
     _vignetteEntities.clear();
     _vignetteAlpha = 0.0F;
-    LOG_DEBUG("[RtypeGameScene] Destructor completed");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Destructor completed");
 }
 
 std::vector<ECS::Entity> RtypeGameScene::initialize() {
-    LOG_DEBUG("[RtypeGameScene] Initialize called");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Initialize called");
     std::vector<ECS::Entity> entities;
 
     auto bgEntities = EntityFactory::createBackground(this->_registry,
                                                       this->_assetsManager, "");
     entities.insert(entities.end(), bgEntities.begin(), bgEntities.end());
-    LOG_DEBUG("[RtypeGameScene] Background created with " << bgEntities.size()
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Background created with " << bgEntities.size()
                                                           << " entities");
-
     if (_networkSystem) {
-        LOG_DEBUG("[RtypeGameScene] Setting up local player callback");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Setting up local player callback");
         setupLocalPlayerCallback();
-        LOG_DEBUG("[RtypeGameScene] Setting up health update callback");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Setting up health update callback");
         _networkSystem->onHealthUpdate(
             [this](const ::rtype::client::EntityHealthEvent& event) {
                 handleHealthUpdate(event);
             });
-        LOG_DEBUG("[RtypeGameScene] Network callbacks configured");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Network callbacks configured");
     }
 
-    LOG_DEBUG("[RtypeGameScene] Constructor started");
-    LOG_DEBUG("[RtypeGameScene] _networkClient is "
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Constructor started");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] _networkClient is "
               << (_networkClient ? "valid" : "NULL"));
-    LOG_DEBUG("[RtypeGameScene] _registry is "
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] _registry is "
               << (_registry ? "valid" : "NULL"));
-    LOG_DEBUG("[RtypeGameScene] Setting up HUD");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Setting up HUD");
     setupHud();
     setupDamageVignette();
-    LOG_DEBUG("[RtypeGameScene] HUD setup complete");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] HUD setup complete");
     auto pauseEntities = RtypePauseMenu::createPauseMenu(
         _registry, _assetsManager, _switchToScene);
     entities.insert(entities.end(), pauseEntities.begin(), pauseEntities.end());
-    LOG_DEBUG("[RtypeGameScene] Pause menu created with "
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Pause menu created with "
               << pauseEntities.size() << " entities");
 
     if (!_registry->hasSingleton<PauseState>()) {
         _registry->setSingleton<PauseState>(PauseState{false});
-        LOG_DEBUG("[RtypeGameScene] PauseState singleton created");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] PauseState singleton created");
     } else {
         _registry->getSingleton<PauseState>().isPaused = false;
-        LOG_DEBUG("[RtypeGameScene] PauseState reset to unpaused");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] PauseState reset to unpaused");
     }
 
-    LOG_DEBUG("[RtypeGameScene] Initialize completed, total entities: "
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Initialize completed, total entities: "
               << entities.size());
     return entities;
 }
@@ -189,7 +188,7 @@ std::uint8_t RtypeGameScene::getInputMask() const {
 }
 
 void RtypeGameScene::setupEntityFactory() {
-    LOG_DEBUG("[RtypeGameScene] Setting up entityFactory");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Setting up entityFactory");
     _networkSystem->setEntityFactory(
         RtypeEntityFactory::createNetworkEntityFactory(_registry,
                                                        _assetsManager));
@@ -201,16 +200,16 @@ void RtypeGameScene::setupLocalPlayerCallback() {
                                                            ECS::Entity entity) {
         if (registry->isAlive(entity)) {
             registry->emplaceComponent<ControllableTag>(entity);
-            LOG_DEBUG("[RtypeGameScene] Local player entity assigned");
+            LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Local player entity assigned");
         }
         _localPlayerEntity = entity;
         _localPlayerId = userId;
-        LOG_DEBUG("[RtypeGameScene] Local player ID set to " << userId);
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Local player ID set to " << userId);
         if (registry->isAlive(entity) &&
             registry->hasComponent<rs::HealthComponent>(entity)) {
             const auto& health =
                 registry->getComponent<rs::HealthComponent>(entity);
-            LOG_DEBUG("[RtypeGameScene] Initial health: " << health.current
+            LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Initial health: " << health.current
                                                           << "/" << health.max);
             updateLivesDisplay(health.current, health.max);
         }
@@ -253,7 +252,7 @@ void RtypeGameScene::setupHud() {
 }
 
 void RtypeGameScene::updateLivesDisplay(int current, int max) {
-    LOG_DEBUG("[RtypeGameScene] updateLivesDisplay: " << current << "/" << max);
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] updateLivesDisplay: " << current << "/" << max);
     _lastKnownLives = current;
     _lastKnownMaxLives = max;
     updateHealthBar(current, max);
@@ -261,7 +260,7 @@ void RtypeGameScene::updateLivesDisplay(int current, int max) {
 
 void RtypeGameScene::handleHealthUpdate(
     const ::rtype::client::EntityHealthEvent& event) {
-    LOG_DEBUG("[RtypeGameScene] Health update for local player: current="
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Health update for local player: current="
               << event.current << " max=" << event.max);
 
     if (_lastKnownLives > event.current) {
@@ -279,11 +278,11 @@ void RtypeGameScene::handleHealthUpdate(
 }
 
 void RtypeGameScene::updateHealthBar(int current, int max) {
-    LOG_DEBUG("[RtypeGameScene] updateHealthBar called: " << current << "/"
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] updateHealthBar called: " << current << "/"
                                                           << max);
     if (!_healthBarFillEntity.has_value() ||
         !_registry->isAlive(*_healthBarFillEntity)) {
-        LOG_DEBUG("[RtypeGameScene] Health bar fill entity not valid");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Health bar fill entity not valid");
         return;
     }
 
@@ -294,7 +293,7 @@ void RtypeGameScene::updateHealthBar(int current, int max) {
             : 0.f;
     auto& rect = _registry->getComponent<Rectangle>(*_healthBarFillEntity);
     rect.size.first = barWidth * ratio;
-    LOG_DEBUG("[RtypeGameScene] Health bar width set to: " << rect.size.first);
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Health bar width set to: " << rect.size.first);
 
     if (_healthTextEntity.has_value() &&
         _registry->isAlive(*_healthTextEntity) &&
@@ -302,9 +301,9 @@ void RtypeGameScene::updateHealthBar(int current, int max) {
         auto& text = _registry->getComponent<Text>(*_healthTextEntity);
         text.textContent =
             "HP: " + std::to_string(current) + "/" + std::to_string(max);
-        LOG_DEBUG("[RtypeGameScene] HP text updated to: " << text.textContent);
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] HP text updated to: " << text.textContent);
     } else {
-        LOG_DEBUG("[RtypeGameScene] Health text entity not valid for update");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Health text entity not valid for update");
     }
 }
 
@@ -545,7 +544,7 @@ void RtypeGameScene::triggerDamageFlash(int damageAmount) {
 }
 
 void RtypeGameScene::spawnDamagePopup(int damage) {
-    LOG_DEBUG(
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, 
         "[RtypeGameScene] spawnDamagePopup called with damage=" << damage);
 
     std::optional<ECS::Entity> playerEntity = _localPlayerEntity;
@@ -554,28 +553,28 @@ void RtypeGameScene::spawnDamagePopup(int damage) {
     }
 
     if (!playerEntity.has_value()) {
-        LOG_DEBUG(
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, 
             "[RtypeGameScene] No player entity available for damage popup");
         return;
     }
 
     if (!_registry->isAlive(*playerEntity)) {
-        LOG_DEBUG("[RtypeGameScene] Player entity not alive for damage popup");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Player entity not alive for damage popup");
         return;
     }
 
     if (!_registry->hasComponent<rs::Position>(*playerEntity)) {
-        LOG_DEBUG(
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, 
             "[RtypeGameScene] Player entity has no Position for damage popup");
         return;
     }
 
     const auto& pos = _registry->getComponent<rs::Position>(*playerEntity);
-    LOG_DEBUG("[RtypeGameScene] Player position for popup: (" << pos.x << ", "
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Player position for popup: (" << pos.x << ", "
                                                               << pos.y << ")");
 
     if (!_assetsManager || !_assetsManager->fontManager) {
-        LOG_DEBUG("[RtypeGameScene] No assets manager for damage popup");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] No assets manager for damage popup");
         return;
     }
 
@@ -584,9 +583,9 @@ void RtypeGameScene::spawnDamagePopup(int damage) {
         VisualCueFactory::createDamagePopup(
             *_registry, sf::Vector2f(pos.x + 20.f, pos.y - 10.f), damage, font,
             sf::Color(255, 60, 60));
-        LOG_DEBUG("[RtypeGameScene] Damage popup created successfully");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Damage popup created successfully");
     } catch (const std::exception& e) {
-        LOG_DEBUG(
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI, 
             "[RtypeGameScene] Failed to create damage popup: " << e.what());
     }
 }

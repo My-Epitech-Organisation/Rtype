@@ -120,9 +120,9 @@ void GameEngine::update(float deltaTime) {
 }
 
 void GameEngine::shutdown() {
-    LOG_DEBUG("[GameEngine] Shutdown: Checking running state");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[GameEngine] Shutdown: Checking running state");
     if (!_running) {
-        LOG_DEBUG("[GameEngine] Already shut down, returning");
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[GameEngine] Already shut down, returning");
         return;
     }
     _running = false;
@@ -142,7 +142,7 @@ void GameEngine::shutdown() {
         std::lock_guard<std::mutex> lock(_eventMutex);
         _pendingEvents.clear();
     }
-    LOG_DEBUG("[GameEngine] Shutdown: Complete");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[GameEngine] Shutdown: Complete");
 }
 
 void GameEngine::setEventCallback(EventCallback callback) {

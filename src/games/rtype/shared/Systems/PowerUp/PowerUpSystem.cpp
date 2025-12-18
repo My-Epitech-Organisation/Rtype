@@ -33,7 +33,7 @@ void PowerUpSystem::update(ECS::Registry& registry, float deltaTime) {
             auto& cd = registry.getComponent<ShootCooldownComponent>(entity);
             cd.setCooldownTime(active.originalCooldown);
         }
-        LOG_DEBUG("[PowerUpSystem] Power-up expired for entity "
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine, "[PowerUpSystem] Power-up expired for entity "
                   << entity.id << " (" << static_cast<int>(active.type) << ")");
         registry.removeComponent<ActivePowerUpComponent>(entity);
     });

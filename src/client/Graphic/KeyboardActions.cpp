@@ -37,7 +37,7 @@ KeyboardActions::KeyboardActions() {
     for (unsigned int i = 0; i < sf::Joystick::Count; ++i) {
         if (sf::Joystick::isConnected(i)) {
             controllerFound = true;
-            LOG_INFO("[KeyboardActions] Controller detected (Joystick " +
+            LOG_INFO_CAT(::rtype::LogCategory::Input, "[KeyboardActions] Controller detected (Joystick " +
                      std::to_string(i) + ") - defaulting to Controller mode");
             this->_inputMode = InputMode::Controller;
             break;
@@ -45,7 +45,7 @@ KeyboardActions::KeyboardActions() {
     }
 
     if (!controllerFound) {
-        LOG_INFO(
+        LOG_INFO_CAT(::rtype::LogCategory::Input,
             "[KeyboardActions] No controller detected - defaulting to Keyboard "
             "mode");
         this->_inputMode = InputMode::Keyboard;
