@@ -8,9 +8,11 @@
     {
       "name": "vcpkg-base",
       "hidden": true,
+      "description": "vcpkg base preset: enables manifest mode and static library linkage for distribution of standalone executables without runtime dependencies.",
       "toolchainFile": "${sourceDir}/cmake/vcpkg-toolchain.cmake",
       "cacheVariables": {
-        "VCPKG_MANIFEST_MODE": "ON"
+        "VCPKG_MANIFEST_MODE": "ON",
+        "VCPKG_LIBRARY_LINKAGE": "static"
       }
     },
     {
@@ -57,11 +59,42 @@
     {
       "name": "linux-release",
       "displayName": "Linux Release",
+      "description": "Linux release with LTO enabled (CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON) for better runtime performance; increases build time and memory usage.",
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "BUILD_GRAPHICAL_TESTS": "OFF",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+      }
+    },
+    {
+      "name": "cpm-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-cpm",
+      "description": "CPM-only base: intentionally does not load the vcpkg toolchain.",
+      "cacheVariables": {
+        "RTYPE_FORCE_CPM": "ON"
+      }
+    },
+    {
+      "name": "linux-release-cpm",
+      "displayName": "Linux Release (CPM)",
+      "description": "Pure CPM build: no vcpkg toolchain loaded; uses build-cpm/.",
+      "inherits": "cpm-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
         "BUILD_GRAPHICAL_TESTS": "OFF"
+      }
+    },
+    {
+      "name": "linux-debug-cpm",
+      "displayName": "Linux Debug (CPM)",
+      "description": "Pure CPM build: no vcpkg toolchain loaded; uses build-cpm/.",
+      "inherits": "cpm-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
@@ -86,6 +119,14 @@
     {
       "name": "linux-release",
       "configurePreset": "linux-release"
+    },
+    {
+      "name": "linux-debug-cpm",
+      "configurePreset": "linux-debug-cpm"
+    },
+    {
+      "name": "linux-release-cpm",
+      "configurePreset": "linux-release-cpm"
     },
     {
       "name": "windows-debug",

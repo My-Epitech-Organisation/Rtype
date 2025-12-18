@@ -36,7 +36,11 @@ function(add_ecs_test TEST_PATH)
         GTest::gtest_main
     )
     target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    gtest_discover_tests(${TEST_NAME})
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(${TEST_NAME} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(${TEST_NAME})
+    endif()
 endfunction()
 
 # Create all test executables

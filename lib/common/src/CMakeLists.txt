@@ -1,5 +1,5 @@
 add_library(common INTERFACE)
-find_package(tomlplusplus CONFIG REQUIRED)
+rtype_find_tomlplusplus()
 
 target_include_directories(common INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/Logger

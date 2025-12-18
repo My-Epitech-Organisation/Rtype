@@ -16,7 +16,11 @@ if(BUILD_GRAPHICAL_TESTS)
     )
 
     include(GoogleTest)
-    gtest_discover_tests(test_client_app)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_client_app WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_client_app)
+    endif()
 
     add_executable(test_graphic test_graphic.cpp)
 
@@ -34,7 +38,11 @@ if(BUILD_GRAPHICAL_TESTS)
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_graphic)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_graphic WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_graphic)
+    endif()
 
     add_executable(test_graphic_systems test_systems.cpp)
 
@@ -53,7 +61,11 @@ if(BUILD_GRAPHICAL_TESTS)
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_graphic_systems)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_graphic_systems WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_graphic_systems)
+    endif()
 
     add_executable(test_scene_manager test_scene_manager.cpp)
 
@@ -71,7 +83,11 @@ if(BUILD_GRAPHICAL_TESTS)
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_scene_manager)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_scene_manager WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_scene_manager)
+    endif()
 
     # ==========================================================================
     # Stress Tests - Performance testing under heavy load
@@ -95,7 +111,11 @@ if(BUILD_GRAPHICAL_TESTS)
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_stress_rendering)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_stress_rendering WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_stress_rendering)
+    endif()
 
     # ECS component stress tests
     add_executable(test_stress_ecs test_stress_ecs.cpp)
@@ -114,7 +134,11 @@ if(BUILD_GRAPHICAL_TESTS)
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_stress_ecs)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_stress_ecs WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_stress_ecs)
+    endif()
 
     # Event system stress tests
     add_executable(test_stress_events test_stress_events.cpp)
@@ -134,7 +158,11 @@ if(BUILD_GRAPHICAL_TESTS)
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_stress_events)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_stress_events WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_stress_events)
+    endif()
 
     add_executable(test_entity_factory test_entity_factory.cpp)
 
@@ -153,7 +181,11 @@ if(BUILD_GRAPHICAL_TESTS)
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_entity_factory)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_entity_factory WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_entity_factory)
+    endif()
 
     add_executable(test_asset_managers test_asset_managers.cpp)
 
@@ -176,7 +208,11 @@ if(BUILD_GRAPHICAL_TESTS)
     target_include_directories(test_audio PRIVATE
         ${CMAKE_SOURCE_DIR}
     )
-    gtest_discover_tests(test_audio)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_audio WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_audio)
+    endif()
 
     add_executable(test_audio_more test_audio_more.cpp)
     target_link_libraries(test_audio_more PRIVATE
@@ -187,7 +223,11 @@ if(BUILD_GRAPHICAL_TESTS)
     target_include_directories(test_audio_more PRIVATE
         ${CMAKE_SOURCE_DIR}
     )
-    gtest_discover_tests(test_audio_more)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_audio_more WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_audio_more)
+    endif()
 
     add_executable(test_audio_branches test_audio_branches.cpp)
     target_link_libraries(test_audio_branches PRIVATE
@@ -198,7 +238,11 @@ if(BUILD_GRAPHICAL_TESTS)
     target_include_directories(test_audio_branches PRIVATE
         ${CMAKE_SOURCE_DIR}
     )
-    gtest_discover_tests(test_audio_branches)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_audio_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_audio_branches)
+    endif()
 
     add_executable(test_controller_rumble test_controller_rumble.cpp)
     target_link_libraries(test_controller_rumble PRIVATE
@@ -208,13 +252,21 @@ if(BUILD_GRAPHICAL_TESTS)
     target_include_directories(test_controller_rumble PRIVATE
         ${CMAKE_SOURCE_DIR}/src
     )
-    gtest_discover_tests(test_controller_rumble)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_controller_rumble WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_controller_rumble)
+    endif()
 
     target_include_directories(test_asset_managers PRIVATE
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_asset_managers)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_asset_managers WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_asset_managers)
+    endif()
 
     # UI Components tests (Rectangle, Text, Button)
     add_executable(test_ui_components test_ui_components.cpp)
@@ -232,7 +284,11 @@ if(BUILD_GRAPHICAL_TESTS)
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_ui_components)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_ui_components WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_ui_components)
+    endif()
 
     add_executable(test_accessibility_and_input test_accessibility_and_input.cpp)
 
@@ -250,7 +306,11 @@ if(BUILD_GRAPHICAL_TESTS)
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_accessibility_and_input)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_accessibility_and_input WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_accessibility_and_input)
+    endif()
 
     add_executable(test_input_handler test_input_handler.cpp)
 
@@ -267,7 +327,11 @@ if(BUILD_GRAPHICAL_TESTS)
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_input_handler)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_input_handler WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_input_handler)
+    endif()
 
     add_executable(test_pause_menu test_pause_menu.cpp)
 
@@ -284,7 +348,11 @@ if(BUILD_GRAPHICAL_TESTS)
         ${CMAKE_SOURCE_DIR}/src
     )
 
-    gtest_discover_tests(test_pause_menu)
+    if(WIN32 OR MSVC)
+        gtest_discover_tests(test_pause_menu WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    else()
+        gtest_discover_tests(test_pause_menu)
+    endif()
 
 endif()
 
@@ -303,4 +371,8 @@ target_include_directories(test_rtype_entity_factory PRIVATE
     ${CMAKE_SOURCE_DIR}/src
 )
 
-gtest_discover_tests(test_rtype_entity_factory)
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_rtype_entity_factory WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_rtype_entity_factory)
+endif()

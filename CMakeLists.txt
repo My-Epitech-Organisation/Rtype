@@ -35,6 +35,9 @@ option(BUILD_GRAPHICAL_TESTS "Build graphical tests" ON)
 option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 option(BUILD_DOCS "Build documentation (Doxygen + Docusaurus)" OFF)
 
+# Dependency management (vcpkg preferred, CPM fallback)
+include(${CMAKE_SOURCE_DIR}/cmake/rtype-dependencies.cmake)
+
 # Coverage configuration
 if(ENABLE_COVERAGE)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")

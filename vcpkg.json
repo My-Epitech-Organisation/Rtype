@@ -2,6 +2,12 @@
   "name" : "r-type",
   "version-string" : "1.0.0",
   "builtin-baseline" : "a11dd074dac3fa168aa8efb992cbb0220a3dc481",
+  "overrides": [
+    {
+      "name": "sfml",
+      "version": "3.0.2"
+    }
+  ],
   "dependencies" : [ {
     "name" : "asio",
     "version>=" : "1.28.0"

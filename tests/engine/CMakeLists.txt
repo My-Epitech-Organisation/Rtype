@@ -17,5 +17,9 @@ target_link_libraries(test_engine_factory PRIVATE
 )
 
 include(GoogleTest)
-gtest_discover_tests(test_engine_factory)
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_engine_factory WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_engine_factory)
+endif()
 
