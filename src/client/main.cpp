@@ -66,7 +66,7 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
                   noColor = true;
                   return rtype::ParseResult::Success;
               })
-        .option("-h", "--host", "host",
+        .option("-s", "--server", "server host",
                 "Server hostname or IP address (default: 127.0.0.1)",
                 [&config](std::string_view val) {
                     config.defaultServerHost = std::string(val);
