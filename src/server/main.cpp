@@ -67,11 +67,28 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
                   }
                   return rtype::ParseResult::Exit;
               })
-        .flag("-v", "--verbose", "Enable verbose debug output",
+        .flag("-v", "--verbose", "Enable verbose debug output for all categories",
               [config]() {
                   config->verbose = true;
+                  config->verboseCategories = rtype::LogCategory::All;
                   return rtype::ParseResult::Success;
               })
+        .option("-vc", "--verbose-category", "category",
+                "Enable verbose output for specific categories (main,network,game,ecs,input,audio,graphics,physics,ai,ui). Can be specified multiple times.",
+                [config](std::string_view val) {
+                    rtype::LogCategory cat = rtype::categoryFromString(val);
+                    if (cat == rtype::LogCategory::None) {
+                        LOG_ERROR("Unknown category: " << val);
+                        return rtype::ParseResult::Error;
+                    }
+                    config->verbose = true;
+                    if (config->verboseCategories == rtype::LogCategory::All) {
+                        config->verboseCategories = cat;
+                    } else {
+                        config->verboseCategories |= cat;
+                    }
+                    return rtype::ParseResult::Success;
+                })
         .flag("-nc", "--no-color", "Disable colored console output",
               [config]() {
                   config->noColor = true;
@@ -193,6 +210,7 @@ int main(int argc, char** argv) {
 
         if (config->verbose) {
             logger.setLogLevel(rtype::LogLevel::Debug);
+            logger.setEnabledCategories(config->verboseCategories);
         } else {
             logger.setLogLevel(rtype::LogLevel::Info);
         }
