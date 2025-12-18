@@ -12,6 +12,7 @@ add_executable(test_integration
     ${CMAKE_SOURCE_DIR}/src/server/clientManager/ClientManager.cpp
     test_network_disconnects.cpp
     test_network_packet_loss.cpp
+    test_event_manager_integration.cpp
 )
 
 target_link_libraries(test_integration

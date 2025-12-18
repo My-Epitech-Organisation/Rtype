@@ -25,6 +25,8 @@ set(ECS_TESTS
     traits/test_component_traits
     # Signal tests
     signal/test_signal_dispatcher
+    # EventManager tests
+    test_event_manager
 )
 
 # Function to create a test executable with common configuration
