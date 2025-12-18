@@ -72,6 +72,11 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
                   config->verbose = true;
                   return rtype::ParseResult::Success;
               })
+        .flag("-nc", "--no-color", "Disable colored console output",
+              [config]() {
+                  config->noColor = true;
+                  return rtype::ParseResult::Success;
+              })
         .option("-c", "--config", "path",
                 "Path to configuration directory (default: config/server)",
                 [config](std::string_view val) {
@@ -116,7 +121,7 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
  */
 static void printBanner(const ServerConfig& config) {
     LOG_INFO(
-        "==================================\n"
+        "\n==================================\n"
         << "    R-Type Server\n"
         << "==================================\n"
         << std::format("  Config Dir:  {}\n", config.configPath)
@@ -184,15 +189,34 @@ int main(int argc, char** argv) {
             parser->clear();
         }
 
+        auto& logger = rtype::Logger::instance();
+
+        if (config->verbose) {
+            logger.setLogLevel(rtype::LogLevel::Debug);
+        } else {
+            logger.setLogLevel(rtype::LogLevel::Info);
+        }
+
+        if (config->noColor) {
+            logger.setColorEnabled(false);
+        }
+        const auto logFile =
+            rtype::Logger::generateLogFilename("server_session");
+        if (logger.setLogFile(logFile, false)) {
+            LOG_INFO("[Main] Logging to file: " << logFile.string());
+        } else {
+            LOG_WARNING("[Main] Failed to open log file: " << logFile.string());
+        }
+
         printBanner(*config);
         setupSignalHandlers();
         return runServer(*config, ServerSignals::shutdown(),
                          ServerSignals::reloadConfig());
     } catch (const std::exception& e) {
-        LOG_ERROR("[Main] Fatal error: " << std::string(e.what()));
+        LOG_FATAL("[Main] Fatal error: " << std::string(e.what()));
         return 1;
     } catch (...) {
-        LOG_ERROR("[Main] Unknown fatal error occurred");
+        LOG_FATAL("[Main] Unknown fatal error occurred");
         return 1;
     }
 }
