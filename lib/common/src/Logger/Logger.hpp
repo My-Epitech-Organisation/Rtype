@@ -16,6 +16,7 @@
 #include <sstream>
 #include <string>
 
+#include "ColorFormatter.hpp"
 #include "FileWriter.hpp"
 #include "LogLevel.hpp"
 #include "Timestamp.hpp"
@@ -88,6 +89,38 @@ class Logger {
     [[nodiscard]] LogLevel getLogLevel() const noexcept { return _logLevel; }
 
     /**
+     * @brief Generate a timestamped log filename
+     * @param prefix Prefix for the log file (e.g., "server", "client")
+     * @param directory Directory where to create the log file (default: "logs")
+     * @return Path to the log file with timestamp
+     */
+    static std::filesystem::path generateLogFilename(
+        const std::string& prefix = "session",
+        const std::filesystem::path& directory = "logs") {
+        const auto now = std::chrono::system_clock::now();
+        const auto time = std::chrono::system_clock::to_time_t(now);
+
+        std::tm timeInfo{};
+        RTYPE_LOCALTIME(&time, &timeInfo);
+
+        const std::string filename = std::format(
+            "{}_{:04d}-{:02d}-{:02d}_{:02d}-{:02d}-{:02d}.log",
+            prefix,
+            timeInfo.tm_year + 1900,
+            timeInfo.tm_mon + 1,
+            timeInfo.tm_mday,
+            timeInfo.tm_hour,
+            timeInfo.tm_min,
+            timeInfo.tm_sec);
+
+        if (!std::filesystem::exists(directory)) {
+            std::filesystem::create_directories(directory);
+        }
+
+        return directory / filename;
+    }
+
+    /**
      * @brief Enable file logging
      * @param filepath Path to the log file
      * @param append If true, append to existing file; otherwise overwrite
@@ -140,6 +173,28 @@ class Logger {
      */
     virtual void error(const std::string& msg) { log(LogLevel::Error, msg); }
 
+    /**
+     * @brief Log a fatal error message
+     * @param msg The message to log
+     */
+    virtual void fatal(const std::string& msg) { log(LogLevel::Fatal, msg); }
+
+    /**
+     * @brief Enable or disable colored console output
+     * @param enabled true to enable colors, false to disable
+     */
+    void setColorEnabled(bool enabled) noexcept {
+        ColorFormatter::setEnabled(enabled);
+    }
+
+    /**
+     * @brief Check if colored console output is enabled
+     * @return true if colors are enabled
+     */
+    [[nodiscard]] bool isColorEnabled() const noexcept {
+        return ColorFormatter::isEnabled();
+    }
+
    protected:
     mutable std::mutex _mutex;
     LogLevel _logLevel{LogLevel::Debug};
@@ -160,12 +215,21 @@ class Logger {
         if (level < _logLevel) {
             return;
         }
+
         const std::string formattedMsg =
             std::format("[{}] [{}] {}", Timestamp::now(), toString(level), msg);
 
+        const std::string coloredMsg = std::format(
+            "{}[{}] [{}] {}{}",
+            ColorFormatter::getColor(level),
+            Timestamp::now(),
+            toString(level),
+            msg,
+            ColorFormatter::getReset());
+
         std::ostream& consoleStream =
             (level >= LogLevel::Warning) ? std::cerr : std::cout;
-        consoleStream << formattedMsg << '\n';
+        consoleStream << coloredMsg << '\n';
 
         _fileWriter.write(formattedMsg);
     }
