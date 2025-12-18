@@ -66,14 +66,21 @@ NetworkClient::NetworkClient(const Config& config)
 }
 
 NetworkClient::~NetworkClient() {
+    if (isConnected()) {
+        disconnect();
+    }
+
+    if (socket_) {
+        socket_->cancel();
+        ioContext_.poll();
+    }
+
+    ioContext_.stop();
     networkThreadRunning_.store(false, std::memory_order_release);
     if (networkThread_.joinable()) {
         networkThread_.join();
     }
 
-    if (isConnected()) {
-        disconnect();
-    }
     if (socket_) {
         socket_->close();
     }
@@ -81,11 +88,23 @@ NetworkClient::~NetworkClient() {
 
 bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
     if (!connection_.isDisconnected()) {
+        LOG_DEBUG("[NetworkClient] Cannot connect: not disconnected");
         return false;
+    }
+
+    connection_.reset();
+
+    if (socket_) {
+        socket_->cancel();
+        socket_->close();
+        socket_ = network::createAsyncSocket(ioContext_.get());
     }
 
     auto bindResult = socket_->bind(0);
     if (!bindResult) {
+        LOG_ERROR("[NetworkClient] Failed to bind socket");
+        socket_->close();
+        socket_ = network::createAsyncSocket(ioContext_.get());
         return false;
     }
 
@@ -95,6 +114,12 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
 
     auto result = connection_.connect();
     if (!result) {
+        LOG_ERROR("[NetworkClient] Failed to initiate connection");
+        socket_->cancel();
+        socket_->close();
+        socket_ = network::createAsyncSocket(ioContext_.get());
+        serverEndpoint_.reset();
+        connection_.reset();
         return false;
     }
 
@@ -115,6 +140,12 @@ void NetworkClient::disconnect() {
 
     connection_.reset();
     serverEndpoint_.reset();
+
+    if (socket_) {
+        socket_->cancel();
+        socket_->close();
+        socket_ = network::createAsyncSocket(ioContext_.get());
+    }
 }
 
 bool NetworkClient::isConnected() const noexcept {
@@ -231,11 +262,12 @@ void NetworkClient::queueCallback(std::function<void()> callback) {
 }
 
 void NetworkClient::startReceive() {
-    if (receiveInProgress_ || !socket_->isOpen()) {
+    if (receiveInProgress_.load(std::memory_order_acquire) ||
+        !socket_->isOpen()) {
         return;
     }
 
-    receiveInProgress_ = true;
+    receiveInProgress_.store(true, std::memory_order_release);
     receiveBuffer_->resize(network::kMaxPacketSize);
 
     socket_->asyncReceiveFrom(receiveBuffer_, receiveSender_,
@@ -245,7 +277,7 @@ void NetworkClient::startReceive() {
 }
 
 void NetworkClient::handleReceive(network::Result<std::size_t> result) {
-    receiveInProgress_ = false;
+    receiveInProgress_.store(false, std::memory_order_release);
 
     if (result) {
         std::size_t bytesReceived = result.value();

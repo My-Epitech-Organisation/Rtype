@@ -17,12 +17,14 @@ The Entity Component System (ECS) is an architectural pattern that separates dat
 ## Creating Entities
 
 ```cpp
-#include "rtype/engine/Registry.hpp"
+#include "rtype/ecs.hpp"
+
+using namespace ECS;
 
 Registry registry;
 
 // Create a new entity
-Entity player = registry.spawn_entity();
+Entity player = registry.spawnEntity();
 ```
 
 ## Adding Components
@@ -36,11 +38,8 @@ struct PositionComponent {
     float y;
 };
 
-// Register the component type
-registry.register_component<PositionComponent>();
-
-// Add component to entity
-registry.emplace_component<PositionComponent>(player, 100.0f, 200.0f);
+// Add component to entity (components are auto-registered on first use)
+registry.emplaceComponent<PositionComponent>(player, 100.0f, 200.0f);
 ```
 
 ## Creating Systems
@@ -52,11 +51,11 @@ class MovementSystem {
 public:
     void update(Registry& registry, float deltaTime) {
         // Get all entities with Position and Velocity
-        auto entities = registry.get_entities_with<PositionComponent, VelocityComponent>();
+        auto view = registry.view<PositionComponent, VelocityComponent>();
 
-        for (auto entity : entities) {
-            auto& pos = registry.get_component<PositionComponent>(entity);
-            auto& vel = registry.get_component<VelocityComponent>(entity);
+        for (auto entity : view) {
+            auto& pos = registry.getComponent<PositionComponent>(entity);
+            auto& vel = registry.getComponent<VelocityComponent>(entity);
 
             // Update position based on velocity
             pos.x += vel.x * deltaTime;
@@ -70,30 +69,30 @@ public:
 
 ```cpp
 // Check if entity has a component
-if (registry.has_component<PositionComponent>(entity)) {
-    auto& pos = registry.get_component<PositionComponent>(entity);
+if (registry.hasComponent<PositionComponent>(entity)) {
+    auto& pos = registry.getComponent<PositionComponent>(entity);
     // Use position...
 }
 
 // Remove a component
-registry.remove_component<PositionComponent>(entity);
+registry.removeComponent<PositionComponent>(entity);
 
 // Kill an entity
-registry.kill_entity(entity);
+registry.killEntity(entity);
 ```
 
 ## Example: Creating a Spaceship
 
 ```cpp
 // Create entity
-Entity spaceship = registry.spawn_entity();
+Entity spaceship = registry.spawnEntity();
 
 // Add components
-registry.emplace_component<PositionComponent>(spaceship, 400.0f, 300.0f);
-registry.emplace_component<VelocityComponent>(spaceship, 0.0f, 0.0f);
-registry.emplace_component<SpriteComponent>(spaceship, "spaceship.png");
-registry.emplace_component<HealthComponent>(spaceship, 100);
-registry.emplace_component<PlayerControlledComponent>(spaceship);
+registry.emplaceComponent<PositionComponent>(spaceship, 400.0f, 300.0f);
+registry.emplaceComponent<VelocityComponent>(spaceship, 0.0f, 0.0f);
+registry.emplaceComponent<SpriteComponent>(spaceship, "spaceship.png");
+registry.emplaceComponent<HealthComponent>(spaceship, 100);
+registry.emplaceComponent<PlayerControlledComponent>(spaceship);
 ```
 
 ## Best Practices

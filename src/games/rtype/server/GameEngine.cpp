@@ -21,6 +21,7 @@
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
+#include "Logger/Macros.hpp"
 namespace rtype::games::rtype::server {
 
 GameEngine::GameEngine(std::shared_ptr<ECS::Registry> registry)
@@ -57,6 +58,8 @@ bool GameEngine::initialize() {
     spawnerConfig.weightStationary = 1.2F;
     spawnerConfig.weightChase = 1.5F;
     spawnerConfig.stationarySpawnInset = GameConfig::STATIONARY_SPAWN_INSET;
+    spawnerConfig.maxWaves = 1;
+    spawnerConfig.enemiesPerWave = 5;
     _spawnerSystem =
         std::make_unique<SpawnerSystem>(eventEmitter, spawnerConfig);
     ProjectileSpawnConfig projConfig{};
@@ -117,7 +120,9 @@ void GameEngine::update(float deltaTime) {
 }
 
 void GameEngine::shutdown() {
+    LOG_DEBUG("[GameEngine] Shutdown: Checking running state");
     if (!_running) {
+        LOG_DEBUG("[GameEngine] Already shut down, returning");
         return;
     }
     _running = false;
@@ -137,6 +142,7 @@ void GameEngine::shutdown() {
         std::lock_guard<std::mutex> lock(_eventMutex);
         _pendingEvents.clear();
     }
+    LOG_DEBUG("[GameEngine] Shutdown: Complete");
 }
 
 void GameEngine::setEventCallback(EventCallback callback) {
@@ -217,6 +223,9 @@ engine::ProcessedEvent GameEngine::processEvent(
         case engine::GameEventType::PowerUpApplied:
             result.valid = true;
             break;
+        case engine::GameEventType::GameOver:
+            result.valid = false;
+            break;
     }
 
     return result;
@@ -256,10 +265,14 @@ uint32_t GameEngine::spawnProjectile(uint32_t playerNetworkId, float playerX,
 }
 
 void GameEngine::emitEvent(const engine::GameEvent& event) {
-    std::lock_guard<std::mutex> lock(_eventMutex);
-    _pendingEvents.push_back(event);
-    if (_eventCallback) {
-        _eventCallback(event);
+    EventCallback callbackCopy;
+    {
+        std::lock_guard<std::mutex> lock(_eventMutex);
+        _pendingEvents.push_back(event);
+        callbackCopy = _eventCallback;
+    }
+    if (callbackCopy) {
+        callbackCopy(event);
     }
 }
 

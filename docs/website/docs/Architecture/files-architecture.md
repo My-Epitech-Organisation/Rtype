@@ -125,11 +125,13 @@ r-type/
 
   ```text
   scripts/
-    build_debug.sh
-    build_release.sh
-    run_client.sh
-    run_server.sh
-    format_all.sh           # optional, clang-format wrapper
+    setup-vcpkg.sh          # Bootstrap vcpkg (first-time setup)
+    run_client.sh           # Launch the client
+    run_server.sh           # Launch the server
+    run_quality_checks.sh   # Run static analysis and linting
+    generate_docs.sh        # Generate documentation (deprecated, use CMake)
+    coverage.sh             # Generate code coverage reports
+    serve_docs.sh           # Serve documentation locally
   ```
 
 * **`tests/`**
@@ -196,12 +198,126 @@ src/engine/ecs/Registry.cpp           # Implementation
 
 ---
 
-## 2. Source code layout (`src/`)
+## 2. Core Libraries (`lib/`)
+
+```text
+lib/
+├── ecs/           # Entity Component System
+├── engine/        # Game engine utilities
+├── engine_core/   # Core engine functionality
+├── network/       # Network layer (UDP, Protocol, Serialization)
+└── common/        # Common utilities (ArgParser, Logger)
+```
+
+### 2.1. `lib/ecs/` – Entity Component System (lowest level)
+
+This directory implements the **ECS architecture**.
+
+**Header placement strategy**: Implementation headers (`.hpp` files with corresponding `.cpp`)
+are **co-located** with their source files for better cohesion. Only abstract interfaces
+are exposed in `include/rtype/`.
+
+```text
+lib/ecs/
+  src/
+    core/
+      Entity.hpp          # Entity class
+      Entity.cpp
+      Registry/
+        Registry.hpp      # Main ECS registry
+        Registry.cpp
+    storage/
+      SparseSet.hpp       # Component storage
+    view/
+      View.hpp            # Entity queries
+    signal/
+      SignalDispatcher.hpp # Component callbacks
+    CMakeLists.txt
+```
+
+* Compiled into library: **`rtype_ecs`**.
+* Responsibilities:
+
+  * `Entity`/`Component` management.
+  * Component storage (sparse sets).
+  * Entity queries and views.
+  * Signal/observer pattern for component lifecycle.
+* **Does not know anything about R-Type**, networking, or rendering libraries.
+
+> Dependency rule: `rtype_ecs` is the **base layer** – nothing inside `lib/ecs/` depends on other project modules.
+
+---
+
+### 2.2. `lib/network/` – Network library
+
+**Header placement**: Implementation headers co-located with `.cpp` files.
+
+```text
+lib/network/
+  src/
+    UdpSocket.hpp         # UDP socket wrapper
+    UdpSocket.cpp
+    Packet.hpp            # Packet structure
+    Packet.cpp
+    Serializer.hpp        # Binary serialization
+    Serializer.cpp
+    protocol/
+      OpCode.hpp          # Protocol operation codes
+      Header.hpp          # Packet header (16 bytes)
+      Payloads.hpp        # Payload structures
+      Validator.hpp       # Packet validation
+    core/
+      ByteOrder.hpp       # Endianness conversion
+    CMakeLists.txt
+```
+
+* Compiled into library: **`rtype_network`**.
+* Responsibilities:
+
+  * UDP socket abstraction (cross-platform).
+  * RTGP protocol implementation (RFC RTGP v1.2.0).
+  * Packet serialization/deserialization.
+  * Network byte order conversion.
+  * Packet validation and security.
+* **Depends on**:
+
+  * `rtype_common` (for logging and error handling).
+* Used by:
+
+  * `r-type_server` (server executable).
+  * `r-type_client` (client executable).
+
+> Dependency rule: network is **above common**, but **below game logic**.
+
+---
+
+### 2.3. `lib/common/` – Common utilities
+
+```text
+lib/common/
+  src/
+    ArgParser/
+      ArgParser.hpp       # Command-line argument parser
+      NumberParser.hpp    # Numeric parsing utilities
+    Logger.hpp            # Logging system
+    Logger.cpp
+    CMakeLists.txt
+```
+
+* Compiled into library: **`rtype_common`**.
+* Responsibilities:
+
+  * Command-line argument parsing.
+  * Logging system.
+  * Common utilities shared across modules.
+* No dependencies on other project libraries.
+
+---
+
+## 3. Application Code (`src/`)
 
 ```text
 src/
-├── engine/
-├── network/
 ├── games/
 │   └── rtype/
 │       ├── shared/
@@ -211,77 +327,9 @@ src/
 └── client/
 ```
 
-### 2.1. `src/engine/` – core engine & ECS (lowest level)
-
-This directory implements the **engine core** and ECS.
-
-**Header placement strategy**: Implementation headers (`.hpp` files with corresponding `.cpp`)
-are **co-located** with their source files for better cohesion. Only abstract interfaces
-are exposed in `include/rtype/engine/`.
-
-```text
-src/engine/
-  ecs/
-    Entity.hpp          # Implementation header (co-located)
-    Entity.cpp
-    Registry.hpp        # Implementation header (co-located)
-    Registry.cpp
-    CMakeLists.txt
-  core/
-    Time.hpp            # Implementation header (co-located)
-    Time.cpp
-    Logger.cpp
-    Config.cpp
-    CMakeLists.txt
-```
-
-* Compiled into library: **`rtype_engine`**.
-* Responsibilities:
-
-  * `Entity`/`Component`/`System` primitives.
-  * Engine loop helpers, time management.
-  * Logging, config loading, basic utilities.
-* **Does not know anything about R-Type**, networking, or rendering libraries.
-
-> Dependency rule: `rtype_engine` is the **base layer** – nothing inside `src/engine/` depends on other project modules.
-
 ---
 
-### 2.2. `src/network/` – shared network library
-
-**Header placement**: Implementation headers co-located with `.cpp` files.
-
-```text
-src/network/
-  UdpSocket.hpp         # Implementation header (co-located)
-  UdpSocket.cpp
-  Packet.hpp            # Implementation header (co-located)
-  Packet.cpp
-  Serializer.hpp        # Implementation header (co-located)
-  Serializer.cpp
-  CMakeLists.txt
-```
-
-* Compiled into library: **`rtype_network`**.
-* Responsibilities:
-
-  * UDP socket wrappers (and optional TCP if justified).
-  * Packet structure, (de)serialization of messages.
-  * Definition of message types (e.g. `PlayerInput`, `EntitySpawn`, `EntityUpdate`, etc.).
-* **Depends on**:
-
-  * `rtype_engine` (for logging, maybe time, basic types).
-* Used by:
-
-  * `r-type_server` (server executable).
-  * `r-type_client` (client executable).
-  * Game-specific logic in `games/rtype/{shared,server,client}`.
-
-> Dependency rule: network is **above engine**, but **below game logic**.
-
----
-
-### 2.3. `src/games/rtype/` – game module (R-Type)
+### 3.1. `src/games/rtype/` – game module (R-Type)
 
 The game module R-Type is split into three parts:
 
@@ -292,7 +340,7 @@ src/games/rtype/
   client/     # rendering & input logic for the client
 ```
 
-#### 2.3.1. `src/games/rtype/shared/`
+#### 3.1.1. `src/games/rtype/shared/`
 
 **Header placement**: Shared components header co-located in `shared/`.
 

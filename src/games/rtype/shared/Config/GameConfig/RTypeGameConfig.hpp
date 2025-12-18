@@ -81,9 +81,14 @@ struct TexturesConfig {
     std::string Player;
     std::string Enemy;
     std::string background;
+    std::string sun;
     std::string planet1;
     std::string planet2;
     std::string planet3;
+    std::string bigAsteroids;
+    std::string smallAsteroids;
+    std::string fstPlanAsteroids;
+    std::string sndPlanAsteroids;
     std::string astroVessel;
     std::string missileLaser;
 

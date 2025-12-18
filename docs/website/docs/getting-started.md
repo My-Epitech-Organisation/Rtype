@@ -10,31 +10,65 @@ This guide will help you set up your development environment and build the R-Typ
 
 Before you begin, ensure you have the following installed:
 
-- **CMake** (version 3.20 or higher)
-- **C++ Compiler** (GCC 11+, Clang 14+, or MSVC 2022)
+- **CMake** (version 3.19 or higher)
+- **Ninja** (build system)
+- **C++ Compiler** with C++20 support (GCC 11+, Clang 14+, or MSVC 2022)
 - **Git**
+
+**Optional (for documentation):**
 - **Doxygen** (for API documentation)
-- **Node.js** (for web documentation)
+- **Node.js** v20+ (for web documentation)
 
 ## Clone the Repository
 
 ```bash
-git clone https://github.com/My-Epitech-Organisation/Rtype.git
-cd R-Type
+git clone --recursive https://github.com/My-Epitech-Organisation/Rtype.git
+cd Rtype
+```
+
+> **Note:** The `--recursive` flag is required to fetch the vcpkg submodule.
+
+## Setup vcpkg (first time only)
+
+```bash
+./scripts/setup-vcpkg.sh
+```
+
+This script initializes vcpkg and bootstraps it automatically.
+
+**Alternative:** If you have your own vcpkg installation, set the `VCPKG_ROOT` environment variable:
+```bash
+export VCPKG_ROOT=/path/to/your/vcpkg
 ```
 
 ## Build the Project
 
-### Debug Build
+### Configure
 
 ```bash
-./scripts/build_debug.sh
+# Linux Debug
+cmake --preset linux-debug
+
+# Linux Release
+cmake --preset linux-release
+
+# Windows Debug (MSVC)
+cmake --preset windows-debug
+
+# Windows Release (MSVC)
+cmake --preset windows-release
 ```
 
-### Release Build
+### Build
 
 ```bash
-./scripts/build_release.sh
+cmake --build build
+```
+
+### Run Tests
+
+```bash
+ctest --test-dir build --output-on-failure
 ```
 
 ## Run the Application
@@ -56,12 +90,21 @@ cd R-Type
 Configuration files are located in the `config/` directory:
 
 - `config/server/` - Server configuration
-  - `server.toml` - Network and server settings
+  - `server.toml` - Network settings (port, max players, etc.)
   - `gameplay.toml` - Game rules and mechanics
+  - `config.toml` - General server configuration
 
 - `config/client/` - Client configuration
-  - `video.toml` - Graphics settings
-  - `controls.json` - Input mappings
+  - `video.toml` - Graphics settings (resolution, fullscreen, vsync)
+  - `controls.json` - Input mappings (key bindings, gamepad)
+  - `client.toml` - General client configuration
+
+- `config/game/` - Game entity configurations
+  - `enemies.toml` - Enemy types and properties
+  - `players.toml` - Player ship configurations
+  - `powerups.toml` - Power-up definitions
+  - `projectiles.toml` - Projectile configurations
+  - `levels/` - Level and wave definitions
 
 ## Running Tests
 
@@ -76,7 +119,7 @@ To generate both Doxygen and Docusaurus documentation:
 
 ```bash
 # Configure CMake with documentation enabled
-cmake -S . -B build -DBUILD_DOCS=ON
+cmake --preset linux-debug -DBUILD_DOCS=ON
 
 # Generate complete documentation
 cmake --build build --target docs
@@ -88,6 +131,8 @@ To view the documentation with live reload:
 cmake --build build --target docs-serve
 ```
 
+This will start a dev server at `http://localhost:3000`
+
 Or manually with npm:
 
 ```bash
@@ -95,6 +140,13 @@ cd docs/website
 npm install
 npm start
 ```
+
+### Available Documentation Targets
+
+- `docs` - Generate complete documentation (Doxygen + Docusaurus)
+- `docs-doxygen` - Generate API reference only
+- `docs-serve` - Start Docusaurus dev server
+- `docs-build` - Build production documentation
 
 ## Next Steps
 

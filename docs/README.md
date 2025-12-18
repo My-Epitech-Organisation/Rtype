@@ -31,24 +31,37 @@ Open your browser to `http://localhost:3000`
 
 ### Generate Complete Documentation
 
-Run the documentation generation script to build both Doxygen and Docusaurus:
+Build both Doxygen and Docusaurus documentation using CMake:
 
 ```bash
-./generate-docs.sh
+# Configure with documentation enabled
+cmake --preset linux-debug -DBUILD_DOCS=ON
+
+# Generate all documentation (Doxygen + Docusaurus)
+cmake --build build --target docs
 ```
 
 This will:
 1. Generate Doxygen API documentation from C++ source code
-2. Copy Doxygen HTML output to Docusaurus static folder
-3. Build the complete Docusaurus site
+2. Install npm dependencies for Docusaurus
+3. Copy Doxygen HTML output to Docusaurus static folder
 
 ### Generate Only Doxygen Documentation
 
 ```bash
-doxygen Doxyfile
+cmake --preset linux-debug -DBUILD_DOCS=ON
+cmake --build build --target docs-doxygen
 ```
 
-Output will be in `doxygen/html/index.html`
+Output will be in `build/docs/doxygen/html/index.html`
+
+### Start Development Server
+
+```bash
+cmake --build build --target docs-serve
+```
+
+This starts Docusaurus dev server at `http://localhost:3000` with live reload.
 
 ## Documentation Technologies
 
@@ -71,8 +84,15 @@ Output will be in `doxygen/html/index.html`
 The two documentation systems are integrated:
 - Doxygen generates API documentation from C++ comments
 - Docusaurus serves as the main documentation portal
-- The `generate-docs.sh` script copies Doxygen output to `website/static/api/`
+- CMake build targets handle copying Doxygen output to `website/static/api/`
 - Docusaurus navigation includes a link to `/api` for the API reference
+
+## Available CMake Targets
+
+- `docs` - Generate complete documentation (Doxygen + Docusaurus build)
+- `docs-doxygen` - Generate Doxygen API reference only
+- `docs-serve` - Start Docusaurus dev server with live reload
+- `docs-build` - Build production-ready static site
 
 ## Writing Documentation
 

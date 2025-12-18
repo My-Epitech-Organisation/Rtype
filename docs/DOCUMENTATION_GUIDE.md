@@ -36,7 +36,7 @@ npm install
 
 From project root:
 ```bash
-cmake -S . -B build -DBUILD_DOCS=ON
+cmake --preset linux-debug -DBUILD_DOCS=ON
 cmake --build build --target docs-serve
 ```
 
@@ -46,27 +46,29 @@ This opens `http://localhost:3000` with live reload.
 
 From project root:
 ```bash
-cmake -S . -B build -DBUILD_DOCS=ON
+cmake --preset linux-debug -DBUILD_DOCS=ON
 cmake --build build --target docs-doxygen
 ```
+
+Output will be in `build/docs/doxygen/html/index.html`
 
 #### 3. Generate Complete Documentation
 
 From project root (recommended):
 ```bash
-cmake -S . -B build -DBUILD_DOCS=ON
+cmake --preset linux-debug -DBUILD_DOCS=ON
 cmake --build build --target docs
 ```
 
 This will:
 - Generate Doxygen API documentation
-- Install Docusaurus dependencies
+- Install Docusaurus dependencies (if not already installed)
 - Copy Doxygen output to Docusaurus static folder
 
 #### 4. Build Production Documentation
 
 ```bash
-cmake -S . -B build -DBUILD_DOCS=ON
+cmake --preset linux-release -DBUILD_DOCS=ON
 cmake --build build --target docs-build
 ```
 

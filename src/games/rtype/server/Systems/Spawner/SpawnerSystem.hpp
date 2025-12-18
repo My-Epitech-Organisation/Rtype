@@ -46,6 +46,9 @@ struct SpawnerConfig {
     float powerUpMinInterval = 8.0F;
     float powerUpMaxInterval = 14.0F;
     float powerUpSpeed = 70.0F;
+
+    std::size_t maxWaves = 1;  // 0 = infinite waves
+    std::size_t enemiesPerWave = 5;
 };
 
 /**
@@ -74,6 +77,22 @@ class SpawnerSystem : public ::rtype::engine::ASystem {
      */
     [[nodiscard]] std::size_t getEnemyCount() const noexcept {
         return _enemyCount;
+    }
+
+    /**
+     * @brief Get the current wave number
+     * @return Current wave (starts at 1)
+     */
+    [[nodiscard]] std::size_t getCurrentWave() const noexcept {
+        return _currentWave;
+    }
+
+    /**
+     * @brief Check if all waves are completed
+     * @return true if maxWaves is set and reached
+     */
+    [[nodiscard]] bool isAllWavesCompleted() const noexcept {
+        return _config.maxWaves > 0 && _currentWave > _config.maxWaves;
     }
 
    private:
@@ -106,6 +125,9 @@ class SpawnerSystem : public ::rtype::engine::ASystem {
     float _nextPowerUpSpawnTime = 0.0F;
     std::size_t _enemyCount = 0;
     uint32_t _nextNetworkId = 1000;
+    std::size_t _currentWave = 1;
+    std::size_t _enemiesSpawnedThisWave = 0;
+    bool _gameOverEmitted = false;
 
     std::mt19937 _rng;
     std::uniform_real_distribution<float> _spawnTimeDist;

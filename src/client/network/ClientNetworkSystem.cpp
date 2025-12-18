@@ -328,38 +328,48 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
     }
 
     auto it = networkIdToEntity_.find(event.entityId);
-    if (it != networkIdToEntity_.end()) {
-        ECS::Entity entity = it->second;
-        if (registry_->isAlive(entity)) {
-            if (registry_->hasComponent<
-                    rtype::games::rtype::shared::HealthComponent>(entity)) {
-                auto& health = registry_->getComponent<
-                    rtype::games::rtype::shared::HealthComponent>(entity);
-                previousHealth = health.current;
-                health.current = event.current;
-                health.max = event.max;
-            } else {
-                registry_->emplaceComponent<
-                    rtype::games::rtype::shared::HealthComponent>(
-                    entity, event.current, event.max);
-            }
-
-            if (previousHealth.has_value() &&
-                previousHealth.value() > event.current &&
-                registry_->hasComponent<rtype::games::rtype::shared::Position>(
-                    entity)) {
-                const auto& pos =
-                    registry_
-                        ->getComponent<rtype::games::rtype::shared::Position>(
-                            entity);
-                games::rtype::client::VisualCueFactory::createFlash(
-                    *registry_, {pos.x, pos.y}, sf::Color(255, 80, 80), 70.f,
-                    0.25f, 12);
-            }
-        }
-    } else {
+    if (it == networkIdToEntity_.end()) {
         LOG_DEBUG("[ClientNetworkSystem] Entity "
-                  << event.entityId << " not found in networkIdToEntity_ map");
+                  << event.entityId
+                  << " not found in networkIdToEntity_ map, ignoring health");
+        lastKnownHealth_.erase(event.entityId);
+        return;
+    }
+
+    ECS::Entity entity = it->second;
+
+    if (!registry_->isAlive(entity)) {
+        LOG_DEBUG("[ClientNetworkSystem] Entity "
+                  << event.entityId << " not alive, ignoring health");
+        networkIdToEntity_.erase(it);
+        lastKnownHealth_.erase(event.entityId);
+        return;
+    }
+
+    if (registry_->hasComponent<rtype::games::rtype::shared::HealthComponent>(
+            entity)) {
+        auto& health =
+            registry_
+                ->getComponent<rtype::games::rtype::shared::HealthComponent>(
+                    entity);
+        previousHealth = health.current;
+        health.current = event.current;
+        health.max = event.max;
+    } else {
+        registry_
+            ->emplaceComponent<rtype::games::rtype::shared::HealthComponent>(
+                entity, event.current, event.max);
+    }
+
+    if (previousHealth.has_value() && previousHealth.value() > event.current &&
+        registry_->hasComponent<rtype::games::rtype::shared::Position>(
+            entity)) {
+        const auto& pos =
+            registry_->getComponent<rtype::games::rtype::shared::Position>(
+                entity);
+        games::rtype::client::VisualCueFactory::createFlash(
+            *registry_, {pos.x, pos.y}, sf::Color(255, 80, 80), 70.f, 0.25f,
+            12);
     }
 
     lastKnownHealth_[event.entityId] = {event.current, event.max};

@@ -8,6 +8,7 @@
 #ifndef SRC_SERVER_NETWORK_NETWORKSERVER_HPP_
 #define SRC_SERVER_NETWORK_NETWORKSERVER_HPP_
 
+#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -408,11 +409,13 @@ class NetworkServer {
 
     std::unordered_map<std::uint32_t, std::string> userIdToKey_;
 
+    std::vector<std::uint32_t> freeUserIds_;
+
     std::uint32_t nextUserIdCounter_{1};
 
     std::shared_ptr<network::Buffer> receiveBuffer_;
     std::shared_ptr<network::Endpoint> receiveSender_;
-    bool receiveInProgress_{false};
+    std::atomic<bool> receiveInProgress_{false};
 
     mutable std::mutex callbackMutex_;
     std::queue<std::function<void()>> callbackQueue_;

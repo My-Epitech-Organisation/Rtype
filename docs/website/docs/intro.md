@@ -30,16 +30,22 @@ Choose your path:
 
 ```
 R-Type/
-├── src/           # Source code
-│   ├── engine/    # Core engine (ECS, Time)
-│   ├── network/   # Network layer (UDP, Serialization)
-│   ├── games/     # Game implementations
+├── lib/           # Core libraries
+│   ├── ecs/       # Entity Component System
+│   ├── engine/    # Game engine utilities
+│   ├── engine_core/ # Core engine functionality
+│   ├── network/   # Network layer (UDP, Protocol, Serialization)
+│   └── common/    # Common utilities
+├── src/           # Application code
 │   ├── client/    # Client application
-│   └── server/    # Server application
-├── include/       # Public headers
-├── tests/         # Unit tests
+│   ├── server/    # Server application
+│   └── games/     # Game implementations (R-Type)
+├── include/       # Public API headers
+│   └── rtype/     # Public interfaces
+├── tests/         # Unit and integration tests
 ├── docs/          # Documentation (you are here!)
-└── config/        # Configuration files
+├── config/        # Configuration files (TOML/JSON)
+└── assets/        # Game assets (textures, audio, fonts)
 ```
 
 ## Getting Help

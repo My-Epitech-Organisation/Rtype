@@ -252,3 +252,84 @@ TEST_F(PacketProcessorTest, Metrics_MultipleDrops) {
 
     EXPECT_GE(metrics_->packetsDropped.load(), 5u);
 }
+
+// ============================================================================
+// BRANCH COVERAGE TESTS - Missing paths from coverage report
+// ============================================================================
+
+TEST_F(PacketProcessorTest, ProcessRawData_WithPayload) {
+    PacketProcessor processor(metrics_, false);
+    std::string endpoint = "127.0.0.1:50001";
+    std::uint32_t userId = 1001;
+    
+    processor.registerConnection(endpoint, userId);
+    
+    // Create a valid packet with payload (tests header.payloadSize > 0 branch)
+    InputPayload input{0x01};  // Up button pressed
+    auto header = Header::create(OpCode::C_INPUT, userId, 1, sizeof(InputPayload));
+    auto headerBytes = ByteOrderSpec::serializeToNetwork(header);
+    auto payloadBytes = ByteOrderSpec::serializeToNetwork(input);
+    
+    // Combine header + payload
+    headerBytes.insert(headerBytes.end(), payloadBytes.begin(), payloadBytes.end());
+    
+    auto result = processor.processRawData(endpoint, headerBytes);
+    
+    EXPECT_TRUE(result.has_value());
+}
+
+TEST_F(PacketProcessorTest, VerboseMode_LogsAcceptedPacket) {
+    PacketProcessor processor(metrics_, true);  // Verbose mode enabled (tests _verbose branch)
+    std::string endpoint = "127.0.0.1:50002";
+    std::uint32_t userId = 1002;
+    
+    processor.registerConnection(endpoint, userId);
+    
+    // Use PING opcode which has no payload
+    auto header = Header::create(OpCode::PING, userId, 1, 0);
+    auto headerBytes = ByteOrderSpec::serializeToNetwork(header);
+    
+    auto result = processor.processRawData(endpoint, headerBytes);
+    
+    EXPECT_TRUE(result.has_value());
+}
+
+TEST_F(PacketProcessorTest, ProcessRawData_InvalidSequenceId) {
+    PacketProcessor processor(metrics_, false);
+    std::string endpoint = "127.0.0.1:50003";
+    std::uint32_t userId = 1003;
+    
+    processor.registerConnection(endpoint, userId);
+    
+    // Send first packet with seq 1
+    auto header1 = Header::create(OpCode::PING, userId, 1, 0);
+    auto packet1 = ByteOrderSpec::serializeToNetwork(header1);
+    auto result1 = processor.processRawData(endpoint, packet1);
+    EXPECT_TRUE(result1.has_value());
+    
+    // Try to send duplicate packet with same seq ID (tests seqResult.isErr() branch)
+    std::size_t droppedBefore = metrics_->packetsDropped.load();
+    auto result2 = processor.processRawData(endpoint, packet1);
+    
+    EXPECT_FALSE(result2.has_value());
+    EXPECT_GT(metrics_->packetsDropped.load(), droppedBefore);
+}
+
+TEST_F(PacketProcessorTest, ProcessRawData_UserIdSpoofing) {
+    PacketProcessor processor(metrics_, false);
+    std::string endpoint = "127.0.0.1:50004";
+    std::uint32_t registeredUserId = 1004;
+    std::uint32_t spoofedUserId = 9999;
+    
+    processor.registerConnection(endpoint, registeredUserId);
+    
+    // Try to send packet with different user ID (tests userIdResult.isErr() branch)
+    auto header = Header::create(OpCode::PING, spoofedUserId, 1, 0);
+    auto packetData = ByteOrderSpec::serializeToNetwork(header);
+    
+    std::size_t droppedBefore = metrics_->packetsDropped.load();
+    auto result = processor.processRawData(endpoint, packetData);
+    
+    EXPECT_FALSE(result.has_value());
+    EXPECT_GT(metrics_->packetsDropped.load(), droppedBefore);
+}
