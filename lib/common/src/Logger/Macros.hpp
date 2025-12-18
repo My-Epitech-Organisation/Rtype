@@ -74,4 +74,16 @@
 #define LOG_ERROR(...) \
     ::rtype::Logger::instance().error(LOG_TO_STRING(__VA_ARGS__))
 
+/**
+ * @brief Fatal error logging macro - always prints to stderr
+ *
+ * Use for critical error messages that indicate fatal failures.
+ * Thread-safe with timestamp.
+ *
+ * @param ... The message to log (supports << chaining and expressions with
+ * commas)
+ */
+#define LOG_FATAL(...) \
+    ::rtype::Logger::instance().fatal(LOG_TO_STRING(__VA_ARGS__))
+
 #endif  // SRC_COMMON_LOGGER_MACROS_HPP_
