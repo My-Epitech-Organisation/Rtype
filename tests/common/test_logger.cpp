@@ -981,6 +981,11 @@ TEST(LoggerFatalTest, FatalWritesToFile) {
     logger.fatal("Fatal error occurred");
     logger.closeFile();
 
+#ifdef _WIN32
+    // On Windows, give the OS time to release file handles
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+#endif
+
     std::ifstream file(testFilePath);
     std::stringstream buffer;
     buffer << file.rdbuf();
@@ -1295,6 +1300,11 @@ TEST(LoggerCategoryTest, CategoryFiltering) {
     logger.debug("Network message", LogCategory::Network);
     logger.closeFile();
     
+#ifdef _WIN32
+    // On Windows, give the OS time to release file handles
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+#endif
+    
     std::ifstream file(testFilePath);
     std::stringstream buffer;
     buffer << file.rdbuf();
@@ -1321,6 +1331,11 @@ TEST(LoggerCategoryTest, MacroWithCategory) {
     LOG_INFO_CAT(LogCategory::Network, "Network info");
     
     logger.closeFile();
+    
+#ifdef _WIN32
+    // On Windows, give the OS time to release file handles
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+#endif
     
     std::ifstream file(testFilePath);
     std::stringstream buffer;
