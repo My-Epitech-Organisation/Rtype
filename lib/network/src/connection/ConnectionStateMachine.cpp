@@ -57,14 +57,14 @@ Result<void> ConnectionStateMachine::handleDisconnectAck() {
     return Ok();
 }
 
-Result<void> ConnectionStateMachine::handleRemoteDisconnect() {
+Result<void> ConnectionStateMachine::handleRemoteDisconnect(DisconnectReason reason) {
     if (state_ == ConnectionState::Disconnected) {
         return Err<void>(NetworkError::InvalidStateTransition);
     }
-    lastDisconnectReason_ = DisconnectReason::RemoteRequest;
+    lastDisconnectReason_ = reason;
     transitionTo(ConnectionState::Disconnected);
     if (callbacks_.onDisconnected) {
-        callbacks_.onDisconnected(DisconnectReason::RemoteRequest);
+        callbacks_.onDisconnected(reason);
     }
     return Ok();
 }

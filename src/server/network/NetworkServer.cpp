@@ -57,6 +57,8 @@ void NetworkServer::stop() {
     running_ = false;
 
     network::DisconnectPayload payload;
+    payload.reason =
+        static_cast<std::uint8_t>(network::DisconnectReason::RemoteRequest);
     auto serialized = network::Serializer::serialize(payload);
 
     for (const auto& [key, client] : clients_) {
@@ -70,8 +72,12 @@ void NetworkServer::stop() {
     }
 
     if (socket_) {
+        socket_->cancel();
+        ioContext_.poll();
         socket_->close();
     }
+
+    ioContext_.stop();
 }
 
 bool NetworkServer::isRunning() const noexcept { return running_; }
@@ -155,12 +161,15 @@ void NetworkServer::updateGameState(GameState state) {
 }
 
 void NetworkServer::sendGameOver(std::uint32_t finalScore) {
+    LOG_INFO(
+        "[NetworkServer] Sending GameOver packet with score=" << finalScore);
     network::GameOverPayload payload;
     payload.finalScore = finalScore;
 
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
     broadcastToAll(network::OpCode::S_GAME_OVER, serialized);
+    LOG_INFO("[NetworkServer] GameOver packet broadcasted to all clients");
 }
 
 void NetworkServer::spawnEntityToClient(std::uint32_t userId, std::uint32_t id,
@@ -405,11 +414,12 @@ void NetworkServer::queueCallback(std::function<void()> callback) {
 }
 
 void NetworkServer::startReceive() {
-    if (receiveInProgress_ || !socket_->isOpen()) {
+    if (receiveInProgress_.load(std::memory_order_acquire) ||
+        !socket_->isOpen()) {
         return;
     }
 
-    receiveInProgress_ = true;
+    receiveInProgress_.store(true, std::memory_order_release);
     receiveBuffer_->resize(network::kMaxPacketSize);
 
     socket_->asyncReceiveFrom(receiveBuffer_, receiveSender_,
@@ -419,7 +429,7 @@ void NetworkServer::startReceive() {
 }
 
 void NetworkServer::handleReceive(network::Result<std::size_t> result) {
-    receiveInProgress_ = false;
+    receiveInProgress_.store(false, std::memory_order_release);
 
     if (result && running_) {
         std::size_t bytesReceived = result.value();
@@ -590,6 +600,8 @@ void NetworkServer::handleDisconnect(const network::Header& header,
     std::uint32_t userId = it->second->userId;
 
     network::DisconnectPayload payload;
+    payload.reason =
+        static_cast<std::uint8_t>(network::DisconnectReason::RemoteRequest);
     auto serialized = network::Serializer::serialize(payload);
 
     auto ackPacket =
@@ -718,6 +730,8 @@ void NetworkServer::removeClient(std::uint32_t userId) {
     std::string key = keyIt->second;
     userIdToKey_.erase(keyIt);
     clients_.erase(key);
+
+    freeUserIds_.push_back(userId);
 }
 
 void NetworkServer::checkTimeouts() {
@@ -743,7 +757,22 @@ void NetworkServer::checkTimeouts() {
         }
     }
 
+    network::DisconnectPayload payload;
+    payload.reason =
+        static_cast<std::uint8_t>(network::DisconnectReason::Timeout);
+    auto serialized = network::Serializer::serialize(payload);
+
     for (std::uint32_t userId : timedOutUsers) {
+        auto client = findClientByUserId(userId);
+        if (client) {
+            auto disconnectPacket =
+                buildPacket(network::OpCode::DISCONNECT, serialized,
+                            network::kServerUserId, 0, 0, false);
+            socket_->asyncSendTo(
+                disconnectPacket, client->endpoint,
+                [](network::Result<std::size_t> result) { (void)result; });
+        }
+
         queueCallback([this, userId]() {
             if (onClientDisconnectedCallback_) {
                 onClientDisconnectedCallback_(
@@ -815,6 +844,14 @@ void NetworkServer::broadcastToAll(network::OpCode opcode,
 }
 
 std::uint32_t NetworkServer::nextUserId() {
+    std::lock_guard<std::mutex> lock(clientsMutex_);
+
+    if (!freeUserIds_.empty()) {
+        std::uint32_t id = freeUserIds_.back();
+        freeUserIds_.pop_back();
+        return id;
+    }
+
     std::uint32_t id = nextUserIdCounter_++;
 
     if (nextUserIdCounter_ >= network::kMaxClientUserId) {
