@@ -23,6 +23,7 @@ docs/website/package-lock.json
 build/*
 build-coverage/*
 Testing/*
+build-cpm/*
 *.slo
 *.lo
 *.o
