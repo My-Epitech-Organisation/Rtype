@@ -986,10 +986,13 @@ TEST(LoggerFatalTest, FatalWritesToFile) {
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 #endif
 
-    std::ifstream file(testFilePath);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    const std::string contents = buffer.str();
+    std::string contents;
+    {
+        std::ifstream file(testFilePath);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        contents = buffer.str();
+    }  // File is closed here
 
     EXPECT_NE(contents.find("FATAL"), std::string::npos);
     EXPECT_NE(contents.find("Fatal error occurred"), std::string::npos);
@@ -1305,10 +1308,13 @@ TEST(LoggerCategoryTest, CategoryFiltering) {
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 #endif
     
-    std::ifstream file(testFilePath);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    const std::string contents = buffer.str();
+    std::string contents;
+    {
+        std::ifstream file(testFilePath);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        contents = buffer.str();
+    }  // File is closed here
     
     // Only Network message should be logged
     EXPECT_EQ(contents.find("Main message"), std::string::npos);
@@ -1337,10 +1343,13 @@ TEST(LoggerCategoryTest, MacroWithCategory) {
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 #endif
     
-    std::ifstream file(testFilePath);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    const std::string contents = buffer.str();
+    std::string contents;
+    {
+        std::ifstream file(testFilePath);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        contents = buffer.str();
+    }  // File is closed here
     
     // Only GameEngine message should be logged
     EXPECT_EQ(contents.find("Main debug"), std::string::npos);
