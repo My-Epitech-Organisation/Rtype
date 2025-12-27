@@ -27,7 +27,8 @@ void ButtonUpdateSystem::update(ECS::Registry& registry, float /*dt*/) {
         [](ECS::Entity /*entity*/, auto& buttonAct, auto& actionType) {
             if (!actionType.idle && actionType.isReleased &&
                 actionType.isHovered) {
-                LOG_DEBUG(
+                LOG_DEBUG_CAT(
+                    ::rtype::LogCategory::UI,
                     "[ButtonUpdateSystem] Button clicked, executing callback");
                 try {
                     buttonAct.callback();

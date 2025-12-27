@@ -24,13 +24,16 @@ bool ControllerRumble::_sdlInitialized = false;
 void ControllerRumble::triggerRumble(unsigned int joystickId, float intensity,
                                      int durationMs) {
     if (!_sdlInitialized) {
-        LOG_INFO("[ControllerRumble] First rumble call - initializing SDL2...");
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::Input,
+            "[ControllerRumble] First rumble call - initializing SDL2...");
         initialize();
     }
 
     if (!sf::Joystick::isConnected(joystickId)) {
-        LOG_WARNING("[ControllerRumble] Joystick " +
-                    std::to_string(joystickId) + " not connected!");
+        LOG_WARNING_CAT(::rtype::LogCategory::Input,
+                        "[ControllerRumble] Joystick " +
+                            std::to_string(joystickId) + " not connected!");
         return;
     }
 
@@ -40,10 +43,11 @@ void ControllerRumble::triggerRumble(unsigned int joystickId, float intensity,
     }
 
     if (!controller) {
-        LOG_WARNING("[ControllerRumble] Controller " +
-                    std::to_string(joystickId) +
-                    " is not an Xbox controller or doesn't support rumble (not "
-                    "in SDL game controller DB)");
+        LOG_WARNING_CAT(
+            ::rtype::LogCategory::Input,
+            "[ControllerRumble] Controller " + std::to_string(joystickId) +
+                " is not an Xbox controller or doesn't support rumble (not "
+                "in SDL game controller DB)");
         return;
     }
 
@@ -53,18 +57,22 @@ void ControllerRumble::triggerRumble(unsigned int joystickId, float intensity,
 
     float clampedIntensity = std::clamp(intensity, 0.0f, 1.0f);
     Uint16 rumbleStrength = static_cast<Uint16>(clampedIntensity * 65535);
-    LOG_INFO("[ControllerRumble] Calling SDL_GameControllerRumble(id=" +
-             std::to_string(joystickId) +
-             ", strength=" + std::to_string(rumbleStrength) +
-             ", duration=" + std::to_string(std::max(0, durationMs)) + "ms)");
+    LOG_INFO_CAT(::rtype::LogCategory::Input,
+                 "[ControllerRumble] Calling SDL_GameControllerRumble(id=" +
+                     std::to_string(joystickId) +
+                     ", strength=" + std::to_string(rumbleStrength) +
+                     ", duration=" + std::to_string(std::max(0, durationMs)) +
+                     "ms)");
 
     int result = SDL_GameControllerRumble(
         controller, rumbleStrength, rumbleStrength, std::max(0, durationMs));
     if (result == 0) {
-        LOG_INFO("[ControllerRumble] ✓ Rumble triggered successfully!");
+        LOG_INFO_CAT(::rtype::LogCategory::Input,
+                     "[ControllerRumble] ✓ Rumble triggered successfully!");
     } else {
-        LOG_WARNING("[ControllerRumble] Failed to trigger rumble: " +
-                    std::string(SDL_GetError()));
+        LOG_WARNING_CAT(::rtype::LogCategory::Input,
+                        "[ControllerRumble] Failed to trigger rumble: " +
+                            std::string(SDL_GetError()));
     }
 }
 
@@ -79,8 +87,9 @@ void ControllerRumble::stopRumble(unsigned int joystickId) {
             }
         }
 
-        LOG_DEBUG("[ControllerRumble] Stopped rumble on controller " +
-                  std::to_string(joystickId));
+        LOG_DEBUG_CAT(::rtype::LogCategory::Input,
+                      "[ControllerRumble] Stopped rumble on controller " +
+                          std::to_string(joystickId));
     }
 }
 
@@ -120,53 +129,62 @@ void ControllerRumble::update() {
             SDL_GameControllerRumble(itCtrl->second, 0, 0, 0);
         }
         _rumbleEndTimes.erase(id);
-        LOG_DEBUG("[ControllerRumble] Auto-stopped rumble on controller " +
-                  std::to_string(id));
+        LOG_DEBUG_CAT(::rtype::LogCategory::Input,
+                      "[ControllerRumble] Auto-stopped rumble on controller " +
+                          std::to_string(id));
     }
 }
 
 void ControllerRumble::initialize() {
     if (_sdlInitialized) {
-        LOG_DEBUG("[ControllerRumble] Already initialized");
+        LOG_DEBUG_CAT(::rtype::LogCategory::Input,
+                      "[ControllerRumble] Already initialized");
         return;
     }
 
-    LOG_INFO(
+    LOG_INFO_CAT(
+        ::rtype::LogCategory::Input,
         "[ControllerRumble] Initializing SDL2 GameController subsystem...");
 
     if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
-        LOG_ERROR(
+        LOG_ERROR_CAT(
+            ::rtype::LogCategory::Input,
             "[ControllerRumble] Failed to initialize SDL GameController: " +
-            std::string(SDL_GetError()));
+                std::string(SDL_GetError()));
         return;
     }
 
     _sdlInitialized = true;
-    LOG_INFO(
+    LOG_INFO_CAT(
+        ::rtype::LogCategory::Input,
         "[ControllerRumble] SDL2 initialized successfully for Xbox controller "
         "rumble!");
 
     int numJoysticks = SDL_NumJoysticks();
-    LOG_INFO("[ControllerRumble] Found " + std::to_string(numJoysticks) +
-             " joystick(s)");
+    LOG_INFO_CAT(::rtype::LogCategory::Input, "[ControllerRumble] Found " +
+                                                  std::to_string(numJoysticks) +
+                                                  " joystick(s)");
 
     for (int i = 0; i < numJoysticks; ++i) {
         if (SDL_IsGameController(i)) {
             SDL_GameController* ctrl = SDL_GameControllerOpen(i);
             if (ctrl) {
                 const char* name = SDL_GameControllerName(ctrl);
-                LOG_INFO("[ControllerRumble] Opened controller " +
-                         std::to_string(i) + ": " +
-                         std::string(name ? name : "Unknown"));
+                LOG_INFO_CAT(::rtype::LogCategory::Input,
+                             "[ControllerRumble] Opened controller " +
+                                 std::to_string(i) + ": " +
+                                 std::string(name ? name : "Unknown"));
                 _controllers[i] = ctrl;
             } else {
-                LOG_WARNING("[ControllerRumble] Failed to open controller " +
-                            std::to_string(i) + ": " +
-                            std::string(SDL_GetError()));
+                LOG_WARNING_CAT(
+                    ::rtype::LogCategory::Input,
+                    "[ControllerRumble] Failed to open controller " +
+                        std::to_string(i) + ": " + std::string(SDL_GetError()));
             }
         } else {
-            LOG_WARNING("[ControllerRumble] Joystick " + std::to_string(i) +
-                        " is not a game controller");
+            LOG_WARNING_CAT(::rtype::LogCategory::Input,
+                            "[ControllerRumble] Joystick " + std::to_string(i) +
+                                " is not a game controller");
         }
     }
 }
@@ -184,6 +202,7 @@ void ControllerRumble::cleanup() {
     if (_sdlInitialized) {
         SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
         _sdlInitialized = false;
-        LOG_INFO("[ControllerRumble] SDL2 cleaned up");
+        LOG_INFO_CAT(::rtype::LogCategory::Input,
+                     "[ControllerRumble] SDL2 cleaned up");
     }
 }

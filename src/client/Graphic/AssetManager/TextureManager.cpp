@@ -15,19 +15,22 @@ void TextureManager::load(const std::string& id, const std::string& filePath) {
     auto texture = std::make_unique<sf::Texture>();
 
     if (!texture->loadFromFile(filePath)) {
-        LOG_ERROR("Unable to open texture: " << filePath);
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
+                      "Unable to open texture: " << filePath);
         throw std::runtime_error("Error while loading texture: " + filePath);
     }
 
     this->_assets[id] = std::move(texture);
-    LOG_DEBUG("Texture loaded with ID: " << id);
+    LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
+                  "Texture loaded with ID: " << id);
 }
 
 sf::Texture& TextureManager::get(const std::string& id) {
     auto it = this->_assets.find(id);
 
     if (it == this->_assets.end()) {
-        LOG_ERROR("Texture not found: " << id);
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
+                      "Texture not found: " << id);
         throw std::out_of_range("Texture not found: " + id);
     }
 
@@ -41,18 +44,20 @@ bool TextureManager::isLoaded(const std::string& id) const {
 bool TextureManager::unload(const std::string& id) {
     auto it = this->_assets.find(id);
     if (it == this->_assets.end()) {
-        LOG_DEBUG("Texture not found for unloading: " << id);
+        LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
+                      "Texture not found for unloading: " << id);
         return false;
     }
     this->_assets.erase(it);
-    LOG_DEBUG("Texture unloaded: " << id);
+    LOG_DEBUG_CAT(::rtype::LogCategory::Graphics, "Texture unloaded: " << id);
     return true;
 }
 
 void TextureManager::unloadAll() {
     std::size_t count = this->_assets.size();
     this->_assets.clear();
-    LOG_DEBUG("All textures unloaded (" << count << " textures)");
+    LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
+                  "All textures unloaded (" << count << " textures)");
 }
 
 std::size_t TextureManager::size() const { return this->_assets.size(); }

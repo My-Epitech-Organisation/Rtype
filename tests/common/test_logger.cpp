@@ -529,24 +529,29 @@ class MockLogger : public Logger {
    public:
     std::vector<std::pair<LogLevel, std::string>> loggedMessages;
 
-    void info(const std::string& msg) override {
+    void info(const std::string& msg, LogCategory category = LogCategory::Main) override {
         loggedMessages.emplace_back(LogLevel::Info, msg);
-        Logger::info(msg);
+        Logger::info(msg, category);
     }
 
-    void warning(const std::string& msg) override {
+    void warning(const std::string& msg, LogCategory category = LogCategory::Main) override {
         loggedMessages.emplace_back(LogLevel::Warning, msg);
-        Logger::warning(msg);
+        Logger::warning(msg, category);
     }
 
-    void error(const std::string& msg) override {
+    void error(const std::string& msg, LogCategory category = LogCategory::Main) override {
         loggedMessages.emplace_back(LogLevel::Error, msg);
-        Logger::error(msg);
+        Logger::error(msg, category);
     }
 
-    void debug(const std::string& msg) override {
+    void debug(const std::string& msg, LogCategory category = LogCategory::Main) override {
         loggedMessages.emplace_back(LogLevel::Debug, msg);
-        Logger::debug(msg);
+        Logger::debug(msg, category);
+    }
+
+    void fatal(const std::string& msg, LogCategory category = LogCategory::Main) override {
+        loggedMessages.emplace_back(LogLevel::Fatal, msg);
+        Logger::fatal(msg, category);
     }
 
     void clear() { loggedMessages.clear(); }
@@ -953,4 +958,404 @@ TEST_F(LogMacrosTest, LogEmptyMessage) {
     LOG_INFO("");
     ASSERT_EQ(mockLogger.loggedMessages.size(), 1);
     EXPECT_EQ(mockLogger.loggedMessages[0].second, "");
+}
+
+// ============================================================================
+// LogLevel Fatal Tests
+// ============================================================================
+
+TEST(LogLevelTest, FatalLogLevelExists) {
+    EXPECT_EQ(static_cast<int>(LogLevel::Fatal), 4);
+    EXPECT_GT(LogLevel::Fatal, LogLevel::Error);
+    EXPECT_LT(LogLevel::Fatal, LogLevel::None);
+}
+
+TEST(LogLevelTest, ToStringFatal) {
+    EXPECT_EQ(toString(LogLevel::Fatal), "FATAL");
+}
+
+TEST(LoggerFatalTest, FatalWritesToFile) {
+    const auto testFilePath = getUniqueTestFile("test_fatal");
+    Logger logger;
+    logger.setLogFile(testFilePath);
+    logger.fatal("Fatal error occurred");
+    logger.closeFile();
+
+#ifdef _WIN32
+    // On Windows, give the OS time to release file handles
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+#endif
+
+    std::string contents;
+    {
+        std::ifstream file(testFilePath);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        contents = buffer.str();
+    }  // File is closed here
+
+    EXPECT_NE(contents.find("FATAL"), std::string::npos);
+    EXPECT_NE(contents.find("Fatal error occurred"), std::string::npos);
+
+    safeRemoveFile(testFilePath);
+}
+
+TEST(LoggerFatalTest, FatalGoesToStderr) {
+    Logger logger;
+    testing::internal::CaptureStderr();
+    logger.fatal("Fatal test");
+    const std::string output = testing::internal::GetCapturedStderr();
+    EXPECT_NE(output.find("FATAL"), std::string::npos);
+}
+
+TEST_F(LogMacrosTest, LogFatalMacro) {
+    LOG_FATAL("Fatal error");
+
+    ASSERT_EQ(mockLogger.loggedMessages.size(), 1);
+    EXPECT_EQ(mockLogger.loggedMessages[0].first, LogLevel::Fatal);
+    EXPECT_EQ(mockLogger.loggedMessages[0].second, "Fatal error");
+}
+
+// ============================================================================
+// ColorFormatter Tests
+// ============================================================================
+
+#include "common/src/Logger/ColorFormatter.hpp"
+
+TEST(ColorFormatterTest, DefaultEnabledState) {
+#ifdef _WIN32
+    // Colors disabled by default on Windows
+    EXPECT_FALSE(ColorFormatter::isEnabled());
+#else
+    // Colors enabled by default on Unix/Linux
+    EXPECT_TRUE(ColorFormatter::isEnabled());
+#endif
+}
+
+TEST(ColorFormatterTest, SetEnabled) {
+    bool originalState = ColorFormatter::isEnabled();
+    
+    ColorFormatter::setEnabled(true);
+    EXPECT_TRUE(ColorFormatter::isEnabled());
+    
+    ColorFormatter::setEnabled(false);
+    EXPECT_FALSE(ColorFormatter::isEnabled());
+    
+    // Restore original state
+    ColorFormatter::setEnabled(originalState);
+}
+
+TEST(ColorFormatterTest, GetColorWhenEnabled) {
+    ColorFormatter::setEnabled(true);
+    
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Debug), "\033[36m");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Info), "\033[32m");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Warning), "\033[33m");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Error), "\033[31m");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Fatal), "\033[91m");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::None), "");
+}
+
+TEST(ColorFormatterTest, GetColorWhenDisabled) {
+    ColorFormatter::setEnabled(false);
+    
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Debug), "");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Info), "");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Warning), "");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Error), "");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::Fatal), "");
+    EXPECT_EQ(ColorFormatter::getColor(LogLevel::None), "");
+}
+
+TEST(ColorFormatterTest, GetResetWhenEnabled) {
+    ColorFormatter::setEnabled(true);
+    EXPECT_EQ(ColorFormatter::getReset(), "\033[0m");
+}
+
+TEST(ColorFormatterTest, GetResetWhenDisabled) {
+    ColorFormatter::setEnabled(false);
+    EXPECT_EQ(ColorFormatter::getReset(), "");
+}
+
+TEST(LoggerColorTest, ColoredOutputToConsole) {
+    Logger logger;
+    ColorFormatter::setEnabled(true);
+    
+    testing::internal::CaptureStdout();
+    logger.info("Test message");
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    // Should contain ANSI color codes
+    EXPECT_NE(output.find("\033["), std::string::npos);
+}
+
+TEST(LoggerColorTest, NoColoredOutputWhenDisabled) {
+    Logger logger;
+    ColorFormatter::setEnabled(false);
+    
+    testing::internal::CaptureStdout();
+    logger.info("Test message");
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    // Should not contain ANSI color codes
+    EXPECT_EQ(output.find("\033["), std::string::npos);
+}
+
+TEST(LoggerColorTest, SetColorEnabledMethod) {
+    Logger logger;
+    
+    logger.setColorEnabled(true);
+    EXPECT_TRUE(logger.isColorEnabled());
+    
+    logger.setColorEnabled(false);
+    EXPECT_FALSE(logger.isColorEnabled());
+}
+
+// ============================================================================
+// GenerateLogFilename Tests
+// ============================================================================
+
+TEST(LoggerFilenameTest, GenerateLogFilenameWithDefaults) {
+    const auto logFile = Logger::generateLogFilename();
+    
+    EXPECT_EQ(logFile.parent_path(), std::filesystem::path("logs"));
+    EXPECT_NE(logFile.filename().string().find("session_"), std::string::npos);
+    EXPECT_NE(logFile.filename().string().find(".log"), std::string::npos);
+    
+    // Clean up created directory if test created it
+    if (std::filesystem::exists("logs") && std::filesystem::is_empty("logs")) {
+        std::filesystem::remove("logs");
+    }
+}
+
+TEST(LoggerFilenameTest, GenerateLogFilenameWithPrefix) {
+    const auto logFile = Logger::generateLogFilename("server_session");
+    
+    EXPECT_NE(logFile.filename().string().find("server_session_"), 
+              std::string::npos);
+    EXPECT_NE(logFile.filename().string().find(".log"), std::string::npos);
+    
+    // Clean up created directory if test created it
+    if (std::filesystem::exists("logs") && std::filesystem::is_empty("logs")) {
+        std::filesystem::remove("logs");
+    }
+}
+
+TEST(LoggerFilenameTest, GenerateLogFilenameWithCustomDirectory) {
+    const auto testDir = std::filesystem::temp_directory_path() / "test_logs";
+    const auto logFile = Logger::generateLogFilename("client_session", testDir);
+    
+    EXPECT_EQ(logFile.parent_path(), testDir);
+    EXPECT_NE(logFile.filename().string().find("client_session_"), 
+              std::string::npos);
+    
+    // Clean up
+    if (std::filesystem::exists(testDir)) {
+        std::filesystem::remove_all(testDir);
+    }
+}
+
+TEST(LoggerFilenameTest, GenerateLogFilenameCreatesDirectory) {
+    const auto testDir = std::filesystem::temp_directory_path() / 
+                         "test_logs_create";
+    
+    // Ensure directory doesn't exist
+    if (std::filesystem::exists(testDir)) {
+        std::filesystem::remove_all(testDir);
+    }
+    
+    EXPECT_FALSE(std::filesystem::exists(testDir));
+    
+    const auto logFile = Logger::generateLogFilename("test", testDir);
+    
+    EXPECT_TRUE(std::filesystem::exists(testDir));
+    EXPECT_TRUE(std::filesystem::is_directory(testDir));
+    
+    // Clean up
+    std::filesystem::remove_all(testDir);
+}
+
+TEST(LoggerFilenameTest, GenerateLogFilenameTimestampFormat) {
+    const auto logFile = Logger::generateLogFilename("test");
+    const auto filename = logFile.filename().string();
+    
+    // Should match format: test_YYYY-MM-DD_HH-MM-SS.log
+    std::regex pattern(R"(test_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.log)");
+    EXPECT_TRUE(std::regex_match(filename, pattern));
+    
+    // Clean up created directory if test created it
+    if (std::filesystem::exists("logs") && std::filesystem::is_empty("logs")) {
+        std::filesystem::remove("logs");
+    }
+}
+
+TEST(LoggerFilenameTest, GenerateLogFilenameUnique) {
+    const auto logFile1 = Logger::generateLogFilename("test");
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    const auto logFile2 = Logger::generateLogFilename("test");
+    
+    // Files should have different names due to timestamp
+    EXPECT_NE(logFile1, logFile2);
+    
+    // Clean up created directory if test created it
+    if (std::filesystem::exists("logs") && std::filesystem::is_empty("logs")) {
+        std::filesystem::remove("logs");
+    }
+}
+
+// ============================================================================
+// LogCategory Tests
+// ============================================================================
+
+#include "common/src/Logger/LogCategory.hpp"
+
+TEST(LogCategoryTest, EnumValues) {
+    EXPECT_EQ(static_cast<uint32_t>(LogCategory::None), 0u);
+    EXPECT_EQ(static_cast<uint32_t>(LogCategory::Main), 1u << 0);
+    EXPECT_EQ(static_cast<uint32_t>(LogCategory::Network), 1u << 1);
+    EXPECT_EQ(static_cast<uint32_t>(LogCategory::GameEngine), 1u << 2);
+    EXPECT_EQ(static_cast<uint32_t>(LogCategory::All), 0xFFFFFFFFu);
+}
+
+TEST(LogCategoryTest, BitwiseOperators) {
+    LogCategory cat1 = LogCategory::Main;
+    LogCategory cat2 = LogCategory::Network;
+    
+    LogCategory combined = cat1 | cat2;
+    EXPECT_TRUE(isCategoryEnabled(combined, LogCategory::Main));
+    EXPECT_TRUE(isCategoryEnabled(combined, LogCategory::Network));
+    EXPECT_FALSE(isCategoryEnabled(combined, LogCategory::GameEngine));
+}
+
+TEST(LogCategoryTest, IsCategoryEnabled) {
+    LogCategory mask = LogCategory::Main | LogCategory::Network;
+    
+    EXPECT_TRUE(isCategoryEnabled(mask, LogCategory::Main));
+    EXPECT_TRUE(isCategoryEnabled(mask, LogCategory::Network));
+    EXPECT_FALSE(isCategoryEnabled(mask, LogCategory::GameEngine));
+    EXPECT_FALSE(isCategoryEnabled(mask, LogCategory::ECS));
+}
+
+TEST(LogCategoryTest, AllCategoryEnablesEverything) {
+    LogCategory mask = LogCategory::All;
+    
+    EXPECT_TRUE(isCategoryEnabled(mask, LogCategory::Main));
+    EXPECT_TRUE(isCategoryEnabled(mask, LogCategory::Network));
+    EXPECT_TRUE(isCategoryEnabled(mask, LogCategory::GameEngine));
+    EXPECT_TRUE(isCategoryEnabled(mask, LogCategory::ECS));
+}
+
+TEST(LogCategoryTest, ToStringConversion) {
+    EXPECT_EQ(toString(LogCategory::Main), "Main");
+    EXPECT_EQ(toString(LogCategory::Network), "Network");
+    EXPECT_EQ(toString(LogCategory::GameEngine), "GameEngine");
+    EXPECT_EQ(toString(LogCategory::All), "All");
+}
+
+TEST(LogCategoryTest, FromStringConversion) {
+    EXPECT_EQ(categoryFromString("main"), LogCategory::Main);
+    EXPECT_EQ(categoryFromString("Main"), LogCategory::Main);
+    EXPECT_EQ(categoryFromString("MAIN"), LogCategory::Main);
+    
+    EXPECT_EQ(categoryFromString("network"), LogCategory::Network);
+    EXPECT_EQ(categoryFromString("Network"), LogCategory::Network);
+    
+    EXPECT_EQ(categoryFromString("gameengine"), LogCategory::GameEngine);
+    EXPECT_EQ(categoryFromString("game"), LogCategory::GameEngine);
+    
+    EXPECT_EQ(categoryFromString("all"), LogCategory::All);
+    EXPECT_EQ(categoryFromString("ALL"), LogCategory::All);
+    
+    EXPECT_EQ(categoryFromString("invalid"), LogCategory::None);
+}
+
+TEST(LoggerCategoryTest, SetEnabledCategories) {
+    Logger logger;
+    
+    logger.setEnabledCategories(LogCategory::Network);
+    EXPECT_TRUE(logger.isCategoryEnabled(LogCategory::Network));
+    EXPECT_FALSE(logger.isCategoryEnabled(LogCategory::Main));
+}
+
+TEST(LoggerCategoryTest, EnableCategory) {
+    Logger logger;
+    logger.setEnabledCategories(LogCategory::None);
+    
+    logger.enableCategory(LogCategory::Main);
+    EXPECT_TRUE(logger.isCategoryEnabled(LogCategory::Main));
+    EXPECT_FALSE(logger.isCategoryEnabled(LogCategory::Network));
+    
+    logger.enableCategory(LogCategory::Network);
+    EXPECT_TRUE(logger.isCategoryEnabled(LogCategory::Main));
+    EXPECT_TRUE(logger.isCategoryEnabled(LogCategory::Network));
+}
+
+TEST(LoggerCategoryTest, CategoryFiltering) {
+    const auto testFilePath = getUniqueTestFile("test_category");
+    Logger logger;
+    logger.setLogFile(testFilePath);
+    logger.setLogLevel(LogLevel::Debug);
+    
+    // Only enable Network category
+    logger.setEnabledCategories(LogCategory::Network);
+    
+    logger.debug("Main message", LogCategory::Main);
+    logger.debug("Network message", LogCategory::Network);
+    logger.closeFile();
+    
+#ifdef _WIN32
+    // On Windows, give the OS time to release file handles
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+#endif
+    
+    std::string contents;
+    {
+        std::ifstream file(testFilePath);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        contents = buffer.str();
+    }  // File is closed here
+    
+    // Only Network message should be logged
+    EXPECT_EQ(contents.find("Main message"), std::string::npos);
+    EXPECT_NE(contents.find("Network message"), std::string::npos);
+    
+    safeRemoveFile(testFilePath);
+}
+
+TEST(LoggerCategoryTest, MacroWithCategory) {
+    const auto testFilePath = getUniqueTestFile("test_category_macro");
+    Logger logger;
+    Logger::setInstance(logger);
+    
+    logger.setLogFile(testFilePath);
+    logger.setLogLevel(LogLevel::Debug);
+    logger.setEnabledCategories(LogCategory::GameEngine);
+    
+    LOG_DEBUG_CAT(LogCategory::Main, "Main debug");
+    LOG_DEBUG_CAT(LogCategory::GameEngine, "GameEngine debug");
+    LOG_INFO_CAT(LogCategory::Network, "Network info");
+    
+    logger.closeFile();
+    
+#ifdef _WIN32
+    // On Windows, give the OS time to release file handles
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+#endif
+    
+    std::string contents;
+    {
+        std::ifstream file(testFilePath);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        contents = buffer.str();
+    }  // File is closed here
+    
+    // Only GameEngine message should be logged
+    EXPECT_EQ(contents.find("Main debug"), std::string::npos);
+    EXPECT_NE(contents.find("GameEngine debug"), std::string::npos);
+    EXPECT_EQ(contents.find("Network info"), std::string::npos);
+    
+    Logger::resetInstance();
+    safeRemoveFile(testFilePath);
 }

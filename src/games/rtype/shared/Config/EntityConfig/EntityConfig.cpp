@@ -59,7 +59,8 @@ bool EntityConfigRegistry::loadFromDirectory(const std::string& configDir) {
     const fs::path dir(configDir);
 
     if (!fs::exists(dir)) {
-        LOG_ERROR("[EntityConfig] Directory not found: " << configDir);
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[EntityConfig] Directory not found: " << configDir);
         return false;
     }
     if (fs::exists(dir / "enemies.toml")) {
@@ -125,19 +126,22 @@ bool EntityConfigRegistry::loadEnemies(const std::string& filepath) {
                     if (config.isValid()) {
                         m_enemies[config.id] = std::move(config);
                     } else {
-                        LOG_WARNING("[EntityConfig] Invalid enemy config: "
-                                    << config.id);
+                        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                                        "[EntityConfig] Invalid enemy config: "
+                                            << config.id);
                     }
                 }
             }
         }
 
-        LOG_INFO("[EntityConfig] Loaded " << m_enemies.size()
-                                          << " enemies from " << filepath);
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[EntityConfig] Loaded " << m_enemies.size()
+                                              << " enemies from " << filepath);
         return true;
     } catch (const toml::parse_error& err) {
-        LOG_ERROR("[EntityConfig] Failed to parse " << filepath << ": "
-                                                    << err.what());
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[EntityConfig] Failed to parse " << filepath << ": "
+                                                        << err.what());
         return false;
     }
 }
@@ -173,12 +177,15 @@ bool EntityConfigRegistry::loadProjectiles(const std::string& filepath) {
             }
         }
 
-        LOG_INFO("[EntityConfig] Loaded " << m_projectiles.size()
-                                          << " projectiles from " << filepath);
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[EntityConfig] Loaded " << m_projectiles.size()
+                                              << " projectiles from "
+                                              << filepath);
         return true;
     } catch (const toml::parse_error& err) {
-        LOG_ERROR("[EntityConfig] Failed to parse " << filepath << ": "
-                                                    << err.what());
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[EntityConfig] Failed to parse " << filepath << ": "
+                                                        << err.what());
         return false;
     }
 }
@@ -216,12 +223,14 @@ bool EntityConfigRegistry::loadPlayers(const std::string& filepath) {
             }
         }
 
-        LOG_INFO("[EntityConfig] Loaded " << m_players.size()
-                                          << " players from " << filepath);
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[EntityConfig] Loaded " << m_players.size()
+                                              << " players from " << filepath);
         return true;
     } catch (const toml::parse_error& err) {
-        LOG_ERROR("[EntityConfig] Failed to parse " << filepath << ": "
-                                                    << err.what());
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[EntityConfig] Failed to parse " << filepath << ": "
+                                                        << err.what());
         return false;
     }
 }
@@ -255,12 +264,15 @@ bool EntityConfigRegistry::loadPowerUps(const std::string& filepath) {
             }
         }
 
-        LOG_INFO("[EntityConfig] Loaded " << m_powerUps.size()
-                                          << " power-ups from " << filepath);
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[EntityConfig] Loaded "
+                                                           << m_powerUps.size()
+                                                           << " power-ups from "
+                                                           << filepath);
         return true;
     } catch (const toml::parse_error& err) {
-        LOG_ERROR("[EntityConfig] Failed to parse " << filepath << ": "
-                                                    << err.what());
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[EntityConfig] Failed to parse " << filepath << ": "
+                                                        << err.what());
         return false;
     }
 }
@@ -310,13 +322,15 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
 
         if (config.isValid()) {
             m_levels[config.id] = std::move(config);
-            LOG_INFO("[EntityConfig] Loaded level: " << config.id);
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "[EntityConfig] Loaded level: " << config.id);
             return true;
         }
         return false;
     } catch (const toml::parse_error& err) {
-        LOG_ERROR("[EntityConfig] Failed to parse level " << filepath << ": "
-                                                          << err.what());
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[EntityConfig] Failed to parse level "
+                          << filepath << ": " << err.what());
         return false;
     }
 }
