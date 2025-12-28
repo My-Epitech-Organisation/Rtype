@@ -159,6 +159,37 @@ inline constexpr unsigned int MAX_PLAYER_SPRITES = 4;
 /// @brief Obstacle nbr of sprites (variety)
 inline constexpr unsigned int NBR_MAX_OBSTACLES = 11;
 
+// ==========================================================================
+// Game Over Scene UI Configuration
+// ==========================================================================
+
+/// @brief Game Over center X offset from window center
+inline constexpr float GAME_OVER_CENTER_OFFSET = 70.f;
+
+/// @brief Game Over title X offset from center
+inline constexpr float GAME_OVER_TITLE_X_OFFSET = 260.f;
+
+/// @brief Game Over title Y position
+inline constexpr float GAME_OVER_TITLE_Y = 180.f;
+
+/// @brief Game Over score X offset from center
+inline constexpr float GAME_OVER_SCORE_X_OFFSET = 140.f;
+
+/// @brief Game Over score Y position
+inline constexpr float GAME_OVER_SCORE_Y = 320.f;
+
+/// @brief Game Over button X offset from center
+inline constexpr float GAME_OVER_BUTTON_X_OFFSET = 20.f;
+
+/// @brief Game Over button Y position
+inline constexpr float GAME_OVER_BUTTON_Y = 650.f;
+
+/// @brief Game Over button width
+inline constexpr float GAME_OVER_BUTTON_WIDTH = 300.f;
+
+/// @brief Game Over button height
+inline constexpr float GAME_OVER_BUTTON_HEIGHT = 70.f;
+
 }  // namespace GraphicsConfig
 
 }  // namespace rtype::games::rtype::client

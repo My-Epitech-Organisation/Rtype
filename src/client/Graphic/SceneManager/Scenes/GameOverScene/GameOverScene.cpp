@@ -81,11 +81,15 @@ void GameOverScene::_buildLayout() {
         static_cast<float>(
             rtype::games::rtype::client::GraphicsConfig::WINDOW_WIDTH) /
             2.0f -
-        70.f;
+        rtype::games::rtype::client::GraphicsConfig::GAME_OVER_CENTER_OFFSET;
 
     auto title = EntityFactory::createStaticText(
         this->_registry, _assetsManager, "GAME OVER", "title_font",
-        sf::Vector2f{centerX - 260.f, 180.f}, 96.f);
+        sf::Vector2f{
+            centerX - rtype::games::rtype::client::GraphicsConfig::
+                          GAME_OVER_TITLE_X_OFFSET,
+            rtype::games::rtype::client::GraphicsConfig::GAME_OVER_TITLE_Y},
+        96.f);
 
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         title, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
@@ -94,23 +98,33 @@ void GameOverScene::_buildLayout() {
     auto score = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager,
         "SCORE: " + std::to_string(finalScore), "main_font",
-        sf::Vector2f{centerX - 140.f, 320.f}, 72.f);
+        sf::Vector2f{
+            centerX - rtype::games::rtype::client::GraphicsConfig::
+                          GAME_OVER_SCORE_X_OFFSET,
+            rtype::games::rtype::client::GraphicsConfig::GAME_OVER_SCORE_Y},
+        72.f);
 
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         score, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
     this->_listEntity.push_back(score);
 
-    float btnWidth = 300.f;
-    float btnHeight = 70.f;
-    float btnX = rtype::games::rtype::client::GraphicsConfig::WINDOW_WIDTH / 2 -
-                 (btnWidth / 2.0f) - 20.f;
+    float btnWidth =
+        rtype::games::rtype::client::GraphicsConfig::GAME_OVER_BUTTON_WIDTH;
+    float btnHeight =
+        rtype::games::rtype::client::GraphicsConfig::GAME_OVER_BUTTON_HEIGHT;
+    float btnX =
+        rtype::games::rtype::client::GraphicsConfig::WINDOW_WIDTH / 2 -
+        (btnWidth / 2.0f) -
+        rtype::games::rtype::client::GraphicsConfig::GAME_OVER_BUTTON_X_OFFSET;
 
     auto button = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Back to Menu"),
-        rtype::games::rtype::shared::Position(btnX, 650.f),
+        rtype::games::rtype::shared::Position(
+            btnX,
+            rtype::games::rtype::client::GraphicsConfig::GAME_OVER_BUTTON_Y),
         rtype::games::rtype::client::Rectangle(
             {static_cast<int>(btnWidth), static_cast<int>(btnHeight)},
             sf::Color(0, 150, 200), sf::Color(0, 200, 255)),

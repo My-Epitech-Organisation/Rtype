@@ -195,6 +195,7 @@ ECS::Entity EntityFactory::createRectangle(
         fill, fill);
     registry->emplaceComponent<rtype::games::rtype::shared::Position>(
         entt, position.x, position.y);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entt, 1);
     return entt;
 }
 
