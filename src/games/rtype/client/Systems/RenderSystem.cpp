@@ -67,7 +67,7 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry,
         registry.hasComponent<HudTag>(entity) ||
         registry.hasComponent<rs::DestroyTag>(entity))
         return;
-    auto& rectData = registry.getComponent<Rectangle>(entity);  // Référence !
+    auto& rectData = registry.getComponent<Rectangle>(entity);
     const auto& pos = registry.getComponent<rs::Position>(entity);
 
     rectData.rectangle.setSize(
@@ -194,11 +194,16 @@ void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
     for (auto entity : sortedEntities) {
         if (isEntityHidden(registry, entity)) continue;
 
-        this->_renderImages(registry, entity);
-        this->_renderRectangles(registry, entity);
-        this->_renderButtons(registry, entity);
-        this->_renderStaticText(registry, entity);
-        this->_renderHudRectangles(registry, entity);
+        if (registry.hasComponent<Image>(entity))
+            this->_renderImages(registry, entity);
+        if (registry.hasComponent<Rectangle>(entity))
+            this->_renderRectangles(registry, entity);
+        if (registry.hasComponent<ButtonTag>(entity))
+            this->_renderButtons(registry, entity);
+        if (registry.hasComponent<StaticTextTag>(entity))
+            this->_renderStaticText(registry, entity);
+        if (registry.hasComponent<HudTag>(entity))
+            this->_renderHudRectangles(registry, entity);
     }
 }
 
