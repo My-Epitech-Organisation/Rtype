@@ -71,8 +71,8 @@ void HowToPlayScene::_initLayout() {
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
-    float textX = kSectionX + 40.f;
-    float startY = kSectionY + 80.f;
+    float textX = kSectionX + kSectionW / 2;
+    float startY = kSectionY + kSectionH / 2 - 150.f;
     float lineGap = 55.f;
 
     const std::vector<std::string> lines = {
