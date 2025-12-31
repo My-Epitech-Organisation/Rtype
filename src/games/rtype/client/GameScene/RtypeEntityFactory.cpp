@@ -27,6 +27,7 @@
 #include "GraphicsConstants.hpp"
 #include "Logger/Macros.hpp"
 #include "VisualCueFactory.hpp"
+#include "Components/AnnimationComponent.hpp"
 #include "protocol/Payloads.hpp"
 
 namespace rtype::games::rtype::client {
@@ -198,12 +199,13 @@ void RtypeEntityFactory::setupMissileEntity(
         entity, assetsManager->textureManager->get("projectile_player_laser"));
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 34}));
-    reg.emplaceComponent<Size>(entity, 1, 1);
+    reg.emplaceComponent<Size>(entity, 1.75, 1.75);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, 33.0f, 34.0f);
     reg.emplaceComponent<shared::ProjectileTag>(entity);
     reg.emplaceComponent<BoxingComponent>(entity,
                                           sf::FloatRect({0, 0}, {33.f, 34.f}));
+    reg.emplaceComponent<Animation>(entity, 4, 0.5, true);
     reg.getComponent<BoxingComponent>(entity).outlineColor =
         sf::Color(0, 220, 180);
     reg.getComponent<BoxingComponent>(entity).fillColor =

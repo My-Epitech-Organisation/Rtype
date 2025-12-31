@@ -32,6 +32,7 @@
 #include "AudioLib/AudioLib.hpp"
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
+#include "Systems/AnimationSystem.hpp"
 #include "Systems/ClientDestroySystem.hpp"
 #include "Systems/ShaderRenderSystem.hpp"
 
@@ -124,6 +125,8 @@ class Graphic {
         _movementSystem;
     std::unique_ptr<::rtype::games::rtype::client::PlayerAnimationSystem>
         _playerAnimationSystem;
+    std::unique_ptr<::rtype::games::rtype::client::AnimationSystem>
+        _animationSystem;
     std::unique_ptr<::rtype::games::rtype::client::PlayerPowerUpVisualSystem>
         _playerPowerUpVisualSystem;
     std::unique_ptr<::rtype::games::rtype::client::ButtonUpdateSystem>

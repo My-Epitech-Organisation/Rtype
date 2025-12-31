@@ -23,6 +23,7 @@
 #include "games/rtype/client/PauseState.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
+#include "Systems/AnimationSystem.hpp"
 
 void Graphic::_pollEvents() {
     this->_systemScheduler->runSystem("reset_triggers");
@@ -84,6 +85,7 @@ void Graphic::_update() {
     if (!isPaused) {
         this->_systemScheduler->runSystem("movement");
         this->_systemScheduler->runSystem("player_animation");
+        this->_systemScheduler->runSystem("animation");
         this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
     }
@@ -139,6 +141,8 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::client::MovementSystem>();
     this->_playerAnimationSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerAnimationSystem>();
+    this->_animationSystem = std::make_unique<
+    ::rtype::games::rtype::client::AnimationSystem>();
     this->_playerPowerUpVisualSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_buttonUpdateSystem =
@@ -190,6 +194,13 @@ void Graphic::_initializeSystems() {
                                               reg, _currentDeltaTime);
                                       },
                                       {"movement"});
+
+    this->_systemScheduler->addSystem("animation",
+                                  [this](ECS::Registry& reg) {
+                                      _animationSystem->update(
+                                          reg, _currentDeltaTime);
+                                  },
+                                  {"movement"});
 
     this->_systemScheduler->addSystem("powerup_visuals",
                                       [this](ECS::Registry& reg) {
