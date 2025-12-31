@@ -142,6 +142,6 @@ SceneManager::SceneManager(
             std::move(rtypeGameScene), this->_networkClient,
             this->_networkSystem, this->_audio);
     });
-    this->setCurrentScene(MAIN_MENU);
+    this->setCurrentScene(SETTINGS_MENU);
     this->_applySceneChange();
 }
