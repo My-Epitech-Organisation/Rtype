@@ -209,6 +209,11 @@ ECS::Entity EntityFactory::createStaticText(
     registry->emplaceComponent<rtype::games::rtype::client::Text>(
         titleEnt, assets->fontManager->get(std::string(fontId)),
         sf::Color::White, size, title);
+    auto& data =
+        registry->getComponent<rtype::games::rtype::client::Text>(titleEnt);
+    sf::FloatRect textRect = data.text.getLocalBounds();
+    data.text.setOrigin({textRect.position.x + textRect.size.x / 2.0f,
+                         textRect.position.y + textRect.size.y / 2.0f});
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         titleEnt);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(titleEnt,

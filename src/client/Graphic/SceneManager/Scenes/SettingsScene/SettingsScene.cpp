@@ -167,7 +167,7 @@ void SettingsScene::_initAudioSection() {
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
-    auto& font = this->_assetsManager->fontManager->get("main_font");
+    auto font = this->_assetsManager->fontManager->get("main_font");
     float startY = sectionY + 70;
     float gapY = 60;
 
