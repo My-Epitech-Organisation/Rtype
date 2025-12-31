@@ -17,6 +17,7 @@
 
 #include "AllComponents.hpp"
 #include "EntityFactory/EntityFactory.hpp"
+#include "Graphic.hpp"
 #include "Logger/Macros.hpp"
 #include "games/rtype/client/GameOverState.hpp"
 #include "games/rtype/client/GraphicsConstants.hpp"
@@ -77,20 +78,14 @@ void GameOverScene::_buildLayout() {
         rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
     this->_listEntity.push_back(popUpOverlay);
 
-    const float centerX =
-        static_cast<float>(
-            rtype::games::rtype::client::GraphicsConfig::WINDOW_WIDTH) /
-            2.0f -
-        rtype::games::rtype::client::GraphicsConfig::GAME_OVER_CENTER_OFFSET;
+    const float centerX = static_cast<float>(Graphic::WINDOW_WIDTH) / 2.0f;
 
     auto title = EntityFactory::createStaticText(
         this->_registry, _assetsManager, "GAME OVER", "title_font",
         sf::Vector2f{
-            centerX - rtype::games::rtype::client::GraphicsConfig::
-                          GAME_OVER_TITLE_X_OFFSET,
+            centerX,
             rtype::games::rtype::client::GraphicsConfig::GAME_OVER_TITLE_Y},
         96.f);
-
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         title, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
     this->_listEntity.push_back(title);
@@ -99,8 +94,7 @@ void GameOverScene::_buildLayout() {
         this->_registry, this->_assetsManager,
         "SCORE: " + std::to_string(finalScore), "main_font",
         sf::Vector2f{
-            centerX - rtype::games::rtype::client::GraphicsConfig::
-                          GAME_OVER_SCORE_X_OFFSET,
+            centerX,
             rtype::games::rtype::client::GraphicsConfig::GAME_OVER_SCORE_Y},
         72.f);
 
