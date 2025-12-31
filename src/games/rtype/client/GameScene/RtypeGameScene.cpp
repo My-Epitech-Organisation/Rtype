@@ -244,7 +244,9 @@ void RtypeGameScene::setupHud() {
 
     auto hpText = EntityFactory::createStaticText(
         _registry, _assetsManager, "HP: --/--", "title_font",
-        sf::Vector2f{barPos.x + barWidth + strlen("HP: --/--") / 2 * 24, barPos.y + barHeight / 2}, 24.f);
+        sf::Vector2f{barPos.x + barWidth + strlen("HP: --/--") / 2 * 24,
+                     barPos.y + barHeight / 2},
+        24.f);
     _registry->emplaceComponent<ZIndex>(hpText, GraphicsConfig::ZINDEX_UI + 2);
     _registry->emplaceComponent<HudTag>(hpText);
     _registry->emplaceComponent<GameTag>(hpText);

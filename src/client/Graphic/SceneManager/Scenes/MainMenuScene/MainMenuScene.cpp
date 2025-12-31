@@ -97,7 +97,9 @@ void MainMenuScene::_createConnectionPanel(
     auto title = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Connect to Server",
         "title_font",
-        sf::Vector2f(kConnectionPanelX + kConnectionPanelWidth / 2, kConnectionPanelY + 40.f), 32);
+        sf::Vector2f(kConnectionPanelX + kConnectionPanelWidth / 2,
+                     kConnectionPanelY + 40.f),
+        32);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         title, 11);
     this->_listEntity.push_back(title);
@@ -120,7 +122,7 @@ void MainMenuScene::_createConnectionPanel(
     this->_listEntity.push_back(_ipInputEntity);
     auto portLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Port:", "main_font",
-        sf::Vector2f(kConnectionPanelX +  kInputOffsetX / 2,
+        sf::Vector2f(kConnectionPanelX + kInputOffsetX / 2,
                      kConnectionPanelY + 145.f + kInputHeight / 2),
         24);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
@@ -137,7 +139,7 @@ void MainMenuScene::_createConnectionPanel(
     this->_listEntity.push_back(_portInputEntity);
     _statusEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "main_font",
-        sf::Vector2f(kConnectionPanelX +  kInputOffsetX / 2,
+        sf::Vector2f(kConnectionPanelX + kInputOffsetX / 2,
                      kConnectionPanelY + 200.f + kInputHeight / 2),
         18);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
