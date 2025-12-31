@@ -20,6 +20,7 @@
 #include "../shared/Config/GameConfig/RTypeGameConfig.hpp"
 #include "AllComponents.hpp"
 #include "AudioLib/AudioLib.hpp"
+#include "Components/AnnimationComponent.hpp"
 #include "Components/LifetimeComponent.hpp"
 #include "Components/SoundComponent.hpp"
 #include "Components/Tags.hpp"
@@ -27,7 +28,6 @@
 #include "GraphicsConstants.hpp"
 #include "Logger/Macros.hpp"
 #include "VisualCueFactory.hpp"
-#include "Components/AnnimationComponent.hpp"
 #include "protocol/Payloads.hpp"
 
 namespace rtype::games::rtype::client {

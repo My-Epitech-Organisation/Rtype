@@ -17,13 +17,13 @@
 #include "Config/Parser/RTypeConfigParser.hpp"
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
+#include "Systems/AnimationSystem.hpp"
 #include "games/rtype/client/AllComponents.hpp"
 #include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"
 #include "games/rtype/client/GameScene/RtypeInputHandler.hpp"
 #include "games/rtype/client/PauseState.hpp"
 #include "games/rtype/shared/Components/PositionComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
-#include "Systems/AnimationSystem.hpp"
 
 void Graphic::_pollEvents() {
     this->_systemScheduler->runSystem("reset_triggers");
@@ -141,8 +141,8 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::client::MovementSystem>();
     this->_playerAnimationSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerAnimationSystem>();
-    this->_animationSystem = std::make_unique<
-    ::rtype::games::rtype::client::AnimationSystem>();
+    this->_animationSystem =
+        std::make_unique<::rtype::games::rtype::client::AnimationSystem>();
     this->_playerPowerUpVisualSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_buttonUpdateSystem =
@@ -196,11 +196,11 @@ void Graphic::_initializeSystems() {
                                       {"movement"});
 
     this->_systemScheduler->addSystem("animation",
-                                  [this](ECS::Registry& reg) {
-                                      _animationSystem->update(
-                                          reg, _currentDeltaTime);
-                                  },
-                                  {"movement"});
+                                      [this](ECS::Registry& reg) {
+                                          _animationSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"movement"});
 
     this->_systemScheduler->addSystem("powerup_visuals",
                                       [this](ECS::Registry& reg) {

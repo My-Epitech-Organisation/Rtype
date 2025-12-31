@@ -21,7 +21,6 @@ struct Animation {
           frameDuration(duration),
           elapsedTime(0.f),
           oneTime(oneTime) {}
-
 };
 
-#endif //R_TYPE_ANNIMATIONCOMPONENT_HPP
+#endif  // R_TYPE_ANNIMATIONCOMPONENT_HPP
