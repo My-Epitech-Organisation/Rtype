@@ -411,7 +411,6 @@ void SettingsScene::_initAccessibilitySection() {
         sf::Vector2f(labelX, sliderY + 50 / 2), 24);
     this->_listEntity.push_back(*this->_intensityLabel);
 
-
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
