@@ -5,8 +5,8 @@
 ** AnnimationComponent.hpp
 */
 
-#ifndef R_TYPE_ANNIMATIONCOMPONENT_HPP
-#define R_TYPE_ANNIMATIONCOMPONENT_HPP
+#ifndef SRC_GAMES_RTYPE_CLIENT_COMPONENTS_ANNIMATIONCOMPONENT_HPP_
+#define SRC_GAMES_RTYPE_CLIENT_COMPONENTS_ANNIMATIONCOMPONENT_HPP_
 
 struct Animation {
     int frameCount;
@@ -15,7 +15,8 @@ struct Animation {
     float elapsedTime;
     bool oneTime;
 
-    Animation(int count = 1, float duration = 0.1f, bool oneTime = false)
+    explicit Animation(int count = 1, float duration = 0.1f,
+                       bool oneTime = false)
         : frameCount(count),
           currentFrame(1),
           frameDuration(duration),
@@ -23,4 +24,4 @@ struct Animation {
           oneTime(oneTime) {}
 };
 
-#endif  // R_TYPE_ANNIMATIONCOMPONENT_HPP
+#endif  //  SRC_GAMES_RTYPE_CLIENT_COMPONENTS_ANNIMATIONCOMPONENT_HPP_

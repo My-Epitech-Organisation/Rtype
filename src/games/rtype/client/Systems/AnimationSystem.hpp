@@ -5,8 +5,8 @@
 ** AnimationSystem.hpp
 */
 
-#ifndef R_TYPE_ANIMATIONSYSTEM_HPP
-#define R_TYPE_ANIMATIONSYSTEM_HPP
+#ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_ANIMATIONSYSTEM_HPP_
+#define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_ANIMATIONSYSTEM_HPP_
 
 #include <memory>
 
@@ -21,4 +21,4 @@ class AnimationSystem : public ::rtype::engine::ASystem {
 };
 }  // namespace rtype::games::rtype::client
 
-#endif  // R_TYPE_ANIMATIONSYSTEM_HPP
+#endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_ANIMATIONSYSTEM_HPP_
