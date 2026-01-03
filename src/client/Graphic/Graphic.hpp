@@ -16,6 +16,7 @@
 #include "../../games/rtype/client/GraphicsConstants.hpp"
 #include "../../games/rtype/client/Systems/BoxingSystem.hpp"
 #include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
+#include "../../games/rtype/client/Systems/ClientDestroySystem.hpp"
 #include "../../games/rtype/client/Systems/EventSystem.hpp"
 #include "../../games/rtype/client/Systems/MovementSystem.hpp"
 #include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
@@ -23,6 +24,7 @@
 #include "../../games/rtype/client/Systems/PlayerPowerUpVisualSystem.hpp"
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
+#include "../../games/rtype/client/Systems/ShaderRenderSystem.hpp"
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
 #include "../network/ClientNetworkSystem.hpp"
@@ -33,8 +35,6 @@
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
 #include "Systems/AnimationSystem.hpp"
-#include "Systems/ClientDestroySystem.hpp"
-#include "Systems/ShaderRenderSystem.hpp"
 
 /**
  * @brief Main graphics class managing the game window and rendering pipeline.

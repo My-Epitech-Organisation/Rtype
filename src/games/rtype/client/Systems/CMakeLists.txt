@@ -19,8 +19,12 @@ add_library(rtype_game_client_systems STATIC
     PlayerAnimationSystem.hpp
     PlayerPowerUpVisualSystem.cpp
     PlayerPowerUpVisualSystem.hpp
-        AnimationSystem.cpp
-        AnimationSystem.hpp
+    AnimationSystem.cpp
+    AnimationSystem.hpp
+    ClientDestroySystem.cpp
+    ClientDestroySystem.hpp
+    ShaderRenderSystem.cpp
+    ShaderRenderSystem.hpp
 )
 
 target_link_libraries(rtype_game_client_systems
