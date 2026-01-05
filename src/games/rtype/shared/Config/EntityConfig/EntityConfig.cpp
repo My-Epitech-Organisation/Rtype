@@ -273,6 +273,23 @@ bool EntityConfigRegistry::loadPowerUps(const std::string& filepath) {
                     config.hitboxHeight =
                         (*puTbl)["hitbox_height"].value_or(16.0F);
 
+                    if (auto* colorArray = (*puTbl)["color"].as_array()) {
+                        if (colorArray->size() >= 4) {
+                            config.colorR = static_cast<uint8_t>(
+                                colorArray->get(0)->value<int64_t>().value_or(
+                                    255));
+                            config.colorG = static_cast<uint8_t>(
+                                colorArray->get(1)->value<int64_t>().value_or(
+                                    255));
+                            config.colorB = static_cast<uint8_t>(
+                                colorArray->get(2)->value<int64_t>().value_or(
+                                    255));
+                            config.colorA = static_cast<uint8_t>(
+                                colorArray->get(3)->value<int64_t>().value_or(
+                                    255));
+                        }
+                    }
+
                     if (config.isValid()) {
                         m_powerUps[config.id] = std::move(config);
                     }
