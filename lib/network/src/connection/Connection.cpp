@@ -15,10 +15,17 @@
 
 namespace rtype::network {
 
+Connection::Connection()
+    : config_(),
+      stateMachine_(config_.stateConfig),
+      reliableChannel_(config_.reliabilityConfig),
+      compressor_(config_.compressionConfig) {}
+
 Connection::Connection(const Config& config)
     : config_(config),
       stateMachine_(config.stateConfig),
-      reliableChannel_(config.reliabilityConfig) {}
+      reliableChannel_(config.reliabilityConfig),
+      compressor_(config.compressionConfig) {}
 
 Result<void> Connection::connect() {
     auto result = stateMachine_.initiateConnect();
@@ -92,9 +99,21 @@ Result<void> Connection::processPacket(const Buffer& data,
         }
     }
 
+    // Extract and decompress payload
     Buffer payload;
     if (header.payloadSize > 0) {
-        payload.assign(data.begin() + kHeaderSize, data.end());
+        Buffer rawPayload(data.begin() + kHeaderSize, data.end());
+
+        // Check if payload is compressed
+        if (header.flags & Flags::kCompressed) {
+            auto decompressResult = compressor_.decompress(rawPayload);
+            if (!decompressResult) {
+                return Err<void>(NetworkError::DecompressionFailed);
+            }
+            payload = std::move(decompressResult.value());
+        } else {
+            payload = std::move(rawPayload);
+        }
     }
 
     auto opcode = static_cast<OpCode>(header.opcode);
@@ -181,11 +200,24 @@ Result<Connection::OutgoingPacket> Connection::buildPacket(
         return Err<OutgoingPacket>(NetworkError::NotConnected);
     }
 
+    // Attempt compression if enabled
+    Buffer finalPayload = payload;
+    bool isCompressed = false;
+
+    if (config_.enableCompression &&
+        compressor_.shouldCompress(payload.size())) {
+        auto compressionResult = compressor_.compress(payload);
+        if (compressionResult.wasCompressed) {
+            finalPayload = std::move(compressionResult.data);
+            isCompressed = true;
+        }
+    }
+
     Header header;
     header.magic = kMagicByte;
     header.opcode = static_cast<std::uint8_t>(opcode);
     header.payloadSize =
-        ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(payload.size()));
+        ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(finalPayload.size()));
     header.userId = ByteOrderSpec::toNetwork(*uid);
     header.seqId = ByteOrderSpec::toNetwork(nextSequenceId());
     header.ackId =
@@ -198,11 +230,15 @@ Result<Connection::OutgoingPacket> Connection::buildPacket(
         header.flags |= Flags::kReliable;
     }
 
-    Buffer packet(kHeaderSize + payload.size());
+    if (isCompressed) {
+        header.flags |= Flags::kCompressed;
+    }
+
+    Buffer packet(kHeaderSize + finalPayload.size());
     std::memcpy(packet.data(), &header, kHeaderSize);
-    if (!payload.empty()) {
-        std::memcpy(packet.data() + kHeaderSize, payload.data(),
-                    payload.size());
+    if (!finalPayload.empty()) {
+        std::memcpy(packet.data() + kHeaderSize, finalPayload.data(),
+                    finalPayload.size());
     }
 
     if (reliable) {
