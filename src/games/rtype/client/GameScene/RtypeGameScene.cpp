@@ -255,7 +255,9 @@ void RtypeGameScene::setupHud() {
 
     auto hpText = EntityFactory::createStaticText(
         _registry, _assetsManager, "HP: --/--", "title_font",
-        sf::Vector2f{barPos.x + barWidth + 16.f, barPos.y - 2.f}, 24.f);
+        sf::Vector2f{barPos.x + barWidth + strlen("HP: --/--") / 2 * 24,
+                     barPos.y + barHeight / 2},
+        24.f);
     _registry->emplaceComponent<ZIndex>(hpText, GraphicsConfig::ZINDEX_UI + 2);
     _registry->emplaceComponent<HudTag>(hpText);
     _registry->emplaceComponent<GameTag>(hpText);
@@ -628,7 +630,7 @@ void RtypeGameScene::spawnDamagePopup(int damage) {
     }
 
     try {
-        const sf::Font& font = _assetsManager->fontManager->get("title_font");
+        auto font = _assetsManager->fontManager->get("title_font");
         VisualCueFactory::createDamagePopup(
             *_registry, sf::Vector2f(pos.x + 20.f, pos.y - 10.f), damage, font,
             sf::Color(255, 60, 60));
@@ -676,7 +678,8 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     _registry->emplaceComponent<Rectangle>(overlayEntity, overlaySize,
                                            sf::Color(0, 0, 0, 180),
                                            sf::Color(0, 0, 0, 180));
-    auto& overlayPos = _registry->emplaceComponent<rs::Position>(overlayEntity);
+    auto& overlayPos =
+        _registry->emplaceComponent<rs::TransformComponent>(overlayEntity);
     overlayPos.x = 0;
     overlayPos.y = 0;
     _registry->emplaceComponent<ZIndex>(overlayEntity, 9000);
@@ -690,18 +693,20 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     auto& panelRect = _registry->getComponent<Rectangle>(panelEntity);
     panelRect.outlineColor = sf::Color(120, 120, 150, 255);
     panelRect.outlineThickness = 3.0F;
-    auto& panelPos = _registry->emplaceComponent<rs::Position>(panelEntity);
+    auto& panelPos =
+        _registry->emplaceComponent<rs::TransformComponent>(panelEntity);
     panelPos.x = centerX - 250.0F;
     panelPos.y = centerY - 150.0F;
     _registry->emplaceComponent<ZIndex>(panelEntity, 9001);
     _disconnectPanelEntity = panelEntity;
 
     auto titleEntity = _registry->spawnEntity();
-    const sf::Font& titleFont = _assetsManager->fontManager->get("title_font");
+    auto titleFont = _assetsManager->fontManager->get("title_font");
     _registry->emplaceComponent<Text>(titleEntity, titleFont,
                                       sf::Color(255, 100, 100), 36,
                                       "Connection Lost");
-    auto& titlePos = _registry->emplaceComponent<rs::Position>(titleEntity);
+    auto& titlePos =
+        _registry->emplaceComponent<rs::TransformComponent>(titleEntity);
     titlePos.x = centerX - 150.0F;
     titlePos.y = centerY - 120.0F;
     _registry->emplaceComponent<StaticTextTag>(titleEntity);
@@ -709,10 +714,11 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     _disconnectTitleEntity = titleEntity;
 
     auto messageEntity = _registry->spawnEntity();
-    const sf::Font& mainFont = _assetsManager->fontManager->get("main_font");
+    auto mainFont = _assetsManager->fontManager->get("main_font");
     _registry->emplaceComponent<Text>(
         messageEntity, mainFont, sf::Color(220, 220, 220), 20, reasonMessage);
-    auto& messagePos = _registry->emplaceComponent<rs::Position>(messageEntity);
+    auto& messagePos =
+        _registry->emplaceComponent<rs::TransformComponent>(messageEntity);
     messagePos.x = centerX - 220.0F;
     messagePos.y = centerY - 50.0F;
     _registry->emplaceComponent<StaticTextTag>(messageEntity);
@@ -722,7 +728,7 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     _disconnectMessageEntity = messageEntity;
 
     Text buttonText(mainFont, sf::Color::White, 22, "Return to Main Menu");
-    rs::Position buttonPos{centerX - 125.0F, centerY + 80.0F};
+    rs::TransformComponent buttonPos{centerX - 125.0F, centerY + 80.0F};
     auto buttonSize = std::make_pair(250.0F, 50.0F);
     Rectangle buttonRect(buttonSize, sf::Color(80, 120, 200, 255),
                          sf::Color(100, 140, 220, 255));

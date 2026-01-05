@@ -24,6 +24,7 @@
 #include "Components/TextComponent.hpp"
 #include "Components/TextInputComponent.hpp"
 #include "Components/UserEventComponent.hpp"
+#include "Components/ZIndexComponent.hpp"
 #include "ECS.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 
@@ -46,6 +47,7 @@ static ECS::Entity createButton(
         entity, onClick);
     registry->emplaceComponent<rtype::games::rtype::client::UserEvent>(entity);
     registry->emplaceComponent<rtype::games::rtype::client::ButtonTag>(entity);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entity, 1);
     if (assetsManager) {
         registry->emplaceComponent<
             rtype::games::rtype::client::ButtonSoundComponent>(
@@ -82,6 +84,20 @@ ECS::Entity createPlayer(std::shared_ptr<ECS::Registry> registry,
                          std::shared_ptr<AssetManager> assetManager,
                          sf::Vector2i scale = sf::Vector2i(1, 1),
                          bool isControllable = false);
+
+/**
+ * @brief Create a rectangle entity
+ * @param registry ECS registry
+ * @param size a sf::Vector2i defining the size of the rectangle
+ * @param fill Fill color of the rectangle
+ * @param position Position of the rectangle
+ * @return Created entity
+ */
+
+ECS::Entity createRectangle(std::shared_ptr<ECS::Registry> registry,
+                            sf::Vector2i size = sf::Vector2i(1, 1),
+                            sf::Color fill = sf::Color::White,
+                            sf::Vector2f position = sf::Vector2f(0, 0));
 
 std::vector<ECS::Entity> createSection(std::shared_ptr<ECS::Registry> registry,
                                        std::shared_ptr<AssetManager> assets,
