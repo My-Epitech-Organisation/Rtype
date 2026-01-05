@@ -19,6 +19,8 @@
 #include "../shared/Components/Tags.hpp"
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
+#include "../shared/Config/EntityConfig/EntityConfig.hpp"
+#include "../shared/Config/PrefabLoader.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 #include "Logger/Macros.hpp"
 namespace rtype::games::rtype::server {
@@ -38,6 +40,10 @@ bool GameEngine::initialize() {
         return false;
     }
     _registry->reserveEntities(GameConfig::MAX_ENEMIES + 100);
+
+    _prefabManager = std::make_unique<ECS::PrefabManager>(std::ref(*_registry));
+    shared::PrefabLoader::registerAllPrefabs(*_prefabManager);
+    LOG_INFO("[GameEngine] Registered " << _prefabManager->getPrefabNames().size() << " prefabs from entity configs");
 
     setupECSSignals();
     auto eventEmitter = [this](const engine::GameEvent& event) {

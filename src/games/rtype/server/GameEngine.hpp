@@ -15,6 +15,7 @@
 #include <rtype/ecs.hpp>
 #include <rtype/engine.hpp>
 
+#include "../shared/Config/PrefabLoader.hpp"
 #include "../shared/Systems/Systems.hpp"
 #include "Systems/Systems.hpp"
 
@@ -126,6 +127,7 @@ class GameEngine : public engine::AGameEngine {
 
     std::shared_ptr<ECS::Registry> _registry;
     std::unique_ptr<ECS::SystemScheduler> _systemScheduler;
+    std::unique_ptr<ECS::PrefabManager> _prefabManager;
 
     bool _running = false;
 
