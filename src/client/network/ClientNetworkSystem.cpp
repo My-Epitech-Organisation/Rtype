@@ -450,6 +450,7 @@ void ClientNetworkSystem::handleConnected(std::uint32_t userId) {
     LOG_INFO("[ClientNetworkSystem] Connected with userId=" +
              std::to_string(userId));
     localUserId_ = userId;
+    disconnectedHandled_ = false;
 
     auto pendingIt = pendingPlayerSpawns_.find(userId);
     if (pendingIt != pendingPlayerSpawns_.end()) {
@@ -481,7 +482,13 @@ void ClientNetworkSystem::handleConnected(std::uint32_t userId) {
 }
 
 void ClientNetworkSystem::handleDisconnected(network::DisconnectReason reason) {
-    (void)reason;
+    LOG_DEBUG("[ClientNetworkSystem] handleDisconnected called, reason="
+              << static_cast<int>(reason));
+    if (disconnectedHandled_) {
+        LOG_DEBUG("[ClientNetworkSystem] Disconnect already handled, skipping");
+        return;
+    }
+    disconnectedHandled_ = true;
 
     for (auto& [networkId, entity] : networkIdToEntity_) {
         if (registry_->isAlive(entity)) {
@@ -494,6 +501,19 @@ void ClientNetworkSystem::handleDisconnected(network::DisconnectReason reason) {
     localPlayerEntity_.reset();
     pendingPlayerSpawns_.clear();
     lastKnownHealth_.clear();
+
+    if (onDisconnectCallback_) {
+        LOG_DEBUG("[ClientNetworkSystem] Calling onDisconnect callback");
+        onDisconnectCallback_(reason);
+    } else {
+        LOG_WARNING(
+            "[ClientNetworkSystem] No onDisconnect callback registered!");
+    }
+}
+
+void ClientNetworkSystem::onDisconnect(
+    std::function<void(network::DisconnectReason)> callback) {
+    onDisconnectCallback_ = std::move(callback);
 }
 
 ECS::Entity ClientNetworkSystem::defaultEntityFactory(

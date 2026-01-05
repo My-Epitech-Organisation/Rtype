@@ -20,11 +20,11 @@ namespace rtype::network {
  * @brief Reason for connection termination
  */
 enum class DisconnectReason : std::uint8_t {
-    LocalRequest,
-    RemoteRequest,
-    Timeout,
-    MaxRetriesExceeded,
-    ProtocolError
+    Timeout = 0,
+    MaxRetriesExceeded = 1,
+    ProtocolError = 2,
+    RemoteRequest = 3,
+    LocalRequest = 4
 };
 
 [[nodiscard]] constexpr std::string_view toString(
