@@ -416,8 +416,21 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
     this->_networkClient->onGameStart([this](float countdownDuration) {
         LOG_INFO("[Lobby] Server triggered game start with countdown: "
                  << countdownDuration << "s");
-        _countdownActive = true;
-        _countdownTimer = countdownDuration;
+        if (countdownDuration > 0.0f) {
+            _countdownActive = true;
+            _countdownTimer = countdownDuration;
+        } else {
+            _countdownActive = false;
+            _countdownTimer = 0.0f;
+            if (_registry->hasComponent<rtype::games::rtype::client::Text>(
+                    _countdownTextEntity)) {
+                auto& text = _registry->getComponent<rtype::games::rtype::client::Text>(
+                    _countdownTextEntity);
+                text.textContent = "";
+                text.text.setString(text.textContent);
+            }
+            LOG_INFO("[Lobby] Countdown cancelled by server");
+        }
     });
 
     this->_networkClient->onPlayerReadyStateChanged(
