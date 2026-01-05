@@ -600,7 +600,8 @@ void NetworkClient::handleEntityDestroy(const network::Header& header,
 
         queueCallback([this, entityId]() {
             for (const auto& cb : onEntityDestroyCallbacks_) {
-                cb(entityId);
+                if (cb)
+                    cb(entityId);
             }
         });
     } catch (...) {
