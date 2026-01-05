@@ -160,12 +160,6 @@ class GameStateManager {
         _stateChangeCallback = std::move(callback);
     }
 
-    /**
-     * @brief Set callback for when all players are ready
-     */
-    void setOnAllPlayersReady(std::function<void()> callback) {
-        _onAllPlayersReadyCallback = std::move(callback);
-    }
 
     /**
      * @brief Set callback invoked when the countdown starts. Receives the
@@ -249,14 +243,13 @@ class GameStateManager {
     size_t _minPlayersToStart;
     size_t _connectedPlayerCount{0};
     StateChangeCallback _stateChangeCallback;
-    std::function<void()> _onAllPlayersReadyCallback;
+
     std::function<void(std::uint32_t userId, bool isReady)>
         _onPlayerReadyStateChangedCallback;
 
     bool _countdownActive{false};
     float _countdownRemaining{0.0f};
 
-    // Countdown configuration and callbacks
     float _defaultCountdown{3.0f};
     std::function<void(float)> _onCountdownStartedCallback;
     std::function<void()> _onCountdownCancelledCallback;
