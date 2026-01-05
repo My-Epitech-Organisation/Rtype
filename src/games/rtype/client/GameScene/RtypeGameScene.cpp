@@ -174,14 +174,12 @@ void RtypeGameScene::update() {
     if (_networkSystem && _networkSystem->isConnected()) {
         bool shouldSend = false;
 
-        // Mask for movement inputs only (without shoot)
         constexpr std::uint8_t kMovementMask =
             ::rtype::network::InputMask::kUp |
             ::rtype::network::InputMask::kDown |
             ::rtype::network::InputMask::kLeft |
             ::rtype::network::InputMask::kRight;
 
-        // Check if movement changed → immediate send
         std::uint8_t currentMovement = inputMask & kMovementMask;
         std::uint8_t lastMovement = _lastInputMask & kMovementMask;
 
@@ -189,7 +187,6 @@ void RtypeGameScene::update() {
             shouldSend = true;
         }
 
-        // Check shoot button state for continuous fire support
         bool isShootingNow =
             (inputMask & ::rtype::network::InputMask::kShoot) != 0;
         bool wasShootingLast =
@@ -197,17 +194,14 @@ void RtypeGameScene::update() {
 
         if (isShootingNow) {
             if (!wasShootingLast) {
-                // Just pressed shoot → immediate send + reset timer
                 shouldSend = true;
                 _shootInputClock.restart();
             } else if (_shootInputClock.getElapsedTime().asSeconds() >=
                        kShootSendInterval) {
-                // Shoot held → throttled continuous send (20 Hz)
                 shouldSend = true;
                 _shootInputClock.restart();
             }
         } else if (wasShootingLast) {
-            // Just released shoot → immediate send
             shouldSend = true;
         }
 

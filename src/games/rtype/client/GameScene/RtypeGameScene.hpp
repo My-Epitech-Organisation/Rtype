@@ -132,10 +132,8 @@ class RtypeGameScene : public AGameScene {
     static constexpr float kVignetteMaxAlpha = 180.0F;
     sf::Vector2u _lastVignetteSize{0, 0};
 
-    /// @brief Interval between shoot input sends when holding fire (20 Hz)
     static constexpr float kShootSendInterval = 0.05F;
 
-    /// @brief Timer for shoot input throttling during continuous fire
     sf::Clock _shootInputClock;
 
     void setupDamageVignette();
