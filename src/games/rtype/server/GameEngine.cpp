@@ -220,6 +220,7 @@ engine::ProcessedEvent GameEngine::processEvent(
     engine::ProcessedEvent result{};
     result.type = event.type;
     result.networkId = event.entityNetworkId;
+    result.subType = event.subType;
     result.x = event.x;
     result.y = event.y;
     result.vx = event.velocityX;
