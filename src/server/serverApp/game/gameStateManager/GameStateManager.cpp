@@ -103,22 +103,26 @@ void GameStateManager::checkAutoStart() {
         return;
     }
 
-    if (_connectedPlayerCount == 0 ||
+    if (_readyPlayers.size() < _minPlayersToStart) {
+        return;
+    }
+
+    if (_connectedPlayerCount > 0 &&
         _readyPlayers.size() < _connectedPlayerCount) {
         return;
     }
 
-    LOG_INFO("[GameStateManager] All "
-             << _connectedPlayerCount << " players are ready - starting game!");
+    LOG_INFO("[GameStateManager] Auto-start conditions met: ready="
+             << _readyPlayers.size() << " connected=" << _connectedPlayerCount
+             << " minRequired=" << _minPlayersToStart);
 
     if (_onAllPlayersReadyCallback) {
         _onAllPlayersReadyCallback();
     }
 
-    _countdownActive = true;
-    _countdownRemaining = 3.0f;
-    LOG_INFO("[GameStateManager] Starting countdown: " << _countdownRemaining
-                                                       << "s");
+    _countdownActive = false;
+    _countdownRemaining = 0.0f;
+    transitionTo(GameState::Playing);
 }
 
 void GameStateManager::update(float deltaTime) {
