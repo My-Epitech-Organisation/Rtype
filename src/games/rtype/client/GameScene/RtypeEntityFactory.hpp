@@ -53,10 +53,11 @@ class RtypeEntityFactory {
      * @param reg ECS registry
      * @param assetsManager Asset manager
      * @param entity Entity to configure
+     * @param subType Enemy variant (0=Basic, 1=Shooter, 2=Chaser, etc...)
      */
     static void setupBydosEntity(ECS::Registry& reg,
                                  std::shared_ptr<AssetManager> assetsManager,
-                                 ECS::Entity entity);
+                                 ECS::Entity entity, std::uint8_t subType = 0);
 
     /**
      * @brief Create a missile entity with all components
