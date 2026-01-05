@@ -33,11 +33,9 @@ Result<void> ReliableChannel::trackOutgoing(
 }
 
 void ReliableChannel::recordAck(std::uint16_t ackId) noexcept {
-    // Cumulative acknowledgment: mark all packets with seqId <= ackId as acknowledged
-    for (auto& [seqId, packet] : pendingPackets_) {
-        if (seqId <= ackId) {
-            packet.isAcked = true;
-        }
+    auto it = pendingPackets_.find(ackId);
+    if (it != pendingPackets_.end()) {
+        it->second.isAcked = true;
     }
 }
 
