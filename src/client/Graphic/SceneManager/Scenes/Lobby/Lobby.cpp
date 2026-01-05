@@ -442,7 +442,20 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
         });
 
     this->_networkClient->onEntityDestroy([this](std::uint32_t entityId) {
-        _pendingPlayerRemovals.push_back(entityId);
+        bool found = false;
+        for (const auto& [userId, entities] : _listUser) {
+            auto it = std::find_if(entities.begin(), entities.end(), [entityId](const ECS::Entity& ent) {
+                return ent.id == entityId;
+            });
+            if (it != entities.end()) {
+                _pendingPlayerRemovals.push_back(userId);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            LOG_WARNING("[Lobby] onEntityDestroy: unknown entityId " << entityId << " - no matching user found");
+        }
     });
 
     this->_networkClient->onDisconnected(
