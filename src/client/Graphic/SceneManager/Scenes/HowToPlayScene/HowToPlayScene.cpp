@@ -40,7 +40,7 @@ HowToPlayScene::HowToPlayScene(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Back"),
-        rtype::games::rtype::shared::Position(100, 900),
+        rtype::games::rtype::shared::TransformComponent(100, 900),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager, std::function<void()>([this]() {

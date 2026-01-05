@@ -78,6 +78,8 @@ void GameEventProcessor::processEvents() {
                     processed.vy);
                 break;
             }
+            case engine::GameEventType::GameOver:
+                break;
             case engine::GameEventType::EntityHealthChanged: {
                 LOG_DEBUG("[EventProcessor] Processing EntityHealthChanged: "
                           << "networkId=" << event.entityNetworkId << " health="

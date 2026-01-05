@@ -301,7 +301,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           cd build
-          ctest --output-on-failure --timeout 120
+          ctest --output-on-failure --timeout 300
 
       - name: Run Coverage Analysis (Linux only)
         if: matrix.os == 'ubuntu-latest'

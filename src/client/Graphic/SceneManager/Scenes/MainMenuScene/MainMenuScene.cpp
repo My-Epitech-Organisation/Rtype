@@ -40,8 +40,9 @@ void MainMenuScene::_createAstroneerVessel() {
     this->_registry->emplaceComponent<rtype::games::rtype::client::Image>(
         astroneerVessel,
         this->_assetsManager->textureManager->get("astro_vessel"));
-    this->_registry->emplaceComponent<rtype::games::rtype::shared::Position>(
-        astroneerVessel, 1900, 1060);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+            astroneerVessel, 1900, 1060);
     this->_registry->emplaceComponent<rtype::games::rtype::client::Size>(
         astroneerVessel, 0.3, 0.3);
     this->_registry
@@ -68,7 +69,7 @@ void MainMenuScene::_createFakePlayer() {
                 fakePlayer, std::pair<int, int>({0, 0}),
                 std::pair<int, int>({33, 17}));
         this->_registry
-            ->emplaceComponent<rtype::games::rtype::shared::Position>(
+            ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
                 fakePlayer, (-10 * (distrib150(gen) + 50)),
                 72 * (distrib15(gen) % 15));
         this->_registry->emplaceComponent<rtype::games::rtype::client::Size>(
@@ -135,8 +136,8 @@ void MainMenuScene::_createConnectionPanel(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 28, "Connect"),
-        rtype::games::rtype::shared::Position(kConnectionPanelX + 15.f,
-                                              kConnectionPanelY + 275.f),
+        rtype::games::rtype::shared::TransformComponent(
+            kConnectionPanelX + 15.f, kConnectionPanelY + 275.f),
         rtype::games::rtype::client::Rectangle({200, 60}, sf::Color(0, 150, 0),
                                                sf::Color(0, 200, 0)),
         this->_assetsManager, std::function<void()>([this, switchToScene]() {
@@ -147,7 +148,7 @@ void MainMenuScene::_createConnectionPanel(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 26, "Close"),
-        rtype::games::rtype::shared::Position(kConnectionPanelX + 235.f,
+        rtype::games::rtype::shared::TransformComponent(kConnectionPanelX + 235.f,
                                               kConnectionPanelY + 275.f),
         rtype::games::rtype::client::Rectangle({200, 60}, sf::Color(150, 0, 0),
                                                sf::Color(200, 0, 0)),
@@ -221,15 +222,25 @@ void MainMenuScene::_onConnectClicked(
     _updateStatus("Connecting to " + ip + ":" + std::to_string(port) + "...",
                   sf::Color::Yellow);
     std::weak_ptr<ECS::Registry> weakRegistry = _registry;
+    ECS::Entity statusEntity = _statusEntity;
 
-    _networkClient->onConnected([this, switchToScene,
-                                 weakRegistry](std::uint32_t userId) {
-        if (!_alive) return;
+    _networkClient->onConnected([weakRegistry, switchToScene,
+                                 statusEntity](std::uint32_t userId) {
         auto reg = weakRegistry.lock();
         if (!reg) return;
 
-        LOG_INFO("[Client] Connected with user ID: " + std::to_string(userId));
-        _updateStatus("Connected! Starting game...", sf::Color::Green);
+        LOG_INFO("[Client] Connected with user ID: " << userId);
+
+        if (reg->isAlive(statusEntity) &&
+            reg->hasComponent<rtype::games::rtype::client::Text>(
+                statusEntity)) {
+            auto& text = reg->getComponent<rtype::games::rtype::client::Text>(
+                statusEntity);
+            text.textContent = "Connected! Starting game...";
+            text.text.setString("Connected! Starting game...");
+            text.text.setFillColor(sf::Color::Green);
+        }
+
         try {
             switchToScene(SceneManager::LOBBY);
         } catch (SceneNotFound& e) {
@@ -239,11 +250,11 @@ void MainMenuScene::_onConnectClicked(
     });
 
     _networkClient->onDisconnected(
-        [this,
-         weakRegistry](rtype::client::NetworkClient::DisconnectReason reason) {
-            if (!_alive) return;
+        [weakRegistry,
+         statusEntity](rtype::client::NetworkClient::DisconnectReason reason) {
             auto reg = weakRegistry.lock();
             if (!reg) return;
+
             std::string reasonStr;
             switch (reason) {
                 case rtype::network::DisconnectReason::Timeout:
@@ -262,7 +273,17 @@ void MainMenuScene::_onConnectClicked(
                     reasonStr = "Disconnected";
                     break;
             }
-            _updateStatus(reasonStr, sf::Color::Red);
+
+            if (reg->isAlive(statusEntity) &&
+                reg->hasComponent<rtype::games::rtype::client::Text>(
+                    statusEntity)) {
+                auto& text =
+                    reg->getComponent<rtype::games::rtype::client::Text>(
+                        statusEntity);
+                text.textContent = reasonStr;
+                text.text.setString(reasonStr);
+                text.text.setFillColor(sf::Color::Red);
+            }
         });
     if (!_networkClient->connect(ip, port)) {
         this->_connectPopUpVisible = true;
@@ -346,7 +367,7 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Play"),
-        rtype::games::rtype::shared::Position(100, 350),
+        rtype::games::rtype::shared::TransformComponent(100, 350),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager,
@@ -359,7 +380,7 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "How to Play"),
-        rtype::games::rtype::shared::Position(100, 470),
+        rtype::games::rtype::shared::TransformComponent(100, 470),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager, std::function<void()>([switchToScene]() {
@@ -378,7 +399,7 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Settings"),
-        rtype::games::rtype::shared::Position(100, 590),
+        rtype::games::rtype::shared::TransformComponent(100, 590),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager, std::function<void()>([switchToScene]() {
@@ -397,7 +418,7 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Quit"),
-        rtype::games::rtype::shared::Position(100, 710),
+        rtype::games::rtype::shared::TransformComponent(100, 710),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager,
@@ -463,7 +484,6 @@ MainMenuScene::MainMenuScene(
 }
 
 MainMenuScene::~MainMenuScene() {
-    _alive = false;
     if (_networkClient) {
         _networkClient->onConnected([](std::uint32_t) {});
         _networkClient->onDisconnected([](rtype::network::DisconnectReason) {});

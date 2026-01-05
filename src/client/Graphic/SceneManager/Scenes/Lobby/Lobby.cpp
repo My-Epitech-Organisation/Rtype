@@ -65,17 +65,17 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
             float mySectionX = kStartPosX + ((this->_nbrUser - 1) * kStepX);
             float myCenterX = mySectionX + kBoxHalfW;
             if (this->_registry
-                    ->hasComponent<rtype::games::rtype::shared::Position>(
+                    ->hasComponent<rtype::games::rtype::shared::TransformComponent>(
                         playerEntt)) {
                 auto& pos =
                     this->_registry
-                        ->getComponent<rtype::games::rtype::shared::Position>(
+                        ->getComponent<rtype::games::rtype::shared::TransformComponent>(
                             playerEntt);
                 pos.x = myCenterX;
                 pos.y = kBoxCenterY;
             } else {
                 this->_registry
-                    ->emplaceComponent<rtype::games::rtype::shared::Position>(
+                    ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
                         playerEntt, myCenterX, kBoxCenterY);
             }
             Zindex.depth = 4;
@@ -87,7 +87,7 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Disconnect"),
-        rtype::games::rtype::shared::Position(100, 900),
+        rtype::games::rtype::shared::TransformComponent(100, 900),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color(200, 0, 0),
                                                sf::Color::Red),
         this->_assetsManager, std::function<void()>([this]() {
@@ -139,7 +139,7 @@ void Lobby::_initInfoMenu() {
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 32, "Start Game"),
-        rtype::games::rtype::shared::Position(
+        rtype::games::rtype::shared::TransformComponent(
             static_cast<float>(kBaseX + kBaseW - 280),
             static_cast<float>(kBaseY + kBaseH - 70)),
         rtype::games::rtype::client::Rectangle(std::pair<int, int>(250, 50),

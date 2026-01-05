@@ -19,8 +19,9 @@
 #include "SceneManager/SceneException.hpp"
 #include "games/rtype/client/AllComponents.hpp"
 #include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"
+#include "games/rtype/client/GameScene/RtypeInputHandler.hpp"
 #include "games/rtype/client/PauseState.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 
 void Graphic::_pollEvents() {
@@ -29,6 +30,9 @@ void Graphic::_pollEvents() {
         if (!event) return;
         if (event->is<sf::Event::Closed>()) {
             this->_window->close();
+        }
+        if (event->is<sf::Event::FocusLost>()) {
+            rtype::games::rtype::client::RtypeInputHandler::clearKeyStates();
         }
         this->_eventSystem->setEvent(*event);
         this->_eventSystem->update(*this->_registry, 0.f);
@@ -78,7 +82,7 @@ void Graphic::_update() {
     this->_systemScheduler->runSystem("parallax");
 
     if (!isPaused) {
-        this->_systemScheduler->runSystem("movement");
+        this->_systemScheduler->runSystem("sprite_position");
         this->_systemScheduler->runSystem("player_animation");
         this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
@@ -131,8 +135,8 @@ void Graphic::_setupNetworkEntityFactory() {
 }
 
 void Graphic::_initializeSystems() {
-    this->_movementSystem =
-        std::make_unique<::rtype::games::rtype::client::MovementSystem>();
+    this->_spritePositionSystem =
+        std::make_unique<::rtype::games::rtype::client::SpritePositionSystem>();
     this->_playerAnimationSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerAnimationSystem>();
     this->_playerPowerUpVisualSystem = std::make_unique<
@@ -173,9 +177,9 @@ void Graphic::_initializeSystems() {
             this->_resetTriggersSystem->update(reg, 0.f);
         });
 
-    this->_systemScheduler->addSystem("movement",
+    this->_systemScheduler->addSystem("sprite_position",
                                       [this](ECS::Registry& reg) {
-                                          _movementSystem->update(
+                                          _spritePositionSystem->update(
                                               reg, _currentDeltaTime);
                                       },
                                       {"reset_triggers"});
@@ -185,14 +189,14 @@ void Graphic::_initializeSystems() {
                                           _playerAnimationSystem->update(
                                               reg, _currentDeltaTime);
                                       },
-                                      {"movement"});
+                                      {"sprite_position"});
 
     this->_systemScheduler->addSystem("powerup_visuals",
                                       [this](ECS::Registry& reg) {
                                           _playerPowerUpVisualSystem->update(
                                               reg, _currentDeltaTime);
                                       },
-                                      {"movement"});
+                                      {"sprite_position"});
 
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {
@@ -253,6 +257,15 @@ void Graphic::_initializeCommonAssets() {
     manager->fontManager->load("main_font", config.assets.fonts.MainFont);
 
     manager->textureManager->load("bg_menu", config.assets.textures.background);
+    manager->textureManager->load("bg_sun", config.assets.textures.sun);
+    manager->textureManager->load("bg_big_asteroids",
+                                  config.assets.textures.bigAsteroids);
+    manager->textureManager->load("bg_small_asteroids",
+                                  config.assets.textures.smallAsteroids);
+    manager->textureManager->load("bg_fst_plan_asteroids",
+                                  config.assets.textures.fstPlanAsteroids);
+    manager->textureManager->load("bg_snd_plan_asteroids",
+                                  config.assets.textures.sndPlanAsteroids);
     manager->textureManager->load("bg_planet_1",
                                   config.assets.textures.planet1);
     manager->textureManager->load("bg_planet_2",
@@ -279,6 +292,10 @@ void Graphic::_initializeCommonAssets() {
     manager->textureManager->get("bg_planet_1").setRepeated(true);
     manager->textureManager->get("bg_planet_2").setRepeated(true);
     manager->textureManager->get("bg_planet_3").setRepeated(true);
+    manager->textureManager->get("bg_small_asteroids").setRepeated(true);
+    manager->textureManager->get("bg_big_asteroids").setRepeated(true);
+    manager->textureManager->get("bg_fst_plan_asteroids").setRepeated(true);
+    manager->textureManager->get("bg_snd_plan_asteroids").setRepeated(true);
 }
 
 Graphic::Graphic(

@@ -44,8 +44,6 @@ class MainMenuScene : public AScene {
     /// @brief Status text entity
     ECS::Entity _statusEntity;
 
-    bool _alive{true};
-
     void _createAstroneerVessel();
     void _createFakePlayer();
 

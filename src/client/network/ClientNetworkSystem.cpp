@@ -13,7 +13,6 @@
 #include <SFML/Graphics/Color.hpp>
 
 #include "Components/HealthComponent.hpp"
-#include "Components/PositionComponent.hpp"
 #include "Components/SoundComponent.hpp"
 #include "Components/VelocityComponent.hpp"
 #include "Logger/Macros.hpp"
@@ -26,10 +25,11 @@
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
 #include "games/rtype/shared/Components/PowerUpComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace rtype::client {
 
-using Position = rtype::games::rtype::shared::Position;
+using Transform = rtype::games::rtype::shared::TransformComponent;
 using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
 ClientNetworkSystem::ClientNetworkSystem(
@@ -210,8 +210,8 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
         return;
     }
 
-    if (registry_->hasComponent<Position>(entity)) {
-        auto& pos = registry_->getComponent<Position>(entity);
+    if (registry_->hasComponent<Transform>(entity)) {
+        auto& pos = registry_->getComponent<Transform>(entity);
         pos.x = event.x;
         pos.y = event.y;
     }
@@ -254,9 +254,11 @@ void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
         auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
         audioLib->playSFX(*soundComp.deathSFX);
     }
-    if (registry_->hasComponent<games::rtype::shared::Position>(entity)) {
+    if (registry_->hasComponent<games::rtype::shared::TransformComponent>(
+            entity)) {
         const auto& pos =
-            registry_->getComponent<games::rtype::shared::Position>(entity);
+            registry_->getComponent<games::rtype::shared::TransformComponent>(
+                entity);
         games::rtype::client::VisualCueFactory::createFlash(
             *registry_, {pos.x, pos.y}, sf::Color(255, 80, 0), 90.f, 0.45f, 20);
     }
@@ -309,8 +311,8 @@ void ClientNetworkSystem::handlePositionCorrection(float x, float y) {
         return;
     }
 
-    if (registry_->hasComponent<Position>(entity)) {
-        auto& pos = registry_->getComponent<Position>(entity);
+    if (registry_->hasComponent<Transform>(entity)) {
+        auto& pos = registry_->getComponent<Transform>(entity);
         pos.x = x;
         pos.y = y;
     }
@@ -328,38 +330,50 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
     }
 
     auto it = networkIdToEntity_.find(event.entityId);
-    if (it != networkIdToEntity_.end()) {
-        ECS::Entity entity = it->second;
-        if (registry_->isAlive(entity)) {
-            if (registry_->hasComponent<
-                    rtype::games::rtype::shared::HealthComponent>(entity)) {
-                auto& health = registry_->getComponent<
-                    rtype::games::rtype::shared::HealthComponent>(entity);
-                previousHealth = health.current;
-                health.current = event.current;
-                health.max = event.max;
-            } else {
-                registry_->emplaceComponent<
-                    rtype::games::rtype::shared::HealthComponent>(
-                    entity, event.current, event.max);
-            }
-
-            if (previousHealth.has_value() &&
-                previousHealth.value() > event.current &&
-                registry_->hasComponent<rtype::games::rtype::shared::Position>(
-                    entity)) {
-                const auto& pos =
-                    registry_
-                        ->getComponent<rtype::games::rtype::shared::Position>(
-                            entity);
-                games::rtype::client::VisualCueFactory::createFlash(
-                    *registry_, {pos.x, pos.y}, sf::Color(255, 80, 80), 70.f,
-                    0.25f, 12);
-            }
-        }
-    } else {
+    if (it == networkIdToEntity_.end()) {
         LOG_DEBUG("[ClientNetworkSystem] Entity "
-                  << event.entityId << " not found in networkIdToEntity_ map");
+                  << event.entityId
+                  << " not found in networkIdToEntity_ map, ignoring health");
+        lastKnownHealth_.erase(event.entityId);
+        return;
+    }
+
+    ECS::Entity entity = it->second;
+
+    if (!registry_->isAlive(entity)) {
+        LOG_DEBUG("[ClientNetworkSystem] Entity "
+                  << event.entityId << " not alive, ignoring health");
+        networkIdToEntity_.erase(it);
+        lastKnownHealth_.erase(event.entityId);
+        return;
+    }
+
+    if (registry_->hasComponent<rtype::games::rtype::shared::HealthComponent>(
+            entity)) {
+        auto& health =
+            registry_
+                ->getComponent<rtype::games::rtype::shared::HealthComponent>(
+                    entity);
+        previousHealth = health.current;
+        health.current = event.current;
+        health.max = event.max;
+    } else {
+        registry_
+            ->emplaceComponent<rtype::games::rtype::shared::HealthComponent>(
+                entity, event.current, event.max);
+    }
+
+    if (previousHealth.has_value() && previousHealth.value() > event.current &&
+        registry_
+            ->hasComponent<rtype::games::rtype::shared::TransformComponent>(
+                entity)) {
+        const auto& pos =
+            registry_
+                ->getComponent<rtype::games::rtype::shared::TransformComponent>(
+                    entity);
+        games::rtype::client::VisualCueFactory::createFlash(
+            *registry_, {pos.x, pos.y}, sf::Color(255, 80, 80), 70.f, 0.25f,
+            12);
     }
 
     lastKnownHealth_[event.entityId] = {event.current, event.max};
@@ -405,11 +419,13 @@ void ClientNetworkSystem::handlePowerUpEvent(const PowerUpEvent& event) {
         powerUpType == rtype::games::rtype::shared::PowerUpType::Shield;
     active.hasOriginalCooldown = false;
 
-    if (registry_->hasComponent<rtype::games::rtype::shared::Position>(
-            entity)) {
+    if (registry_
+            ->hasComponent<rtype::games::rtype::shared::TransformComponent>(
+                entity)) {
         const auto& pos =
-            registry_->getComponent<rtype::games::rtype::shared::Position>(
-                entity);
+            registry_
+                ->getComponent<rtype::games::rtype::shared::TransformComponent>(
+                    entity);
         sf::Color cueColor = sf::Color(180, 240, 255);
         switch (powerUpType) {
             case rtype::games::rtype::shared::PowerUpType::Shield:
@@ -440,6 +456,7 @@ void ClientNetworkSystem::handleConnected(std::uint32_t userId) {
     LOG_INFO("[ClientNetworkSystem] Connected with userId=" +
              std::to_string(userId));
     localUserId_ = userId;
+    disconnectedHandled_ = false;
 
     auto pendingIt = pendingPlayerSpawns_.find(userId);
     if (pendingIt != pendingPlayerSpawns_.end()) {
@@ -471,7 +488,13 @@ void ClientNetworkSystem::handleConnected(std::uint32_t userId) {
 }
 
 void ClientNetworkSystem::handleDisconnected(network::DisconnectReason reason) {
-    (void)reason;
+    LOG_DEBUG("[ClientNetworkSystem] handleDisconnected called, reason="
+              << static_cast<int>(reason));
+    if (disconnectedHandled_) {
+        LOG_DEBUG("[ClientNetworkSystem] Disconnect already handled, skipping");
+        return;
+    }
+    disconnectedHandled_ = true;
 
     for (auto& [networkId, entity] : networkIdToEntity_) {
         if (registry_->isAlive(entity)) {
@@ -484,13 +507,26 @@ void ClientNetworkSystem::handleDisconnected(network::DisconnectReason reason) {
     localPlayerEntity_.reset();
     pendingPlayerSpawns_.clear();
     lastKnownHealth_.clear();
+
+    if (onDisconnectCallback_) {
+        LOG_DEBUG("[ClientNetworkSystem] Calling onDisconnect callback");
+        onDisconnectCallback_(reason);
+    } else {
+        LOG_WARNING(
+            "[ClientNetworkSystem] No onDisconnect callback registered!");
+    }
+}
+
+void ClientNetworkSystem::onDisconnect(
+    std::function<void(network::DisconnectReason)> callback) {
+    onDisconnectCallback_ = std::move(callback);
 }
 
 ECS::Entity ClientNetworkSystem::defaultEntityFactory(
     ECS::Registry& registry, const EntitySpawnEvent& event) {
     auto entity = registry.spawnEntity();
 
-    registry.emplaceComponent<Position>(entity, event.x, event.y);
+    registry.emplaceComponent<Transform>(entity, event.x, event.y);
     registry.emplaceComponent<Velocity>(entity, 0.f, 0.f);
     registry.emplaceComponent<rtype::games::rtype::shared::NetworkIdComponent>(
         entity, event.entityId);
