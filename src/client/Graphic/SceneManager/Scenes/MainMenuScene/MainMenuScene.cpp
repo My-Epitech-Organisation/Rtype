@@ -223,32 +223,45 @@ void MainMenuScene::_onConnectClicked(
     std::weak_ptr<ECS::Registry> weakRegistry = _registry;
     ECS::Entity statusEntity = _statusEntity;
 
-    _networkClient->onConnected([weakRegistry, switchToScene,
-                                 statusEntity](std::uint32_t userId) {
-        auto reg = weakRegistry.lock();
-        if (!reg) return;
-
-        LOG_INFO("[Client] Connected with user ID: " << userId);
-
-        if (reg->isAlive(statusEntity) &&
-            reg->hasComponent<rtype::games::rtype::client::Text>(
-                statusEntity)) {
-            auto& text = reg->getComponent<rtype::games::rtype::client::Text>(
-                statusEntity);
-            text.textContent = "Connected! Starting game...";
-            text.text.setString("Connected! Starting game...");
-            text.text.setFillColor(sf::Color::Green);
+    if (_networkClient) {
+        for (auto id : _connectedCallbackIds) {
+            _networkClient->removeConnectedCallback(id);
         }
-
-        try {
-            switchToScene(SceneManager::LOBBY);
-        } catch (SceneNotFound& e) {
-            LOG_ERROR(std::string("Error switching to Game: ") +
-                      std::string(e.what()));
+        _connectedCallbackIds.clear();
+        for (auto id : _disconnectedCallbackIds) {
+            _networkClient->removeDisconnectedCallback(id);
         }
-    });
+        _disconnectedCallbackIds.clear();
+    }
 
-    _networkClient->onDisconnected(
+    auto onConnectedId = _networkClient->addConnectedCallback(
+        [weakRegistry, switchToScene, statusEntity](std::uint32_t userId) {
+            auto reg = weakRegistry.lock();
+            if (!reg) return;
+
+            LOG_INFO("[Client] Connected with user ID: " << userId);
+
+            if (reg->isAlive(statusEntity) &&
+                reg->hasComponent<rtype::games::rtype::client::Text>(
+                    statusEntity)) {
+                auto& text =
+                    reg->getComponent<rtype::games::rtype::client::Text>(
+                        statusEntity);
+                text.textContent = "Connected! Starting game...";
+                text.text.setString("Connected! Starting game...");
+                text.text.setFillColor(sf::Color::Green);
+            }
+
+            try {
+                switchToScene(SceneManager::LOBBY);
+            } catch (SceneNotFound& e) {
+                LOG_ERROR(std::string("Error switching to Game: ") +
+                          std::string(e.what()));
+            }
+        });
+    _connectedCallbackIds.push_back(onConnectedId);
+
+    auto onDisconnectedId = _networkClient->addDisconnectedCallback(
         [weakRegistry,
          statusEntity](rtype::client::NetworkClient::DisconnectReason reason) {
             auto reg = weakRegistry.lock();
@@ -284,6 +297,7 @@ void MainMenuScene::_onConnectClicked(
                 text.text.setFillColor(sf::Color::Red);
             }
         });
+    _disconnectedCallbackIds.push_back(onDisconnectedId);
     if (!_networkClient->connect(ip, port)) {
         this->_connectPopUpVisible = true;
         _updateStatus("Failed to start connection", sf::Color::Red);
@@ -444,20 +458,23 @@ MainMenuScene::MainMenuScene(
     this->_audio->loadMusic(bgMusic);
     this->_audio->setLoop(true);
     this->_audio->play();
-    this->_networkClient->onConnected([this,
-                                       switchToScene](std::uint32_t userId) {
-        LOG_INFO("[Client] Connected with user ID: " + std::to_string(userId));
-        this->_updateStatus("Connected! Starting game...", sf::Color::Green);
-        try {
-            switchToScene(SceneManager::LOBBY);
-            this->_connectPopUpVisible = false;
-        } catch (SceneNotFound& e) {
-            LOG_ERROR(std::string("Error switching to Game: ") +
-                      std::string(e.what()));
-        }
-    });
+    auto menuOnConnectedId = this->_networkClient->addConnectedCallback(
+        [this, switchToScene](std::uint32_t userId) {
+            LOG_INFO("[Client] Connected with user ID: " +
+                     std::to_string(userId));
+            this->_updateStatus("Connected! Starting game...",
+                                sf::Color::Green);
+            try {
+                switchToScene(SceneManager::LOBBY);
+                this->_connectPopUpVisible = false;
+            } catch (SceneNotFound& e) {
+                LOG_ERROR(std::string("Error switching to Game: ") +
+                          std::string(e.what()));
+            }
+        });
+    _connectedCallbackIds.push_back(menuOnConnectedId);
 
-    this->_networkClient->onDisconnected(
+    auto menuOnDisconnectedId = this->_networkClient->addDisconnectedCallback(
         [this](rtype::client::NetworkClient::DisconnectReason reason) {
             std::string reasonStr;
             this->_connectPopUpVisible = true;
@@ -480,11 +497,16 @@ MainMenuScene::MainMenuScene(
             }
             _updateStatus(reasonStr, sf::Color::Red);
         });
+    _disconnectedCallbackIds.push_back(menuOnDisconnectedId);
 }
 
 MainMenuScene::~MainMenuScene() {
     if (_networkClient) {
-        _networkClient->onConnected([](std::uint32_t) {});
-        _networkClient->onDisconnected([](rtype::network::DisconnectReason) {});
+        for (auto id : _connectedCallbackIds) {
+            _networkClient->removeConnectedCallback(id);
+        }
+        for (auto id : _disconnectedCallbackIds) {
+            _networkClient->removeDisconnectedCallback(id);
+        }
     }
 }
