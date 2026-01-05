@@ -20,6 +20,9 @@ PlayerPowerUpVisualSystem::PlayerPowerUpVisualSystem()
 void PlayerPowerUpVisualSystem::update(ECS::Registry& registry, float /*dt*/) {
     registry.view<Image, PlayerTag>().each(
         [&](auto entity, Image& img, PlayerTag& /*tag*/) {
+            if (registry.hasComponent<ColorTint>(entity)) {
+                return;
+            }
             img.sprite.setColor(sf::Color::White);
             if (registry.hasComponent<BoxingComponent>(entity)) {
                 auto& box = registry.getComponent<BoxingComponent>(entity);
@@ -31,6 +34,9 @@ void PlayerPowerUpVisualSystem::update(ECS::Registry& registry, float /*dt*/) {
     registry.view<Image, PlayerTag, rs::ActivePowerUpComponent>().each(
         [&](auto entity, Image& img, PlayerTag& /*tag*/,
             const rs::ActivePowerUpComponent& active) {
+            if (registry.hasComponent<ColorTint>(entity)) {
+                return;
+            }
             if (active.remainingTime <= 0.0f) {
                 return;
             }
