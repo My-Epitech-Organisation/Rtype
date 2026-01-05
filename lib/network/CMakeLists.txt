@@ -7,6 +7,7 @@ set(NETWORK_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/reliability/ReliableChannel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connection/ConnectionStateMachine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connection/Connection.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/compression/Compressor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/UdpSocket.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Packet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Serializer.cpp
@@ -26,10 +27,14 @@ target_compile_features(network PUBLIC cxx_std_20)
 
 rtype_find_asio()
 
+# Find LZ4 for compression
+find_package(lz4 CONFIG REQUIRED)
+
 target_link_libraries(network PUBLIC
     engine
     common
     asio::asio
+    lz4::lz4
 )
 
 if(WIN32)
