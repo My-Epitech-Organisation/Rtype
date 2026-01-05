@@ -274,7 +274,9 @@ void RtypeGameScene::setupHud() {
 
     auto hpText = EntityFactory::createStaticText(
         _registry, _assetsManager, "HP: --/--", "title_font",
-        sf::Vector2f{barPos.x + barWidth + 16.f, barPos.y - 2.f}, 24.f);
+        sf::Vector2f{barPos.x + barWidth + strlen("HP: --/--") / 2 * 24,
+                     barPos.y + barHeight / 2},
+        24.f);
     _registry->emplaceComponent<ZIndex>(hpText, GraphicsConfig::ZINDEX_UI + 2);
     _registry->emplaceComponent<HudTag>(hpText);
     _registry->emplaceComponent<GameTag>(hpText);
@@ -665,7 +667,7 @@ void RtypeGameScene::spawnDamagePopup(int damage) {
     }
 
     try {
-        const sf::Font& font = _assetsManager->fontManager->get("title_font");
+        auto font = _assetsManager->fontManager->get("title_font");
         VisualCueFactory::createDamagePopup(
             *_registry, sf::Vector2f(pos.x + 20.f, pos.y - 10.f), damage, font,
             sf::Color(255, 60, 60));
@@ -738,7 +740,7 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     _disconnectPanelEntity = panelEntity;
 
     auto titleEntity = _registry->spawnEntity();
-    const sf::Font& titleFont = _assetsManager->fontManager->get("title_font");
+    auto titleFont = _assetsManager->fontManager->get("title_font");
     _registry->emplaceComponent<Text>(titleEntity, titleFont,
                                       sf::Color(255, 100, 100), 36,
                                       "Connection Lost");
@@ -751,7 +753,7 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     _disconnectTitleEntity = titleEntity;
 
     auto messageEntity = _registry->spawnEntity();
-    const sf::Font& mainFont = _assetsManager->fontManager->get("main_font");
+    auto mainFont = _assetsManager->fontManager->get("main_font");
     _registry->emplaceComponent<Text>(
         messageEntity, mainFont, sf::Color(220, 220, 220), 20, reasonMessage);
     auto& messagePos =

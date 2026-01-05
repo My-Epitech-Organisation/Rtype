@@ -5,15 +5,15 @@
 ** ClientDestroySystem - Client-side entity destruction
 */
 
-#ifndef SRC_CLIENT_GRAPHIC_SYSTEMS_CLIENTDESTROYSYSTEM_HPP_
-#define SRC_CLIENT_GRAPHIC_SYSTEMS_CLIENTDESTROYSYSTEM_HPP_
+#ifndef SRC_GAMES_RTYPE_CLIENT_SYSTEMS_CLIENTDESTROYSYSTEM_HPP_
+#define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_CLIENTDESTROYSYSTEM_HPP_
 
 #include <vector>
 
 #include <rtype/engine.hpp>
 
-#include "../../../games/rtype/shared/Components/LifetimeComponent.hpp"
-#include "../../../games/rtype/shared/Components/Tags.hpp"
+#include "../../shared/Components/LifetimeComponent.hpp"
+#include "../../shared/Components/Tags.hpp"
 #include "Logger/Macros.hpp"
 
 namespace rtype::games::rtype::client {
@@ -34,4 +34,4 @@ class ClientDestroySystem : public ::rtype::engine::ASystem {
 
 }  // namespace rtype::games::rtype::client
 
-#endif  // SRC_CLIENT_GRAPHIC_SYSTEMS_CLIENTDESTROYSYSTEM_HPP_
+#endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_CLIENTDESTROYSYSTEM_HPP_

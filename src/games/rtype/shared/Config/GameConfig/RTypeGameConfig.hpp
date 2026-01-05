@@ -75,11 +75,10 @@ struct FontsConfig {
 };
 
 /**
- * @brief Textures configuration section
+ * @brief Background Textures configuration section
  */
-struct TexturesConfig {
-    std::string Player;
-    std::string Enemy;
+
+struct BackgroundTextureConfig {
     std::string background;
     std::string sun;
     std::string planet1;
@@ -89,6 +88,38 @@ struct TexturesConfig {
     std::string smallAsteroids;
     std::string fstPlanAsteroids;
     std::string sndPlanAsteroids;
+
+    bool operator==(const BackgroundTextureConfig&) const = default;
+};
+
+/**
+ * @brief Wall Textures configuration section
+ */
+
+struct WallTextureConfig {
+    std::string engrenage1;
+    std::string engrenage2;
+    std::string metal1;
+    std::string metal2;
+    std::string metal3;
+    std::string metal4;
+    std::string panneau1;
+    std::string panneau2;
+    std::string panneau3;
+    std::string truc;
+    std::string tubeMetal;
+
+    bool operator==(const WallTextureConfig&) const = default;
+};
+
+/**
+ * @brief Textures configuration section
+ */
+struct TexturesConfig {
+    BackgroundTextureConfig backgroundTexture;
+    WallTextureConfig wallTexture;
+    std::string Player;
+    std::string Enemy;
     std::string astroVessel;
     std::string missileLaser;
 
@@ -102,6 +133,7 @@ struct MusicConfig {
     std::string mainMenu;
     std::string game;
     std::string settings;
+    std::string gameOver;
 
     bool operator==(const MusicConfig&) const = default;
 };

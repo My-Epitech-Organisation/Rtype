@@ -9,6 +9,7 @@
 
 #include <SFML/Graphics/Color.hpp>
 
+#include "Components/ZIndexComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "Graphic/SceneManager/Scenes/SettingsScene/SettingsSceneUtils.hpp"
 #include "Logger/Macros.hpp"
@@ -35,7 +36,7 @@ HowToPlayScene::HowToPlayScene(
         this->_registry, this->_assetsManager, "How to Play");
     _initLayout();
 
-    this->_listEntity.push_back(EntityFactory::createButton(
+    auto backBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
@@ -51,7 +52,10 @@ HowToPlayScene::HowToPlayScene(
                               std::string("Error switching to Main Menu: ") +
                                   std::string(e.what()));
             }
-        })));
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        backBtn, 1);
+    this->_listEntity.push_back(backBtn);
 }
 
 std::string HowToPlayScene::_keyName(GameAction action) const {
@@ -68,8 +72,8 @@ void HowToPlayScene::_initLayout() {
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
-    float textX = kSectionX + 40.f;
-    float startY = kSectionY + 80.f;
+    float textX = kSectionX + kSectionW / 2;
+    float startY = kSectionY + kSectionH / 2 - 150.f;
     float lineGap = 55.f;
 
     const std::vector<std::string> lines = {
@@ -93,6 +97,8 @@ void HowToPlayScene::_initLayout() {
         auto text = EntityFactory::createStaticText(
             this->_registry, this->_assetsManager, lines[i], fontId,
             sf::Vector2f{textX, y}, 28.f);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            text, 2);
         this->_listEntity.push_back(text);
     }
 }

@@ -11,28 +11,14 @@ add_library(rtype-graphic-SFML
     KeyboardActions.hpp
     ControllerRumble.cpp
     ControllerRumble.hpp
-    Systems/ClientDestroySystem.cpp
-    Systems/ClientDestroySystem.hpp
-    Systems/ShaderRenderSystem.cpp
-    Systems/ShaderRenderSystem.hpp
 )
 
 target_include_directories(rtype-graphic-SFML PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 
-find_package(SFML
-        COMPONENTS
-        Network
-        Graphics
-        Window
-        Audio
-        System
-        CONFIG
-        REQUIRED
-)
-
-find_package(SDL2 CONFIG REQUIRED)
+rtype_find_sfml()
+rtype_find_sdl2()
 
 target_link_libraries(rtype-graphic-SFML
     PUBLIC

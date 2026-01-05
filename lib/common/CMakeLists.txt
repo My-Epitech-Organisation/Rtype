@@ -22,7 +22,7 @@ add_library(RType::Common ALIAS common)
 # TOML Parser Library (Static)
 # ============================================================================
 
-find_package(tomlplusplus CONFIG REQUIRED)
+rtype_find_tomlplusplus()
 
 add_library(rtype_toml_parser STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Config/TomlParser.cpp
@@ -35,6 +35,15 @@ target_include_directories(rtype_toml_parser PUBLIC
 )
 
 target_link_libraries(rtype_toml_parser PUBLIC
+    tomlplusplus::tomlplusplus
+)
+
+# Ensure consumers of common also get tomlplusplus includes.
+# This allows downstream targets (e.g., src/client, src/server) that link against
+# common to access tomlplusplus headers without explicitly depending on it.
+# Existing consumers should continue to compile correctly, as this only adds
+# an interface dependency; it does not remove or change existing exports.
+target_link_libraries(common INTERFACE
     tomlplusplus::tomlplusplus
 )
 

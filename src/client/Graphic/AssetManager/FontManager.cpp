@@ -12,7 +12,7 @@
 
 void FontManager::load(const std::string& id, const std::string& filePath) {
     if (this->_assets.contains(id)) return;
-    auto font = std::make_unique<sf::Font>();
+    auto font = std::make_shared<sf::Font>();
 
     if (!font->openFromFile(filePath)) {
         LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
@@ -25,7 +25,7 @@ void FontManager::load(const std::string& id, const std::string& filePath) {
                   "Font loaded with ID: " << id);
 }
 
-sf::Font& FontManager::get(const std::string& id) {
+std::shared_ptr<sf::Font> FontManager::get(const std::string& id) {
     auto it = this->_assets.find(id);
 
     if (it == this->_assets.end()) {
@@ -33,7 +33,7 @@ sf::Font& FontManager::get(const std::string& id) {
         throw std::out_of_range("Font not found: " + id);
     }
 
-    return *it->second;
+    return it->second;
 }
 
 bool FontManager::isLoaded(const std::string& id) const {
