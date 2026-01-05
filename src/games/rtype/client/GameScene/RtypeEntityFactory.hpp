@@ -74,9 +74,10 @@ class RtypeEntityFactory {
      * @param registry ECS registry
      * @param entity Entity to configure
      * @param networkId Network identifier for the entity
+     * @param subType Power-up variant type
      */
     static void setupPickupEntity(ECS::Registry& registry, ECS::Entity entity,
-                                  std::uint32_t networkId);
+                                  std::uint32_t networkId, uint8_t subType);
     /**
      * @brief Create an obstacle entity with all components
      *

@@ -12,14 +12,16 @@
 #include <utility>
 
 #include "../../shared/Config/EntityConfig/EntityConfig.hpp"
+#include "../Components/ColorTintComponent.hpp"
 #include "../Components/RectangleComponent.hpp"
 #include "../Systems/PlayerAnimationSystem.hpp"
-#include "../shared/Components/BoundingBoxComponent.hpp"
-#include "../shared/Components/EnemyTypeComponent.hpp"
-#include "../shared/Components/HealthComponent.hpp"
-#include "../shared/Components/NetworkIdComponent.hpp"
-#include "../shared/Components/PlayerIdComponent.hpp"
-#include "../shared/Config/GameConfig/RTypeGameConfig.hpp"
+#include "../../shared/Components/BoundingBoxComponent.hpp"
+#include "../../shared/Components/EnemyTypeComponent.hpp"
+#include "../../shared/Components/HealthComponent.hpp"
+#include "../../shared/Components/NetworkIdComponent.hpp"
+#include "../../shared/Components/PlayerIdComponent.hpp"
+#include "../../shared/Components/PowerUpTypeComponent.hpp"
+#include "../../shared/Config/GameConfig/RTypeGameConfig.hpp"
 #include "AllComponents.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Components/AnnimationComponent.hpp"
@@ -94,7 +96,7 @@ RtypeEntityFactory::createNetworkEntityFactory(
                 break;
 
             case ::rtype::network::EntityType::Pickup:
-                setupPickupEntity(reg, entity, event.entityId);
+                setupPickupEntity(reg, entity, event.entityId, event.subType);
                 break;
 
             case ::rtype::network::EntityType::Obstacle:
@@ -322,13 +324,33 @@ void RtypeEntityFactory::setupMissileEntity(
 
 void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
                                            ECS::Entity entity,
-                                           std::uint32_t networkId) {
-    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
-                  "[RtypeEntityFactory] Adding Pickup components");
-    static const std::array<sf::Color, 4> kColors = {
-        sf::Color(120, 200, 255), sf::Color(170, 120, 255),
-        sf::Color(120, 255, 170), sf::Color(255, 200, 120)};
-    const sf::Color color = kColors[networkId % kColors.size()];
+                                           std::uint32_t networkId,
+                                           uint8_t subType) {
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS, "[RtypeEntityFactory] Adding Pickup components");
+    auto variant = static_cast<shared::PowerUpVariant>(subType);
+    std::string configId = shared::PowerUpTypeComponent::variantToString(variant);
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS, "[RtypeEntityFactory] Pickup subType=" << static_cast<int>(subType)
+              << " variant=" << configId);
+
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    auto powerUpConfig = configRegistry.getPowerUp(configId);
+
+    sf::Color color = sf::Color::White;
+    if (powerUpConfig.has_value()) {
+        const auto& config = powerUpConfig->get();
+        color = sf::Color(config.colorR, config.colorG,
+                         config.colorB, config.colorA);
+        LOG_DEBUG_CAT(::rtype::LogCategory::ECS, "[RtypeEntityFactory] Adding ColorTint: R=" << static_cast<int>(config.colorR)
+                  << " G=" << static_cast<int>(config.colorG)
+                  << " B=" << static_cast<int>(config.colorB)
+                  << " A=" << static_cast<int>(config.colorA));
+        reg.emplaceComponent<ColorTint>(entity, config.colorR,
+                                        config.colorG,
+                                        config.colorB,
+                                        config.colorA);
+    } else {
+        LOG_WARNING("[RtypeEntityFactory] No config found for power-up: " << configId);
+    }
 
     reg.emplaceComponent<Rectangle>(entity, std::pair<float, float>{24.f, 24.f},
                                     color, color);
