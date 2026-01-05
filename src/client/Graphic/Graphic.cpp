@@ -153,6 +153,9 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::client::AnimationSystem>();
     this->_playerPowerUpVisualSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
+    this->_powerUpCollectionSystem = std::make_unique<
+        ::rtype::games::rtype::client::PowerUpCollectionSystem>(
+            this->_assetsManager->fontManager->get("main_font"));
     this->_buttonUpdateSystem =
         std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(
             this->_window);
@@ -223,6 +226,13 @@ void Graphic::_initializeSystems() {
                                               reg, _currentDeltaTime);
                                       },
                                       {"sprite_position"});
+
+    this->_systemScheduler->addSystem("powerup_collection",
+                                      [this](ECS::Registry& reg) {
+                                          _powerUpCollectionSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"powerup_visuals"});
 
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {

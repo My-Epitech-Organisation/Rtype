@@ -22,6 +22,7 @@
 #include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
 #include "../../games/rtype/client/Systems/PlayerAnimationSystem.hpp"
 #include "../../games/rtype/client/Systems/PlayerPowerUpVisualSystem.hpp"
+#include "../../games/rtype/client/Systems/PowerUpCollectionSystem.hpp"
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "../../games/rtype/client/Systems/ShaderRenderSystem.hpp"
@@ -133,6 +134,8 @@ class Graphic {
         _animationSystem;
     std::unique_ptr<::rtype::games::rtype::client::PlayerPowerUpVisualSystem>
         _playerPowerUpVisualSystem;
+    std::unique_ptr<::rtype::games::rtype::client::PowerUpCollectionSystem>
+        _powerUpCollectionSystem;
     std::unique_ptr<::rtype::games::rtype::client::ButtonUpdateSystem>
         _buttonUpdateSystem;
     std::unique_ptr<::rtype::games::rtype::client::ParallaxScrolling>
