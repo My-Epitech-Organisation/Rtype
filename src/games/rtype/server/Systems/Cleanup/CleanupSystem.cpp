@@ -32,10 +32,11 @@ void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
 
     auto enemyView = registry.view<TransformComponent, EnemyTag>();
 
-    enemyView.each([this, &registry, &isOutOfBounds](ECS::Entity entity,
-                                const TransformComponent& transform,
-                                const EnemyTag& /*tag*/) {
-        if (isOutOfBounds(transform) && !registry.hasComponent<DestroyTag>(entity)) {
+    enemyView.each([this, &registry, &isOutOfBounds](
+                       ECS::Entity entity, const TransformComponent& transform,
+                       const EnemyTag& /*tag*/) {
+        if (isOutOfBounds(transform) &&
+            !registry.hasComponent<DestroyTag>(entity)) {
             LOG_DEBUG("[CleanupSystem] Enemy "
                       << entity.id << " escaped out of bounds at ("
                       << transform.x << ", " << transform.y
@@ -78,13 +79,15 @@ void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
 
     auto projectileView = registry.view<TransformComponent, ProjectileTag>();
 
-    projectileView.each([this, &registry, &isOutOfBounds](ECS::Entity entity,
-                                const TransformComponent& transform,
-                                const ProjectileTag& /*tag*/) {
-        if (isOutOfBounds(transform) && !registry.hasComponent<DestroyTag>(entity)) {
-            registry.emplaceComponent<DestroyTag>(entity, DestroyTag{});
-        }
-    });
+    projectileView.each(
+        [this, &registry, &isOutOfBounds](ECS::Entity entity,
+                                          const TransformComponent& transform,
+                                          const ProjectileTag& /*tag*/) {
+            if (isOutOfBounds(transform) &&
+                !registry.hasComponent<DestroyTag>(entity)) {
+                registry.emplaceComponent<DestroyTag>(entity, DestroyTag{});
+            }
+        });
 }
 
 }  // namespace rtype::games::rtype::server
