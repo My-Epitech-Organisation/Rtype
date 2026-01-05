@@ -115,6 +115,10 @@ class GameEngine : public engine::AGameEngine {
 
    private:
     /**
+     * @brief Configure les signaux ECS pour les logs et statistiques
+     */
+    void setupECSSignals();
+    /**
      * @brief Emit a game event
      * @param event The event to emit
      */
@@ -139,6 +143,10 @@ class GameEngine : public engine::AGameEngine {
     EventCallback _eventCallback;
     std::vector<engine::GameEvent> _pendingEvents;
     mutable std::mutex _eventMutex;
+
+    std::atomic<size_t> _totalEntitiesCreated{0};
+    std::atomic<size_t> _totalEntitiesDestroyed{0};
+    float _lastDeltaTime = 0.0f;
 };
 
 /**

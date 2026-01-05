@@ -83,7 +83,7 @@ void GameOverScene::_buildLayout() {
         rtype::games::rtype::client::Text(
             _assetsManager->fontManager->get("main_font"), sf::Color::White, 36,
             "Back to Menu"),
-        rtype::games::rtype::shared::Position(centerX - 120.f, 520.f),
+        rtype::games::rtype::shared::TransformComponent(centerX - 120.f, 520.f),
         rtype::games::rtype::client::Rectangle(
             {240, 70}, sf::Color(0, 150, 200), sf::Color(0, 200, 255)),
         _assetsManager, std::function<void()>{[this]() {

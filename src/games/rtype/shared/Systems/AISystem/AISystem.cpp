@@ -11,20 +11,38 @@
 
 namespace rtype::games::rtype::shared {
 
-void AISystem::update(ECS::Registry& registry, float deltaTime) {
-    auto view =
-        registry.view<AIComponent, TransformComponent, VelocityComponent>();
-    const auto& behaviorRegistry = BehaviorRegistry::instance();
+namespace {
+constexpr size_t PARALLEL_THRESHOLD = 50;
+}
 
-    view.each(
-        [deltaTime, &behaviorRegistry](ECS::Entity /*entity*/, AIComponent& ai,
-                                       const TransformComponent& transform,
-                                       VelocityComponent& velocity) {
+void AISystem::update(ECS::Registry& registry, float deltaTime) {
+    const size_t entityCount = registry.countComponents<AIComponent>();
+    const auto& behaviorRegistry = BehaviorRegistry::instance();
+    if (entityCount >= PARALLEL_THRESHOLD) {
+        auto view = registry.parallelView<AIComponent, TransformComponent,
+                                          VelocityComponent>();
+        view.each([deltaTime, &behaviorRegistry](
+                      ECS::Entity /*entity*/, AIComponent& ai,
+                      const TransformComponent& transform,
+                      VelocityComponent& velocity) {
             auto behavior = behaviorRegistry.getBehavior(ai.behavior);
             if (behavior) {
                 behavior->apply(ai, transform, velocity, deltaTime);
             }
         });
+    } else {
+        auto view =
+            registry.view<AIComponent, TransformComponent, VelocityComponent>();
+        view.each([deltaTime, &behaviorRegistry](
+                      ECS::Entity /*entity*/, AIComponent& ai,
+                      const TransformComponent& transform,
+                      VelocityComponent& velocity) {
+            auto behavior = behaviorRegistry.getBehavior(ai.behavior);
+            if (behavior) {
+                behavior->apply(ai, transform, velocity, deltaTime);
+            }
+        });
+    }
 }
 
 }  // namespace rtype::games::rtype::shared

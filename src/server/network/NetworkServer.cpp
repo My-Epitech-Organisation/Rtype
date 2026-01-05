@@ -57,6 +57,8 @@ void NetworkServer::stop() {
     running_ = false;
 
     network::DisconnectPayload payload;
+    payload.reason =
+        static_cast<std::uint8_t>(network::DisconnectReason::RemoteRequest);
     auto serialized = network::Serializer::serialize(payload);
 
     for (const auto& [key, client] : clients_) {
@@ -604,6 +606,8 @@ void NetworkServer::handleDisconnect(const network::Header& header,
     std::uint32_t userId = it->second->userId;
 
     network::DisconnectPayload payload;
+    payload.reason =
+        static_cast<std::uint8_t>(network::DisconnectReason::RemoteRequest);
     auto serialized = network::Serializer::serialize(payload);
 
     auto ackPacket =
@@ -761,7 +765,22 @@ void NetworkServer::checkTimeouts() {
         }
     }
 
+    network::DisconnectPayload payload;
+    payload.reason =
+        static_cast<std::uint8_t>(network::DisconnectReason::Timeout);
+    auto serialized = network::Serializer::serialize(payload);
+
     for (std::uint32_t userId : timedOutUsers) {
+        auto client = findClientByUserId(userId);
+        if (client) {
+            auto disconnectPacket =
+                buildPacket(network::OpCode::DISCONNECT, serialized,
+                            network::kServerUserId, 0, 0, false);
+            socket_->asyncSendTo(
+                disconnectPacket, client->endpoint,
+                [](network::Result<std::size_t> result) { (void)result; });
+        }
+
         queueCallback([this, userId]() {
             if (onClientDisconnectedCallback_) {
                 onClientDisconnectedCallback_(

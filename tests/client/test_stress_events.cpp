@@ -97,7 +97,7 @@ class EventStressTest : public ::testing::Test {
             float w = sizeDist(rng);
             float h = sizeDist(rng);
 
-            registry->emplaceComponent<rs::Position>(entity, x, y);
+            registry->emplaceComponent<rs::TransformComponent>(entity, x, y);
             registry->emplaceComponent<rc::Rectangle>(
                 entity, std::make_pair(w, h),
                 sf::Color::Blue, sf::Color::Cyan);
@@ -133,7 +133,7 @@ class EventStressTest : public ::testing::Test {
             float w = sizeDist(rng);
             float h = sizeDist(rng);
 
-            registry->emplaceComponent<rs::Position>(entity, x, y);
+            registry->emplaceComponent<rs::TransformComponent>(entity, x, y);
             registry->emplaceComponent<rc::Rectangle>(
                 entity, std::make_pair(w, h),
                 sf::Color::Green, sf::Color::Yellow);
@@ -524,7 +524,7 @@ TEST_F(EventStressTest, ButtonCallbacks_ClickSimulation) {
     for (std::size_t i = 0; i < COUNT; ++i) {
         auto entity = registry->spawnEntity();
 
-        registry->emplaceComponent<rs::Position>(entity,
+        registry->emplaceComponent<rs::TransformComponent>(entity,
             static_cast<float>(i * 15), static_cast<float>(i * 10));
         registry->emplaceComponent<rc::Rectangle>(
             entity, std::make_pair(50.0f, 30.0f),

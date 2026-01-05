@@ -31,6 +31,7 @@ This quick cheatsheet summarises the binary protocol used by the R-Type client &
 - Some opcodes are marked as *reliable* and will be retransmitted if not acked.
 - Reliable opcodes include spawn/destroy/accept/update state.
 - Unreliable opcodes include movement updates and client inputs (latest state wins).
+- `PING` / `PONG` are **unreliable** (no retry); they are used for keepalive and RTT measurement. The client disconnects only after 3 consecutive missed `PONG`s **with no other packets received** (any inbound packet resets the miss counter).
 
 ## Common OpCodes (summary)
 
@@ -44,7 +45,7 @@ This quick cheatsheet summarises the binary protocol used by the R-Type client &
 - `S_ENTITY_DESTROY` — Payload: \{ entityId(uint32) \}
 - `C_INPUT` — Payload: input mask (uint8)
 - `S_UPDATE_POS` — Payload: posX(float), posY(float) for corrections
-- `PING` / `PONG` — Keepalive; empty payloads; uses seq/ack for RTT
+- `PING` / `PONG` — Keepalive and latency probe (unreliable); uses seq/ack for RTT
 
 For the full opcode list and payload structures, see:
 

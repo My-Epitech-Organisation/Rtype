@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include <rtype/ecs.hpp>
 #include <rtype/engine.hpp>
 #include <rtype/network/Protocol.hpp>
 
@@ -56,6 +57,7 @@ CollisionSystem::CollisionSystem(EventEmitter emitter, float worldWidth,
 void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
     _quadTreeSystem->update(registry, deltaTime);
     auto collisionPairs = _quadTreeSystem->queryCollisionPairs(registry);
+    ECS::CommandBuffer cmdBuffer(std::ref(registry));
 
     for (const auto& pair : collisionPairs) {
         ECS::Entity entityA = pair.entityA;
@@ -101,32 +103,38 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         bool bHasHealth = registry.hasComponent<HealthComponent>(entityB);
 
         if (aIsPickup && bIsPlayer) {
-            handlePickupCollision(registry, entityB, entityA);
+            handlePickupCollision(registry, cmdBuffer, entityB, entityA);
             continue;
         }
         if (bIsPickup && aIsPlayer) {
-            handlePickupCollision(registry, entityA, entityB);
+            handlePickupCollision(registry, cmdBuffer, entityA, entityB);
             continue;
         }
 
         if (aIsObstacle && (bIsPlayer || bIsProjectile)) {
-            handleObstacleCollision(registry, entityA, entityB, bIsPlayer);
+            handleObstacleCollision(registry, cmdBuffer, entityA, entityB,
+                                    bIsPlayer);
             continue;
         }
         if (bIsObstacle && (aIsPlayer || aIsProjectile)) {
-            handleObstacleCollision(registry, entityB, entityA, aIsPlayer);
+            handleObstacleCollision(registry, cmdBuffer, entityB, entityA,
+                                    aIsPlayer);
             continue;
         }
 
         if (aIsProjectile && (bIsEnemy || bIsPlayer || bHasHealth)) {
-            handleProjectileCollision(registry, entityA, entityB, bIsPlayer);
+            handleProjectileCollision(registry, cmdBuffer, entityA, entityB,
+                                      bIsPlayer);
         } else if (bIsProjectile && (aIsEnemy || aIsPlayer || aHasHealth)) {
-            handleProjectileCollision(registry, entityB, entityA, aIsPlayer);
+            handleProjectileCollision(registry, cmdBuffer, entityB, entityA,
+                                      aIsPlayer);
         }
     }
+    cmdBuffer.flush();
 }
 
 void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
+                                                ECS::CommandBuffer& cmdBuffer,
                                                 ECS::Entity projectile,
                                                 ECS::Entity target,
                                                 bool isTargetPlayer) {
@@ -206,32 +214,36 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
             LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                           "[CollisionSystem] Target "
                               << target.id << " destroyed (no health)");
-            registry.emplaceComponent<DestroyTag>(target, DestroyTag{});
+            cmdBuffer.emplaceComponentDeferred<DestroyTag>(target,
+                                                           DestroyTag{});
         }
     } else {
         LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                       "[CollisionSystem] Target "
                           << target.id << " destroyed (no HealthComponent)");
-        registry.emplaceComponent<DestroyTag>(target, DestroyTag{});
+        cmdBuffer.emplaceComponentDeferred<DestroyTag>(target, DestroyTag{});
     }
 
     if (!piercing) {
         LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                       "[CollisionSystem] Projectile "
                           << projectile.id << " destroyed (non-piercing)");
-        registry.emplaceComponent<DestroyTag>(projectile, DestroyTag{});
+        cmdBuffer.emplaceComponentDeferred<DestroyTag>(projectile,
+                                                       DestroyTag{});
     } else if (registry.hasComponent<ProjectileComponent>(projectile)) {
         auto& projComp = registry.getComponent<ProjectileComponent>(projectile);
         if (projComp.registerHit()) {
             LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                           "[CollisionSystem] Projectile "
                               << projectile.id << " destroyed (max hits)");
-            registry.emplaceComponent<DestroyTag>(projectile, DestroyTag{});
+            cmdBuffer.emplaceComponentDeferred<DestroyTag>(projectile,
+                                                           DestroyTag{});
         }
     }
 }
 
 void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
+                                            ECS::CommandBuffer& cmdBuffer,
                                             ECS::Entity player,
                                             ECS::Entity pickup) {
     if (registry.hasComponent<DestroyTag>(pickup) ||
@@ -249,7 +261,7 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
         LOG_DEBUG_CAT(
             ::rtype::LogCategory::GameEngine,
             "[CollisionSystem] Ignoring pickup with PowerUpType::None");
-        registry.emplaceComponent<DestroyTag>(pickup, DestroyTag{});
+        cmdBuffer.emplaceComponentDeferred<DestroyTag>(pickup, DestroyTag{});
         return;
     }
 
@@ -333,10 +345,11 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
         _emitEvent(evt);
     }
 
-    registry.emplaceComponent<DestroyTag>(pickup, DestroyTag{});
+    cmdBuffer.emplaceComponentDeferred<DestroyTag>(pickup, DestroyTag{});
 }
 
 void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
+                                              ECS::CommandBuffer& cmdBuffer,
                                               ECS::Entity obstacle,
                                               ECS::Entity other,
                                               bool otherIsPlayer) {
@@ -362,7 +375,8 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
             auto& health = registry.getComponent<HealthComponent>(other);
             health.takeDamage(damage);
             if (!health.isAlive()) {
-                registry.emplaceComponent<DestroyTag>(other, DestroyTag{});
+                cmdBuffer.emplaceComponentDeferred<DestroyTag>(other,
+                                                               DestroyTag{});
             }
             if (_emitEvent &&
                 registry.hasComponent<NetworkIdComponent>(other) &&
@@ -379,14 +393,14 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
                 _emitEvent(evt);
             }
         } else {
-            registry.emplaceComponent<DestroyTag>(other, DestroyTag{});
+            cmdBuffer.emplaceComponentDeferred<DestroyTag>(other, DestroyTag{});
         }
     } else {
-        registry.emplaceComponent<DestroyTag>(other, DestroyTag{});
+        cmdBuffer.emplaceComponentDeferred<DestroyTag>(other, DestroyTag{});
     }
 
     if (destroyObstacle) {
-        registry.emplaceComponent<DestroyTag>(obstacle, DestroyTag{});
+        cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle, DestroyTag{});
     }
 }
 
