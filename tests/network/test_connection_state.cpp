@@ -177,7 +177,7 @@ TEST_F(ConnectionStateMachineTest, HandleRemoteDisconnect) {
     fsm.initiateConnect();
     fsm.handleAccept(123);
 
-    auto result = fsm.handleRemoteDisconnect();
+    auto result = fsm.handleRemoteDisconnect(DisconnectReason::RemoteRequest);
     EXPECT_TRUE(result.isOk());
     EXPECT_EQ(fsm.state(), ConnectionState::Disconnected);
     EXPECT_EQ(fsm.lastDisconnectReason(), DisconnectReason::RemoteRequest);

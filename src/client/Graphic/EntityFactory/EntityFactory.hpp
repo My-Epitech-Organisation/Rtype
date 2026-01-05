@@ -18,7 +18,6 @@
 
 #include "AssetManager/AssetManager.hpp"
 #include "Components/ButtonComponent.hpp"
-#include "Components/PositionComponent.hpp"
 #include "Components/RectangleComponent.hpp"
 #include "Components/SoundComponent.hpp"
 #include "Components/TagComponent.hpp"
@@ -27,20 +26,21 @@
 #include "Components/UserEventComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
 #include "ECS.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace EntityFactory {
 template <typename... Args>
 static ECS::Entity createButton(
     std::shared_ptr<ECS::Registry> registry,
     const rtype::games::rtype::client::Text& text,
-    const rtype::games::rtype::shared::Position& position,
+    const rtype::games::rtype::shared::TransformComponent& position,
     const rtype::games::rtype::client::Rectangle& rectangle,
     std::shared_ptr<AssetManager> assetsManager,
     std::function<void(Args...)> onClick) {
     auto entity = registry->spawnEntity();
     registry->emplaceComponent<rtype::games::rtype::client::Text>(entity, text);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(entity,
-                                                                      position);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        entity, position);
     registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
         entity, rectangle);
     registry->emplaceComponent<rtype::games::rtype::client::Button<Args...>>(

@@ -18,13 +18,13 @@
 #include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
 #include "../../games/rtype/client/Systems/ClientDestroySystem.hpp"
 #include "../../games/rtype/client/Systems/EventSystem.hpp"
-#include "../../games/rtype/client/Systems/MovementSystem.hpp"
 #include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
 #include "../../games/rtype/client/Systems/PlayerAnimationSystem.hpp"
 #include "../../games/rtype/client/Systems/PlayerPowerUpVisualSystem.hpp"
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "../../games/rtype/client/Systems/ShaderRenderSystem.hpp"
+#include "../../games/rtype/client/Systems/SpritePositionSystem.hpp"
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
 #include "../network/ClientNetworkSystem.hpp"
@@ -46,12 +46,13 @@
  * System execution order:
  * 1. ResetTriggers - Resets input states
  * 2. Network - Polls network and processes incoming packets
- * 3. Movement - Updates entity positions (depends on ResetTriggers)
+ * 3. SpritePosition - Syncs SFML sprite positions with Position components
+ * (depends on ResetTriggers)
  * 4. PlayerAnimation - Selects sprite frame by velocity/id (depends on
- * Movement)
+ * SpritePosition)
  * 5. PowerUpVisuals - Applies tint to players with active power-ups (depends on
- * Movement)
- * 6. Parallax - Updates parallax backgrounds (depends on Movement)
+ * SpritePosition)
+ * 6. Parallax - Updates parallax backgrounds (depends on SpritePosition)
  * 7. ButtonUpdate - Updates button states (depends on Parallax, for UI/menus)
  * 8. Render - Draws all entities (depends on ButtonUpdate)
  * 9. Boxing - Draws debug boxes on top (drawn after Render for visibility)
@@ -121,8 +122,8 @@ class Graphic {
     // ECS Systems (unique ownership, registered with scheduler)
     // ========================================================================
 
-    std::unique_ptr<::rtype::games::rtype::client::MovementSystem>
-        _movementSystem;
+    std::unique_ptr<::rtype::games::rtype::client::SpritePositionSystem>
+        _spritePositionSystem;
     std::unique_ptr<::rtype::games::rtype::client::PlayerAnimationSystem>
         _playerAnimationSystem;
     std::unique_ptr<::rtype::games::rtype::client::AnimationSystem>

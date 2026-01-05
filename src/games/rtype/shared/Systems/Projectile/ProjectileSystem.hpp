@@ -9,8 +9,8 @@
 
 #include <rtype/engine.hpp>
 
-#include "../../../shared/Components/Tags.hpp"
-#include "../../Components/PositionComponent.hpp"
+#include "../../Components/Tags.hpp"
+#include "../../Components/TransformComponent.hpp"
 #include "../../Components/VelocityComponent.hpp"
 
 namespace rtype::games::rtype::shared {

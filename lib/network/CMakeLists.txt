@@ -17,7 +17,6 @@ add_library(network STATIC ${NETWORK_SOURCES})
 target_include_directories(network PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../engine/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../engine_core/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/src/Logger
     ${CMAKE_SOURCE_DIR}/include
@@ -25,7 +24,7 @@ target_include_directories(network PUBLIC
 
 target_compile_features(network PUBLIC cxx_std_20)
 
-find_package(asio CONFIG REQUIRED)
+rtype_find_asio()
 
 target_link_libraries(network PUBLIC
     engine

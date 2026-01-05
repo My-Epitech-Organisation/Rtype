@@ -116,7 +116,7 @@ void GameOverScene::_buildLayout() {
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Back to Menu"),
-        rtype::games::rtype::shared::Position(
+        rtype::games::rtype::shared::TransformComponent(
             btnX,
             rtype::games::rtype::client::GraphicsConfig::GAME_OVER_BUTTON_Y),
         rtype::games::rtype::client::Rectangle(
