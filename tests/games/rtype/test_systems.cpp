@@ -359,6 +359,31 @@ TEST_F(AISystemTest, UpdateWithEmptyRegistry) {
     entity = registry.spawnEntity();
 }
 
+TEST_F(AISystemTest, UpdateParallelPath_ManyEntities) {
+    // Create 51 AI entities to trigger parallel execution path (threshold is 50)
+    std::vector<ECS::Entity> entities;
+    for (int i = 0; i < 51; ++i) {
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<AIComponent>(e, AIBehavior::MoveLeft, 100.0F);
+        registry.emplaceComponent<TransformComponent>(e, 500.0F + static_cast<float>(i), 300.0F, 0.0F);
+        registry.emplaceComponent<VelocityComponent>(e, 0.0F, 0.0F);
+        entities.push_back(e);
+    }
+
+    aiSystem.update(registry, 0.016F);
+
+    // Verify all entities have their velocities set by the AI behavior
+    for (auto e : entities) {
+        auto& velocity = registry.getComponent<VelocityComponent>(e);
+        EXPECT_FLOAT_EQ(velocity.vx, -100.0F);
+        EXPECT_FLOAT_EQ(velocity.vy, 0.0F);
+    }
+
+    for (auto e : entities) {
+        registry.killEntity(e);
+    }
+}
+
 TEST_F(AISystemTest, UpdateWithEntityMissingVelocity) {
     // Entity with AI and Transform but no Velocity
     registry.emplaceComponent<AIComponent>(entity, AIBehavior::MoveLeft, 100.0F);

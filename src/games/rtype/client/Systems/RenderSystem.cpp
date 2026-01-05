@@ -33,7 +33,7 @@ bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
 
 void RenderSystem::_renderImages(ECS::Registry& registry) {
     std::vector<ECS::Entity> drawableEntities;
-    registry.view<Image, rs::Position, ZIndex>().each(
+    registry.view<Image, rs::TransformComponent, ZIndex>().each(
         [&drawableEntities](auto entt, auto, auto, auto) {
             drawableEntities.push_back(entt);
         });
@@ -48,7 +48,7 @@ void RenderSystem::_renderImages(ECS::Registry& registry) {
         if (registry.hasComponent<rs::DestroyTag>(entt)) continue;
 
         auto& img = registry.getComponent<Image>(entt);
-        const auto& pos = registry.getComponent<rs::Position>(entt);
+        const auto& pos = registry.getComponent<rs::TransformComponent>(entt);
 
         if (registry.hasComponent<Size>(entt)) {
             const auto& size = registry.getComponent<Size>(entt);
@@ -74,7 +74,7 @@ void RenderSystem::_renderImages(ECS::Registry& registry) {
 }
 
 void RenderSystem::_renderRectangles(ECS::Registry& registry) {
-    registry.view<Rectangle, rs::Position>().each(
+    registry.view<Rectangle, rs::TransformComponent>().each(
         [this, &registry](auto entt, auto& rectData, auto& pos) {
             if (registry.hasComponent<ButtonTag>(entt)) return;
             if (registry.hasComponent<HudTag>(entt)) return;
@@ -104,7 +104,7 @@ void RenderSystem::_renderHudRectangles(ECS::Registry& registry) {
     const sf::View savedView = _target->getView();
     _target->setView(_target->getDefaultView());
 
-    registry.view<Rectangle, rs::Position, HudTag>().each(
+    registry.view<Rectangle, rs::TransformComponent, HudTag>().each(
         [this, &registry](auto entt, auto& rectData, auto& pos, auto /*tag*/) {
             if (isEntityHidden(registry, entt)) return;
             if (registry.hasComponent<rs::DestroyTag>(entt)) return;
@@ -124,7 +124,7 @@ void RenderSystem::_renderHudRectangles(ECS::Registry& registry) {
 }
 
 void RenderSystem::_renderButtons(ECS::Registry& registry) {
-    registry.view<Rectangle, Text, rs::Position, ButtonTag>().each(
+    registry.view<Rectangle, Text, rs::TransformComponent, ButtonTag>().each(
         [this, &registry](auto entt, auto& rectData, auto& textData, auto& pos,
                           auto /*tag*/) {
             if (isEntityHidden(registry, entt)) return;
@@ -164,7 +164,7 @@ void RenderSystem::_renderButtons(ECS::Registry& registry) {
 }
 
 void RenderSystem::_renderStaticText(ECS::Registry& registry) {
-    registry.view<Text, rs::Position, StaticTextTag>().each(
+    registry.view<Text, rs::TransformComponent, StaticTextTag>().each(
         [this, &registry](auto entt, auto& textData, auto& pos, auto /*tag*/) {
             if (isEntityHidden(registry, entt)) return;
             if (registry.hasComponent<rs::DestroyTag>(entt)) return;
