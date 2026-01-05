@@ -162,6 +162,23 @@ TEST_F(GameStateManagerTest, Countdown_Cancelled_ByUnready) {
     manager.playerNotReady(2);
     EXPECT_FALSE(manager.isCountdownActive());
     EXPECT_FALSE(manager.isPlaying());
+    EXPECT_TRUE(manager.isWaiting());
+}
+
+TEST_F(GameStateManagerTest, Countdown_Cancelled_FromPaused_ByUnready) {
+    GameStateManager manager(2);
+
+    // Start from Paused and then satisfy auto-start conditions
+    manager.transitionTo(GameState::Paused);
+    manager.playerReady(1);
+    manager.playerReady(2);
+    EXPECT_TRUE(manager.isCountdownActive());
+
+    // One player becomes not ready - countdown should cancel and state should be WaitingForPlayers
+    manager.playerNotReady(2);
+    EXPECT_FALSE(manager.isCountdownActive());
+    EXPECT_FALSE(manager.isPlaying());
+    EXPECT_TRUE(manager.isWaiting());
 }
 
 // ============================================================================

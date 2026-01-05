@@ -64,6 +64,9 @@ bool GameStateManager::playerNotReady(std::uint32_t userId) {
             if (_onCountdownCancelledCallback) {
                 _onCountdownCancelledCallback();
             }
+            if (_state != GameState::WaitingForPlayers) {
+                transitionTo(GameState::WaitingForPlayers);
+            }
         }
     }
     return removed > 0;
@@ -84,6 +87,9 @@ void GameStateManager::playerLeft(std::uint32_t userId) {
             _countdownRemaining = 0.0f;
             if (_onCountdownCancelledCallback) {
                 _onCountdownCancelledCallback();
+            }
+            if (_state != GameState::WaitingForPlayers) {
+                transitionTo(GameState::WaitingForPlayers);
             }
         }
     }
