@@ -122,6 +122,22 @@ bool EntityConfigRegistry::loadEnemies(const std::string& filepath) {
                     config.projectileType =
                         (*enemyTbl)["projectile_type"].value_or("");
 
+                    // Visual - Color filter
+                    if (auto* colorArray = (*enemyTbl)["color"].as_array()) {
+                        if (colorArray->size() >= 4) {
+                            auto r = (*colorArray)[0].value<int64_t>();
+                            auto g = (*colorArray)[1].value<int64_t>();
+                            auto b = (*colorArray)[2].value<int64_t>();
+                            auto a = (*colorArray)[3].value<int64_t>();
+                            if (r && g && b && a) {
+                                config.colorR = static_cast<uint8_t>(*r);
+                                config.colorG = static_cast<uint8_t>(*g);
+                                config.colorB = static_cast<uint8_t>(*b);
+                                config.colorA = static_cast<uint8_t>(*a);
+                            }
+                        }
+                    }
+
                     if (config.isValid()) {
                         m_enemies[config.id] = std::move(config);
                     } else {
