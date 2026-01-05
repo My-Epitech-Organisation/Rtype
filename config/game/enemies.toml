@@ -18,6 +18,9 @@ health = 50
 damage = 10
 score_value = 100
 
+# Visual
+color = [255, 255, 255, 255]  # White (default)
+
 # Movement
 behavior = "move_left"
 speed = 100.0
@@ -41,6 +44,8 @@ health = 75
 damage = 15
 score_value = 150
 
+color = [100, 200, 255, 255]  # Light blue
+
 behavior = "sine_wave"
 speed = 200.0
 
@@ -60,6 +65,8 @@ sprite_sheet = "assets/sprites/enemies/shooter.png"
 health = 100
 damage = 20
 score_value = 200
+
+color = [255, 100, 100, 255]  # Red
 
 behavior = "stationary"
 speed = 0.0
@@ -83,6 +90,8 @@ health = 60
 damage = 25
 score_value = 250
 
+color = [100, 255, 100, 255]  # Green
+
 behavior = "chase"
 speed = 120.0
 
@@ -102,6 +111,8 @@ sprite_sheet = "assets/sprites/enemies/patrol.png"
 health = 80
 damage = 15
 score_value = 175
+
+color = [139, 69, 19, 255]  # Brown
 
 behavior = "patrol"
 speed = 600.0
@@ -125,6 +136,8 @@ health = 300
 damage = 40
 score_value = 500
 
+color = [0, 0, 0, 255]  # Black
+
 behavior = "move_left"
 speed = 40.0
 
@@ -146,6 +159,8 @@ sprite_sheet = "assets/sprites/enemies/boss_1.png"
 health = 2000
 damage = 50
 score_value = 5000
+
+color = [255, 255, 0, 255]  # Yellow
 
 behavior = "patrol"
 speed = 60.0
