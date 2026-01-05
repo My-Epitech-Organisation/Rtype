@@ -294,6 +294,10 @@ static_assert(sizeof(PowerUpEventPayload) == 9,
 static_assert(sizeof(InputPayload) == 1, "InputPayload must be 1 byte");
 static_assert(sizeof(UpdatePosPayload) == 8,
               "UpdatePosPayload must be 8 bytes (4+4)");
+static_assert(sizeof(GameStartPayload) == 4,
+              "GameStartPayload must be 4 bytes (float)");
+static_assert(sizeof(PlayerReadyStatePayload) == 5,
+              "PlayerReadyStatePayload must be 5 bytes (4+1)");
 
 static_assert(std::is_trivially_copyable_v<AcceptPayload>);
 static_assert(std::is_trivially_copyable_v<UpdateStatePayload>);
@@ -306,6 +310,8 @@ static_assert(std::is_trivially_copyable_v<PowerUpEventPayload>);
 static_assert(std::is_trivially_copyable_v<InputPayload>);
 static_assert(std::is_trivially_copyable_v<UpdatePosPayload>);
 static_assert(std::is_trivially_copyable_v<LobbyReadyPayload>);
+static_assert(std::is_trivially_copyable_v<GameStartPayload>);
+static_assert(std::is_trivially_copyable_v<PlayerReadyStatePayload>);
 
 static_assert(std::is_standard_layout_v<AcceptPayload>);
 static_assert(std::is_standard_layout_v<UpdateStatePayload>);
@@ -318,6 +324,8 @@ static_assert(std::is_standard_layout_v<PowerUpEventPayload>);
 static_assert(std::is_standard_layout_v<InputPayload>);
 static_assert(std::is_standard_layout_v<UpdatePosPayload>);
 static_assert(std::is_standard_layout_v<LobbyReadyPayload>);
+static_assert(std::is_standard_layout_v<GameStartPayload>);
+static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
 
 /**
  * @brief Get the expected payload size for a given OpCode
