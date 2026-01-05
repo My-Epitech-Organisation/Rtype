@@ -412,7 +412,8 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
       _switchToScene(std::move(switchToScene)) {
     this->_nbrUser = 0;
 
-    _isConnected = (this->_networkClient && this->_networkClient->isConnected());
+    _isConnected =
+        (this->_networkClient && this->_networkClient->isConnected());
 
     if (this->_networkSystem && this->_assetsManager) {
         this->_networkSystem->setEntityFactory(
@@ -491,7 +492,8 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
             try {
                 this->_switchToScene(SceneManager::Scene::MAIN_MENU);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Main Menu: ") + e.what());
+                LOG_ERROR(std::string("Error switching to Main Menu: ") +
+                          e.what());
             }
             LOG_INFO(
                 "[Lobby] Lobby cleaned up after disconnect, switching to main "
