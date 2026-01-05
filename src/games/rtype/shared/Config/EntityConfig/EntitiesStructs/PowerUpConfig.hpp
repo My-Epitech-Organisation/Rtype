@@ -36,6 +36,11 @@ struct PowerUpConfig {
     float hitboxWidth = 16.0F;
     float hitboxHeight = 16.0F;
 
+    uint8_t colorR = 255;
+    uint8_t colorG = 255;
+    uint8_t colorB = 255;
+    uint8_t colorA = 255;
+
     [[nodiscard]] bool isValid() const noexcept { return !id.empty(); }
 };
 
