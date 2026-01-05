@@ -17,6 +17,7 @@
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 #include "games/rtype/shared/Components/WeaponComponent.hpp"
+#include "games/rtype/shared/Config/EntityConfig/EntityConfig.hpp"
 #include "network/ServerNetworkSystem.hpp"
 
 namespace rtype::server {
@@ -40,6 +41,18 @@ PlayerSpawner::PlayerSpawner(std::shared_ptr<ECS::Registry> registry,
 
 PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
                                              size_t playerIndex) {
+    auto& configRegistry = rtype::games::rtype::shared::EntityConfigRegistry::getInstance();
+    auto playerConfigOpt = configRegistry.getPlayer("default_ship");
+
+    if (!playerConfigOpt.has_value()) {
+        LOG_ERROR("[PlayerSpawner] Player config 'default_ship' not found in registry!");
+        PlayerSpawnResult result;
+        result.success = false;
+        return result;
+    }
+
+    const auto& playerConfig = playerConfigOpt.value().get();
+
     PlayerSpawnResult result;
     result.networkId = userId;
     result.x = _config.baseX;
@@ -53,20 +66,20 @@ PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
                                            0.0F);
     _registry->emplaceComponent<Velocity>(playerEntity, 0.0F, 0.0F);
 
-    _registry->emplaceComponent<ShootCooldown>(playerEntity,
-                                               _config.shootCooldown);
+    float shootCooldown = (playerConfig.fireRate > 0) ? (1.0F / playerConfig.fireRate) : 0.3F;
+    _registry->emplaceComponent<ShootCooldown>(playerEntity, shootCooldown);
     Weapon weapon{};
     weapon.weapons[0] = rtype::games::rtype::shared::WeaponPresets::LaserBeam;
     weapon.currentSlot = 0;
     weapon.unlockedSlots = 1;
     _registry->emplaceComponent<Weapon>(playerEntity, weapon);
 
-    _registry->emplaceComponent<BoundingBox>(playerEntity, _config.playerWidth,
-                                             _config.playerHeight);
+    _registry->emplaceComponent<BoundingBox>(playerEntity, playerConfig.hitboxWidth,
+                                             playerConfig.hitboxHeight);
 
     _registry->emplaceComponent<PlayerTag>(playerEntity);
-    _registry->emplaceComponent<Health>(playerEntity, _config.playerLives,
-                                        _config.playerLives);
+    _registry->emplaceComponent<Health>(playerEntity, playerConfig.health,
+                                        playerConfig.health);
     _registry->emplaceComponent<NetworkIdComponent>(playerEntity,
                                                     result.networkId);
 
@@ -75,7 +88,7 @@ PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
                                                 EntityType::Player, result.x,
                                                 result.y);
         _networkSystem->updateEntityHealth(
-            result.networkId, _config.playerLives, _config.playerLives);
+            result.networkId, playerConfig.health, playerConfig.health);
         _networkSystem->setPlayerEntity(userId, playerEntity);
     }
 
