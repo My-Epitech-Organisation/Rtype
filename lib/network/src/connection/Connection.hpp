@@ -209,7 +209,7 @@ class Connection {
     [[nodiscard]] bool shouldSendKeepalive() const noexcept;
     void updatePingTracking() noexcept;
 
-    static constexpr Duration kKeepaliveInterval{30000};  // 30 seconds
+    static constexpr Duration kKeepaliveInterval{3000};   // 3 seconds
     static constexpr int kMaxMissedPings{3};
 
     Config config_;
