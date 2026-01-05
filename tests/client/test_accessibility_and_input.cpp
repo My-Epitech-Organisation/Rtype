@@ -31,7 +31,7 @@
 #include "games/rtype/client/Systems/EventSystem.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "games/rtype/shared/Components/LifetimeComponent.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace client = rtype::games::rtype::client;
 namespace shared = rtype::games::rtype::shared;
@@ -219,10 +219,10 @@ TEST(VisualCueFactoryTest, SpawnsFlashWhenEnabled) {
 
     bool found = false;
     registry
-        .view<client::Rectangle, client::ZIndex, shared::Position,
+        .view<client::Rectangle, client::ZIndex, shared::TransformComponent,
               shared::LifetimeComponent>()
         .each([&](ECS::Entity, client::Rectangle& rect, client::ZIndex& z,
-                  shared::Position& pos, shared::LifetimeComponent& life) {
+                  shared::TransformComponent& pos, shared::LifetimeComponent& life) {
             found = true;
             EXPECT_FLOAT_EQ(rect.size.first, size);
             EXPECT_FLOAT_EQ(rect.size.second, size);

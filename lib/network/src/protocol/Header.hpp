@@ -13,20 +13,15 @@
 #include <vector>
 
 #include "OpCode.hpp"
+#include "core/Types.hpp"
 
 namespace rtype::network {
-
-/// Dynamic buffer for network data
-using Buffer = std::vector<std::uint8_t>;
 
 /// Magic byte for packet validation (RFC Section 4.1)
 inline constexpr std::uint8_t kMagicByte = 0xA1;
 
 /// Header size in bytes (RFC Section 4.1)
 inline constexpr std::size_t kHeaderSize = 16;
-
-/// Maximum packet size to avoid IP fragmentation (RFC Section 3)
-inline constexpr std::size_t kMaxPacketSize = 1400;
 
 /// Maximum payload size (packet size minus header)
 inline constexpr std::size_t kMaxPayloadSize = kMaxPacketSize - kHeaderSize;
