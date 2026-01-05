@@ -89,7 +89,8 @@ NetworkClient::~NetworkClient() {
 
 bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
     if (!connection_.isDisconnected()) {
-        LOG_DEBUG("[NetworkClient] Cannot connect: not disconnected");
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Cannot connect: not disconnected");
         return false;
     }
 
@@ -103,7 +104,8 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
 
     auto bindResult = socket_->bind(0);
     if (!bindResult) {
-        LOG_ERROR("[NetworkClient] Failed to bind socket");
+        LOG_ERROR_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Failed to bind socket");
         socket_->close();
         socket_ = network::createAsyncSocket(ioContext_.get());
         return false;
@@ -115,7 +117,8 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
 
     auto result = connection_.connect();
     if (!result) {
-        LOG_ERROR("[NetworkClient] Failed to initiate connection");
+        LOG_ERROR_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Failed to initiate connection");
         socket_->cancel();
         socket_->close();
         socket_ = network::createAsyncSocket(ioContext_.get());
@@ -326,10 +329,11 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
     auto opcode = static_cast<network::OpCode>(header.opcode);
 
     if (network::isReliable(opcode)) {
-        LOG_DEBUG("[NetworkClient] Received reliable packet: opcode="
-                  << static_cast<int>(opcode) << " seqId=" << header.seqId
-                  << " flags=0x" << std::hex << static_cast<int>(header.flags)
-                  << std::dec);
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Received reliable packet: opcode="
+                          << static_cast<int>(opcode) << " seqId="
+                          << header.seqId << " flags=0x" << std::hex
+                          << static_cast<int>(header.flags) << std::dec);
         sendAck(header.seqId);
     }
 
@@ -386,11 +390,14 @@ void NetworkClient::handleEntitySpawn(const network::Header& header,
                                       const network::Buffer& payload) {
     (void)header;
 
-    LOG_DEBUG("[NetworkClient] handleEntitySpawn called, payload size=" +
-              std::to_string(payload.size()));
+    LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                  "[NetworkClient] handleEntitySpawn called, payload size=" +
+                      std::to_string(payload.size()));
 
     if (payload.size() < sizeof(network::EntitySpawnPayload)) {
-        LOG_DEBUG("[NetworkClient] Payload too small for EntitySpawnPayload");
+        LOG_DEBUG_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] Payload too small for EntitySpawnPayload");
         return;
     }
 
@@ -398,11 +405,12 @@ void NetworkClient::handleEntitySpawn(const network::Header& header,
         auto deserialized = network::Serializer::deserializeFromNetwork<
             network::EntitySpawnPayload>(payload);
 
-        LOG_DEBUG("[NetworkClient] Deserialized spawn: entityId=" +
-                  std::to_string(deserialized.entityId) + " type=" +
-                  std::to_string(static_cast<int>(deserialized.type)) +
-                  " pos=(" + std::to_string(deserialized.posX) + ", " +
-                  std::to_string(deserialized.posY) + ")");
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Deserialized spawn: entityId=" +
+                          std::to_string(deserialized.entityId) + " type=" +
+                          std::to_string(static_cast<int>(deserialized.type)) +
+                          " pos=(" + std::to_string(deserialized.posX) + ", " +
+                          std::to_string(deserialized.posY) + ")");
 
         EntitySpawnEvent event;
         event.entityId = deserialized.entityId;
@@ -481,11 +489,14 @@ void NetworkClient::handleEntityHealth(const network::Header& header,
                                        const network::Buffer& payload) {
     (void)header;
 
-    LOG_DEBUG("[NetworkClient] handleEntityHealth called, payload size="
-              << payload.size());
+    LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                  "[NetworkClient] handleEntityHealth called, payload size="
+                      << payload.size());
 
     if (payload.size() < sizeof(network::EntityHealthPayload)) {
-        LOG_DEBUG("[NetworkClient] Payload too small for EntityHealthPayload");
+        LOG_DEBUG_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] Payload too small for EntityHealthPayload");
         return;
     }
 
@@ -493,9 +504,11 @@ void NetworkClient::handleEntityHealth(const network::Header& header,
         auto deserialized = network::Serializer::deserializeFromNetwork<
             network::EntityHealthPayload>(payload);
 
-        LOG_DEBUG("[NetworkClient] Deserialized health: entityId="
-                  << deserialized.entityId << " current="
-                  << deserialized.current << " max=" << deserialized.max);
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Deserialized health: entityId="
+                          << deserialized.entityId
+                          << " current=" << deserialized.current
+                          << " max=" << deserialized.max);
 
         EntityHealthEvent event{};
         event.entityId = deserialized.entityId;
@@ -508,7 +521,8 @@ void NetworkClient::handleEntityHealth(const network::Header& header,
             }
         });
     } catch (...) {
-        LOG_DEBUG("[NetworkClient] Exception deserializing health payload");
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Exception deserializing health payload");
     }
 }
 
@@ -650,27 +664,36 @@ void NetworkClient::flushOutgoing() {
 
 void NetworkClient::sendAck(std::uint16_t ackSeqId) {
     if (!serverEndpoint_.has_value() || !socket_->isOpen()) {
-        LOG_DEBUG("[NetworkClient] sendAck: no endpoint or socket not open");
+        LOG_DEBUG_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] sendAck: no endpoint or socket not open");
         return;
     }
 
     auto ackPacket = connection_.buildAckPacket(ackSeqId);
     if (ackPacket.has_value()) {
-        LOG_DEBUG("[NetworkClient] sendAck: sending ACK for seqId="
-                  << ackSeqId << " packet size=" << ackPacket.value().size());
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] sendAck: sending ACK for seqId="
+                          << ackSeqId
+                          << " packet size=" << ackPacket.value().size());
         socket_->asyncSendTo(
             ackPacket.value(), *serverEndpoint_,
             [ackSeqId](network::Result<std::size_t> result) {
                 if (result) {
-                    LOG_DEBUG("[NetworkClient] ACK sent successfully for seqId="
-                              << ackSeqId << " bytes=" << result.value());
+                    LOG_DEBUG_CAT(
+                        rtype::LogCategory::Network,
+                        "[NetworkClient] ACK sent successfully for seqId="
+                            << ackSeqId << " bytes=" << result.value());
                 } else {
-                    LOG_WARNING("[NetworkClient] ACK send failed for seqId="
-                                << ackSeqId);
+                    LOG_WARNING_CAT(rtype::LogCategory::Network,
+                                    "[NetworkClient] ACK send failed for seqId="
+                                        << ackSeqId);
                 }
             });
     } else {
-        LOG_WARNING("[NetworkClient] sendAck: buildAckPacket returned nullopt");
+        LOG_WARNING_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] sendAck: buildAckPacket returned nullopt");
     }
 }
 

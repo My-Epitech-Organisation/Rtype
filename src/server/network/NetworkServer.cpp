@@ -127,8 +127,9 @@ void NetworkServer::destroyEntity(std::uint32_t id) {
 
 void NetworkServer::updateEntityHealth(std::uint32_t id, std::int32_t current,
                                        std::int32_t max) {
-    LOG_DEBUG("[NetworkServer] updateEntityHealth: entityId="
-              << id << " current=" << current << " max=" << max);
+    LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                  "[NetworkServer] updateEntityHealth: entityId="
+                      << id << " current=" << current << " max=" << max);
     network::EntityHealthPayload payload;
     payload.entityId = id;
     payload.current = current;
@@ -161,7 +162,8 @@ void NetworkServer::updateGameState(GameState state) {
 }
 
 void NetworkServer::sendGameOver(std::uint32_t finalScore) {
-    LOG_INFO(
+    LOG_INFO_CAT(
+        ::rtype::LogCategory::Network,
         "[NetworkServer] Sending GameOver packet with score=" << finalScore);
     network::GameOverPayload payload;
     payload.finalScore = finalScore;
@@ -169,7 +171,8 @@ void NetworkServer::sendGameOver(std::uint32_t finalScore) {
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
     broadcastToAll(network::OpCode::S_GAME_OVER, serialized);
-    LOG_INFO("[NetworkServer] GameOver packet broadcasted to all clients");
+    LOG_INFO_CAT(::rtype::LogCategory::Network,
+                 "[NetworkServer] GameOver packet broadcasted to all clients");
 }
 
 void NetworkServer::spawnEntityToClient(std::uint32_t userId, std::uint32_t id,
@@ -357,10 +360,11 @@ void NetworkServer::poll() {
 
             auto cleanupResult = client->reliableChannel.cleanup();
             if (!cleanupResult) {
-                LOG_WARNING(
+                LOG_WARNING_CAT(
+                    ::rtype::LogCategory::Network,
                     "[NetworkServer] Reliable channel retry limit for userId="
-                    << client->userId << " pending="
-                    << client->reliableChannel.getPendingCount());
+                        << client->userId << " pending="
+                        << client->reliableChannel.getPendingCount());
                 usersToRemove.push_back(client->userId);
             }
         }
@@ -481,9 +485,10 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
     if (header.flags & network::Flags::kIsAck) {
         auto client = findClient(sender);
         if (client) {
-            LOG_DEBUG("[NetworkServer] Processing ACK from userId="
-                      << header.userId << " ackId=" << header.ackId
-                      << " (seqId=" << header.seqId << ")");
+            LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                          "[NetworkServer] Processing ACK from userId="
+                              << header.userId << " ackId=" << header.ackId
+                              << " (seqId=" << header.seqId << ")");
             client->reliableChannel.recordAck(header.ackId);
             client->lastActivity = std::chrono::steady_clock::now();
         }
@@ -491,9 +496,10 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
 
     auto seqResult = securityContext_.validateSequenceId(connKey, header.seqId);
     if (!seqResult) {
-        LOG_DEBUG("[NetworkServer] Sequence validation failed for userId="
-                  << header.userId << " seqId=" << header.seqId
-                  << " (ACK already processed if present)");
+        LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                      "[NetworkServer] Sequence validation failed for userId="
+                          << header.userId << " seqId=" << header.seqId
+                          << " (ACK already processed if present)");
         return;
     }
 
@@ -614,7 +620,9 @@ void NetworkServer::handleDisconnect(const network::Header& header,
 
     removeClient(userId);
 
-    LOG_INFO("[NetworkServer] Client requested disconnect userId=" << userId);
+    LOG_INFO_CAT(
+        ::rtype::LogCategory::Network,
+        "[NetworkServer] Client requested disconnect userId=" << userId);
 
     queueCallback([this, userId]() {
         if (onClientDisconnectedCallback_) {
@@ -746,12 +754,12 @@ void NetworkServer::checkTimeouts() {
                     now - client->lastActivity);
 
             if (elapsed > config_.clientTimeout) {
-                LOG_WARNING(
-                    "[NetworkServer] Client timeout userId="
-                    << client->userId << " lastActivityMs="
-                    << std::chrono::duration_cast<std::chrono::milliseconds>(
-                           elapsed)
-                           .count());
+                LOG_WARNING_CAT(::rtype::LogCategory::Network,
+                                "[NetworkServer] Client timeout userId="
+                                    << client->userId << " lastActivityMs="
+                                    << std::chrono::duration_cast<
+                                           std::chrono::milliseconds>(elapsed)
+                                           .count());
                 timedOutUsers.push_back(client->userId);
             }
         }

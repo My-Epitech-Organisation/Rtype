@@ -56,9 +56,12 @@ ServerApp::ServerApp(std::unique_ptr<IGameConfig> gameConfig,
       _stateManager(std::make_shared<GameStateManager>(MIN_PLAYERS_TO_START)),
       _packetProcessor(_metrics, verbose) {
     if (_gameConfig && _gameConfig->isInitialized()) {
-        LOG_INFO("[Server] Configured from game: " << _gameConfig->getGameId());
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[Server] Configured from game: " << _gameConfig->getGameId());
     } else {
-        LOG_WARNING("[Server] Game config not initialized, using defaults");
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[Server] Game config not initialized, using defaults");
     }
 }
 
@@ -66,7 +69,8 @@ ServerApp::~ServerApp() { shutdown(); }
 
 bool ServerApp::run() {
     if (!initialize()) {
-        LOG_ERROR("[Server] Failed to initialize server");
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Failed to initialize server");
         return false;
     }
     logStartupInfo();
@@ -75,7 +79,7 @@ bool ServerApp::run() {
     loop.run([this]() { onFrame(); }, [this](float dt) { onUpdate(dt); },
              [this]() { onPostUpdate(); });
 
-    LOG_INFO("[Server] Shutting down...");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[Server] Shutting down...");
     shutdown();
     return true;
 }
@@ -117,42 +121,57 @@ void ServerApp::onPostUpdate() {
 }
 
 void ServerApp::logStartupInfo() const noexcept {
-    LOG_INFO("[Server] Starting on port " << _port);
-    LOG_INFO("[Server] Max players: " << _clientManager.getMaxPlayers());
-    LOG_INFO("[Server] Tick rate: " << _tickRate << " Hz");
-    LOG_INFO("[Server] State: Waiting for players (need "
-             << MIN_PLAYERS_TO_START << " ready to start)");
-    LOG_DEBUG("[Server] Client timeout: " << _clientTimeoutSeconds << "s");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Starting on port " << _port);
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Max players: " << _clientManager.getMaxPlayers());
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Tick rate: " << _tickRate << " Hz");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] State: Waiting for players (need "
+                     << MIN_PLAYERS_TO_START << " ready to start)");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                  "[Server] Client timeout: " << _clientTimeoutSeconds << "s");
 
     if (_gameConfig && _gameConfig->isInitialized()) {
         const auto gameplay = _gameConfig->getGameplaySettings();
-        LOG_INFO("[Server] Game: " << _gameConfig->getGameId());
-        LOG_INFO("[Server] Difficulty: " << gameplay.difficulty);
-        LOG_INFO("[Server] Starting lives: " << gameplay.startingLives);
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[Server] Game: " << _gameConfig->getGameId());
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[Server] Difficulty: " << gameplay.difficulty);
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[Server] Starting lives: " << gameplay.startingLives);
     }
 }
 
 bool ServerApp::reloadConfiguration() {
     if (!_gameConfig || !_gameConfig->isInitialized()) {
-        LOG_WARNING("[Server] Cannot reload - game config not initialized");
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[Server] Cannot reload - game config not initialized");
         return false;
     }
 
     if (!_gameConfig->reloadConfiguration()) {
-        LOG_ERROR("[Server] Configuration reload failed");
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Configuration reload failed");
         return false;
     }
 
     const auto gameplay = _gameConfig->getGameplaySettings();
-    LOG_INFO("[Server] Configuration reloaded:");
-    LOG_INFO("[Server]   Difficulty: " << gameplay.difficulty);
-    LOG_INFO(
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Configuration reloaded:");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server]   Difficulty: " << gameplay.difficulty);
+    LOG_INFO_CAT(
+        ::rtype::LogCategory::GameEngine,
         "[Server]   Enemy speed multiplier: " << gameplay.enemySpeedMultiplier);
 
     const auto serverSettings = _gameConfig->getServerSettings();
     if (serverSettings.port != _port) {
-        LOG_WARNING("[Server] Port change requires restart (current: "
-                    << _port << ", new: " << serverSettings.port << ")");
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[Server] Port change requires restart (current: "
+                            << _port << ", new: " << serverSettings.port
+                            << ")");
     }
 
     return true;
@@ -182,14 +201,17 @@ bool ServerApp::initialize() {
     _registry = std::make_shared<ECS::Registry>();
     _gameEngine = engine::createGameEngine(_registry);
     if (!_gameEngine) {
-        LOG_ERROR("[Server] Failed to create game engine");
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Failed to create game engine");
         return false;
     }
     if (!_gameEngine->initialize()) {
-        LOG_ERROR("[Server] Failed to initialize game engine");
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Failed to initialize game engine");
         return false;
     }
-    LOG_INFO("[Server] Game engine initialized");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Game engine initialized");
 
     NetworkServer::Config netConfig;
     netConfig.clientTimeout =
@@ -220,11 +242,13 @@ bool ServerApp::initialize() {
         gameId, _registry, _networkSystem, gameEngineOpt, gameConfigOpt);
 
     if (!_entitySpawner) {
-        LOG_ERROR(
+        LOG_ERROR_CAT(
+            ::rtype::LogCategory::GameEngine,
             "[Server] Failed to create entity spawner for game: " << gameId);
         return false;
     }
-    LOG_INFO("[Server] Entity spawner created for game: " << gameId);
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Entity spawner created for game: " << gameId);
 
     _inputHandler = std::make_unique<PlayerInputHandler>(
         _registry, _networkSystem, _stateManager, _gameConfig, _verbose);
@@ -255,68 +279,83 @@ bool ServerApp::initialize() {
 
     _gameEngine->setEventCallback([this](const engine::GameEvent& event) {
         if (_verbose) {
-            LOG_DEBUG("[Server] Game event: type="
-                      << static_cast<int>(event.type)
-                      << " entityId=" << event.entityNetworkId);
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[Server] Game event: type="
+                              << static_cast<int>(event.type)
+                              << " entityId=" << event.entityNetworkId);
         }
         onGameEvent(event);
     });
 
     if (!_networkServer->start(_port)) {
-        LOG_ERROR("[Server] Failed to start network server on port " << _port);
+        LOG_ERROR_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[Server] Failed to start network server on port " << _port);
         return false;
     }
-    LOG_INFO("[Server] Network server started on port " << _port);
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Network server started on port " << _port);
 
     if (!startNetworkThread()) {
-        LOG_ERROR("[Server] Failed to start network thread");
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Failed to start network thread");
         return false;
     }
 
-    LOG_INFO("[Server] Server initialized successfully");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Server initialized successfully");
     return true;
 }
 
 void ServerApp::shutdown() noexcept {
     if (_hasShutdown.exchange(true, std::memory_order_acq_rel)) {
-        LOG_DEBUG("[Server] Shutdown already performed, skipping");
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Shutdown already performed, skipping");
         return;
     }
 
     stopNetworkThread();
     if (_networkServer) {
         _networkServer->stop();
-        LOG_DEBUG("[Server] Network server stopped");
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Network server stopped");
     }
     if (_gameEngine && _gameEngine->isRunning()) {
         _gameEngine->shutdown();
-        LOG_DEBUG("[Server] Game engine shutdown");
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Game engine shutdown");
     }
 
     _clientManager.clearAllClients();
-    LOG_DEBUG("[Server] Shutdown complete");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                  "[Server] Shutdown complete");
 }
 
 void ServerApp::handleClientConnected(std::uint32_t userId) {
-    LOG_INFO("[Server] Client connected: userId=" << userId);
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Client connected: userId=" << userId);
     _metrics->totalConnections.fetch_add(1, std::memory_order_relaxed);
 
     if (_stateManager->isWaiting()) {
-        LOG_INFO("[Server] Waiting for client " << userId
-                                                << " to signal ready");
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[Server] Waiting for client " << userId << " to signal ready");
     }
 
     if (_entitySpawner) {
         PlayerSpawnConfig config{userId, _stateManager->getReadyPlayerCount()};
         auto result = _entitySpawner->spawnPlayer(config);
         if (!result.success) {
-            LOG_ERROR("[Server] Failed to spawn player for userId=" << userId);
+            LOG_ERROR_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[Server] Failed to spawn player for userId=" << userId);
         }
     }
 }
 
 void ServerApp::handleClientDisconnected(std::uint32_t userId) {
-    LOG_INFO("[Server] Client disconnected: userId=" << userId);
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Client disconnected: userId=" << userId);
     _stateManager->playerLeft(userId);
 
     if (_entitySpawner) {
@@ -328,31 +367,41 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
     switch (newState) {
         case GameState::Playing:
             _score = 0;
-            LOG_INFO("[Server] *** GAME STARTED *** ("
-                     << _stateManager->getReadyPlayerCount() << " players)");
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "[Server] *** GAME STARTED *** ("
+                             << _stateManager->getReadyPlayerCount()
+                             << " players)");
             if (_networkSystem) {
                 _networkSystem->broadcastGameStart();
             }
             break;
         case GameState::Paused:
-            LOG_INFO("[Server] Game paused - waiting for players to reconnect");
+            LOG_INFO_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[Server] Game paused - waiting for players to reconnect");
             break;
         case GameState::WaitingForPlayers:
             if (oldState == GameState::Paused) {
-                LOG_INFO("[Server] Resuming wait for players");
+                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                             "[Server] Resuming wait for players");
             } else if (oldState == GameState::GameOver) {
-                LOG_INFO("[Server] Back to lobby - waiting for players");
+                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                             "[Server] Back to lobby - waiting for players");
             }
             break;
         case GameState::GameOver:
-            LOG_INFO("[Server] *** GAME OVER *** Final score=" << _score);
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "[Server] *** GAME OVER *** Final score=" << _score);
             if (_networkSystem) {
-                LOG_INFO("[Server] Broadcasting GameOver via NetworkSystem");
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::GameEngine,
+                    "[Server] Broadcasting GameOver via NetworkSystem");
                 _networkSystem->broadcastGameState(
                     NetworkServer::GameState::GameOver);
                 _networkSystem->broadcastGameOver(_score);
             } else if (_networkServer) {
-                LOG_INFO("[Server] Sending GameOver via NetworkServer");
+                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                             "[Server] Sending GameOver via NetworkServer");
                 _networkServer->updateGameState(
                     NetworkServer::GameState::GameOver);
                 _networkServer->sendGameOver(_score);
@@ -374,8 +423,9 @@ void ServerApp::processIncomingData() noexcept {
         if (clientId == ClientManager::INVALID_CLIENT_ID) {
             clientId = _clientManager.handleNewConnection(endpoint);
             if (clientId == ClientManager::INVALID_CLIENT_ID) {
-                LOG_WARNING("[Server] Rejected connection from "
-                            << endpoint << " (server full)");
+                LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                                "[Server] Rejected connection from "
+                                    << endpoint << " (server full)");
                 _metrics->connectionsRejected.fetch_add(
                     1, std::memory_order_relaxed);
                 continue;
@@ -402,10 +452,12 @@ bool ServerApp::startNetworkThread() {
     try {
         _networkThreadRunning.store(true, std::memory_order_release);
         _networkThread = std::thread(&ServerApp::networkThreadFunction, this);
-        LOG_DEBUG("[Server] Network thread started");
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Network thread started");
         return true;
     } catch (const std::exception& e) {
-        LOG_ERROR("[Server] Failed to start network thread: " << e.what());
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Failed to start network thread: " << e.what());
         _networkThreadRunning.store(false, std::memory_order_release);
         return false;
     }
@@ -417,18 +469,21 @@ void ServerApp::stopNetworkThread() noexcept {
         if (_networkThread.joinable()) {
             _networkThread.join();
         }
-        LOG_DEBUG("[Server] Network thread stopped");
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Network thread stopped");
     }
 }
 
 void ServerApp::networkThreadFunction() noexcept {
-    LOG_DEBUG("[Server] Network thread running");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                  "[Server] Network thread running");
 
     while (_networkThreadRunning.load(std::memory_order_acquire)) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    LOG_DEBUG("[Server] Network thread exiting");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                  "[Server] Network thread exiting");
 }
 
 void ServerApp::updatePlayerMovement(float deltaTime) noexcept {
@@ -453,7 +508,8 @@ void ServerApp::checkGameOverCondition() {
         return;
     }
 
-    LOG_INFO("[Server] All players defeated - ending game");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] All players defeated - ending game");
 
     if (_gameEngine && _gameEngine->isRunning()) {
         _gameEngine->shutdown();
@@ -463,7 +519,8 @@ void ServerApp::checkGameOverCondition() {
 }
 
 void ServerApp::resetToLobby() {
-    LOG_INFO("[Server] Resetting session to lobby");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Resetting session to lobby");
 
     if (_registry) {
         _registry->removeEntitiesIf([](ECS::Entity) { return true; });
@@ -494,12 +551,14 @@ void ServerApp::resetToLobby() {
             PlayerSpawnConfig cfg{userId, idx++};
             auto result = _entitySpawner->spawnPlayer(cfg);
             if (!result.success) {
-                LOG_ERROR(
+                LOG_ERROR_CAT(
+                    ::rtype::LogCategory::GameEngine,
                     "[Server] Failed to respawn player for userId=" << userId);
             }
         }
     }
-    LOG_INFO("[Server] Reset to lobby complete");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Reset to lobby complete");
 }
 
 std::size_t ServerApp::countAlivePlayers() {
@@ -530,7 +589,8 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
     }
 
     if (event.type == engine::GameEventType::GameOver) {
-        LOG_INFO(
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::GameEngine,
             "[ServerApp] GameOver event received, transitioning to GameOver "
             "state");
         _stateManager->transitionTo(GameState::GameOver);
