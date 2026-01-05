@@ -9,6 +9,8 @@ add_library(rtype_game_client_systems STATIC
     ParallaxScrolling.hpp
     SpritePositionSystem.cpp
     SpritePositionSystem.hpp
+    ColorTintSystem.cpp
+    ColorTintSystem.hpp
     BoxingSystem.cpp
     BoxingSystem.hpp
     ResetTriggersSystem.cpp
