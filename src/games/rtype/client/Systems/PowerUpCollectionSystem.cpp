@@ -9,10 +9,10 @@
 
 #include <SFML/System/Vector2.hpp>
 
-#include "../AllComponents.hpp"
-#include "../GameScene/VisualCueFactory.hpp"
 #include "../../shared/Components/PlayerIdComponent.hpp"
 #include "../../shared/Components/TransformComponent.hpp"
+#include "../AllComponents.hpp"
+#include "../GameScene/VisualCueFactory.hpp"
 #include "Logger/Macros.hpp"
 
 namespace rc = ::rtype::games::rtype::client;
@@ -26,65 +26,69 @@ PowerUpCollectionSystem::PowerUpCollectionSystem(std::shared_ptr<sf::Font> font)
 }
 
 void PowerUpCollectionSystem::update(ECS::Registry& registry, float /*dt*/) {
-    auto playerView = registry.view<PlayerTag, rs::PlayerIdComponent, rs::TransformComponent>();
+    auto playerView =
+        registry
+            .view<PlayerTag, rs::PlayerIdComponent, rs::TransformComponent>();
 
     size_t playerCount = 0;
-    playerView.each(
-        [&](auto entity, PlayerTag& /*tag*/, const rs::PlayerIdComponent& playerId,
-            const rs::TransformComponent& transform) {
+    playerView.each([&](auto entity, PlayerTag& /*tag*/,
+                        const rs::PlayerIdComponent& playerId,
+                        const rs::TransformComponent& transform) {
+        playerCount++;
 
-            playerCount++;
+        bool hasActivePowerUp =
+            registry.hasComponent<rs::ActivePowerUpComponent>(entity);
+        LOG_DEBUG("[PowerUpCollectionSystem] Checking player "
+                  << playerId.playerId << " (entity=" << entity.id
+                  << ") hasActivePowerUp=" << hasActivePowerUp);
 
-            bool hasActivePowerUp = registry.hasComponent<rs::ActivePowerUpComponent>(entity);
-            LOG_DEBUG("[PowerUpCollectionSystem] Checking player " << playerId.playerId
-                      << " (entity=" << entity.id << ") hasActivePowerUp=" << hasActivePowerUp);
+        if (!hasActivePowerUp) {
+            _lastPowerUpState.erase(playerId.playerId);
+            return;
+        }
 
-            if (!hasActivePowerUp) {
-                _lastPowerUpState.erase(playerId.playerId);
-                return;
-            }
+        const auto& activePowerUp =
+            registry.getComponent<rs::ActivePowerUpComponent>(entity);
+        auto it = _lastPowerUpState.find(playerId.playerId);
+        bool isNewCollection = false;
 
-            const auto& activePowerUp = registry.getComponent<rs::ActivePowerUpComponent>(entity);
-            auto it = _lastPowerUpState.find(playerId.playerId);
-            bool isNewCollection = false;
-
-            if (it == _lastPowerUpState.end()) {
+        if (it == _lastPowerUpState.end()) {
+            isNewCollection = (activePowerUp.type != rs::PowerUpType::None);
+        } else {
+            if (it->second.type != activePowerUp.type) {
                 isNewCollection = (activePowerUp.type != rs::PowerUpType::None);
             } else {
-                if (it->second.type != activePowerUp.type) {
-                    isNewCollection = (activePowerUp.type != rs::PowerUpType::None);
-                } else {
-                    float timeDiff = activePowerUp.remainingTime - it->second.remainingTime;
-                    if (timeDiff > 0.5f) {
-                        isNewCollection = true;
-                    }
+                float timeDiff =
+                    activePowerUp.remainingTime - it->second.remainingTime;
+                if (timeDiff > 0.5f) {
+                    isNewCollection = true;
                 }
             }
-
-            if (isNewCollection) {
-                std::string displayName = getPowerUpDisplayName(activePowerUp.type);
-                sf::Color color = getPowerUpColor(activePowerUp.type);
-
-                LOG_DEBUG("[PowerUpCollectionSystem] Player " << playerId.playerId
-                          << " collected power-up: " << displayName
-                          << " (remainingTime=" << activePowerUp.remainingTime << ")");
-
-                VisualCueFactory::createPowerUpPopup(
-                    registry,
-                    sf::Vector2f(transform.x + 20.f, transform.y),
-                    displayName,
-                    _font,
-                    color
-                );
-            }
-            _lastPowerUpState[playerId.playerId] = {activePowerUp.type, activePowerUp.remainingTime};
         }
-    );
 
-    LOG_DEBUG("[PowerUpCollectionSystem] update() finished, checked " << playerCount << " players");
+        if (isNewCollection) {
+            std::string displayName = getPowerUpDisplayName(activePowerUp.type);
+            sf::Color color = getPowerUpColor(activePowerUp.type);
+
+            LOG_DEBUG(
+                "[PowerUpCollectionSystem] Player "
+                << playerId.playerId << " collected power-up: " << displayName
+                << " (remainingTime=" << activePowerUp.remainingTime << ")");
+
+            VisualCueFactory::createPowerUpPopup(
+                registry, sf::Vector2f(transform.x + 20.f, transform.y),
+                displayName, _font, color);
+        }
+        _lastPowerUpState[playerId.playerId] = {activePowerUp.type,
+                                                activePowerUp.remainingTime};
+    });
+
+    LOG_DEBUG("[PowerUpCollectionSystem] update() finished, checked "
+              << playerCount << " players");
 }
 
-std::string PowerUpCollectionSystem::getPowerUpDisplayName(rs::PowerUpType type) const {
+std::string PowerUpCollectionSystem::getPowerUpDisplayName(
+    rs::PowerUpType type) const {
     switch (type) {
         case rs::PowerUpType::SpeedBoost:
             return "+Speed";

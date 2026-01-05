@@ -42,7 +42,8 @@ struct PowerUpTypeComponent {
         if (id == "shield") return PowerUpVariant::Shield;
         if (id == "rapid_fire") return PowerUpVariant::RapidFire;
         if (id == "double_damage") return PowerUpVariant::DoubleDamage;
-        if (id == "health_small" || id == "health_large") return PowerUpVariant::HealthBoost;
+        if (id == "health_small" || id == "health_large")
+            return PowerUpVariant::HealthBoost;
         if (id == "weapon_upgrade") return PowerUpVariant::WeaponUpgrade;
         if (id == "extra_life") return PowerUpVariant::ExtraLife;
         return PowerUpVariant::Unknown;

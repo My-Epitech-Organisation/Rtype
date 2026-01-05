@@ -155,7 +155,7 @@ void Graphic::_initializeSystems() {
         ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_powerUpCollectionSystem = std::make_unique<
         ::rtype::games::rtype::client::PowerUpCollectionSystem>(
-            this->_assetsManager->fontManager->get("main_font"));
+        this->_assetsManager->fontManager->get("main_font"));
     this->_buttonUpdateSystem =
         std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(
             this->_window);

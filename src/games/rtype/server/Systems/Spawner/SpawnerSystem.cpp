@@ -242,7 +242,8 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     event.x = spawnX;
     event.y = spawnY;
     event.rotation = 0.0F;
-    event.entityType = static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
+    event.entityType =
+        static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
     event.subType = static_cast<uint8_t>(variant);
     _emitEvent(event);
 }

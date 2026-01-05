@@ -14,13 +14,14 @@
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Font.hpp>
 
-#include "rtype/engine.hpp"
 #include "../../shared/Components/PowerUpComponent.hpp"
+#include "rtype/engine.hpp"
 
 namespace rtype::games::rtype::client {
 
 /**
- * @brief System that detects when players collect power-ups and displays popup notifications
+ * @brief System that detects when players collect power-ups and displays popup
+ * notifications
  */
 class PowerUpCollectionSystem : public ::rtype::engine::ASystem {
    public:
@@ -38,8 +39,10 @@ class PowerUpCollectionSystem : public ::rtype::engine::ASystem {
     };
     std::unordered_map<uint32_t, PowerUpState> _lastPowerUpState;
 
-    std::string getPowerUpDisplayName(::rtype::games::rtype::shared::PowerUpType type) const;
-    sf::Color getPowerUpColor(::rtype::games::rtype::shared::PowerUpType type) const;
+    std::string getPowerUpDisplayName(
+        ::rtype::games::rtype::shared::PowerUpType type) const;
+    sf::Color getPowerUpColor(
+        ::rtype::games::rtype::shared::PowerUpType type) const;
 };
 
 }  // namespace rtype::games::rtype::client
