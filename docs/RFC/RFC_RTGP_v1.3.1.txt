@@ -4,7 +4,9 @@ Category: Experimental                                   December 2025
 
 
                      R-Type Game Protocol (RTGP)
-              Version 1.3.0 (Game Events & Power-Up System)
+              Version 1.3.1 (Lobby Ready & Game Start System)
+
+Date: January 5 2026
 
 Abstract
 
@@ -381,7 +383,16 @@ Table of Contents
 
 8.  Changes from Previous Versions
 
-8.1.  Version 1.3.0 (2025-12-15)
+8.1.  Version 1.3.1 (2026-01-05)
+
+   o  Added OpCode 0x08 - C_READY: Client lobby ready/unready signal
+   o  Added OpCode 0x09 - S_GAME_START: Server-initiated game start with countdown
+   o  Added OpCode 0x0A - S_PLAYER_READY_STATE: Server broadcasts individual player ready state
+   o  Added Section 5.1: Extended session management documentation for lobby ready workflow
+   o  Updated Section 7: Added C_READY, S_GAME_START, and S_PLAYER_READY_STATE to payload size reference table
+   o  Lobby Workflow: Clients send C_READY when toggling ready state. Server broadcasts S_GAME_START when all players ready, triggering synchronized countdown on all clients.
+
+8.2.  Version 1.3.0 (2025-12-15)
 
    o  Added OpCode 0x07 - S_GAME_OVER: Server notification for game
       termination with final score
