@@ -407,6 +407,7 @@ void NetworkClient::handleEntitySpawn(const network::Header& header,
         EntitySpawnEvent event;
         event.entityId = deserialized.entityId;
         event.type = deserialized.getType();
+        event.subType = deserialized.subType;
         event.x = deserialized.posX;
         event.y = deserialized.posY;
 
