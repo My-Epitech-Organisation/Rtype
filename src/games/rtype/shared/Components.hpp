@@ -19,6 +19,7 @@
 #include "Components/EnemyTypeComponent.hpp"
 #include "Components/HealthComponent.hpp"
 #include "Components/PowerUpComponent.hpp"
+#include "Components/PowerUpTypeComponent.hpp"
 
 // Entity Types and Tags
 #include "Components/EntityType.hpp"
