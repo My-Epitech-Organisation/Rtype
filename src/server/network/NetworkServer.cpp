@@ -117,6 +117,30 @@ void NetworkServer::moveEntity(std::uint32_t id, float x, float y, float vx,
     broadcastToAll(network::OpCode::S_ENTITY_MOVE, serialized);
 }
 
+void NetworkServer::moveEntitiesBatch(
+    const std::vector<std::tuple<std::uint32_t, float, float, float, float>>&
+        entities) {
+    if (entities.empty()) {
+        return;
+    }
+
+    auto count = static_cast<std::uint8_t>(
+        std::min(entities.size(), network::kMaxEntitiesPerBatch));
+
+    network::Buffer payload;
+    payload.reserve(1 + count * sizeof(network::EntityMovePayload));
+    payload.push_back(count);
+
+    for (std::size_t i = 0; i < count; ++i) {
+        const auto& [id, x, y, vx, vy] = entities[i];
+        network::EntityMovePayload entry{id, x, y, vx, vy};
+        auto serialized = network::Serializer::serializeForNetwork(entry);
+        payload.insert(payload.end(), serialized.begin(), serialized.end());
+    }
+
+    broadcastToAll(network::OpCode::S_ENTITY_MOVE_BATCH, payload);
+}
+
 void NetworkServer::destroyEntity(std::uint32_t id) {
     network::EntityDestroyPayload payload;
     payload.entityId = id;
