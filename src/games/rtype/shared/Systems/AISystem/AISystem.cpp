@@ -11,6 +11,7 @@
 
 #include "../../Components/Tags.hpp"
 #include "Behaviors/BehaviorRegistry.hpp"
+#include "Logger/Macros.hpp"
 
 namespace rtype::games::rtype::shared {
 
@@ -63,9 +64,6 @@ void AISystem::updateChaseTargets(ECS::Registry& registry) {
         players.push_back({transform.x, transform.y});
     });
 
-    if (players.empty()) {
-        return;
-    }
     auto chaseView = registry.view<EnemyTag, AIComponent, TransformComponent>();
     chaseView.each([&players](ECS::Entity /*entity*/, const EnemyTag& /*tag*/,
                               AIComponent& ai,

@@ -184,10 +184,12 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
 
     registry.emplaceComponent<TransformComponent>(enemy, spawnX, spawnY, 0.0F);
 
-    float speedX = (chosenBehavior == AIBehavior::MoveLeft ||
-                    chosenBehavior == AIBehavior::Stationary)
-                       ? -enemyConfig.speed
-                       : 0.0F;
+    float speedX = 0.0F;
+    if (chosenBehavior == AIBehavior::MoveLeft) {
+        speedX = -enemyConfig.speed;
+    } else if (chosenBehavior == AIBehavior::Stationary) {
+        speedX = -enemyConfig.speed;
+    }
     registry.emplaceComponent<VelocityComponent>(enemy, speedX, 0.0F);
 
     AIComponent ai{};
