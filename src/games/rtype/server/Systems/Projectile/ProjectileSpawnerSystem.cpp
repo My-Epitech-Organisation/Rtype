@@ -14,6 +14,7 @@
 #include <rtype/network/Protocol.hpp>
 
 #include "../../../shared/Components.hpp"
+#include "../../../shared/Config/EntityConfig/EntityConfig.hpp"
 
 namespace rtype::games::rtype::server {
 using ::rtype::network::EntityType;
@@ -35,6 +36,34 @@ using shared::WeaponConfig;
 using shared::WeaponPresets::BasicBullet;
 using shared::WeaponPresets::EnemyBullet;
 
+namespace {
+/**
+ * @brief Convert ProjectileConfig from TOML to WeaponConfig
+ * @param projConfig The projectile config from TOML
+ * @param projectileType The type of projectile for the WeaponConfig
+ * @param cooldown Fire rate cooldown (calculated from fire_rate)
+ * @return WeaponConfig ready to use
+ */
+shared::WeaponConfig createWeaponConfigFromProjectile(
+    const shared::ProjectileConfig& projConfig,
+    shared::ProjectileType projectileType,
+    float cooldown = 0.2F) {
+    shared::WeaponConfig config;
+    config.projectileType = projectileType;
+    config.damage = projConfig.damage;
+    config.speed = projConfig.speed;
+    config.cooldown = cooldown;
+    config.lifetime = projConfig.lifetime;
+    config.hitboxWidth = projConfig.hitboxWidth;
+    config.hitboxHeight = projConfig.hitboxHeight;
+    config.piercing = projConfig.piercing;
+    config.maxHits = projConfig.maxHits;
+    config.projectileCount = 1;
+    config.spreadAngle = 0.0F;
+    return config;
+}
+}  // namespace
+
 ProjectileSpawnerSystem::ProjectileSpawnerSystem(EventEmitter emitter,
                                                  ProjectileSpawnConfig config)
     : ASystem("ProjectileSpawnerSystem"),
@@ -55,7 +84,16 @@ void ProjectileSpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
 uint32_t ProjectileSpawnerSystem::spawnPlayerProjectile(
     ECS::Registry& registry, uint32_t playerNetworkId, float playerX,
     float playerY) {
-    WeaponConfig weaponConfig = BasicBullet;
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    auto projConfigOpt = configRegistry.getProjectile("basic_bullet");
+    WeaponConfig weaponConfig;
+    if (projConfigOpt.has_value()) {
+        const auto& projConfig = projConfigOpt.value().get();
+        weaponConfig = createWeaponConfigFromProjectile(
+            projConfig, shared::ProjectileType::BasicBullet, 0.2F);
+    } else {
+        weaponConfig = BasicBullet;
+    }
 
     float damageMultiplier = 1.0F;
     auto powerView = registry.view<NetworkIdComponent, shared::PlayerTag,
@@ -112,11 +150,20 @@ uint32_t ProjectileSpawnerSystem::spawnEnemyProjectile(
     float dx = targetX - spawnX;
     float dy = targetY - spawnY;
     float length = std::sqrt(dx * dx + dy * dy);
-    WeaponConfig weaponConfig = EnemyBullet;
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    auto projConfigOpt = configRegistry.getProjectile("enemy_bullet");
+
+    WeaponConfig weaponConfig;
+    if (projConfigOpt.has_value()) {
+        const auto& projConfig = projConfigOpt.value().get();
+        weaponConfig = createWeaponConfigFromProjectile(
+            projConfig, shared::ProjectileType::EnemyBullet, 1.8F);
+    } else {
+        weaponConfig = EnemyBullet;
+    }
     float vx = (length > 0.0F) ? (dx / length) * weaponConfig.speed
                                : -weaponConfig.speed;
     float vy = (length > 0.0F) ? (dy / length) * weaponConfig.speed : 0.0F;
-
     return spawnProjectileWithConfig(registry, spawnX, spawnY, vx, vy,
                                      weaponConfig, ProjectileOwner::Enemy,
                                      enemyNetworkId);
