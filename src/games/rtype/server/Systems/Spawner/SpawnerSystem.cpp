@@ -26,6 +26,7 @@ using shared::BoundingBoxComponent;
 using shared::BydosSlaveTag;
 using shared::DamageOnContactComponent;
 using shared::EnemyTag;
+using shared::EnemyTypeComponent;
 using shared::HealthComponent;
 using shared::NetworkIdComponent;
 using shared::ObstacleTag;
@@ -217,6 +218,8 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     registry.emplaceComponent<NetworkIdComponent>(enemy, networkId);
     registry.emplaceComponent<EnemyTag>(enemy);
     registry.emplaceComponent<BydosSlaveTag>(enemy);
+    auto variant = EnemyTypeComponent::stringToVariant(selectedEnemyId);
+    registry.emplaceComponent<EnemyTypeComponent>(enemy, variant, selectedEnemyId);
 
     _enemyCount++;
 
@@ -227,6 +230,7 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     event.y = spawnY;
     event.rotation = 0.0F;
     event.entityType = static_cast<uint8_t>(EntityType::Bydos);
+    event.subType = static_cast<uint8_t>(variant);
     _emitEvent(event);
 }
 
