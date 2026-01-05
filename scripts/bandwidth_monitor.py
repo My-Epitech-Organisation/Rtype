@@ -33,6 +33,7 @@ OPCODE_NAMES = {
     0x12: "S_ENTITY_DESTROY",
     0x13: "S_ENTITY_HEALTH",
     0x14: "S_POWERUP_EVENT",
+    0x15: "S_ENTITY_MOVE_BATCH",
     0x20: "C_INPUT",
     0x21: "S_UPDATE_POS",
     0xF0: "PING",
