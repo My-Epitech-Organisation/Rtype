@@ -18,7 +18,6 @@ namespace rc = ::rtype::games::rtype::client;
 namespace rs = ::rtype::games::rtype::shared;
 
 namespace rtype::games::rtype::client {
-
 RenderSystem::RenderSystem(std::shared_ptr<sf::RenderTarget> target)
     : ::rtype::engine::ASystem("RenderSystem"), _target(std::move(target)) {}
 
@@ -214,12 +213,18 @@ void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
     for (auto entity : sortedEntities) {
         if (isEntityHidden(registry, entity)) continue;
 
-        this->_renderImages(registry, entity);
-        this->_renderRectangles(registry, entity);
-        this->_renderButtons(registry, entity);
-        this->_renderStaticText(registry, entity);
-        this->_renderTextInputs(registry, entity);
-        this->_renderHudRectangles(registry, entity);
+        if (registry.hasComponent<Image>(entity))
+            this->_renderImages(registry, entity);
+        if (registry.hasComponent<Rectangle>(entity))
+            this->_renderRectangles(registry, entity);
+        if (registry.hasComponent<ButtonTag>(entity))
+            this->_renderButtons(registry, entity);
+        if (registry.hasComponent<StaticTextTag>(entity))
+            this->_renderStaticText(registry, entity);
+        if (registry.hasComponent<TextInputTag>(entity))
+            this->_renderTextInputs(registry, entity);
+        if (registry.hasComponent<HudTag>(entity))
+            this->_renderHudRectangles(registry, entity);
     }
 }
 

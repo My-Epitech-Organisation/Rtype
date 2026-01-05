@@ -90,7 +90,7 @@ void SettingsScene::_initKeybindSection() {
                 }
             }));
         this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-            btn, 1);
+            btn, 2);
         this->_actionButtons[action] = btn;
         this->_keybindSectionEntities.push_back(btn);
         this->_listEntity.push_back(btn);
@@ -167,14 +167,13 @@ void SettingsScene::_initAudioSection() {
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
-    auto& font = this->_assetsManager->fontManager->get("main_font");
+    auto font = this->_assetsManager->fontManager->get("main_font");
     float startY = sectionY + 70;
     float gapY = 60;
 
     auto createVolumeControl = [&](std::string label, float y, bool isMusic) {
         float labelX = sectionX + 30;
         float minusX = sectionX + 250;
-        float valueX = sectionX + 320;
         float plusX = sectionX + 400;
 
         auto valueEntity = this->_registry->spawnEntity();
@@ -227,7 +226,7 @@ void SettingsScene::_initAudioSection() {
                 }
             }));
         this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-            minusBtn, 1);
+            minusBtn);
         this->_listEntity.push_back(minusBtn);
 
         auto plusBtn = EntityFactory::createButton(
@@ -260,7 +259,7 @@ void SettingsScene::_initAudioSection() {
                 }
             }));
         this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-            plusBtn, 1);
+            plusBtn);
         this->_listEntity.push_back(plusBtn);
     };
 
@@ -334,7 +333,7 @@ void SettingsScene::_initInputModeSection() {
 
     this->_inputModeLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Current: Keyboard", "main_font",
-        sf::Vector2f(sectionX + sectionW - 220, sectionY + 20), 20);
+        sf::Vector2f(sectionX + sectionW - 215, sectionY + 35), 20);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         this->_inputModeLabel, 1);
     this->_listEntity.push_back(this->_inputModeLabel);
@@ -411,9 +410,9 @@ void SettingsScene::_initAccessibilitySection() {
                ColorBlindMode::HighContrast);
 
     float sliderY = startY + gapY * 6;
-    float labelX = startX;
-    float minusX = startX + 300;
-    float plusX = startX + 420;
+    float labelX = startX + strlen("Intensity") / 2 * 24;
+    float minusX = startX + 280;
+    float plusX = startX + 340;
 
     float currentIntensity =
         this->_registry->getSingleton<AccessibilitySettings>().intensity;
@@ -423,7 +422,7 @@ void SettingsScene::_initAccessibilitySection() {
     this->_intensityLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager,
         "Intensity: " + std::to_string(percent) + "%", "main_font",
-        sf::Vector2f(labelX, sliderY), 24);
+        sf::Vector2f(labelX, sliderY + 50 / 2), 24);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         *this->_intensityLabel, 1);
     this->_listEntity.push_back(*this->_intensityLabel);
@@ -433,7 +432,7 @@ void SettingsScene::_initAccessibilitySection() {
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 28, "-"),
-        rtype::games::rtype::shared::TransformComponent(minusX, sliderY - 10),
+        rtype::games::rtype::shared::TransformComponent(minusX, sliderY),
         rtype::games::rtype::client::Rectangle({60, 50}, sf::Color(40, 40, 90),
                                                sf::Color(70, 70, 140)),
         this->_assetsManager,
@@ -447,7 +446,7 @@ void SettingsScene::_initAccessibilitySection() {
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 28, "+"),
-        rtype::games::rtype::shared::TransformComponent(plusX, sliderY - 10),
+        rtype::games::rtype::shared::TransformComponent(plusX, sliderY),
         rtype::games::rtype::client::Rectangle({60, 50}, sf::Color(40, 40, 90),
                                                sf::Color(70, 70, 140)),
         this->_assetsManager,

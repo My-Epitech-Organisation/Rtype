@@ -54,7 +54,8 @@ void VisualCueFactory::createFlash(ECS::Registry& registry,
 
 void VisualCueFactory::createDamagePopup(ECS::Registry& registry,
                                          const sf::Vector2f& position,
-                                         int damage, const sf::Font& font,
+                                         int damage,
+                                         std::shared_ptr<sf::Font> font,
                                          const sf::Color& color) {
     auto entity = registry.spawnEntity();
     LOG_DEBUG("[VisualCueFactory] Damage popup entity=" +
