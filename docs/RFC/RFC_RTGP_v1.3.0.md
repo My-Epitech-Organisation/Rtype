@@ -2,9 +2,9 @@
 
 | Metadata | Details |
 | :---- | :---- |
-| **Version** | 1.3.0 (Game Events & Power-Up System) |
+| **Version** | 1.4.0 (LZ4 Compression Support) |
 | **Status** | Draft / Experimental |
-| **Date** | 2025-12-15 |
+| **Date** | 2026-01-05 |
 | **Authors** | R-Type Project Team |
 | **Abstract** | This document specifies the binary application-layer protocol used for real-time communication between the R-Type Client and Server, including a reliability layer over UDP. |
 
@@ -105,7 +105,7 @@ Every RTGP packet consists of a fixed **16-byte Header** followed by a variable-
 
 ### **4.3. Reliability Mechanism (Flags)**
 
-The `Flags` field is used to manage the reliability layer (RUDP).
+The `Flags` field is used to manage the reliability layer (RUDP) and compression.
 
 **Flag Bitmask Values:**
 
@@ -114,6 +114,8 @@ The `Flags` field is used to manage the reliability layer (RUDP).
   dedicated ACK or piggybacking).
 * **0x02 - IS\_ACK:** The `Ack ID` field in this header is valid and
   acknowledges a previously received packet.
+* **0x04 - COMPRESSED:** The payload is compressed using LZ4 frame format.
+  The receiver **MUST** decompress the payload before processing.
 
 **Behavior:**
 
@@ -123,6 +125,30 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 3. **Retransmission:** If a packet marked `RELIABLE` is not acknowledged
    within a specific timeout (e.g., 200ms), the sender MUST retransmit
    it.
+
+### **4.4. Compression**
+
+RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
+
+**Compression Behavior:**
+
+1. **Threshold:** Payloads smaller than 64 bytes **SHOULD NOT** be compressed
+   (overhead exceeds benefit).
+2. **Format:** LZ4 frame format is used, which includes decompressed size
+   metadata for safe buffer allocation.
+3. **Header Field:** `Packet Size` (payloadSize) contains the **COMPRESSED**
+   size, not the original size.
+4. **Flag:** When payload is compressed, the COMPRESSED flag (0x04) **MUST**
+   be set.
+5. **Backward Compatibility:** Receivers **MUST** support both compressed and
+   uncompressed packets. If COMPRESSED flag is not set, payload is
+   processed as-is.
+
+**Decompression Requirements:**
+
+1. Receivers **MUST** check the COMPRESSED flag before processing payload.
+2. If decompression fails, the packet **MUST** be dropped and **MAY** be logged.
+3. Decompressed size **MUST NOT** exceed `kMaxPayloadSize` (1384 bytes).
 
 ## **5. Protocol Operations (OpCodes)**
 
