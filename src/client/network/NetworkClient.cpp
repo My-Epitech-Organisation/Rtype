@@ -45,6 +45,14 @@ NetworkClient::NetworkClient(const Config& config)
 
     connCallbacks.onDisconnected = [this](network::DisconnectReason reason) {
         queueCallback([this, reason]() {
+            connection_.reset();
+            serverEndpoint_.reset();
+            if (socket_) {
+                socket_->cancel();
+                socket_->close();
+                socket_ = network::createAsyncSocket(ioContext_.get());
+            }
+
             for (const auto& cb : onDisconnectedCallbacks_) {
                 if (cb) cb(reason);
             }
@@ -54,6 +62,14 @@ NetworkClient::NetworkClient(const Config& config)
     connCallbacks.onConnectFailed = [this](network::NetworkError error) {
         (void)error;
         queueCallback([this]() {
+            connection_.reset();
+            serverEndpoint_.reset();
+            if (socket_) {
+                socket_->cancel();
+                socket_->close();
+                socket_ = network::createAsyncSocket(ioContext_.get());
+            }
+
             for (const auto& cb : onDisconnectedCallbacks_) {
                 if (cb) cb(DisconnectReason::ProtocolError);
             }
@@ -92,6 +108,14 @@ NetworkClient::NetworkClient(const Config& config,
 
     connCallbacks.onDisconnected = [this](network::DisconnectReason reason) {
         queueCallback([this, reason]() {
+            connection_.reset();
+            serverEndpoint_.reset();
+            if (socket_) {
+                socket_->cancel();
+                socket_->close();
+                socket_ = network::createAsyncSocket(ioContext_.get());
+            }
+
             for (const auto& cb : onDisconnectedCallbacks_) {
                 if (cb) cb(reason);
             }
@@ -101,6 +125,14 @@ NetworkClient::NetworkClient(const Config& config,
     connCallbacks.onConnectFailed = [this](network::NetworkError error) {
         (void)error;
         queueCallback([this]() {
+            connection_.reset();
+            serverEndpoint_.reset();
+            if (socket_) {
+                socket_->cancel();
+                socket_->close();
+                socket_ = network::createAsyncSocket(ioContext_.get());
+            }
+
             for (const auto& cb : onDisconnectedCallbacks_) {
                 if (cb) cb(DisconnectReason::ProtocolError);
             }
