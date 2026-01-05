@@ -16,6 +16,7 @@
 #include <optional>
 #include <queue>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
@@ -162,6 +163,18 @@ class NetworkServer {
      * @param vy Y velocity
      */
     void moveEntity(std::uint32_t id, float x, float y, float vx, float vy);
+
+    /**
+     * @brief Broadcast batched entity moves to all clients
+     *
+     * More efficient than individual moveEntity calls - reduces packet overhead
+     * and enables LZ4 compression for larger batches.
+     *
+     * @param entities Vector of (entityId, x, y, vx, vy) tuples
+     */
+    void moveEntitiesBatch(
+        const std::vector<std::tuple<std::uint32_t, float, float, float, float>>&
+            entities);
 
     /**
      * @brief Destroy an entity on all clients
