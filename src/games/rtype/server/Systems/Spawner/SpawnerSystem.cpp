@@ -31,6 +31,7 @@ using shared::HealthComponent;
 using shared::NetworkIdComponent;
 using shared::ObstacleTag;
 using shared::PowerUpComponent;
+using shared::PowerUpTypeComponent;
 using shared::TransformComponent;
 using shared::VelocityComponent;
 
@@ -241,7 +242,7 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     event.x = spawnX;
     event.y = spawnY;
     event.rotation = 0.0F;
-    event.entityType = static_cast<uint8_t>(EntityType::Bydos);
+    event.entityType = static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
     event.subType = static_cast<uint8_t>(variant);
     _emitEvent(event);
 }
@@ -300,6 +301,36 @@ void SpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
     power.magnitude = 0.5F;
     registry.emplaceComponent<shared::PowerUpComponent>(pickup, power);
 
+    std::string powerUpId = "health_small";
+    shared::PowerUpVariant variant = shared::PowerUpVariant::Unknown;
+
+    switch (power.type) {
+        case shared::PowerUpType::SpeedBoost:
+            powerUpId = "speed_boost";
+            variant = shared::PowerUpVariant::SpeedBoost;
+            break;
+        case shared::PowerUpType::Shield:
+            powerUpId = "shield";
+            variant = shared::PowerUpVariant::Shield;
+            break;
+        case shared::PowerUpType::RapidFire:
+            powerUpId = "rapid_fire";
+            variant = shared::PowerUpVariant::RapidFire;
+            break;
+        case shared::PowerUpType::DoubleDamage:
+            powerUpId = "double_damage";
+            variant = shared::PowerUpVariant::DoubleDamage;
+            break;
+        case shared::PowerUpType::HealthBoost:
+            powerUpId = "health_small";
+            variant = shared::PowerUpVariant::HealthBoost;
+            break;
+        default:
+            powerUpId = "health_small";
+            variant = shared::PowerUpVariant::HealthBoost;
+            break;
+    }
+    registry.emplaceComponent<PowerUpTypeComponent>(pickup, variant);
     uint32_t networkId = _nextNetworkId++;
     registry.emplaceComponent<NetworkIdComponent>(pickup, networkId);
     engine::GameEvent event{};
@@ -308,6 +339,7 @@ void SpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
     event.x = _config.spawnX;
     event.y = spawnY;
     event.entityType = static_cast<uint8_t>(EntityType::Pickup);
+    event.subType = static_cast<uint8_t>(variant);
     _emitEvent(event);
 }
 
