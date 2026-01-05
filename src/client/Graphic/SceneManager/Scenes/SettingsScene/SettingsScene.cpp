@@ -59,10 +59,12 @@ void SettingsScene::_initKeybindSection() {
                 if (this->_actionToRebind.has_value()) return;
 
                 InputMode mode = this->_keybinds->getInputMode();
-                LOG_DEBUG("[SettingsScene] Button clicked for action: "
-                          << static_cast<int>(action) << ", Mode: "
-                          << (mode == InputMode::Keyboard ? "Keyboard"
-                                                          : "Controller"));
+                LOG_DEBUG_CAT(
+                    ::rtype::LogCategory::Input,
+                    "[SettingsScene] Button clicked for action: "
+                        << static_cast<int>(action) << ", Mode: "
+                        << (mode == InputMode::Keyboard ? "Keyboard"
+                                                        : "Controller"));
 
                 if (mode == InputMode::Keyboard ||
                     action == GameAction::SHOOT ||
@@ -71,8 +73,10 @@ void SettingsScene::_initKeybindSection() {
                     action == GameAction::MOVE_UP ||
                     action == GameAction::MOVE_DOWN) {
                     this->_actionToRebind = action;
-                    LOG_DEBUG("[SettingsScene] Waiting for input for action: "
-                              << static_cast<int>(action));
+                    LOG_DEBUG_CAT(
+                        ::rtype::LogCategory::Input,
+                        "[SettingsScene] Waiting for input for action: "
+                            << static_cast<int>(action));
                     ECS::Entity entity = this->_actionButtons[action];
                     if (this->_registry
                             ->hasComponent<rtype::games::rtype::client::Text>(
@@ -479,13 +483,15 @@ void SettingsScene::pollEvents(const sf::Event& e) {
     if (this->_actionToRebind.has_value()) {
         GameAction action = *this->_actionToRebind;
         InputMode mode = this->_keybinds->getInputMode();
-        LOG_DEBUG("[SettingsScene] In rebind mode for action: "
-                  << static_cast<int>(action));
+        LOG_DEBUG_CAT(::rtype::LogCategory::Input,
+                      "[SettingsScene] In rebind mode for action: "
+                          << static_cast<int>(action));
 
         if (mode == InputMode::Keyboard) {
             if (const auto& keyEvent = e.getIf<sf::Event::KeyPressed>()) {
-                LOG_DEBUG("[SettingsScene] Keyboard key pressed: "
-                          << static_cast<int>(keyEvent->code));
+                LOG_DEBUG_CAT(::rtype::LogCategory::Input,
+                              "[SettingsScene] Keyboard key pressed: "
+                                  << static_cast<int>(keyEvent->code));
                 sf::Keyboard::Key key = keyEvent->code;
 
                 this->_keybinds->setKeyBinding(action, key);
@@ -512,7 +518,8 @@ void SettingsScene::pollEvents(const sf::Event& e) {
             if (const auto& btnEvent =
                     e.getIf<sf::Event::JoystickButtonPressed>()) {
                 unsigned int button = btnEvent->button;
-                LOG_DEBUG(
+                LOG_DEBUG_CAT(
+                    ::rtype::LogCategory::Input,
                     "[SettingsScene] Controller button pressed: " << button);
 
                 if (action == GameAction::SHOOT ||
@@ -596,8 +603,9 @@ SettingsScene::SettingsScene(
             try {
                 switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Main Menu: ") +
-                          std::string(e.what()));
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              std::string("Error switching to Main Menu: ") +
+                                  std::string(e.what()));
             }
         })));
 

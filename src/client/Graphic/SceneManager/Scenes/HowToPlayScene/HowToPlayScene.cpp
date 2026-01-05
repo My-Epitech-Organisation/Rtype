@@ -48,8 +48,9 @@ HowToPlayScene::HowToPlayScene(
             try {
                 this->_switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Main Menu: ") +
-                          std::string(e.what()));
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              std::string("Error switching to Main Menu: ") +
+                                  std::string(e.what()));
             }
         }));
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
@@ -108,8 +109,9 @@ void HowToPlayScene::pollEvents(const sf::Event& e) {
             try {
                 _switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& err) {
-                LOG_ERROR(std::string("Error switching to Main Menu: ") +
-                          std::string(err.what()));
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              std::string("Error switching to Main Menu: ") +
+                                  std::string(err.what()));
             }
         }
     }

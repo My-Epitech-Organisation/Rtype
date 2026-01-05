@@ -1,11 +1,12 @@
 # ============================================================================
-# Common Utilities Library (Header-Only)
+# Common Utilities Library (Static)
 # ============================================================================
 
+add_library(common STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Logger/Logger.cpp
+)
 
-add_library(common INTERFACE)
-
-target_include_directories(common INTERFACE
+target_include_directories(common PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Logger
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ArgParser
@@ -13,7 +14,7 @@ target_include_directories(common INTERFACE
     ${CMAKE_SOURCE_DIR}/include
 )
 
-target_compile_features(common INTERFACE cxx_std_20)
+target_compile_features(common PUBLIC cxx_std_20)
 
 add_library(RType::Common ALIAS common)
 

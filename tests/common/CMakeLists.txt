@@ -2,6 +2,7 @@ add_executable(test_argparser test_argparser.cpp)
 
 target_link_libraries(test_argparser PRIVATE
     GTest::gtest_main
+    common
 )
 
 target_include_directories(test_argparser PRIVATE

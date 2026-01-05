@@ -8,10 +8,12 @@
 #ifndef SRC_COMMON_LOGGER_FILEWRITER_HPP_
 #define SRC_COMMON_LOGGER_FILEWRITER_HPP_
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <memory>
 #include <mutex>
+#include <thread>
 
 namespace rtype {
 
@@ -100,7 +102,13 @@ class FileWriter {
      */
     void closeInternal() {
         if (_fileStream) {
+            _fileStream->flush();
             _fileStream->close();
+#ifdef _WIN32
+            // On Windows, give the OS time to flush buffers to disk
+            // This prevents read-after-write issues in tests
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+#endif
             _fileStream.reset();
         }
     }

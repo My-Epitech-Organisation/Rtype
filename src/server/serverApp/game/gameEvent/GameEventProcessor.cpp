@@ -34,9 +34,10 @@ void GameEventProcessor::processEvents() {
 
         if (!processed.valid) {
             if (_verbose) {
-                LOG_DEBUG("[EventProcessor] Event not processed: type="
-                          << static_cast<int>(event.type)
-                          << " networkId=" << event.entityNetworkId);
+                LOG_DEBUG_CAT(rtype::LogCategory::GameEngine,
+                              "[EventProcessor] Event not processed: type="
+                                  << static_cast<int>(event.type)
+                                  << " networkId=" << event.entityNetworkId);
             }
             continue;
         }
@@ -56,11 +57,13 @@ void GameEventProcessor::processEvents() {
                     processed.x, processed.y);
 
                 if (_verbose) {
-                    LOG_DEBUG("[EventProcessor] Entity spawned & broadcast: "
-                              << "networkId=" << processed.networkId << " type="
-                              << static_cast<int>(processed.networkEntityType)
-                              << " pos=(" << processed.x << ", " << processed.y
-                              << ")");
+                    LOG_DEBUG_CAT(
+                        rtype::LogCategory::GameEngine,
+                        "[EventProcessor] Entity spawned & broadcast: "
+                            << "networkId=" << processed.networkId << " type="
+                            << static_cast<int>(processed.networkEntityType)
+                            << " pos=(" << processed.x << ", " << processed.y
+                            << ")");
                 }
                 break;
             }
@@ -68,8 +71,10 @@ void GameEventProcessor::processEvents() {
                 _networkSystem->unregisterNetworkedEntityById(
                     processed.networkId);
                 if (_verbose) {
-                    LOG_DEBUG("[EventProcessor] Entity destroyed: networkId="
-                              << processed.networkId);
+                    LOG_DEBUG_CAT(
+                        rtype::LogCategory::GameEngine,
+                        "[EventProcessor] Entity destroyed: networkId="
+                            << processed.networkId);
                 }
                 break;
             }
@@ -82,9 +87,11 @@ void GameEventProcessor::processEvents() {
             case engine::GameEventType::GameOver:
                 break;
             case engine::GameEventType::EntityHealthChanged: {
-                LOG_DEBUG("[EventProcessor] Processing EntityHealthChanged: "
-                          << "networkId=" << event.entityNetworkId << " health="
-                          << event.healthCurrent << "/" << event.healthMax);
+                LOG_DEBUG_CAT(
+                    rtype::LogCategory::GameEngine,
+                    "[EventProcessor] Processing EntityHealthChanged: "
+                        << "networkId=" << event.entityNetworkId << " health="
+                        << event.healthCurrent << "/" << event.healthMax);
                 _networkSystem->updateEntityHealth(event.entityNetworkId,
                                                    event.healthCurrent,
                                                    event.healthMax);
@@ -94,10 +101,11 @@ void GameEventProcessor::processEvents() {
                 _networkSystem->broadcastPowerUp(event.entityNetworkId,
                                                  event.subType, event.duration);
                 if (_verbose) {
-                    LOG_DEBUG("[EventProcessor] Power-up applied: playerId="
-                              << event.entityNetworkId
-                              << " type=" << static_cast<int>(event.subType)
-                              << " duration=" << event.duration);
+                    LOG_DEBUG_CAT(rtype::LogCategory::GameEngine,
+                                  "[EventProcessor] Power-up applied: playerId="
+                                      << event.entityNetworkId << " type="
+                                      << static_cast<int>(event.subType)
+                                      << " duration=" << event.duration);
                 }
                 break;
             }
