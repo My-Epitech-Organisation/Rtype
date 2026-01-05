@@ -227,11 +227,17 @@ bool ServerApp::initialize() {
             "[ServerApp] Countdown started - broadcasting game start with "
             << duration << "s");
         _networkServer->broadcastGameStart(duration);
+        if (_onGameStartBroadcastCallback) {
+            _onGameStartBroadcastCallback(duration);
+        }
     });
 
     _stateManager->setOnCountdownCancelled([this]() {
         LOG_INFO("[ServerApp] Countdown cancelled - broadcasting cancel");
         _networkServer->broadcastGameStart(0.0f);
+        if (_onGameStartBroadcastCallback) {
+            _onGameStartBroadcastCallback(0.0f);
+        }
     });
 
     std::string gameId = _gameConfig && _gameConfig->isInitialized()

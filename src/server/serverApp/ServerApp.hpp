@@ -10,6 +10,8 @@
 
 #include <atomic>
 #include <cstdint>
+#include <functional>
+#include <utility>
 #include <memory>
 #include <optional>
 #include <thread>
@@ -143,6 +145,14 @@ class ServerApp {
         _stateManager->forceStart();
     }
 
+    /**
+     * @brief Test hook: register a callback to be invoked when ServerApp
+     * broadcasts a game start (used in tests to capture broadcast events).
+     */
+    void setOnGameStartBroadcastCallback(std::function<void(float)> cb) {
+        _onGameStartBroadcastCallback = std::move(cb);
+    }
+
     [[nodiscard]] bool reloadConfiguration();
 
     void registerUserIdMapping(const Endpoint& endpoint,
@@ -203,6 +213,9 @@ class ServerApp {
     std::shared_ptr<NetworkServer> _networkServer;
     std::shared_ptr<ServerNetworkSystem> _networkSystem;
     std::shared_ptr<ECS::Registry> _registry;
+
+    // Test hooks
+    std::function<void(float)> _onGameStartBroadcastCallback;
 
     std::uint32_t _score{0};
     static constexpr std::uint32_t ENEMY_DESTRUCTION_SCORE = 100;
