@@ -21,6 +21,8 @@ add_library(rtype_game_client_systems STATIC
     PlayerAnimationSystem.hpp
     PlayerPowerUpVisualSystem.cpp
     PlayerPowerUpVisualSystem.hpp
+    PowerUpCollectionSystem.cpp
+    PowerUpCollectionSystem.hpp
     AnimationSystem.cpp
     AnimationSystem.hpp
     ClientDestroySystem.cpp
