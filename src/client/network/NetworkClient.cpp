@@ -66,6 +66,57 @@ NetworkClient::NetworkClient(const Config& config)
     networkThread_ = std::thread([this]() { networkThreadLoop(); });
 }
 
+// Testable constructor: allows injecting a mock socket and optionally disabling
+// the background network thread to keep tests deterministic.
+NetworkClient::NetworkClient(const Config& config,
+                             std::unique_ptr<network::IAsyncSocket> socket,
+                             bool startNetworkThread)
+    : config_(config),
+      ioContext_(),
+      socket_(std::move(socket)),
+      connection_(config.connectionConfig),
+      receiveBuffer_(
+          std::make_shared<network::Buffer>(network::kMaxPacketSize)),
+      receiveSender_(std::make_shared<network::Endpoint>()) {
+    network::ConnectionCallbacks connCallbacks;
+
+    connCallbacks.onConnected = [this](std::uint32_t userId) {
+        queueCallback([this, userId]() {
+            for (const auto& callback : onConnectedCallbacks_) {
+                if (callback) {
+                    callback(userId);
+                }
+            }
+        });
+    };
+
+    connCallbacks.onDisconnected = [this](network::DisconnectReason reason) {
+        queueCallback([this, reason]() {
+            for (const auto& cb : onDisconnectedCallbacks_) {
+                if (cb) cb(reason);
+            }
+        });
+    };
+
+    connCallbacks.onConnectFailed = [this](network::NetworkError error) {
+        (void)error;
+        queueCallback([this]() {
+            for (const auto& cb : onDisconnectedCallbacks_) {
+                if (cb) cb(DisconnectReason::ProtocolError);
+            }
+        });
+    };
+
+    connection_.setCallbacks(connCallbacks);
+
+    if (startNetworkThread) {
+        networkThreadRunning_.store(true, std::memory_order_release);
+        networkThread_ = std::thread([this]() { networkThreadLoop(); });
+    } else {
+        networkThreadRunning_.store(false, std::memory_order_release);
+    }
+}
+
 NetworkClient::~NetworkClient() {
     if (isConnected()) {
         disconnect();

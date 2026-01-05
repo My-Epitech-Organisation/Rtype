@@ -145,6 +145,12 @@ class NetworkClient {
     explicit NetworkClient(const Config& config = Config{});
 
     /**
+     * @brief Testable constructor for injecting a mock socket and optionally
+     *        disabling the background network thread. Useful for unit tests.
+     */
+    NetworkClient(const Config& config, std::unique_ptr<network::IAsyncSocket> socket, bool startNetworkThread = true);
+
+    /**
      * @brief Destructor - automatically disconnects if connected
      */
     ~NetworkClient();
