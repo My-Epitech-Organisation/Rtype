@@ -15,7 +15,6 @@
 #include "Components/ImageComponent.hpp"
 #include "Components/LifetimeComponent.hpp"
 #include "Components/ParallaxComponent.hpp"
-#include "Components/PositionComponent.hpp"
 #include "Components/SizeComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/Tags.hpp"
@@ -23,6 +22,7 @@
 #include "Components/TextureRectComponent.hpp"
 #include "Components/VelocityComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace cfg = ::rtype::games::rtype::client::GraphicsConfig;
 
@@ -33,17 +33,19 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     auto& bgTexture = assetManager->textureManager->get("bg_menu");
     registry->emplaceComponent<rtype::games::rtype::client::Image>(background,
                                                                    bgTexture);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         background, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         background, cfg::ZINDEX_BACKGROUND);
+    registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
+        background, cfg::PARALLAX_BACKGROUND, true);
 
     auto sun = registry->spawnEntity();
     auto& sunTexture = assetManager->textureManager->get("bg_sun");
     registry->emplaceComponent<rtype::games::rtype::client::Image>(sun,
                                                                    sunTexture);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(sun, 0,
-                                                                      0);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        sun, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         sun, cfg::ZINDEX_SUN);
 
@@ -54,10 +56,10 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
         bigAsteroids, bigAsteroidsTexture);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         bigAsteroids, cfg::PARALLAX_BIG_ASTEROIDS, true);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         bigAsteroids, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        bigAsteroids, cfg::ZINDEX_BIG_SMALL_ASTEROIDS);
+        bigAsteroids, cfg::ZINDEX_BIG_ASTEROIDS);
 
     auto smallAsteroids = registry->spawnEntity();
     auto& smallAsteroidsTexture =
@@ -66,10 +68,10 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
         smallAsteroids, smallAsteroidsTexture);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         smallAsteroids, cfg::PARALLAX_SMALL_ASTEROIDS, true);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         smallAsteroids, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        smallAsteroids, cfg::ZINDEX_BIG_SMALL_ASTEROIDS);
+        smallAsteroids, cfg::ZINDEX_SMALL_ASTEROIDS);
 
     auto firstPlanAsteroids = registry->spawnEntity();
     auto& firstPlanAsteroidsTexture =
@@ -78,7 +80,7 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
         firstPlanAsteroids, firstPlanAsteroidsTexture);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         firstPlanAsteroids, cfg::PARALLAX_ASTEROIDS_FST_PLAN, true);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         firstPlanAsteroids, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         firstPlanAsteroids, cfg::ZINDEX_FST_PLAN_ASTEROIDS);
@@ -90,7 +92,7 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
         secondPlanAsteroids, secondPlanAsteroidsTexture);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         secondPlanAsteroids, cfg::PARALLAX_ASTEROIDS_SND_PLAN, true);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         secondPlanAsteroids, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         secondPlanAsteroids, cfg::ZINDEX_SND_PLAN_ASTEROIDS);
@@ -99,8 +101,8 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     auto& planet1Texture = assetManager->textureManager->get("bg_planet_1");
     registry->emplaceComponent<rtype::games::rtype::client::Image>(
         planet1, planet1Texture);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(planet1,
-                                                                      0, 0);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        planet1, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         planet1, cfg::PARALLAX_PLANET_1, true);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
@@ -110,8 +112,8 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     auto& planet2Texture = assetManager->textureManager->get("bg_planet_2");
     registry->emplaceComponent<rtype::games::rtype::client::Image>(
         planet2, planet2Texture);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(planet2,
-                                                                      0, 0);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        planet2, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         planet2, cfg::PARALLAX_PLANET_2, true);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
@@ -121,8 +123,8 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     auto& planet3Texture = assetManager->textureManager->get("bg_planet_3");
     registry->emplaceComponent<rtype::games::rtype::client::Image>(
         planet3, planet3Texture);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(planet3,
-                                                                      0, 0);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        planet3, 0, 0);
     registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
         planet3, cfg::PARALLAX_PLANET_3, true);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
@@ -133,12 +135,12 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
     registry->emplaceComponent<rtype::games::rtype::client::Text>(
         appTitle, assetManager->fontManager->get("title_font"),
         sf::Color::White, 72, PageName);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(appTitle,
-                                                                      50, 50);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        appTitle, 50, 50);
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         appTitle);
-    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(appTitle,
-                                                                    0);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        appTitle, cfg::ZINDEX_APP_TITLE);
     return {planet1, planet2, planet3, background, appTitle};
 }
 
@@ -148,7 +150,7 @@ std::vector<ECS::Entity> EntityFactory::createSection(
     const sf::FloatRect& bounds, int ZindexRect) {
     std::vector<ECS::Entity> entities;
     auto bg = registry->spawnEntity();
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         bg, bounds.position.x, bounds.position.y);
     registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
         bg, std::pair<float, float>{bounds.size.x, bounds.size.y},
@@ -160,14 +162,14 @@ std::vector<ECS::Entity> EntityFactory::createSection(
         rect.outlineThickness = cfg::UI_OUTLINE_THICKNESS;
         rect.outlineColor = sf::Color::White;
     }
-    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(bg,
-                                                                    ZindexRect);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(bg, 0);
+
     if (title.empty()) return {bg};
 
     entities.push_back(bg);
 
     auto titleEnt = registry->spawnEntity();
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         titleEnt, bounds.position.x + cfg::SECTION_TITLE_OFFSET_X,
         bounds.position.y + cfg::SECTION_TITLE_OFFSET_Y);
     registry->emplaceComponent<rtype::games::rtype::client::Text>(
@@ -178,6 +180,9 @@ std::vector<ECS::Entity> EntityFactory::createSection(
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         titleEnt, ZindexRect + 1);
     entities.push_back(titleEnt);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(titleEnt,
+                                                                    1);
+
     return entities;
 }
 
@@ -190,8 +195,9 @@ ECS::Entity EntityFactory::createRectangle(
         std::pair<float, float>{static_cast<float>(size.x),
                                 static_cast<float>(size.y)},
         fill, fill);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         entt, position.x, position.y);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entt, 1);
     return entt;
 }
 
@@ -203,7 +209,7 @@ ECS::Entity EntityFactory::createLobbyPlayer(
     auto& texture = assetManager->textureManager->get("player_vessel");
     registry->emplaceComponent<rtype::games::rtype::client::Image>(entt,
                                                                    texture);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         entt, position.x, position.y);
     registry->emplaceComponent<rtype::games::rtype::client::Size>(
         entt, static_cast<float>(scale.x), static_cast<float>(scale.y));
@@ -221,13 +227,20 @@ ECS::Entity EntityFactory::createStaticText(
     std::shared_ptr<AssetManager> assets, std::string_view title,
     std::string_view fontId, const sf::Vector2f& position, float size) {
     auto titleEnt = registry->spawnEntity();
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         titleEnt, position.x, position.y);
     registry->emplaceComponent<rtype::games::rtype::client::Text>(
         titleEnt, assets->fontManager->get(std::string(fontId)),
         sf::Color::White, size, title);
+    auto& data =
+        registry->getComponent<rtype::games::rtype::client::Text>(titleEnt);
+    sf::FloatRect textRect = data.text.getLocalBounds();
+    data.text.setOrigin({textRect.position.x + textRect.size.x / 2.0f,
+                         textRect.position.y + textRect.size.y / 2.0f});
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         titleEnt);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(titleEnt,
+                                                                    1);
     return titleEnt;
 }
 
@@ -242,7 +255,7 @@ ECS::Entity EntityFactory::createTextInput(
         entity, assetManager->fontManager->get("main_font"), bounds.size.x,
         bounds.size.y, placeholder, initialValue, maxLength, isNumericOnly);
 
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         entity, bounds.position.x, bounds.position.y);
 
     registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
@@ -253,6 +266,6 @@ ECS::Entity EntityFactory::createTextInput(
         entity);
 
     registry->emplaceComponent<rtype::games::rtype::client::UserEvent>(entity);
-
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entity, 1);
     return entity;
 }

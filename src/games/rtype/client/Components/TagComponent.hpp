@@ -19,5 +19,6 @@ struct PauseMenuTag {};
 struct HudTag {};
 struct ConnectMenuTag {};
 struct ButtonMenuTag {};
+struct SectionItemTag {};
 }  // namespace rtype::games::rtype::client
 #endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_TAGCOMPONENT_HPP_

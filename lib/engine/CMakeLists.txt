@@ -16,7 +16,6 @@ target_sources(engine PRIVATE
 
 target_link_libraries(engine PUBLIC
     ecs
-    engine_core
 )
 
 target_include_directories(engine PUBLIC

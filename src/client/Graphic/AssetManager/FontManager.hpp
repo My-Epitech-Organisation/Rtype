@@ -18,7 +18,7 @@
 
 class FontManager {
    private:
-    std::unordered_map<std::string, std::unique_ptr<sf::Font>> _assets;
+    std::unordered_map<std::string, std::shared_ptr<sf::Font>> _assets;
 
    public:
     FontManager(const FontManager&) = delete;
@@ -26,7 +26,7 @@ class FontManager {
 
     void load(const std::string& id, const std::string& filePath);
 
-    sf::Font& get(const std::string& id);
+    std::shared_ptr<sf::Font> get(const std::string& id);
 
     /**
      * @brief Check if a font is loaded

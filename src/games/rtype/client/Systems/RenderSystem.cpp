@@ -18,7 +18,6 @@ namespace rc = ::rtype::games::rtype::client;
 namespace rs = ::rtype::games::rtype::shared;
 
 namespace rtype::games::rtype::client {
-
 RenderSystem::RenderSystem(std::shared_ptr<sf::RenderTarget> target)
     : ::rtype::engine::ASystem("RenderSystem"), _target(std::move(target)) {}
 
@@ -31,12 +30,12 @@ bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
 
 void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
     if (!registry.hasComponent<Image>(entity) ||
-        !registry.hasComponent<rs::Position>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity) ||
         registry.hasComponent<rs::DestroyTag>(entity))
         return;
 
     auto& img = registry.getComponent<Image>(entity);
-    const auto& pos = registry.getComponent<rs::Position>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
     if (registry.hasComponent<Size>(entity)) {
         const auto& size = registry.getComponent<Size>(entity);
@@ -63,13 +62,13 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
 void RenderSystem::_renderRectangles(ECS::Registry& registry,
                                      ECS::Entity entity) {
     if (!registry.hasComponent<Rectangle>(entity) ||
-        !registry.hasComponent<rs::Position>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity) ||
         registry.hasComponent<ButtonTag>(entity) ||
         registry.hasComponent<HudTag>(entity) ||
         registry.hasComponent<rs::DestroyTag>(entity))
         return;
     auto& rectData = registry.getComponent<Rectangle>(entity);  // Référence !
-    const auto& pos = registry.getComponent<rs::Position>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
     rectData.rectangle.setSize(
         sf::Vector2f(rectData.size.first, rectData.size.second));
@@ -94,13 +93,13 @@ void RenderSystem::_renderHudRectangles(ECS::Registry& registry,
     const sf::View savedView = _target->getView();
     _target->setView(_target->getDefaultView());
     if (!registry.hasComponent<Rectangle>(entity) ||
-        !registry.hasComponent<rs::Position>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity) ||
         !registry.hasComponent<HudTag>(entity) ||
         registry.hasComponent<rs::DestroyTag>(entity))
         return;
 
     auto& rectData = registry.getComponent<Rectangle>(entity);
-    const auto& pos = registry.getComponent<rs::Position>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
     rectData.rectangle.setPosition(
         {static_cast<float>(pos.x), static_cast<float>(pos.y)});
@@ -117,13 +116,13 @@ void RenderSystem::_renderButtons(ECS::Registry& registry, ECS::Entity entity) {
     if (!registry.hasComponent<ButtonTag>(entity) ||
         !registry.hasComponent<Rectangle>(entity) ||
         !registry.hasComponent<Text>(entity) ||
-        !registry.hasComponent<rs::Position>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity) ||
         registry.hasComponent<rs::DestroyTag>(entity))
         return;
 
     auto& rectData = registry.getComponent<Rectangle>(entity);
     auto& textData = registry.getComponent<Text>(entity);
-    const auto& pos = registry.getComponent<rs::Position>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
     rectData.rectangle.setPosition(
         {static_cast<float>(pos.x), static_cast<float>(pos.y)});
@@ -160,12 +159,12 @@ void RenderSystem::_renderStaticText(ECS::Registry& registry,
                                      ECS::Entity entity) {
     if (!registry.hasComponent<StaticTextTag>(entity) ||
         !registry.hasComponent<Text>(entity) ||
-        !registry.hasComponent<rs::Position>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity) ||
         registry.hasComponent<rs::DestroyTag>(entity))
         return;
 
     auto& textData = registry.getComponent<Text>(entity);
-    const auto& pos = registry.getComponent<rs::Position>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
     textData.text.setPosition(
         {static_cast<float>(pos.x), static_cast<float>(pos.y)});
@@ -180,11 +179,11 @@ void RenderSystem::_renderTextInputs(ECS::Registry& registry,
                                      ECS::Entity entity) {
     if (!registry.hasComponent<TextInputTag>(entity) ||
         !registry.hasComponent<TextInput>(entity) ||
-        !registry.hasComponent<rs::Position>(entity))
+        !registry.hasComponent<rs::TransformComponent>(entity))
         return;
 
     auto& textInput = registry.getComponent<TextInput>(entity);
-    const auto& pos = registry.getComponent<rs::Position>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
     textInput.background.setPosition(
         {static_cast<float>(pos.x), static_cast<float>(pos.y)});
@@ -214,12 +213,18 @@ void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
     for (auto entity : sortedEntities) {
         if (isEntityHidden(registry, entity)) continue;
 
-        this->_renderImages(registry, entity);
-        this->_renderRectangles(registry, entity);
-        this->_renderButtons(registry, entity);
-        this->_renderStaticText(registry, entity);
-        this->_renderTextInputs(registry, entity);
-        this->_renderHudRectangles(registry, entity);
+        if (registry.hasComponent<Image>(entity))
+            this->_renderImages(registry, entity);
+        if (registry.hasComponent<Rectangle>(entity))
+            this->_renderRectangles(registry, entity);
+        if (registry.hasComponent<ButtonTag>(entity))
+            this->_renderButtons(registry, entity);
+        if (registry.hasComponent<StaticTextTag>(entity))
+            this->_renderStaticText(registry, entity);
+        if (registry.hasComponent<TextInputTag>(entity))
+            this->_renderTextInputs(registry, entity);
+        if (registry.hasComponent<HudTag>(entity))
+            this->_renderHudRectangles(registry, entity);
     }
 }
 

@@ -35,12 +35,12 @@ HowToPlayScene::HowToPlayScene(
     this->_listEntity = EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "How to Play");
     this->_initLayout();
-    auto btnBack = EntityFactory::createButton(
+    auto backBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 36, "Back"),
-        rtype::games::rtype::shared::Position(100, 900),
+        rtype::games::rtype::shared::TransformComponent(100, 900),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
         this->_assetsManager, std::function<void()>([this]() {
@@ -52,8 +52,8 @@ HowToPlayScene::HowToPlayScene(
             }
         }));
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        btnBack, 0);
-    this->_listEntity.push_back(btnBack);
+        backBtn, 1);
+    this->_listEntity.push_back(backBtn);
 }
 
 std::string HowToPlayScene::_keyName(GameAction action) const {
@@ -70,8 +70,8 @@ void HowToPlayScene::_initLayout() {
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
-    float textX = kSectionX + 40.f;
-    float startY = kSectionY + 80.f;
+    float textX = kSectionX + kSectionW / 2;
+    float startY = kSectionY + kSectionH / 2 - 150.f;
     float lineGap = 55.f;
 
     const std::vector<std::string> lines = {
@@ -96,7 +96,7 @@ void HowToPlayScene::_initLayout() {
             this->_registry, this->_assetsManager, lines[i], fontId,
             sf::Vector2f{textX, y}, 28.f);
         this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-            text, 1);
+            text, 2);
         this->_listEntity.push_back(text);
     }
 }

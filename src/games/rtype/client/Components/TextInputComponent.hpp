@@ -28,7 +28,7 @@ namespace rtype::games::rtype::client {
  * placeholder text, and optional validation.
  */
 struct TextInput {
-    sf::Font font;
+    std::shared_ptr<sf::Font> font;
     sf::Text text;
     sf::RectangleShape background;
     std::string content;
@@ -54,12 +54,12 @@ struct TextInput {
      * @param maxLength Maximum number of characters (0 = unlimited)
      * @param isNumericOnly Only allow numeric input
      */
-    TextInput(const sf::Font& font, float width, float height,
+    TextInput(std::shared_ptr<sf::Font> font, float width, float height,
               std::string_view placeholder = "",
               std::string_view initialValue = "", std::size_t maxLength = 0,
               bool isNumericOnly = false)
         : font(font),
-          text(font),
+          text(*font),
           background({width, height}),
           content(initialValue),
           placeholder(placeholder),

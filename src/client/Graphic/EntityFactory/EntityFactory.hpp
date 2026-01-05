@@ -18,34 +18,36 @@
 
 #include "AssetManager/AssetManager.hpp"
 #include "Components/ButtonComponent.hpp"
-#include "Components/PositionComponent.hpp"
 #include "Components/RectangleComponent.hpp"
 #include "Components/SoundComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
 #include "Components/TextInputComponent.hpp"
 #include "Components/UserEventComponent.hpp"
+#include "Components/ZIndexComponent.hpp"
 #include "ECS.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace EntityFactory {
 template <typename... Args>
 static ECS::Entity createButton(
     std::shared_ptr<ECS::Registry> registry,
     const rtype::games::rtype::client::Text& text,
-    const rtype::games::rtype::shared::Position& position,
+    const rtype::games::rtype::shared::TransformComponent& position,
     const rtype::games::rtype::client::Rectangle& rectangle,
     std::shared_ptr<AssetManager> assetsManager,
     std::function<void(Args...)> onClick) {
     auto entity = registry->spawnEntity();
     registry->emplaceComponent<rtype::games::rtype::client::Text>(entity, text);
-    registry->emplaceComponent<rtype::games::rtype::shared::Position>(entity,
-                                                                      position);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        entity, position);
     registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
         entity, rectangle);
     registry->emplaceComponent<rtype::games::rtype::client::Button<Args...>>(
         entity, onClick);
     registry->emplaceComponent<rtype::games::rtype::client::UserEvent>(entity);
     registry->emplaceComponent<rtype::games::rtype::client::ButtonTag>(entity);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entity, 1);
     if (assetsManager) {
         registry->emplaceComponent<
             rtype::games::rtype::client::ButtonSoundComponent>(
@@ -83,6 +85,15 @@ ECS::Entity createLobbyPlayer(std::shared_ptr<ECS::Registry> registry,
                               sf::Vector2f position,
                               sf::Vector2i scale = sf::Vector2i(1, 1),
                               bool isControllable = false);
+
+/**
+ * @brief Create a rectangle entity
+ * @param registry ECS registry
+ * @param size a sf::Vector2i defining the size of the rectangle
+ * @param fill Fill color of the rectangle
+ * @param position Position of the rectangle
+ * @return Created entity
+ **/
 
 ECS::Entity createRectangle(std::shared_ptr<ECS::Registry> registry,
                             sf::Vector2i size = sf::Vector2i(1, 1),
