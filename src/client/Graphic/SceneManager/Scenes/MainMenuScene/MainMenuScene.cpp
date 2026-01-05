@@ -148,8 +148,8 @@ void MainMenuScene::_createConnectionPanel(
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 26, "Close"),
-        rtype::games::rtype::shared::TransformComponent(kConnectionPanelX + 235.f,
-                                              kConnectionPanelY + 275.f),
+        rtype::games::rtype::shared::TransformComponent(
+            kConnectionPanelX + 235.f, kConnectionPanelY + 275.f),
         rtype::games::rtype::client::Rectangle({200, 60}, sf::Color(150, 0, 0),
                                                sf::Color(200, 0, 0)),
         this->_assetsManager, std::function<void()>([this]() {

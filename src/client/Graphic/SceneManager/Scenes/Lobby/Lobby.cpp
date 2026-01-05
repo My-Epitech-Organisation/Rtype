@@ -64,19 +64,18 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
             if (userId != id.playerId) return;
             float mySectionX = kStartPosX + ((this->_nbrUser - 1) * kStepX);
             float myCenterX = mySectionX + kBoxHalfW;
-            if (this->_registry
-                    ->hasComponent<rtype::games::rtype::shared::TransformComponent>(
-                        playerEntt)) {
-                auto& pos =
-                    this->_registry
-                        ->getComponent<rtype::games::rtype::shared::TransformComponent>(
-                            playerEntt);
+            if (this->_registry->hasComponent<
+                    rtype::games::rtype::shared::TransformComponent>(
+                    playerEntt)) {
+                auto& pos = this->_registry->getComponent<
+                    rtype::games::rtype::shared::TransformComponent>(
+                    playerEntt);
                 pos.x = myCenterX;
                 pos.y = kBoxCenterY;
             } else {
-                this->_registry
-                    ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
-                        playerEntt, myCenterX, kBoxCenterY);
+                this->_registry->emplaceComponent<
+                    rtype::games::rtype::shared::TransformComponent>(
+                    playerEntt, myCenterX, kBoxCenterY);
             }
             Zindex.depth = 4;
             if (this->_listUser[userId].back() == playerEntt) return;
