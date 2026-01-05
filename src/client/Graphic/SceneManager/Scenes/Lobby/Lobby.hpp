@@ -53,6 +53,10 @@ class Lobby : public AScene {
                         const std::vector<ECS::Entity>& entities) {
         _listUser[userId] = entities;
     }
+
+    // Test helpers
+    bool isCountdownActive() const noexcept { return _countdownActive; }
+    float getCountdownTimer() const noexcept { return _countdownTimer; }
     /**
      * @brief Construct a new Lobby scene
      * @param networkClient Shared pointer to the network client
