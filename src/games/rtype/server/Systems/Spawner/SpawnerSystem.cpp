@@ -14,6 +14,7 @@
 #include <rtype/network/Protocol.hpp>
 
 #include "../../../shared/Components.hpp"
+#include "../../../shared/Config/EntityConfig/EntityConfig.hpp"
 #include "Logger/Macros.hpp"
 
 namespace rtype::games::rtype::server {
@@ -31,8 +32,6 @@ using shared::ObstacleTag;
 using shared::PowerUpComponent;
 using shared::TransformComponent;
 using shared::VelocityComponent;
-static constexpr float BYDOS_SLAVE_SIZE = 32.0F;
-static constexpr int BYDOS_SLAVE_HEALTH = 10;
 
 SpawnerSystem::SpawnerSystem(EventEmitter emitter, SpawnerConfig config)
     : ASystem("SpawnerSystem"),
@@ -120,8 +119,31 @@ void SpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
 }
 
 void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    const auto& allEnemies = configRegistry.getAllEnemies();
+    if (allEnemies.empty()) {
+        LOG_ERROR("[SpawnerSystem] No enemy configs loaded!");
+        return;
+    }
+    std::vector<std::string> enemyPool = {"basic", "shooter", "chaser", "wave"};
+    std::uniform_int_distribution<size_t> enemyTypeDist(0, enemyPool.size() - 1);
+    std::string selectedEnemyId = enemyPool[enemyTypeDist(_rng)];
+
+    auto enemyConfigOpt = configRegistry.getEnemy(selectedEnemyId);
+    if (!enemyConfigOpt.has_value()) {
+        selectedEnemyId = allEnemies.begin()->first;
+        enemyConfigOpt = configRegistry.getEnemy(selectedEnemyId);
+        if (!enemyConfigOpt.has_value()) {
+            LOG_ERROR("[SpawnerSystem] Failed to get any enemy config!");
+            return;
+        }
+    }
+
+    const auto& enemyConfig = enemyConfigOpt.value().get();
+    LOG_DEBUG("[SpawnerSystem] Spawning enemy type: " << selectedEnemyId);
     ECS::Entity enemy = registry.spawnEntity();
     float spawnY = _spawnYDist(_rng);
+
     const std::vector<std::pair<AIBehavior, float>> behaviors = {
         {AIBehavior::MoveLeft, _config.weightMoveLeft},
         {AIBehavior::SineWave, _config.weightSineWave},
@@ -136,7 +158,7 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     }
     std::uniform_real_distribution<float> weightDist(0.0F, totalWeight);
     float pick = weightDist(_rng);
-    AIBehavior chosenBehavior = AIBehavior::MoveLeft;
+    AIBehavior chosenBehavior = enemyConfig.behavior;
     float accumulator = 0.0F;
     for (const auto& [behavior, weight] : behaviors) {
         accumulator += weight;
@@ -152,16 +174,20 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     }
 
     registry.emplaceComponent<TransformComponent>(enemy, spawnX, spawnY, 0.0F);
-    registry.emplaceComponent<VelocityComponent>(
-        enemy, -_config.bydosSlaveSpeed, 0.0F);
+
+    float speedX = (chosenBehavior == AIBehavior::MoveLeft ||
+                    chosenBehavior == AIBehavior::Stationary)
+                   ? -enemyConfig.speed : 0.0F;
+    registry.emplaceComponent<VelocityComponent>(enemy, speedX, 0.0F);
+
     AIComponent ai{};
     ai.behavior = chosenBehavior;
-    ai.speed = _config.bydosSlaveSpeed;
+    ai.speed = enemyConfig.speed;
 
     switch (chosenBehavior) {
         case AIBehavior::Chase:
-            ai.targetX = -200.0F;
-            ai.targetY = _spawnYDist(_rng);
+            ai.targetX = 0.0F;
+            ai.targetY = 0.0F;
             break;
         case AIBehavior::DiveBomb:
             ai.targetY = _spawnYDist(_rng);
@@ -179,12 +205,14 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     }
 
     registry.emplaceComponent<AIComponent>(enemy, ai);
-    registry.emplaceComponent<HealthComponent>(enemy, BYDOS_SLAVE_HEALTH,
-                                               BYDOS_SLAVE_HEALTH);
-    registry.emplaceComponent<BoundingBoxComponent>(enemy, BYDOS_SLAVE_SIZE,
-                                                    BYDOS_SLAVE_SIZE);
-    registry.emplaceComponent<shared::ShootCooldownComponent>(
-        enemy, shared::WeaponPresets::EnemyBullet.cooldown);
+    registry.emplaceComponent<HealthComponent>(enemy, enemyConfig.health, enemyConfig.health);
+    registry.emplaceComponent<BoundingBoxComponent>(enemy, enemyConfig.hitboxWidth, enemyConfig.hitboxHeight);
+    registry.emplaceComponent<DamageOnContactComponent>(enemy, enemyConfig.damage, true);
+
+    if (enemyConfig.canShoot) {
+        registry.emplaceComponent<shared::ShootCooldownComponent>(
+            enemy, enemyConfig.fireRate);
+    }
     uint32_t networkId = _nextNetworkId++;
     registry.emplaceComponent<NetworkIdComponent>(enemy, networkId);
     registry.emplaceComponent<EnemyTag>(enemy);
