@@ -172,10 +172,43 @@ void RtypeGameScene::update() {
     std::uint8_t inputMask = getInputMask();
 
     if (_networkSystem && _networkSystem->isConnected()) {
-        if (inputMask != _lastInputMask) {
-            _networkSystem->sendInput(inputMask);
-            _lastInputMask = inputMask;
+        bool shouldSend = false;
+
+        constexpr std::uint8_t kMovementMask =
+            ::rtype::network::InputMask::kUp |
+            ::rtype::network::InputMask::kDown |
+            ::rtype::network::InputMask::kLeft |
+            ::rtype::network::InputMask::kRight;
+
+        std::uint8_t currentMovement = inputMask & kMovementMask;
+        std::uint8_t lastMovement = _lastInputMask & kMovementMask;
+
+        if (currentMovement != lastMovement) {
+            shouldSend = true;
         }
+
+        bool isShootingNow =
+            (inputMask & ::rtype::network::InputMask::kShoot) != 0;
+        bool wasShootingLast =
+            (_lastInputMask & ::rtype::network::InputMask::kShoot) != 0;
+
+        if (isShootingNow) {
+            if (!wasShootingLast) {
+                shouldSend = true;
+                _shootInputClock.restart();
+            } else if (_shootInputClock.getElapsedTime().asSeconds() >=
+                       kShootSendInterval) {
+                shouldSend = true;
+                _shootInputClock.restart();
+            }
+        } else if (wasShootingLast) {
+            shouldSend = true;
+        }
+
+        if (shouldSend) {
+            _networkSystem->sendInput(inputMask);
+        }
+        _lastInputMask = inputMask;
     }
 }
 

@@ -132,6 +132,10 @@ class RtypeGameScene : public AGameScene {
     static constexpr float kVignetteMaxAlpha = 180.0F;
     sf::Vector2u _lastVignetteSize{0, 0};
 
+    static constexpr float kShootSendInterval = 0.05F;
+
+    sf::Clock _shootInputClock;
+
     void setupDamageVignette();
     void refreshDamageVignetteLayout();
     void clearDamageVignette();
