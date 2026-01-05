@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <string>
 
-#include "Components/AIComponent.hpp"
+#include "../../../Components/AIComponent.hpp"
 
 namespace rtype::games::rtype::shared {
 
