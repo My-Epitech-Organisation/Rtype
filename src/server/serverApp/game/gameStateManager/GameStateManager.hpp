@@ -168,12 +168,38 @@ class GameStateManager {
     }
 
     /**
+     * @brief Set callback invoked when the countdown starts. Receives the
+     * countdown duration in seconds.
+     */
+    void setOnCountdownStarted(std::function<void(float)> callback) {
+        _onCountdownStartedCallback = std::move(callback);
+    }
+
+    /**
+     * @brief Set callback invoked when a previously-started countdown is
+     * cancelled (e.g., a player becomes unready).
+     */
+    void setOnCountdownCancelled(std::function<void()> callback) {
+        _onCountdownCancelledCallback = std::move(callback);
+    }
+
+    /**
      * @brief Set callback for when a player's ready state changes
      */
     void setOnPlayerReadyStateChanged(
         std::function<void(std::uint32_t userId, bool isReady)> callback) {
         _onPlayerReadyStateChangedCallback = std::move(callback);
     }
+
+    /**
+     * @brief Get whether a countdown is currently active (for tests/inspection)
+     */
+    [[nodiscard]] bool isCountdownActive() const noexcept { return _countdownActive; }
+
+    /**
+     * @brief Get remaining countdown time in seconds
+     */
+    [[nodiscard]] float getCountdownRemaining() const noexcept { return _countdownRemaining; }
 
     /**
      * @brief Force transition to Playing state (for testing)
@@ -229,6 +255,11 @@ class GameStateManager {
 
     bool _countdownActive{false};
     float _countdownRemaining{0.0f};
+
+    // Countdown configuration and callbacks
+    float _defaultCountdown{3.0f};
+    std::function<void(float)> _onCountdownStartedCallback;
+    std::function<void()> _onCountdownCancelledCallback;
 };
 
 }  // namespace rtype::server

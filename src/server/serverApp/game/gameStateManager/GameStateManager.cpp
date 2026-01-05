@@ -55,6 +55,16 @@ bool GameStateManager::playerNotReady(std::uint32_t userId) {
         if (_onPlayerReadyStateChangedCallback) {
             _onPlayerReadyStateChangedCallback(userId, false);
         }
+
+        if (_countdownActive) {
+            LOG_INFO("[GameStateManager] Countdown cancelled due to player "
+                     << userId << " becoming not ready");
+            _countdownActive = false;
+            _countdownRemaining = 0.0f;
+            if (_onCountdownCancelledCallback) {
+                _onCountdownCancelledCallback();
+            }
+        }
     }
     return removed > 0;
 }
@@ -64,6 +74,19 @@ void GameStateManager::playerLeft(std::uint32_t userId) {
     LOG_DEBUG("[GameState] Player " << userId << " left, "
                                     << _readyPlayers.size()
                                     << " players remaining");
+
+    if (_countdownActive) {
+        if (_readyPlayers.size() < _minPlayersToStart ||
+            (_connectedPlayerCount > 0 && _readyPlayers.size() < _connectedPlayerCount)) {
+            LOG_INFO("[GameStateManager] Countdown cancelled due to player "
+                     << userId << " leaving");
+            _countdownActive = false;
+            _countdownRemaining = 0.0f;
+            if (_onCountdownCancelledCallback) {
+                _onCountdownCancelledCallback();
+            }
+        }
+    }
 
     if (_state == GameState::Playing && _readyPlayers.empty()) {
         LOG_INFO("[GameState] All players left during game. Ending game...");
@@ -116,13 +139,13 @@ void GameStateManager::checkAutoStart() {
              << _readyPlayers.size() << " connected=" << _connectedPlayerCount
              << " minRequired=" << _minPlayersToStart);
 
-    if (_onAllPlayersReadyCallback) {
-        _onAllPlayersReadyCallback();
+    if (!_countdownActive) {
+        _countdownActive = true;
+        _countdownRemaining = _defaultCountdown;
+        if (_onCountdownStartedCallback) {
+            _onCountdownStartedCallback(_countdownRemaining);
+        }
     }
-
-    _countdownActive = false;
-    _countdownRemaining = 0.0f;
-    transitionTo(GameState::Playing);
 }
 
 void GameStateManager::update(float deltaTime) {
