@@ -2,9 +2,9 @@
 
 | Metadata | Details |
 | :---- | :---- |
-| **Version** | 1.3.0 (Game Events & Power-Up System) |
+| **Version** | 1.3.1 (Lobby Ready & Game Start System) |
 | **Status** | Draft / Experimental |
-| **Date** | 2025-12-15 |
+| **Date** | 2026-01-05 |
 | **Authors** | R-Type Project Team |
 | **Abstract** | This document specifies the binary application-layer protocol used for real-time communication between the R-Type Client and Server, including a reliability layer over UDP. |
 
@@ -183,6 +183,22 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 * **Payload:**
   * Final Score (uint32): The final accumulated score.
 
+#### **0x08 - C\_READY**
+
+* **Sender:** Client
+* **Reliability:** **RELIABLE** (Flag 0x01)
+* **Description:** Client signals ready/unready state in the lobby. When all players are ready, the server initiates the game start sequence.
+* **Payload:**
+  * Is Ready (uint8): 1 if ready, 0 if not ready.
+
+#### **0x09 - S\_GAME\_START**
+
+* **Sender:** Server
+* **Reliability:** **RELIABLE** (Flag 0x01)
+* **Description:** Server signals that all players are ready and the game is starting. Includes countdown duration for client-side countdown display. Sent when the server determines all required players are ready.
+* **Payload:**
+  * Countdown Duration (float): Duration in seconds for the countdown timer (e.g., 3.0 for 3 seconds).
+
 ### **5.2. Gameplay & Entity Management**
 
 #### **0x10 - S\_ENTITY\_SPAWN**
@@ -301,6 +317,8 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 | R_GET_USERS | Variable | 1 + (count * 4) |
 | S_UPDATE_STATE | 1 | uint8 |
 | S_GAME_OVER | 4 | uint32 |
+| C_READY | 1 | uint8 |
+| S_GAME_START | 4 | float |
 | S_ENTITY_SPAWN | 13 | uint32 + uint8 + float + float |
 | S_ENTITY_MOVE | 20 | uint32 + 4 * float |
 | S_ENTITY_DESTROY | 4 | uint32 |
@@ -312,6 +330,14 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 | PONG | 0 | Empty |
 
 ## **8. Changes from Previous Versions**
+
+### **Version 1.3.1 (2026-01-05)**
+
+* **Added OpCode 0x08 - C_READY:** Client lobby ready/unready signal
+* **Added OpCode 0x09 - S_GAME_START:** Server-initiated game start with countdown
+* **Added Section 5.1:** Extended session management documentation for lobby ready workflow
+* **Updated Section 7:** Added C_READY and S_GAME_START to payload size reference table
+* **Lobby Workflow:** Clients send C_READY when toggling ready state. Server broadcasts S_GAME_START when all players ready, triggering synchronized countdown on all clients.
 
 ### **Version 1.3.0 (2025-12-15)**
 
