@@ -9,6 +9,8 @@
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_LOBBY_LOBBY_HPP_
 
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 #include "../AScene.hpp"
 #include "SceneManager.hpp"
@@ -17,7 +19,18 @@ class Lobby : public AScene {
    private:
     bool _isConnected = false;
     unsigned int _nbrUser = 0;
+    bool _isReady = false;
+    bool _countdownActive = false;
+    float _countdownTimer = 3.0f;
+    ECS::Entity _readyButtonEntity;
+    ECS::Entity _countdownTextEntity;
     std::unordered_map<uint32_t, std::vector<ECS::Entity>> _listUser;
+    std::unordered_set<uint32_t> _playersToPosition;
+    std::unordered_map<uint32_t, int> _playerIndexMap;
+    std::unordered_map<uint32_t, ECS::Entity> _playerReadyIndicators;
+    std::unordered_set<uint32_t> _playerReadyStates;
+    std::unordered_set<uint32_t> _disconnectedPlayers;
+    std::vector<uint32_t> _pendingPlayerRemovals;
     std::shared_ptr<rtype::client::NetworkClient> _networkClient;
     std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
     std::function<void(const SceneManager::Scene&)> _switchToScene;
@@ -27,6 +40,8 @@ class Lobby : public AScene {
     void _createPlayerInfoMenu(uint32_t id, int index = 0);
 
     void _removePlayerInfoMenu(uint32_t userId);
+
+    void _updatePlayerReadyIndicator(uint32_t userId, bool isReady);
 
    public:
     /**
