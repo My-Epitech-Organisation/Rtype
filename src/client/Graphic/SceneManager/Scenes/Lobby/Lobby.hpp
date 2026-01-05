@@ -44,6 +44,14 @@ class Lobby : public AScene {
     void _updatePlayerReadyIndicator(uint32_t userId, bool isReady);
 
    public:
+    // Test helpers
+    void onEntityDestroyEvent(std::uint32_t entityId);
+    const std::vector<uint32_t>& getPendingPlayerRemovals() const noexcept {
+        return _pendingPlayerRemovals;
+    }
+    void addUserForTest(uint32_t userId, const std::vector<ECS::Entity>& entities) {
+        _listUser[userId] = entities;
+    }
     /**
      * @brief Construct a new Lobby scene
      * @param networkClient Shared pointer to the network client
