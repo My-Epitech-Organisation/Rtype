@@ -145,6 +145,44 @@ TEST_F(FileOperationsTest, WriteToFileExistingDirectoryNoCreate) {
     EXPECT_FALSE(error.has_value());
 }
 
+TEST_F(FileOperationsTest, WriteToFileCreateSaveDirectoryThrows) {
+    // Create a file where a directory is expected so create_directories will fail
+    auto parentAsFile = testDir / "parent_file";
+    std::ofstream(parentAsFile) << "data";
+
+    auto filepath = parentAsFile / "subdir" / "save.bin";
+    std::vector<uint8_t> data = {1, 2, 3};
+
+    auto err = FileOperations::writeToFile(filepath, data);
+    ASSERT_TRUE(err.has_value());
+    EXPECT_NE(err->find("Cannot create save directory"), std::string::npos);
+}
+
+TEST_F(FileOperationsTest, WriteToFileCannotCreateSaveFileNoWritePerms) {
+#ifndef _WIN32
+    auto dir = testDir / "readonly";
+    std::filesystem::create_directories(dir);
+
+    // Remove write permission
+    std::filesystem::permissions(dir, std::filesystem::perms::owner_write,
+                                 std::filesystem::perm_options::remove);
+
+    auto filepath = dir / "save.bin";
+    std::vector<uint8_t> data = {4, 5, 6};
+
+    auto err = FileOperations::writeToFile(filepath, data);
+
+    // Restore permission for cleanup
+    std::filesystem::permissions(dir, std::filesystem::perms::owner_write,
+                                 std::filesystem::perm_options::add);
+
+    ASSERT_TRUE(err.has_value());
+    EXPECT_NE(err->find("Cannot create save file"), std::string::npos);
+#else
+    GTEST_SKIP() << "Permission tests skipped on Windows";
+#endif
+}
+
 // =============================================================================
 // readFromFile Tests - Branch coverage
 // =============================================================================
@@ -174,6 +212,32 @@ TEST_F(FileOperationsTest, ReadFromFileNotFound) {
     EXPECT_FALSE(data.has_value());
     EXPECT_TRUE(error.has_value());
     EXPECT_TRUE(error->find("not found") != std::string::npos);
+}
+
+TEST_F(FileOperationsTest, ReadFromFileCannotOpenDueToPermissions) {
+#ifndef _WIN32
+    auto filepath = testDir / "unreadable_file.bin";
+    {
+        std::ofstream out(filepath, std::ios::binary);
+        out << "hello";
+    }
+
+    // Remove read permission
+    std::filesystem::permissions(filepath, std::filesystem::perms::owner_read,
+                                 std::filesystem::perm_options::remove);
+
+    auto [data, error] = FileOperations::readFromFile(filepath);
+
+    // Restore permission for cleanup
+    std::filesystem::permissions(filepath, std::filesystem::perms::owner_read,
+                                 std::filesystem::perm_options::add);
+
+    EXPECT_FALSE(data.has_value());
+    EXPECT_TRUE(error.has_value());
+    EXPECT_NE(error->find("Cannot open save file"), std::string::npos);
+#else
+    GTEST_SKIP() << "Permission tests skipped on Windows";
+#endif
 }
 
 TEST_F(FileOperationsTest, ReadFromFileEmptyFile) {
@@ -267,6 +331,33 @@ TEST_F(FileOperationsTest, DeleteFileEmptyFile) {
 
     EXPECT_FALSE(error.has_value());
     EXPECT_FALSE(std::filesystem::exists(filepath));
+}
+
+TEST_F(FileOperationsTest, DeleteFileThrowsWhenParentNotWritable) {
+#ifndef _WIN32
+    auto dir = testDir / "no_remove_dir";
+    std::filesystem::create_directories(dir);
+    auto filepath = dir / "file_to_delete.bin";
+    {
+        std::ofstream f(filepath, std::ios::binary);
+        f << "content";
+    }
+
+    // Remove write permission on parent dir to cause remove to fail
+    std::filesystem::permissions(dir, std::filesystem::perms::owner_write,
+                                 std::filesystem::perm_options::remove);
+
+    auto err = FileOperations::deleteFile(filepath);
+
+    // Restore permission for cleanup
+    std::filesystem::permissions(dir, std::filesystem::perms::owner_write,
+                                 std::filesystem::perm_options::add);
+
+    ASSERT_TRUE(err.has_value());
+    EXPECT_NE(err->find("Failed to delete file"), std::string::npos);
+#else
+    GTEST_SKIP() << "Permission tests skipped on Windows";
+#endif
 }
 
 // =============================================================================
