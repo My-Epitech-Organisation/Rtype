@@ -30,10 +30,10 @@ void LifetimeSystem::update(ECS::Registry& registry, float deltaTime) {
             lifetime.remainingTime -= deltaTime;
             if (lifetime.remainingTime <= 0.0F &&
                 !registry.hasComponent<DestroyTag>(entity)) {
-                   LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                                  "[LifetimeSystem] Entity " +
-                                      std::to_string(entity.id) +
-                                      " expired (lifetime <= 0)");
+                LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                              "[LifetimeSystem] Entity " +
+                                  std::to_string(entity.id) +
+                                  " expired (lifetime <= 0)");
                 cmdBuffer.emplaceComponentDeferred<DestroyTag>(entity,
                                                                DestroyTag{});
             }
@@ -45,10 +45,10 @@ void LifetimeSystem::update(ECS::Registry& registry, float deltaTime) {
             lifetime.remainingTime -= deltaTime;
             if (lifetime.remainingTime <= 0.0F &&
                 !registry.hasComponent<DestroyTag>(entity)) {
-                    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                                  "[LifetimeSystem] Entity " +
-                                      std::to_string(entity.id) +
-                                      " expired (lifetime <= 0)");
+                LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                              "[LifetimeSystem] Entity " +
+                                  std::to_string(entity.id) +
+                                  " expired (lifetime <= 0)");
                 cmdBuffer.emplaceComponentDeferred<DestroyTag>(entity,
                                                                DestroyTag{});
             }
