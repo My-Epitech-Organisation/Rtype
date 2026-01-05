@@ -131,6 +131,15 @@ class ClientNetworkSystem {
     void update();
 
     /**
+     * @brief Re-register network callbacks
+     *
+     * Call this after another system has overwritten the NetworkClient
+     * callbacks. This restores the ClientNetworkSystem's handlers for entity
+     * spawn, move, etc.
+     */
+    void registerCallbacks();
+
+    /**
      * @brief Send player input to server
      *
      * @param inputMask Combined input flags
