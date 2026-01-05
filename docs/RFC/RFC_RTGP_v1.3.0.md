@@ -328,6 +328,7 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 | S_GAME_OVER | 4 | uint32 |
 | C_READY | 1 | uint8 |
 | S_GAME_START | 4 | float |
+| S_PLAYER_READY_STATE | 5 | uint32 + uint8 |
 | S_ENTITY_SPAWN | 13 | uint32 + uint8 + float + float |
 | S_ENTITY_MOVE | 20 | uint32 + 4 * float |
 | S_ENTITY_DESTROY | 4 | uint32 |
@@ -345,7 +346,7 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 * **Added OpCode 0x08 - C_READY:** Client lobby ready/unready signal
 * **Added OpCode 0x09 - S_GAME_START:** Server-initiated game start with countdown
 * **Added Section 5.1:** Extended session management documentation for lobby ready workflow
-* **Updated Section 7:** Added C_READY and S_GAME_START to payload size reference table
+* **Updated Section 7:** Added C_READY, S_GAME_START, and S_PLAYER_READY_STATE to payload size reference table
 * **Lobby Workflow:** Clients send C_READY when toggling ready state. Server broadcasts S_GAME_START when all players ready, triggering synchronized countdown on all clients.
 
 ### **Version 1.3.0 (2025-12-15)**

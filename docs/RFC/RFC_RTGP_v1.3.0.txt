@@ -367,6 +367,7 @@ Table of Contents
    | R_GET_USERS      | Variable          | 1 + (count * 4)           |
    | S_UPDATE_STATE   | 1                 | uint8                     |
    | S_GAME_OVER      | 4                 | uint32                    |
+   | S_PLAYER_READY_STATE | 5                 | uint32+uint8              |
    | S_ENTITY_SPAWN   | 13                | uint32+uint8+float+float  |
    | S_ENTITY_MOVE    | 20                | uint32 + 4*float          |
    | S_ENTITY_DESTROY | 4                 | uint32                    |
