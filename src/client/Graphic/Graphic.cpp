@@ -381,7 +381,8 @@ Graphic::Graphic(
     this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value());
 
     LOG_DEBUG("[Graphic] Loading entity configurations");
-    auto& entityConfigRegistry = rtype::games::rtype::shared::EntityConfigRegistry::getInstance();
+    auto& entityConfigRegistry =
+        rtype::games::rtype::shared::EntityConfigRegistry::getInstance();
     entityConfigRegistry.loadEnemies("config/game/enemies.toml");
     entityConfigRegistry.loadPlayers("config/game/players.toml");
     entityConfigRegistry.loadProjectiles("config/game/projectiles.toml");

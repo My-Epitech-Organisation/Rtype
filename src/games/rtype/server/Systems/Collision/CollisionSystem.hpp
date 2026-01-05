@@ -66,8 +66,8 @@ class CollisionSystem : public ::rtype::engine::ASystem {
      * @param player The player entity
      */
     void handleEnemyPlayerCollision(ECS::Registry& registry,
-                                   ECS::CommandBuffer& cmdBuffer,
-                                   ECS::Entity enemy, ECS::Entity player);
+                                    ECS::CommandBuffer& cmdBuffer,
+                                    ECS::Entity enemy, ECS::Entity player);
 
     void handlePickupCollision(ECS::Registry& registry,
                                ECS::CommandBuffer& cmdBuffer,

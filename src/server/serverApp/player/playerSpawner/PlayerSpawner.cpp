@@ -41,11 +41,14 @@ PlayerSpawner::PlayerSpawner(std::shared_ptr<ECS::Registry> registry,
 
 PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
                                              size_t playerIndex) {
-    auto& configRegistry = rtype::games::rtype::shared::EntityConfigRegistry::getInstance();
+    auto& configRegistry =
+        rtype::games::rtype::shared::EntityConfigRegistry::getInstance();
     auto playerConfigOpt = configRegistry.getPlayer("default_ship");
 
     if (!playerConfigOpt.has_value()) {
-        LOG_ERROR("[PlayerSpawner] Player config 'default_ship' not found in registry!");
+        LOG_ERROR(
+            "[PlayerSpawner] Player config 'default_ship' not found in "
+            "registry!");
         PlayerSpawnResult result;
         result.success = false;
         return result;
@@ -66,7 +69,8 @@ PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
                                            0.0F);
     _registry->emplaceComponent<Velocity>(playerEntity, 0.0F, 0.0F);
 
-    float shootCooldown = (playerConfig.fireRate > 0) ? (1.0F / playerConfig.fireRate) : 0.3F;
+    float shootCooldown =
+        (playerConfig.fireRate > 0) ? (1.0F / playerConfig.fireRate) : 0.3F;
     _registry->emplaceComponent<ShootCooldown>(playerEntity, shootCooldown);
     Weapon weapon{};
     weapon.weapons[0] = rtype::games::rtype::shared::WeaponPresets::LaserBeam;
@@ -74,8 +78,8 @@ PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
     weapon.unlockedSlots = 1;
     _registry->emplaceComponent<Weapon>(playerEntity, weapon);
 
-    _registry->emplaceComponent<BoundingBox>(playerEntity, playerConfig.hitboxWidth,
-                                             playerConfig.hitboxHeight);
+    _registry->emplaceComponent<BoundingBox>(
+        playerEntity, playerConfig.hitboxWidth, playerConfig.hitboxHeight);
 
     _registry->emplaceComponent<PlayerTag>(playerEntity);
     _registry->emplaceComponent<Health>(playerEntity, playerConfig.health,

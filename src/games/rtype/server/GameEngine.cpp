@@ -43,7 +43,9 @@ bool GameEngine::initialize() {
 
     _prefabManager = std::make_unique<ECS::PrefabManager>(std::ref(*_registry));
     shared::PrefabLoader::registerAllPrefabs(*_prefabManager);
-    LOG_INFO("[GameEngine] Registered " << _prefabManager->getPrefabNames().size() << " prefabs from entity configs");
+    LOG_INFO("[GameEngine] Registered "
+             << _prefabManager->getPrefabNames().size()
+             << " prefabs from entity configs");
 
     setupECSSignals();
     auto eventEmitter = [this](const engine::GameEvent& event) {

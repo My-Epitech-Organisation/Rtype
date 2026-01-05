@@ -11,6 +11,7 @@
 #include <random>
 #include <utility>
 
+#include "../../shared/Config/EntityConfig/EntityConfig.hpp"
 #include "../Components/RectangleComponent.hpp"
 #include "../Systems/PlayerAnimationSystem.hpp"
 #include "../shared/Components/BoundingBoxComponent.hpp"
@@ -19,7 +20,6 @@
 #include "../shared/Components/NetworkIdComponent.hpp"
 #include "../shared/Components/PlayerIdComponent.hpp"
 #include "../shared/Config/GameConfig/RTypeGameConfig.hpp"
-#include "../../shared/Config/EntityConfig/EntityConfig.hpp"
 #include "AllComponents.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Components/AnnimationComponent.hpp"
@@ -162,7 +162,9 @@ void RtypeEntityFactory::setupPlayerEntity(
         hitboxHeight = playerConfig.hitboxHeight;
         health = playerConfig.health;
     } else {
-        LOG_WARNING("[RtypeEntityFactory] Could not load player config, using fallback values");
+        LOG_WARNING(
+            "[RtypeEntityFactory] Could not load player config, using fallback "
+            "values");
     }
 
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
@@ -186,10 +188,14 @@ void RtypeEntityFactory::setupPlayerEntity(
 void RtypeEntityFactory::setupBydosEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity, std::uint8_t subType) {
-    LOG_DEBUG("[RtypeEntityFactory] Adding Bydos components with subType=" << static_cast<int>(subType));
+    LOG_DEBUG("[RtypeEntityFactory] Adding Bydos components with subType="
+              << static_cast<int>(subType));
 
-    auto variant = static_cast<::rtype::games::rtype::shared::EnemyVariant>(subType);
-    std::string enemyId = ::rtype::games::rtype::shared::EnemyTypeComponent::variantToString(variant);
+    auto variant =
+        static_cast<::rtype::games::rtype::shared::EnemyVariant>(subType);
+    std::string enemyId =
+        ::rtype::games::rtype::shared::EnemyTypeComponent::variantToString(
+            variant);
 
     auto& configRegistry = shared::EntityConfigRegistry::getInstance();
     auto enemyConfigOpt = configRegistry.getEnemy(enemyId);
@@ -203,12 +209,15 @@ void RtypeEntityFactory::setupBydosEntity(
         hitboxWidth = enemyConfig.hitboxWidth;
         hitboxHeight = enemyConfig.hitboxHeight;
         health = enemyConfig.health;
-        LOG_DEBUG("[RtypeEntityFactory] Loaded config for enemy type: " << enemyId);
+        LOG_DEBUG(
+            "[RtypeEntityFactory] Loaded config for enemy type: " << enemyId);
     } else {
-        LOG_WARNING("[RtypeEntityFactory] Could not load enemy config for " << enemyId << ", using fallback values");
+        LOG_WARNING("[RtypeEntityFactory] Could not load enemy config for "
+                    << enemyId << ", using fallback values");
     }
 
-    reg.emplaceComponent<::rtype::games::rtype::shared::EnemyTypeComponent>(entity, variant, enemyId);
+    reg.emplaceComponent<::rtype::games::rtype::shared::EnemyTypeComponent>(
+        entity, variant, enemyId);
 
     reg.emplaceComponent<Image>(
         entity, assetsManager->textureManager->get("bdos_enemy"));
@@ -218,14 +227,18 @@ void RtypeEntityFactory::setupBydosEntity(
 
     if (enemyConfigOpt.has_value()) {
         const auto& enemyConfig = enemyConfigOpt.value().get();
-        LOG_INFO("[RtypeEntityFactory] Adding ColorTint: R=" << static_cast<int>(enemyConfig.colorR)
-                  << " G=" << static_cast<int>(enemyConfig.colorG)
-                  << " B=" << static_cast<int>(enemyConfig.colorB)
-                  << " A=" << static_cast<int>(enemyConfig.colorA));
-        reg.emplaceComponent<ColorTint>(entity, enemyConfig.colorR, enemyConfig.colorG,
-                                        enemyConfig.colorB, enemyConfig.colorA);
+        LOG_INFO("[RtypeEntityFactory] Adding ColorTint: R="
+                 << static_cast<int>(enemyConfig.colorR)
+                 << " G=" << static_cast<int>(enemyConfig.colorG)
+                 << " B=" << static_cast<int>(enemyConfig.colorB)
+                 << " A=" << static_cast<int>(enemyConfig.colorA));
+        reg.emplaceComponent<ColorTint>(entity, enemyConfig.colorR,
+                                        enemyConfig.colorG, enemyConfig.colorB,
+                                        enemyConfig.colorA);
     } else {
-        LOG_WARNING("[RtypeEntityFactory] Could not load enemy config, adding default ColorTint (white)");
+        LOG_WARNING(
+            "[RtypeEntityFactory] Could not load enemy config, adding default "
+            "ColorTint (white)");
         reg.emplaceComponent<ColorTint>(entity, 255, 255, 255, 255);
     }
 
@@ -263,7 +276,9 @@ void RtypeEntityFactory::setupMissileEntity(
         hitboxWidth = projectileConfig.hitboxWidth;
         hitboxHeight = projectileConfig.hitboxHeight;
     } else {
-        LOG_WARNING("[RtypeEntityFactory] Could not load projectile config, using fallback values");
+        LOG_WARNING(
+            "[RtypeEntityFactory] Could not load projectile config, using "
+            "fallback values");
     }
 
     reg.emplaceComponent<Image>(

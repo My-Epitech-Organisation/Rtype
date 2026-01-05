@@ -46,8 +46,7 @@ namespace {
  */
 shared::WeaponConfig createWeaponConfigFromProjectile(
     const shared::ProjectileConfig& projConfig,
-    shared::ProjectileType projectileType,
-    float cooldown = 0.2F) {
+    shared::ProjectileType projectileType, float cooldown = 0.2F) {
     shared::WeaponConfig config;
     config.projectileType = projectileType;
     config.damage = projConfig.damage;

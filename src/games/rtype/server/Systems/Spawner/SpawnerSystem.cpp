@@ -127,7 +127,8 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
         return;
     }
     std::vector<std::string> enemyPool = {"basic", "shooter", "chaser", "wave"};
-    std::uniform_int_distribution<size_t> enemyTypeDist(0, enemyPool.size() - 1);
+    std::uniform_int_distribution<size_t> enemyTypeDist(0,
+                                                        enemyPool.size() - 1);
     std::string selectedEnemyId = enemyPool[enemyTypeDist(_rng)];
 
     auto enemyConfigOpt = configRegistry.getEnemy(selectedEnemyId);
@@ -178,7 +179,8 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
 
     float speedX = (chosenBehavior == AIBehavior::MoveLeft ||
                     chosenBehavior == AIBehavior::Stationary)
-                   ? -enemyConfig.speed : 0.0F;
+                       ? -enemyConfig.speed
+                       : 0.0F;
     registry.emplaceComponent<VelocityComponent>(enemy, speedX, 0.0F);
 
     AIComponent ai{};
@@ -206,9 +208,12 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     }
 
     registry.emplaceComponent<AIComponent>(enemy, ai);
-    registry.emplaceComponent<HealthComponent>(enemy, enemyConfig.health, enemyConfig.health);
-    registry.emplaceComponent<BoundingBoxComponent>(enemy, enemyConfig.hitboxWidth, enemyConfig.hitboxHeight);
-    registry.emplaceComponent<DamageOnContactComponent>(enemy, enemyConfig.damage, true);
+    registry.emplaceComponent<HealthComponent>(enemy, enemyConfig.health,
+                                               enemyConfig.health);
+    registry.emplaceComponent<BoundingBoxComponent>(
+        enemy, enemyConfig.hitboxWidth, enemyConfig.hitboxHeight);
+    registry.emplaceComponent<DamageOnContactComponent>(
+        enemy, enemyConfig.damage, true);
 
     if (enemyConfig.canShoot) {
         registry.emplaceComponent<shared::ShootCooldownComponent>(
@@ -219,7 +224,8 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     registry.emplaceComponent<EnemyTag>(enemy);
     registry.emplaceComponent<BydosSlaveTag>(enemy);
     auto variant = EnemyTypeComponent::stringToVariant(selectedEnemyId);
-    registry.emplaceComponent<EnemyTypeComponent>(enemy, variant, selectedEnemyId);
+    registry.emplaceComponent<EnemyTypeComponent>(enemy, variant,
+                                                  selectedEnemyId);
 
     _enemyCount++;
 

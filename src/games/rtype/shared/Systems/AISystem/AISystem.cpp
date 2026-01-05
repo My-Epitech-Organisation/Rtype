@@ -59,7 +59,7 @@ void AISystem::updateChaseTargets(ECS::Registry& registry) {
 
     auto playerView = registry.view<PlayerTag, TransformComponent>();
     playerView.each([&players](ECS::Entity /*entity*/, const PlayerTag& /*tag*/,
-                                const TransformComponent& transform) {
+                               const TransformComponent& transform) {
         players.push_back({transform.x, transform.y});
     });
 
@@ -68,7 +68,8 @@ void AISystem::updateChaseTargets(ECS::Registry& registry) {
     }
     auto chaseView = registry.view<EnemyTag, AIComponent, TransformComponent>();
     chaseView.each([&players](ECS::Entity /*entity*/, const EnemyTag& /*tag*/,
-                              AIComponent& ai, const TransformComponent& transform) {
+                              AIComponent& ai,
+                              const TransformComponent& transform) {
         if (ai.behavior != AIBehavior::Chase) {
             return;
         }

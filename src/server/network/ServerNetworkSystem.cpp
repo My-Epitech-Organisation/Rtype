@@ -56,11 +56,13 @@ void ServerNetworkSystem::registerNetworkedEntity(ECS::Entity entity,
     entityToNetworkId_[entity.id] = networkId;
 
     std::uint8_t subType = 0;
-    if (registry_->hasComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
-            entity)) {
+    if (registry_
+            ->hasComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
+                entity)) {
         const auto& enemyType =
-            registry_->getComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
-                entity);
+            registry_
+                ->getComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
+                    entity);
         subType = static_cast<std::uint8_t>(enemyType.variant);
     }
 
@@ -296,11 +298,11 @@ void ServerNetworkSystem::handleClientConnected(std::uint32_t userId) {
     for (const auto& [networkId, info] : networkedEntities_) {
         std::uint8_t subType = 0;
         if (registry_->isAlive(info.entity) &&
-            registry_->hasComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
-                info.entity)) {
-            const auto& enemyType =
-                registry_->getComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
-                    info.entity);
+            registry_
+                ->hasComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
+                    info.entity)) {
+            const auto& enemyType = registry_->getComponent<
+                rtype::games::rtype::shared::EnemyTypeComponent>(info.entity);
             subType = static_cast<std::uint8_t>(enemyType.variant);
         }
         server_->spawnEntityToClient(userId, networkId, info.type, subType,
