@@ -23,17 +23,19 @@ CleanupSystem::CleanupSystem(EventEmitter emitter, CleanupConfig config)
       _config(config) {}
 
 void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
+    auto isOutOfBounds = [this](const TransformComponent& transform) {
+        return transform.x < _config.leftBoundary ||
+               transform.x > _config.rightBoundary ||
+               transform.y < _config.topBoundary ||
+               transform.y > _config.bottomBoundary;
+    };
+
     auto enemyView = registry.view<TransformComponent, EnemyTag>();
 
-    enemyView.each([this, &registry](ECS::Entity entity,
+    enemyView.each([this, &registry, &isOutOfBounds](ECS::Entity entity,
                                 const TransformComponent& transform,
                                 const EnemyTag& /*tag*/) {
-        bool outOfBounds = transform.x < _config.leftBoundary ||
-                           transform.x > _config.rightBoundary ||
-                           transform.y < _config.topBoundary ||
-                           transform.y > _config.bottomBoundary;
-
-        if (outOfBounds && !registry.hasComponent<DestroyTag>(entity)) {
+        if (isOutOfBounds(transform) && !registry.hasComponent<DestroyTag>(entity)) {
             LOG_DEBUG("[CleanupSystem] Enemy "
                       << entity.id << " escaped out of bounds at ("
                       << transform.x << ", " << transform.y
@@ -76,15 +78,10 @@ void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
 
     auto projectileView = registry.view<TransformComponent, ProjectileTag>();
 
-    projectileView.each([this, &registry](ECS::Entity entity,
+    projectileView.each([this, &registry, &isOutOfBounds](ECS::Entity entity,
                                 const TransformComponent& transform,
                                 const ProjectileTag& /*tag*/) {
-        bool outOfBounds = transform.x < _config.leftBoundary ||
-                           transform.x > _config.rightBoundary ||
-                           transform.y < _config.topBoundary ||
-                           transform.y > _config.bottomBoundary;
-
-        if (outOfBounds && !registry.hasComponent<DestroyTag>(entity)) {
+        if (isOutOfBounds(transform) && !registry.hasComponent<DestroyTag>(entity)) {
             registry.emplaceComponent<DestroyTag>(entity, DestroyTag{});
         }
     });
