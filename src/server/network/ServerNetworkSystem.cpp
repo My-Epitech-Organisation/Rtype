@@ -165,8 +165,8 @@ void ServerNetworkSystem::broadcastEntityUpdates() {
     for (auto& [networkId, info] : networkedEntities_) {
         if (info.dirty) {
             if (server_) {
-                server_->moveEntity(networkId, info.lastX, info.lastY, info.lastVx,
-                                    info.lastVy);
+                server_->moveEntity(networkId, info.lastX, info.lastY,
+                                    info.lastVx, info.lastVy);
             }
             info.dirty = false;
         }
@@ -207,17 +207,18 @@ void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
     if (server_) {
         server_->spawnEntity(networkId, type, x, y);
 
-        if (registry_ && !info.entity.isNull() && registry_->isAlive(info.entity) &&
-            registry_->hasComponent<rtype::games::rtype::shared::HealthComponent>(
-                info.entity)) {
-            const auto& health =
-                registry_
-                    ->getComponent<rtype::games::rtype::shared::HealthComponent>(
-                        info.entity);
-            LOG_DEBUG("[ServerNetworkSystem] Sending initial health for entity " +
-                      std::to_string(networkId) + ": " +
-                      std::to_string(health.current) + "/" +
-                      std::to_string(health.max));
+        if (registry_ && !info.entity.isNull() &&
+            registry_->isAlive(info.entity) &&
+            registry_
+                ->hasComponent<rtype::games::rtype::shared::HealthComponent>(
+                    info.entity)) {
+            const auto& health = registry_->getComponent<
+                rtype::games::rtype::shared::HealthComponent>(info.entity);
+            LOG_DEBUG(
+                "[ServerNetworkSystem] Sending initial health for entity " +
+                std::to_string(networkId) + ": " +
+                std::to_string(health.current) + "/" +
+                std::to_string(health.max));
             server_->updateEntityHealth(networkId, health.current, health.max);
         } else {
             LOG_DEBUG("[ServerNetworkSystem] No health component for entity " +
@@ -314,13 +315,13 @@ void ServerNetworkSystem::handleClientConnected(std::uint32_t userId) {
 
     for (const auto& [networkId, info] : networkedEntities_) {
         if (server_) {
-            server_->spawnEntityToClient(userId, networkId, info.type, info.lastX,
-                                         info.lastY);
+            server_->spawnEntityToClient(userId, networkId, info.type,
+                                         info.lastX, info.lastY);
 
             if (registry_->isAlive(info.entity) &&
-                registry_
-                    ->hasComponent<rtype::games::rtype::shared::HealthComponent>(
-                        info.entity)) {
+                registry_->hasComponent<
+                    rtype::games::rtype::shared::HealthComponent>(
+                    info.entity)) {
                 const auto& health = registry_->getComponent<
                     rtype::games::rtype::shared::HealthComponent>(info.entity);
                 server_->updateEntityHealthToClient(userId, networkId,
@@ -411,7 +412,8 @@ void ServerNetworkSystem::handleGetUsersRequest(std::uint32_t userId) {
         auto connectedClients = server_->getConnectedClients();
         server_->sendUserList(userId, connectedClients);
     } else {
-        LOG_DEBUG("[ServerNetworkSystem] No server available to send user list");
+        LOG_DEBUG(
+            "[ServerNetworkSystem] No server available to send user list");
     }
 }
 
