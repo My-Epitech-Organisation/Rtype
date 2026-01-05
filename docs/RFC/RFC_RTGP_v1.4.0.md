@@ -2,7 +2,7 @@
 
 | Metadata | Details |
 | :---- | :---- |
-| **Version** | 1.4.0 (LZ4 Compression Support) |
+| **Version** | 1.4.1 (Entity Move Batching) |
 | **Status** | Draft / Experimental |
 | **Date** | 2026-01-05 |
 | **Authors** | R-Type Project Team |
@@ -263,6 +263,27 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
   * Power-Up Type (uint8) - The type of power-up collected (implementation-specific enumeration)
   * Duration (float) - Duration in seconds for temporary power-ups (0.0 for permanent)
 
+#### **0x15 - S\_ENTITY\_MOVE\_BATCH**
+
+* **Sender:** Server
+* **Reliability:** **UNRELIABLE** (Flag 0x00)
+* **Description:** Batched position/velocity updates for multiple entities. More bandwidth-efficient than individual S\_ENTITY\_MOVE packets, especially when combined with LZ4 compression. Each tick, all dirty entity updates are grouped into a single packet.
+* **Payload:**
+  * Count (uint8): Number of entities in the batch (1-69)
+  * Entries (EntityMovePayload[]): Array of entity updates, each containing:
+    * Entity ID (uint32)
+    * PosX (float)
+    * PosY (float)
+    * VelX (float)
+    * VelY (float)
+
+**Notes:**
+
+* Maximum 69 entities per batch due to MTU constraints: (1384 - 1) / 20 = 69
+* If more than 69 entities need updating, multiple batch packets are sent
+* LZ4 compression is automatically applied when batch size exceeds 64 bytes (4+ entities)
+* Estimated bandwidth savings: 50-60% compared to individual S\_ENTITY\_MOVE packets
+
 ### **5.3. Input & Reconciliation**
 
 #### **0x20 - C\_INPUT**
@@ -329,6 +350,7 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 | S_GAME_OVER | 4 | uint32 |
 | S_ENTITY_SPAWN | 13 | uint32 + uint8 + float + float |
 | S_ENTITY_MOVE | 20 | uint32 + 4 * float |
+| S_ENTITY_MOVE_BATCH | Variable | 1 + (count * 20), max 1381 bytes |
 | S_ENTITY_DESTROY | 4 | uint32 |
 | S_ENTITY_HEALTH | 12 | uint32 + int32 + int32 |
 | S_POWERUP_EVENT | 9 | uint32 + uint8 + float |
@@ -338,6 +360,12 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 | PONG | 0 | Empty |
 
 ## **8. Changes from Previous Versions**
+
+### **Version 1.4.1 (2026-01-05)**
+
+* **Added OpCode 0x15 - S_ENTITY_MOVE_BATCH:** Batched entity position/velocity updates for bandwidth optimization
+* **Optimization:** Entity updates are now grouped into a single packet per tick, enabling LZ4 compression
+* **Estimated bandwidth savings:** 50-60% for entity movement traffic
 
 ### **Version 1.3.0 (2025-12-15)**
 
