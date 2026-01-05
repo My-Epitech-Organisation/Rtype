@@ -127,6 +127,23 @@ TEST_F(GameStateManagerTest, PlayerLeft_NotLastPlayer_ContinuesGame) {
     EXPECT_EQ(manager.getReadyPlayerCount(), 1u);
 }
 
+TEST_F(GameStateManagerTest, PlayerLeft_WithZeroConnected_CancelsCountdown) {
+    GameStateManager manager(1);
+
+    // Simulate uninitialized/zero connected players
+    manager.setConnectedPlayerCount(0);
+
+    manager.playerReady(1);
+    EXPECT_TRUE(manager.isCountdownActive());
+
+    manager.playerLeft(1);
+
+    EXPECT_FALSE(manager.isCountdownActive());
+    EXPECT_FALSE(manager.isPlaying());
+    EXPECT_TRUE(manager.isWaiting());
+    EXPECT_EQ(manager.getReadyPlayerCount(), 0u);
+}
+
 TEST_F(GameStateManagerTest, PlayerReady_TriggersAutoStart) {
     GameStateManager manager(2);
 
