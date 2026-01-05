@@ -47,8 +47,16 @@ void Lobby::update(float dt) {
         return;
     }
 
-    if (!this->_networkClient->isConnected()) {
-        this->_switchToScene(SceneManager::Scene::MAIN_MENU);
+    const bool isConnected = this->_networkClient->isConnected();
+    if (!isConnected && _isConnected) {
+        _isConnected = false;
+        try {
+            this->_switchToScene(SceneManager::Scene::MAIN_MENU);
+        } catch (SceneNotFound& e) {
+            LOG_ERROR(std::string("Error switching to Main Menu: ") + e.what());
+        }
+    } else if (isConnected) {
+        _isConnected = true;
     }
 
     if (!_pendingPlayerRemovals.empty()) {
@@ -404,6 +412,8 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
       _switchToScene(std::move(switchToScene)) {
     this->_nbrUser = 0;
 
+    _isConnected = (this->_networkClient && this->_networkClient->isConnected());
+
     if (this->_networkSystem && this->_assetsManager) {
         this->_networkSystem->setEntityFactory(
             rtype::games::rtype::client::RtypeEntityFactory::
@@ -477,6 +487,12 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
             _countdownActive = false;
             _countdownTimer = 3.0f;
 
+            _isConnected = false;
+            try {
+                this->_switchToScene(SceneManager::Scene::MAIN_MENU);
+            } catch (SceneNotFound& e) {
+                LOG_ERROR(std::string("Error switching to Main Menu: ") + e.what());
+            }
             LOG_INFO(
                 "[Lobby] Lobby cleaned up after disconnect, switching to main "
                 "menu");
