@@ -129,6 +129,11 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
             handleProjectileCollision(registry, cmdBuffer, entityB, entityA,
                                       aIsPlayer);
         }
+        if (aIsEnemy && bIsPlayer) {
+            handleEnemyPlayerCollision(registry, cmdBuffer, entityA, entityB);
+        } else if (bIsEnemy && aIsPlayer) {
+            handleEnemyPlayerCollision(registry, cmdBuffer, entityB, entityA);
+        }
     }
     cmdBuffer.flush();
 }
@@ -392,6 +397,54 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
 
     if (destroyObstacle) {
         cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle, DestroyTag{});
+    }
+}
+
+void CollisionSystem::handleEnemyPlayerCollision(ECS::Registry& registry,
+                                                ECS::CommandBuffer& cmdBuffer,
+                                                ECS::Entity enemy,
+                                                ECS::Entity player) {
+    if (registry.hasComponent<DestroyTag>(enemy) ||
+        registry.hasComponent<DestroyTag>(player)) {
+        return;
+    }
+    if (registry.hasComponent<InvincibleTag>(player)) {
+        return;
+    }
+    if (!registry.hasComponent<DamageOnContactComponent>(enemy)) {
+        return;
+    }
+    const auto& damageComp = registry.getComponent<DamageOnContactComponent>(enemy);
+    int32_t damage = damageComp.damage;
+
+    LOG_DEBUG("[CollisionSystem] Enemy " << enemy.id << " collided with player "
+              << player.id << " (damage=" << damage << ")");
+    if (registry.hasComponent<HealthComponent>(player)) {
+        auto& health = registry.getComponent<HealthComponent>(player);
+        const int32_t prevHealth = health.current;
+        health.takeDamage(damage);
+        LOG_DEBUG("[CollisionSystem] Player health: " << prevHealth << " -> "
+                  << health.current);
+        if (_emitEvent && registry.hasComponent<NetworkIdComponent>(player)) {
+            const auto& netId = registry.getComponent<NetworkIdComponent>(player);
+            if (netId.isValid()) {
+                engine::GameEvent event{};
+                event.type = engine::GameEventType::EntityHealthChanged;
+                event.entityNetworkId = netId.networkId;
+                event.entityType = static_cast<uint8_t>(::rtype::network::EntityType::Player);
+                event.healthCurrent = health.current;
+                event.healthMax = health.max;
+                _emitEvent(event);
+            }
+        }
+        if (!health.isAlive()) {
+            LOG_DEBUG("[CollisionSystem] Player " << player.id << " destroyed");
+            cmdBuffer.emplaceComponentDeferred<DestroyTag>(player, DestroyTag{});
+        }
+    }
+    if (damageComp.destroySelf) {
+        LOG_DEBUG("[CollisionSystem] Enemy " << enemy.id << " destroyed on contact");
+        cmdBuffer.emplaceComponentDeferred<DestroyTag>(enemy, DestroyTag{});
     }
 }
 
