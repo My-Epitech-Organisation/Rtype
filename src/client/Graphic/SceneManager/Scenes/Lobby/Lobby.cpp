@@ -18,6 +18,7 @@
 #include "EntityFactory/EntityFactory.hpp"
 #include "GameScene/RtypeEntityFactory.hpp"
 #include "SceneException.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 constexpr float kBaseX = 210.0f;
 constexpr float kBaseY = 200.0f;
@@ -117,15 +118,16 @@ void Lobby::update(float dt) {
                              << " y=" << kBoxCenterY);
 
                     if (this->_registry->hasComponent<
-                            rtype::games::rtype::shared::Position>(
+                            rtype::games::rtype::shared::TransformComponent>(
                             playerEntt)) {
                         auto& pos = this->_registry->getComponent<
-                            rtype::games::rtype::shared::Position>(playerEntt);
+                            rtype::games::rtype::shared::TransformComponent>(
+                            playerEntt);
                         pos.x = myCenterX;
                         pos.y = kBoxCenterY;
                     } else {
                         this->_registry->emplaceComponent<
-                            rtype::games::rtype::shared::Position>(
+                            rtype::games::rtype::shared::TransformComponent>(
                             playerEntt, myCenterX, kBoxCenterY);
                     }
                     Zindex.depth = 4;
@@ -309,7 +311,7 @@ void Lobby::_initInfoMenu() {
         rtype::games::rtype::client::Text(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 32, "Ready"),
-        rtype::games::rtype::shared::Position(
+        rtype::games::rtype::shared::TransformComponent(
             static_cast<float>(kBaseX + kBaseW - 280),
             static_cast<float>(kBaseY + kBaseH - 70)),
         rtype::games::rtype::client::Rectangle(std::pair<int, int>(250, 50),
@@ -533,7 +535,7 @@ Lobby::~Lobby() {
         LOG_INFO("[Lobby] Resetting player positions for game scene...");
         this->_registry
             ->view<rtype::games::rtype::shared::PlayerIdComponent,
-                   rtype::games::rtype::shared::Position>()
+                   rtype::games::rtype::shared::TransformComponent>()
             .each([](auto playerEntt, auto& id, auto& pos) {
                 pos.x = 100.0f;
                 pos.y = 150.0f + ((id.playerId - 1) * 100.0f);
