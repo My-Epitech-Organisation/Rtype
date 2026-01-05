@@ -25,6 +25,7 @@
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "../../games/rtype/client/Systems/ShaderRenderSystem.hpp"
 #include "../../games/rtype/client/Systems/SpritePositionSystem.hpp"
+#include "../../games/rtype/client/Systems/ColorTintSystem.hpp"
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
 #include "../network/ClientNetworkSystem.hpp"
@@ -124,6 +125,8 @@ class Graphic {
 
     std::unique_ptr<::rtype::games::rtype::client::SpritePositionSystem>
         _spritePositionSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ColorTintSystem>
+        _colorTintSystem;
     std::unique_ptr<::rtype::games::rtype::client::PlayerAnimationSystem>
         _playerAnimationSystem;
     std::unique_ptr<::rtype::games::rtype::client::AnimationSystem>
