@@ -18,12 +18,10 @@ PlayerPowerUpVisualSystem::PlayerPowerUpVisualSystem()
     : ::rtype::engine::ASystem("PlayerPowerUpVisualSystem") {}
 
 void PlayerPowerUpVisualSystem::update(ECS::Registry& registry, float /*dt*/) {
-    // Reset colors for players without active power-ups
-    // Skip players with ColorTint component to avoid overriding ColorTintSystem
     registry.view<Image, PlayerTag>().each(
         [&](auto entity, Image& img, PlayerTag& /*tag*/) {
             if (registry.hasComponent<ColorTint>(entity)) {
-                return;  // ColorTintSystem handles color for this entity
+                return;
             }
             img.sprite.setColor(sf::Color::White);
             if (registry.hasComponent<BoxingComponent>(entity)) {
@@ -33,13 +31,11 @@ void PlayerPowerUpVisualSystem::update(ECS::Registry& registry, float /*dt*/) {
             }
         });
 
-    // Apply power-up visual effects
-    // Skip players with ColorTint component to avoid overriding ColorTintSystem
     registry.view<Image, PlayerTag, rs::ActivePowerUpComponent>().each(
         [&](auto entity, Image& img, PlayerTag& /*tag*/,
             const rs::ActivePowerUpComponent& active) {
             if (registry.hasComponent<ColorTint>(entity)) {
-                return;  // ColorTintSystem handles color for this entity
+                return;
             }
             if (active.remainingTime <= 0.0f) {
                 return;
