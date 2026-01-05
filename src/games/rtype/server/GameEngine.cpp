@@ -55,7 +55,7 @@ bool GameEngine::initialize() {
     spawnerConfig.minSpawnInterval = GameConfig::MIN_SPAWN_INTERVAL;
     spawnerConfig.maxSpawnInterval = GameConfig::MAX_SPAWN_INTERVAL;
     spawnerConfig.maxEnemies = GameConfig::MAX_ENEMIES;
-    spawnerConfig.spawnX = GameConfig::SCREEN_WIDTH + GameConfig::SPAWN_MARGIN;
+    spawnerConfig.spawnX = GameConfig::SCREEN_WIDTH + GameConfig::SPAWN_OFFSET;
     spawnerConfig.minSpawnY = GameConfig::SPAWN_MARGIN;
     spawnerConfig.maxSpawnY =
         GameConfig::SCREEN_HEIGHT - GameConfig::SPAWN_MARGIN;
