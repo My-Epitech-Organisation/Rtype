@@ -102,14 +102,17 @@ void MainMenuScene::_createConnectionPanel(
         sf::Vector2f(kConnectionPanelX + kConnectionPanelWidth / 2,
                      kConnectionPanelY + 40.f),
         32);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(connectText);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            connectText);
     panelEntities.push_back(connectText);
     auto ipText = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "IP:", "main_font",
         sf::Vector2f(kConnectionPanelX + kInputOffsetX / 2,
                      kConnectionPanelY + 105.f),
         24);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(ipText);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(ipText);
     panelEntities.push_back(ipText);
     this->_ipInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
@@ -117,14 +120,18 @@ void MainMenuScene::_createConnectionPanel(
                                    kConnectionPanelY + 85.f),
                       sf::Vector2f(kInputWidth, kInputHeight)),
         "127.0.0.1", "127.0.0.1", 15, false);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(this->_ipInputEntity);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            this->_ipInputEntity);
     panelEntities.push_back(this->_ipInputEntity);
     auto portText = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Port:", "main_font",
         sf::Vector2f(kConnectionPanelX + kInputOffsetX / 2,
                      kConnectionPanelY + 145.f + kInputHeight / 2),
         24);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(portText);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            portText);
     panelEntities.push_back(portText);
     this->_portInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
@@ -132,14 +139,18 @@ void MainMenuScene::_createConnectionPanel(
                                    kConnectionPanelY + 145.f),
                       sf::Vector2f(kInputWidth, kInputHeight)),
         "4242", "4242", 5, true);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(this->_portInputEntity);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            this->_portInputEntity);
     panelEntities.push_back(this->_portInputEntity);
     this->_statusEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "main_font",
         sf::Vector2f(kConnectionPanelX + kInputOffsetX / 2,
                      kConnectionPanelY + 200.f + kInputHeight / 2),
         18);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(this->_statusEntity);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            this->_statusEntity);
     panelEntities.push_back(this->_statusEntity);
     auto connectBtn = EntityFactory::createButton(
         this->_registry,
@@ -153,7 +164,9 @@ void MainMenuScene::_createConnectionPanel(
         this->_assetsManager, std::function<void()>([this, switchToScene]() {
             this->_onConnectClicked(switchToScene);
         }));
-    this->_registry->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(connectBtn);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            connectBtn);
     panelEntities.push_back(connectBtn);
     auto closeBtn = EntityFactory::createButton(
         this->_registry,
@@ -167,23 +180,31 @@ void MainMenuScene::_createConnectionPanel(
         this->_assetsManager, std::function<void()>([this]() {
             this->_connectPopUpVisible = false;
         }));
-    this->_registry->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(closeBtn);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            closeBtn);
     panelEntities.push_back(closeBtn);
     for (auto& s : panelEntities) {
         if (!this->_registry->hasComponent<rtype::games::rtype::client::ZIndex>(
                 s)) {
-            if (this->_registry->hasComponent<rtype::games::rtype::client::SectionItemTag>(s)) {
+            if (this->_registry
+                    ->hasComponent<rtype::games::rtype::client::SectionItemTag>(
+                        s)) {
                 this->_registry
-                    ->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-                        s, 11);
+                    ->emplaceComponent<rtype::games::rtype::client::ZIndex>(s,
+                                                                            11);
             } else {
                 this->_registry
-                 ->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-                     s, 10);
+                    ->emplaceComponent<rtype::games::rtype::client::ZIndex>(s,
+                                                                            10);
             }
         } else {
-            auto &zindex = this->_registry->getComponent<rtype::games::rtype::client::ZIndex>(s);
-            if (this->_registry->hasComponent<rtype::games::rtype::client::SectionItemTag>(s))
+            auto& zindex =
+                this->_registry
+                    ->getComponent<rtype::games::rtype::client::ZIndex>(s);
+            if (this->_registry
+                    ->hasComponent<rtype::games::rtype::client::SectionItemTag>(
+                        s))
                 zindex.depth = 11;
             else
                 zindex.depth = 10;
@@ -398,7 +419,8 @@ MainMenuScene::MainMenuScene(
         rtype::games::rtype::shared::TransformComponent(100, 350),
         rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
                                                sf::Color::Red),
-        this->_assetsManager, std::function<void()>([this]() { this->_connectPopUpVisible = true; }));
+        this->_assetsManager,
+        std::function<void()>([this]() { this->_connectPopUpVisible = true; }));
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         playBtn, 1);
     this->_listEntity.push_back(playBtn);
@@ -453,7 +475,7 @@ MainMenuScene::MainMenuScene(
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         quitBtn, 1);
     this->_registry
-    ->emplaceComponent<rtype::games::rtype::client::ButtonMenuTag>(quitBtn);
+        ->emplaceComponent<rtype::games::rtype::client::ButtonMenuTag>(quitBtn);
     this->_registry
         ->emplaceComponent<rtype::games::rtype::client::ButtonMenuTag>(playBtn);
     this->_registry
