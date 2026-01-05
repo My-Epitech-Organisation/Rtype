@@ -22,6 +22,7 @@ docs/website/package-lock.json
 # Compiled Object files
 build/*
 build-coverage/*
+build-cpm/*
 Testing/*
 *.slo
 *.lo
