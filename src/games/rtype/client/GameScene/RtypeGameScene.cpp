@@ -103,6 +103,8 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
             [this](const ::rtype::client::EntityHealthEvent& event) {
                 handleHealthUpdate(event);
             });
+        LOG_DEBUG("[RtypeGameScene] Setting up disconnect callback");
+        setupDisconnectCallback();
         LOG_DEBUG("[RtypeGameScene] Network callbacks configured");
     }
 
@@ -138,6 +140,14 @@ void RtypeGameScene::update() {
     const float dt = _uiClock.restart().asSeconds();
 
     updateDamageVignette(dt);
+    updatePingDisplay();
+
+    if (_isDisconnected) {
+        if (_networkSystem) {
+            _networkSystem->update();
+        }
+        return;
+    }
 
     if (_damageFlashTimer > 0.0F) {
         _damageFlashTimer = std::max(0.0F, _damageFlashTimer - dt);
@@ -250,6 +260,15 @@ void RtypeGameScene::setupHud() {
     _registry->emplaceComponent<GameTag>(hpText);
     _healthTextEntity = hpText;
     _livesTextEntity = hpText;
+
+    auto pingText = EntityFactory::createStaticText(
+        _registry, _assetsManager, "Ping: 0ms", "title_font",
+        sf::Vector2f{1800.f, 20.f}, 20.f);
+    _registry->emplaceComponent<ZIndex>(pingText,
+                                        GraphicsConfig::ZINDEX_UI + 2);
+    _registry->emplaceComponent<HudTag>(pingText);
+    _registry->emplaceComponent<GameTag>(pingText);
+    _pingTextEntity = pingText;
 }
 
 void RtypeGameScene::updateLivesDisplay(int current, int max) {
@@ -305,6 +324,29 @@ void RtypeGameScene::updateHealthBar(int current, int max) {
         LOG_DEBUG("[RtypeGameScene] HP text updated to: " << text.textContent);
     } else {
         LOG_DEBUG("[RtypeGameScene] Health text entity not valid for update");
+    }
+}
+
+void RtypeGameScene::updatePingDisplay() {
+    if (!_pingTextEntity.has_value() || !_registry->isAlive(*_pingTextEntity) ||
+        !_registry->hasComponent<Text>(*_pingTextEntity)) {
+        return;
+    }
+
+    if (_networkClient && _networkClient->isConnected()) {
+        std::uint32_t latency = _networkClient->latencyMs();
+        auto& text = _registry->getComponent<Text>(*_pingTextEntity);
+        text.textContent = "Ping: " + std::to_string(latency) + "ms";
+
+        if (latency < 50) {
+            text.color = sf::Color(90, 220, 140);
+        } else if (latency < 100) {
+            text.color = sf::Color(220, 220, 90);
+        } else if (latency < 200) {
+            text.color = sf::Color(255, 165, 0);
+        } else {
+            text.color = sf::Color(220, 90, 90);
+        }
     }
 }
 
@@ -603,6 +645,131 @@ void RtypeGameScene::resetHudColors() {
         _registry->hasComponent<Text>(*_healthTextEntity)) {
         auto& text = _registry->getComponent<Text>(*_healthTextEntity);
         text.color = sf::Color::White;
+    }
+}
+
+void RtypeGameScene::setupDisconnectCallback() {
+    _networkSystem->onDisconnect([this](network::DisconnectReason reason) {
+        showDisconnectModal(reason);
+    });
+}
+
+void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
+    _isDisconnected = true;
+    std::string reasonMessage = getDisconnectMessage(reason);
+    LOG_INFO("[RtypeGameScene] Disconnected from server, reason="
+             << static_cast<int>(reason) << " message=" << reasonMessage);
+
+    const sf::Vector2u windowSize = _window->getSize();
+    const float centerX = windowSize.x / 2.0F;
+    const float centerY = windowSize.y / 2.0F;
+
+    auto overlayEntity = _registry->spawnEntity();
+    auto overlaySize = std::make_pair(static_cast<float>(windowSize.x),
+                                      static_cast<float>(windowSize.y));
+    _registry->emplaceComponent<Rectangle>(overlayEntity, overlaySize,
+                                           sf::Color(0, 0, 0, 180),
+                                           sf::Color(0, 0, 0, 180));
+    auto& overlayPos = _registry->emplaceComponent<rs::Position>(overlayEntity);
+    overlayPos.x = 0;
+    overlayPos.y = 0;
+    _registry->emplaceComponent<ZIndex>(overlayEntity, 9000);
+    _disconnectOverlayEntity = overlayEntity;
+
+    auto panelEntity = _registry->spawnEntity();
+    auto panelSize = std::make_pair(500.0F, 300.0F);
+    _registry->emplaceComponent<Rectangle>(panelEntity, panelSize,
+                                           sf::Color(40, 40, 60, 255),
+                                           sf::Color(40, 40, 60, 255));
+    auto& panelRect = _registry->getComponent<Rectangle>(panelEntity);
+    panelRect.outlineColor = sf::Color(120, 120, 150, 255);
+    panelRect.outlineThickness = 3.0F;
+    auto& panelPos = _registry->emplaceComponent<rs::Position>(panelEntity);
+    panelPos.x = centerX - 250.0F;
+    panelPos.y = centerY - 150.0F;
+    _registry->emplaceComponent<ZIndex>(panelEntity, 9001);
+    _disconnectPanelEntity = panelEntity;
+
+    auto titleEntity = _registry->spawnEntity();
+    const sf::Font& titleFont = _assetsManager->fontManager->get("title_font");
+    _registry->emplaceComponent<Text>(titleEntity, titleFont,
+                                      sf::Color(255, 100, 100), 36,
+                                      "Connection Lost");
+    auto& titlePos = _registry->emplaceComponent<rs::Position>(titleEntity);
+    titlePos.x = centerX - 150.0F;
+    titlePos.y = centerY - 120.0F;
+    _registry->emplaceComponent<StaticTextTag>(titleEntity);
+    _registry->emplaceComponent<ZIndex>(titleEntity, 9002);
+    _disconnectTitleEntity = titleEntity;
+
+    auto messageEntity = _registry->spawnEntity();
+    const sf::Font& mainFont = _assetsManager->fontManager->get("main_font");
+    _registry->emplaceComponent<Text>(
+        messageEntity, mainFont, sf::Color(220, 220, 220), 20, reasonMessage);
+    auto& messagePos = _registry->emplaceComponent<rs::Position>(messageEntity);
+    messagePos.x = centerX - 220.0F;
+    messagePos.y = centerY - 50.0F;
+    _registry->emplaceComponent<StaticTextTag>(messageEntity);
+    LOG_INFO("[RtypeGameScene] Created disconnect message entity with text: "
+             << reasonMessage);
+    _registry->emplaceComponent<ZIndex>(messageEntity, 9002);
+    _disconnectMessageEntity = messageEntity;
+
+    Text buttonText(mainFont, sf::Color::White, 22, "Return to Main Menu");
+    rs::Position buttonPos{centerX - 125.0F, centerY + 80.0F};
+    auto buttonSize = std::make_pair(250.0F, 50.0F);
+    Rectangle buttonRect(buttonSize, sf::Color(80, 120, 200, 255),
+                         sf::Color(100, 140, 220, 255));
+    buttonRect.outlineColor = sf::Color(120, 160, 240, 255);
+    buttonRect.outlineThickness = 2.0F;
+
+    std::function<void()> buttonCallback = [this]() {
+        LOG_INFO("[RtypeGameScene] Returning to main menu after disconnect");
+        cleanupDisconnectModal();
+        _switchToScene(SceneManager::MAIN_MENU);
+    };
+
+    auto buttonEntity =
+        EntityFactory::createButton(_registry, buttonText, buttonPos,
+                                    buttonRect, _assetsManager, buttonCallback);
+
+    _registry->emplaceComponent<ZIndex>(buttonEntity, 9003);
+    _disconnectButtonEntity = buttonEntity;
+}
+
+void RtypeGameScene::cleanupDisconnectModal() {
+    auto destroyEntity = [this](std::optional<ECS::Entity>& entity) {
+        if (entity.has_value() && _registry->isAlive(*entity)) {
+            _registry->killEntity(*entity);
+        }
+        entity.reset();
+    };
+
+    destroyEntity(_disconnectOverlayEntity);
+    destroyEntity(_disconnectPanelEntity);
+    destroyEntity(_disconnectTitleEntity);
+    destroyEntity(_disconnectMessageEntity);
+    destroyEntity(_disconnectButtonEntity);
+    _isDisconnected = false;
+}
+
+std::string RtypeGameScene::getDisconnectMessage(
+    network::DisconnectReason reason) const {
+    switch (reason) {
+        case network::DisconnectReason::Timeout:
+            return "Server connection timed out.\nThe server may be down or "
+                   "unreachable.";
+        case network::DisconnectReason::MaxRetriesExceeded:
+            return "Failed to connect after multiple attempts.\nPlease check "
+                   "your connection.";
+        case network::DisconnectReason::ProtocolError:
+            return "A protocol error occurred.\nPlease restart the game.";
+        case network::DisconnectReason::RemoteRequest:
+            return "Server closed the connection.\nYou may have been kicked.";
+        case network::DisconnectReason::LocalRequest:
+            return "Disconnected from server.";
+        default:
+            return "Connection lost for unknown reason.";
     }
 }
 
