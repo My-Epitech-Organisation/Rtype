@@ -35,6 +35,13 @@ class AISystem : public ::rtype::engine::ASystem {
      * @param deltaTime Time elapsed since last update
      */
     void update(ECS::Registry& registry, float deltaTime) override;
+
+   private:
+    /**
+     * @brief Update target positions for Chase behavior enemies
+     * @param registry ECS registry
+     */
+    void updateChaseTargets(ECS::Registry& registry);
 };
 
 }  // namespace rtype::games::rtype::shared
