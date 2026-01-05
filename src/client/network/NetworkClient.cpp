@@ -200,14 +200,60 @@ bool NetworkClient::ping() {
     return true;
 }
 
+bool NetworkClient::sendReady(bool isReady) {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    network::LobbyReadyPayload payload;
+    payload.isReady = isReady ? 1 : 0;
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    auto result = connection_.buildPacket(network::OpCode::C_READY, serialized);
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    return true;
+}
+
 void NetworkClient::onConnected(
     std::function<void(std::uint32_t myUserId)> callback) {
     onConnectedCallbacks_.push_back(std::move(callback));
 }
 
+NetworkClient::CallbackId NetworkClient::addConnectedCallback(
+    std::function<void(std::uint32_t myUserId)> callback) {
+    onConnectedCallbacks_.push_back(std::move(callback));
+    return onConnectedCallbacks_.size() - 1;
+}
+
+void NetworkClient::removeConnectedCallback(CallbackId id) {
+    if (id < onConnectedCallbacks_.size()) {
+        onConnectedCallbacks_[id] = nullptr;
+    }
+}
+
 void NetworkClient::onDisconnected(
     std::function<void(DisconnectReason)> callback) {
     onDisconnectedCallbacks_.push_back(std::move(callback));
+}
+
+NetworkClient::CallbackId NetworkClient::addDisconnectedCallback(
+    std::function<void(DisconnectReason)> callback) {
+    onDisconnectedCallbacks_.push_back(std::move(callback));
+    return onDisconnectedCallbacks_.size() - 1;
+}
+
+void NetworkClient::removeDisconnectedCallback(CallbackId id) {
+    if (id < onDisconnectedCallbacks_.size()) {
+        onDisconnectedCallbacks_[id] = nullptr;
+    }
 }
 
 void NetworkClient::onEntitySpawn(
@@ -222,7 +268,7 @@ void NetworkClient::onEntityMove(
 
 void NetworkClient::onEntityDestroy(
     std::function<void(std::uint32_t entityId)> callback) {
-    onEntityDestroyCallback_ = std::move(callback);
+    onEntityDestroyCallbacks_.push_back(std::move(callback));
 }
 
 void NetworkClient::onEntityHealth(
@@ -246,6 +292,15 @@ void NetworkClient::onGameStateChange(
 
 void NetworkClient::onGameOver(std::function<void(GameOverEvent)> callback) {
     onGameOverCallback_ = std::move(callback);
+}
+
+void NetworkClient::onGameStart(std::function<void(float)> callback) {
+    onGameStartCallback_ = std::move(callback);
+}
+
+void NetworkClient::onPlayerReadyStateChanged(
+    std::function<void(std::uint32_t userId, bool isReady)> callback) {
+    onPlayerReadyStateChangedCallback_ = std::move(callback);
 }
 
 void NetworkClient::poll() {
@@ -383,6 +438,14 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
             handleGameOver(header, payload);
             break;
 
+        case network::OpCode::S_GAME_START:
+            handleGameStart(header, payload);
+            break;
+
+        case network::OpCode::S_PLAYER_READY_STATE:
+            handlePlayerReadyState(header, payload);
+            break;
+
         case network::OpCode::PONG:
             handlePong(header, payload);
             break;
@@ -485,8 +548,8 @@ void NetworkClient::handleEntityDestroy(const network::Header& header,
         std::uint32_t entityId = deserialized.entityId;
 
         queueCallback([this, entityId]() {
-            if (onEntityDestroyCallback_) {
-                onEntityDestroyCallback_(entityId);
+            for (const auto& cb : onEntityDestroyCallbacks_) {
+                cb(entityId);
             }
         });
     } catch (...) {
@@ -630,6 +693,55 @@ void NetworkClient::handleGameOver(const network::Header& header,
     }
 }
 
+void NetworkClient::handleGameStart(const network::Header& header,
+                                    const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::GameStartPayload)) {
+        return;
+    }
+
+    try {
+        auto deserialized = network::Serializer::deserializeFromNetwork<
+            network::GameStartPayload>(payload);
+
+        float countdownDuration = deserialized.countdownDuration;
+
+        queueCallback([this, countdownDuration]() {
+            if (onGameStartCallback_) {
+                onGameStartCallback_(countdownDuration);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
+void NetworkClient::handlePlayerReadyState(const network::Header& header,
+                                           const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::PlayerReadyStatePayload)) {
+        return;
+    }
+
+    try {
+        auto deserialized = network::Serializer::deserializeFromNetwork<
+            network::PlayerReadyStatePayload>(payload);
+
+        uint32_t userId = deserialized.userId;
+        bool isReady = (deserialized.isReady != 0);
+
+        queueCallback([this, userId, isReady]() {
+            if (onPlayerReadyStateChangedCallback_) {
+                onPlayerReadyStateChangedCallback_(userId, isReady);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
 void NetworkClient::handlePong(const network::Header& header,
                                const network::Buffer& payload) {
     (void)header;
@@ -686,6 +798,7 @@ void NetworkClient::sendAck(std::uint16_t ackSeqId) {
                                 << ackSeqId);
                 }
             });
+        connection_.recordPacketSent();
     } else {
         LOG_WARNING("[NetworkClient] sendAck: buildAckPacket returned nullopt");
     }
