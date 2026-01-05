@@ -206,6 +206,39 @@ Table of Contents
       state.
    o  Payload: Final Score (uint32): The final accumulated score.
 
+5.1.8.  0x08 - C_READY
+
+   o  Sender: Client
+   o  Reliability: RELIABLE (Flag 0x01)
+   o  Description: Client signals ready/unready state in the lobby. When
+      all players are ready, the server initiates the game start
+      sequence.
+   o  Payload: Is Ready (uint8): 1 if ready, 0 if not ready.
+
+5.1.9.  0x09 - S_GAME_START
+
+   o  Sender: Server
+   o  Reliability: RELIABLE (Flag 0x01)
+   o  Description: Server signals that all players are ready and the
+      game is starting.  Includes countdown duration for client-side
+      countdown display.  Sent when the server determines all required
+      players are ready.
+   o  Payload: Countdown Duration (float): Duration in seconds for the
+      countdown timer (e.g., 3.0 for 3 seconds).
+
+5.1.10. 0x0A - S_PLAYER_READY_STATE
+
+   o  Sender: Server
+   o  Reliability: RELIABLE (Flag 0x01)
+   o  Description: Broadcasts the ready/unready state of a specific
+      player to all clients in the lobby.  Typically sent by the server
+      in response to a client's C_READY message, or when synchronizing
+      lobby state after a client joins.
+   o  Payload:
+      *  Player ID (uint32): Unique identifier of the player whose
+         state changed.
+      *  Is Ready (uint8): 1 if the player is ready, 0 if not ready.
+
 5.2.  Gameplay & Entity Management
 
 5.2.1.  0x10 - S_ENTITY_SPAWN

@@ -199,6 +199,15 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 * **Payload:**
   * Countdown Duration (float): Duration in seconds for the countdown timer (e.g., 3.0 for 3 seconds).
 
+#### **0x0A - S\_PLAYER\_READY\_STATE**
+
+* **Sender:** Server
+* **Reliability:** **RELIABLE** (Flag 0x01)
+* **Description:** Broadcasts the ready/unready state of a specific player to all clients in the lobby. Typically sent by the server in response to a client's **C\_READY** message, or when synchronizing lobby state after a client joins.
+* **Payload:**
+  * Player ID (uint32): Unique identifier of the player whose state changed.
+  * Is Ready (uint8): 1 if the player is ready, 0 if not ready.
+
 ### **5.2. Gameplay & Entity Management**
 
 #### **0x10 - S\_ENTITY\_SPAWN**
