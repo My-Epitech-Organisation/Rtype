@@ -25,32 +25,34 @@ void LifetimeSystem::update(ECS::Registry& registry, float deltaTime) {
 
     if (entityCount >= PARALLEL_THRESHOLD) {
         auto view = registry.parallelView<LifetimeComponent>();
-        view.each(
-            [deltaTime, &cmdBuffer](auto entity, LifetimeComponent& lifetime) {
-                lifetime.remainingTime -= deltaTime;
-                if (lifetime.remainingTime <= 0.0F) {
-                    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+        view.each([deltaTime, &cmdBuffer, &registry](
+                      auto entity, LifetimeComponent& lifetime) {
+            lifetime.remainingTime -= deltaTime;
+            if (lifetime.remainingTime <= 0.0F &&
+                !registry.hasComponent<DestroyTag>(entity)) {
+                   LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                                   "[LifetimeSystem] Entity " +
                                       std::to_string(entity.id) +
                                       " expired (lifetime <= 0)");
-                    cmdBuffer.emplaceComponentDeferred<DestroyTag>(
-                        entity, DestroyTag{});
-                }
-            });
+                cmdBuffer.emplaceComponentDeferred<DestroyTag>(entity,
+                                                               DestroyTag{});
+            }
+        });
     } else {
         auto view = registry.view<LifetimeComponent>();
-        view.each(
-            [deltaTime, &cmdBuffer](auto entity, LifetimeComponent& lifetime) {
-                lifetime.remainingTime -= deltaTime;
-                if (lifetime.remainingTime <= 0.0F) {
+        view.each([deltaTime, &cmdBuffer, &registry](
+                      auto entity, LifetimeComponent& lifetime) {
+            lifetime.remainingTime -= deltaTime;
+            if (lifetime.remainingTime <= 0.0F &&
+                !registry.hasComponent<DestroyTag>(entity)) {
                     LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                                   "[LifetimeSystem] Entity " +
                                       std::to_string(entity.id) +
                                       " expired (lifetime <= 0)");
-                    cmdBuffer.emplaceComponentDeferred<DestroyTag>(
-                        entity, DestroyTag{});
-                }
-            });
+                cmdBuffer.emplaceComponentDeferred<DestroyTag>(entity,
+                                                               DestroyTag{});
+            }
+        });
     }
 
     cmdBuffer.flush();
