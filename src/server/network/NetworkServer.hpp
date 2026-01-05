@@ -21,6 +21,7 @@
 
 #include <asio.hpp>
 
+#include "compression/Compressor.hpp"
 #include "connection/ConnectionEvents.hpp"
 #include "core/Types.hpp"
 #include "protocol/Header.hpp"
@@ -38,6 +39,8 @@ namespace rtype::server {
 struct NetworkServerConfig {
     std::chrono::milliseconds clientTimeout{10000};
     network::ReliableChannel::Config reliabilityConfig{};
+    network::Compressor::Config compressionConfig{};
+    bool enableCompression = true;
 };
 
 /**
@@ -396,6 +399,7 @@ class NetworkServer {
     [[nodiscard]] std::uint32_t nextUserId();
 
     Config config_;
+    network::Compressor compressor_;
 
     bool running_{false};
 
