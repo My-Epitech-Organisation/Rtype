@@ -49,7 +49,8 @@ class Lobby : public AScene {
     const std::vector<uint32_t>& getPendingPlayerRemovals() const noexcept {
         return _pendingPlayerRemovals;
     }
-    void addUserForTest(uint32_t userId, const std::vector<ECS::Entity>& entities) {
+    void addUserForTest(uint32_t userId,
+                        const std::vector<ECS::Entity>& entities) {
         _listUser[userId] = entities;
     }
     /**

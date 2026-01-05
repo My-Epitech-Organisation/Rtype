@@ -223,9 +223,8 @@ bool ServerApp::initialize() {
         });
 
     _stateManager->setOnCountdownStarted([this](float duration) {
-        LOG_INFO(
-            "[ServerApp] Countdown started - broadcasting game start with "
-            << duration << "s");
+        LOG_INFO("[ServerApp] Countdown started - broadcasting game start with "
+                 << duration << "s");
         _networkServer->broadcastGameStart(duration);
         if (_onGameStartBroadcastCallback) {
             _onGameStartBroadcastCallback(duration);

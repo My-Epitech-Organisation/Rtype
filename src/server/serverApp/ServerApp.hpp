@@ -11,10 +11,10 @@
 #include <atomic>
 #include <cstdint>
 #include <functional>
-#include <utility>
 #include <memory>
 #include <optional>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include <rtype/common.hpp>
@@ -141,9 +141,7 @@ class ServerApp {
         _stateManager->playerNotReady(userId);
     }
 
-    void forceStart() {
-        _stateManager->forceStart();
-    }
+    void forceStart() { _stateManager->forceStart(); }
 
     /**
      * @brief Test hook: register a callback to be invoked when ServerApp

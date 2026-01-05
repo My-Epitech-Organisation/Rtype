@@ -80,7 +80,8 @@ void GameStateManager::playerLeft(std::uint32_t userId) {
 
     if (_countdownActive) {
         if (_readyPlayers.size() < _minPlayersToStart ||
-            (_connectedPlayerCount > 0 && _readyPlayers.size() < _connectedPlayerCount)) {
+            (_connectedPlayerCount > 0 &&
+             _readyPlayers.size() < _connectedPlayerCount)) {
             LOG_INFO("[GameStateManager] Countdown cancelled due to player "
                      << userId << " leaving");
             _countdownActive = false;

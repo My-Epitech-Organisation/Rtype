@@ -160,7 +160,6 @@ class GameStateManager {
         _stateChangeCallback = std::move(callback);
     }
 
-
     /**
      * @brief Set callback invoked when the countdown starts. Receives the
      * countdown duration in seconds.
@@ -188,12 +187,16 @@ class GameStateManager {
     /**
      * @brief Get whether a countdown is currently active (for tests/inspection)
      */
-    [[nodiscard]] bool isCountdownActive() const noexcept { return _countdownActive; }
+    [[nodiscard]] bool isCountdownActive() const noexcept {
+        return _countdownActive;
+    }
 
     /**
      * @brief Get remaining countdown time in seconds
      */
-    [[nodiscard]] float getCountdownRemaining() const noexcept { return _countdownRemaining; }
+    [[nodiscard]] float getCountdownRemaining() const noexcept {
+        return _countdownRemaining;
+    }
 
     /**
      * @brief Force transition to Playing state (for testing)

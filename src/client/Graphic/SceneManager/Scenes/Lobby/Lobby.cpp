@@ -424,8 +424,9 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
             _countdownTimer = 0.0f;
             if (_registry->hasComponent<rtype::games::rtype::client::Text>(
                     _countdownTextEntity)) {
-                auto& text = _registry->getComponent<rtype::games::rtype::client::Text>(
-                    _countdownTextEntity);
+                auto& text =
+                    _registry->getComponent<rtype::games::rtype::client::Text>(
+                        _countdownTextEntity);
                 text.textContent = "";
                 text.text.setString(text.textContent);
             }
@@ -544,9 +545,9 @@ void Lobby::_updatePlayerReadyIndicator(uint32_t userId, bool isReady) {
 void Lobby::onEntityDestroyEvent(std::uint32_t entityId) {
     bool found = false;
     for (const auto& [userId, entities] : _listUser) {
-        auto it = std::find_if(entities.begin(), entities.end(), [entityId](const ECS::Entity& ent) {
-            return ent.id == entityId;
-        });
+        auto it = std::find_if(
+            entities.begin(), entities.end(),
+            [entityId](const ECS::Entity& ent) { return ent.id == entityId; });
         if (it != entities.end()) {
             _pendingPlayerRemovals.push_back(userId);
             found = true;
@@ -554,7 +555,8 @@ void Lobby::onEntityDestroyEvent(std::uint32_t entityId) {
         }
     }
     if (!found) {
-        LOG_WARNING("[Lobby] onEntityDestroy: unknown entityId " << entityId << " - no matching user found");
+        LOG_WARNING("[Lobby] onEntityDestroy: unknown entityId "
+                    << entityId << " - no matching user found");
     }
 }
 
