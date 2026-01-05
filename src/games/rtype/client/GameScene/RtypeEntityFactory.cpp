@@ -216,9 +216,7 @@ void RtypeEntityFactory::setupMissileEntity(
         entity, 33.0f, 34.0f);
     reg.emplaceComponent<shared::ProjectileTag>(entity);
     reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0    this->_lifetimeSystem =
-        std::make_unique<::rtype::games::rtype::shared::LifetimeSystem>();
-}, {33.f, 34.f}));
+                                          sf::FloatRect({0, 0}, {33.f, 34.f}));
     reg.emplaceComponent<Animation>(entity, 4, 0.5, true);
     reg.getComponent<BoxingComponent>(entity).outlineColor =
         sf::Color(0, 220, 180);
