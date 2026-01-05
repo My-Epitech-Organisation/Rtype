@@ -636,10 +636,6 @@ TEST_F(ByteOrderSpecTest, EmptyPayloadsSerializeToEmptyBuffers) {
     auto connectBytes = ByteOrderSpec::serializeToNetwork(connect);
     EXPECT_EQ(connectBytes.size(), 0u);
 
-    DisconnectPayload disconnect{};
-    auto disconnectBytes = ByteOrderSpec::serializeToNetwork(disconnect);
-    EXPECT_EQ(disconnectBytes.size(), 0u);
-
     PingPayload ping{};
     auto pingBytes = ByteOrderSpec::serializeToNetwork(ping);
     EXPECT_EQ(pingBytes.size(), 0u);
@@ -654,12 +650,24 @@ TEST_F(ByteOrderSpecTest, EmptyPayloadsDeserializeFromEmptyBuffers) {
     std::vector<uint8_t> emptyBuffer;
 
     auto connect = ByteOrderSpec::deserializeFromNetwork<ConnectPayload>(emptyBuffer);
-    auto disconnect = ByteOrderSpec::deserializeFromNetwork<DisconnectPayload>(emptyBuffer);
     auto ping = ByteOrderSpec::deserializeFromNetwork<PingPayload>(emptyBuffer);
     auto pong = ByteOrderSpec::deserializeFromNetwork<PongPayload>(emptyBuffer);
 
     // Should succeed without throwing
     SUCCEED();
+}
+
+TEST_F(ByteOrderSpecTest, DisconnectPayloadSerializeDeserialize) {
+    // DisconnectPayload has a reason field (uint8_t)
+    DisconnectPayload original{};
+    original.reason = 3;  // RemoteRequest
+
+    auto bytes = ByteOrderSpec::serializeToNetwork(original);
+    EXPECT_EQ(bytes.size(), 1u);  // Should be 1 byte
+    EXPECT_EQ(bytes[0], 3u);
+
+    auto restored = ByteOrderSpec::deserializeFromNetwork<DisconnectPayload>(bytes);
+    EXPECT_EQ(restored.reason, 3u);
 }
 
 TEST_F(ByteOrderSpecTest, DeserializeFromRawPointer) {

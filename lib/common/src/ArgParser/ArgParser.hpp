@@ -2,11 +2,16 @@
 ** EPITECH PROJECT, 2025
 ** Rtype
 ** File description:
-** ArgParser - Main argument parser class
+** ArgParser - Command-line argument parser
 */
 
 #ifndef SRC_COMMON_ARGPARSER_ARGPARSER_HPP_
 #define SRC_COMMON_ARGPARSER_ARGPARSER_HPP_
+
+// Prevent Windows.h from defining min/max macros
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 
 #include <algorithm>
 #include <format>
@@ -271,7 +276,7 @@ class ArgParser {
             if (opt.hasArg) {
                 width += opt.argName.size() + 3;
             }
-            maxWidth = std::max(maxWidth, width);
+            maxWidth = (std::max)(maxWidth, width);
         }
         for (const auto& opt : _options) {
             std::ostringstream optStr;
@@ -294,7 +299,7 @@ class ArgParser {
         std::cout << "Arguments:\n";
         std::size_t maxWidth = 0;
         for (const auto& posArg : _positionalArgs) {
-            maxWidth = std::max(maxWidth, posArg.name.size());
+            maxWidth = (std::max)(maxWidth, posArg.name.size());
         }
         for (const auto& posArg : _positionalArgs) {
             std::cout << "  " << std::left

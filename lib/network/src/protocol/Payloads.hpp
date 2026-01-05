@@ -69,9 +69,11 @@ struct AcceptPayload {
 
 /**
  * @brief Payload for DISCONNECT (0x03)
- * @note Empty payload - disconnect has no data
+ * @note Contains a reason code (maps to DisconnectReason)
  */
-struct DisconnectPayload {};
+struct DisconnectPayload {
+    std::uint8_t reason{static_cast<std::uint8_t>(4)};  // Default LocalRequest
+};
 
 /**
  * @brief Payload for C_GET_USERS (0x04)
@@ -217,13 +219,13 @@ struct UpdatePosPayload {
 
 /**
  * @brief Payload for PING (0xF0)
- * @note Empty - timestamp can be tracked via seqId
+ * @note Unreliable - timestamp can be tracked via seqId
  */
 struct PingPayload {};
 
 /**
  * @brief Payload for PONG (0xF1)
- * @note Empty - echoes the seqId from PING via ackId
+ * @note Unreliable - echoes the seqId from PING via ackId
  */
 struct PongPayload {};
 
@@ -233,8 +235,7 @@ static_assert(sizeof(ConnectPayload) == 1,
               "ConnectPayload is an empty struct (size 1 in C++), "
               "serialization returns 0 bytes");
 static_assert(sizeof(DisconnectPayload) == 1,
-              "DisconnectPayload is an empty struct (size 1 in C++), "
-              "serialization returns 0 bytes");
+              "DisconnectPayload must be exactly 1 byte (reason)");
 static_assert(sizeof(GetUsersRequestPayload) == 1,
               "GetUsersRequestPayload is an empty struct (size 1 in C++), "
               "serialization returns 0 bytes");
@@ -299,7 +300,6 @@ static_assert(std::is_standard_layout_v<UpdatePosPayload>);
 [[nodiscard]] constexpr std::size_t getPayloadSize(OpCode opcode) noexcept {
     switch (opcode) {
         case OpCode::C_CONNECT:
-        case OpCode::DISCONNECT:
         case OpCode::C_GET_USERS:
         case OpCode::PING:
         case OpCode::PONG:
@@ -329,6 +329,8 @@ static_assert(std::is_standard_layout_v<UpdatePosPayload>);
             return sizeof(InputPayload);
         case OpCode::S_UPDATE_POS:
             return sizeof(UpdatePosPayload);
+        case OpCode::DISCONNECT:
+            return sizeof(DisconnectPayload);
     }
     return 0;
 }

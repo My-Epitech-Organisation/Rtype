@@ -8,6 +8,7 @@
 #include "RtypeEntityFactory.hpp"
 
 #include <memory>
+#include <random>
 #include <utility>
 
 #include "../Components/RectangleComponent.hpp"
@@ -19,6 +20,7 @@
 #include "../shared/Config/GameConfig/RTypeGameConfig.hpp"
 #include "AllComponents.hpp"
 #include "AudioLib/AudioLib.hpp"
+#include "Components/AnnimationComponent.hpp"
 #include "Components/LifetimeComponent.hpp"
 #include "Components/SoundComponent.hpp"
 #include "Components/Tags.hpp"
@@ -68,7 +70,7 @@ RtypeEntityFactory::createNetworkEntityFactory(
 
         auto entity = reg.spawnEntity();
 
-        reg.emplaceComponent<::rtype::games::rtype::shared::Position>(
+        reg.emplaceComponent<::rtype::games::rtype::shared::TransformComponent>(
             entity, event.x, event.y);
         reg.emplaceComponent<::rtype::games::rtype::shared::VelocityComponent>(
             entity, 0.f, 0.f);
@@ -93,7 +95,7 @@ RtypeEntityFactory::createNetworkEntityFactory(
                 break;
 
             case ::rtype::network::EntityType::Obstacle:
-                setupObstacleEntity(reg, entity, event.entityId);
+                setupObstacleEntity(reg, assetsManager, entity, event.entityId);
                 break;
         }
 
@@ -197,12 +199,13 @@ void RtypeEntityFactory::setupMissileEntity(
         entity, assetsManager->textureManager->get("projectile_player_laser"));
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 34}));
-    reg.emplaceComponent<Size>(entity, 1, 1);
+    reg.emplaceComponent<Size>(entity, 1.75, 1.75);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, 33.0f, 34.0f);
     reg.emplaceComponent<shared::ProjectileTag>(entity);
     reg.emplaceComponent<BoxingComponent>(entity,
                                           sf::FloatRect({0, 0}, {33.f, 34.f}));
+    reg.emplaceComponent<Animation>(entity, 4, 0.5, true);
     reg.getComponent<BoxingComponent>(entity).outlineColor =
         sf::Color(0, 220, 180);
     reg.getComponent<BoxingComponent>(entity).fillColor =
@@ -214,8 +217,8 @@ void RtypeEntityFactory::setupMissileEntity(
     auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
     lib->playSFX(*assetsManager->soundManager->get("laser_sfx"));
 
-    if (reg.hasComponent<shared::Position>(entity)) {
-        const auto& pos = reg.getComponent<shared::Position>(entity);
+    if (reg.hasComponent<shared::TransformComponent>(entity)) {
+        const auto& pos = reg.getComponent<shared::TransformComponent>(entity);
         VisualCueFactory::createFlash(reg, {pos.x, pos.y},
                                       sf::Color(0, 255, 220), 52.f, 0.25f, 10);
     }
@@ -245,27 +248,23 @@ void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
         entity, 24.0f, 24.0f);
 }
 
-void RtypeEntityFactory::setupObstacleEntity(ECS::Registry& reg,
-                                             ECS::Entity entity,
-                                             std::uint32_t /*networkId*/) {
+void RtypeEntityFactory::setupObstacleEntity(
+    ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
+    ECS::Entity entity, std::uint32_t /*networkId*/) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Obstacle components");
-    const sf::Color main = sf::Color(110, 110, 120);
-    const sf::Color outline = sf::Color(200, 200, 210);
 
-    reg.emplaceComponent<Rectangle>(entity, std::pair<float, float>{64.f, 64.f},
-                                    main, main);
-    reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
-    reg.getComponent<Rectangle>(entity).outlineColor = outline;
-    reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {64.f, 64.f}));
-    reg.getComponent<BoxingComponent>(entity).outlineColor = outline;
-    reg.getComponent<BoxingComponent>(entity).fillColor =
-        sf::Color(outline.r, outline.g, outline.b, 35);
+    std::random_device rd;   // Seed
+    std::mt19937 gen(rd());  // Mersenne Twister engine
+    std::uniform_int_distribution<> dist(1, GraphicsConfig::NBR_MAX_OBSTACLES);
+
+    int value = dist(gen);
+    std::string textureName = "projectile" + std::to_string(value);
+
+    auto& projectileTexture = assetsManager->textureManager->get(textureName);
+    reg.emplaceComponent<Image>(entity, projectileTexture);
+    reg.emplaceComponent<Size>(entity, 0.5, 0.5);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
-
-    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, 64.0f, 64.0f);
 }
 
 }  // namespace rtype::games::rtype::client

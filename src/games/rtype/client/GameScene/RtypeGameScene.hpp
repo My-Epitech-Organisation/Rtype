@@ -117,6 +117,7 @@ class RtypeGameScene : public AGameScene {
     std::optional<ECS::Entity> _healthBarBgEntity;
     std::optional<ECS::Entity> _healthBarFillEntity;
     std::optional<ECS::Entity> _healthTextEntity;
+    std::optional<ECS::Entity> _pingTextEntity;
     std::optional<std::uint32_t> _localPlayerId;
     std::optional<ECS::Entity> _localPlayerEntity;
     int _lastKnownLives{0};
@@ -143,9 +144,21 @@ class RtypeGameScene : public AGameScene {
     void setHealthBarVisible(bool visible);
     void updateDamageVignette(float deltaTime);
     void updateHealthBar(int current, int max);
+    void updatePingDisplay();
     void triggerDamageFlash(int damageAmount);
     void resetHudColors();
     void spawnDamagePopup(int damage);
+
+    void setupDisconnectCallback();
+    void showDisconnectModal(network::DisconnectReason reason);
+    void cleanupDisconnectModal();
+    std::string getDisconnectMessage(network::DisconnectReason reason) const;
+    std::optional<ECS::Entity> _disconnectOverlayEntity;
+    std::optional<ECS::Entity> _disconnectPanelEntity;
+    std::optional<ECS::Entity> _disconnectTitleEntity;
+    std::optional<ECS::Entity> _disconnectMessageEntity;
+    std::optional<ECS::Entity> _disconnectButtonEntity;
+    bool _isDisconnected{false};
 };
 }  // namespace rtype::games::rtype::client
 

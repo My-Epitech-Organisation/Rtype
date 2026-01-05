@@ -24,7 +24,7 @@ namespace rtype::games::rtype::client {
  * Stores both the SFML text object and the raw string content.
  */
 struct Text {
-    sf::Font font;
+    std::shared_ptr<sf::Font> font;
     sf::Text text;
     std::string textContent;
     sf::Color color;
@@ -37,17 +37,26 @@ struct Text {
      * @param size Font size in pixels (default: 30)
      * @param textContent Initial text string (default: empty)
      */
-    Text(const sf::Font& font, const sf::Color& color, unsigned int size = 30,
-         std::string_view textContent = "")
-        : font(font),
-          text(font),
-          textContent(textContent),
-          color(color),
-          size(size) {
+    Text(std::shared_ptr<sf::Font> f, const sf::Color& col,
+         unsigned int sz = 30, std::string_view content = "")
+        : font(f), text(*f), textContent(content), color(col), size(sz) {
         text.setString(std::string(textContent));
+        text.setCharacterSize(size);
+        text.setFillColor(color);
     }
 
-    Text(const Text& other) = default;
+    Text(const Text& other)
+        : font(other.font),
+          text(*font),
+          textContent(other.textContent),
+          color(other.color),
+          size(other.size) {
+        text.setString(textContent);
+        text.setCharacterSize(size);
+        text.setFillColor(color);
+        text.setOrigin(other.text.getOrigin());
+    }
+
     Text(Text&& other) noexcept = default;
     Text& operator=(const Text& other) = default;
     Text& operator=(Text&& other) noexcept = default;
