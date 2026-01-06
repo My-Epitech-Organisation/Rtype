@@ -27,7 +27,8 @@ void ButtonUpdateSystem::update(ECS::Registry& registry, float /*dt*/) {
     std::vector<std::function<void()>> callbacksToRun;
 
     registry.view<Button<>, UserEvent>().each(
-        [&callbacksToRun](ECS::Entity /*entity*/, auto& buttonAct, auto& actionType) {
+        [&callbacksToRun](ECS::Entity /*entity*/, auto& buttonAct,
+                          auto& actionType) {
             if (!actionType.idle && actionType.isReleased &&
 
                 actionType.isHovered && !actionType.isDisabled) {

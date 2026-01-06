@@ -157,9 +157,11 @@ void RtypeEntityFactory::setupPlayerEntity(
     const int left = neutralColumn * width;
     const int top = spriteOffset.second;
 
-    LOG_DEBUG_CAT(::rtype::LogCategory::ECS, "[RtypeEntityFactory] Getting player_vessel texture");
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Getting player_vessel texture");
     reg.emplaceComponent<Image>(entity, "player_vessel");
-    LOG_DEBUG_CAT(::rtype::LogCategory::ECS, "[RtypeEntityFactory] Image component added");
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Image component added");
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({left, top}),
                                       std::pair<int, int>({width, height}));
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,

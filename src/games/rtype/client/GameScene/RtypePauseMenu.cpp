@@ -29,8 +29,8 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
     auto sectionY = (Graphic::WINDOW_HEIGHT - kSizeYPauseMenu) / 2.0f;
 
     pauseEntities = EntityFactory::createSection(
-        registry, assetsManager, "", {sectionX, sectionY,
-        static_cast<float>(kSizeXPauseMenu),
+        registry, assetsManager, "",
+        {sectionX, sectionY, static_cast<float>(kSizeXPauseMenu),
          static_cast<float>(kSizeYPauseMenu)});
 
     auto titleEntity = EntityFactory::createStaticText(

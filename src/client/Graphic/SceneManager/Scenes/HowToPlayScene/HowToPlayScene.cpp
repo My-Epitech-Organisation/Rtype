@@ -64,7 +64,8 @@ std::string HowToPlayScene::_keyName(GameAction action) const {
 void HowToPlayScene::_initLayout() {
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "How to Play",
-        rtype::display::Rect<float>(kSectionX, kSectionY, kSectionW, kSectionH));
+        rtype::display::Rect<float>(kSectionX, kSectionY, kSectionW,
+                                    kSectionH));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 

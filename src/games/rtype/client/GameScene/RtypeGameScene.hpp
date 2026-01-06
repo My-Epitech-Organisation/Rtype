@@ -15,10 +15,10 @@
 #include <utility>
 #include <vector>
 
+#include "../lib/display/Clock/Clock.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Graphic/SceneManager/Scenes/GameScene/AGameScene.hpp"
 #include "rtype/display/DisplayTypes.hpp"
-#include "../lib/display/Clock/Clock.hpp"
 
 namespace rtype::games::rtype::client {
 

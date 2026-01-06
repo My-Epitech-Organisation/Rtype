@@ -196,7 +196,9 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
 
     auto playerSection = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "",
-        ::rtype::display::Rect<float>(sectionX, kBoxTopY, kBoxWidth, kBoxHeight), 1);
+        ::rtype::display::Rect<float>(sectionX, kBoxTopY, kBoxWidth,
+                                      kBoxHeight),
+        1);
     this->_listUser.insert({userId, playerSection});
     this->_listEntity.insert(this->_listEntity.end(), playerSection.begin(),
                              playerSection.end());
@@ -241,11 +243,11 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
     auto backBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            ::rtype::display::Color::White(), 36, "Disconnect"),
+            "main_font", ::rtype::display::Color::White(), 36, "Disconnect"),
         rtype::games::rtype::shared::TransformComponent(100, 900),
-        rtype::games::rtype::client::Rectangle({400, 75}, ::rtype::display::Color(200, 0, 0),
-                                               ::rtype::display::Color::Red()),
+        rtype::games::rtype::client::Rectangle(
+            {400, 75}, ::rtype::display::Color(200, 0, 0),
+            ::rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([this]() {
             try {
                 LOG_INFO(
@@ -305,8 +307,9 @@ void Lobby::_initInfoMenu() {
                              section.end());
     auto title = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Game Info", "main_font",
-        ::rtype::display::Vector2<float>(static_cast<float>(kBaseX + kBaseW / 2 - 100),
-                     static_cast<float>(kBaseY + 20)),
+        ::rtype::display::Vector2<float>(
+            static_cast<float>(kBaseX + kBaseW / 2 - 100),
+            static_cast<float>(kBaseY + 20)),
         48);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         title, 1);
@@ -315,14 +318,13 @@ void Lobby::_initInfoMenu() {
     _readyButtonEntity = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            ::rtype::display::Color::White(), 32, "Ready"),
+            "main_font", ::rtype::display::Color::White(), 32, "Ready"),
         rtype::games::rtype::shared::TransformComponent(
             static_cast<float>(kBaseX + kBaseW - 280),
             static_cast<float>(kBaseY + kBaseH - 70)),
-        rtype::games::rtype::client::Rectangle(std::pair<int, int>(250, 50),
-                                               ::rtype::display::Color(70, 130, 180),
-                                               ::rtype::display::Color(0, 150, 0)),
+        rtype::games::rtype::client::Rectangle(
+            std::pair<int, int>(250, 50), ::rtype::display::Color(70, 130, 180),
+            ::rtype::display::Color(0, 150, 0)),
         this->_assetsManager, std::function<void()>([this]() {
             _isReady = !_isReady;
 
@@ -339,8 +341,9 @@ void Lobby::_initInfoMenu() {
                     _registry
                         ->getComponent<rtype::games::rtype::client::Rectangle>(
                             _readyButtonEntity);
-                rect.mainColor =
-                    _isReady ? ::rtype::display::Color(0, 150, 0) : ::rtype::display::Color(70, 130, 180);
+                rect.mainColor = _isReady
+                                     ? ::rtype::display::Color(0, 150, 0)
+                                     : ::rtype::display::Color(70, 130, 180);
                 rect.currentColor = rect.mainColor;
             }
 
@@ -379,8 +382,9 @@ void Lobby::_initInfoMenu() {
 
     _countdownTextEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "main_font",
-        ::rtype::display::Vector2<float>(static_cast<float>(kBaseX + kBaseW / 2 - 150),
-                     static_cast<float>(kBaseY + kBaseH / 2)),
+        ::rtype::display::Vector2<float>(
+            static_cast<float>(kBaseX + kBaseW / 2 - 150),
+            static_cast<float>(kBaseY + kBaseH / 2)),
         64);
     if (_registry->hasComponent<rtype::games::rtype::client::Text>(
             _countdownTextEntity)) {

@@ -82,8 +82,9 @@ void MainMenuScene::_createConnectionPanel(
     std::function<void(const SceneManager::Scene&)> switchToScene) {
     auto panelEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "",
-        rtype::display::Rect<float>(kConnectionPanelX, kConnectionPanelY, kConnectionPanelWidth,
-                                       kConnectionPanelHeight));
+        rtype::display::Rect<float>(kConnectionPanelX, kConnectionPanelY,
+                                    kConnectionPanelWidth,
+                                    kConnectionPanelHeight));
 
     for (auto& s : panelEntities) {
         if (this->_registry
@@ -167,12 +168,12 @@ void MainMenuScene::_createConnectionPanel(
     auto closeBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 26, "Close"),
+            "main_font", rtype::display::Color::White(), 26, "Close"),
         rtype::games::rtype::shared::TransformComponent(
             kConnectionPanelX + 235.f, kConnectionPanelY + 275.f),
-        rtype::games::rtype::client::Rectangle({200, 60}, rtype::display::Color(150, 0, 0),
-                                               rtype::display::Color(200, 0, 0)),
+        rtype::games::rtype::client::Rectangle(
+            {200, 60}, rtype::display::Color(150, 0, 0),
+            rtype::display::Color(200, 0, 0)),
         this->_assetsManager, std::function<void()>([this]() {
             this->_connectPopUpVisible = false;
         }));
@@ -212,7 +213,8 @@ void MainMenuScene::_createConnectionPanel(
             ->emplaceComponent<rtype::games::rtype::client::ConnectMenuTag>(s);
     }
     auto popUpBg = EntityFactory::createRectangle(
-        this->_registry, rtype::display::Vector2<int>(1920, 1080), rtype::display::Color(0, 0, 0, 150));
+        this->_registry, rtype::display::Vector2<int>(1920, 1080),
+        rtype::display::Color(0, 0, 0, 150));
 
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         popUpBg, 10);
@@ -232,7 +234,7 @@ void MainMenuScene::_onConnectClicked(
     std::cout << "Connect button clicked\n";
     if (!this->_networkClient) {
         this->_updateStatus("Error: Network not available",
-                      rtype::display::Color::Red());
+                            rtype::display::Color::Red());
         return;
     }
     std::string ip = kIp;
@@ -260,7 +262,7 @@ void MainMenuScene::_onConnectClicked(
                 port = static_cast<std::uint16_t>(std::stoi(portInput.content));
             } catch (...) {
                 this->_updateStatus("Invalid port number",
-                              rtype::display::Color::Red());
+                                    rtype::display::Color::Red());
                 return;
             }
         }

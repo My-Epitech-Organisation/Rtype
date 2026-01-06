@@ -27,91 +27,90 @@
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace EntityFactory {
-    template<typename... Args>
-    static ECS::Entity createButton(
-        std::shared_ptr<ECS::Registry> registry,
-        const rtype::games::rtype::client::Text &text,
-        const rtype::games::rtype::shared::TransformComponent &position,
-        const rtype::games::rtype::client::Rectangle &rectangle,
-        std::shared_ptr<AssetManager> assetsManager,
-        std::function<void(Args...)> onClick) {
-        auto entity = registry->spawnEntity();
-        registry->emplaceComponent<rtype::games::rtype::client::Text>(entity, text);
-        registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
-            entity, position);
-        registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
-            entity, rectangle);
-        registry->emplaceComponent<rtype::games::rtype::client::Button<Args...> >(
-            entity, onClick);
-        registry->emplaceComponent<rtype::games::rtype::client::UserEvent>(entity);
-        registry->emplaceComponent<rtype::games::rtype::client::ButtonTag>(entity);
-        registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entity, 1);
-        if (assetsManager) {
-            registry->emplaceComponent<
-                rtype::games::rtype::client::ButtonSoundComponent>(
-                entity, assetsManager->soundManager->get("hover_button"),
-                assetsManager->soundManager->get("click_button"));
-        }
-        return entity;
+template <typename... Args>
+static ECS::Entity createButton(
+    std::shared_ptr<ECS::Registry> registry,
+    const rtype::games::rtype::client::Text& text,
+    const rtype::games::rtype::shared::TransformComponent& position,
+    const rtype::games::rtype::client::Rectangle& rectangle,
+    std::shared_ptr<AssetManager> assetsManager,
+    std::function<void(Args...)> onClick) {
+    auto entity = registry->spawnEntity();
+    registry->emplaceComponent<rtype::games::rtype::client::Text>(entity, text);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        entity, position);
+    registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
+        entity, rectangle);
+    registry->emplaceComponent<rtype::games::rtype::client::Button<Args...> >(
+        entity, onClick);
+    registry->emplaceComponent<rtype::games::rtype::client::UserEvent>(entity);
+    registry->emplaceComponent<rtype::games::rtype::client::ButtonTag>(entity);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entity, 1);
+    if (assetsManager) {
+        registry->emplaceComponent<
+            rtype::games::rtype::client::ButtonSoundComponent>(
+            entity, assetsManager->soundManager->get("hover_button"),
+            assetsManager->soundManager->get("click_button"));
     }
+    return entity;
+}
 
-    /**
-     * @brief Create a text input field entity
-     * @param registry ECS registry
-     * @param assetManager Asset manager for fonts
-     * @param position Position of the input field
-     * @param size Size of the input field
-     * @param placeholder Placeholder text
-     * @param initialValue Initial text value
-     * @param maxLength Maximum number of characters (0 = unlimited)
-     * @param isNumericOnly Only allow numeric input
-     * @return Created entity
-     */
-    ECS::Entity createTextInput(std::shared_ptr<ECS::Registry> registry,
-                                std::shared_ptr<AssetManager> assetManager,
-                                const ::rtype::display::Vector2f &position,
-                                const ::rtype::display::Vector2f &size,
-                                std::string_view placeholder = "",
-                                std::string_view initialValue = "",
-                                std::size_t maxLength = 0,
-                                bool isNumericOnly = false);
+/**
+ * @brief Create a text input field entity
+ * @param registry ECS registry
+ * @param assetManager Asset manager for fonts
+ * @param position Position of the input field
+ * @param size Size of the input field
+ * @param placeholder Placeholder text
+ * @param initialValue Initial text value
+ * @param maxLength Maximum number of characters (0 = unlimited)
+ * @param isNumericOnly Only allow numeric input
+ * @return Created entity
+ */
+ECS::Entity createTextInput(std::shared_ptr<ECS::Registry> registry,
+                            std::shared_ptr<AssetManager> assetManager,
+                            const ::rtype::display::Vector2f& position,
+                            const ::rtype::display::Vector2f& size,
+                            std::string_view placeholder = "",
+                            std::string_view initialValue = "",
+                            std::size_t maxLength = 0,
+                            bool isNumericOnly = false);
 
-    std::vector<ECS::Entity> createBackground(
-        std::shared_ptr<ECS::Registry> registry,
-        std::shared_ptr<AssetManager> assetManager, std::string_view PageName);
+std::vector<ECS::Entity> createBackground(
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assetManager, std::string_view PageName);
 
-    ECS::Entity createLobbyPlayer(std::shared_ptr<ECS::Registry> registry,
-                                  std::shared_ptr<AssetManager> assetManager,
-                                  ::rtype::display::Vector2<float> positon,
-                                  ::rtype::display::Vector2<int> scale = {1, 1},
-                                  bool isControllable = false);
+ECS::Entity createLobbyPlayer(std::shared_ptr<ECS::Registry> registry,
+                              std::shared_ptr<AssetManager> assetManager,
+                              ::rtype::display::Vector2<float> positon,
+                              ::rtype::display::Vector2<int> scale = {1, 1},
+                              bool isControllable = false);
 
-    /**
-     * @brief Create a rectangle entity
-     * @param registry ECS registry
-     * @param size a Vector2i defining the size of the rectangle
-     * @param fill Fill color of the rectangle
-     * @param position Position of the rectangle
-     * @return Created entity
-     **/
+/**
+ * @brief Create a rectangle entity
+ * @param registry ECS registry
+ * @param size a Vector2i defining the size of the rectangle
+ * @param fill Fill color of the rectangle
+ * @param position Position of the rectangle
+ * @return Created entity
+ **/
 
-    ECS::Entity createRectangle(
-        std::shared_ptr<ECS::Registry> registry,
-        ::rtype::display::Vector2i size = {1, 1},
-        ::rtype::display::Color fill = ::rtype::display::Color::White(),
-        ::rtype::display::Vector2f position = {0, 0});
+ECS::Entity createRectangle(
+    std::shared_ptr<ECS::Registry> registry,
+    ::rtype::display::Vector2i size = {1, 1},
+    ::rtype::display::Color fill = ::rtype::display::Color::White(),
+    ::rtype::display::Vector2f position = {0, 0});
 
-    std::vector<ECS::Entity> createSection(
-        std::shared_ptr<ECS::Registry> registry,
-        std::shared_ptr<AssetManager> assets, std::string_view title,
-        const ::rtype::display::Rect<float> &bounds,
-        int ZindexRect = 0);
+std::vector<ECS::Entity> createSection(
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assets, std::string_view title,
+    const ::rtype::display::Rect<float>& bounds, int ZindexRect = 0);
 
-    ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
-                                 std::shared_ptr<AssetManager> assets,
-                                 std::string_view title, std::string_view fontId,
-                                 const ::rtype::display::Vector2f &position,
-                                 float size);
-}; // namespace EntityFactory
+ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
+                             std::shared_ptr<AssetManager> assets,
+                             std::string_view title, std::string_view fontId,
+                             const ::rtype::display::Vector2f& position,
+                             float size);
+};  // namespace EntityFactory
 
 #endif  // SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_

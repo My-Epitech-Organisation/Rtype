@@ -107,7 +107,7 @@ void RenderSystem::_renderHudRectangles(ECS::Registry& registry,
 }
 
 void RenderSystem::_renderTextInputs(ECS::Registry& registry,
-                                    ECS::Entity entity) {
+                                     ECS::Entity entity) {
     if (!registry.hasComponent<TextInput>(entity) ||
         !registry.hasComponent<rs::TransformComponent>(entity) ||
         registry.hasComponent<rs::DestroyTag>(entity))

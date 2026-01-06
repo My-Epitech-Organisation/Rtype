@@ -192,11 +192,12 @@ ECS::Entity EntityFactory::createRectangle(
 
 ECS::Entity EntityFactory::createLobbyPlayer(
     std::shared_ptr<ECS::Registry> registry,
-    std::shared_ptr<AssetManager> assetManager, ::rtype::display::Vector2<float> position,
+    std::shared_ptr<AssetManager> assetManager,
+    ::rtype::display::Vector2<float> position,
     ::rtype::display::Vector2<int> scale, bool isControllable) {
     auto entt = registry->spawnEntity();
-    registry->emplaceComponent<rtype::games::rtype::client::Image>(entt,
-                                                                   "player_vessel");
+    registry->emplaceComponent<rtype::games::rtype::client::Image>(
+        entt, "player_vessel");
     registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         entt, position.x, position.y);
     registry->emplaceComponent<rtype::games::rtype::client::Size>(

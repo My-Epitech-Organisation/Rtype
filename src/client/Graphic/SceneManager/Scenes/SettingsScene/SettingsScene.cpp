@@ -485,7 +485,7 @@ void SettingsScene::_initAccessibilitySection() {
         this->_assetsManager,
         std::function<void()>([this]() { _adjustColorIntensity(-0.1f); }));
 
-this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         btnMinus, 1);
     this->_listEntity.push_back(btnMinus);
 
