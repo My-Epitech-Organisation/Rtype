@@ -75,7 +75,7 @@ void ServerNetworkSystem::registerNetworkedEntity(ECS::Entity entity,
     }
 
     if (server_) {
-        server_->spawnEntity(networkId, type, x, y);
+        server_->spawnEntity(networkId, type, subType, x, y);
     }
 }
 
@@ -223,7 +223,7 @@ void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
 
     networkedEntities_[networkId] = info;
     if (server_) {
-        server_->spawnEntity(networkId, type, x, y);
+        server_->spawnEntity(networkId, type, subType, x, y);
 
         if (registry_ && !info.entity.isNull() &&
             registry_->isAlive(info.entity) &&
@@ -352,7 +352,7 @@ void ServerNetworkSystem::handleClientConnected(std::uint32_t userId) {
         }
 
         if (server_) {
-            server_->spawnEntityToClient(userId, networkId, info.type, subType
+            server_->spawnEntityToClient(userId, networkId, info.type, subType,
                                          info.lastX, info.lastY);
 
             if (registry_->isAlive(info.entity) &&
