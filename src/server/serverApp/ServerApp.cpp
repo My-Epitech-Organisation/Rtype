@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <memory>
 #include <span>
+#include <string>
 
 #include "games/rtype/shared/Components/EntityType.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
@@ -91,6 +92,8 @@ void ServerApp::onFrame() {
 
 void ServerApp::onUpdate(float deltaTime) {
     _clientManager.checkClientTimeouts(_clientTimeoutSeconds);
+
+    _stateManager->update(deltaTime);
 
     if (!_stateManager->isPlaying()) {
         return;
@@ -225,6 +228,39 @@ bool ServerApp::initialize() {
     _networkSystem->onClientDisconnected(
         [this](std::uint32_t userId) { handleClientDisconnected(userId); });
 
+    _networkServer->onClientReady([this](std::uint32_t userId, bool isReady) {
+        if (isReady) {
+            _stateManager->playerReady(userId);
+        } else {
+            _stateManager->playerNotReady(userId);
+        }
+    });
+
+    _stateManager->setOnPlayerReadyStateChanged(
+        [this](std::uint32_t userId, bool isReady) {
+            LOG_INFO("[ServerApp] Broadcasting player "
+                     << userId
+                     << " ready state: " << (isReady ? "READY" : "NOT READY"));
+            _networkServer->broadcastPlayerReadyState(userId, isReady);
+        });
+
+    _stateManager->setOnCountdownStarted([this](float duration) {
+        LOG_INFO("[ServerApp] Countdown started - broadcasting game start with "
+                 << duration << "s");
+        _networkServer->broadcastGameStart(duration);
+        if (_onGameStartBroadcastCallback) {
+            _onGameStartBroadcastCallback(duration);
+        }
+    });
+
+    _stateManager->setOnCountdownCancelled([this]() {
+        LOG_INFO("[ServerApp] Countdown cancelled - broadcasting cancel");
+        _networkServer->broadcastGameStart(0.0f);
+        if (_onGameStartBroadcastCallback) {
+            _onGameStartBroadcastCallback(0.0f);
+        }
+    });
+
     std::string gameId = _gameConfig && _gameConfig->isInitialized()
                              ? _gameConfig->getGameId()
                              : "rtype";
@@ -336,6 +372,10 @@ void ServerApp::handleClientConnected(std::uint32_t userId) {
                  "[Server] Client connected: userId=" << userId);
     _metrics->totalConnections.fetch_add(1, std::memory_order_relaxed);
 
+    size_t connectedCount = _stateManager->getConnectedPlayerCount() + 1;
+    _stateManager->setConnectedPlayerCount(connectedCount);
+    LOG_DEBUG("[Server] Connected players: " << connectedCount);
+
     if (_stateManager->isWaiting()) {
         LOG_INFO_CAT(
             ::rtype::LogCategory::GameEngine,
@@ -357,6 +397,14 @@ void ServerApp::handleClientDisconnected(std::uint32_t userId) {
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                  "[Server] Client disconnected: userId=" << userId);
     _stateManager->playerLeft(userId);
+
+    size_t connectedCount = _stateManager->getConnectedPlayerCount();
+    if (connectedCount > 0) {
+        connectedCount--;
+    }
+    _stateManager->setConnectedPlayerCount(connectedCount);
+    LOG_DEBUG(
+        "[Server] Connected players after disconnect: " << connectedCount);
 
     if (_entitySpawner) {
         _entitySpawner->destroyPlayerByUserId(userId);

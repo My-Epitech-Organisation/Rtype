@@ -147,7 +147,7 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
 std::vector<ECS::Entity> EntityFactory::createSection(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assets, std::string_view title,
-    const sf::FloatRect& bounds) {
+    const sf::FloatRect& bounds, int ZindexRect) {
     std::vector<ECS::Entity> entities;
     auto bg = registry->spawnEntity();
     registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
@@ -177,6 +177,8 @@ std::vector<ECS::Entity> EntityFactory::createSection(
         cfg::SECTION_TITLE_FONT_SIZE, title);
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         titleEnt);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        titleEnt, ZindexRect + 1);
     entities.push_back(titleEnt);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(titleEnt,
                                                                     1);
@@ -195,6 +197,27 @@ ECS::Entity EntityFactory::createRectangle(
         fill, fill);
     registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         entt, position.x, position.y);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entt, 1);
+    return entt;
+}
+
+ECS::Entity EntityFactory::createLobbyPlayer(
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assetManager, sf::Vector2f position,
+    sf::Vector2i scale, bool isControllable) {
+    auto entt = registry->spawnEntity();
+    auto& texture = assetManager->textureManager->get("player_vessel");
+    registry->emplaceComponent<rtype::games::rtype::client::Image>(entt,
+                                                                   texture);
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        entt, position.x, position.y);
+    registry->emplaceComponent<rtype::games::rtype::client::Size>(
+        entt, static_cast<float>(scale.x), static_cast<float>(scale.y));
+    if (isControllable) {
+        registry
+            ->emplaceComponent<rtype::games::rtype::client::ControllableTag>(
+                entt);
+    }
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entt, 1);
     return entt;
 }

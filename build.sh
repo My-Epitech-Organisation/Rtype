@@ -100,33 +100,67 @@ verify_vcpkg_ready() {
 }
 
 if [ "$FORCE_CPM" = false ]; then
-    if [ -n "$VCPKG_ROOT" ] && verify_vcpkg_ready "$VCPKG_ROOT"; then
-        echo "  ✓ Using personal vcpkg from VCPKG_ROOT: $VCPKG_ROOT"
-        VCPKG_AVAILABLE=true
-    elif verify_vcpkg_ready "$VCPKG_DIR"; then
-        echo "  ✓ vcpkg found and bootstrapped in project: $VCPKG_DIR"
-        VCPKG_AVAILABLE=true
-    elif [ -d "$VCPKG_DIR" ] && [ ! -f "$VCPKG_DIR/vcpkg" ]; then
-        echo "  ⚠ vcpkg directory exists but not bootstrapped."
-        echo "    Bootstrap vcpkg by running:"
-        echo "      cd $VCPKG_DIR && ./bootstrap-vcpkg.sh"
-        echo "    Then install dependencies:"
-        echo "      $VCPKG_DIR/vcpkg install"
-        echo "    Or use -c flag to skip vcpkg and use CPM instead."
-        echo "  → Falling back to CPM..."
-        VCPKG_AVAILABLE=false
-    elif [ -f "$VCPKG_DIR/vcpkg" ] && ! verify_vcpkg_ready "$VCPKG_DIR"; then
-        echo "  ⚠ vcpkg executable found but failed to run (not properly bootstrapped)."
-        echo "    Bootstrap vcpkg by running:"
-        echo "      cd $VCPKG_DIR && ./bootstrap-vcpkg.sh"
-        echo "    Then install dependencies:"
-        echo "      $VCPKG_DIR/vcpkg install"
-        echo "    Or use -c flag to skip vcpkg and use CPM instead."
-        echo "  → Falling back to CPM..."
-        VCPKG_AVAILABLE=false
-    else
-        echo "  ⚠ vcpkg not found. Will use CPM as fallback."
-        VCPKG_AVAILABLE=false
+    # Check if vcpkg submodule is initialized
+    if [ ! -d "$VCPKG_DIR" ] || [ ! -f "$VCPKG_DIR/.git" ]; then
+        echo "  ⚠ vcpkg submodule not initialized."
+        echo "    Initializing vcpkg submodule..."
+        if git submodule update --init --recursive external/vcpkg; then
+            echo "    ✓ vcpkg submodule initialized"
+        else
+            echo "  ⚠ Failed to initialize vcpkg submodule"
+            echo "  → Falling back to CPM..."
+            VCPKG_AVAILABLE=false
+            FORCE_CPM=true
+        fi
+    fi
+    
+    if [ "$FORCE_CPM" = false ]; then
+        if [ -n "$VCPKG_ROOT" ] && verify_vcpkg_ready "$VCPKG_ROOT"; then
+            echo "  ✓ Using personal vcpkg from VCPKG_ROOT: $VCPKG_ROOT"
+            VCPKG_AVAILABLE=true
+        elif verify_vcpkg_ready "$VCPKG_DIR"; then
+            echo "  ✓ vcpkg found and bootstrapped in project: $VCPKG_DIR"
+            VCPKG_AVAILABLE=true
+        elif [ -d "$VCPKG_DIR" ] && [ ! -f "$VCPKG_DIR/vcpkg" ]; then
+            echo "  ⚠ vcpkg directory exists but not bootstrapped."
+            echo "    Attempting to bootstrap vcpkg..."
+            if cd "$VCPKG_DIR" && ./bootstrap-vcpkg.sh; then
+                echo "    ✓ vcpkg bootstrapped successfully"
+                if verify_vcpkg_ready "$VCPKG_DIR"; then
+                    echo "  ✓ vcpkg ready for use"
+                    VCPKG_AVAILABLE=true
+                else
+                    echo "  ⚠ vcpkg bootstrap failed verification"
+                    echo "  → Falling back to CPM..."
+                    VCPKG_AVAILABLE=false
+                fi
+            else
+                echo "  ⚠ vcpkg bootstrap failed"
+                echo "  → Falling back to CPM..."
+                VCPKG_AVAILABLE=false
+            fi
+        elif [ -f "$VCPKG_DIR/vcpkg" ] && ! verify_vcpkg_ready "$VCPKG_DIR"; then
+            echo "  ⚠ vcpkg executable found but failed to run (not properly bootstrapped)."
+            echo "    Attempting to re-bootstrap vcpkg..."
+            if cd "$VCPKG_DIR" && ./bootstrap-vcpkg.sh; then
+                echo "    ✓ vcpkg re-bootstrapped successfully"
+                if verify_vcpkg_ready "$VCPKG_DIR"; then
+                    echo "  ✓ vcpkg ready for use"
+                    VCPKG_AVAILABLE=true
+                else
+                    echo "  ⚠ vcpkg re-bootstrap failed verification"
+                    echo "  → Falling back to CPM..."
+                    VCPKG_AVAILABLE=false
+                fi
+            else
+                echo "  ⚠ vcpkg re-bootstrap failed"
+                echo "  → Falling back to CPM..."
+                VCPKG_AVAILABLE=false
+            fi
+        else
+            echo "  ⚠ vcpkg not found. Will use CPM as fallback."
+            VCPKG_AVAILABLE=false
+        fi
     fi
 else
     echo "  → CPM forced via -c flag (skipping vcpkg check)"

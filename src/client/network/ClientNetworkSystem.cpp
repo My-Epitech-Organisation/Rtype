@@ -36,6 +36,10 @@ ClientNetworkSystem::ClientNetworkSystem(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<NetworkClient> client)
     : registry_(std::move(registry)), client_(std::move(client)) {
+    registerCallbacks();
+}
+
+void ClientNetworkSystem::registerCallbacks() {
     client_->onConnected(
         [this](std::uint32_t userId) { handleConnected(userId); });
 
