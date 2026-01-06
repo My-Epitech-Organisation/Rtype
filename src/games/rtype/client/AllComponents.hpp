@@ -60,6 +60,7 @@ using ButtonTag = ::rtype::games::rtype::client::ButtonTag;
 using StaticTextTag = ::rtype::games::rtype::client::StaticTextTag;
 using PauseMenuTag = ::rtype::games::rtype::client::PauseMenuTag;
 using HudTag = ::rtype::games::rtype::client::HudTag;
+using LobbyTag = ::rtype::games::rtype::client::LobbyTag;
 using TextInputTag = ::rtype::games::rtype::client::TextInputTag;
 
 // Text input component
