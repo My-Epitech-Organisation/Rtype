@@ -332,11 +332,7 @@ bool NetworkClient::requestLobbyList(const std::string& discoveryIp,
     network::Endpoint discoveryEndpoint{discoveryIp, discoveryPort};
 
     network::Header header =
-        network::Header::create(network::OpCode::C_REQUEST_LOBBIES,
-                                0,
-                                0,
-                                0
-        );
+        network::Header::create(network::OpCode::C_REQUEST_LOBBIES, 0, 0, 0);
 
     network::Buffer packet(network::kHeaderSize);
     std::memcpy(packet.data(), &header, network::kHeaderSize);
@@ -987,8 +983,7 @@ void NetworkClient::handleLobbyList(const network::Header& header,
         LOG_DEBUG("[NetworkClient] Received empty lobby list");
         queueCallback([this]() {
             if (onLobbyListReceivedCallback_) {
-                onLobbyListReceivedCallback_(
-                    LobbyListEvent{{}});
+                onLobbyListReceivedCallback_(LobbyListEvent{{}});
             }
         });
         return;
