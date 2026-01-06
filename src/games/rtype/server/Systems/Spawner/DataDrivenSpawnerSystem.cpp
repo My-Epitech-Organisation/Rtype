@@ -37,7 +37,6 @@ using shared::TransformComponent;
 using shared::VelocityComponent;
 constexpr int32_t KBOSS_HEALTH_THRESHOLD = 500;
 
-
 DataDrivenSpawnerSystem::DataDrivenSpawnerSystem(EventEmitter emitter,
                                                  DataDrivenSpawnerConfig config)
     : ASystem("DataDrivenSpawnerSystem"),
@@ -343,8 +342,7 @@ bool DataDrivenSpawnerSystem::isBossEnemy(
     auto& configRegistry = shared::EntityConfigRegistry::getInstance();
     const auto& allLevels = configRegistry.getAllLevels();
     for (const auto& [levelId, levelConfig] : allLevels) {
-        if (levelConfig.bossId.has_value() && 
-            *levelConfig.bossId == enemyId) {
+        if (levelConfig.bossId.has_value() && *levelConfig.bossId == enemyId) {
             return true;
         }
     }

@@ -13,6 +13,7 @@
 
 #include <rtype/engine.hpp>
 
+#include "../../../shared/Config/EntityConfig/EntitiesStructs/EnemyConfig.hpp"
 #include "../WaveManager/WaveManager.hpp"
 
 namespace rtype::games::rtype::server {
@@ -164,7 +165,8 @@ class DataDrivenSpawnerSystem : public ::rtype::engine::ASystem {
      * @param config Enemy configuration
      * @return true if the enemy is identified as a boss
      */
-    bool isBossEnemy(const std::string& enemyId, const shared::EnemyConfig& config) const;
+    bool isBossEnemy(const std::string& enemyId,
+                     const shared::EnemyConfig& config) const;
 
     std::random_device::result_type getRandomSeed() {
         std::random_device rd;
