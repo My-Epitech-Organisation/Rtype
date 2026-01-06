@@ -42,8 +42,15 @@ class MainMenuScene : public AScene {
     /// @brief Port input field entity
     ECS::Entity _portInputEntity;
 
+    /// @brief Lobby code input field entity
+    ECS::Entity _lobbyCodeInputEntity;
+
     /// @brief Status text entity
     ECS::Entity _statusEntity;
+
+    /// @brief Discovery server address
+    std::string _discoveryIp = "127.0.0.1";
+    std::uint16_t _discoveryPort = 4242;
 
     void _createAstroneerVessel();
     void _createFakePlayer();
