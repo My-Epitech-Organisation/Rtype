@@ -1358,7 +1358,12 @@ TEST_F(SpawnerSystemTest, SpawnedEntityHasCorrectAIComponent) {
         const bool found = std::find(allowed.begin(), allowed.end(),
                                       ai.behavior) != allowed.end();
         EXPECT_TRUE(found);
-        EXPECT_GT(ai.speed, 0.0F);  // Speed should be positive (from config)
+        // Speed may be zero for Stationary behavior (e.g., shooter enemy).
+        if (ai.behavior == AIBehavior::Stationary) {
+            EXPECT_GE(ai.speed, 0.0F);
+        } else {
+            EXPECT_GT(ai.speed, 0.0F);  // Speed should be positive for non-stationary behaviors
+        }
     });
 }
 
