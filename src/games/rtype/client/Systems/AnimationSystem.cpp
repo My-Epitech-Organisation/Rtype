@@ -25,8 +25,8 @@ void rtype::games::rtype::client::AnimationSystem::update(
                 } else if (!anim.oneTime) {
                     anim.currentFrame = 1;
                 }
-                texRect.rect.position.x =
-                    (anim.currentFrame - 1) * texRect.rect.size.x;
+                texRect.rect.left =
+                    (anim.currentFrame - 1) * texRect.rect.width;
             }
         });
 }

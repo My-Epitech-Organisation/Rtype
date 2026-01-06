@@ -9,9 +9,7 @@
 #define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_PARALLAXSCROLLING_HPP_
 
 #include <memory>
-
-#include <SFML/Graphics/View.hpp>
-
+#include "../../../../../include/rtype/display/IDisplay.hpp"
 #include "ASystem.hpp"
 #include "ECS.hpp"
 
@@ -23,7 +21,7 @@ namespace rtype::games::rtype::client {
  **/
 class ParallaxScrolling : public ::rtype::engine::ASystem {
    private:
-    std::shared_ptr<sf::View> _view;
+    std::shared_ptr<::rtype::display::IDisplay> _display;
 
     /// @brief Cached half-width of the view
     float _cachedHalfWidth = 0.0f;
@@ -34,11 +32,14 @@ class ParallaxScrolling : public ::rtype::engine::ASystem {
     /// @brief Whether cache needs refresh
     bool _cacheValid = false;
 
+    /// @brief Total scroll offset
+    float _totalScroll = 0.0f;
+
     /// @brief Update cached dimensions from view
     void _updateCache();
 
    public:
-    explicit ParallaxScrolling(std::shared_ptr<sf::View> view);
+    explicit ParallaxScrolling(std::shared_ptr<::rtype::display::IDisplay> display);
 
     void update(ECS::Registry& registry, float dt) override;
 };

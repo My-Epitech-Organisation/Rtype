@@ -11,8 +11,8 @@
 #include <optional>
 #include <vector>
 
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Window/Event.hpp>
+#include "rtype/display/IDisplay.hpp"
+#include "rtype/display/DisplayTypes.hpp"
 
 #include "../Components/RectangleComponent.hpp"
 #include "../Components/UserEventComponent.hpp"
@@ -35,23 +35,26 @@ namespace rtype::games::rtype::client {
  */
 class EventSystem : public ::rtype::engine::ASystem {
    private:
-    std::optional<sf::Event> _event;
-    std::shared_ptr<sf::RenderWindow> _window;
+    std::optional<::rtype::display::Event> _event;
+    std::shared_ptr<::rtype::display::IDisplay> _display;
     std::shared_ptr<AudioLib> _audioLib;
 
     /// @brief Check if world position is within rectangle bounds
     [[nodiscard]] bool _isPointInRect(
-        sf::Vector2i pixelPos,
-        const ::rtype::games::rtype::client::Rectangle& rect) const;
+        ::rtype::display::Vector2i pixelPos,
+        const ::rtype::games::rtype::client::Rectangle& rect,
+        ::rtype::display::Vector2f position) const;
 
     bool _handleMouseMoved(UserEvent& actionType, const Rectangle& rect,
-                           ECS::Registry& reg, ECS::Entity entt) const;
+                           ECS::Registry& reg, ECS::Entity entt,
+                           ::rtype::display::Vector2f position) const;
 
     bool _handleMousePressed(UserEvent& actionType, const Rectangle& rect,
-                             ECS::Registry& reg, ECS::Entity entt) const;
+                             ECS::Registry& reg, ECS::Entity entt,
+                             ::rtype::display::Vector2f position) const;
 
-    bool _handleMouseReleased(UserEvent& actionType,
-                              const Rectangle& rect) const;
+    bool _handleMouseReleased(UserEvent& actionType, const Rectangle& rect,
+                              ::rtype::display::Vector2f position) const;
 
     void _handleMenuNavigation(ECS::Registry& registry,
                                const std::vector<ECS::Entity>& buttons,
@@ -63,27 +66,17 @@ class EventSystem : public ::rtype::engine::ASystem {
    public:
     /**
      * @brief Construct a new EventSystem (reusable version).
-     * @param window Shared pointer to the SFML render window
+     * @param display Shared pointer to the display interface
      * @param audioLib Shared pointer to the AudioLib
      */
-    explicit EventSystem(std::shared_ptr<sf::RenderWindow> window,
+    explicit EventSystem(std::shared_ptr<::rtype::display::IDisplay> display,
                          std::shared_ptr<AudioLib> audioLib);
-
-    /**
-     * @brief Legacy constructor for backward compatibility.
-     * @param window Shared pointer to the SFML render window
-     * @param audioLib Shared pointer to the AudioLib
-     * @param event The event to process
-     * @deprecated Use the single-argument constructor and setEvent() instead
-     */
-    EventSystem(std::shared_ptr<sf::RenderWindow> window,
-                std::shared_ptr<AudioLib> audioLib, const sf::Event& event);
 
     /**
      * @brief Set the current event to process.
      * @param event The event to process
      */
-    void setEvent(const sf::Event& event);
+    void setEvent(const ::rtype::display::Event& event);
 
     /**
      * @brief Clear the current event.
@@ -98,5 +91,6 @@ class EventSystem : public ::rtype::engine::ASystem {
     void update(ECS::Registry& registry, float dt) override;
 };
 }  // namespace rtype::games::rtype::client
+
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_EVENTSYSTEM_HPP_

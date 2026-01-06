@@ -8,23 +8,22 @@
 #ifndef SRC_GAMES_RTYPE_CLIENT_COMPONENTS_SOUNDCOMPONENT_HPP_
 #define SRC_GAMES_RTYPE_CLIENT_COMPONENTS_SOUNDCOMPONENT_HPP_
 #include <memory>
-
-#include <SFML/Audio/SoundBuffer.hpp>
+#include "rtype/display/IDisplay.hpp"
 
 namespace rtype::games::rtype::client {
 struct ButtonSoundComponent {
-    std::shared_ptr<sf::SoundBuffer> hoverSFX;
-    std::shared_ptr<sf::SoundBuffer> clickSFX;
+    std::shared_ptr<::rtype::display::ISoundBuffer> hoverSFX;
+    std::shared_ptr<::rtype::display::ISoundBuffer> clickSFX;
 };
 
 struct EnemySoundComponent {
-    std::shared_ptr<sf::SoundBuffer> spawnSFX;
-    std::shared_ptr<sf::SoundBuffer> deathSFX;
+    std::shared_ptr<::rtype::display::ISoundBuffer> spawnSFX;
+    std::shared_ptr<::rtype::display::ISoundBuffer> deathSFX;
 };
 
 struct PlayerSoundComponent {
-    std::shared_ptr<sf::SoundBuffer> spawnSFX;
-    std::shared_ptr<sf::SoundBuffer> deathSFX;
+    std::shared_ptr<::rtype::display::ISoundBuffer> spawnSFX;
+    std::shared_ptr<::rtype::display::ISoundBuffer> deathSFX;
 };
 }  // namespace rtype::games::rtype::client
 

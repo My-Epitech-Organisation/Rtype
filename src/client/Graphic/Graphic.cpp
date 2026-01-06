@@ -27,29 +27,33 @@
 
 void Graphic::_pollEvents() {
     this->_systemScheduler->runSystem("reset_triggers");
-    while (const std::optional event = this->_window->pollEvent()) {
-        if (!event) return;
-        if (event->is<sf::Event::Closed>()) {
-            this->_window->close();
+    rtype::display::Event event;
+    while (this->_display->pollEvent(event)) {
+        if (event.type == rtype::display::EventType::Closed) {
+            this->_display->close();
         }
-        if (event->is<sf::Event::FocusLost>()) {
-            rtype::games::rtype::client::RtypeInputHandler::clearKeyStates();
-        }
-        this->_eventSystem->setEvent(*event);
+        // Note: FocusLost logic needs to be adapted if needed
+        // if (event.type == rtype::display::EventType::FocusLost) {
+        //     rtype::games::rtype::client::RtypeInputHandler::clearKeyStates();
+        // }
+        
+        this->_eventSystem->setEvent(event);
         this->_eventSystem->update(*this->_registry, 0.f);
-        this->_sceneManager->pollEvents(*event);
+        this->_sceneManager->pollEvents(event);
     }
 }
 
 void Graphic::_updateDeltaTime() {
-    this->_currentDeltaTime = this->_mainClock.getElapsedTime().asSeconds();
-    this->_mainClock.restart();
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<float> elapsed = now - _lastFrameTime;
+    this->_currentDeltaTime = elapsed.count();
+    _lastFrameTime = now;
 }
 
 void Graphic::_updateViewScrolling() {
-    sf::Vector2f center = this->_view->getCenter();
+    rtype::display::Vector2f center = this->_display->getViewCenter();
     float newX = center.x + (scrollSpeed * this->_currentDeltaTime);
-    this->_view->setCenter({newX, center.y});
+    this->_display->setView({newX, center.y}, {static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT)});
 }
 
 void Graphic::_updateNetwork() {
@@ -79,11 +83,10 @@ void Graphic::_update() {
         }
     }
 
-    _updateViewScrolling();
+    // _updateViewScrolling();
     this->_systemScheduler->runSystem("parallax");
 
     if (!isPaused) {
-        this->_systemScheduler->runSystem("sprite_position");
         this->_systemScheduler->runSystem("player_animation");
         this->_systemScheduler->runSystem("animation");
         this->_systemScheduler->runSystem("powerup_visuals");
@@ -94,27 +97,33 @@ void Graphic::_update() {
     this->_sceneManager->update(this->_currentDeltaTime);
 }
 
-void Graphic::_display() {
-    this->_sceneTexture->clear();
+void Graphic::_render() {
+    if (!this->_display->isOpen()) return;
+    this->_display->resetView();
+
+    this->_display->beginRenderToTexture("scene");
+    this->_display->clear();
 
     this->_systemScheduler->runSystem("render");
     this->_systemScheduler->runSystem("boxing");
 
-    this->_sceneTexture->display();
+    this->_display->endRenderToTexture();
 
     this->_systemScheduler->runSystem("shader_render");
 
     this->_sceneManager->draw();
-    this->_window->display();
+    this->_display->display();
 }
 
 void Graphic::loop() {
-    this->_window->setFramerateLimit(60);
+    this->_display->setFramerateLimit(60);
 
-    while (this->_window->isOpen()) {
+    while (this->_display->isOpen()) {
         this->_pollEvents();
+        if (!this->_display->isOpen()) break;
         this->_update();
-        this->_display();
+        if (!this->_display->isOpen()) break;
+        this->_render();
     }
 }
 
@@ -137,8 +146,7 @@ void Graphic::_setupNetworkEntityFactory() {
 }
 
 void Graphic::_initializeSystems() {
-    this->_spritePositionSystem =
-        std::make_unique<::rtype::games::rtype::client::SpritePositionSystem>();
+
     this->_playerAnimationSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerAnimationSystem>();
     this->_animationSystem =
@@ -147,22 +155,21 @@ void Graphic::_initializeSystems() {
         ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_buttonUpdateSystem =
         std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(
-            this->_window);
+            this->_display);
     this->_parallaxScrolling =
         std::make_unique<::rtype::games::rtype::client::ParallaxScrolling>(
-            this->_view);
-    std::shared_ptr<sf::RenderTarget> targetPtr = this->_sceneTexture;
+            this->_display);
     this->_renderSystem =
         std::make_unique<::rtype::games::rtype::client::RenderSystem>(
-            targetPtr);
+            this->_display);
     this->_boxingSystem =
         std::make_unique<::rtype::games::rtype::client::BoxingSystem>(
-            targetPtr);
+            this->_display);
     this->_resetTriggersSystem =
         std::make_unique<::rtype::games::rtype::client::ResetTriggersSystem>();
     this->_eventSystem =
         std::make_unique<::rtype::games::rtype::client::EventSystem>(
-            this->_window, this->_audioLib);
+            this->_display, this->_audioLib);
     this->_projectileSystem =
         std::make_unique<::rtype::games::rtype::shared::ProjectileSystem>();
     this->_lifetimeSystem =
@@ -171,7 +178,7 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::client::ClientDestroySystem>();
     this->_shaderRenderSystem =
         std::make_unique<::rtype::games::rtype::client::ShaderRenderSystem>(
-            this->_window, this->_sceneTexture, this->_colorShader);
+            this->_display);
 
     this->_systemScheduler =
         std::make_unique<ECS::SystemScheduler>(*this->_registry);
@@ -181,33 +188,28 @@ void Graphic::_initializeSystems() {
             this->_resetTriggersSystem->update(reg, 0.f);
         });
 
-    this->_systemScheduler->addSystem("sprite_position",
-                                      [this](ECS::Registry& reg) {
-                                          _spritePositionSystem->update(
-                                              reg, _currentDeltaTime);
-                                      },
-                                      {"reset_triggers"});
+
 
     this->_systemScheduler->addSystem("player_animation",
                                       [this](ECS::Registry& reg) {
                                           _playerAnimationSystem->update(
                                               reg, _currentDeltaTime);
                                       },
-                                      {"sprite_position"});
+                                      {"reset_triggers"});
 
     this->_systemScheduler->addSystem("animation",
                                       [this](ECS::Registry& reg) {
                                           _animationSystem->update(
                                               reg, _currentDeltaTime);
                                       },
-                                      {"sprite_position"});
+                                      {"reset_triggers"});
 
     this->_systemScheduler->addSystem("powerup_visuals",
                                       [this](ECS::Registry& reg) {
                                           _playerPowerUpVisualSystem->update(
                                               reg, _currentDeltaTime);
                                       },
-                                      {"sprite_position"});
+                                      {"reset_triggers"});
 
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {
@@ -226,7 +228,7 @@ void Graphic::_initializeSystems() {
                                           this->_projectileSystem->update(
                                               reg, this->_currentDeltaTime);
                                       },
-                                      {"sprite_position"});
+                                      {"reset_triggers"});
 
     this->_systemScheduler->addSystem("lifetime",
                                       [this](ECS::Registry& reg) {
@@ -328,14 +330,14 @@ void Graphic::_initializeCommonAssets() {
     manager->soundManager->load("bydos_death", config.assets.sfx.enemyDeath);
     manager->soundManager->load("laser_sfx", config.assets.sfx.laser);
 
-    manager->textureManager->get("bg_menu").setRepeated(true);
-    manager->textureManager->get("bg_planet_1").setRepeated(true);
-    manager->textureManager->get("bg_planet_2").setRepeated(true);
-    manager->textureManager->get("bg_planet_3").setRepeated(true);
-    manager->textureManager->get("bg_small_asteroids").setRepeated(true);
-    manager->textureManager->get("bg_big_asteroids").setRepeated(true);
-    manager->textureManager->get("bg_fst_plan_asteroids").setRepeated(true);
-    manager->textureManager->get("bg_snd_plan_asteroids").setRepeated(true);
+    manager->textureManager->get("bg_menu")->setRepeated(true);
+    manager->textureManager->get("bg_planet_1")->setRepeated(true);
+    manager->textureManager->get("bg_planet_2")->setRepeated(true);
+    manager->textureManager->get("bg_planet_3")->setRepeated(true);
+    manager->textureManager->get("bg_small_asteroids")->setRepeated(true);
+    manager->textureManager->get("bg_big_asteroids")->setRepeated(true);
+    manager->textureManager->get("bg_fst_plan_asteroids")->setRepeated(true);
+    manager->textureManager->get("bg_snd_plan_asteroids")->setRepeated(true);
 }
 
 Graphic::Graphic(
@@ -344,37 +346,26 @@ Graphic::Graphic(
     std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem)
     : _registry(std::move(registry)),
       _networkClient(std::move(networkClient)),
-      _networkSystem(std::move(networkSystem)),
-      _view(std::make_shared<sf::View>(
-          sf::FloatRect({0, 0}, {WINDOW_WIDTH, WINDOW_HEIGHT}))) {
+      _networkSystem(std::move(networkSystem)) {
     rtype::game::config::RTypeConfigParser parser;
     auto assetsConfig = parser.loadFromFile("./assets/config.toml");
     if (!assetsConfig.has_value()) throw std::exception();
     this->_keybinds = std::make_shared<KeyboardActions>();
-    this->_window = std::make_shared<sf::RenderWindow>(
-        sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "R-Type - Epitech 2025");
-    this->_window->setView(*this->_view);
 
-    this->_sceneTexture = std::make_shared<sf::RenderTexture>(
-        sf::Vector2u{WINDOW_WIDTH, WINDOW_HEIGHT});
+    this->_displayLoader = std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>("./display.so");
+    this->_display = std::shared_ptr<rtype::display::IDisplay>(this->_displayLoader->getInstance("createInstanceDisplay"));
+    this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT, "R-Type - Epitech 2025");
 
-    if (sf::Shader::isAvailable()) {
-        auto shader = std::make_shared<sf::Shader>();
-        if (shader->loadFromFile("assets/shaders/colorblind.frag",
-                                 sf::Shader::Type::Fragment)) {
-            this->_colorShader = shader;
-        } else {
-            LOG_ERROR("Failed to load shader: assets/shaders/colorblind.frag");
-        }
-    }
-    this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value());
+    this->_keybinds->initialize(*this->_display);
+
+    this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value(), this->_display);
 
     this->_initializeCommonAssets();
 
     if (_networkSystem) {
         _setupNetworkEntityFactory();
     }
-    this->_audioLib = std::make_shared<AudioLib>();
+    this->_audioLib = std::make_shared<AudioLib>(this->_display);
     this->_registry->setSingleton<std::shared_ptr<AudioLib>>(this->_audioLib);
     this->_registry->setSingleton<AccessibilitySettings>(
         AccessibilitySettings{ColorBlindMode::None});
@@ -382,8 +373,22 @@ Graphic::Graphic(
         rtype::games::rtype::client::PauseState{false});
     this->_initializeCommonAssets();
     this->_sceneManager = std::make_unique<SceneManager>(
-        _registry, this->_assetsManager, this->_window, this->_keybinds,
+        _registry, this->_assetsManager, this->_display, this->_keybinds,
         _networkClient, _networkSystem, this->_audioLib);
     _initializeSystems();
-    this->_mainClock.start();
+    _lastFrameTime = std::chrono::steady_clock::now();
+}
+
+Graphic::~Graphic() {
+    // 1. Destroy things that definitely use the display/DLL
+    _sceneManager.reset();
+    _systemScheduler.reset();
+    _assetsManager.reset();
+    _audioLib.reset();
+
+    // 2. Clear registry to ensure components/singletons containing DLL objects
+    // are destroyed before we unload the DLL.
+    if (_registry) {
+        _registry->clear();
+    }
 }

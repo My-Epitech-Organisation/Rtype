@@ -11,9 +11,7 @@
 #include <memory>
 #include <string>
 
-#include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/Font.hpp>
-#include <SFML/System/Vector2.hpp>
+#include "rtype/display/DisplayTypes.hpp"
 
 #include "ECS.hpp"
 
@@ -25,8 +23,8 @@ namespace rtype::games::rtype::client {
  */
 class VisualCueFactory {
    public:
-    static void createFlash(ECS::Registry& registry, const sf::Vector2f& center,
-                            const sf::Color& color, float size = 64.f,
+    static void createFlash(ECS::Registry& registry, const ::rtype::display::Vector2f& center,
+                            const ::rtype::display::Color& color, float size = 64.f,
                             float lifetime = 0.35f, int zIndex = 50);
 
     /**
@@ -34,13 +32,13 @@ class VisualCueFactory {
      * @param registry The ECS registry
      * @param position Position where the number appears
      * @param damage The damage amount to display
-     * @param font The font to use
+     * @param fontName The font name to use
      * @param color Text color (default red for damage)
      */
     static void createDamagePopup(ECS::Registry& registry,
-                                  const sf::Vector2f& position, int damage,
-                                  std::shared_ptr<sf::Font> font,
-                                  const sf::Color& color = sf::Color::Red);
+                                  const ::rtype::display::Vector2f& position, int damage,
+                                  const std::string& fontName,
+                                  const ::rtype::display::Color& color = ::rtype::display::Color::Red());
 };
 
 }  // namespace rtype::games::rtype::client

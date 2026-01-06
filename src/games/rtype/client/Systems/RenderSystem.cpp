@@ -18,8 +18,8 @@ namespace rc = ::rtype::games::rtype::client;
 namespace rs = ::rtype::games::rtype::shared;
 
 namespace rtype::games::rtype::client {
-RenderSystem::RenderSystem(std::shared_ptr<sf::RenderTarget> target)
-    : ::rtype::engine::ASystem("RenderSystem"), _target(std::move(target)) {}
+RenderSystem::RenderSystem(std::shared_ptr<::rtype::display::IDisplay> display)
+    : ::rtype::engine::ASystem("RenderSystem"), _display(std::move(display)) {}
 
 bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
     if (registry.hasComponent<HiddenComponent>(entity)) {
@@ -37,26 +37,25 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
     auto& img = registry.getComponent<Image>(entity);
     const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
+    display::Vector2f scale = {1.0f, 1.0f};
     if (registry.hasComponent<Size>(entity)) {
         const auto& size = registry.getComponent<Size>(entity);
-        img.sprite.setScale(sf::Vector2f({size.x, size.y}));
+        scale = {size.x, size.y};
     }
+
+    display::IntRect rect = {0, 0, 0, 0};
     if (registry.hasComponent<TextureRect>(entity)) {
         const auto& texture = registry.getComponent<TextureRect>(entity);
-        img.sprite.setTextureRect(texture.rect);
+        rect = texture.rect;
     }
 
-    if (registry.hasComponent<GameTag>(entity)) {
-        auto bounds = img.sprite.getGlobalBounds();
-        float offsetX = pos.x - bounds.size.x / 2.0f;
-        float offsetY = pos.y - bounds.size.y / 2.0f;
-        img.sprite.setPosition({offsetX, offsetY});
-    } else {
-        img.sprite.setPosition(
-            {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-    }
+    display::Vector2f position = {static_cast<float>(pos.x), static_cast<float>(pos.y)};
 
-    this->_target->draw(img.sprite);
+    // Note: GameTag logic for centering might need adjustment if we don't have sprite bounds here.
+    // For now, let's assume the display implementation handles it or we pass it.
+    // Actually, let's just pass the position.
+
+    this->_display->drawSprite(img.textureName, position, rect, scale, img.color);
 }
 
 void RenderSystem::_renderRectangles(ECS::Registry& registry,
@@ -70,46 +69,73 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry,
     auto& rectData = registry.getComponent<Rectangle>(entity);
     const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
-    rectData.rectangle.setSize(
-        sf::Vector2f(rectData.size.first, rectData.size.second));
-    rectData.rectangle.setOutlineThickness(rectData.outlineThickness);
-    rectData.rectangle.setOutlineColor(rectData.outlineColor);
-    rectData.rectangle.setFillColor(rectData.currentColor);
+    display::Vector2f position = {static_cast<float>(pos.x), static_cast<float>(pos.y)};
+    display::Vector2f size = {rectData.size.first, rectData.size.second};
 
-    if (registry.hasComponent<GameTag>(entity)) {
-        float offsetX = pos.x - rectData.size.first / 2.0f;
-        float offsetY = pos.y - rectData.size.second / 2.0f;
-        rectData.rectangle.setPosition({offsetX, offsetY});
-    } else {
-        rectData.rectangle.setPosition(
-            {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-    }
-
-    _target->draw(rectData.rectangle);
+    this->_display->drawRectangle(position, size, rectData.currentColor, rectData.outlineColor, rectData.outlineThickness);
 }
 
 void RenderSystem::_renderHudRectangles(ECS::Registry& registry,
                                         ECS::Entity entity) {
-    const sf::View savedView = _target->getView();
-    _target->setView(_target->getDefaultView());
     if (!registry.hasComponent<Rectangle>(entity) ||
         !registry.hasComponent<rs::TransformComponent>(entity) ||
         !registry.hasComponent<HudTag>(entity) ||
         registry.hasComponent<rs::DestroyTag>(entity))
         return;
 
+    auto center = this->_display->getViewCenter();
+    auto viewSize = this->_display->getViewSize();
+    this->_display->resetView();
+
     auto& rectData = registry.getComponent<Rectangle>(entity);
     const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
-    rectData.rectangle.setPosition(
-        {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-    rectData.rectangle.setSize(
-        sf::Vector2f(rectData.size.first, rectData.size.second));
-    rectData.rectangle.setOutlineThickness(rectData.outlineThickness);
-    rectData.rectangle.setOutlineColor(rectData.outlineColor);
-    rectData.rectangle.setFillColor(rectData.currentColor);
+    display::Vector2f position = {static_cast<float>(pos.x), static_cast<float>(pos.y)};
+    display::Vector2f size = {rectData.size.first, rectData.size.second};
 
-    this->_target->draw(rectData.rectangle);
+    this->_display->drawRectangle(position, size, rectData.currentColor, rectData.outlineColor, rectData.outlineThickness);
+    
+    this->_display->setView(center, viewSize);
+}
+
+void RenderSystem::_renderTextInput(ECS::Registry& registry, ECS::Entity entity) {
+    if (!registry.hasComponent<TextInput>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity) ||
+        registry.hasComponent<rs::DestroyTag>(entity))
+        return;
+
+    auto center = this->_display->getViewCenter();
+    auto viewSize = this->_display->getViewSize();
+    this->_display->resetView();
+
+    auto& input = registry.getComponent<TextInput>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
+
+    display::Vector2f position = {static_cast<float>(pos.x), static_cast<float>(pos.y)};
+    display::Vector2f size = {input.size.x, input.size.y};
+
+    // Draw background
+    this->_display->drawRectangle(position, size, input.backgroundColor, 
+        input.isFocused ? input.focusedBorderColor : input.unfocusedBorderColor, 3.0f);
+
+    // Draw text or placeholder
+    std::string textToDraw;
+    display::Color colorToUse = input.textColor;
+
+    if (input.content.empty() && !input.isFocused) {
+        textToDraw = input.placeholder;
+        colorToUse = display::Color(150, 150, 150, 255);
+    } else {
+        textToDraw = input.content + (input.isFocused ? "_" : "");
+    }
+
+    display::Vector2f textBounds = this->_display->getTextBounds(textToDraw, input.fontName, input.fontSize);
+    float posX = position.x + kOffsetTextInput;
+    float posY = position.y + ((size.y / 2) - (textBounds.y / 2));
+
+    this->_display->drawText(textToDraw, input.fontName, {posX, posY}, input.fontSize, colorToUse);
+
+    this->_display->setView(center, viewSize);
 }
 
 void RenderSystem::_renderButtons(ECS::Registry& registry, ECS::Entity entity) {
@@ -120,39 +146,27 @@ void RenderSystem::_renderButtons(ECS::Registry& registry, ECS::Entity entity) {
         registry.hasComponent<rs::DestroyTag>(entity))
         return;
 
+    auto center = this->_display->getViewCenter();
+    auto viewSize = this->_display->getViewSize();
+    this->_display->resetView();
+
     auto& rectData = registry.getComponent<Rectangle>(entity);
     auto& textData = registry.getComponent<Text>(entity);
     const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
-    rectData.rectangle.setPosition(
-        {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-    rectData.rectangle.setSize(
-        sf::Vector2f(rectData.size.first, rectData.size.second));
-    rectData.rectangle.setOutlineThickness(rectData.outlineThickness);
-    rectData.rectangle.setOutlineColor(rectData.outlineColor);
-    rectData.rectangle.setFillColor(rectData.currentColor);
+    display::Vector2f position = {static_cast<float>(pos.x), static_cast<float>(pos.y)};
+    display::Vector2f size = {rectData.size.first, rectData.size.second};
 
-    textData.text.setCharacterSize(textData.size);
-    textData.text.setFillColor(textData.color);
-    textData.text.setString(textData.textContent);
+    this->_display->drawRectangle(position, size, rectData.currentColor, rectData.outlineColor, rectData.outlineThickness);
 
-    float rectX = rectData.rectangle.getPosition().x;
-    float rectY = rectData.rectangle.getPosition().y;
-    float rectWidth = rectData.size.first;
-    float rectHeight = rectData.size.second;
+    display::Vector2f textBounds = this->_display->getTextBounds(textData.textContent, textData.fontName, textData.size);
 
-    sf::FloatRect textBounds = textData.text.getLocalBounds();
-    float textWidth = textBounds.size.x;
-    float textHeight = textBounds.size.y;
-    float textTop = textBounds.position.y;
+    float centerX = position.x + (size.x / 2.0f) - (textBounds.x / 2.0f);
+    float centerY = position.y + (size.y / 2.0f) - (textBounds.y / 2.0f);
 
-    float centerX = rectX + (rectWidth / 2.0f) - (textWidth / 2.0f);
-    float centerY = rectY + (rectHeight / 2.0f) - (textHeight / 2.0f) - textTop;
+    this->_display->drawText(textData.textContent, textData.fontName, {centerX, centerY}, textData.size, textData.color);
 
-    textData.text.setPosition({centerX, centerY});
-
-    this->_target->draw(rectData.rectangle);
-    this->_target->draw(textData.text);
+    this->_display->setView(center, viewSize);
 }
 
 void RenderSystem::_renderStaticText(ECS::Registry& registry,
@@ -163,16 +177,25 @@ void RenderSystem::_renderStaticText(ECS::Registry& registry,
         registry.hasComponent<rs::DestroyTag>(entity))
         return;
 
+    auto center = this->_display->getViewCenter();
+    auto viewSize = this->_display->getViewSize();
+    this->_display->resetView();
+
     auto& textData = registry.getComponent<Text>(entity);
     const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
-    textData.text.setPosition(
-        {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-    textData.text.setCharacterSize(textData.size);
-    textData.text.setFillColor(textData.color);
-    textData.text.setString(textData.textContent);
+    display::Vector2f position = {static_cast<float>(pos.x), static_cast<float>(pos.y)};
 
-    this->_target->draw(textData.text);
+    // Center the text if tag is present
+    if (registry.hasComponent<CenteredTextTag>(entity)) {
+        display::Vector2f textBounds = this->_display->getTextBounds(textData.textContent, textData.fontName, textData.size);
+        position.x -= (textBounds.x / 2.0f);
+        position.y -= (textBounds.y / 2.0f);
+    }
+
+    this->_display->drawText(textData.textContent, textData.fontName, position, textData.size, textData.color);
+
+    this->_display->setView(center, viewSize);
 }
 
 void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
@@ -202,6 +225,8 @@ void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
             this->_renderButtons(registry, entity);
         if (registry.hasComponent<StaticTextTag>(entity))
             this->_renderStaticText(registry, entity);
+        if (registry.hasComponent<TextInput>(entity))
+            this->_renderTextInput(registry, entity);
         if (registry.hasComponent<HudTag>(entity))
             this->_renderHudRectangles(registry, entity);
     }

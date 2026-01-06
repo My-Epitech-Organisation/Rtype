@@ -12,8 +12,7 @@
 #include <optional>
 #include <string>
 
-#include <SFML/Window/Joystick.hpp>
-#include <SFML/Window/Keyboard.hpp>
+#include "../../../include/rtype/display/IDisplay.hpp"
 
 #include "../GameAction.hpp"
 
@@ -21,38 +20,40 @@ enum class InputMode { Keyboard, Controller };
 
 class KeyboardActions {
    private:
-    std::map<GameAction, sf::Keyboard::Key> _keyBindings;
+    std::map<GameAction, ::rtype::display::Key> _keyBindings;
     std::map<GameAction, unsigned int> _joyButtonBindings;
-    std::map<GameAction, sf::Joystick::Axis> _joyAxisBindings;
+    std::map<GameAction, ::rtype::display::JoystickAxis> _joyAxisBindings;
     std::map<GameAction, bool> _joyAxisInverted;
     InputMode _inputMode = InputMode::Keyboard;
 
    public:
+    KeyboardActions();
+    void initialize(::rtype::display::IDisplay& display);
+
     void setInputMode(InputMode mode) { _inputMode = mode; }
     InputMode getInputMode() const { return _inputMode; }
 
-    void setKeyBinding(const GameAction& action, const sf::Keyboard::Key& key);
+    void setKeyBinding(const GameAction& action, const ::rtype::display::Key& key);
 
-    auto getKeyBinding(const sf::Keyboard::Key& key)
+    auto getKeyBinding(const ::rtype::display::Key& key)
         -> std::optional<GameAction>;
     auto getKeyBinding(const GameAction& action)
-        -> std::optional<sf::Keyboard::Key>;
+        -> std::optional<::rtype::display::Key>;
 
     void setJoyButtonBinding(const GameAction& action, unsigned int button);
     auto getJoyButtonBinding(const GameAction& action)
         -> std::optional<unsigned int>;
 
     void setJoyAxisBinding(const GameAction& action,
-                           const sf::Joystick::Axis& axis);
+                           const ::rtype::display::JoystickAxis& axis);
     auto getJoyAxisBinding(const GameAction& action)
-        -> std::optional<sf::Joystick::Axis>;
+        -> std::optional<::rtype::display::JoystickAxis>;
 
     void setJoyAxisInverted(const GameAction& action, bool inverted);
     bool isJoyAxisInverted(const GameAction& action) const;
 
     static std::string getXboxButtonName(unsigned int buttonIndex);
 
-    KeyboardActions();
     ~KeyboardActions() = default;
 
     KeyboardActions(const KeyboardActions&) = delete;

@@ -21,38 +21,38 @@ void PlayerPowerUpVisualSystem::update(ECS::Registry& registry, float /*dt*/) {
     registry.view<Image, PlayerTag, rs::ActivePowerUpComponent>().each(
         [&](auto entity, Image& img, PlayerTag& /*tag*/,
             const rs::ActivePowerUpComponent& active) {
-            sf::Color tint = sf::Color::White;
+            ::rtype::display::Color tint = ::rtype::display::Color::White();
 
             switch (active.type) {
                 case rs::PowerUpType::Shield:
-                    tint = sf::Color(255, 215, 0, 220);
+                    tint = {255, 215, 0, 220};
                     break;
                 case rs::PowerUpType::SpeedBoost:
-                    tint = sf::Color(140, 255, 180, 220);
+                    tint = {140, 255, 180, 220};
                     break;
                 case rs::PowerUpType::RapidFire:
-                    tint = sf::Color(120, 200, 255, 220);
+                    tint = {120, 200, 255, 220};
                     break;
                 case rs::PowerUpType::DoubleDamage:
-                    tint = sf::Color(255, 120, 120, 220);
+                    tint = {255, 120, 120, 220};
                     break;
                 case rs::PowerUpType::HealthBoost:
-                    tint = sf::Color(220, 180, 255, 220);
+                    tint = {220, 180, 255, 220};
                     break;
                 default:
-                    tint = sf::Color::White;
+                    tint = ::rtype::display::Color::White();
                     break;
             }
             if (active.shieldActive) {
-                tint = sf::Color(255, 215, 0, 240);
+                tint = {255, 215, 0, 240};
             }
 
-            img.sprite.setColor(tint);
+            img.color = tint;
 
             if (registry.hasComponent<BoxingComponent>(entity)) {
                 auto& box = registry.getComponent<BoxingComponent>(entity);
                 box.outlineColor = tint;
-                box.fillColor = sf::Color(tint.r, tint.g, tint.b, 40);
+                box.fillColor = {tint.r, tint.g, tint.b, 40};
             }
         });
 }

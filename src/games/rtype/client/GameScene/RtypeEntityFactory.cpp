@@ -134,10 +134,7 @@ void RtypeEntityFactory::setupPlayerEntity(
     const int top = spriteOffset.second;
 
     LOG_DEBUG("[RtypeEntityFactory] Getting player_vessel texture");
-    auto& playerTexture = assetsManager->textureManager->get("player_vessel");
-    LOG_DEBUG("[RtypeEntityFactory] Texture size: "
-              << playerTexture.getSize().x << "x" << playerTexture.getSize().y);
-    reg.emplaceComponent<Image>(entity, playerTexture);
+    reg.emplaceComponent<Image>(entity, "player_vessel");
     LOG_DEBUG("[RtypeEntityFactory] Image component added");
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({left, top}),
                                       std::pair<int, int>({width, height}));
@@ -151,36 +148,35 @@ void RtypeEntityFactory::setupPlayerEntity(
     reg.emplaceComponent<shared::HealthComponent>(entity, 1, 1);
     reg.emplaceComponent<PlayerTag>(entity);
     reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {132.f, 68.f}));
-    reg.getComponent<BoxingComponent>(entity).outlineColor = sf::Color::White;
+                                          ::rtype::display::Vector2f{0, 0}, ::rtype::display::Vector2f{132.f, 68.f});
+    reg.getComponent<BoxingComponent>(entity).outlineColor = ::rtype::display::Color::White();
     reg.getComponent<BoxingComponent>(entity).fillColor =
-        sf::Color(0, 200, 255, 45);
+        {0, 200, 255, 45};
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<PlayerSoundComponent>(
         entity, assetsManager->soundManager->get("player_spawn"),
         assetsManager->soundManager->get("player_death"));
     auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(*assetsManager->soundManager->get("player_spawn"));
+    lib->playSFX(assetsManager->soundManager->get("player_spawn"));
 }
 
 void RtypeEntityFactory::setupBydosEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Bydos components");
-    reg.emplaceComponent<Image>(
-        entity, assetsManager->textureManager->get("bdos_enemy"));
+    reg.emplaceComponent<Image>(entity, "bdos_enemy");
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 34}));
     reg.emplaceComponent<Size>(entity, 2, 2);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, 66.0f, 68.0f);
     reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {66.f, 68.f}));
+                                          ::rtype::display::Vector2f{0, 0}, ::rtype::display::Vector2f{66.f, 68.f});
     reg.getComponent<BoxingComponent>(entity).outlineColor =
-        sf::Color(255, 120, 0);
+        {255, 120, 0, 255};
     reg.getComponent<BoxingComponent>(entity).fillColor =
-        sf::Color(255, 120, 0, 40);
+        {255, 120, 0, 40};
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<shared::HealthComponent>(entity, 10, 10);
     reg.emplaceComponent<GameTag>(entity);
@@ -188,15 +184,14 @@ void RtypeEntityFactory::setupBydosEntity(
         entity, assetsManager->soundManager->get("bydos_spawn"),
         assetsManager->soundManager->get("bydos_death"));
     auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(*assetsManager->soundManager->get("bydos_spawn"));
+    lib->playSFX(assetsManager->soundManager->get("bydos_spawn"));
 }
 
 void RtypeEntityFactory::setupMissileEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Missile components");
-    reg.emplaceComponent<Image>(
-        entity, assetsManager->textureManager->get("projectile_player_laser"));
+    reg.emplaceComponent<Image>(entity, "projectile_player_laser");
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 34}));
     reg.emplaceComponent<Size>(entity, 1.75, 1.75);
@@ -204,23 +199,23 @@ void RtypeEntityFactory::setupMissileEntity(
         entity, 33.0f, 34.0f);
     reg.emplaceComponent<shared::ProjectileTag>(entity);
     reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {33.f, 34.f}));
+                                          ::rtype::display::Vector2f{0, 0}, ::rtype::display::Vector2f{33.f, 34.f});
     reg.emplaceComponent<Animation>(entity, 4, 0.5, true);
     reg.getComponent<BoxingComponent>(entity).outlineColor =
-        sf::Color(0, 220, 180);
+        {0, 220, 180, 255};
     reg.getComponent<BoxingComponent>(entity).fillColor =
-        sf::Color(0, 220, 180, 35);
+        {0, 220, 180, 35};
     reg.emplaceComponent<ZIndex>(entity, 1);
     reg.emplaceComponent<shared::LifetimeComponent>(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
     reg.emplaceComponent<GameTag>(entity);
     auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(*assetsManager->soundManager->get("laser_sfx"));
+    lib->playSFX(assetsManager->soundManager->get("laser_sfx"));
 
     if (reg.hasComponent<shared::TransformComponent>(entity)) {
         const auto& pos = reg.getComponent<shared::TransformComponent>(entity);
         VisualCueFactory::createFlash(reg, {pos.x, pos.y},
-                                      sf::Color(0, 255, 220), 52.f, 0.25f, 10);
+                                      ::rtype::display::Color{0, 255, 220, 255}, 52.f, 0.25f, 10);
     }
 }
 
@@ -228,20 +223,20 @@ void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
                                            ECS::Entity entity,
                                            std::uint32_t networkId) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Pickup components");
-    static const std::array<sf::Color, 4> kColors = {
-        sf::Color(120, 200, 255), sf::Color(170, 120, 255),
-        sf::Color(120, 255, 170), sf::Color(255, 200, 120)};
-    const sf::Color color = kColors[networkId % kColors.size()];
+    static const std::array<::rtype::display::Color, 4> kColors = {
+        ::rtype::display::Color{120, 200, 255, 255}, ::rtype::display::Color{170, 120, 255, 255},
+        ::rtype::display::Color{120, 255, 170, 255}, ::rtype::display::Color{255, 200, 120, 255}};
+    const ::rtype::display::Color color = kColors[networkId % kColors.size()];
 
     reg.emplaceComponent<Rectangle>(entity, std::pair<float, float>{24.f, 24.f},
                                     color, color);
     reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
-    reg.getComponent<Rectangle>(entity).outlineColor = sf::Color::White;
+    reg.getComponent<Rectangle>(entity).outlineColor = ::rtype::display::Color::White();
     reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {24.f, 24.f}));
+                                          ::rtype::display::Vector2f{0, 0}, ::rtype::display::Vector2f{24.f, 24.f});
     reg.getComponent<BoxingComponent>(entity).outlineColor = color;
     reg.getComponent<BoxingComponent>(entity).fillColor =
-        sf::Color(color.r, color.g, color.b, 45);
+        {color.r, color.g, color.b, 45};
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
@@ -260,8 +255,7 @@ void RtypeEntityFactory::setupObstacleEntity(
     int value = dist(gen);
     std::string textureName = "projectile" + std::to_string(value);
 
-    auto& projectileTexture = assetsManager->textureManager->get(textureName);
-    reg.emplaceComponent<Image>(entity, projectileTexture);
+    reg.emplaceComponent<Image>(entity, textureName);
     reg.emplaceComponent<Size>(entity, 0.5, 0.5);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);

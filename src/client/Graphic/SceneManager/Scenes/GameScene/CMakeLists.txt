@@ -8,10 +8,6 @@ add_library(rtype-graphic-game-scene
 
 target_link_libraries(rtype-graphic-game-scene
         PUBLIC
-        SFML::Graphics
-        SFML::Window
-        SFML::Audio
-        SFML::System
         engine
         network
         rtype_client_network

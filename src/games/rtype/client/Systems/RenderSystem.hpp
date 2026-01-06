@@ -11,11 +11,13 @@
 #include <memory>
 #include <vector>
 
-#include <SFML/Graphics/RenderTarget.hpp>
+#include "../../../../../include/rtype/display/IDisplay.hpp"
 
 #include "../Components/HiddenComponent.hpp"
 #include "ASystem.hpp"
 #include "ECS.hpp"
+
+constexpr int kOffsetTextInput = 20;
 
 namespace rtype::games::rtype::client {
 
@@ -35,7 +37,7 @@ namespace rtype::games::rtype::client {
  */
 class RenderSystem : public ::rtype::engine::ASystem {
    private:
-    std::shared_ptr<sf::RenderTarget> _target;
+    std::shared_ptr<::rtype::display::IDisplay> _display;
 
     /// @brief Cached vector for drawable entities (avoids per-frame allocation)
     mutable std::vector<ECS::Entity> _cachedDrawableEntities;
@@ -75,6 +77,13 @@ class RenderSystem : public ::rtype::engine::ASystem {
     void _renderStaticText(ECS::Registry& registry, ECS::Entity entity);
 
     /**
+     * @brief Render text input entities.
+     * @param registry The ECS registry
+     * @param entity The entity to try to render
+     */
+    void _renderTextInput(ECS::Registry& registry, ECS::Entity entity);
+
+    /**
      * @brief Render screen-space rectangles (UI elements not affected by
      * camera).
      * @param registry The ECS registry
@@ -93,9 +102,9 @@ class RenderSystem : public ::rtype::engine::ASystem {
 
     /**
      * @brief Construct a new RenderSystem.
-     * @param window Shared pointer to the SFML render window
+     * @param display Shared pointer to the display interface
      */
-    explicit RenderSystem(std::shared_ptr<sf::RenderTarget> target);
+    explicit RenderSystem(std::shared_ptr<::rtype::display::IDisplay> display);
 
     /**
      * @brief Render all visible entities to the window.

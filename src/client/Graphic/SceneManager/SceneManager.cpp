@@ -60,7 +60,7 @@ void SceneManager::setCurrentScene(const Scene scene) {
     this->_nextScene = scene;
 }
 
-void SceneManager::pollEvents(const sf::Event& e) {
+void SceneManager::pollEvents(const rtype::display::Event& e) {
     this->_applySceneChange();
 
     if (!this->_activeScene) {
@@ -84,17 +84,17 @@ void SceneManager::draw() {
     if (!this->_activeScene) {
         throw SceneNotInitialized();
     }
-    this->_activeScene->render(this->_window);
+    this->_activeScene->render(this->_display);
 }
 
 SceneManager::SceneManager(
     std::shared_ptr<ECS::Registry> ecs, std::shared_ptr<AssetManager> texture,
-    std::shared_ptr<sf::RenderWindow> window,
+    std::shared_ptr<rtype::display::IDisplay> display,
     std::shared_ptr<KeyboardActions> keybinds,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,
     std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem,
     std::shared_ptr<AudioLib> audioLib)
-    : _window(window),
+    : _display(display),
       _keybinds(keybinds),
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)),
@@ -106,22 +106,22 @@ SceneManager::SceneManager(
     };
     this->_sceneList.emplace(MAIN_MENU, [ecs, texture, this]() {
         return std::make_unique<MainMenuScene>(
-            ecs, texture, this->_window, this->_switchToScene,
+            ecs, texture, this->_display, this->_switchToScene,
             this->_networkClient, this->_networkSystem, this->_audio);
     });
     this->_sceneList.emplace(SETTINGS_MENU, [ecs, texture, this]() {
-        return std::make_unique<SettingsScene>(ecs, texture, this->_window,
+        return std::make_unique<SettingsScene>(ecs, texture, this->_display,
                                                this->_keybinds, this->_audio,
                                                this->_switchToScene);
     });
     this->_sceneList.emplace(HOW_TO_PLAY, [ecs, texture, this]() {
-        return std::make_unique<HowToPlayScene>(ecs, texture, this->_window,
+        return std::make_unique<HowToPlayScene>(ecs, texture, this->_display,
                                                 this->_keybinds, this->_audio,
                                                 this->_switchToScene);
     });
     this->_sceneList.emplace(GAME_OVER, [ecs, texture, this]() {
         return std::make_unique<GameOverScene>(
-            ecs, texture, this->_window, this->_audio, this->_switchToScene);
+            ecs, texture, this->_display, this->_audio, this->_switchToScene);
     });
     this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
         if (this->_networkSystem) {
@@ -134,11 +134,11 @@ SceneManager::SceneManager(
         }
         auto rtypeGameScene =
             std::make_unique<rtype::games::rtype::client::RtypeGameScene>(
-                ecs, texture, this->_window, this->_keybinds,
+                ecs, texture, this->_display, this->_keybinds,
                 this->_switchToScene, this->_networkClient,
                 this->_networkSystem, this->_audio);
         return std::make_unique<GameScene>(
-            ecs, texture, this->_window, this->_keybinds, this->_switchToScene,
+            ecs, texture, this->_display, this->_keybinds, this->_switchToScene,
             std::move(rtypeGameScene), this->_networkClient,
             this->_networkSystem, this->_audio);
     });

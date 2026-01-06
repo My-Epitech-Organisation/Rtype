@@ -1,14 +1,3 @@
-find_package(SFML
-        COMPONENTS
-        Network
-        Graphics
-        Window
-        Audio
-        System
-        CONFIG
-        REQUIRED
-)
-
 add_subdirectory(Components)
 add_subdirectory(Systems)
 add_subdirectory(GameScene)

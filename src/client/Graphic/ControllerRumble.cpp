@@ -12,9 +12,9 @@
 #include <string>
 #include <vector>
 
-#include <SFML/Window/Joystick.hpp>
-
 #include "Logger/Macros.hpp"
+#include "rtype/display/DisplayTypes.hpp"
+#include "rtype/display/IDisplay.hpp"
 
 std::map<unsigned int, std::chrono::steady_clock::time_point>
     ControllerRumble::_rumbleEndTimes;
@@ -26,12 +26,6 @@ void ControllerRumble::triggerRumble(unsigned int joystickId, float intensity,
     if (!_sdlInitialized) {
         LOG_INFO("[ControllerRumble] First rumble call - initializing SDL2...");
         initialize();
-    }
-
-    if (!sf::Joystick::isConnected(joystickId)) {
-        LOG_WARNING("[ControllerRumble] Joystick " +
-                    std::to_string(joystickId) + " not connected!");
-        return;
     }
 
     SDL_GameController* controller = nullptr;

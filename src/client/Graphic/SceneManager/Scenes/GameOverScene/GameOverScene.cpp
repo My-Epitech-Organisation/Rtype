@@ -13,8 +13,6 @@
 #include <string>
 #include <utility>
 
-#include <SFML/Graphics/Color.hpp>
-
 #include "AllComponents.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "Graphic.hpp"
@@ -25,7 +23,7 @@
 GameOverScene::GameOverScene(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assetsManager,
-    std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<AudioLib> audio,
+    std::shared_ptr<rtype::display::IDisplay> window, std::shared_ptr<AudioLib> audio,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(std::move(registry), std::move(assetsManager), std::move(window),
              std::move(audio)),
@@ -43,11 +41,11 @@ GameOverScene::GameOverScene(
     }
 }
 
-void GameOverScene::pollEvents(const sf::Event& e) { (void)e; }
+void GameOverScene::pollEvents(const rtype::display::Event& e) { (void)e; }
 
 void GameOverScene::update(float dt) { (void)dt; }
 
-void GameOverScene::render(std::shared_ptr<sf::RenderWindow> window) {
+void GameOverScene::render(std::shared_ptr<rtype::display::IDisplay> window) {
     (void)window;
 }
 
@@ -69,10 +67,10 @@ void GameOverScene::_buildLayout() {
 
     auto popUpOverlay = EntityFactory::createRectangle(
         this->_registry,
-        sf::Vector2i{
+        rtype::display::Vector2<int>{
             rtype::games::rtype::client::GraphicsConfig::WINDOW_WIDTH,
             rtype::games::rtype::client::GraphicsConfig::WINDOW_HEIGHT},
-        sf::Color(0, 0, 0, 200), sf::Vector2f{0.f, 0.f});
+        rtype::display::Color(0, 0, 0, 200), rtype::display::Vector2<float>{0.f, 0.f});
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         popUpOverlay,
         rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
@@ -82,10 +80,11 @@ void GameOverScene::_buildLayout() {
 
     auto title = EntityFactory::createStaticText(
         this->_registry, _assetsManager, "GAME OVER", "title_font",
-        sf::Vector2f{
+        rtype::display::Vector2<float>{
             centerX,
             rtype::games::rtype::client::GraphicsConfig::GAME_OVER_TITLE_Y},
         96.f);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(title);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         title, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
     this->_listEntity.push_back(title);
@@ -93,10 +92,11 @@ void GameOverScene::_buildLayout() {
     auto score = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager,
         "SCORE: " + std::to_string(finalScore), "main_font",
-        sf::Vector2f{
+        rtype::display::Vector2<float>{
             centerX,
             rtype::games::rtype::client::GraphicsConfig::GAME_OVER_SCORE_Y},
         72.f);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(score);
 
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         score, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
@@ -114,14 +114,14 @@ void GameOverScene::_buildLayout() {
     auto button = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 36, "Back to Menu"),
+            "main_font",
+            rtype::display::Color::White(), 36, "Back to Menu"),
         rtype::games::rtype::shared::TransformComponent(
             btnX,
             rtype::games::rtype::client::GraphicsConfig::GAME_OVER_BUTTON_Y),
         rtype::games::rtype::client::Rectangle(
             {static_cast<int>(btnWidth), static_cast<int>(btnHeight)},
-            sf::Color(0, 150, 200), sf::Color(0, 200, 255)),
+            rtype::display::Color(0, 150, 200, 255), rtype::display::Color(0, 200, 255, 255)),
         this->_assetsManager, std::function<void()>{[this]() {
             if (this->_switchToScene) {
                 this->_switchToScene(SceneManager::MAIN_MENU);

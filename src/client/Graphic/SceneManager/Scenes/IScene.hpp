@@ -7,14 +7,14 @@
 
 #ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_ISCENE_HPP_
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_ISCENE_HPP_
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Window/Event.hpp>
+#include <memory>
+#include "../../../../../include/rtype/display/IDisplay.hpp"
 
 class IScene {
    public:
-    virtual void pollEvents(const sf::Event& e) = 0;
+    virtual void pollEvents(const rtype::display::Event& e) = 0;
     virtual void update(float dt) = 0;
-    virtual void render(std::shared_ptr<sf::RenderWindow> window) = 0;
+    virtual void render(std::shared_ptr<rtype::display::IDisplay> display) = 0;
 
     virtual ~IScene() = default;
 };

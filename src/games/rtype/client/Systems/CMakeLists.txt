@@ -7,8 +7,6 @@ add_library(rtype_game_client_systems STATIC
     ButtonUpdateSystem.hpp
     ParallaxScrolling.cpp
     ParallaxScrolling.hpp
-    SpritePositionSystem.cpp
-    SpritePositionSystem.hpp
     BoxingSystem.cpp
     BoxingSystem.hpp
     ResetTriggersSystem.cpp
@@ -29,11 +27,6 @@ add_library(rtype_game_client_systems STATIC
 
 target_link_libraries(rtype_game_client_systems
     PUBLIC
-    SFML::Network
-    SFML::Graphics
-    SFML::Window
-    SFML::Audio
-    SFML::System
     engine
     rtype-graphic-scene-manager
     rtype_game_shared

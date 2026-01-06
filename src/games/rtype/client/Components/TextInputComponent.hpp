@@ -14,10 +14,13 @@
 #include <string>
 #include <string_view>
 
-#include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/Font.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
-#include <SFML/Graphics/Text.hpp>
+#include <cctype>
+#include <cstddef>
+#include <functional>
+#include <string>
+#include <string_view>
+
+#include "../../../../../include/rtype/display/DisplayTypes.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -28,25 +31,24 @@ namespace rtype::games::rtype::client {
  * placeholder text, and optional validation.
  */
 struct TextInput {
-    std::shared_ptr<sf::Font> font;
-    sf::Text text;
-    sf::RectangleShape background;
+    std::string fontName;
     std::string content;
     std::string placeholder;
-    sf::Color textColor;
-    sf::Color backgroundColor;
-    sf::Color focusedBorderColor;
-    sf::Color unfocusedBorderColor;
+    ::rtype::display::Color textColor;
+    ::rtype::display::Color backgroundColor;
+    ::rtype::display::Color focusedBorderColor;
+    ::rtype::display::Color unfocusedBorderColor;
     unsigned int fontSize;
     std::size_t maxLength;
     bool isFocused;
     bool isNumericOnly;
+    ::rtype::display::Vector2f size;
     std::function<void(const std::string&)> onChanged;
     std::function<void(const std::string&)> onSubmit;
 
     /**
      * @brief Construct a new TextInput component.
-     * @param font Reference to the font
+     * @param fontName Name of the font in the asset manager
      * @param width Width of the input field
      * @param height Height of the input field
      * @param placeholder Placeholder text when empty
@@ -54,46 +56,28 @@ struct TextInput {
      * @param maxLength Maximum number of characters (0 = unlimited)
      * @param isNumericOnly Only allow numeric input
      */
-    TextInput(std::shared_ptr<sf::Font> font, float width, float height,
+    TextInput(std::string fontName, float width, float height,
               std::string_view placeholder = "",
               std::string_view initialValue = "", std::size_t maxLength = 0,
               bool isNumericOnly = false)
-        : font(font),
-          text(*font),
-          background({width, height}),
+        : fontName(std::move(fontName)),
           content(initialValue),
           placeholder(placeholder),
-          textColor(sf::Color::White),
-          backgroundColor(sf::Color(50, 50, 50)),
-          focusedBorderColor(sf::Color::Cyan),
-          unfocusedBorderColor(sf::Color(100, 100, 100)),
+          textColor(::rtype::display::Color::White()),
+          backgroundColor(::rtype::display::Color(50, 50, 50)),
+          focusedBorderColor(::rtype::display::Color::Cyan()),
+          unfocusedBorderColor(::rtype::display::Color::White()),
           fontSize(24),
           maxLength(maxLength),
           isFocused(false),
-          isNumericOnly(isNumericOnly) {
-        background.setFillColor(backgroundColor);
-        background.setOutlineThickness(2.f);
-        background.setOutlineColor(unfocusedBorderColor);
-        text.setString(
-            std::string(initialValue.empty() ? placeholder : initialValue));
-        text.setCharacterSize(fontSize);
-        text.setFillColor(content.empty() ? sf::Color(150, 150, 150)
-                                          : textColor);
-    }
+          isNumericOnly(isNumericOnly),
+          size({width, height}) {}
 
     /**
      * @brief Update the displayed text
      */
     void updateDisplay() {
-        if (content.empty() && !isFocused) {
-            text.setString(placeholder);
-            text.setFillColor(sf::Color(150, 150, 150));
-        } else {
-            text.setString(content + (isFocused ? "_" : ""));
-            text.setFillColor(textColor);
-        }
-        background.setOutlineColor(isFocused ? focusedBorderColor
-                                             : unfocusedBorderColor);
+        // Logic moved to RenderSystem or handled by IDisplay
     }
 
     /**

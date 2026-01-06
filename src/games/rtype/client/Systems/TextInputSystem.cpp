@@ -16,40 +16,29 @@
 
 namespace rtype::games::rtype::client {
 
-TextInputSystem::TextInputSystem(std::shared_ptr<sf::RenderWindow> window)
-    : _window(std::move(window)) {}
+TextInputSystem::TextInputSystem(std::shared_ptr<::rtype::display::IDisplay> display)
+    : _display(std::move(display)) {}
 
 bool TextInputSystem::handleEvent(ECS::Registry& registry,
-                                  const sf::Event& event) {
-    if (auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>()) {
-        if (mousePressed->button == sf::Mouse::Button::Left) {
-            sf::Vector2f worldPos =
-                _window->mapPixelToCoords(mousePressed->position);
-            handleClick(registry, worldPos.x, worldPos.y);
+                                  const ::rtype::display::Event& event) {
+    if (event.type == ::rtype::display::EventType::MouseButtonPressed) {
+        if (event.mouseButton.button == ::rtype::display::MouseButton::Left) {
+            handleClick(registry, static_cast<float>(event.mouseButton.x),
+                        static_cast<float>(event.mouseButton.y));
             return true;
         }
     }
-    if (auto* textEntered = event.getIf<sf::Event::TextEntered>()) {
-        return handleTextEntered(registry, textEntered->unicode);
+    if (event.type == ::rtype::display::EventType::TextEntered) {
+        return handleTextEntered(registry, event.text.unicode);
     }
-    if (auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
-        return handleKeyPressed(registry, keyPressed->code);
+    if (event.type == ::rtype::display::EventType::KeyPressed) {
+        return handleKeyPressed(registry, event.key.code);
     }
 
     return false;
 }
 
-void TextInputSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
-    auto view =
-        registry.view<TextInput, shared::TransformComponent, TextInputTag>();
-
-    view.each([this](auto /*entity*/, TextInput& input,
-                     shared::TransformComponent& pos, auto) {
-        input.background.setPosition({pos.x, pos.y});
-        input.text.setPosition({pos.x + 10.f, pos.y + 5.f});
-        _window->draw(input.background);
-        _window->draw(input.text);
-    });
+void TextInputSystem::update(ECS::Registry& /*registry*/, float /*deltaTime*/) {
 }
 
 std::optional<ECS::Entity> TextInputSystem::getFocusedInput() const {
@@ -71,10 +60,8 @@ void TextInputSystem::handleClick(ECS::Registry& registry, float mouseX,
     view.each([this, mouseX, mouseY, &topInput, &highestZIndex, &foundInput,
                &registry](ECS::Entity entity, TextInput& input,
                           shared::TransformComponent& pos, auto) {
-        sf::FloatRect bounds = input.background.getGlobalBounds();
-        bounds.position = {pos.x, pos.y};
-
-        if (bounds.contains({mouseX, mouseY})) {
+        if (mouseX >= pos.x && mouseX <= pos.x + input.size.x &&
+            mouseY >= pos.y && mouseY <= pos.y + input.size.y) {
             int zIndex = 0;
             if (registry.hasComponent<ZIndex>(entity)) {
                 zIndex = registry.getComponent<ZIndex>(entity).depth;
@@ -99,9 +86,8 @@ void TextInputSystem::handleClick(ECS::Registry& registry, float mouseX,
             if (registry.hasComponent<TextInputTag>(entity)) {
                 return;
             }
-            sf::FloatRect bounds = rect.rectangle.getGlobalBounds();
-            bounds.position = {pos.x, pos.y};
-            if (bounds.contains({mouseX, mouseY})) {
+            if (mouseX >= pos.x && mouseX <= pos.x + rect.size.first &&
+                mouseY >= pos.y && mouseY <= pos.y + rect.size.second) {
                 int otherZIndex = 0;
                 if (registry.hasComponent<ZIndex>(entity)) {
                     otherZIndex = registry.getComponent<ZIndex>(entity).depth;
@@ -135,28 +121,28 @@ bool TextInputSystem::handleTextEntered(ECS::Registry& registry,
 }
 
 bool TextInputSystem::handleKeyPressed(ECS::Registry& registry,
-                                       sf::Keyboard::Key key) {
+                                       ::rtype::display::Key key) {
     if (!_focusedInput.has_value()) return false;
 
     auto& input = registry.getComponent<TextInput>(*_focusedInput);
 
-    if (key == sf::Keyboard::Key::Backspace) {
+    if (key == ::rtype::display::Key::BackSpace) {
         input.handleBackspace();
         return true;
     }
 
-    if (key == sf::Keyboard::Key::Enter) {
+    if (key == ::rtype::display::Key::Return) {
         if (input.onSubmit) {
             input.onSubmit(input.content);
         }
         return true;
     }
 
-    if (key == sf::Keyboard::Key::Tab) {
+    if (key == ::rtype::display::Key::Tab) {
         return true;
     }
 
-    if (key == sf::Keyboard::Key::Escape) {
+    if (key == ::rtype::display::Key::Escape) {
         input.setFocus(false);
         _focusedInput = std::nullopt;
         return true;

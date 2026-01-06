@@ -9,45 +9,64 @@
 
 #include "../Components/ImageComponent.hpp"
 #include "../Components/ParallaxComponent.hpp"
+#include "../Components/TextureRectComponent.hpp"
+#include "../shared/Components/TransformComponent.hpp"
+#include "../GraphicsConstants.hpp"
 
 namespace rtype::games::rtype::client {
 
 namespace rc = ::rtype::games::rtype::client;
+namespace rs = ::rtype::games::rtype::shared;
 
-ParallaxScrolling::ParallaxScrolling(std::shared_ptr<sf::View> view)
-    : ::rtype::engine::ASystem("ParallaxScrolling"), _view(std::move(view)) {}
+ParallaxScrolling::ParallaxScrolling(std::shared_ptr<::rtype::display::IDisplay> display)
+    : ::rtype::engine::ASystem("ParallaxScrolling"), _display(std::move(display)) {}
 
 void ParallaxScrolling::_updateCache() {
     if (!_cacheValid) {
-        sf::Vector2f size = _view->getSize();
-        _cachedHalfWidth = size.x / 2.0f;
-        _cachedHalfHeight = size.y / 2.0f;
+        display::Vector2f viewSize = _display->getViewSize();
+        _cachedHalfWidth = viewSize.x / 2.0f;
+        _cachedHalfHeight = viewSize.y / 2.0f;
         _cacheValid = true;
     }
 }
 
-void ParallaxScrolling::update(ECS::Registry& registry, float /*dt*/) {
+void ParallaxScrolling::update(ECS::Registry& registry, float dt) {
     _updateCache();
+    _totalScroll += GraphicsConfig::SCROLL_SPEED * dt;
 
-    const sf::Vector2f center = _view->getCenter();
+    const display::Vector2f center = _display->getViewCenter();
     const float viewWidth = _cachedHalfWidth * 2.0f;
     const float spriteX = center.x - _cachedHalfWidth;
     const float spriteY = center.y - _cachedHalfHeight;
 
-    registry.view<rc::Parallax, rc::Image>().each(
-        [this, &center, viewWidth, spriteX, spriteY](
-            auto /*entity*/, const auto& parallax, auto& spriteData) {
-            float effectiveOffset = center.x * parallax.scrollFactor;
+    // Only process entities that HAVE the Parallax component.
+    // We also need Image and Transform. TextureRect will be added if missing.
+    registry.view<rc::Parallax, rc::Image, rs::TransformComponent>().each(
+        [&registry, this, &center, viewWidth, spriteX, spriteY](
+            auto entity, auto& parallax, auto& img, auto& transform) {
+
+            // Ensure TextureRect exists
+            if (!registry.hasComponent<rc::TextureRect>(entity)) {
+                registry.emplaceComponent<rc::TextureRect>(entity);
+            }
+            auto& texRect = registry.getComponent<rc::TextureRect>(entity);
+
+            float effectiveOffset = _totalScroll * parallax.scrollFactor;
             int intOffset = static_cast<int>(effectiveOffset);
 
-            spriteData.sprite.setPosition({spriteX, spriteY});
+            // Pin to camera
+            transform.x = spriteX;
+            transform.y = spriteY;
 
-            sf::IntRect newRect(
-                {intOffset, 0},
-                {static_cast<int>(viewWidth) + 1,
-                 static_cast<int>(spriteData.sprite.getTexture().getSize().y)});
-
-            spriteData.sprite.setTextureRect(newRect);
+            auto texture = _display->getTexture(img.textureName);
+            if (texture) {
+                display::Vector2u texSize = texture->getSize();
+                texRect.rect = {
+                    intOffset, 0,
+                    static_cast<int>(viewWidth) + 1,
+                    static_cast<int>(texSize.y)
+                };
+            }
         });
 }
 

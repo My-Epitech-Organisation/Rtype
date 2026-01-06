@@ -14,8 +14,6 @@
 #include "AudioLib/AudioLib.hpp"
 
 static constexpr int nbr_vessels = 7;
-#include <SFML/Graphics/Color.hpp>
-
 #include "../../../../network/ClientNetworkSystem.hpp"
 #include "../../../../network/NetworkClient.hpp"
 #include "../AScene.hpp"
@@ -65,17 +63,17 @@ class MainMenuScene : public AScene {
      * @param message Status message
      * @param color Text color
      */
-    void _updateStatus(const std::string& message, sf::Color color);
+    void _updateStatus(const std::string& message, ::rtype::display::Color color);
 
    public:
     void update(float dt) override;
-    void render(std::shared_ptr<sf::RenderWindow> window) override;
-    void pollEvents(const sf::Event& e) override;
+    void render(std::shared_ptr<::rtype::display::IDisplay> window) override;
+    void pollEvents(const ::rtype::display::Event& e) override;
 
     MainMenuScene(
         std::shared_ptr<ECS::Registry> ecs,
         std::shared_ptr<AssetManager> textureManager,
-        std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<::rtype::display::IDisplay> window,
         std::function<void(const SceneManager::Scene&)> switchToScene,
         std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,
         std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =

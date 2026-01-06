@@ -22,8 +22,8 @@
 namespace rtype::games::rtype::client {
 
 void VisualCueFactory::createFlash(ECS::Registry& registry,
-                                   const sf::Vector2f& center,
-                                   const sf::Color& color, float size,
+                                   const ::rtype::display::Vector2f& center,
+                                   const ::rtype::display::Color& color, float size,
                                    float lifetime, int zIndex) {
     if (registry.hasSingleton<AccessibilitySettings>()) {
         const auto& acc = registry.getSingleton<AccessibilitySettings>();
@@ -40,7 +40,7 @@ void VisualCueFactory::createFlash(ECS::Registry& registry,
         entity, std::pair<float, float>({size, size}), color, color);
     auto& rect = registry.getComponent<Rectangle>(entity);
     rect.currentColor = color;
-    rect.outlineColor = sf::Color::White;
+    rect.outlineColor = ::rtype::display::Color::White();
     rect.outlineThickness = 3.f;
 
     registry
@@ -53,18 +53,19 @@ void VisualCueFactory::createFlash(ECS::Registry& registry,
 }
 
 void VisualCueFactory::createDamagePopup(ECS::Registry& registry,
-                                         const sf::Vector2f& position,
+                                         const ::rtype::display::Vector2f& position,
                                          int damage,
-                                         std::shared_ptr<sf::Font> font,
-                                         const sf::Color& color) {
+                                         const std::string& fontName,
+                                         const ::rtype::display::Color& color) {
     auto entity = registry.spawnEntity();
     LOG_DEBUG("[VisualCueFactory] Damage popup entity=" +
               std::to_string(entity.id) + " dmg=" + std::to_string(damage));
 
     std::string damageText = "-" + std::to_string(damage);
-    registry.emplaceComponent<Text>(entity, font, color, 32, damageText);
+    registry.emplaceComponent<Text>(entity, fontName, color, 32, damageText);
 
     registry.emplaceComponent<StaticTextTag>(entity);
+    registry.emplaceComponent<CenteredTextTag>(entity);
 
     static thread_local std::random_device rd;
     static thread_local std::mt19937 gen(rd());
