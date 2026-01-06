@@ -14,19 +14,20 @@
 #include <string>
 #include <unordered_map>
 
-#include <SFML/Graphics/Texture.hpp>
+#include "rtype/display/IDisplay.hpp"
 
 class TextureManager {
    private:
-    std::unordered_map<std::string, std::unique_ptr<sf::Texture>> _assets;
+    rtype::display::IDisplay* _display;
 
    public:
+    TextureManager(rtype::display::IDisplay* display) : _display(display) {}
     TextureManager(const TextureManager&) = delete;
     TextureManager& operator=(const TextureManager&) = delete;
 
     void load(const std::string& id, const std::string& filePath);
 
-    sf::Texture& get(const std::string& id);
+    std::shared_ptr<::rtype::display::ITexture> get(const std::string& id);
 
     /**
      * @brief Check if a texture is loaded
@@ -34,26 +35,6 @@ class TextureManager {
      * @return true if the texture is loaded, false otherwise
      */
     bool isLoaded(const std::string& id) const;
-
-    /**
-     * @brief Unload a specific texture by id
-     * @param id The texture identifier to unload
-     * @return true if the texture was unloaded, false if not found
-     */
-    bool unload(const std::string& id);
-
-    /**
-     * @brief Unload all textures
-     */
-    void unloadAll();
-
-    /**
-     * @brief Get the number of loaded textures
-     * @return Number of textures currently loaded
-     */
-    std::size_t size() const;
-
-    TextureManager() = default;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_TEXTUREMANAGER_HPP_

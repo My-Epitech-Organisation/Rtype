@@ -12,18 +12,20 @@
 
 void FontManager::load(const std::string& id, const std::string& filePath) {
     if (this->_assets.contains(id)) return;
-    auto font = std::make_shared<sf::Font>();
+    
+    _display->loadFont(id, filePath);
+    auto font = _display->getFont(id);
 
-    if (!font->openFromFile(filePath)) {
+    if (!font) {
         LOG_ERROR("Unable to open font: " << filePath);
         throw std::runtime_error("Error while loading font: " + filePath);
     }
 
-    this->_assets[id] = std::move(font);
+    this->_assets[id] = font;
     LOG_DEBUG("Font loaded with ID: " << id);
 }
 
-std::shared_ptr<sf::Font> FontManager::get(const std::string& id) {
+std::shared_ptr<::rtype::display::IFont> FontManager::get(const std::string& id) {
     auto it = this->_assets.find(id);
 
     if (it == this->_assets.end()) {

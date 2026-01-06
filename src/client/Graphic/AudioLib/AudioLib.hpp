@@ -10,16 +10,17 @@
 
 #include <list>
 
-#include "SFML/Audio.hpp"
+#include "../../../../include/rtype/display/IDisplay.hpp"
 
 class AudioLib {
    private:
-    std::shared_ptr<sf::Music> _currentMusic;
+    std::shared_ptr<::rtype::display::IMusic> _currentMusic;
+    std::shared_ptr<::rtype::display::IDisplay> _display;
 
     float _volumeMusic = 50;
     float _volumeSFX = 25;
 
-    std::list<sf::Sound> _sounds;
+    std::list<std::shared_ptr<::rtype::display::ISound>> _sounds;
 
    public:
     void setLoop(const bool& loop) const;
@@ -32,11 +33,11 @@ class AudioLib {
     void pauseMusic() const;
     void play() const;
 
-    void playSFX(const sf::SoundBuffer& sfx);
+    void playSFX(std::shared_ptr<rtype::display::ISoundBuffer> sfx);
 
-    void loadMusic(std::shared_ptr<sf::Music> music);
+    void loadMusic(std::shared_ptr<::rtype::display::IMusic> music);
 
-    AudioLib() = default;
+    explicit AudioLib(std::shared_ptr<::rtype::display::IDisplay> display) : _display(display) {}
     ~AudioLib();
 };
 

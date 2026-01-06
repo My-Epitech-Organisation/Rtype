@@ -11,18 +11,20 @@
 
 void AudioManager::load(const std::string& id, const std::string& filePath) {
     if (this->_assets.contains(id)) return;
-    auto music = std::make_shared<sf::Music>();
+    
+    _display->loadMusic(id, filePath);
+    auto music = _display->getMusic(id);
 
-    if (!music->openFromFile(filePath)) {
+    if (!music) {
         LOG_ERROR("Error unable to open music: " + filePath);
         throw std::runtime_error("Error while loading music: " + filePath);
     }
 
-    this->_assets[id] = std::move(music);
+    this->_assets[id] = music;
     LOG_INFO("Audio saved with ID: " + id);
 }
 
-std::shared_ptr<sf::Music> AudioManager::get(const std::string& id) {
+std::shared_ptr<::rtype::display::IMusic> AudioManager::get(const std::string& id) {
     auto it = this->_assets.find(id);
 
     if (it == this->_assets.end()) {

@@ -16,15 +16,12 @@
 class AssetManager {
    public:
     rtype::game::config::RTypeGameConfig configGameAssets;
-    std::shared_ptr<TextureManager> textureManager =
-        std::make_shared<TextureManager>();
-    std::shared_ptr<FontManager> fontManager = std::make_shared<FontManager>();
-    std::shared_ptr<AudioManager> audioManager =
-        std::make_shared<AudioManager>();
-    std::shared_ptr<SoundManager> soundManager =
-        std::make_shared<SoundManager>();
+    std::shared_ptr<TextureManager> textureManager;
+    std::shared_ptr<FontManager> fontManager;
+    std::shared_ptr<AudioManager> audioManager;
+    std::shared_ptr<SoundManager> soundManager;
     explicit AssetManager(
-        const rtype::game::config::RTypeGameConfig& configGameAssets);
+        const rtype::game::config::RTypeGameConfig& configGameAssets, std::shared_ptr<rtype::display::IDisplay> display);
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_ASSETMANAGER_HPP_

@@ -14,12 +14,11 @@
 #include <string>
 #include <unordered_map>
 
-#include <SFML/Audio.hpp>
-#include <SFML/Audio/Music.hpp>
+#include "rtype/display/IDisplay.hpp"
 
 class AudioManager {
    private:
-    std::unordered_map<std::string, std::shared_ptr<sf::Music>> _assets;
+    std::unordered_map<std::string, std::shared_ptr<::rtype::display::IMusic>> _assets;
 
    public:
     AudioManager(const AudioManager&) = delete;
@@ -27,9 +26,12 @@ class AudioManager {
 
     void load(const std::string& id, const std::string& filePath);
 
-    std::shared_ptr<sf::Music> get(const std::string& id);
+    std::shared_ptr<::rtype::display::IMusic> get(const std::string& id);
 
-    AudioManager() = default;
+    AudioManager(::rtype::display::IDisplay* display) : _display(display) {}
+
+   private:
+    ::rtype::display::IDisplay* _display;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_AUDIOMANAGER_HPP_

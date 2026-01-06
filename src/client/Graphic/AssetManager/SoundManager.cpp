@@ -8,21 +8,24 @@
 #include "SoundManager.hpp"
 
 #include "Macros.hpp"
+#include "include/rtype/display/IDisplay.hpp"
 
 void SoundManager::load(const std::string& id, const std::string& filePath) {
     if (this->_assets.contains(id)) return;
-    auto sound = std::make_shared<sf::SoundBuffer>();
+    
+    _display->loadSoundBuffer(id, filePath);
+    auto sound = _display->getSoundBuffer(id);
 
-    if (!sound->loadFromFile(filePath)) {
+    if (!sound) {
         LOG_ERROR("Error unable to open sound: " + filePath);
         throw std::runtime_error("Error while loading sound: " + filePath);
     }
 
-    this->_assets[id] = std::move(sound);
+    this->_assets[id] = sound;
     LOG_INFO("Sound saved with ID: " + id);
 }
 
-std::shared_ptr<sf::SoundBuffer> SoundManager::get(const std::string& id) {
+std::shared_ptr<::rtype::display::ISoundBuffer> SoundManager::get(const std::string& id) {
     auto it = this->_assets.find(id);
 
     if (it == this->_assets.end()) {
