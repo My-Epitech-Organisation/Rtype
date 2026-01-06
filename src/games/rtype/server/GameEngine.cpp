@@ -41,6 +41,20 @@ bool GameEngine::initialize() {
     }
     _registry->reserveEntities(GameConfig::MAX_ENEMIES + 100);
 
+    LOG_INFO("[GameEngine] Loading entity configurations");
+    auto& entityConfigRegistry = shared::EntityConfigRegistry::getInstance();
+    try {
+        entityConfigRegistry.loadEnemiesWithSearch("config/game/enemies.toml");
+        entityConfigRegistry.loadPlayersWithSearch("config/game/players.toml");
+        entityConfigRegistry.loadProjectilesWithSearch("config/game/projectiles.toml");
+        entityConfigRegistry.loadPowerUpsWithSearch("config/game/powerups.toml");
+        LOG_INFO("[GameEngine] Entity configurations loaded");
+    } catch (const std::exception& e) {
+        LOG_WARNING("[GameEngine] Failed to load some entity configurations: "
+                    << e.what()
+                    << " - Continuing with available configs");
+    }
+
     _prefabManager = std::make_unique<ECS::PrefabManager>(std::ref(*_registry));
     shared::PrefabLoader::registerAllPrefabs(*_prefabManager);
     LOG_INFO("[GameEngine] Registered "
