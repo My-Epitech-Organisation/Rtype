@@ -263,4 +263,33 @@
         return std::cref(static_cast<const SparseSet<T>&>(*iter->second));
     }
 
+    inline void Registry::clear() {
+        // 1. Kill all entities (this triggers onDestroy callbacks for all components)
+        removeEntitiesIf([](Entity) { return true; });
+        cleanupTombstones();
+
+        // 2. Clear all signals to prevent any further callbacks
+        _signalDispatcher.clearAllCallbacks();
+
+        // 3. Clear all singletons
+        {
+            std::unique_lock lock(_entityMutex); // Reusing entity mutex for convenience
+            _singletons.clear();
+        }
+
+        // 4. Clear component pools and generations
+        {
+            std::unique_lock lock(_componentPoolMutex);
+            _componentPools.clear();
+        }
+        
+        {
+            std::unique_lock lock(_entityMutex);
+            _generations.clear();
+            _freeIndices.clear();
+            _tombstones.clear();
+            _entityComponents.clear();
+        }
+    }
+
 #endif // ECS_CORE_REGISTRY_COMPONENT_INL
