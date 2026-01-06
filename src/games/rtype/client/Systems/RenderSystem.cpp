@@ -205,12 +205,17 @@ void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
 
     std::sort(sortedEntities.begin(), sortedEntities.end(),
               [&registry](ECS::Entity a, ECS::Entity b) {
+                  if (!registry.isAlive(a) || !registry.hasComponent<ZIndex>(a))
+                      return true;
+                  if (!registry.isAlive(b) || !registry.hasComponent<ZIndex>(b))
+                      return false;
                   const auto& za = registry.getComponent<ZIndex>(a);
                   const auto& zb = registry.getComponent<ZIndex>(b);
                   return za.depth < zb.depth;
               });
 
     for (auto entity : sortedEntities) {
+        if (!registry.isAlive(entity)) continue;
         if (isEntityHidden(registry, entity)) continue;
 
         if (registry.hasComponent<Image>(entity))
