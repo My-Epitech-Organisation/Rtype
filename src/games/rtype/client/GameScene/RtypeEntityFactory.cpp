@@ -127,7 +127,6 @@ RtypeEntityFactory::createNetworkEntityFactory(
 void RtypeEntityFactory::setupPlayerEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity, std::uint32_t userId) {
-
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] Adding Player components for entity "
                       << entity.id);
