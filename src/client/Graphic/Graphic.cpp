@@ -357,8 +357,8 @@ Graphic::Graphic(
 
 #ifdef _WIN32
     this->_displayLoader =
-    std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
-        "./display.dll");
+        std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
+            "./display.dll");
 #else
     this->_displayLoader =
         std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
