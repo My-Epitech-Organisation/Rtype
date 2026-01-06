@@ -27,8 +27,8 @@ target_compile_features(network PUBLIC cxx_std_20)
 
 rtype_find_asio()
 
-# Find LZ4 for compression
-find_package(lz4 CONFIG REQUIRED)
+# Find LZ4 for compression (vcpkg preferred, CPM fallback)
+rtype_find_lz4()
 
 target_link_libraries(network PUBLIC
     engine

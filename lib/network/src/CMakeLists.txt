@@ -26,8 +26,8 @@ add_library(network STATIC
 # Find Asio (standalone, non-Boost)
 rtype_find_asio()
 
-# Find LZ4 for compression
-find_package(lz4 CONFIG REQUIRED)
+# Find LZ4 for compression (vcpkg preferred, CPM fallback)
+rtype_find_lz4()
 
 target_include_directories(network PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

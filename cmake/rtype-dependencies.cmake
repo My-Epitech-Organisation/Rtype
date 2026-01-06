@@ -53,6 +53,7 @@ endif()
 #   - PNG::PNG (libpng)
 #   - BZip2::BZip2 (bzip2)
 #   - unofficial::brotli::brotlidec, unofficial::brotli::brotlicommon (brotli)
+#   - lz4::lz4 (lz4)
 #
 # This works consistently across vcpkg, CPM, and system packages, allowing
 # downstream CMakeLists (e.g., src/client) to use TARGET checks without *_FOUND guards.
@@ -337,5 +338,34 @@ function(rtype_find_brotli)
     endif()
     if(TARGET brotlienc-static AND NOT TARGET unofficial::brotli::brotlienc)
         add_library(unofficial::brotli::brotlienc ALIAS brotlienc-static)
+    endif()
+endfunction()
+
+function(rtype_find_lz4)
+    if(NOT RTYPE_FORCE_CPM)
+        find_package(lz4 CONFIG QUIET)
+        if(lz4_FOUND)
+            return()
+        endif()
+    endif()
+
+    CPMAddPackage(
+        NAME lz4
+        VERSION 1.10.0
+        GITHUB_REPOSITORY lz4/lz4
+        GIT_TAG v1.10.0
+        SOURCE_SUBDIR build/cmake
+        OPTIONS
+            "LZ4_BUILD_CLI=OFF"
+            "LZ4_BUILD_LEGACY_LZ4C=OFF"
+            "BUILD_SHARED_LIBS=OFF"
+            "BUILD_STATIC_LIBS=ON"
+    )
+
+    # Create alias target for consistent usage across vcpkg/CPM
+    if(TARGET lz4_static AND NOT TARGET lz4::lz4)
+        add_library(lz4::lz4 ALIAS lz4_static)
+    elseif(TARGET LZ4::lz4_static AND NOT TARGET lz4::lz4)
+        add_library(lz4::lz4 ALIAS LZ4::lz4_static)
     endif()
 endfunction()
