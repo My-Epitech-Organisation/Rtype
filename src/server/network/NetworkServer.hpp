@@ -208,6 +208,25 @@ class NetworkServer {
     void sendGameOver(std::uint32_t finalScore);
 
     /**
+     * @brief Broadcast game start with countdown
+     *
+     * Sent reliably to all clients to trigger countdown timer.
+     *
+     * @param countdownDuration Countdown duration in seconds (e.g., 3.0f)
+     */
+    void broadcastGameStart(float countdownDuration);
+
+    /**
+     * @brief Broadcast player ready state change to all clients
+     *
+     * Sent reliably to all clients to update lobby UI with ready status.
+     *
+     * @param userId User ID of the player whose ready state changed
+     * @param isReady True if player is ready, false otherwise
+     */
+    void broadcastPlayerReadyState(std::uint32_t userId, bool isReady);
+
+    /**
      * @brief Spawn an entity on a specific client
      *
      * Useful for syncing existing entities to newly connected clients.
@@ -316,6 +335,13 @@ class NetworkServer {
     void onGetUsersRequest(std::function<void(std::uint32_t userId)> callback);
 
     /**
+     * @brief Register callback for client ready/not ready signals
+     * @param callback Function receiving user ID and ready state (true=ready)
+     */
+    void onClientReady(
+        std::function<void(std::uint32_t userId, bool isReady)> callback);
+
+    /**
      * @brief Process incoming packets and dispatch callbacks
      *
      * Must be called regularly (e.g., each game frame) to:
@@ -378,6 +404,9 @@ class NetworkServer {
                         const network::Endpoint& sender);
     void handlePing(const network::Header& header,
                     const network::Endpoint& sender);
+    void handleReady(const network::Header& header,
+                     const network::Buffer& payload,
+                     const network::Endpoint& sender);
 
     [[nodiscard]] std::string makeConnectionKey(
         const network::Endpoint& ep) const;
@@ -429,6 +458,7 @@ class NetworkServer {
         onClientDisconnectedCallback_;
     std::function<void(std::uint32_t, std::uint8_t)> onClientInputCallback_;
     std::function<void(std::uint32_t)> onGetUsersRequestCallback_;
+    std::function<void(std::uint32_t, bool)> onClientReadyCallback_;
 
     mutable std::mutex clientsMutex_;
 };

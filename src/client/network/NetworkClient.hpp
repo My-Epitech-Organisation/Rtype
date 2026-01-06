@@ -128,6 +128,7 @@ static constexpr std::chrono::milliseconds kNetworkThreadSleepDuration{3};
 class NetworkClient {
    public:
     using DisconnectReason = network::DisconnectReason;
+    using CallbackId = std::size_t;
 
     /**
      * @brief Configuration for NetworkClient
@@ -143,6 +144,14 @@ class NetworkClient {
      * @param config Optional configuration
      */
     explicit NetworkClient(const Config& config = Config{});
+
+    /**
+     * @brief Testable constructor for injecting a mock socket and optionally
+     *        disabling the background network thread. Useful for unit tests.
+     */
+    NetworkClient(const Config& config,
+                  std::unique_ptr<network::IAsyncSocket> socket,
+                  bool startNetworkThread = true);
 
     /**
      * @brief Destructor - automatically disconnects if connected
@@ -209,16 +218,39 @@ class NetworkClient {
     bool sendInput(std::uint8_t inputMask);
 
     /**
+     * @brief Send a ping to the server
+     *
+     * Used for latency calculation.
+     * @return true if sent, false if not connected
+     */
+    bool ping();
+
+    /**
+     * @brief Send ready/not ready state to server
+     *
+     * Sends C_READY packet to signal lobby ready state.
+     * @param isReady true if ready, false if not ready
+     * @return true if sent, false if not connected
+     */
+    bool sendReady(bool isReady);
+
+    /**
      * @brief Register callback for successful connection
      * @param callback Function receiving the assigned user ID
      */
     void onConnected(std::function<void(std::uint32_t myUserId)> callback);
+    CallbackId addConnectedCallback(
+        std::function<void(std::uint32_t myUserId)> callback);
+    void removeConnectedCallback(CallbackId id);
 
     /**
      * @brief Register callback for disconnection (graceful or unexpected)
      * @param callback Function receiving the disconnect reason
      */
     void onDisconnected(std::function<void(DisconnectReason)> callback);
+    CallbackId addDisconnectedCallback(
+        std::function<void(DisconnectReason)> callback);
+    void removeDisconnectedCallback(CallbackId id);
 
     /**
      * @brief Register callback for entity spawn events
@@ -267,6 +299,19 @@ class NetworkClient {
     void onGameOver(std::function<void(GameOverEvent)> callback);
 
     /**
+     * @brief Register callback for game start countdown
+     * @param callback Function receiving countdown duration in seconds
+     */
+    void onGameStart(std::function<void(float countdownDuration)> callback);
+
+    /**
+     * @brief Register callback for player ready state changes
+     * @param callback Function receiving userId and ready status
+     */
+    void onPlayerReadyStateChanged(
+        std::function<void(std::uint32_t userId, bool isReady)> callback);
+
+    /**
      * @brief Process network events and dispatch callbacks
      *
      * Must be called regularly (e.g., each game frame) to:
@@ -307,6 +352,10 @@ class NetworkClient {
                            const network::Buffer& payload);
     void handleGameOver(const network::Header& header,
                         const network::Buffer& payload);
+    void handleGameStart(const network::Header& header,
+                         const network::Buffer& payload);
+    void handlePlayerReadyState(const network::Header& header,
+                                const network::Buffer& payload);
     void handlePong(const network::Header& header,
                     const network::Buffer& payload);
 
@@ -342,11 +391,13 @@ class NetworkClient {
     std::vector<std::function<void(DisconnectReason)>> onDisconnectedCallbacks_;
     std::function<void(EntitySpawnEvent)> onEntitySpawnCallback_;
     std::function<void(EntityMoveEvent)> onEntityMoveCallback_;
-    std::function<void(std::uint32_t)> onEntityDestroyCallback_;
+    std::vector<std::function<void(std::uint32_t)>> onEntityDestroyCallbacks_;
     std::function<void(EntityHealthEvent)> onEntityHealthCallback_;
     std::function<void(float, float)> onPositionCorrectionCallback_;
     std::function<void(GameStateEvent)> onGameStateChangeCallback_;
     std::function<void(GameOverEvent)> onGameOverCallback_;
+    std::function<void(float)> onGameStartCallback_;
+    std::function<void(std::uint32_t, bool)> onPlayerReadyStateChangedCallback_;
     std::function<void(PowerUpEvent)> onPowerUpCallback_;
 
     std::thread networkThread_;

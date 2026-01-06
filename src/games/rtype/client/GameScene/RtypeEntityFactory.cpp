@@ -37,6 +37,24 @@
 namespace rtype::games::rtype::client {
 
 /**
+ * @brief Map server userId to client playerId for consistent color assignment
+ *
+ * The server assigns userIds based on connection order (1, 2, 3, 4, ...)
+ * We map these to playerId (1-4) for player colors:
+ * userId 1 → playerId 1 (blue)
+ * userId 2 → playerId 2 (pink)
+ * userId 3 → playerId 3 (green)
+ * userId 4 → playerId 4 (red)
+ * userId 5+ → wraps around
+ */
+static inline uint32_t userIdToPlayerId(uint32_t userId) {
+    if (userId < 1) return 1;
+    uint32_t playerId =
+        ((userId - 1) % ::rtype::game::config::MAX_PLAYER_COUNT) + 1;
+    return playerId;
+}
+
+/**
  * @brief Get the texture rectangle (sprite position) for a player based on
  * their ID
  *
@@ -83,9 +101,11 @@ RtypeEntityFactory::createNetworkEntityFactory(
             entity, event.entityId);
 
         switch (event.type) {
-            case ::rtype::network::EntityType::Player:
-                setupPlayerEntity(reg, assetsManager, entity, event.userId);
+            case ::rtype::network::EntityType::Player: {
+                uint32_t playerId = userIdToPlayerId(event.userId);
+                setupPlayerEntity(reg, assetsManager, entity, playerId);
                 break;
+            }
 
             case ::rtype::network::EntityType::Bydos:
                 setupBydosEntity(reg, assetsManager, entity, event.subType);
@@ -193,8 +213,6 @@ void RtypeEntityFactory::setupPlayerEntity(
     reg.emplaceComponent<PlayerSoundComponent>(
         entity, assetsManager->soundManager->get("player_spawn"),
         assetsManager->soundManager->get("player_death"));
-    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(*assetsManager->soundManager->get("player_spawn"));
 }
 
 void RtypeEntityFactory::setupBydosEntity(
@@ -268,8 +286,6 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.emplaceComponent<EnemySoundComponent>(
         entity, assetsManager->soundManager->get("bydos_spawn"),
         assetsManager->soundManager->get("bydos_death"));
-    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(*assetsManager->soundManager->get("bydos_spawn"));
 }
 
 void RtypeEntityFactory::setupMissileEntity(
@@ -312,8 +328,6 @@ void RtypeEntityFactory::setupMissileEntity(
     reg.emplaceComponent<shared::LifetimeComponent>(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
     reg.emplaceComponent<GameTag>(entity);
-    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(*assetsManager->soundManager->get("laser_sfx"));
 
     if (reg.hasComponent<shared::TransformComponent>(entity)) {
         const auto& pos = reg.getComponent<shared::TransformComponent>(entity);

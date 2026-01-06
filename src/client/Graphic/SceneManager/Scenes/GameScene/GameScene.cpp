@@ -16,6 +16,9 @@
 #include "games/rtype/client/PauseState.hpp"
 
 void GameScene::update(float dt) {
+    if (_networkClient) {
+        _networkClient->poll();
+    }
     if (_gameScene) {
         _gameScene->update();
     }

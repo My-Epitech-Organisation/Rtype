@@ -10,9 +10,11 @@
 
 #include <atomic>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include <rtype/common.hpp>
@@ -111,6 +113,12 @@ class ServerApp {
     [[nodiscard]] bool isPlaying() const noexcept {
         return _stateManager->isPlaying();
     }
+    [[nodiscard]] bool isCountdownActive() const noexcept {
+        return _stateManager->isCountdownActive();
+    }
+    [[nodiscard]] float getCountdownRemaining() const noexcept {
+        return _stateManager->getCountdownRemaining();
+    }
     [[nodiscard]] size_t getReadyPlayerCount() const noexcept {
         return _stateManager->getReadyPlayerCount();
     }
@@ -127,6 +135,22 @@ class ServerApp {
     void playerReady(std::uint32_t userId) {
         _stateManager->playerReady(userId);
     }
+
+    // Test helpers to manipulate game state for integration tests
+    void playerNotReady(std::uint32_t userId) {
+        _stateManager->playerNotReady(userId);
+    }
+
+    void forceStart() { _stateManager->forceStart(); }
+
+    /**
+     * @brief Test hook: register a callback to be invoked when ServerApp
+     * broadcasts a game start (used in tests to capture broadcast events).
+     */
+    void setOnGameStartBroadcastCallback(std::function<void(float)> cb) {
+        _onGameStartBroadcastCallback = std::move(cb);
+    }
+
     [[nodiscard]] bool reloadConfiguration();
 
     void registerUserIdMapping(const Endpoint& endpoint,
@@ -187,6 +211,9 @@ class ServerApp {
     std::shared_ptr<NetworkServer> _networkServer;
     std::shared_ptr<ServerNetworkSystem> _networkSystem;
     std::shared_ptr<ECS::Registry> _registry;
+
+    // Test hooks
+    std::function<void(float)> _onGameStartBroadcastCallback;
 
     std::uint32_t _score{0};
     static constexpr std::uint32_t ENEMY_DESTRUCTION_SCORE = 100;

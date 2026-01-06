@@ -44,6 +44,15 @@ enum class OpCode : std::uint8_t {
     /// Server notifies game over with final score (RELIABLE)
     S_GAME_OVER = 0x07,
 
+    /// Client signals ready in lobby (RELIABLE)
+    C_READY = 0x08,
+
+    /// Server signals game start with countdown (RELIABLE)
+    S_GAME_START = 0x09,
+
+    /// Server broadcasts player ready state change (RELIABLE)
+    S_PLAYER_READY_STATE = 0x0A,
+
     /// Server spawns new entity (RELIABLE)
     S_ENTITY_SPAWN = 0x10,
 
@@ -70,6 +79,9 @@ enum class OpCode : std::uint8_t {
 
     /// Latency measurement response (UNRELIABLE)
     PONG = 0xF1,
+
+    /// Acknowledgment packet (UNRELIABLE)
+    ACK = 0xF2,
 };
 
 namespace OpCodeRange {
@@ -102,6 +114,9 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::R_GET_USERS:
         case OpCode::S_UPDATE_STATE:
         case OpCode::S_GAME_OVER:
+        case OpCode::C_READY:
+        case OpCode::S_GAME_START:
+        case OpCode::S_PLAYER_READY_STATE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
@@ -113,6 +128,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_UPDATE_POS:
         case OpCode::PING:
         case OpCode::PONG:
+        case OpCode::ACK:
             return false;
     }
     return false;
@@ -127,6 +143,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
     switch (opcode) {
         case OpCode::C_CONNECT:
         case OpCode::C_GET_USERS:
+        case OpCode::C_READY:
         case OpCode::C_INPUT:
         case OpCode::PING:
             return true;
@@ -150,6 +167,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::R_GET_USERS:
         case OpCode::S_UPDATE_STATE:
         case OpCode::S_GAME_OVER:
+        case OpCode::S_GAME_START:
+        case OpCode::S_PLAYER_READY_STATE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_DESTROY:
@@ -181,6 +200,9 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::R_GET_USERS:
         case OpCode::S_UPDATE_STATE:
         case OpCode::S_GAME_OVER:
+        case OpCode::C_READY:
+        case OpCode::S_GAME_START:
+        case OpCode::S_PLAYER_READY_STATE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_DESTROY:
@@ -190,6 +212,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_UPDATE_POS:
         case OpCode::PING:
         case OpCode::PONG:
+        case OpCode::ACK:
             return true;
         default:
             return false;
@@ -239,6 +262,12 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "S_UPDATE_STATE";
         case OpCode::S_GAME_OVER:
             return "S_GAME_OVER";
+        case OpCode::C_READY:
+            return "C_READY";
+        case OpCode::S_GAME_START:
+            return "S_GAME_START";
+        case OpCode::S_PLAYER_READY_STATE:
+            return "S_PLAYER_READY_STATE";
         case OpCode::S_ENTITY_SPAWN:
             return "S_ENTITY_SPAWN";
         case OpCode::S_ENTITY_MOVE:
@@ -257,6 +286,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "PING";
         case OpCode::PONG:
             return "PONG";
+        case OpCode::ACK:
+            return "ACK";
     }
     return "UNKNOWN";
 }

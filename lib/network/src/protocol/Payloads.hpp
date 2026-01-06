@@ -230,6 +230,31 @@ struct PingPayload {};
  */
 struct PongPayload {};
 
+/**
+ * @brief Payload for C_READY (0x08)
+ * @note Reliable - client signals ready/unready state in lobby
+ */
+struct LobbyReadyPayload {
+    std::uint8_t isReady;
+};
+
+/**
+ * @brief Payload for S_GAME_START (0x09)
+ * @note Reliable - server signals all players ready, game starting
+ */
+struct GameStartPayload {
+    float countdownDuration;  ///< in seconds
+};
+
+/**
+ * @brief Payload for S_PLAYER_READY_STATE (0x0A)
+ * @note Reliable - server broadcasts when a player's ready state changes
+ */
+struct PlayerReadyStatePayload {
+    std::uint32_t userId;
+    std::uint8_t isReady;
+};
+
 #pragma pack(pop)
 
 static_assert(sizeof(ConnectPayload) == 1,
@@ -246,6 +271,8 @@ static_assert(sizeof(PingPayload) == 1,
 static_assert(sizeof(PongPayload) == 1,
               "PongPayload is an empty struct (size 1 in C++), serialization "
               "returns 0 bytes");
+static_assert(sizeof(LobbyReadyPayload) == 1,
+              "LobbyReadyPayload must be 1 byte (uint8_t)");
 
 static_assert(sizeof(AcceptPayload) == 4,
               "AcceptPayload must be 4 bytes (uint32_t)");
@@ -268,6 +295,10 @@ static_assert(sizeof(PowerUpEventPayload) == 9,
 static_assert(sizeof(InputPayload) == 1, "InputPayload must be 1 byte");
 static_assert(sizeof(UpdatePosPayload) == 8,
               "UpdatePosPayload must be 8 bytes (4+4)");
+static_assert(sizeof(GameStartPayload) == 4,
+              "GameStartPayload must be 4 bytes (float)");
+static_assert(sizeof(PlayerReadyStatePayload) == 5,
+              "PlayerReadyStatePayload must be 5 bytes (4+1)");
 
 static_assert(std::is_trivially_copyable_v<AcceptPayload>);
 static_assert(std::is_trivially_copyable_v<UpdateStatePayload>);
@@ -279,6 +310,9 @@ static_assert(std::is_trivially_copyable_v<EntityHealthPayload>);
 static_assert(std::is_trivially_copyable_v<PowerUpEventPayload>);
 static_assert(std::is_trivially_copyable_v<InputPayload>);
 static_assert(std::is_trivially_copyable_v<UpdatePosPayload>);
+static_assert(std::is_trivially_copyable_v<LobbyReadyPayload>);
+static_assert(std::is_trivially_copyable_v<GameStartPayload>);
+static_assert(std::is_trivially_copyable_v<PlayerReadyStatePayload>);
 
 static_assert(std::is_standard_layout_v<AcceptPayload>);
 static_assert(std::is_standard_layout_v<UpdateStatePayload>);
@@ -290,6 +324,9 @@ static_assert(std::is_standard_layout_v<EntityHealthPayload>);
 static_assert(std::is_standard_layout_v<PowerUpEventPayload>);
 static_assert(std::is_standard_layout_v<InputPayload>);
 static_assert(std::is_standard_layout_v<UpdatePosPayload>);
+static_assert(std::is_standard_layout_v<LobbyReadyPayload>);
+static_assert(std::is_standard_layout_v<GameStartPayload>);
+static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
 
 /**
  * @brief Get the expected payload size for a given OpCode
@@ -304,6 +341,7 @@ static_assert(std::is_standard_layout_v<UpdatePosPayload>);
         case OpCode::C_GET_USERS:
         case OpCode::PING:
         case OpCode::PONG:
+        case OpCode::ACK:
             return 0;
 
         case OpCode::S_ACCEPT:
@@ -314,6 +352,12 @@ static_assert(std::is_standard_layout_v<UpdatePosPayload>);
             return sizeof(UpdateStatePayload);
         case OpCode::S_GAME_OVER:
             return sizeof(GameOverPayload);
+        case OpCode::C_READY:
+            return sizeof(LobbyReadyPayload);
+        case OpCode::S_GAME_START:
+            return sizeof(GameStartPayload);
+        case OpCode::S_PLAYER_READY_STATE:
+            return sizeof(PlayerReadyStatePayload);
 
         case OpCode::S_ENTITY_SPAWN:
             return sizeof(EntitySpawnPayload);
