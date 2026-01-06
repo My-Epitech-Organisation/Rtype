@@ -225,8 +225,11 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
         enemy, enemyConfig.damage, true);
 
     if (enemyConfig.canShoot) {
+        float shootCooldown = (enemyConfig.fireRate > 0)
+                                  ? (1.0F / enemyConfig.fireRate)
+                                  : 0.3F;
         registry.emplaceComponent<shared::ShootCooldownComponent>(
-            enemy, enemyConfig.fireRate);
+            enemy, shootCooldown);
     }
     uint32_t networkId = _nextNetworkId++;
     registry.emplaceComponent<NetworkIdComponent>(enemy, networkId);
