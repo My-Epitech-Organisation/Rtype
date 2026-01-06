@@ -60,6 +60,9 @@ add_executable(r-type_server
     main.cpp
     serverApp/ServerApp.cpp
     clientManager/ClientManager.cpp
+    lobby/Lobby.cpp
+    lobby/LobbyManager.cpp
+    lobby/LobbyDiscoveryServer.cpp
 )
 
 target_compile_features(r-type_server PRIVATE cxx_std_20)
