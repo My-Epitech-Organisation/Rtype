@@ -49,10 +49,10 @@ void SceneManager::setCurrentScene(const Scene scene) {
     }
     LOG_DEBUG("[SceneManager] Scene change requested to: "
               << static_cast<int>(scene));
-    if (scene == IN_GAME && this->_networkSystem && this->_registry &&
-        this->_assetManager) {
+    if ((scene == IN_GAME || scene == LOBBY) && this->_networkSystem &&
+        this->_registry && this->_assetManager) {
         LOG_DEBUG(
-            "[SceneManager] Pre-configuring entity factory for IN_GAME scene");
+            "[SceneManager] Pre-configuring entity factory for game scene");
         this->_networkSystem->setEntityFactory(
             rtype::games::rtype::client::RtypeEntityFactory::
                 createNetworkEntityFactory(this->_registry,
@@ -148,6 +148,6 @@ SceneManager::SceneManager(
             std::move(rtypeGameScene), this->_networkClient,
             this->_networkSystem, this->_audio);
     });
-    this->setCurrentScene(LOBBY);
+    this->setCurrentScene(MAIN_MENU);
     this->_applySceneChange();
 }

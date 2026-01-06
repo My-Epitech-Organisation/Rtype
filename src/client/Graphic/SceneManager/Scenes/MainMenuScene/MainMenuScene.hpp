@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "AudioLib/AudioLib.hpp"
 
@@ -90,6 +91,9 @@ class MainMenuScene : public AScene {
 
    private:
     std::shared_ptr<AudioLib> _audioLib;
+    std::vector<rtype::client::NetworkClient::CallbackId> _connectedCallbackIds;
+    std::vector<rtype::client::NetworkClient::CallbackId>
+        _disconnectedCallbackIds;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_MAINMENUSCENE_MAINMENUSCENE_HPP_

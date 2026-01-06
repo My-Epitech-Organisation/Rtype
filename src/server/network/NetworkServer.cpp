@@ -172,6 +172,33 @@ void NetworkServer::sendGameOver(std::uint32_t finalScore) {
     LOG_INFO("[NetworkServer] GameOver packet broadcasted to all clients");
 }
 
+void NetworkServer::broadcastGameStart(float countdownDuration) {
+    network::GameStartPayload payload;
+    payload.countdownDuration = countdownDuration;
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    broadcastToAll(network::OpCode::S_GAME_START, serialized);
+
+    LOG_INFO("[NetworkServer] Sent S_GAME_START with countdown="
+             << countdownDuration << "s to all clients");
+}
+
+void NetworkServer::broadcastPlayerReadyState(std::uint32_t userId,
+                                              bool isReady) {
+    network::PlayerReadyStatePayload payload;
+    payload.userId = userId;
+    payload.isReady = isReady ? 1 : 0;
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    broadcastToAll(network::OpCode::S_PLAYER_READY_STATE, serialized);
+
+    LOG_INFO("[NetworkServer] Broadcast player "
+             << userId
+             << " ready state: " << (isReady ? "READY" : "NOT READY"));
+}
+
 void NetworkServer::spawnEntityToClient(std::uint32_t userId, std::uint32_t id,
                                         EntityType type, float x, float y) {
     auto client = findClientByUserId(userId);
@@ -333,7 +360,10 @@ void NetworkServer::onGetUsersRequest(
     std::function<void(std::uint32_t userId)> callback) {
     onGetUsersRequestCallback_ = std::move(callback);
 }
-
+void NetworkServer::onClientReady(
+    std::function<void(std::uint32_t, bool)> callback) {
+    onClientReadyCallback_ = std::move(callback);
+}
 void NetworkServer::poll() {
     if (!running_) {
         return;
@@ -531,6 +561,14 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
             handlePing(header, sender);
             break;
 
+        case network::OpCode::C_READY:
+            handleReady(header, payload, sender);
+            break;
+
+        case network::OpCode::ACK:
+            // ACK is handled via kIsAck flag above
+            break;
+
         default:
             break;
     }
@@ -686,6 +724,37 @@ void NetworkServer::handlePing(const network::Header& header,
     socket_->asyncSendTo(
         pongPacket, sender,
         [](network::Result<std::size_t> result) { (void)result; });
+}
+
+void NetworkServer::handleReady(const network::Header& header,
+                                const network::Buffer& payload,
+                                const network::Endpoint& sender) {
+    (void)header;
+
+    auto client = findClient(sender);
+    if (!client) {
+        return;
+    }
+
+    if (payload.size() < sizeof(network::LobbyReadyPayload)) {
+        return;
+    }
+
+    network::LobbyReadyPayload readyPayload;
+    std::memcpy(&readyPayload, payload.data(), sizeof(readyPayload));
+
+    bool isReady = (readyPayload.isReady != 0);
+
+    LOG_INFO("[NetworkServer] Client userId="
+             << client->userId
+             << " ready status: " << (isReady ? "READY" : "NOT READY"));
+
+    if (onClientReadyCallback_) {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        callbackQueue_.push([this, userId = client->userId, isReady]() {
+            onClientReadyCallback_(userId, isReady);
+        });
+    }
 }
 
 std::string NetworkServer::makeConnectionKey(
