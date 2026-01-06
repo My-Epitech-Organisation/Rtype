@@ -173,8 +173,8 @@ class NetworkServer {
      * @param entities Vector of (entityId, x, y, vx, vy) tuples
      */
     void moveEntitiesBatch(
-        const std::vector<std::tuple<std::uint32_t, float, float, float, float>>&
-            entities);
+        const std::vector<
+            std::tuple<std::uint32_t, float, float, float, float>>& entities);
 
     /**
      * @brief Destroy an entity on all clients

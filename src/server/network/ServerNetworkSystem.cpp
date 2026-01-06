@@ -171,9 +171,9 @@ void ServerNetworkSystem::broadcastEntityUpdates() {
     for (std::size_t offset = 0; offset < dirtyEntities.size();
          offset += maxPerBatch) {
         auto end = std::min(offset + maxPerBatch, dirtyEntities.size());
-        std::vector<std::tuple<std::uint32_t, float, float, float, float>> batch(
-            dirtyEntities.begin() + static_cast<std::ptrdiff_t>(offset),
-            dirtyEntities.begin() + static_cast<std::ptrdiff_t>(end));
+        std::vector<std::tuple<std::uint32_t, float, float, float, float>>
+            batch(dirtyEntities.begin() + static_cast<std::ptrdiff_t>(offset),
+                  dirtyEntities.begin() + static_cast<std::ptrdiff_t>(end));
         server_->moveEntitiesBatch(batch);
     }
 }

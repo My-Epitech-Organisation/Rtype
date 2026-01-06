@@ -336,9 +336,8 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
         if (header.flags & network::Flags::kCompressed) {
             auto decompressResult = compressor_.decompress(rawPayload);
             if (!decompressResult) {
-                LOG_WARNING_CAT(
-                    rtype::LogCategory::Network,
-                    "[NetworkClient] Failed to decompress payload");
+                LOG_WARNING_CAT(rtype::LogCategory::Network,
+                                "[NetworkClient] Failed to decompress payload");
                 return;
             }
             payload = std::move(decompressResult.value());
