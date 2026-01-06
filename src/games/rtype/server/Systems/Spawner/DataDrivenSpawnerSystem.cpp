@@ -112,20 +112,25 @@ void DataDrivenSpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
     enemyView.each([&aliveEnemies](ECS::Entity, const shared::EnemyTag&) {
         aliveEnemies++;
     });
-    _obstacleSpawnTimer += deltaTime;
-    _powerUpSpawnTimer += deltaTime;
+    
+    // Only spawn obstacles and power-ups if a level is loaded or fallback is enabled
+    if (_waveManager.isLevelLoaded() || _config.enableFallbackSpawning) {
+        _obstacleSpawnTimer += deltaTime;
+        _powerUpSpawnTimer += deltaTime;
 
-    if (_obstacleSpawnTimer >= _nextObstacleSpawnTime) {
-        spawnObstacle(registry);
-        _obstacleSpawnTimer = 0.0F;
-        generateNextObstacleSpawnTime();
-    }
+        if (_obstacleSpawnTimer >= _nextObstacleSpawnTime) {
+            spawnObstacle(registry);
+            _obstacleSpawnTimer = 0.0F;
+            generateNextObstacleSpawnTime();
+        }
 
-    if (_powerUpSpawnTimer >= _nextPowerUpSpawnTime) {
-        spawnPowerUp(registry);
-        _powerUpSpawnTimer = 0.0F;
-        generateNextPowerUpSpawnTime();
+        if (_powerUpSpawnTimer >= _nextPowerUpSpawnTime) {
+            spawnPowerUp(registry);
+            _powerUpSpawnTimer = 0.0F;
+            generateNextPowerUpSpawnTime();
+        }
     }
+    
     if (_waveManager.isLevelLoaded() && _levelStarted) {
         auto spawns = _waveManager.update(deltaTime, aliveEnemies);
         for (const auto& spawn : spawns) {
