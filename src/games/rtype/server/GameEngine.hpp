@@ -17,8 +17,8 @@
 
 #include "../shared/Config/PrefabLoader.hpp"
 #include "../shared/Systems/Systems.hpp"
-#include "Systems/Systems.hpp"
 #include "Systems/Spawner/DataDrivenSpawnerSystem.hpp"
+#include "Systems/Systems.hpp"
 
 namespace rtype::games::rtype::server {
 

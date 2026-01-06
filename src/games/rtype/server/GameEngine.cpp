@@ -22,8 +22,8 @@
 #include "../shared/Config/EntityConfig/EntityConfig.hpp"
 #include "../shared/Config/PrefabLoader.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
-#include "Systems/Spawner/DataDrivenSpawnerSystem.hpp"
 #include "Logger/Macros.hpp"
+#include "Systems/Spawner/DataDrivenSpawnerSystem.hpp"
 namespace rtype::games::rtype::server {
 
 GameEngine::GameEngine(std::shared_ptr<ECS::Registry> registry)
@@ -52,10 +52,12 @@ bool GameEngine::initialize() {
         entityConfigRegistry.loadPowerUpsWithSearch(
             "config/game/powerups.toml");
         if (entityConfigRegistry.loadFromDirectory("config/game")) {
-            LOG_INFO("[GameEngine] Level configurations loaded from config/game");
+            LOG_INFO(
+                "[GameEngine] Level configurations loaded from config/game");
         } else {
-            LOG_WARNING("[GameEngine] Failed to load level configurations - "
-                        "data-driven spawning may not work correctly");
+            LOG_WARNING(
+                "[GameEngine] Failed to load level configurations - "
+                "data-driven spawning may not work correctly");
         }
         LOG_INFO("[GameEngine] Entity configurations loaded");
     } catch (const std::exception& e) {
@@ -89,10 +91,12 @@ bool GameEngine::initialize() {
         std::make_unique<DataDrivenSpawnerSystem>(eventEmitter, ddConfig);
 
     if (_dataDrivenSpawnerSystem->loadLevel("level_1")) {
-        LOG_INFO("[GameEngine] Level 'level_1' loaded for data-driven spawning");
+        LOG_INFO(
+            "[GameEngine] Level 'level_1' loaded for data-driven spawning");
         _dataDrivenSpawnerSystem->startLevel();
     } else {
-        LOG_WARNING("[GameEngine] Could not load level_1 - using fallback spawning");
+        LOG_WARNING(
+            "[GameEngine] Could not load level_1 - using fallback spawning");
     }
 
     SpawnerConfig spawnerConfig{};
@@ -253,7 +257,9 @@ bool GameEngine::loadLevel(const std::string& levelId) {
     if (_dataDrivenSpawnerSystem) {
         return _dataDrivenSpawnerSystem->loadLevel(levelId);
     }
-    LOG_ERROR("[GameEngine] Cannot load level: DataDrivenSpawnerSystem not initialized");
+    LOG_ERROR(
+        "[GameEngine] Cannot load level: DataDrivenSpawnerSystem not "
+        "initialized");
     return false;
 }
 
@@ -261,7 +267,9 @@ bool GameEngine::loadLevelFromFile(const std::string& filepath) {
     if (_dataDrivenSpawnerSystem) {
         return _dataDrivenSpawnerSystem->loadLevelFromFile(filepath);
     }
-    LOG_ERROR("[GameEngine] Cannot load level: DataDrivenSpawnerSystem not initialized");
+    LOG_ERROR(
+        "[GameEngine] Cannot load level: DataDrivenSpawnerSystem not "
+        "initialized");
     return false;
 }
 

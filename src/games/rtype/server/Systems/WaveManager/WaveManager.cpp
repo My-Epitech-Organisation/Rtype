@@ -57,8 +57,8 @@ bool WaveManager::loadLevelFromFile(const std::string& filepath) {
 
     namespace fs = std::filesystem;
     const std::vector<std::string> searchPaths = {
-        filepath, "../" + filepath, "../../" + filepath,
-        "../../../" + filepath, "config/game/levels/" + filepath};
+        filepath, "../" + filepath, "../../" + filepath, "../../../" + filepath,
+        "config/game/levels/" + filepath};
 
     std::string foundPath;
     for (const auto& path : searchPaths) {
@@ -188,9 +188,9 @@ std::vector<SpawnRequest> WaveManager::update(float deltaTime,
 
     if (allSpawnsComplete) {
         LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
-                     "[WaveManager] Wave "
-                         << (_currentWaveIndex + 1) << "/"
-                         << _levelConfig->waves.size() << " spawn complete");
+                     "[WaveManager] Wave " << (_currentWaveIndex + 1) << "/"
+                                           << _levelConfig->waves.size()
+                                           << " spawn complete");
         _state = WaveState::WaveComplete;
         _transitionTimer = 0.0F;
     }
@@ -213,9 +213,9 @@ void WaveManager::advanceToNextWave() {
     prepareCurrentWave();
 
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
-                 "[WaveManager] Starting wave "
-                     << (_currentWaveIndex + 1) << "/"
-                     << _levelConfig->waves.size());
+                 "[WaveManager] Starting wave " << (_currentWaveIndex + 1)
+                                                << "/"
+                                                << _levelConfig->waves.size());
 }
 
 void WaveManager::prepareCurrentWave() {
@@ -245,10 +245,9 @@ void WaveManager::prepareCurrentWave() {
     }
 
     LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                  "[WaveManager] Prepared wave " << (_currentWaveIndex + 1)
-                                                 << " with "
-                                                 << _pendingSpawns.size()
-                                                 << " spawn entries");
+                  "[WaveManager] Prepared wave "
+                      << (_currentWaveIndex + 1) << " with "
+                      << _pendingSpawns.size() << " spawn entries");
 }
 
 }  // namespace rtype::games::rtype::server

@@ -24,7 +24,8 @@ struct WaveConfig {
 
     struct SpawnEntry {
         std::string enemyId;
-        std::optional<float> x;  ///< X position (nullopt = random on right edge)
+        std::optional<float>
+            x;  ///< X position (nullopt = random on right edge)
         std::optional<float> y;  ///< Y position (nullopt = random)
         float delay = 0.0F;
         int32_t count = 1;

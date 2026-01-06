@@ -25,11 +25,11 @@ namespace rtype::games::rtype::server {
  * @brief Current state of the wave manager
  */
 enum class WaveState {
-    NotStarted,   ///< Level not yet started
-    InProgress,   ///< Currently spawning enemies in a wave
-    WaveComplete, ///< Current wave finished, waiting for transition
-    AllComplete,  ///< All waves completed
-    Failed        ///< Failed to load level config
+    NotStarted,    ///< Level not yet started
+    InProgress,    ///< Currently spawning enemies in a wave
+    WaveComplete,  ///< Current wave finished, waiting for transition
+    AllComplete,   ///< All waves completed
+    Failed         ///< Failed to load level config
 };
 
 /**

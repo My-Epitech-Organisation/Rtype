@@ -36,8 +36,8 @@ using shared::PowerUpVariant;
 using shared::TransformComponent;
 using shared::VelocityComponent;
 
-DataDrivenSpawnerSystem::DataDrivenSpawnerSystem(
-    EventEmitter emitter, DataDrivenSpawnerConfig config)
+DataDrivenSpawnerSystem::DataDrivenSpawnerSystem(EventEmitter emitter,
+                                                 DataDrivenSpawnerConfig config)
     : ASystem("DataDrivenSpawnerSystem"),
       _emitEvent(std::move(emitter)),
       _config(config),
@@ -73,9 +73,9 @@ bool DataDrivenSpawnerSystem::loadLevelFromFile(const std::string& filepath) {
         _levelStarted = false;
         _bossSpawned = false;
         _gameOverEmitted = false;
-        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
-                     "[DataDrivenSpawner] Level loaded from '" << filepath
-                                                               << "'");
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[DataDrivenSpawner] Level loaded from '" << filepath << "'");
     }
     return result;
 }
@@ -162,9 +162,9 @@ void DataDrivenSpawnerSystem::spawnEnemy(ECS::Registry& registry,
     auto enemyConfigOpt = configRegistry.getEnemy(request.enemyId);
 
     if (!enemyConfigOpt.has_value()) {
-        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
-                        "[DataDrivenSpawner] Unknown enemy type: "
-                            << request.enemyId);
+        LOG_WARNING_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[DataDrivenSpawner] Unknown enemy type: " << request.enemyId);
         return;
     }
 
@@ -175,8 +175,7 @@ void DataDrivenSpawnerSystem::spawnEnemy(ECS::Registry& registry,
 
     ECS::Entity enemy = registry.spawnEntity();
 
-    registry.emplaceComponent<TransformComponent>(enemy, spawnX, spawnY,
-                                                  0.0F);
+    registry.emplaceComponent<TransformComponent>(enemy, spawnX, spawnY, 0.0F);
 
     float speedX = 0.0F;
     if (enemyConfig.behavior == AIBehavior::MoveLeft ||
@@ -247,8 +246,8 @@ void DataDrivenSpawnerSystem::spawnEnemy(ECS::Registry& registry,
 
     LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                   "[DataDrivenSpawner] Spawned enemy '"
-                      << request.enemyId << "' at (" << spawnX << ", "
-                      << spawnY << ")");
+                      << request.enemyId << "' at (" << spawnX << ", " << spawnY
+                      << ")");
 }
 
 void DataDrivenSpawnerSystem::spawnBoss(ECS::Registry& registry,
