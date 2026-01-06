@@ -26,9 +26,10 @@ void LifetimeSystem::update(ECS::Registry& registry, float deltaTime) {
     if (entityCount >= PARALLEL_THRESHOLD) {
         auto view = registry.parallelView<LifetimeComponent>();
         view.each(
-            [deltaTime, &cmdBuffer](auto entity, LifetimeComponent& lifetime) {
+            [deltaTime, &cmdBuffer, &registry](auto entity, LifetimeComponent& lifetime) {
                 lifetime.remainingTime -= deltaTime;
-                if (lifetime.remainingTime <= 0.0F) {
+                if (lifetime.remainingTime <= 0.0F &&
+                    !registry.hasComponent<DestroyTag>(entity)) {
                     LOG_DEBUG("[LifetimeSystem] Entity " +
                               std::to_string(entity.id) +
                               " expired (lifetime <= 0)");
@@ -39,9 +40,10 @@ void LifetimeSystem::update(ECS::Registry& registry, float deltaTime) {
     } else {
         auto view = registry.view<LifetimeComponent>();
         view.each(
-            [deltaTime, &cmdBuffer](auto entity, LifetimeComponent& lifetime) {
+            [deltaTime, &cmdBuffer, &registry](auto entity, LifetimeComponent& lifetime) {
                 lifetime.remainingTime -= deltaTime;
-                if (lifetime.remainingTime <= 0.0F) {
+                if (lifetime.remainingTime <= 0.0F &&
+                    !registry.hasComponent<DestroyTag>(entity)) {
                     LOG_DEBUG("[LifetimeSystem] Entity " +
                               std::to_string(entity.id) +
                               " expired (lifetime <= 0)");
