@@ -75,6 +75,13 @@ class RenderSystem : public ::rtype::engine::ASystem {
     void _renderStaticText(ECS::Registry& registry, ECS::Entity entity);
 
     /**
+     * @brief Render all text input entities.
+     * @param registry The ECS registry
+     * @param entity The entity to try to render
+     */
+    void _renderTextInputs(ECS::Registry& registry, ECS::Entity entity);
+
+    /**
      * @brief Render screen-space rectangles (UI elements not affected by
      * camera).
      * @param registry The ECS registry

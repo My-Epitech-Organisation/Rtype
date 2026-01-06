@@ -17,9 +17,9 @@
 
 namespace {
 static constexpr float kSectionX = 350.f;
-static constexpr float kSectionY = 220.f;
+static constexpr float kSectionY = 250.f;
 static constexpr float kSectionW = 1220.f;
-static constexpr float kSectionH = 700.f;
+static constexpr float kSectionH = 600.f;
 }  // namespace
 
 HowToPlayScene::HowToPlayScene(
@@ -34,8 +34,7 @@ HowToPlayScene::HowToPlayScene(
       _switchToScene(std::move(switchToScene)) {
     this->_listEntity = EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "How to Play");
-    _initLayout();
-
+    this->_initLayout();
     auto backBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(

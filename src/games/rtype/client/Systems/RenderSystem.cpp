@@ -67,7 +67,7 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry,
         registry.hasComponent<HudTag>(entity) ||
         registry.hasComponent<rs::DestroyTag>(entity))
         return;
-    auto& rectData = registry.getComponent<Rectangle>(entity);
+    auto& rectData = registry.getComponent<Rectangle>(entity);  // Référence !
     const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
     rectData.rectangle.setSize(
@@ -175,6 +175,25 @@ void RenderSystem::_renderStaticText(ECS::Registry& registry,
     this->_target->draw(textData.text);
 }
 
+void RenderSystem::_renderTextInputs(ECS::Registry& registry,
+                                     ECS::Entity entity) {
+    if (!registry.hasComponent<TextInputTag>(entity) ||
+        !registry.hasComponent<TextInput>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity))
+        return;
+
+    auto& textInput = registry.getComponent<TextInput>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
+
+    textInput.background.setPosition(
+        {static_cast<float>(pos.x), static_cast<float>(pos.y)});
+    textInput.text.setPosition(
+        {static_cast<float>(pos.x) + 10.f, static_cast<float>(pos.y) + 5.f});
+
+    this->_target->draw(textInput.background);
+    this->_target->draw(textInput.text);
+}
+
 void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
     std::vector<ECS::Entity> sortedEntities;
 
@@ -186,12 +205,17 @@ void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
 
     std::sort(sortedEntities.begin(), sortedEntities.end(),
               [&registry](ECS::Entity a, ECS::Entity b) {
+                  if (!registry.isAlive(a) || !registry.hasComponent<ZIndex>(a))
+                      return true;
+                  if (!registry.isAlive(b) || !registry.hasComponent<ZIndex>(b))
+                      return false;
                   const auto& za = registry.getComponent<ZIndex>(a);
                   const auto& zb = registry.getComponent<ZIndex>(b);
                   return za.depth < zb.depth;
               });
 
     for (auto entity : sortedEntities) {
+        if (!registry.isAlive(entity)) continue;
         if (isEntityHidden(registry, entity)) continue;
 
         if (registry.hasComponent<Image>(entity))
@@ -202,6 +226,8 @@ void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
             this->_renderButtons(registry, entity);
         if (registry.hasComponent<StaticTextTag>(entity))
             this->_renderStaticText(registry, entity);
+        if (registry.hasComponent<TextInputTag>(entity))
+            this->_renderTextInputs(registry, entity);
         if (registry.hasComponent<HudTag>(entity))
             this->_renderHudRectangles(registry, entity);
     }

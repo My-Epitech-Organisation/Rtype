@@ -155,14 +155,14 @@ TEST_F(ServerAppUnitTest, GameState_ReadyPlayerCount_InitiallyZero) {
 TEST_F(ServerAppUnitTest, GameState_PlayerReady_IncreasesCount) {
     ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
 
-    // First player ready triggers game start (MIN_PLAYERS_TO_START = 1)
+    // First player ready triggers countdown start (MIN_PLAYERS_TO_START = 1)
     server.playerReady(1);
     EXPECT_EQ(server.getReadyPlayerCount(), 1u);
-    EXPECT_TRUE(server.isPlaying());  // Game starts immediately
+    EXPECT_TRUE(server.isCountdownActive());  // Countdown started
 
-    // Second player ready is ignored since game is already running
+    // Second player ready increases ready count while countdown is active
     server.playerReady(2);
-    EXPECT_EQ(server.getReadyPlayerCount(), 1u);  // Still 1, second player ignored
+    EXPECT_EQ(server.getReadyPlayerCount(), 2u);
 }
 
 TEST_F(ServerAppUnitTest, GameState_PlayerReady_DuplicateIgnored) {
@@ -181,22 +181,22 @@ TEST_F(ServerAppUnitTest, GameState_TransitionToPlaying) {
 
     EXPECT_EQ(server.getGameState(), GameState::WaitingForPlayers);
 
-    // One player ready should trigger game start (MIN_PLAYERS_TO_START = 1)
+    // One player ready should trigger countdown start (MIN_PLAYERS_TO_START = 1)
     server.playerReady(1);
 
-    EXPECT_EQ(server.getGameState(), GameState::Playing);
-    EXPECT_TRUE(server.isPlaying());
+    EXPECT_TRUE(server.isCountdownActive());
+    EXPECT_FALSE(server.isPlaying());
 }
 
 TEST_F(ServerAppUnitTest, GameState_PlayerReadyWhenAlreadyPlaying) {
     ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
 
     server.playerReady(1);
-    EXPECT_EQ(server.getGameState(), GameState::Playing);
+    EXPECT_TRUE(server.isCountdownActive());
 
-    // Player ready when already playing - should not crash
+    // Player ready while countdown active - should not crash and ready count should increase
     server.playerReady(2);
-    EXPECT_EQ(server.getGameState(), GameState::Playing);
+    EXPECT_EQ(server.getReadyPlayerCount(), 2u);
 }
 
 // ============================================================================
@@ -618,15 +618,14 @@ TEST_F(ServerAppUnitTest, EdgeCase_HighTickRate) {
 TEST_F(ServerAppUnitTest, EdgeCase_ManyPlayersReady) {
     ServerApp server(8080, 100, 60, shutdownFlag_, 30, false);
 
-    // First player ready triggers game start (MIN_PLAYERS_TO_START = 1)
-    // Subsequent playerReady calls are ignored once game is playing
+    // Multiple players toggling ready before countdown finishes
     for (std::uint32_t i = 1; i <= 50; ++i) {
         server.playerReady(i);
     }
 
-    // Only first player is counted - game started after first ready
-    EXPECT_EQ(server.getReadyPlayerCount(), 1u);
-    EXPECT_TRUE(server.isPlaying());
+    // All ready signals should be recorded and countdown should be active
+    EXPECT_EQ(server.getReadyPlayerCount(), 50u);
+    EXPECT_TRUE(server.isCountdownActive());
 }
 
 TEST_F(ServerAppUnitTest, EdgeCase_LargeUserId) {
@@ -649,23 +648,23 @@ TEST_F(ServerAppUnitTest, GameState_TransitionToPlaying_WithNetworkSystem) {
     // Make player ready before run
     server.playerReady(1);
 
-    EXPECT_TRUE(server.isPlaying());
-    EXPECT_EQ(server.getGameState(), GameState::Playing);
+    // Countdown should be active (server will broadcast start), not yet playing
+    EXPECT_TRUE(server.isCountdownActive());
 }
 
 TEST_F(ServerAppUnitTest, GameState_CheckGameStart_AlreadyPlaying) {
     ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
 
-    // Transition to playing
+    // Start countdown
     server.playerReady(1);
-    EXPECT_TRUE(server.isPlaying());
+    EXPECT_TRUE(server.isCountdownActive());
 
-    // Additional playerReady should not change state
+    // Additional playerReady should increase count but not change state
     server.playerReady(2);
     server.playerReady(3);
 
-    EXPECT_TRUE(server.isPlaying());
-    EXPECT_EQ(server.getReadyPlayerCount(), 1u);  // Only first counted
+    EXPECT_TRUE(server.isCountdownActive());
+    EXPECT_EQ(server.getReadyPlayerCount(), 3u);
 }
 
 // ============================================================================
@@ -855,9 +854,9 @@ TEST_F(ServerAppUnitTest, PlayerReady_SamePlayerMultipleTimes) {
     // First player ready
     server.playerReady(1);
     EXPECT_EQ(server.getReadyPlayerCount(), 1u);
-    EXPECT_TRUE(server.isPlaying());
+    EXPECT_TRUE(server.isCountdownActive());
 
-    // Same player again (game already playing)
+    // Same player again (idempotent)
     server.playerReady(1);
     server.playerReady(1);
     server.playerReady(1);
@@ -909,5 +908,5 @@ TEST_F(ServerAppUnitTest, Run_WithPlayerReadyDuringRun) {
     server.stop();
     serverThread.join();
 
-    EXPECT_TRUE(server.isPlaying());
+    EXPECT_TRUE(server.isCountdownActive());
 }
