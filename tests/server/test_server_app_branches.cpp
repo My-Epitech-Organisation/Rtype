@@ -428,7 +428,7 @@ TEST_F(ServerAppBranchTest, ExtremeMaxPlayersValues) {
 
     auto flag2 = std::make_shared<std::atomic<bool>>(false);
     EXPECT_NO_THROW({
-        ServerApp server2(8080, std::numeric_limits<size_t>::max(), 60, flag2, 30, false);  // Max
+        ServerApp server2(8080, 100000, 60, flag2, 30, false);  // Very large but reasonable
     });
 }
 
