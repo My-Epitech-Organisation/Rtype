@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 if(WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
 endif()
 
 # Prefer Clang over GCC for better diagnostics and modern C++ support
