@@ -477,6 +477,15 @@ void NetworkClient::dispatchCallbacks() {
     }
 }
 
+void NetworkClient::test_dispatchCallbacks() {
+    dispatchCallbacks();
+}
+
+void NetworkClient::test_processIncomingPacket(const network::Buffer& data,
+                                               const network::Endpoint& sender) {
+    processIncomingPacket(data, sender);
+}
+
 void NetworkClient::queueCallback(std::function<void()> callback) {
     std::lock_guard<std::mutex> lock(callbackMutex_);
     callbackQueue_.push(std::move(callback));

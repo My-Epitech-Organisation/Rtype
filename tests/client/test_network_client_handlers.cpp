@@ -15,6 +15,7 @@
 using namespace rtype::client;
 using namespace rtype::network;
 
+
 // Minimal FakeSocket used for deterministic unit tests
 class FakeSocket : public IAsyncSocket {
   public:
@@ -89,10 +90,10 @@ TEST(NetworkClientHandlersTest, LobbyListEmptyTriggersCallback) {
     Buffer pkt = buildPacketBuffer(hdr, Buffer{});
 
     Endpoint sender{"127.0.0.1", 11111};
-    client.processIncomingPacket(pkt, sender);
+    client.test_processIncomingPacket(pkt, sender);
 
     // Dispatch queued callbacks
-    client.dispatchCallbacks();
+    client.test_dispatchCallbacks();
 
     EXPECT_TRUE(called.load());
 }
@@ -138,10 +139,10 @@ TEST(NetworkClientHandlersTest, EntitySpawnInvokesCallback) {
 
     Buffer pkt = buildPacketBuffer(hdr, serialized);
     Endpoint sender{"127.0.0.1", 22222};
-    client.processIncomingPacket(pkt, sender);
+    client.test_processIncomingPacket(pkt, sender);
 
     // Dispatch queued callbacks
-    client.dispatchCallbacks();
+    client.test_dispatchCallbacks();
 
     EXPECT_TRUE(called.load());
 }
@@ -169,7 +170,7 @@ TEST(NetworkClientHandlersTest, CompressedPayloadDecompressionFailure) {
 
     Buffer pkt = buildPacketBuffer(hdr, garbage);
     Endpoint sender{"127.0.0.1", 33333};
-    client.processIncomingPacket(pkt, sender);
+    client.test_processIncomingPacket(pkt, sender);
 
     // Decompression should fail and callback should not be invoked
     EXPECT_FALSE(called.load());
@@ -224,8 +225,8 @@ TEST(NetworkClientHandlersTest, LobbyListMultipleEntriesParsed) {
 
     Buffer pkt = buildPacketBuffer(hdr, payload);
     Endpoint sender{"127.0.0.1", 33333};
-    client.processIncomingPacket(pkt, sender);
-    client.dispatchCallbacks();
+    client.test_processIncomingPacket(pkt, sender);
+    client.test_dispatchCallbacks();
 
     EXPECT_TRUE(called.load());
 }
@@ -270,8 +271,8 @@ TEST(NetworkClientHandlersTest, EntityMoveBatchMultipleInvokesBatchCallback) {
 
     Buffer pkt = buildPacketBuffer(hdr, payload);
     Endpoint sender{"127.0.0.1", 44444};
-    client.processIncomingPacket(pkt, sender);
-    client.dispatchCallbacks();
+    client.test_processIncomingPacket(pkt, sender);
+    client.test_dispatchCallbacks();
 
     EXPECT_TRUE(called.load());
 }
@@ -302,7 +303,10 @@ TEST(NetworkClientHandlersTest, AcceptThenReliablePacketSendsAck) {
     EXPECT_TRUE(client.connection_.connect());
     // Set server endpoint like a real connect would
     client.serverEndpoint_ = sender;
-    client.processIncomingPacket(buildPacketBuffer(accHdr, acceptPayload), sender);
+    {
+        auto _pkt = buildPacketBuffer(accHdr, acceptPayload);
+        client.test_processIncomingPacket(_pkt, sender);
+    }
 
     // Now send a reliable packet (S_ENTITY_SPAWN) to trigger sendAck
     EntitySpawnPayload payload{};
@@ -327,7 +331,10 @@ TEST(NetworkClientHandlersTest, AcceptThenReliablePacketSendsAck) {
     hdr.ackId = 0;
     hdr.flags = rtype::network::Flags::kReliable;
 
-    client.processIncomingPacket(buildPacketBuffer(hdr, serialized), sender);
+    {
+        auto _pkt2 = buildPacketBuffer(hdr, serialized);
+        client.test_processIncomingPacket(_pkt2, sender);
+    }
 
     // The fake socket should have recorded a send (the ACK)
     EXPECT_FALSE(raw->lastSend_.empty());

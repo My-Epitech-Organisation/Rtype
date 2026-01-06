@@ -29,6 +29,7 @@
 #include "transport/AsioUdpSocket.hpp"
 #include "transport/IoContext.hpp"
 
+
 namespace rtype::client {
 
 /**
@@ -378,6 +379,11 @@ class NetworkClient {
      * Callbacks are executed on the calling thread.
      */
     void poll();
+
+    // Test helpers (use from unit tests only)
+    void test_dispatchCallbacks();
+    void test_processIncomingPacket(const network::Buffer& data,
+                                    const network::Endpoint& sender);
 
    private:
     void dispatchCallbacks();
