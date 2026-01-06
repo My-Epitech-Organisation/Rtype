@@ -399,9 +399,10 @@ Graphic::Graphic(
     LOG_DEBUG("[Graphic] Loading entity configurations");
     auto& entityConfigRegistry =
         rtype::games::rtype::shared::EntityConfigRegistry::getInstance();
-    entityConfigRegistry.loadEnemies("config/game/enemies.toml");
-    entityConfigRegistry.loadPlayers("config/game/players.toml");
-    entityConfigRegistry.loadProjectiles("config/game/projectiles.toml");
+    entityConfigRegistry.loadEnemiesWithSearch("config/game/enemies.toml");
+    entityConfigRegistry.loadPlayersWithSearch("config/game/players.toml");
+    entityConfigRegistry.loadProjectilesWithSearch("config/game/projectiles.toml");
+    entityConfigRegistry.loadPowerUpsWithSearch("config/game/powerups.toml");
     LOG_DEBUG("[Graphic] Entity configurations loaded");
 
     this->_initializeCommonAssets();
