@@ -53,7 +53,7 @@ void SceneManager::setCurrentScene(const Scene scene) {
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[SceneManager] Scene change requested to: "
                       << static_cast<int>(scene));
-    if ((scene == IN_GAME || scene == LOBBY ) && this->_networkSystem &&
+    if ((scene == IN_GAME || scene == LOBBY) && this->_networkSystem &&
         this->_registry && this->_assetManager) {
         LOG_DEBUG_CAT(
             ::rtype::LogCategory::UI,
