@@ -15,7 +15,7 @@ TEST(EndpointTest, BasicOperations) {
     EXPECT_NE(a, c);
     EXPECT_FALSE(Endpoint{}.isValid());
 
-    EXPECT_LT(c, a); // '192...' < '127...' false but compares lexicographically; ensure operator compiles
+    EXPECT_LT(a, c); // '127...' < '192...' lexicographically
 
     EXPECT_EQ(a.toString(), "127.0.0.1:4242");
 

@@ -12,7 +12,7 @@ TEST(TomlParserTest, ParseString_ValidAndGetters) {
 [server]
 host = "127.0.0.1"
 port = 4242
-)") ;
+)";
 
     auto table = parser.parseString(content);
     ASSERT_TRUE(table.has_value());
