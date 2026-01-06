@@ -25,7 +25,7 @@ class DLLoader {
    public:
     explicit DLLoader(const std::string& path) : _handle(nullptr) {
         #ifdef _WIN32
-            this->_handle = LoadLibraryA(path.c_str())
+            this->_handle = LoadLibraryA(path.c_str());
             if (!this->_handle) {
                 LPVOID lpMsgBuf;
                 throw std::runtime_error("Cannot load library");
