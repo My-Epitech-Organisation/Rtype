@@ -211,6 +211,13 @@ target_link_libraries(test_compressor PRIVATE
     GTest::gtest_main
 )
 
+# Payloads batch tests (EntityMoveBatch, etc.)
+add_executable(test_payloads_batch test_payloads_batch.cpp)
+target_link_libraries(test_payloads_batch PRIVATE
+    network
+    GTest::gtest_main
+)
+
 # Enable test discovery
 include(GoogleTest)
 if(WIN32 OR MSVC)
@@ -246,6 +253,7 @@ if(WIN32 OR MSVC)
     gtest_discover_tests(test_serializer_validate_extract_extra WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_asio_error_mapping_all WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_compressor WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_payloads_batch WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_protocol)
     gtest_discover_tests(test_serialization)
@@ -279,5 +287,6 @@ else()
     gtest_discover_tests(test_serializer_validate_extract_extra)
     gtest_discover_tests(test_asio_error_mapping_all)
     gtest_discover_tests(test_compressor)
+    gtest_discover_tests(test_payloads_batch)
 endif()
 ## test_asio_error_mapping removed due to private API access - rely on other asio tests
