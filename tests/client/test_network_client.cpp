@@ -13,13 +13,18 @@
 #include <vector>
 
 // Include before NetworkClient to access private members for testing
+// Note: This hack doesn't work on Windows/MSVC due to different name mangling
+#ifndef _WIN32
 #define private public
 #define protected public
+#endif
 
 #include "client/network/NetworkClient.hpp"
 
+#ifndef _WIN32
 #undef private
 #undef protected
+#endif
 
 #include "Serializer.hpp"
 #include "protocol/ByteOrderSpec.hpp"
@@ -53,8 +58,10 @@ static Buffer buildPacket(OpCode opcode, const Buffer& payload, uint32_t userId 
 }
 
 // =============================================================================
-// Test Fixtures
+// Test Fixtures (only available on non-Windows platforms)
 // =============================================================================
+
+#ifndef _WIN32
 
 class NetworkClientTest : public ::testing::Test {
    protected:
@@ -723,8 +730,10 @@ TEST_F(NetworkClientTest, HandlePong_DoesNotCrash) {
     client.handlePong(header, emptyPayload);
 }
 
+#endif  // _WIN32
+
 // =============================================================================
-// Event Struct Tests
+// Event Struct Tests (available on all platforms)
 // =============================================================================
 
 TEST(EntitySpawnEventTest, DefaultValues) {
