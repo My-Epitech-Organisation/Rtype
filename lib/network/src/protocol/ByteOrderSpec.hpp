@@ -382,6 +382,7 @@ fromNetwork(const T& data) noexcept {
 [[nodiscard]] inline EntityMoveBatchHeader fromNetwork(
     const EntityMoveBatchHeader& p) noexcept {
     return p;  // Single byte, no conversion needed
+}
 
 [[nodiscard]] inline LobbyReadyPayload toNetwork(const LobbyReadyPayload& p) noexcept {
     return p;
@@ -395,6 +396,7 @@ fromNetwork(const T& data) noexcept {
     result.countdownDuration = ByteOrder::toNetwork(p.countdownDuration);
     return result;
 }
+
 [[nodiscard]] inline GameStartPayload fromNetwork(const GameStartPayload& p) noexcept {
     GameStartPayload result;
     result.countdownDuration = ByteOrder::fromNetwork(p.countdownDuration);
@@ -408,13 +410,13 @@ fromNetwork(const T& data) noexcept {
     result.isReady = p.isReady;
     return result;
 }
+
 [[nodiscard]] inline PlayerReadyStatePayload fromNetwork(
     const PlayerReadyStatePayload& p) noexcept {
     PlayerReadyStatePayload result;
     result.userId = ByteOrder::fromNetwork(p.userId);
     result.isReady = p.isReady;
     return result;
->>>>>>> 96fa14d067f80a11e09526fb050aaa3aab9641cd
 }
 
 /**
