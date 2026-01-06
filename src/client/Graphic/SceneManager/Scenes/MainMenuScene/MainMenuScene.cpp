@@ -350,44 +350,6 @@ void MainMenuScene::_onConnectClicked(
             }
         });
     _disconnectedCallbackIds.push_back(onDisconnectedId);
-
-    auto onDisconnectedId = _networkClient->addDisconnectedCallback(
-        [weakRegistry,
-         statusEntity](rtype::client::NetworkClient::DisconnectReason reason) {
-            auto reg = weakRegistry.lock();
-            if (!reg) return;
-
-            std::string reasonStr;
-            switch (reason) {
-                case rtype::network::DisconnectReason::Timeout:
-                    reasonStr = "Connection timed out";
-                    break;
-                case rtype::network::DisconnectReason::MaxRetriesExceeded:
-                    reasonStr = "Server unreachable";
-                    break;
-                case rtype::network::DisconnectReason::ProtocolError:
-                    reasonStr = "Protocol error";
-                    break;
-                case rtype::network::DisconnectReason::RemoteRequest:
-                    reasonStr = "Server closed connection";
-                    break;
-                default:
-                    reasonStr = "Disconnected";
-                    break;
-            }
-
-            if (reg->isAlive(statusEntity) &&
-                reg->hasComponent<rtype::games::rtype::client::Text>(
-                    statusEntity)) {
-                auto& text =
-                    reg->getComponent<rtype::games::rtype::client::Text>(
-                        statusEntity);
-                text.textContent = reasonStr;
-                text.text.setString(reasonStr);
-                text.text.setFillColor(sf::Color::Red);
-            }
-        });
-    _disconnectedCallbackIds.push_back(onDisconnectedId);
     if (!_networkClient->connect(ip, port)) {
         this->_connectPopUpVisible = true;
         _updateStatus("Failed to start connection", sf::Color::Red);
