@@ -13,7 +13,8 @@
 namespace rtype::display {
 
     struct Color {
-        uint8_t r, g, b, a;
+        uint8_t r = 0, g = 0, b = 0;
+        uint8_t a = 255;
 
         static Color White() { return {255, 255, 255, 255}; }
         static Color Black() { return {0, 0, 0, 255}; }
