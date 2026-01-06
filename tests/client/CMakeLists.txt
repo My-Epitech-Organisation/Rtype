@@ -376,3 +376,47 @@ if(WIN32 OR MSVC)
 else()
     gtest_discover_tests(test_rtype_entity_factory)
 endif()
+
+# Network client tests
+add_executable(test_network_client_small test_network_client_small.cpp)
+
+target_link_libraries(test_network_client_small PRIVATE
+    GTest::gtest_main
+    engine
+    network
+    rtype_game_shared
+    rtype_game_client
+    rtype_client_network
+)
+
+target_include_directories(test_network_client_small PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_network_client_small WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_network_client_small)
+endif()
+
+# Network client handler tests
+add_executable(test_network_client_handlers test_network_client_handlers.cpp)
+
+target_link_libraries(test_network_client_handlers PRIVATE
+    GTest::gtest_main
+    engine
+    network
+    rtype_game_shared
+    rtype_game_client
+    rtype_client_network
+)
+
+target_include_directories(test_network_client_handlers PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_network_client_handlers WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_network_client_handlers)
+endif()

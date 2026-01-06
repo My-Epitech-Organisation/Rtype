@@ -4,7 +4,7 @@
 #include <queue>
 #include <vector>
 
-#include "NetworkClient.hpp"
+#include "client/network/NetworkClient.hpp"
 #include "protocol/ByteOrderSpec.hpp"
 #include "protocol/Header.hpp"
 #include "protocol/OpCode.hpp"
