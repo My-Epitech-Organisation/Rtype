@@ -477,12 +477,10 @@ void NetworkClient::dispatchCallbacks() {
     }
 }
 
-void NetworkClient::test_dispatchCallbacks() {
-    dispatchCallbacks();
-}
+void NetworkClient::test_dispatchCallbacks() { dispatchCallbacks(); }
 
-void NetworkClient::test_processIncomingPacket(const network::Buffer& data,
-                                               const network::Endpoint& sender) {
+void NetworkClient::test_processIncomingPacket(
+    const network::Buffer& data, const network::Endpoint& sender) {
     processIncomingPacket(data, sender);
 }
 

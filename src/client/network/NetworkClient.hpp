@@ -29,7 +29,6 @@
 #include "transport/AsioUdpSocket.hpp"
 #include "transport/IoContext.hpp"
 
-
 namespace rtype::client {
 
 /**
