@@ -172,6 +172,25 @@ else()
     gtest_discover_tests(test_collision_branches)
 endif()
 
+# EntityConfig branch coverage tests
+add_executable(test_entityconfig_branches test_entityconfig_branches.cpp)
+
+target_link_libraries(test_entityconfig_branches PRIVATE
+    rtype_game_shared
+    GTest::gtest_main
+)
+
+target_include_directories(test_entityconfig_branches PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_entityconfig_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_entityconfig_branches)
+endif()
+
 # Engine base class tests (AGameEngine, ASystem)
 add_executable(test_engine test_engine.cpp)
 
