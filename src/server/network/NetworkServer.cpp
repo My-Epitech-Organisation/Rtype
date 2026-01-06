@@ -512,8 +512,8 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
         auto client = findClient(sender);
         if (client) {
             LOG_DEBUG("[NetworkServer] Processing ACK from userId="
-                      << header.userId << " ackId=" << header.ackId << " (seqId="
-                      << header.seqId << ")");
+                      << header.userId << " ackId=" << header.ackId
+                      << " (seqId=" << header.seqId << ")");
             client->reliableChannel.recordAck(header.ackId);
             client->lastActivity = std::chrono::steady_clock::now();
         }
