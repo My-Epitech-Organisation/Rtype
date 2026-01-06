@@ -232,8 +232,10 @@ count = 1
     EXPECT_EQ(spawns.size(), 1);
     if (!spawns.empty()) {
         EXPECT_EQ(spawns[0].enemyId, "basic");
-        EXPECT_FLOAT_EQ(spawns[0].x, 800.0F);
-        EXPECT_FLOAT_EQ(spawns[0].y, 300.0F);
+        ASSERT_TRUE(spawns[0].x.has_value());
+        ASSERT_TRUE(spawns[0].y.has_value());
+        EXPECT_FLOAT_EQ(*spawns[0].x, 800.0F);
+        EXPECT_FLOAT_EQ(*spawns[0].y, 300.0F);
     }
 }
 
@@ -355,7 +357,7 @@ count = 1
     WaveManager manager;
     ASSERT_TRUE(manager.loadLevel("reset_test"));
     manager.start();
-    manager.update(0.1F, 0);
+    [[maybe_unused]] auto spawns = manager.update(0.1F, 0);
 
     manager.reset();
     EXPECT_EQ(manager.getState(), WaveState::NotStarted);
