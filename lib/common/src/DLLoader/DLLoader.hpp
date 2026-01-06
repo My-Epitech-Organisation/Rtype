@@ -28,15 +28,7 @@ class DLLoader {
             this->_handle = LoadLibraryA(path.c_str())
             if (!this->_handle) {
                 LPVOID lpMsgBuf;
-                throw std::runtime_error("Cannot load library: " + std::string(FormatMessage(
-                    FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                    FORMAT_MESSAGE_FROM_SYSTEM |
-                    FORMAT_MESSAGE_IGNORE_INSERTS,
-                    NULL,
-                    GetLastError(),
-                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                    (LPTSTR) &lpMsgBuf,
-                0, NULL)));
+                throw std::runtime_error("Cannot load library");
             }
         #else
             this->_handle = dlopen(path.c_str(), RTLD_LAZY);
@@ -61,15 +53,7 @@ class DLLoader {
             auto entryPoint = reinterpret_cast<T* (*)()>(GetProcAddress(static_cast<HMODULE>(this->_handle), entryPointName.c_str()));
             if (!entryPoint) {
                 LPVOID lpMsgBuf;
-                throw std::runtime_error("Cannot load symbol: " + std::string(FormatMessage(
-                    FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                    FORMAT_MESSAGE_FROM_SYSTEM |
-                    FORMAT_MESSAGE_IGNORE_INSERTS,
-                    NULL,
-                    GetLastError(),
-                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                    (LPTSTR) &lpMsgBuf,
-                0, NULL)));
+                throw std::runtime_error("Cannot load symbol");
             }
         #else
             auto entryPoint = reinterpret_cast<T* (*)()>(dlsym(this->_handle, entryPointName.c_str()));
