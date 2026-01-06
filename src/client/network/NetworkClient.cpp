@@ -458,9 +458,6 @@ void NetworkClient::handleReceive(network::Result<std::size_t> result) {
 
         processIncomingPacket(*receiveBuffer_, *receiveSender_);
     }
-
-    // Check if socket still exists and is open before starting next receive
-    // This prevents use-after-free if disconnect() is called concurrently
     if (socket_ && socket_->isOpen()) {
         startReceive();
     }
