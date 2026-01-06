@@ -154,6 +154,7 @@ TEST_F(ServerAppUnitTest, GameState_ReadyPlayerCount_InitiallyZero) {
 
 TEST_F(ServerAppUnitTest, GameState_PlayerReady_IncreasesCount) {
     ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+    server.setDefaultCountdown(0.0f);
 
     // First player ready triggers game start (MIN_PLAYERS_TO_START = 1)
     server.playerReady(1);
@@ -178,6 +179,7 @@ TEST_F(ServerAppUnitTest, GameState_PlayerReady_DuplicateIgnored) {
 
 TEST_F(ServerAppUnitTest, GameState_TransitionToPlaying) {
     ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+    server.setDefaultCountdown(0.0f);
 
     EXPECT_EQ(server.getGameState(), GameState::WaitingForPlayers);
 
@@ -190,6 +192,7 @@ TEST_F(ServerAppUnitTest, GameState_TransitionToPlaying) {
 
 TEST_F(ServerAppUnitTest, GameState_PlayerReadyWhenAlreadyPlaying) {
     ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+    server.setDefaultCountdown(0.0f);
 
     server.playerReady(1);
     EXPECT_EQ(server.getGameState(), GameState::Playing);
@@ -617,6 +620,7 @@ TEST_F(ServerAppUnitTest, EdgeCase_HighTickRate) {
 
 TEST_F(ServerAppUnitTest, EdgeCase_ManyPlayersReady) {
     ServerApp server(8080, 100, 60, shutdownFlag_, 30, false);
+    server.setDefaultCountdown(0.0f);
 
     // First player ready triggers game start (MIN_PLAYERS_TO_START = 1)
     // Subsequent playerReady calls are ignored once game is playing
@@ -645,6 +649,7 @@ TEST_F(ServerAppUnitTest, GameState_TransitionToPlaying_WithNetworkSystem) {
     shutdownFlag_->store(true);  // Will exit immediately
 
     ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+    server.setDefaultCountdown(0.0f);
 
     // Make player ready before run
     server.playerReady(1);
@@ -655,6 +660,7 @@ TEST_F(ServerAppUnitTest, GameState_TransitionToPlaying_WithNetworkSystem) {
 
 TEST_F(ServerAppUnitTest, GameState_CheckGameStart_AlreadyPlaying) {
     ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+    server.setDefaultCountdown(0.0f);
 
     // Transition to playing
     server.playerReady(1);
@@ -851,6 +857,7 @@ TEST_F(ServerAppUnitTest, GetGameConfig_WithoutConfig) {
 
 TEST_F(ServerAppUnitTest, PlayerReady_SamePlayerMultipleTimes) {
     ServerApp server(8080, 4, 60, shutdownFlag_, 30, false);
+    server.setDefaultCountdown(0.0f);
 
     // First player ready
     server.playerReady(1);
@@ -892,6 +899,7 @@ TEST_F(ServerAppUnitTest, Run_QuickShutdown) {
 
 TEST_F(ServerAppUnitTest, Run_WithPlayerReadyDuringRun) {
     ServerApp server(14261, 4, 60, shutdownFlag_, 30, false);
+    server.setDefaultCountdown(0.0f);
 
     std::thread serverThread([&]() {
         [[maybe_unused]] bool result = server.run();

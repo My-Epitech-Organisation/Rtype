@@ -311,7 +311,7 @@ target_link_libraries(test_packet_processor PRIVATE
 )
 
 # GameStateManager unit tests
-add_executable(test_game_state_manager test_game_state_manager.cpp
+add_executable(test_game_state_manager test_game_state_manager.cpp test_game_state_manager_countdown.cpp
     ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameStateManager/GameStateManager.cpp
 )
 
