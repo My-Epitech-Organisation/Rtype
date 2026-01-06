@@ -360,3 +360,21 @@ if(WIN32 OR MSVC)
 else()
     gtest_discover_tests(test_powerup_system)
 endif()
+# FileOperations tests (from shared/config/save_manager subdirectory)
+add_executable(test_file_operations shared/config/save_manager/test_file_operations.cpp)
+
+target_link_libraries(test_file_operations PRIVATE
+    GTest::gtest_main
+    rtype_game_config
+)
+
+target_include_directories(test_file_operations PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_file_operations WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_file_operations)
+endif()
