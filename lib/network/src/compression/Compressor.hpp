@@ -39,10 +39,8 @@ class Compressor {
      * @brief Configuration for compression behavior
      */
     struct Config {
-        /// Minimum payload size to attempt compression (bytes)
         std::size_t minSizeThreshold = 64;
 
-        /// Maximum acceptable expansion ratio (1.0 = no expansion allowed)
         float maxExpansionRatio = 1.0f;
     };
 

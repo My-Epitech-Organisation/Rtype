@@ -28,44 +28,35 @@ CompressionResult Compressor::compress(const Buffer& payload) const {
     result.originalSize = payload.size();
     result.wasCompressed = false;
 
-    // Skip compression for small payloads
     if (!shouldCompress(payload.size())) {
         result.data = payload;
         return result;
     }
 
-    // Pre-allocate buffer for worst-case compressed size
     std::size_t maxSize = maxCompressedSize(payload.size());
     Buffer compressed(maxSize);
 
-    // LZ4 frame preferences (use defaults)
     LZ4F_preferences_t prefs{};
-    prefs.compressionLevel = 0;  // Default compression level
+    prefs.compressionLevel = 0;
     prefs.autoFlush = 1;
-    prefs.frameInfo.contentSize = payload.size();  // Store original size
+    prefs.frameInfo.contentSize = payload.size();
 
-    // Compress using LZ4 frame format
     std::size_t compressedSize = LZ4F_compressFrame(
         compressed.data(), compressed.size(), payload.data(), payload.size(),
         &prefs);
 
-    // Check for compression error
     if (LZ4F_isError(compressedSize)) {
-        // Compression failed, return original
         result.data = payload;
         return result;
     }
 
-    // Check if compression was beneficial
     auto ratio = static_cast<float>(compressedSize) /
                  static_cast<float>(payload.size());
     if (ratio > config_.maxExpansionRatio) {
-        // Compression not beneficial, return original
         result.data = payload;
         return result;
     }
 
-    // Compression successful and beneficial
     compressed.resize(compressedSize);
     result.data = std::move(compressed);
     result.wasCompressed = true;
@@ -77,7 +68,6 @@ Result<Buffer> Compressor::decompress(const Buffer& compressedData) const {
         return Err<Buffer>(NetworkError::DecompressionFailed);
     }
 
-    // Create decompression context
     LZ4F_dctx* dctx = nullptr;
     LZ4F_errorCode_t err =
         LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION);
@@ -85,7 +75,6 @@ Result<Buffer> Compressor::decompress(const Buffer& compressedData) const {
         return Err<Buffer>(NetworkError::DecompressionFailed);
     }
 
-    // RAII cleanup for context
     struct ContextGuard {
         LZ4F_dctx* ctx;
         ~ContextGuard() {
@@ -95,7 +84,6 @@ Result<Buffer> Compressor::decompress(const Buffer& compressedData) const {
         }
     } guard{dctx};
 
-    // Get frame info to determine original size
     LZ4F_frameInfo_t frameInfo{};
     std::size_t srcSize = compressedData.size();
     err = LZ4F_getFrameInfo(dctx, &frameInfo, compressedData.data(), &srcSize);
@@ -103,20 +91,16 @@ Result<Buffer> Compressor::decompress(const Buffer& compressedData) const {
         return Err<Buffer>(NetworkError::DecompressionFailed);
     }
 
-    // Allocate output buffer
-    // contentSize may be 0 if not stored in frame, use conservative estimate
     std::size_t dstCapacity = frameInfo.contentSize > 0
                                   ? frameInfo.contentSize
                                   : compressedData.size() * 4;
 
-    // Safety limit: max payload size
     if (dstCapacity > kMaxPacketSize) {
         dstCapacity = kMaxPacketSize;
     }
 
     Buffer decompressed(dstCapacity);
 
-    // Decompress remaining data after frame info
     const std::uint8_t* srcPtr = compressedData.data() + srcSize;
     std::size_t srcRemaining = compressedData.size() - srcSize;
     std::size_t dstSize = decompressed.size();

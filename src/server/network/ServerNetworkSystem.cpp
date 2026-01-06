@@ -165,7 +165,6 @@ void ServerNetworkSystem::broadcastEntityUpdates() {
         return;
     }
 
-    // Send in batches of kMaxEntitiesPerBatch (69)
     constexpr std::size_t maxPerBatch = network::kMaxEntitiesPerBatch;
 
     for (std::size_t offset = 0; offset < dirtyEntities.size();

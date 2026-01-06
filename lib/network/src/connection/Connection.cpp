@@ -99,12 +99,10 @@ Result<void> Connection::processPacket(const Buffer& data,
         }
     }
 
-    // Extract and decompress payload
     Buffer payload;
     if (header.payloadSize > 0) {
         Buffer rawPayload(data.begin() + kHeaderSize, data.end());
 
-        // Check if payload is compressed
         if (header.flags & Flags::kCompressed) {
             auto decompressResult = compressor_.decompress(rawPayload);
             if (!decompressResult) {
@@ -200,7 +198,6 @@ Result<Connection::OutgoingPacket> Connection::buildPacket(
         return Err<OutgoingPacket>(NetworkError::NotConnected);
     }
 
-    // Attempt compression if enabled
     Buffer finalPayload = payload;
     bool isCompressed = false;
 

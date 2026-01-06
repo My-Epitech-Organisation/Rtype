@@ -332,7 +332,6 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
         network::Buffer rawPayload(data.begin() + network::kHeaderSize,
                                    data.end());
 
-        // Check if payload is compressed and decompress
         if (header.flags & network::Flags::kCompressed) {
             auto decompressResult = compressor_.decompress(rawPayload);
             if (!decompressResult) {
@@ -526,7 +525,6 @@ void NetworkClient::handleEntityMoveBatch(const network::Header& header,
             if (onEntityMoveBatchCallback_) {
                 onEntityMoveBatchCallback_(batchEvent);
             } else {
-                // Fallback: dispatch individually for backwards compatibility
                 for (const auto& e : batchEvent.entities) {
                     if (onEntityMoveCallback_) {
                         onEntityMoveCallback_(e);

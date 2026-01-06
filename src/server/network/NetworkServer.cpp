@@ -535,18 +535,15 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
         }
     }
 
-    // Extract and decompress payload
     network::Buffer payload;
     if (header.payloadSize > 0 &&
         data.size() >= network::kHeaderSize + header.payloadSize) {
         network::Buffer rawPayload(data.begin() + network::kHeaderSize,
                                    data.end());
 
-        // Check if payload is compressed
         if (header.flags & network::Flags::kCompressed) {
             auto decompressResult = compressor_.decompress(rawPayload);
             if (!decompressResult) {
-                // Decompression failed, drop packet
                 return;
             }
             payload = std::move(decompressResult.value());
@@ -835,7 +832,6 @@ network::Buffer NetworkServer::buildPacket(network::OpCode opcode,
                                            std::uint32_t userId,
                                            std::uint16_t seqId,
                                            std::uint16_t ackId, bool reliable) {
-    // Attempt compression if enabled
     network::Buffer finalPayload = payload;
     bool isCompressed = false;
 
