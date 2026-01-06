@@ -16,7 +16,8 @@
 
 namespace rtype::games::rtype::client {
 
-TextInputSystem::TextInputSystem(std::shared_ptr<::rtype::display::IDisplay> display)
+TextInputSystem::TextInputSystem(
+    std::shared_ptr<::rtype::display::IDisplay> display)
     : _display(std::move(display)) {}
 
 bool TextInputSystem::handleEvent(ECS::Registry& registry,

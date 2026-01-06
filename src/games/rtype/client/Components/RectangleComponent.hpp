@@ -9,6 +9,7 @@
 #define SRC_GAMES_RTYPE_CLIENT_COMPONENTS_RECTANGLECOMPONENT_HPP_
 
 #include <utility>
+
 #include "../../../../../include/rtype/display/DisplayTypes.hpp"
 
 namespace rtype::games::rtype::client {

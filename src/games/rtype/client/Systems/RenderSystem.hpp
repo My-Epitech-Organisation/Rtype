@@ -12,7 +12,6 @@
 #include <vector>
 
 #include "../../../../../include/rtype/display/IDisplay.hpp"
-
 #include "../Components/HiddenComponent.hpp"
 #include "ASystem.hpp"
 #include "ECS.hpp"

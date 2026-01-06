@@ -9,8 +9,8 @@
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENEUTILS_HPP_
 #include <string>
 
-#include "rtype/display/IDisplay.hpp"
 #include "GameAction.hpp"
+#include "rtype/display/IDisplay.hpp"
 
 class SettingsSceneUtils {
    public:

@@ -34,8 +34,7 @@ static constexpr std::uint16_t kPort = 4242;
 void MainMenuScene::_createAstroneerVessel() {
     auto astroneerVessel = this->_registry->spawnEntity();
     this->_registry->emplaceComponent<rtype::games::rtype::client::Image>(
-        astroneerVessel,
-        "astro_vessel");
+        astroneerVessel, "astro_vessel");
     this->_registry
         ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
             astroneerVessel, 1900, 1060);
@@ -58,8 +57,7 @@ void MainMenuScene::_createFakePlayer() {
     for (int i = 0; i < nbr_vessels; i++) {
         auto fakePlayer = this->_registry->spawnEntity();
         this->_registry->emplaceComponent<rtype::games::rtype::client::Image>(
-            fakePlayer,
-            "player_vessel");
+            fakePlayer, "player_vessel");
         this->_registry
             ->emplaceComponent<rtype::games::rtype::client::TextureRect>(
                 fakePlayer, std::pair<int, int>({0, 0}),
@@ -83,8 +81,9 @@ void MainMenuScene::_createConnectionPanel(
     std::function<void(const SceneManager::Scene&)> switchToScene) {
     auto panelEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "",
-            rtype::display::Vector2<float>(kConnectionPanelX, kConnectionPanelY),
-            rtype::display::Vector2<float>(kConnectionPanelWidth, kConnectionPanelHeight));
+        rtype::display::Vector2<float>(kConnectionPanelX, kConnectionPanelY),
+        rtype::display::Vector2<float>(kConnectionPanelWidth,
+                                       kConnectionPanelHeight));
     for (auto entity : panelEntities) {
         this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
             entity, 10);
@@ -96,7 +95,7 @@ void MainMenuScene::_createConnectionPanel(
         this->_registry, this->_assetsManager, "Connect to Server",
         "title_font",
         rtype::display::Vector2<float>(kConnectionPanelX + 40.f,
-                     kConnectionPanelY + 40.f),
+                                       kConnectionPanelY + 40.f),
         32);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         title, 11);
@@ -104,7 +103,7 @@ void MainMenuScene::_createConnectionPanel(
     auto ipLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "IP:", "main_font",
         rtype::display::Vector2<float>(kConnectionPanelX + 40.f,
-                     kConnectionPanelY + 105.f),
+                                       kConnectionPanelY + 105.f),
         24);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         ipLabel, 11);
@@ -112,16 +111,16 @@ void MainMenuScene::_createConnectionPanel(
     _ipInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
         rtype::display::Vector2<float>(kConnectionPanelX + 120.f,
-                                   kConnectionPanelY + 85.f),
-        rtype::display::Vector2<float>(kInputWidth, kInputHeight),
-        "127.0.0.1", "127.0.0.1", 15, false);
+                                       kConnectionPanelY + 85.f),
+        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "127.0.0.1",
+        "127.0.0.1", 15, false);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         _ipInputEntity, 12);
     this->_listEntity.push_back(_ipInputEntity);
     auto portLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Port:", "main_font",
         rtype::display::Vector2<float>(kConnectionPanelX + 40.f,
-                     kConnectionPanelY + 165.f),
+                                       kConnectionPanelY + 165.f),
         24);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         portLabel, 11);
@@ -129,16 +128,17 @@ void MainMenuScene::_createConnectionPanel(
     _portInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
         rtype::display::Vector2<float>(kConnectionPanelX + 120.f,
-                                   kConnectionPanelY + 145.f),
-                      rtype::display::Vector2<float>(kInputWidth, kInputHeight),
-        "4242", "4242", 5, true);
+                                       kConnectionPanelY + 145.f),
+        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "4242",
+        "4242", 5, true);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         _portInputEntity, 12);
     this->_listEntity.push_back(_portInputEntity);
     _statusEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "main_font",
-        rtype::display::Vector2<float>(kConnectionPanelX + kInputOffsetX / 2,
-                     kConnectionPanelY + 200.f + kInputHeight / 2),
+        rtype::display::Vector2<float>(
+            kConnectionPanelX + kInputOffsetX / 2,
+            kConnectionPanelY + 200.f + kInputHeight / 2),
         18);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         _statusEntity, 11);
@@ -146,12 +146,12 @@ void MainMenuScene::_createConnectionPanel(
     auto connectButton = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 28, "Connect"),
+            "main_font", rtype::display::Color::White(), 28, "Connect"),
         rtype::games::rtype::shared::TransformComponent(
             kConnectionPanelX + 125.f, kConnectionPanelY + 260.f),
-        rtype::games::rtype::client::Rectangle({200, 60}, rtype::display::Color(0, 150, 0, 255),
-                                               rtype::display::Color(0, 200, 0, 255)),
+        rtype::games::rtype::client::Rectangle(
+            {200, 60}, rtype::display::Color(0, 150, 0, 255),
+            rtype::display::Color(0, 200, 0, 255)),
         this->_assetsManager, std::function<void()>([this, switchToScene]() {
             this->_onConnectClicked(switchToScene);
         }));
@@ -163,7 +163,8 @@ void MainMenuScene::_createConnectionPanel(
 void MainMenuScene::_onConnectClicked(
     std::function<void(const SceneManager::Scene&)> switchToScene) {
     if (!_networkClient) {
-        _updateStatus("Error: Network not available", rtype::display::Color::Red());
+        _updateStatus("Error: Network not available",
+                      rtype::display::Color::Red());
         return;
     }
     std::string ip = kIp;
@@ -188,7 +189,8 @@ void MainMenuScene::_onConnectClicked(
             try {
                 port = static_cast<std::uint16_t>(std::stoi(portInput.content));
             } catch (...) {
-                _updateStatus("Invalid port number", rtype::display::Color::Red());
+                _updateStatus("Invalid port number",
+                              rtype::display::Color::Red());
                 return;
             }
         }
@@ -261,11 +263,13 @@ void MainMenuScene::_onConnectClicked(
             }
         });
     if (!_networkClient->connect(ip, port)) {
-        _updateStatus("Failed to start connection", rtype::display::Color::Red());
+        _updateStatus("Failed to start connection",
+                      rtype::display::Color::Red());
     }
 }
 
-void MainMenuScene::_updateStatus(const std::string& message, rtype::display::Color color) {
+void MainMenuScene::_updateStatus(const std::string& message,
+                                  rtype::display::Color color) {
     if (!_registry) return;
     if (!_registry->isAlive(_statusEntity)) return;
     if (!_registry->hasComponent<rtype::games::rtype::client::Text>(
@@ -318,10 +322,10 @@ MainMenuScene::MainMenuScene(
     auto playBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 36, "Play"),
+            "main_font", rtype::display::Color::White(), 36, "Play"),
         rtype::games::rtype::shared::TransformComponent(100, 350),
-        rtype::games::rtype::client::Rectangle({400, 75}, rtype::display::Color::Blue(),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([switchToScene]() {
             try {
@@ -337,10 +341,10 @@ MainMenuScene::MainMenuScene(
     auto howToPlayBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 36, "How to Play"),
+            "main_font", rtype::display::Color::White(), 36, "How to Play"),
         rtype::games::rtype::shared::TransformComponent(100, 470),
-        rtype::games::rtype::client::Rectangle({400, 75}, rtype::display::Color::Blue(),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([switchToScene]() {
             try {
@@ -356,10 +360,10 @@ MainMenuScene::MainMenuScene(
     auto settingsBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 36, "Settings"),
+            "main_font", rtype::display::Color::White(), 36, "Settings"),
         rtype::games::rtype::shared::TransformComponent(100, 590),
-        rtype::games::rtype::client::Rectangle({400, 75}, rtype::display::Color::Blue(),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([switchToScene]() {
             try {
@@ -375,10 +379,10 @@ MainMenuScene::MainMenuScene(
     auto quitBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 36, "Quit"),
+            "main_font", rtype::display::Color::White(), 36, "Quit"),
         rtype::games::rtype::shared::TransformComponent(100, 710),
-        rtype::games::rtype::client::Rectangle({400, 75}, rtype::display::Color::Blue(),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
         this->_assetsManager,
         std::function<void()>([window = this->_window]() { window->close(); }));

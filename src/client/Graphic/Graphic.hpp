@@ -8,13 +8,13 @@
 #ifndef SRC_CLIENT_GRAPHIC_GRAPHIC_HPP_
 #define SRC_CLIENT_GRAPHIC_GRAPHIC_HPP_
 
-#include <memory>
 #include <chrono>
+#include <memory>
 
 #include <rtype/ecs.hpp>
+
 #include "../../../include/rtype/display/IDisplay.hpp"
 #include "../../../lib/common/src/DLLoader/DLLoader.hpp"
-
 #include "../../games/rtype/client/GraphicsConstants.hpp"
 #include "../../games/rtype/client/Systems/BoxingSystem.hpp"
 #include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
@@ -121,7 +121,6 @@ class Graphic {
     // ========================================================================
     // ECS Systems (unique ownership, registered with scheduler)
     // ========================================================================
-
 
     std::unique_ptr<::rtype::games::rtype::client::PlayerAnimationSystem>
         _playerAnimationSystem;

@@ -21,7 +21,8 @@ class AssetManager {
     std::shared_ptr<AudioManager> audioManager;
     std::shared_ptr<SoundManager> soundManager;
     explicit AssetManager(
-        const rtype::game::config::RTypeGameConfig& configGameAssets, std::shared_ptr<rtype::display::IDisplay> display);
+        const rtype::game::config::RTypeGameConfig& configGameAssets,
+        std::shared_ptr<rtype::display::IDisplay> display);
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_ASSETMANAGER_HPP_

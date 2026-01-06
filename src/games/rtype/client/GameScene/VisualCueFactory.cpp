@@ -23,8 +23,8 @@ namespace rtype::games::rtype::client {
 
 void VisualCueFactory::createFlash(ECS::Registry& registry,
                                    const ::rtype::display::Vector2f& center,
-                                   const ::rtype::display::Color& color, float size,
-                                   float lifetime, int zIndex) {
+                                   const ::rtype::display::Color& color,
+                                   float size, float lifetime, int zIndex) {
     if (registry.hasSingleton<AccessibilitySettings>()) {
         const auto& acc = registry.getSingleton<AccessibilitySettings>();
         if (!acc.showVisualCues) {
@@ -52,11 +52,10 @@ void VisualCueFactory::createFlash(ECS::Registry& registry,
     registry.emplaceComponent<GameTag>(entity);
 }
 
-void VisualCueFactory::createDamagePopup(ECS::Registry& registry,
-                                         const ::rtype::display::Vector2f& position,
-                                         int damage,
-                                         const std::string& fontName,
-                                         const ::rtype::display::Color& color) {
+void VisualCueFactory::createDamagePopup(
+    ECS::Registry& registry, const ::rtype::display::Vector2f& position,
+    int damage, const std::string& fontName,
+    const ::rtype::display::Color& color) {
     auto entity = registry.spawnEntity();
     LOG_DEBUG("[VisualCueFactory] Damage popup entity=" +
               std::to_string(entity.id) + " dmg=" + std::to_string(damage));

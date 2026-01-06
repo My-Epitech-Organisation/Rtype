@@ -18,7 +18,9 @@
 
 class SoundManager {
    private:
-    std::unordered_map<std::string, std::shared_ptr<::rtype::display::ISoundBuffer>> _assets;
+    std::unordered_map<std::string,
+                       std::shared_ptr<::rtype::display::ISoundBuffer>>
+        _assets;
 
    public:
     SoundManager(const SoundManager&) = delete;
@@ -28,7 +30,8 @@ class SoundManager {
 
     std::shared_ptr<::rtype::display::ISoundBuffer> get(const std::string& id);
 
-    SoundManager(::rtype::display::IDisplay* display) : _display(display) {}
+    explicit SoundManager(::rtype::display::IDisplay* display)
+        : _display(display) {}
 
    private:
     ::rtype::display::IDisplay* _display;

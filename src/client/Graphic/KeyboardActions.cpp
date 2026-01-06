@@ -13,15 +13,20 @@
 
 KeyboardActions::KeyboardActions() {
     this->_keyBindings.emplace(GameAction::MOVE_UP, ::rtype::display::Key::Up);
-    this->_keyBindings.emplace(GameAction::MOVE_DOWN, ::rtype::display::Key::Down);
+    this->_keyBindings.emplace(GameAction::MOVE_DOWN,
+                               ::rtype::display::Key::Down);
     this->_keyBindings.emplace(GameAction::MOVE_RIGHT,
                                ::rtype::display::Key::Right);
-    this->_keyBindings.emplace(GameAction::MOVE_LEFT, ::rtype::display::Key::Left);
+    this->_keyBindings.emplace(GameAction::MOVE_LEFT,
+                               ::rtype::display::Key::Left);
     this->_keyBindings.emplace(GameAction::SHOOT, ::rtype::display::Key::Space);
-    this->_keyBindings.emplace(GameAction::PAUSE, ::rtype::display::Key::Escape);
-    this->_keyBindings.emplace(GameAction::CHANGE_AMMO, ::rtype::display::Key::Tab);
+    this->_keyBindings.emplace(GameAction::PAUSE,
+                               ::rtype::display::Key::Escape);
+    this->_keyBindings.emplace(GameAction::CHANGE_AMMO,
+                               ::rtype::display::Key::Tab);
 
-    this->_joyAxisBindings.emplace(GameAction::MOVE_UP, ::rtype::display::JoystickAxis::Y);
+    this->_joyAxisBindings.emplace(GameAction::MOVE_UP,
+                                   ::rtype::display::JoystickAxis::Y);
     this->_joyAxisBindings.emplace(GameAction::MOVE_DOWN,
                                    ::rtype::display::JoystickAxis::Y);
     this->_joyAxisBindings.emplace(GameAction::MOVE_LEFT,
@@ -86,8 +91,8 @@ auto KeyboardActions::getJoyButtonBinding(const GameAction& action)
     return this->_joyButtonBindings[action];
 }
 
-void KeyboardActions::setJoyAxisBinding(const GameAction& action,
-                                        const ::rtype::display::JoystickAxis& axis) {
+void KeyboardActions::setJoyAxisBinding(
+    const GameAction& action, const ::rtype::display::JoystickAxis& axis) {
     this->_joyAxisBindings[action] = axis;
 }
 

@@ -18,7 +18,8 @@
 
 class AudioManager {
    private:
-    std::unordered_map<std::string, std::shared_ptr<::rtype::display::IMusic>> _assets;
+    std::unordered_map<std::string, std::shared_ptr<::rtype::display::IMusic>>
+        _assets;
 
    public:
     AudioManager(const AudioManager&) = delete;
@@ -28,7 +29,8 @@ class AudioManager {
 
     std::shared_ptr<::rtype::display::IMusic> get(const std::string& id);
 
-    AudioManager(::rtype::display::IDisplay* display) : _display(display) {}
+    explicit AudioManager(::rtype::display::IDisplay* display)
+        : _display(display) {}
 
    private:
     ::rtype::display::IDisplay* _display;

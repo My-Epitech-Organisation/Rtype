@@ -8,6 +8,7 @@
 #ifndef SRC_GAMES_RTYPE_CLIENT_COMPONENTS_SOUNDCOMPONENT_HPP_
 #define SRC_GAMES_RTYPE_CLIENT_COMPONENTS_SOUNDCOMPONENT_HPP_
 #include <memory>
+
 #include "rtype/display/IDisplay.hpp"
 
 namespace rtype::games::rtype::client {

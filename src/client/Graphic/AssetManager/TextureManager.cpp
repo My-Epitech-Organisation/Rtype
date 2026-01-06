@@ -16,7 +16,8 @@ void TextureManager::load(const std::string& id, const std::string& filePath) {
     LOG_DEBUG("Texture loaded with ID: " << id);
 }
 
-std::shared_ptr<::rtype::display::ITexture> TextureManager::get(const std::string& id) {
+std::shared_ptr<::rtype::display::ITexture> TextureManager::get(
+    const std::string& id) {
     if (!_display) return nullptr;
     auto texture = _display->getTexture(id);
 

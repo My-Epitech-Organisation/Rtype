@@ -37,7 +37,8 @@ class AudioLib {
 
     void loadMusic(std::shared_ptr<::rtype::display::IMusic> music);
 
-    explicit AudioLib(std::shared_ptr<::rtype::display::IDisplay> display) : _display(display) {}
+    explicit AudioLib(std::shared_ptr<::rtype::display::IDisplay> display)
+        : _display(display) {}
     ~AudioLib();
 };
 

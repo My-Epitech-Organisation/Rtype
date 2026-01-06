@@ -147,11 +147,12 @@ void RtypeEntityFactory::setupPlayerEntity(
         entity, 132.0f, 68.0f);
     reg.emplaceComponent<shared::HealthComponent>(entity, 1, 1);
     reg.emplaceComponent<PlayerTag>(entity);
-    reg.emplaceComponent<BoxingComponent>(entity,
-                                          ::rtype::display::Vector2f{0, 0}, ::rtype::display::Vector2f{132.f, 68.f});
-    reg.getComponent<BoxingComponent>(entity).outlineColor = ::rtype::display::Color::White();
-    reg.getComponent<BoxingComponent>(entity).fillColor =
-        {0, 200, 255, 45};
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0, 0},
+        ::rtype::display::Vector2f{132.f, 68.f});
+    reg.getComponent<BoxingComponent>(entity).outlineColor =
+        ::rtype::display::Color::White();
+    reg.getComponent<BoxingComponent>(entity).fillColor = {0, 200, 255, 45};
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<PlayerSoundComponent>(
@@ -171,12 +172,11 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.emplaceComponent<Size>(entity, 2, 2);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, 66.0f, 68.0f);
-    reg.emplaceComponent<BoxingComponent>(entity,
-                                          ::rtype::display::Vector2f{0, 0}, ::rtype::display::Vector2f{66.f, 68.f});
-    reg.getComponent<BoxingComponent>(entity).outlineColor =
-        {255, 120, 0, 255};
-    reg.getComponent<BoxingComponent>(entity).fillColor =
-        {255, 120, 0, 40};
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0, 0},
+        ::rtype::display::Vector2f{66.f, 68.f});
+    reg.getComponent<BoxingComponent>(entity).outlineColor = {255, 120, 0, 255};
+    reg.getComponent<BoxingComponent>(entity).fillColor = {255, 120, 0, 40};
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<shared::HealthComponent>(entity, 10, 10);
     reg.emplaceComponent<GameTag>(entity);
@@ -198,13 +198,12 @@ void RtypeEntityFactory::setupMissileEntity(
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, 33.0f, 34.0f);
     reg.emplaceComponent<shared::ProjectileTag>(entity);
-    reg.emplaceComponent<BoxingComponent>(entity,
-                                          ::rtype::display::Vector2f{0, 0}, ::rtype::display::Vector2f{33.f, 34.f});
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0, 0},
+        ::rtype::display::Vector2f{33.f, 34.f});
     reg.emplaceComponent<Animation>(entity, 4, 0.5, true);
-    reg.getComponent<BoxingComponent>(entity).outlineColor =
-        {0, 220, 180, 255};
-    reg.getComponent<BoxingComponent>(entity).fillColor =
-        {0, 220, 180, 35};
+    reg.getComponent<BoxingComponent>(entity).outlineColor = {0, 220, 180, 255};
+    reg.getComponent<BoxingComponent>(entity).fillColor = {0, 220, 180, 35};
     reg.emplaceComponent<ZIndex>(entity, 1);
     reg.emplaceComponent<shared::LifetimeComponent>(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
@@ -215,7 +214,8 @@ void RtypeEntityFactory::setupMissileEntity(
     if (reg.hasComponent<shared::TransformComponent>(entity)) {
         const auto& pos = reg.getComponent<shared::TransformComponent>(entity);
         VisualCueFactory::createFlash(reg, {pos.x, pos.y},
-                                      ::rtype::display::Color{0, 255, 220, 255}, 52.f, 0.25f, 10);
+                                      ::rtype::display::Color{0, 255, 220, 255},
+                                      52.f, 0.25f, 10);
     }
 }
 
@@ -224,19 +224,23 @@ void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
                                            std::uint32_t networkId) {
     LOG_DEBUG("[RtypeEntityFactory] Adding Pickup components");
     static const std::array<::rtype::display::Color, 4> kColors = {
-        ::rtype::display::Color{120, 200, 255, 255}, ::rtype::display::Color{170, 120, 255, 255},
-        ::rtype::display::Color{120, 255, 170, 255}, ::rtype::display::Color{255, 200, 120, 255}};
+        ::rtype::display::Color{120, 200, 255, 255},
+        ::rtype::display::Color{170, 120, 255, 255},
+        ::rtype::display::Color{120, 255, 170, 255},
+        ::rtype::display::Color{255, 200, 120, 255}};
     const ::rtype::display::Color color = kColors[networkId % kColors.size()];
 
     reg.emplaceComponent<Rectangle>(entity, std::pair<float, float>{24.f, 24.f},
                                     color, color);
     reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
-    reg.getComponent<Rectangle>(entity).outlineColor = ::rtype::display::Color::White();
-    reg.emplaceComponent<BoxingComponent>(entity,
-                                          ::rtype::display::Vector2f{0, 0}, ::rtype::display::Vector2f{24.f, 24.f});
+    reg.getComponent<Rectangle>(entity).outlineColor =
+        ::rtype::display::Color::White();
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0, 0},
+        ::rtype::display::Vector2f{24.f, 24.f});
     reg.getComponent<BoxingComponent>(entity).outlineColor = color;
-    reg.getComponent<BoxingComponent>(entity).fillColor =
-        {color.r, color.g, color.b, 45};
+    reg.getComponent<BoxingComponent>(entity).fillColor = {color.r, color.g,
+                                                           color.b, 45};
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(

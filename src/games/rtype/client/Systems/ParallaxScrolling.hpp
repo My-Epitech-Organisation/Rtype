@@ -9,6 +9,7 @@
 #define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_PARALLAXSCROLLING_HPP_
 
 #include <memory>
+
 #include "../../../../../include/rtype/display/IDisplay.hpp"
 #include "ASystem.hpp"
 #include "ECS.hpp"
@@ -39,7 +40,8 @@ class ParallaxScrolling : public ::rtype::engine::ASystem {
     void _updateCache();
 
    public:
-    explicit ParallaxScrolling(std::shared_ptr<::rtype::display::IDisplay> display);
+    explicit ParallaxScrolling(
+        std::shared_ptr<::rtype::display::IDisplay> display);
 
     void update(ECS::Registry& registry, float dt) override;
 };

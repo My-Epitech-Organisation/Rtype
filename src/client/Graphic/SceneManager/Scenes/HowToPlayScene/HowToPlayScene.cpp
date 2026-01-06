@@ -37,10 +37,10 @@ HowToPlayScene::HowToPlayScene(
     auto backBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 36, "Back"),
+            "main_font", rtype::display::Color::White(), 36, "Back"),
         rtype::games::rtype::shared::TransformComponent(100, 900),
-        rtype::games::rtype::client::Rectangle({400, 75}, rtype::display::Color::Blue(),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([this]() {
             try {
@@ -65,7 +65,7 @@ void HowToPlayScene::_initLayout() {
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "How to Play",
         rtype::display::Vector2<float>(kSectionX, kSectionY),
-                      rtype::display::Vector2<float>(kSectionW, kSectionH));
+        rtype::display::Vector2<float>(kSectionW, kSectionH));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
@@ -94,7 +94,9 @@ void HowToPlayScene::_initLayout() {
         auto text = EntityFactory::createStaticText(
             this->_registry, this->_assetsManager, lines[i], fontId,
             rtype::display::Vector2<float>{textX, y}, 28.f);
-        this->_registry->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(text);
+        this->_registry
+            ->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(
+                text);
         this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
             text, 2);
         this->_listEntity.push_back(text);
@@ -116,4 +118,5 @@ void HowToPlayScene::pollEvents(const rtype::display::Event& e) {
 
 void HowToPlayScene::update(float /*dt*/) {}
 
-void HowToPlayScene::render(std::shared_ptr<rtype::display::IDisplay> /*window*/) {}
+void HowToPlayScene::render(
+    std::shared_ptr<rtype::display::IDisplay> /*window*/) {}

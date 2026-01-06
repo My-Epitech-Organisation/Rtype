@@ -10,6 +10,7 @@
 
 #include <string>
 #include <string_view>
+
 #include "../../../../../include/rtype/display/DisplayTypes.hpp"
 
 namespace rtype::games::rtype::client {
@@ -33,9 +34,12 @@ struct Text {
      * @param size Font size in pixels (default: 30)
      * @param textContent Initial text string (default: empty)
      */
-    Text(std::string fName, const display::Color& col,
-         unsigned int sz = 30, std::string_view content = "")
-        : fontName(std::move(fName)), textContent(content), color(col), size(sz) {}
+    Text(std::string fName, const display::Color& col, unsigned int sz = 30,
+         std::string_view content = "")
+        : fontName(std::move(fName)),
+          textContent(content),
+          color(col),
+          size(sz) {}
 
     Text(const Text& other) = default;
     Text(Text&& other) noexcept = default;

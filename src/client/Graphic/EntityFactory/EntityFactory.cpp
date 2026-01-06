@@ -142,7 +142,8 @@ std::vector<ECS::Entity> EntityFactory::createSection(
         bg, position.x, position.y);
     registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
         bg, std::pair<float, float>{size.x, size.y},
-        ::rtype::display::Color(0, 0, 0, 150), ::rtype::display::Color(0, 0, 0, 150));
+        ::rtype::display::Color(0, 0, 0, 150),
+        ::rtype::display::Color(0, 0, 0, 150));
 
     if (registry->hasComponent<rtype::games::rtype::client::Rectangle>(bg)) {
         auto& rect =
@@ -159,7 +160,8 @@ std::vector<ECS::Entity> EntityFactory::createSection(
     auto titleEnt = registry->spawnEntity();
     registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         titleEnt, position.x + 20.f,
-        position.y + cfg::SECTION_TITLE_OFFSET_Y + cfg::SECTION_TITLE_FONT_SIZE / 2.0f);
+        position.y + cfg::SECTION_TITLE_OFFSET_Y +
+            cfg::SECTION_TITLE_FONT_SIZE / 2.0f);
     registry->emplaceComponent<rtype::games::rtype::client::Text>(
         titleEnt, "title_font", ::rtype::display::Color::White(),
         cfg::SECTION_TITLE_FONT_SIZE, std::string(title));

@@ -9,11 +9,10 @@
 
 #include <memory>
 
-#include "rtype/display/IDisplay.hpp"
-
 #include "ASystem.hpp"
 #include "Accessibility.hpp"
 #include "ECS.hpp"
+#include "rtype/display/IDisplay.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -28,7 +27,8 @@ class ShaderRenderSystem : public ::rtype::engine::ASystem {
      *
      * @param display The display interface
      */
-    ShaderRenderSystem(std::shared_ptr<::rtype::display::IDisplay> display);
+    explicit ShaderRenderSystem(
+        std::shared_ptr<::rtype::display::IDisplay> display);
 
     ~ShaderRenderSystem() override = default;
 

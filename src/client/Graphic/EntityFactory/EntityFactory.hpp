@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "../../../include/rtype/display/DisplayTypes.hpp"
-
 #include "AssetManager/AssetManager.hpp"
 #include "Components/ButtonComponent.hpp"
 #include "Components/RectangleComponent.hpp"
@@ -95,21 +94,23 @@ ECS::Entity createPlayer(std::shared_ptr<ECS::Registry> registry,
  * @return Created entity
  */
 
-ECS::Entity createRectangle(std::shared_ptr<ECS::Registry> registry,
-                            ::rtype::display::Vector2i size = {1, 1},
-                            ::rtype::display::Color fill = ::rtype::display::Color::White(),
-                            ::rtype::display::Vector2f position = {0, 0});
+ECS::Entity createRectangle(
+    std::shared_ptr<ECS::Registry> registry,
+    ::rtype::display::Vector2i size = {1, 1},
+    ::rtype::display::Color fill = ::rtype::display::Color::White(),
+    ::rtype::display::Vector2f position = {0, 0});
 
-std::vector<ECS::Entity> createSection(std::shared_ptr<ECS::Registry> registry,
-                                       std::shared_ptr<AssetManager> assets,
-                                       std::string_view title,
-                                       const ::rtype::display::Vector2f& position,
-                                       const ::rtype::display::Vector2f& size);
+std::vector<ECS::Entity> createSection(
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assets, std::string_view title,
+    const ::rtype::display::Vector2f& position,
+    const ::rtype::display::Vector2f& size);
 
 ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
                              std::shared_ptr<AssetManager> assets,
                              std::string_view title, std::string_view fontId,
-                             const ::rtype::display::Vector2f& position, float size);
+                             const ::rtype::display::Vector2f& position,
+                             float size);
 };  // namespace EntityFactory
 
 #endif  // SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_

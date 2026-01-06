@@ -10,16 +10,18 @@
 #include "../Components/ImageComponent.hpp"
 #include "../Components/ParallaxComponent.hpp"
 #include "../Components/TextureRectComponent.hpp"
-#include "../shared/Components/TransformComponent.hpp"
 #include "../GraphicsConstants.hpp"
+#include "../shared/Components/TransformComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
 namespace rc = ::rtype::games::rtype::client;
 namespace rs = ::rtype::games::rtype::shared;
 
-ParallaxScrolling::ParallaxScrolling(std::shared_ptr<::rtype::display::IDisplay> display)
-    : ::rtype::engine::ASystem("ParallaxScrolling"), _display(std::move(display)) {}
+ParallaxScrolling::ParallaxScrolling(
+    std::shared_ptr<::rtype::display::IDisplay> display)
+    : ::rtype::engine::ASystem("ParallaxScrolling"),
+      _display(std::move(display)) {}
 
 void ParallaxScrolling::_updateCache() {
     if (!_cacheValid) {
@@ -44,7 +46,6 @@ void ParallaxScrolling::update(ECS::Registry& registry, float dt) {
     registry.view<rc::Parallax, rc::Image, rs::TransformComponent>().each(
         [&registry, this, &center, viewWidth, spriteX, spriteY](
             auto entity, auto& parallax, auto& img, auto& transform) {
-
             // Ensure TextureRect exists
             if (!registry.hasComponent<rc::TextureRect>(entity)) {
                 registry.emplaceComponent<rc::TextureRect>(entity);
@@ -61,11 +62,8 @@ void ParallaxScrolling::update(ECS::Registry& registry, float dt) {
             auto texture = _display->getTexture(img.textureName);
             if (texture) {
                 display::Vector2u texSize = texture->getSize();
-                texRect.rect = {
-                    intOffset, 0,
-                    static_cast<int>(viewWidth) + 1,
-                    static_cast<int>(texSize.y)
-                };
+                texRect.rect = {intOffset, 0, static_cast<int>(viewWidth) + 1,
+                                static_cast<int>(texSize.y)};
             }
         });
 }

@@ -25,7 +25,9 @@ EventSystem::EventSystem(std::shared_ptr<::rtype::display::IDisplay> display,
       _display(std::move(display)),
       _audioLib(std::move(audio)) {}
 
-void EventSystem::setEvent(const ::rtype::display::Event& event) { _event = event; }
+void EventSystem::setEvent(const ::rtype::display::Event& event) {
+    _event = event;
+}
 
 void EventSystem::clearEvent() { _event.reset(); }
 
@@ -34,8 +36,10 @@ bool EventSystem::_isPointInRect(::rtype::display::Vector2i pixelPos,
                                  ::rtype::display::Vector2f position) const {
     if (!_display) return false;
     // Simple AABB check
-    return (pixelPos.x >= position.x && pixelPos.x <= position.x + rect.size.first &&
-            pixelPos.y >= position.y && pixelPos.y <= position.y + rect.size.second);
+    return (pixelPos.x >= position.x &&
+            pixelPos.x <= position.x + rect.size.first &&
+            pixelPos.y >= position.y &&
+            pixelPos.y <= position.y + rect.size.second);
 }
 
 void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
@@ -58,7 +62,8 @@ void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
                 _handleMenuActivation(registry, buttonEntities);
             }
         } else if (_event->type == ::rtype::display::EventType::JoystickMoved) {
-            if (_event->joystickMove.axis == ::rtype::display::JoystickAxis::Y) {
+            if (_event->joystickMove.axis ==
+                ::rtype::display::JoystickAxis::Y) {
                 static std::map<unsigned int, bool> lastUpPressed;
                 static std::map<unsigned int, bool> lastDownPressed;
 
@@ -77,16 +82,22 @@ void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
                     lastDownPressed[_event->joystickMove.joystickId] = false;
                 }
             }
-        } else if (_event->type == ::rtype::display::EventType::JoystickButtonPressed) {
+        } else if (_event->type ==
+                   ::rtype::display::EventType::JoystickButtonPressed) {
             if (_event->joystickButton.button == 0) {
                 _handleMenuActivation(registry, buttonEntities);
             }
         }
     }
 
-    registry.view<Rectangle, UserEvent, ::rtype::games::rtype::shared::TransformComponent>().each(
-        [this, &registry](ECS::Entity entity, const Rectangle& rect,
-                          UserEvent& actionType, const ::rtype::games::rtype::shared::TransformComponent& transform) {
+    registry
+        .view<Rectangle, UserEvent,
+              ::rtype::games::rtype::shared::TransformComponent>()
+        .each([this, &registry](
+                  ECS::Entity entity, const Rectangle& rect,
+                  UserEvent& actionType,
+                  const ::rtype::games::rtype::shared::TransformComponent&
+                      transform) {
             if (registry.hasComponent<HiddenComponent>(entity)) {
                 if (registry.getComponent<HiddenComponent>(entity).isHidden) {
                     return;
@@ -96,11 +107,12 @@ void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
             ::rtype::display::Vector2f position{transform.x, transform.y};
 
             bool interaction = false;
+            interaction |= this->_handleMouseMoved(actionType, rect, registry,
+                                                   entity, position);
+            interaction |= this->_handleMousePressed(actionType, rect, registry,
+                                                     entity, position);
             interaction |=
-                this->_handleMouseMoved(actionType, rect, registry, entity, position);
-            interaction |=
-                this->_handleMousePressed(actionType, rect, registry, entity, position);
-            interaction |= this->_handleMouseReleased(actionType, rect, position);
+                this->_handleMouseReleased(actionType, rect, position);
 
             if (interaction || actionType.isHovered || actionType.isPressed) {
                 actionType.idle = false;
@@ -114,7 +126,8 @@ bool EventSystem::_handleMouseMoved(UserEvent& actionType,
                                     ::rtype::display::Vector2f position) const {
     if (_event->type != ::rtype::display::EventType::MouseMoved) return false;
 
-    bool isInside = _isPointInRect({_event->mouseMove.x, _event->mouseMove.y}, rect, position);
+    bool isInside = _isPointInRect({_event->mouseMove.x, _event->mouseMove.y},
+                                   rect, position);
     bool interacted = false;
 
     if (!actionType.isHovered && isInside) {
@@ -136,14 +149,15 @@ bool EventSystem::_handleMouseMoved(UserEvent& actionType,
     return interacted || isInside;
 }
 
-bool EventSystem::_handleMousePressed(UserEvent& actionType,
-                                      const Rectangle& rect, ECS::Registry& reg,
-                                      ECS::Entity entt,
-                                      ::rtype::display::Vector2f position) const {
-    if (_event->type != ::rtype::display::EventType::MouseButtonPressed) return false;
+bool EventSystem::_handleMousePressed(
+    UserEvent& actionType, const Rectangle& rect, ECS::Registry& reg,
+    ECS::Entity entt, ::rtype::display::Vector2f position) const {
+    if (_event->type != ::rtype::display::EventType::MouseButtonPressed)
+        return false;
 
     if (_event->mouseButton.button == ::rtype::display::MouseButton::Left &&
-        _isPointInRect({_event->mouseButton.x, _event->mouseButton.y}, rect, position)) {
+        _isPointInRect({_event->mouseButton.x, _event->mouseButton.y}, rect,
+                       position)) {
         actionType.isPressed = true;
 
         if (reg.hasComponent<ButtonSoundComponent>(entt)) {
@@ -157,16 +171,19 @@ bool EventSystem::_handleMousePressed(UserEvent& actionType,
     return false;
 }
 
-bool EventSystem::_handleMouseReleased(UserEvent& actionType,
-                                       const Rectangle& rect,
-                                       ::rtype::display::Vector2f position) const {
-    if (_event->type != ::rtype::display::EventType::MouseButtonReleased) return false;
+bool EventSystem::_handleMouseReleased(
+    UserEvent& actionType, const Rectangle& rect,
+    ::rtype::display::Vector2f position) const {
+    if (_event->type != ::rtype::display::EventType::MouseButtonReleased)
+        return false;
 
     if (_event->mouseButton.button == ::rtype::display::MouseButton::Left) {
         bool wasPressed = actionType.isPressed;
         actionType.isPressed = false;
 
-        if (wasPressed && _isPointInRect({_event->mouseButton.x, _event->mouseButton.y}, rect, position)) {
+        if (wasPressed &&
+            _isPointInRect({_event->mouseButton.x, _event->mouseButton.y}, rect,
+                           position)) {
             actionType.isReleased = true;
             return true;
         }
@@ -238,4 +255,3 @@ void EventSystem::_handleMenuActivation(
 }
 
 }  // namespace rtype::games::rtype::client
-

@@ -40,10 +40,10 @@ SettingsScene::SettingsScene(
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 36, "Back"),
+            "main_font", rtype::display::Color::White(), 36, "Back"),
         rtype::games::rtype::shared::TransformComponent(100, 900),
-        rtype::games::rtype::client::Rectangle({400, 75}, rtype::display::Color::Blue(),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([switchToScene]() {
             try {
@@ -76,7 +76,8 @@ void SettingsScene::_initKeybindSection() {
     float sectionH = 600;
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Input Bindings",
-        rtype::display::Vector2<float>(sectionX, sectionY), rtype::display::Vector2<float>(sectionW, sectionH));
+        rtype::display::Vector2<float>(sectionX, sectionY),
+        rtype::display::Vector2<float>(sectionW, sectionH));
     this->_keybindSectionEntities.insert(this->_keybindSectionEntities.end(),
                                          sectionEntities.begin(),
                                          sectionEntities.end());
@@ -92,11 +93,11 @@ void SettingsScene::_initKeybindSection() {
         auto btn = EntityFactory::createButton(
             this->_registry,
             rtype::games::rtype::client::Text(
-                "main_font",
-                rtype::display::Color::White(), 24, textStr),
+                "main_font", rtype::display::Color::White(), 24, textStr),
             rtype::games::rtype::shared::TransformComponent(x, y),
-            rtype::games::rtype::client::Rectangle({500, 50}, rtype::display::Color::Blue(),
-                                                   rtype::display::Color::Red()),
+            rtype::games::rtype::client::Rectangle(
+                {500, 50}, rtype::display::Color::Blue(),
+                rtype::display::Color::Red()),
             this->_assetsManager, std::function<void()>([this, action]() {
                 if (this->_actionToRebind.has_value()) return;
 
@@ -203,7 +204,7 @@ void SettingsScene::_initAudioSection() {
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Audio",
         rtype::display::Vector2<float>(sectionX, sectionY),
-                      rtype::display::Vector2<float>(sectionW, sectionH));
+        rtype::display::Vector2<float>(sectionW, sectionH));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
@@ -223,8 +224,9 @@ void SettingsScene::_initAudioSection() {
             label + ": " + std::to_string(static_cast<int>(currentVol));
 
         this->_registry->emplaceComponent<rtype::games::rtype::client::Text>(
-            valueEntity, rtype::games::rtype::client::Text(
-                             font, rtype::display::Color::White(), 24, textStr));
+            valueEntity,
+            rtype::games::rtype::client::Text(
+                font, rtype::display::Color::White(), 24, textStr));
         this->_registry
             ->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
                 valueEntity);
@@ -238,10 +240,12 @@ void SettingsScene::_initAudioSection() {
 
         auto minusBtn = EntityFactory::createButton(
             this->_registry,
-            rtype::games::rtype::client::Text(font, rtype::display::Color::White(), 24, "-"),
+            rtype::games::rtype::client::Text(
+                font, rtype::display::Color::White(), 24, "-"),
             rtype::games::rtype::shared::TransformComponent(minusX, y),
-            rtype::games::rtype::client::Rectangle({50, 50}, rtype::display::Color::Blue(),
-                                                   rtype::display::Color::Red()),
+            rtype::games::rtype::client::Rectangle(
+                {50, 50}, rtype::display::Color::Blue(),
+                rtype::display::Color::Red()),
             this->_assetsManager,
             std::function<void()>([this, valueEntity, isMusic, label]() {
                 float vol = isMusic ? this->_audio->getMusicVolume()
@@ -270,10 +274,12 @@ void SettingsScene::_initAudioSection() {
 
         auto plusBtn = EntityFactory::createButton(
             this->_registry,
-            rtype::games::rtype::client::Text(font, rtype::display::Color::White(), 24, "+"),
+            rtype::games::rtype::client::Text(
+                font, rtype::display::Color::White(), 24, "+"),
             rtype::games::rtype::shared::TransformComponent(plusX, y),
-            rtype::games::rtype::client::Rectangle({50, 50}, rtype::display::Color::Blue(),
-                                                   rtype::display::Color::Red()),
+            rtype::games::rtype::client::Rectangle(
+                {50, 50}, rtype::display::Color::Blue(),
+                rtype::display::Color::Red()),
             this->_assetsManager,
             std::function<void()>([this, valueEntity, isMusic, label]() {
                 float vol = isMusic ? this->_audio->getMusicVolume()
@@ -314,7 +320,7 @@ void SettingsScene::_initWindowSection() {
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Window",
         rtype::display::Vector2<float>(sectionX, sectionY),
-                      rtype::display::Vector2<float>(sectionW, sectionH));
+        rtype::display::Vector2<float>(sectionW, sectionH));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 }
@@ -328,18 +334,18 @@ void SettingsScene::_initInputModeSection() {
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Input Device",
         rtype::display::Vector2<float>(sectionX, sectionY),
-                      rtype::display::Vector2<float>(sectionW, sectionH));
+        rtype::display::Vector2<float>(sectionW, sectionH));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 28, "Keyboard"),
+            "main_font", rtype::display::Color::White(), 28, "Keyboard"),
         rtype::games::rtype::shared::TransformComponent(sectionX + 50,
                                                         sectionY + 60),
-        rtype::games::rtype::client::Rectangle({200, 60}, rtype::display::Color::Blue(),
+        rtype::games::rtype::client::Rectangle({200, 60},
+                                               rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([this]() {
             this->_keybinds->setInputMode(InputMode::Keyboard);
@@ -350,11 +356,11 @@ void SettingsScene::_initInputModeSection() {
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 28, "Controller"),
+            "main_font", rtype::display::Color::White(), 28, "Controller"),
         rtype::games::rtype::shared::TransformComponent(sectionX + 280,
                                                         sectionY + 60),
-        rtype::games::rtype::client::Rectangle({250, 60}, rtype::display::Color::Blue(),
+        rtype::games::rtype::client::Rectangle({250, 60},
+                                               rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([this]() {
             this->_keybinds->setInputMode(InputMode::Controller);
@@ -364,7 +370,9 @@ void SettingsScene::_initInputModeSection() {
 
     _inputModeLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Current: Keyboard", "main_font",
-        rtype::display::Vector2<float>(sectionX + sectionW - 215, sectionY + 35), 20);
+        rtype::display::Vector2<float>(sectionX + sectionW - 215,
+                                       sectionY + 35),
+        20);
     this->_listEntity.push_back(_inputModeLabel);
 
     this->_refreshInputModeLabel();
@@ -395,7 +403,7 @@ void SettingsScene::_initAccessibilitySection() {
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Accessibility",
         rtype::display::Vector2<float>(sectionX, sectionY),
-                      rtype::display::Vector2<float>(sectionW, sectionH));
+        rtype::display::Vector2<float>(sectionW, sectionH));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
@@ -409,11 +417,11 @@ void SettingsScene::_initAccessibilitySection() {
         this->_listEntity.push_back(EntityFactory::createButton(
             this->_registry,
             rtype::games::rtype::client::Text(
-                "main_font",
-                rtype::display::Color::White(), 24, label),
+                "main_font", rtype::display::Color::White(), 24, label),
             rtype::games::rtype::shared::TransformComponent(x, y),
             rtype::games::rtype::client::Rectangle(
-                {400, 55}, rtype::display::Color(60, 60, 120, 255), rtype::display::Color(80, 80, 180, 255)),
+                {400, 55}, rtype::display::Color(60, 60, 120, 255),
+                rtype::display::Color(80, 80, 180, 255)),
             this->_assetsManager,
             std::function<void()>([this, mode]() { _setColorMode(mode); })));
     };
@@ -448,28 +456,30 @@ void SettingsScene::_initAccessibilitySection() {
         this->_registry, this->_assetsManager,
         "Intensity: " + std::to_string(percent) + "%", "main_font",
         rtype::display::Vector2<float>(labelX, sliderY + 50 / 2), 24);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(*this->_intensityLabel);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(
+            *this->_intensityLabel);
     this->_listEntity.push_back(*this->_intensityLabel);
 
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 28, "-"),
+            "main_font", rtype::display::Color::White(), 28, "-"),
         rtype::games::rtype::shared::TransformComponent(minusX, sliderY),
-        rtype::games::rtype::client::Rectangle({60, 50}, rtype::display::Color(40, 40, 90, 255),
-                                               rtype::display::Color(70, 70, 140, 255)),
+        rtype::games::rtype::client::Rectangle(
+            {60, 50}, rtype::display::Color(40, 40, 90, 255),
+            rtype::display::Color(70, 70, 140, 255)),
         this->_assetsManager,
         std::function<void()>([this]() { _adjustColorIntensity(-0.1f); })));
 
     this->_listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 28, "+"),
+            "main_font", rtype::display::Color::White(), 28, "+"),
         rtype::games::rtype::shared::TransformComponent(plusX, sliderY),
-        rtype::games::rtype::client::Rectangle({60, 50}, rtype::display::Color(40, 40, 90, 255),
-                                               rtype::display::Color(70, 70, 140, 255)),
+        rtype::games::rtype::client::Rectangle(
+            {60, 50}, rtype::display::Color(40, 40, 90, 255),
+            rtype::display::Color(70, 70, 140, 255)),
         this->_assetsManager,
         std::function<void()>([this]() { _adjustColorIntensity(0.1f); })));
 }
@@ -494,7 +504,7 @@ void SettingsScene::pollEvents(const ::rtype::display::Event& e) {
                 this->_refreshKeybindSection();
             }
         } else {
-             if (e.type == rtype::display::EventType::JoystickButtonPressed) {
+            if (e.type == rtype::display::EventType::JoystickButtonPressed) {
                 unsigned int btn = e.joystickButton.button;
                 this->_keybinds->setJoyButtonBinding(action, btn);
                 LOG_DEBUG("[SettingsScene] Rebound action "
@@ -506,9 +516,7 @@ void SettingsScene::pollEvents(const ::rtype::display::Event& e) {
     }
 }
 
-void SettingsScene::update(float dt) {
-    (void)dt;
-}
+void SettingsScene::update(float dt) { (void)dt; }
 
 void SettingsScene::render(std::shared_ptr<rtype::display::IDisplay> window) {
     (void)window;

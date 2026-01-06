@@ -12,7 +12,7 @@
 
 void SoundManager::load(const std::string& id, const std::string& filePath) {
     if (this->_assets.contains(id)) return;
-    
+
     _display->loadSoundBuffer(id, filePath);
     auto sound = _display->getSoundBuffer(id);
 
@@ -25,7 +25,8 @@ void SoundManager::load(const std::string& id, const std::string& filePath) {
     LOG_INFO("Sound saved with ID: " + id);
 }
 
-std::shared_ptr<::rtype::display::ISoundBuffer> SoundManager::get(const std::string& id) {
+std::shared_ptr<::rtype::display::ISoundBuffer> SoundManager::get(
+    const std::string& id) {
     auto it = this->_assets.find(id);
 
     if (it == this->_assets.end()) {

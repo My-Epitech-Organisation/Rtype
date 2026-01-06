@@ -18,7 +18,8 @@
 
 namespace rtype::games::rtype::client {
 
-ButtonUpdateSystem::ButtonUpdateSystem(std::shared_ptr<::rtype::display::IDisplay> display)
+ButtonUpdateSystem::ButtonUpdateSystem(
+    std::shared_ptr<::rtype::display::IDisplay> display)
     : ::rtype::engine::ASystem("ButtonUpdateSystem"),
       _display(std::move(display)) {}
 
@@ -26,11 +27,13 @@ void ButtonUpdateSystem::update(ECS::Registry& registry, float /*dt*/) {
     std::vector<std::function<void()>> callbacksToRun;
 
     registry.view<Button<>, UserEvent>().each(
-        [&callbacksToRun](ECS::Entity /*entity*/, auto& buttonAct, auto& actionType) {
+        [&callbacksToRun](ECS::Entity /*entity*/, auto& buttonAct,
+                          auto& actionType) {
             if (!actionType.idle && actionType.isReleased &&
                 actionType.isHovered) {
                 LOG_DEBUG(
-                    "[ButtonUpdateSystem] Button click detected, queueing callback");
+                    "[ButtonUpdateSystem] Button click detected, queueing "
+                    "callback");
                 callbacksToRun.push_back(buttonAct.callback);
             }
         });

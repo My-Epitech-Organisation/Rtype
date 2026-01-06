@@ -12,7 +12,7 @@
 
 void FontManager::load(const std::string& id, const std::string& filePath) {
     if (this->_assets.contains(id)) return;
-    
+
     _display->loadFont(id, filePath);
     auto font = _display->getFont(id);
 
@@ -25,7 +25,8 @@ void FontManager::load(const std::string& id, const std::string& filePath) {
     LOG_DEBUG("Font loaded with ID: " << id);
 }
 
-std::shared_ptr<::rtype::display::IFont> FontManager::get(const std::string& id) {
+std::shared_ptr<::rtype::display::IFont> FontManager::get(
+    const std::string& id) {
     auto it = this->_assets.find(id);
 
     if (it == this->_assets.end()) {

@@ -30,26 +30,27 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
 
     pauseEntities = EntityFactory::createSection(
         registry, assetsManager, "", {sectionX, sectionY},
-        {static_cast<float>(kSizeXPauseMenu), static_cast<float>(kSizeYPauseMenu)});
+        {static_cast<float>(kSizeXPauseMenu),
+         static_cast<float>(kSizeYPauseMenu)});
 
     auto titleEntity = EntityFactory::createStaticText(
         registry, assetsManager, kPauseMenuTitle, "main_font",
-        { (sectionX + kSizeXPauseMenu / 2.0f) -
-                ((kPauseMenuTitle.length() - 2) * (kSizeFontPauseMenu / 2.0f)),
-            sectionY },
+        {(sectionX + kSizeXPauseMenu / 2.0f) -
+             ((kPauseMenuTitle.length() - 2) * (kSizeFontPauseMenu / 2.0f)),
+         sectionY},
         kSizeFontPauseMenu);
 
     pauseEntities.push_back(titleEntity);
 
     pauseEntities.push_back(EntityFactory::createButton(
         registry,
-        Text("main_font", ::rtype::display::Color::White(), 30,
-             "Menu"),
+        Text("main_font", ::rtype::display::Color::White(), 30, "Menu"),
         ::rtype::games::rtype::shared::TransformComponent(
             sectionX + ((kSizeXPauseMenu / 2.0f) - (150.0f / 2.0f)),
             sectionY + kSizeYPauseMenu - 75.0f),
-        Rectangle({150.0f, 55.0f}, ::rtype::display::Color::Blue(), ::rtype::display::Color::Red()), assetsManager,
-        std::function<void()>([switchToScene]() {
+        Rectangle({150.0f, 55.0f}, ::rtype::display::Color::Blue(),
+                  ::rtype::display::Color::Red()),
+        assetsManager, std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
@@ -60,12 +61,12 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
 
     pauseEntities.push_back(EntityFactory::createButton(
         registry,
-        Text("main_font", ::rtype::display::Color::White(), 30,
-             "Resume"),
+        Text("main_font", ::rtype::display::Color::White(), 30, "Resume"),
         ::rtype::games::rtype::shared::TransformComponent(
             sectionX + ((kSizeXPauseMenu / 2.0f) - (150.0f / 2.0f)),
             sectionY + kSizeYPauseMenu - 150.0f),
-        Rectangle({150.0f, 55.0f}, ::rtype::display::Color(0, 100, 200, 255), ::rtype::display::Color(0, 140, 255, 255)),
+        Rectangle({150.0f, 55.0f}, ::rtype::display::Color(0, 100, 200, 255),
+                  ::rtype::display::Color(0, 140, 255, 255)),
         assetsManager, std::function<void()>([registry]() {
             RtypePauseMenu::togglePauseMenu(registry);
         })));

@@ -23,7 +23,8 @@
 GameOverScene::GameOverScene(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assetsManager,
-    std::shared_ptr<rtype::display::IDisplay> window, std::shared_ptr<AudioLib> audio,
+    std::shared_ptr<rtype::display::IDisplay> window,
+    std::shared_ptr<AudioLib> audio,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(std::move(registry), std::move(assetsManager), std::move(window),
              std::move(audio)),
@@ -70,7 +71,8 @@ void GameOverScene::_buildLayout() {
         rtype::display::Vector2<int>{
             rtype::games::rtype::client::GraphicsConfig::WINDOW_WIDTH,
             rtype::games::rtype::client::GraphicsConfig::WINDOW_HEIGHT},
-        rtype::display::Color(0, 0, 0, 200), rtype::display::Vector2<float>{0.f, 0.f});
+        rtype::display::Color(0, 0, 0, 200),
+        rtype::display::Vector2<float>{0.f, 0.f});
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         popUpOverlay,
         rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
@@ -84,7 +86,8 @@ void GameOverScene::_buildLayout() {
             centerX,
             rtype::games::rtype::client::GraphicsConfig::GAME_OVER_TITLE_Y},
         96.f);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(title);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(title);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         title, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
     this->_listEntity.push_back(title);
@@ -96,7 +99,8 @@ void GameOverScene::_buildLayout() {
             centerX,
             rtype::games::rtype::client::GraphicsConfig::GAME_OVER_SCORE_Y},
         72.f);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(score);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(score);
 
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         score, rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI);
@@ -114,14 +118,14 @@ void GameOverScene::_buildLayout() {
     auto button = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font",
-            rtype::display::Color::White(), 36, "Back to Menu"),
+            "main_font", rtype::display::Color::White(), 36, "Back to Menu"),
         rtype::games::rtype::shared::TransformComponent(
             btnX,
             rtype::games::rtype::client::GraphicsConfig::GAME_OVER_BUTTON_Y),
         rtype::games::rtype::client::Rectangle(
             {static_cast<int>(btnWidth), static_cast<int>(btnHeight)},
-            rtype::display::Color(0, 150, 200, 255), rtype::display::Color(0, 200, 255, 255)),
+            rtype::display::Color(0, 150, 200, 255),
+            rtype::display::Color(0, 200, 255, 255)),
         this->_assetsManager, std::function<void()>{[this]() {
             if (this->_switchToScene) {
                 this->_switchToScene(SceneManager::MAIN_MENU);

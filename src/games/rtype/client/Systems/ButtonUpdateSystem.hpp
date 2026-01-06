@@ -9,6 +9,7 @@
 #define SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BUTTONUPDATESYSTEM_HPP_
 
 #include <memory>
+
 #include "../../../../../include/rtype/display/IDisplay.hpp"
 #include "ASystem.hpp"
 #include "ECS.hpp"
@@ -19,7 +20,8 @@ class ButtonUpdateSystem : public ::rtype::engine::ASystem {
     std::shared_ptr<::rtype::display::IDisplay> _display;
 
    public:
-    explicit ButtonUpdateSystem(std::shared_ptr<::rtype::display::IDisplay> display);
+    explicit ButtonUpdateSystem(
+        std::shared_ptr<::rtype::display::IDisplay> display);
     void update(ECS::Registry& registry, float dt) override;
 };
 }  // namespace rtype::games::rtype::client

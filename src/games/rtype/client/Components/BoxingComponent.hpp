@@ -18,7 +18,8 @@ struct BoxingComponent {
     ::rtype::display::Color fillColor = {255, 255, 255, 30};
     float outlineThickness = 2.f;
 
-    explicit BoxingComponent(::rtype::display::Vector2f pos, ::rtype::display::Vector2f sz) 
+    explicit BoxingComponent(::rtype::display::Vector2f pos,
+                             ::rtype::display::Vector2f sz)
         : position(pos), size(sz) {}
 };
 }  // namespace rtype::games::rtype::client

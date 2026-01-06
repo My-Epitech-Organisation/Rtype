@@ -63,7 +63,8 @@ class MainMenuScene : public AScene {
      * @param message Status message
      * @param color Text color
      */
-    void _updateStatus(const std::string& message, ::rtype::display::Color color);
+    void _updateStatus(const std::string& message,
+                       ::rtype::display::Color color);
 
    public:
     void update(float dt) override;

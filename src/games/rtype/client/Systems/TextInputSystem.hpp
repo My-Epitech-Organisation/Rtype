@@ -13,7 +13,6 @@
 #include <optional>
 
 #include "../../../../../include/rtype/display/IDisplay.hpp"
-
 #include "Components/TextInputComponent.hpp"
 #include "ECS.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
@@ -27,7 +26,8 @@ namespace rtype::games::rtype::client {
  */
 class TextInputSystem {
    public:
-    explicit TextInputSystem(std::shared_ptr<::rtype::display::IDisplay> display);
+    explicit TextInputSystem(
+        std::shared_ptr<::rtype::display::IDisplay> display);
 
     /**
      * @brief Handle a keyboard event for text inputs
@@ -35,7 +35,8 @@ class TextInputSystem {
      * @param event The display event
      * @return true if the event was consumed by a text input
      */
-    bool handleEvent(ECS::Registry& registry, const ::rtype::display::Event& event);
+    bool handleEvent(ECS::Registry& registry,
+                     const ::rtype::display::Event& event);
 
     /**
      * @brief Update and render text inputs

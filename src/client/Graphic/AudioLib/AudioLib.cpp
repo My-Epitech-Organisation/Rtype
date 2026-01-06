@@ -41,10 +41,11 @@ void AudioLib::play() const {
 }
 
 void AudioLib::playSFX(std::shared_ptr<rtype::display::ISoundBuffer> sfx) {
-    this->_sounds.remove_if([](const std::shared_ptr<::rtype::display::ISound>& s) {
-        return s->getStatus() == rtype::display::ISound::Status::Stopped;
-    });
-    
+    this->_sounds.remove_if(
+        [](const std::shared_ptr<::rtype::display::ISound>& s) {
+            return s->getStatus() == rtype::display::ISound::Status::Stopped;
+        });
+
     auto sound = _display->createSound(sfx);
     if (sound) {
         sound->setVolume(this->_volumeSFX);

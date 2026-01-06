@@ -11,9 +11,8 @@
 #include <memory>
 #include <string>
 
-#include "rtype/display/DisplayTypes.hpp"
-
 #include "ECS.hpp"
+#include "rtype/display/DisplayTypes.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -23,9 +22,11 @@ namespace rtype::games::rtype::client {
  */
 class VisualCueFactory {
    public:
-    static void createFlash(ECS::Registry& registry, const ::rtype::display::Vector2f& center,
-                            const ::rtype::display::Color& color, float size = 64.f,
-                            float lifetime = 0.35f, int zIndex = 50);
+    static void createFlash(ECS::Registry& registry,
+                            const ::rtype::display::Vector2f& center,
+                            const ::rtype::display::Color& color,
+                            float size = 64.f, float lifetime = 0.35f,
+                            int zIndex = 50);
 
     /**
      * @brief Create a floating damage number popup (WoW style)
@@ -35,10 +36,10 @@ class VisualCueFactory {
      * @param fontName The font name to use
      * @param color Text color (default red for damage)
      */
-    static void createDamagePopup(ECS::Registry& registry,
-                                  const ::rtype::display::Vector2f& position, int damage,
-                                  const std::string& fontName,
-                                  const ::rtype::display::Color& color = ::rtype::display::Color::Red());
+    static void createDamagePopup(
+        ECS::Registry& registry, const ::rtype::display::Vector2f& position,
+        int damage, const std::string& fontName,
+        const ::rtype::display::Color& color = ::rtype::display::Color::Red());
 };
 
 }  // namespace rtype::games::rtype::client

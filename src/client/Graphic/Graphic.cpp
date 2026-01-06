@@ -36,7 +36,7 @@ void Graphic::_pollEvents() {
         // if (event.type == rtype::display::EventType::FocusLost) {
         //     rtype::games::rtype::client::RtypeInputHandler::clearKeyStates();
         // }
-        
+
         this->_eventSystem->setEvent(event);
         this->_eventSystem->update(*this->_registry, 0.f);
         this->_sceneManager->pollEvents(event);
@@ -53,7 +53,9 @@ void Graphic::_updateDeltaTime() {
 void Graphic::_updateViewScrolling() {
     rtype::display::Vector2f center = this->_display->getViewCenter();
     float newX = center.x + (scrollSpeed * this->_currentDeltaTime);
-    this->_display->setView({newX, center.y}, {static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT)});
+    this->_display->setView(
+        {newX, center.y},
+        {static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT)});
 }
 
 void Graphic::_updateNetwork() {
@@ -146,7 +148,6 @@ void Graphic::_setupNetworkEntityFactory() {
 }
 
 void Graphic::_initializeSystems() {
-
     this->_playerAnimationSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerAnimationSystem>();
     this->_animationSystem =
@@ -187,8 +188,6 @@ void Graphic::_initializeSystems() {
         "reset_triggers", [this](ECS::Registry& reg) {
             this->_resetTriggersSystem->update(reg, 0.f);
         });
-
-
 
     this->_systemScheduler->addSystem("player_animation",
                                       [this](ECS::Registry& reg) {
@@ -352,13 +351,17 @@ Graphic::Graphic(
     if (!assetsConfig.has_value()) throw std::exception();
     this->_keybinds = std::make_shared<KeyboardActions>();
 
-    this->_displayLoader = std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>("./display.so");
-    this->_display = std::shared_ptr<rtype::display::IDisplay>(this->_displayLoader->getInstance("createInstanceDisplay"));
+    this->_displayLoader =
+        std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
+            "./display.so");
+    this->_display = std::shared_ptr<rtype::display::IDisplay>(
+        this->_displayLoader->getInstance("createInstanceDisplay"));
     this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT, "R-Type - Epitech 2025");
 
     this->_keybinds->initialize(*this->_display);
 
-    this->_assetsManager = std::make_shared<AssetManager>(assetsConfig.value(), this->_display);
+    this->_assetsManager =
+        std::make_shared<AssetManager>(assetsConfig.value(), this->_display);
 
     this->_initializeCommonAssets();
 

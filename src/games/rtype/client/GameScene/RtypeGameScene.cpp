@@ -44,10 +44,9 @@ RtypeGameScene::RtypeGameScene(
     std::shared_ptr<::rtype::client::NetworkClient> networkClient,
     std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem,
     std::shared_ptr<AudioLib> audioLib)
-    : AGameScene(std::move(registry), std::move(assetsManager),
-                 display, std::move(keybinds),
-                 std::move(switchToScene), std::move(networkClient),
-                 std::move(networkSystem)) {
+    : AGameScene(std::move(registry), std::move(assetsManager), display,
+                 std::move(keybinds), std::move(switchToScene),
+                 std::move(networkClient), std::move(networkSystem)) {
     if (_networkClient) {
         auto registry = _registry;
         auto switchToScene = _switchToScene;
@@ -235,7 +234,8 @@ void RtypeGameScene::setupHud() {
     _registry->emplaceComponent<rs::TransformComponent>(bg, barPos.x, barPos.y);
     _registry->emplaceComponent<Rectangle>(
         bg, std::pair<float, float>{barWidth, barHeight},
-        ::rtype::display::Color(30, 35, 45, 220), ::rtype::display::Color(30, 35, 45, 220));
+        ::rtype::display::Color(30, 35, 45, 220),
+        ::rtype::display::Color(30, 35, 45, 220));
     _registry->emplaceComponent<ZIndex>(bg, GraphicsConfig::ZINDEX_UI);
     _registry->emplaceComponent<HudTag>(bg);
     _registry->emplaceComponent<GameTag>(bg);
@@ -246,7 +246,8 @@ void RtypeGameScene::setupHud() {
                                                         barPos.y);
     _registry->emplaceComponent<Rectangle>(
         fill, std::pair<float, float>{barWidth, barHeight},
-        ::rtype::display::Color(90, 220, 140, 240), ::rtype::display::Color(90, 220, 140, 240));
+        ::rtype::display::Color(90, 220, 140, 240),
+        ::rtype::display::Color(90, 220, 140, 240));
     _registry->emplaceComponent<ZIndex>(fill, GraphicsConfig::ZINDEX_UI + 1);
     _registry->emplaceComponent<HudTag>(fill);
     _registry->emplaceComponent<GameTag>(fill);
@@ -516,8 +517,8 @@ void RtypeGameScene::updateDamageVignette(float deltaTime) {
             float layerAlpha = _vignetteAlpha * (1.0f - layerRatio * 0.7f);
 
             auto& rect = _registry->getComponent<Rectangle>(entity);
-            rect.currentColor =
-                ::rtype::display::Color(255, 0, 0, static_cast<uint8_t>(layerAlpha));
+            rect.currentColor = ::rtype::display::Color(
+                255, 0, 0, static_cast<uint8_t>(layerAlpha));
             rect.mainColor = rect.currentColor;
         }
         ++layerIndex;
@@ -571,8 +572,8 @@ void RtypeGameScene::triggerDamageFlash(int damageAmount) {
             float layerAlpha = _vignetteAlpha * (1.0f - layerRatio * 0.7f);
 
             auto& rect = _registry->getComponent<Rectangle>(entity);
-            rect.currentColor =
-                ::rtype::display::Color(255, 0, 0, static_cast<uint8_t>(layerAlpha));
+            rect.currentColor = ::rtype::display::Color(
+                255, 0, 0, static_cast<uint8_t>(layerAlpha));
             rect.mainColor = rect.currentColor;
         }
         ++layerIndex;
@@ -631,8 +632,8 @@ void RtypeGameScene::spawnDamagePopup(int damage) {
     try {
         auto font = "title_font";
         VisualCueFactory::createDamagePopup(
-            *_registry, ::rtype::display::Vector2f(pos.x + 20.f, pos.y - 10.f), damage, font,
-            ::rtype::display::Color(255, 60, 60, 255));
+            *_registry, ::rtype::display::Vector2f(pos.x + 20.f, pos.y - 10.f),
+            damage, font, ::rtype::display::Color(255, 60, 60, 255));
         LOG_DEBUG("[RtypeGameScene] Damage popup created successfully");
     } catch (const std::exception& e) {
         LOG_DEBUG(
@@ -674,9 +675,9 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     auto overlayEntity = _registry->spawnEntity();
     auto overlaySize = std::make_pair(static_cast<float>(windowSize.x),
                                       static_cast<float>(windowSize.y));
-    _registry->emplaceComponent<Rectangle>(overlayEntity, overlaySize,
-                                           ::rtype::display::Color(0, 0, 0, 180),
-                                           ::rtype::display::Color(0, 0, 0, 180));
+    _registry->emplaceComponent<Rectangle>(
+        overlayEntity, overlaySize, ::rtype::display::Color(0, 0, 0, 180),
+        ::rtype::display::Color(0, 0, 0, 180));
     auto& overlayPos =
         _registry->emplaceComponent<rs::TransformComponent>(overlayEntity);
     overlayPos.x = 0;
@@ -686,9 +687,9 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
 
     auto panelEntity = _registry->spawnEntity();
     auto panelSize = std::make_pair(500.0F, 300.0F);
-    _registry->emplaceComponent<Rectangle>(panelEntity, panelSize,
-                                           ::rtype::display::Color(40, 40, 60, 255),
-                                           ::rtype::display::Color(40, 40, 60, 255));
+    _registry->emplaceComponent<Rectangle>(
+        panelEntity, panelSize, ::rtype::display::Color(40, 40, 60, 255),
+        ::rtype::display::Color(40, 40, 60, 255));
     auto& panelRect = _registry->getComponent<Rectangle>(panelEntity);
     panelRect.outlineColor = ::rtype::display::Color(120, 120, 150, 255);
     panelRect.outlineThickness = 3.0F;
@@ -701,9 +702,9 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
 
     auto titleEntity = _registry->spawnEntity();
     auto titleFont = "title_font";
-    _registry->emplaceComponent<Text>(titleEntity, titleFont,
-                                      ::rtype::display::Color(255, 100, 100, 255), 36,
-                                      "Connection Lost");
+    _registry->emplaceComponent<Text>(
+        titleEntity, titleFont, ::rtype::display::Color(255, 100, 100, 255), 36,
+        "Connection Lost");
     auto& titlePos =
         _registry->emplaceComponent<rs::TransformComponent>(titleEntity);
     titlePos.x = centerX - 150.0F;
@@ -715,7 +716,8 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     auto messageEntity = _registry->spawnEntity();
     auto mainFont = "main_font";
     _registry->emplaceComponent<Text>(
-        messageEntity, mainFont, ::rtype::display::Color(220, 220, 220, 255), 20, reasonMessage);
+        messageEntity, mainFont, ::rtype::display::Color(220, 220, 220, 255),
+        20, reasonMessage);
     auto& messagePos =
         _registry->emplaceComponent<rs::TransformComponent>(messageEntity);
     messagePos.x = centerX - 220.0F;
@@ -726,7 +728,8 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     _registry->emplaceComponent<ZIndex>(messageEntity, 9002);
     _disconnectMessageEntity = messageEntity;
 
-    Text buttonText(mainFont, ::rtype::display::Color::White(), 22, "Return to Main Menu");
+    Text buttonText(mainFont, ::rtype::display::Color::White(), 22,
+                    "Return to Main Menu");
     rs::TransformComponent buttonPos{centerX - 125.0F, centerY + 80.0F};
     auto buttonSize = std::make_pair(250.0F, 50.0F);
     Rectangle buttonRect(buttonSize, ::rtype::display::Color(80, 120, 200, 255),
@@ -785,4 +788,3 @@ std::string RtypeGameScene::getDisconnectMessage(
 }
 
 }  // namespace rtype::games::rtype::client
-

@@ -10,11 +10,10 @@
 
 #include <cstdint>
 #include <memory>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "../../../../../include/rtype/display/IDisplay.hpp"
-
 #include "ECS.hpp"
 #include "Graphic/KeyboardActions.hpp"
 
@@ -42,7 +41,8 @@ class RtypeInputHandler {
      * @return true if event was handled
      */
     static bool handleKeyReleasedEvent(
-        const ::rtype::display::Event& event, std::shared_ptr<KeyboardActions> keybinds,
+        const ::rtype::display::Event& event,
+        std::shared_ptr<KeyboardActions> keybinds,
         std::shared_ptr<ECS::Registry> registry);
 
     /**
@@ -71,8 +71,11 @@ class RtypeInputHandler {
      * will be required.
      */
     static std::unordered_set<::rtype::display::Key> pressedKeys_;
-    static std::unordered_map<unsigned int, std::unordered_map<::rtype::display::JoystickAxis, float>> joystickAxes_;
-    static std::unordered_map<unsigned int, std::unordered_set<unsigned int>> joystickButtons_;
+    static std::unordered_map<
+        unsigned int, std::unordered_map<::rtype::display::JoystickAxis, float>>
+        joystickAxes_;
+    static std::unordered_map<unsigned int, std::unordered_set<unsigned int>>
+        joystickButtons_;
 };
 
 }  // namespace rtype::games::rtype::client

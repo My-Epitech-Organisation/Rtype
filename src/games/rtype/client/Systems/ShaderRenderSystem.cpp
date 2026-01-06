@@ -31,24 +31,24 @@ void ShaderRenderSystem::_applyShaderForSettings(
 
     switch (acc.colorMode) {
         case ColorBlindMode::Protanopia:
-            mat = {0.566f, 0.433f, 0.0f, 0.558f, 0.442f, 0.0f, 0.0f,
-                            0.242f, 0.758f};
+            mat = {0.566f, 0.433f, 0.0f,   0.558f, 0.442f,
+                   0.0f,   0.0f,   0.242f, 0.758f};
             break;
         case ColorBlindMode::Deuteranopia:
             mat = {0.625f, 0.375f, 0.0f, 0.7f, 0.3f, 0.0f, 0.0f, 0.3f, 0.7f};
             break;
         case ColorBlindMode::Tritanopia:
-            mat = {0.95f, 0.05f, 0.0f, 0.0f, 0.433f, 0.567f, 0.0f,
-                            0.475f, 0.525f};
+            mat = {0.95f,  0.05f, 0.0f,   0.0f,  0.433f,
+                   0.567f, 0.0f,  0.475f, 0.525f};
             break;
         case ColorBlindMode::Achromatopsia:
             mat = {0.2126f, 0.2126f, 0.2126f, 0.7152f, 0.7152f,
-                            0.7152f, 0.0722f, 0.0722f, 0.0722f};
+                   0.7152f, 0.0722f, 0.0722f, 0.0722f};
             contrast = 1.3f;
             break;
         case ColorBlindMode::HighContrast:
-            mat = {0.299f, 0.299f, 0.299f, 0.587f, 0.587f, 0.587f,
-                            0.114f, 0.114f, 0.114f};
+            mat = {0.299f, 0.299f, 0.299f, 0.587f, 0.587f,
+                   0.587f, 0.114f, 0.114f, 0.114f};
             contrast = 1.6f;
             break;
         case ColorBlindMode::None:

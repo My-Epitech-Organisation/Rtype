@@ -10,10 +10,9 @@
 
 #include <memory>
 
-#include "rtype/display/IDisplay.hpp"
-
 #include "ASystem.hpp"
 #include "ECS.hpp"
+#include "rtype/display/IDisplay.hpp"
 
 namespace rtype::games::rtype::client {
 class BoxingSystem : public ::rtype::engine::ASystem {

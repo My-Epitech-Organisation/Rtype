@@ -8,6 +8,7 @@
 #ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_ISCENE_HPP_
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_ISCENE_HPP_
 #include <memory>
+
 #include "../../../../../include/rtype/display/IDisplay.hpp"
 
 class IScene {

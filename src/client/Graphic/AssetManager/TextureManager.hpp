@@ -21,7 +21,8 @@ class TextureManager {
     rtype::display::IDisplay* _display;
 
    public:
-    TextureManager(rtype::display::IDisplay* display) : _display(display) {}
+    explicit TextureManager(rtype::display::IDisplay* display)
+        : _display(display) {}
     TextureManager(const TextureManager&) = delete;
     TextureManager& operator=(const TextureManager&) = delete;
 

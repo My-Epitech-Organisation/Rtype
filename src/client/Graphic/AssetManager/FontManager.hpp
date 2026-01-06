@@ -18,7 +18,8 @@
 
 class FontManager {
    private:
-    std::unordered_map<std::string, std::shared_ptr<::rtype::display::IFont>> _assets;
+    std::unordered_map<std::string, std::shared_ptr<::rtype::display::IFont>>
+        _assets;
 
    public:
     FontManager(const FontManager&) = delete;
@@ -53,7 +54,8 @@ class FontManager {
      */
     std::size_t size() const;
 
-    FontManager(::rtype::display::IDisplay* display) : _display(display) {}
+    explicit FontManager(::rtype::display::IDisplay* display)
+        : _display(display) {}
 
    private:
     ::rtype::display::IDisplay* _display;

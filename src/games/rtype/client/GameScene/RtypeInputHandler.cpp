@@ -21,8 +21,11 @@
 namespace rtype::games::rtype::client {
 
 std::unordered_set<::rtype::display::Key> RtypeInputHandler::pressedKeys_;
-std::unordered_map<unsigned int, std::unordered_map<::rtype::display::JoystickAxis, float>> RtypeInputHandler::joystickAxes_;
-std::unordered_map<unsigned int, std::unordered_set<unsigned int>> RtypeInputHandler::joystickButtons_;
+std::unordered_map<unsigned int,
+                   std::unordered_map<::rtype::display::JoystickAxis, float>>
+    RtypeInputHandler::joystickAxes_;
+std::unordered_map<unsigned int, std::unordered_set<unsigned int>>
+    RtypeInputHandler::joystickButtons_;
 
 std::uint8_t RtypeInputHandler::getInputMask(
     std::shared_ptr<KeyboardActions> keybinds) {
@@ -118,12 +121,13 @@ std::uint8_t RtypeInputHandler::getInputMask(
 }
 
 bool RtypeInputHandler::handleKeyReleasedEvent(
-    const ::rtype::display::Event& event, std::shared_ptr<KeyboardActions> keybinds,
+    const ::rtype::display::Event& event,
+    std::shared_ptr<KeyboardActions> keybinds,
     std::shared_ptr<ECS::Registry> registry) {
     auto keyPause = keybinds->getKeyBinding(GameAction::PAUSE);
 
-    if (event.type == ::rtype::display::EventType::KeyReleased && keyPause.has_value() &&
-        event.key.code == *keyPause) {
+    if (event.type == ::rtype::display::EventType::KeyReleased &&
+        keyPause.has_value() && event.key.code == *keyPause) {
         RtypePauseMenu::togglePauseMenu(registry);
         return true;
     }
@@ -144,16 +148,21 @@ void RtypeInputHandler::updateKeyState(const ::rtype::display::Event& event) {
         pressedKeys_.insert(event.key.code);
     } else if (event.type == ::rtype::display::EventType::KeyReleased) {
         pressedKeys_.erase(event.key.code);
-    } else if (event.type == ::rtype::display::EventType::JoystickButtonPressed) {
-        joystickButtons_[event.joystickButton.joystickId].insert(event.joystickButton.button);
-    } else if (event.type == ::rtype::display::EventType::JoystickButtonReleased) {
-        joystickButtons_[event.joystickButton.joystickId].erase(event.joystickButton.button);
+    } else if (event.type ==
+               ::rtype::display::EventType::JoystickButtonPressed) {
+        joystickButtons_[event.joystickButton.joystickId].insert(
+            event.joystickButton.button);
+    } else if (event.type ==
+               ::rtype::display::EventType::JoystickButtonReleased) {
+        joystickButtons_[event.joystickButton.joystickId].erase(
+            event.joystickButton.button);
     } else if (event.type == ::rtype::display::EventType::JoystickMoved) {
-        joystickAxes_[event.joystickMove.joystickId][event.joystickMove.axis] = event.joystickMove.position;
+        joystickAxes_[event.joystickMove.joystickId][event.joystickMove.axis] =
+            event.joystickMove.position;
     }
 }
 
-void RtypeInputHandler::clearKeyStates() { 
+void RtypeInputHandler::clearKeyStates() {
     pressedKeys_.clear();
     joystickAxes_.clear();
     joystickButtons_.clear();

@@ -13,7 +13,6 @@
 #include <string>
 
 #include "../../../include/rtype/display/IDisplay.hpp"
-
 #include "../GameAction.hpp"
 
 enum class InputMode { Keyboard, Controller };
@@ -33,7 +32,8 @@ class KeyboardActions {
     void setInputMode(InputMode mode) { _inputMode = mode; }
     InputMode getInputMode() const { return _inputMode; }
 
-    void setKeyBinding(const GameAction& action, const ::rtype::display::Key& key);
+    void setKeyBinding(const GameAction& action,
+                       const ::rtype::display::Key& key);
 
     auto getKeyBinding(const ::rtype::display::Key& key)
         -> std::optional<GameAction>;

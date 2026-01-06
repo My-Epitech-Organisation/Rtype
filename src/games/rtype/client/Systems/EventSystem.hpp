@@ -11,14 +11,13 @@
 #include <optional>
 #include <vector>
 
-#include "rtype/display/IDisplay.hpp"
-#include "rtype/display/DisplayTypes.hpp"
-
 #include "../Components/RectangleComponent.hpp"
 #include "../Components/UserEventComponent.hpp"
 #include "ASystem.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "ECS.hpp"
+#include "rtype/display/DisplayTypes.hpp"
+#include "rtype/display/IDisplay.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -91,6 +90,5 @@ class EventSystem : public ::rtype::engine::ASystem {
     void update(ECS::Registry& registry, float dt) override;
 };
 }  // namespace rtype::games::rtype::client
-
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_EVENTSYSTEM_HPP_
