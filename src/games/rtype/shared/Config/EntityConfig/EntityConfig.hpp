@@ -56,24 +56,48 @@ class EntityConfigRegistry {
      * @param filepath Path to enemies.toml
      */
     bool loadEnemies(const std::string& filepath);
+    
+    /**
+     * @brief Load enemy configurations, trying multiple search paths
+     * @param filepath Relative path to enemies.toml
+     */
+    bool loadEnemiesWithSearch(const std::string& filepath);
 
     /**
      * @brief Load projectile configurations from file
      * @param filepath Path to projectiles.toml
      */
     bool loadProjectiles(const std::string& filepath);
+    
+    /**
+     * @brief Load projectile configurations, trying multiple search paths
+     * @param filepath Relative path to projectiles.toml
+     */
+    bool loadProjectilesWithSearch(const std::string& filepath);
 
     /**
      * @brief Load player configurations from file
      * @param filepath Path to players.toml
      */
     bool loadPlayers(const std::string& filepath);
+    
+    /**
+     * @brief Load player configurations, trying multiple search paths
+     * @param filepath Relative path to players.toml
+     */
+    bool loadPlayersWithSearch(const std::string& filepath);
 
     /**
      * @brief Load power-up configurations from file
      * @param filepath Path to powerups.toml
      */
     bool loadPowerUps(const std::string& filepath);
+    
+    /**
+     * @brief Load power-up configurations, trying multiple search paths
+     * @param filepath Relative path to powerups.toml
+     */
+    bool loadPowerUpsWithSearch(const std::string& filepath);
 
     /**
      * @brief Load level configurations from file
