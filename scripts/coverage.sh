@@ -181,6 +181,8 @@ if $GENERATE_HTML; then
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/serverApp.cpp' \
+        '*/NetworkClient.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS
 
@@ -299,6 +301,8 @@ else
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/serverApp.cpp' \
+        '*/NetworkClient.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS
 
