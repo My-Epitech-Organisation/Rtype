@@ -340,7 +340,7 @@ TEST_F(ServerNetworkSystemTest, BroadcastEntitySpawn_NoServer) {
     ServerNetworkSystem system(registry, nullptr);
 
     EXPECT_NO_THROW({
-        system.broadcastEntitySpawn(999, ServerNetworkSystem::EntityType::Player, 0.0f, 0.0f);
+        system.broadcastEntitySpawn(999, ServerNetworkSystem::EntityType::Player, 0, 0.0f, 0.0f);
     });
 }
 
@@ -353,7 +353,7 @@ TEST_F(ServerNetworkSystemTest, BroadcastEntitySpawn_WithHealthComponent) {
     registry_->emplaceComponent<rtype::games::rtype::shared::HealthComponent>(entity, 3, 5);
 
     EXPECT_NO_THROW({
-        system_->broadcastEntitySpawn(555, ServerNetworkSystem::EntityType::Player, 10.0f, 20.0f);
+        system_->broadcastEntitySpawn(555, ServerNetworkSystem::EntityType::Player, 0, 10.0f, 20.0f);
     });
 }
 
