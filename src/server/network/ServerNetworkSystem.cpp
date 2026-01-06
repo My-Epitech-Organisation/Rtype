@@ -64,6 +64,11 @@ void ServerNetworkSystem::registerNetworkedEntity(ECS::Entity entity,
                 ->getComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
                     entity);
         subType = static_cast<std::uint8_t>(enemyType.variant);
+    } else if (registry_->hasComponent<
+                   rtype::games::rtype::shared::PowerUpTypeComponent>(entity)) {
+        const auto& powerUpType = registry_->getComponent<
+            rtype::games::rtype::shared::PowerUpTypeComponent>(entity);
+        subType = static_cast<std::uint8_t>(powerUpType.variant);
     }
 
     server_->spawnEntity(networkId, type, subType, x, y);
@@ -306,6 +311,13 @@ void ServerNetworkSystem::handleClientConnected(std::uint32_t userId) {
             const auto& enemyType = registry_->getComponent<
                 rtype::games::rtype::shared::EnemyTypeComponent>(info.entity);
             subType = static_cast<std::uint8_t>(enemyType.variant);
+        } else if (registry_->isAlive(info.entity) &&
+                   registry_->hasComponent<
+                       rtype::games::rtype::shared::PowerUpTypeComponent>(
+                       info.entity)) {
+            const auto& powerUpType = registry_->getComponent<
+                rtype::games::rtype::shared::PowerUpTypeComponent>(info.entity);
+            subType = static_cast<std::uint8_t>(powerUpType.variant);
         }
         server_->spawnEntityToClient(userId, networkId, info.type, subType,
                                      info.lastX, info.lastY);
