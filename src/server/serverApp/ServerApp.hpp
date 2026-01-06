@@ -151,6 +151,16 @@ class ServerApp {
         _onGameStartBroadcastCallback = std::move(cb);
     }
 
+    /**
+     * @brief Test hook: set default countdown duration used by GameStateManager
+     * (useful to make tests deterministic)
+     */
+    void setDefaultCountdown(float seconds) {
+        if (_stateManager) {
+            _stateManager->setDefaultCountdown(seconds);
+        }
+    }
+
     [[nodiscard]] bool reloadConfiguration();
 
     void registerUserIdMapping(const Endpoint& endpoint,
