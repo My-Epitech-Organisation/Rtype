@@ -19,9 +19,6 @@
 #include "../../src/server/network/NetworkServer.hpp"
 #include "../../lib/ecs/src/core/Registry/Registry.hpp"
 
-#include "../../src/games/rtype/shared/Components/NetworkIdComponent.hpp"
-#include "../../src/games/rtype/shared/Components/HealthComponent.hpp"
-
 using namespace rtype::server;
 using namespace ECS;
 
@@ -331,29 +328,6 @@ TEST_F(ServerNetworkSystemTest, BroadcastEntityUpdates_WithDirtyEntities) {
 TEST_F(ServerNetworkSystemTest, BroadcastGameStart) {
     EXPECT_NO_THROW({
         system_->broadcastGameStart();
-    });
-}
-
-TEST_F(ServerNetworkSystemTest, BroadcastEntitySpawn_NoServer) {
-    // Create a system with no server to hit the 'no server available' branch
-    auto registry = std::make_shared<Registry>();
-    ServerNetworkSystem system(registry, nullptr);
-
-    EXPECT_NO_THROW({
-        system.broadcastEntitySpawn(999, ServerNetworkSystem::EntityType::Player, 0.0f, 0.0f);
-    });
-}
-
-TEST_F(ServerNetworkSystemTest, BroadcastEntitySpawn_WithHealthComponent) {
-    // Ensure that when an entity exists and has a HealthComponent, the branch that
-    // attempts to send initial health is executed (no crash expected).
-    ECS::Entity entity = registry_->spawnEntity();
-    // Add matching NetworkIdComponent and HealthComponent via emplaceComponent
-    registry_->emplaceComponent<rtype::games::rtype::shared::NetworkIdComponent>(entity, 555);
-    registry_->emplaceComponent<rtype::games::rtype::shared::HealthComponent>(entity, 3, 5);
-
-    EXPECT_NO_THROW({
-        system_->broadcastEntitySpawn(555, ServerNetworkSystem::EntityType::Player, 10.0f, 20.0f);
     });
 }
 

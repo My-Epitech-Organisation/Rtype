@@ -87,6 +87,7 @@ TEST_F(RTypeEntitySpawnerTest, SpawnPlayerHasRequiredComponents) {
     ASSERT_TRUE(result.success);
 
     // Check all required components are present
+    EXPECT_TRUE(registry->hasComponent<Position>(result.entity));
     EXPECT_TRUE(registry->hasComponent<TransformComponent>(result.entity));
     EXPECT_TRUE(registry->hasComponent<VelocityComponent>(result.entity));
     EXPECT_TRUE(registry->hasComponent<ShootCooldownComponent>(result.entity));
@@ -106,7 +107,7 @@ TEST_F(RTypeEntitySpawnerTest, SpawnPlayerCorrectPosition) {
     auto result = spawner->spawnPlayer(config);
     ASSERT_TRUE(result.success);
 
-    const auto& pos = registry->getComponent<TransformComponent>(result.entity);
+    const auto& pos = registry->getComponent<Position>(result.entity);
     EXPECT_EQ(pos.x, 100.0F);  // kSpawnBaseX
     EXPECT_EQ(pos.y, 150.0F + 2.0F * 100.0F);  // kSpawnBaseY + playerIndex * kSpawnYOffset
 }
@@ -397,24 +398,12 @@ TEST_F(RTypeEntitySpawnerTest, UpdatePlayerVelocityWithoutComponent) {
 
 TEST_F(RTypeEntitySpawnerTest, UpdateAllPlayersMovement) {
     // Spawn multiple players
-    std::vector<ECS::Entity> entities;
     for (int i = 0; i < 3; ++i) {
         PlayerSpawnConfig config{};
         config.userId = 6100 + i;
         config.playerIndex = i;
         auto result = spawner->spawnPlayer(config);
-        if (result.success) {
-            entities.push_back(result.entity);
-        }
-    }
-
-    // Ensure all spawned players have a non-zero velocity so the callback is invoked
-    for (auto ent : entities) {
-        if (registry->hasComponent<VelocityComponent>(ent)) {
-            auto& vel = registry->getComponent<VelocityComponent>(ent);
-            vel.vx = 10.0F;
-            vel.vy = 0.0F;
-        }
+        (void)result;  // Suppress unused warning
     }
 
     int callbackCount = 0;

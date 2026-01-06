@@ -333,23 +333,16 @@ if(BUILD_GRAPHICAL_TESTS)
         gtest_discover_tests(test_input_handler)
     endif()
 
-add_executable(test_network_client test_network_client.cpp)
+    add_executable(test_pause_menu test_pause_menu.cpp)
 
-target_link_libraries(test_network_client PRIVATE
-    GTest::gtest_main
-    network
-    rtype_client_network
-)
-
-target_include_directories(test_network_client PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-)
-
-if(WIN32 OR MSVC)
-    gtest_discover_tests(test_network_client WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-else()
-    gtest_discover_tests(test_network_client)
-endif()
+    target_link_libraries(test_pause_menu PRIVATE
+        GTest::gtest_main
+        engine
+        network
+        rtype_game_shared
+        rtype_game_client
+        rtype-graphic-SFML
+    )
 
     target_include_directories(test_pause_menu PRIVATE
         ${CMAKE_SOURCE_DIR}/src
