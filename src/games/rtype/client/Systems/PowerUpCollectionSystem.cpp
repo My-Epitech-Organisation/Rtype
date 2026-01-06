@@ -20,6 +20,8 @@ namespace rs = ::rtype::games::rtype::shared;
 
 namespace rtype::games::rtype::client {
 
+constexpr float kPowerUpRenewalThreshold = 0.5f;
+
 PowerUpCollectionSystem::PowerUpCollectionSystem(std::shared_ptr<sf::Font> font)
     : ::rtype::engine::ASystem("PowerUpCollectionSystem"), _font(font) {
     LOG_INFO("[PowerUpCollectionSystem] Initialized");
@@ -60,7 +62,7 @@ void PowerUpCollectionSystem::update(ECS::Registry& registry, float /*dt*/) {
             } else {
                 float timeDiff =
                     activePowerUp.remainingTime - it->second.remainingTime;
-                if (timeDiff > 0.5f) {
+                if (timeDiff > kPowerUpRenewalThreshold) {
                     isNewCollection = true;
                 }
             }
