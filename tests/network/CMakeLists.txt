@@ -204,6 +204,13 @@ target_link_libraries(test_asio_socket_misc PRIVATE
     GTest::gtest_main
 )
 
+# Compressor (LZ4) tests
+add_executable(test_compressor test_compressor.cpp)
+target_link_libraries(test_compressor PRIVATE
+    network
+    GTest::gtest_main
+)
+
 # Enable test discovery
 include(GoogleTest)
 if(WIN32 OR MSVC)
@@ -238,6 +245,7 @@ if(WIN32 OR MSVC)
     gtest_discover_tests(test_serializer_validate_extract_server_userid WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_serializer_validate_extract_extra WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_asio_error_mapping_all WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_compressor WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_protocol)
     gtest_discover_tests(test_serialization)
@@ -270,5 +278,6 @@ else()
     gtest_discover_tests(test_serializer_validate_extract_server_userid)
     gtest_discover_tests(test_serializer_validate_extract_extra)
     gtest_discover_tests(test_asio_error_mapping_all)
+    gtest_discover_tests(test_compressor)
 endif()
 ## test_asio_error_mapping removed due to private API access - rely on other asio tests
