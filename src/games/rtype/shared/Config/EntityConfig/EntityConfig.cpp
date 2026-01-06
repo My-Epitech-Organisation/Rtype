@@ -359,8 +359,13 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
                                 WaveConfig::SpawnEntry spawn;
                                 spawn.enemyId =
                                     (*spawnTbl)["enemy"].value_or("");
-                                spawn.x = (*spawnTbl)["x"].value_or(800.0F);
-                                spawn.y = (*spawnTbl)["y"].value_or(300.0F);
+                                // Use optional for x,y - nullopt if not specified
+                                if (auto xVal = (*spawnTbl)["x"].value<double>()) {
+                                    spawn.x = static_cast<float>(*xVal);
+                                }
+                                if (auto yVal = (*spawnTbl)["y"].value<double>()) {
+                                    spawn.y = static_cast<float>(*yVal);
+                                }
                                 spawn.delay =
                                     (*spawnTbl)["delay"].value_or(0.0F);
                                 spawn.count = (*spawnTbl)["count"].value_or(1);
