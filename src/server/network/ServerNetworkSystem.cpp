@@ -214,19 +214,21 @@ void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
                     info.entity)) {
             const auto& health = registry_->getComponent<
                 rtype::games::rtype::shared::HealthComponent>(info.entity);
-            LOG_DEBUG(
-                "[ServerNetworkSystem] Sending initial health for entity " +
-                std::to_string(networkId) + ": " +
-                std::to_string(health.current) + "/" +
-                std::to_string(health.max));
+            LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                          "[NetworkServer] Sending initial health for entity " +
+                              std::to_string(networkId) + ": " +
+                              std::to_string(health.current) + "/" +
+                              std::to_string(health.max));
             server_->updateEntityHealth(networkId, health.current, health.max);
         } else {
-            LOG_DEBUG("[ServerNetworkSystem] No health component for entity " +
-                      std::to_string(networkId));
+            LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                          "[NetworkServer] No health component for entity " +
+                              std::to_string(networkId));
         }
     } else {
-        LOG_DEBUG("[ServerNetworkSystem] No server available to spawn entity " +
-                  std::to_string(networkId));
+        LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                      "[NetworkServer] No health component for entity " +
+                          std::to_string(networkId));
     }
 }
 
@@ -341,9 +343,10 @@ void ServerNetworkSystem::handleClientDisconnected(
         (reason == network::DisconnectReason::Timeout ||
          reason == network::DisconnectReason::MaxRetriesExceeded);
 
-    LOG_INFO("[ServerNetworkSystem] Client disconnected userId="
-             << userId << " reason=" << static_cast<int>(reason)
-             << (useGracePeriod ? " (grace)" : ""));
+    LOG_INFO_CAT(::rtype::LogCategory::Network,
+                 "[NetworkServer] Client disconnected userId="
+                     << userId << " reason=" << static_cast<int>(reason)
+                     << (useGracePeriod ? " (grace)" : ""));
 
     if (useGracePeriod) {
         auto it = userIdToEntity_.find(userId);
@@ -389,7 +392,8 @@ void ServerNetworkSystem::finalizeDisconnection(std::uint32_t userId) {
         userIdToEntity_.erase(it);
     }
 
-    LOG_INFO(
+    LOG_INFO_CAT(
+        ::rtype::LogCategory::Network,
         "[ServerNetworkSystem] Finalized disconnection for userId=" << userId);
 
     if (onClientDisconnectedCallback_) {

@@ -82,9 +82,10 @@ RtypeEntityFactory::createNetworkEntityFactory(
     return [assetsManager, registry](
                ECS::Registry& reg,
                const ::rtype::client::EntitySpawnEvent& event) -> ECS::Entity {
-        LOG_DEBUG("[RtypeEntityFactory] Creating entity type="
-                  << static_cast<int>(event.type) << " pos=(" << event.x << ", "
-                  << event.y << ")");
+        LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                      "[RtypeEntityFactory] Creating entity type="
+                          << static_cast<int>(event.type) << " pos=(" << event.x
+                          << ", " << event.y << ")");
 
         auto entity = reg.spawnEntity();
 
@@ -126,23 +127,27 @@ RtypeEntityFactory::createNetworkEntityFactory(
 void RtypeEntityFactory::setupPlayerEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity, std::uint32_t userId) {
-    LOG_DEBUG("[RtypeEntityFactory] Adding Player components for entity "
-              << entity.id << ", userid =  " << userId);
+
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Adding Player components for entity "
+                      << entity.id);
 
     uint32_t playerId = 1;
     if (userId < 1 || userId > ::rtype::game::config::MAX_PLAYER_COUNT) {
-        LOG_ERROR("[RtypeEntityFactory] Invalid userId "
-                  << userId << ", must be 1-"
-                  << ::rtype::game::config::MAX_PLAYER_COUNT
-                  << ". Defaulting to 1");
+        LOG_ERROR_CAT(::rtype::LogCategory::ECS,
+                      "[RtypeEntityFactory] Invalid userId "
+                          << userId << ", must be 1-"
+                          << ::rtype::game::config::MAX_PLAYER_COUNT
+                          << " Defaulting to 1");
         userId = 1;
     }
     playerId = userId;
 
     std::pair<int, int> spriteOffset = getPlayerSpriteOffset(playerId);
-    LOG_DEBUG("[RtypeEntityFactory] Player " << playerId << " sprite offset: ("
-                                             << spriteOffset.first << ", "
-                                             << spriteOffset.second << ")");
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Player "
+                      << playerId << " sprite offset: (" << spriteOffset.first
+                      << ", " << spriteOffset.second << ")");
 
     reg.emplaceComponent<shared::PlayerIdComponent>(entity, playerId);
 
@@ -153,19 +158,25 @@ void RtypeEntityFactory::setupPlayerEntity(
     const int left = neutralColumn * width;
     const int top = spriteOffset.second;
 
-    LOG_DEBUG("[RtypeEntityFactory] Getting player_vessel texture");
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Getting player_vessel texture");
     auto& playerTexture = assetsManager->textureManager->get("player_vessel");
-    LOG_DEBUG("[RtypeEntityFactory] Texture size: "
-              << playerTexture.getSize().x << "x" << playerTexture.getSize().y);
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Texture size: "
+                      << playerTexture.getSize().x << "x"
+                      << playerTexture.getSize().y);
     reg.emplaceComponent<Image>(entity, playerTexture);
-    LOG_DEBUG("[RtypeEntityFactory] Image component added");
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Image component added");
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({left, top}),
                                       std::pair<int, int>({width, height}));
-    LOG_DEBUG("[RtypeEntityFactory] TextureRect set to: left="
-              << left << " top=" << top << " width=" << width
-              << " height=" << height);
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] TextureRect set to: left="
+                      << left << " top=" << top << " width=" << width
+                      << " height=" << height);
     reg.emplaceComponent<Size>(entity, 4, 4);
-    LOG_DEBUG("[RtypeEntityFactory] Size component added");
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Size component added");
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, 132.0f, 68.0f);
     reg.emplaceComponent<shared::HealthComponent>(entity, 1, 1);
@@ -185,7 +196,8 @@ void RtypeEntityFactory::setupPlayerEntity(
 void RtypeEntityFactory::setupBydosEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity) {
-    LOG_DEBUG("[RtypeEntityFactory] Adding Bydos components");
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Adding Bydos components");
     reg.emplaceComponent<Image>(
         entity, assetsManager->textureManager->get("bdos_enemy"));
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
@@ -210,7 +222,8 @@ void RtypeEntityFactory::setupBydosEntity(
 void RtypeEntityFactory::setupMissileEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity) {
-    LOG_DEBUG("[RtypeEntityFactory] Adding Missile components");
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Adding Missile components");
     reg.emplaceComponent<Image>(
         entity, assetsManager->textureManager->get("projectile_player_laser"));
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
@@ -241,7 +254,8 @@ void RtypeEntityFactory::setupMissileEntity(
 void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
                                            ECS::Entity entity,
                                            std::uint32_t networkId) {
-    LOG_DEBUG("[RtypeEntityFactory] Adding Pickup components");
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Adding Pickup components");
     static const std::array<sf::Color, 4> kColors = {
         sf::Color(120, 200, 255), sf::Color(170, 120, 255),
         sf::Color(120, 255, 170), sf::Color(255, 200, 120)};
@@ -265,7 +279,8 @@ void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
 void RtypeEntityFactory::setupObstacleEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity, std::uint32_t /*networkId*/) {
-    LOG_DEBUG("[RtypeEntityFactory] Adding Obstacle components");
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Adding Obstacle components");
 
     std::random_device rd;   // Seed
     std::mt19937 gen(rd());  // Mersenne Twister engine

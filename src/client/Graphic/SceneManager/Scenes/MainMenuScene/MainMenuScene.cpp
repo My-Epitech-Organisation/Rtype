@@ -289,7 +289,8 @@ void MainMenuScene::_onConnectClicked(
             auto reg = weakRegistry.lock();
             if (!reg) return;
 
-            LOG_INFO("[Client] Connected with user ID: " << userId);
+            LOG_INFO_CAT(::rtype::LogCategory::UI,
+                         "[Client] Connected with user ID: " << userId);
 
             if (reg->isAlive(statusEntity) &&
                 reg->hasComponent<rtype::games::rtype::client::Text>(
@@ -303,13 +304,52 @@ void MainMenuScene::_onConnectClicked(
             }
 
             try {
-                switchToScene(SceneManager::LOBBY);
+                switchToScene(SceneManager::IN_GAME);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Game: ") +
-                          std::string(e.what()));
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              std::string("Error switching to Game: ") +
+                                  std::string(e.what()));
             }
         });
     _connectedCallbackIds.push_back(onConnectedId);
+
+    auto onDisconnectedId = _networkClient->addDisconnectedCallback(
+        [weakRegistry,
+         statusEntity](rtype::client::NetworkClient::DisconnectReason reason) {
+            auto reg = weakRegistry.lock();
+            if (!reg) return;
+
+            std::string reasonStr;
+            switch (reason) {
+                case rtype::network::DisconnectReason::Timeout:
+                    reasonStr = "Connection timed out";
+                    break;
+                case rtype::network::DisconnectReason::MaxRetriesExceeded:
+                    reasonStr = "Server unreachable";
+                    break;
+                case rtype::network::DisconnectReason::ProtocolError:
+                    reasonStr = "Protocol error";
+                    break;
+                case rtype::network::DisconnectReason::RemoteRequest:
+                    reasonStr = "Server closed connection";
+                    break;
+                default:
+                    reasonStr = "Disconnected";
+                    break;
+            }
+
+            if (reg->isAlive(statusEntity) &&
+                reg->hasComponent<rtype::games::rtype::client::Text>(
+                    statusEntity)) {
+                auto& text =
+                    reg->getComponent<rtype::games::rtype::client::Text>(
+                        statusEntity);
+                text.textContent = reasonStr;
+                text.text.setString(reasonStr);
+                text.text.setFillColor(sf::Color::Red);
+            }
+        });
+    _disconnectedCallbackIds.push_back(onDisconnectedId);
 
     auto onDisconnectedId = _networkClient->addDisconnectedCallback(
         [weakRegistry,
@@ -450,8 +490,9 @@ MainMenuScene::MainMenuScene(
             try {
                 switchToScene(SceneManager::HOW_TO_PLAY);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to How To Play: ") +
-                          std::string(e.what()));
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              std::string("Error switching to How To Play: ") +
+                                  std::string(e.what()));
             }
         }));
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
@@ -469,8 +510,10 @@ MainMenuScene::MainMenuScene(
             try {
                 switchToScene(SceneManager::SETTINGS_MENU);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Settings Menu: ") +
-                          std::string(e.what()));
+                LOG_ERROR_CAT(
+                    ::rtype::LogCategory::UI,
+                    std::string("Error switching to Settings Menu: ") +
+                        std::string(e.what()));
             }
         }));
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(

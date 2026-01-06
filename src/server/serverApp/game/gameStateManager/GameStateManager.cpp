@@ -16,22 +16,25 @@ GameStateManager::GameStateManager(size_t minPlayersToStart)
 
 bool GameStateManager::playerReady(std::uint32_t userId) {
     if (_state == GameState::Playing || _state == GameState::GameOver) {
-        LOG_DEBUG("[GameState] Player "
-                  << userId
-                  << " signaled ready but game is already running or ended");
+        LOG_DEBUG_CAT(
+            rtype::LogCategory::GameEngine,
+            "[GameState] Player "
+                << userId
+                << " signaled ready but game is already running or ended");
         return false;
     }
 
     auto [_, inserted] = _readyPlayers.insert(userId);
     if (inserted) {
-        LOG_INFO("[GameState] Player "
-                 << userId << " is ready (" << _readyPlayers.size() << "/"
-                 << _minPlayersToStart << " needed to start)");
+
+        LOG_INFO_CAT(rtype::LogCategory::GameEngine,
+                     "[GameState] Player "
+                         << userId << " is ready (" << _readyPlayers.size()
+                         << "/" << _minPlayersToStart << " needed to start)");
 
         if (_onPlayerReadyStateChangedCallback) {
             _onPlayerReadyStateChangedCallback(userId, true);
         }
-
         checkAutoStart();
     }
     return inserted;
@@ -74,9 +77,10 @@ bool GameStateManager::playerNotReady(std::uint32_t userId) {
 
 void GameStateManager::playerLeft(std::uint32_t userId) {
     _readyPlayers.erase(userId);
-    LOG_DEBUG("[GameState] Player " << userId << " left, "
-                                    << _readyPlayers.size()
-                                    << " players remaining");
+    LOG_DEBUG_CAT(rtype::LogCategory::GameEngine, "[GameState] Player "
+                                                      << userId << " left, "
+                                                      << _readyPlayers.size()
+                                                      << " players remaining");
 
     if (_countdownActive) {
         if (_readyPlayers.size() < _minPlayersToStart ||
@@ -97,7 +101,9 @@ void GameStateManager::playerLeft(std::uint32_t userId) {
     }
 
     if (_state == GameState::Playing && _readyPlayers.empty()) {
-        LOG_INFO("[GameState] All players left during game. Ending game...");
+        LOG_INFO_CAT(
+            rtype::LogCategory::GameEngine,
+            "[GameState] All players left during game. Ending game...");
         transitionTo(GameState::GameOver);
     }
 }
@@ -107,8 +113,9 @@ void GameStateManager::transitionTo(GameState newState) {
         return;
     }
 
-    LOG_INFO("[GameState] State transition: " << toString(_state) << " -> "
-                                              << toString(newState));
+    LOG_INFO_CAT(rtype::LogCategory::GameEngine,
+                 "[GameState] State transition: " << toString(_state) << " -> "
+                                                  << toString(newState));
 
     GameState oldState = _state;
     _state = newState;

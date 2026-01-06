@@ -174,28 +174,31 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
         return;
     }
 
-    LOG_DEBUG("[CollisionSystem] Collision detected! Projectile "
-              << projectile.id << " hit target " << target.id
-              << " (isPlayer=" << isTargetPlayer << ")");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                  "[CollisionSystem] Collision detected! Projectile "
+                      << projectile.id << " hit target " << target.id
+                      << " (isPlayer=" << isTargetPlayer << ")");
 
     if (registry.hasComponent<HealthComponent>(target)) {
         auto& health = registry.getComponent<HealthComponent>(target);
         const int32_t prevHealth = health.current;
         health.takeDamage(damage);
-        LOG_DEBUG("[CollisionSystem] Health after damage: "
-                  << prevHealth << " -> " << health.current
-                  << " (damage=" << damage << ")");
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[CollisionSystem] Health after damage: "
+                          << prevHealth << " -> " << health.current
+                          << " (damage=" << damage << ")");
 
         if (isTargetPlayer && _emitEvent &&
             registry.hasComponent<NetworkIdComponent>(target)) {
             const auto& netId =
                 registry.getComponent<NetworkIdComponent>(target);
             if (netId.isValid()) {
-                LOG_DEBUG(
+                LOG_DEBUG_CAT(
+                    ::rtype::LogCategory::GameEngine,
                     "[CollisionSystem] Emitting EntityHealthChanged for player "
                     "networkId="
-                    << netId.networkId << " health=" << health.current << "/"
-                    << health.max);
+                        << netId.networkId << " health=" << health.current
+                        << "/" << health.max);
                 engine::GameEvent event{};
                 event.type = engine::GameEventType::EntityHealthChanged;
                 event.entityNetworkId = netId.networkId;
@@ -208,27 +211,31 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
         }
 
         if (!health.isAlive()) {
-            LOG_DEBUG("[CollisionSystem] Target " << target.id
-                                                  << " destroyed (no health)");
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[CollisionSystem] Target "
+                              << target.id << " destroyed (no health)");
             cmdBuffer.emplaceComponentDeferred<DestroyTag>(target,
                                                            DestroyTag{});
         }
     } else {
-        LOG_DEBUG("[CollisionSystem] Target "
-                  << target.id << " destroyed (no HealthComponent)");
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[CollisionSystem] Target "
+                          << target.id << " destroyed (no HealthComponent)");
         cmdBuffer.emplaceComponentDeferred<DestroyTag>(target, DestroyTag{});
     }
 
     if (!piercing) {
-        LOG_DEBUG("[CollisionSystem] Projectile "
-                  << projectile.id << " destroyed (non-piercing)");
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[CollisionSystem] Projectile "
+                          << projectile.id << " destroyed (non-piercing)");
         cmdBuffer.emplaceComponentDeferred<DestroyTag>(projectile,
                                                        DestroyTag{});
     } else if (registry.hasComponent<ProjectileComponent>(projectile)) {
         auto& projComp = registry.getComponent<ProjectileComponent>(projectile);
         if (projComp.registerHit()) {
-            LOG_DEBUG("[CollisionSystem] Projectile "
-                      << projectile.id << " destroyed (max hits)");
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[CollisionSystem] Projectile "
+                              << projectile.id << " destroyed (max hits)");
             cmdBuffer.emplaceComponentDeferred<DestroyTag>(projectile,
                                                            DestroyTag{});
         }
@@ -251,7 +258,9 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
     const auto& powerUp = registry.getComponent<PowerUpComponent>(pickup);
 
     if (powerUp.type == shared::PowerUpType::None) {
-        LOG_DEBUG("[CollisionSystem] Ignoring pickup with PowerUpType::None");
+        LOG_DEBUG_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[CollisionSystem] Ignoring pickup with PowerUpType::None");
         cmdBuffer.emplaceComponentDeferred<DestroyTag>(pickup, DestroyTag{});
         return;
     }

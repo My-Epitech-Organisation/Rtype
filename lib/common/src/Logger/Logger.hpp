@@ -8,6 +8,9 @@
 #ifndef SRC_COMMON_LOGGER_LOGGER_HPP_
 #define SRC_COMMON_LOGGER_LOGGER_HPP_
 
+#include <chrono>
+#include <ctime>
+#include <filesystem>
 #include <format>
 #include <functional>
 #include <iostream>
@@ -16,7 +19,9 @@
 #include <sstream>
 #include <string>
 
+#include "ColorFormatter.hpp"
 #include "FileWriter.hpp"
+#include "LogCategory.hpp"
 #include "LogLevel.hpp"
 #include "Timestamp.hpp"
 
@@ -33,6 +38,7 @@ namespace rtype {
  * - Optional file output
  * - Thread-safe operations
  * - Timestamps with millisecond precision
+ * - Category-based filtering
  * - Uses C++20 std::format for formatting
  *
  * @note For unit testing, use Logger::setInstance() to inject a mock logger
@@ -88,15 +94,57 @@ class Logger {
     [[nodiscard]] LogLevel getLogLevel() const noexcept { return _logLevel; }
 
     /**
+     * @brief Set enabled log categories
+     * @param categories Bitmask of categories to enable
+     */
+    void setEnabledCategories(LogCategory categories) noexcept {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _enabledCategories = categories;
+    }
+
+    /**
+     * @brief Get enabled log categories
+     * @return Current category bitmask
+     */
+    [[nodiscard]] LogCategory getEnabledCategories() const noexcept {
+        return _enabledCategories;
+    }
+
+    /**
+     * @brief Enable a specific category
+     * @param category Category to enable
+     */
+    void enableCategory(LogCategory category) noexcept {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _enabledCategories |= category;
+    }
+
+    /**
+     * @brief Check if a category is enabled
+     * @param category Category to check
+     * @return true if category is enabled
+     */
+    [[nodiscard]] bool isCategoryEnabled(LogCategory category) const noexcept {
+        return rtype::isCategoryEnabled(_enabledCategories, category);
+    }
+
+    /**
+     * @brief Generate a timestamped log filename
+     * @param prefix Prefix for the log file (e.g., "server", "client")
+     * @param directory Directory where to create the log file (default: "logs")
+     * @return Path to the log file with timestamp
+     */
+    static std::filesystem::path generateLogFilename(
+        const std::string& prefix = "session",
+        const std::filesystem::path& directory = "logs");
+
+    /**
      * @brief Enable file logging
      * @param filepath Path to the log file
      * @param append If true, append to existing file; otherwise overwrite
      * @return true if file was opened successfully
      */
-    bool setLogFile(const std::filesystem::path& filepath, bool append = true) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _fileWriter.open(filepath, append);
-    }
+    bool setLogFile(const std::filesystem::path& filepath, bool append = true);
 
     /**
      * @brief Close the log file
@@ -117,32 +165,73 @@ class Logger {
     /**
      * @brief Log a debug message
      * @param msg The message to log
+     * @param category Optional category for filtering (default: Main)
      */
-    virtual void debug(const std::string& msg) { log(LogLevel::Debug, msg); }
+    virtual void debug(const std::string& msg,
+                       LogCategory category = LogCategory::Main) {
+        log(LogLevel::Debug, msg, category);
+    }
 
     /**
      * @brief Log an info message
      * @param msg The message to log
+     * @param category Optional category for filtering (default: Main)
      */
-    virtual void info(const std::string& msg) { log(LogLevel::Info, msg); }
+    virtual void info(const std::string& msg,
+                      LogCategory category = LogCategory::Main) {
+        log(LogLevel::Info, msg, category);
+    }
 
     /**
      * @brief Log a warning message
      * @param msg The message to log
+     * @param category Optional category for filtering (default: Main)
      */
-    virtual void warning(const std::string& msg) {
-        log(LogLevel::Warning, msg);
+    virtual void warning(const std::string& msg,
+                         LogCategory category = LogCategory::Main) {
+        log(LogLevel::Warning, msg, category);
     }
 
     /**
      * @brief Log an error message
      * @param msg The message to log
+     * @param category Optional category for filtering (default: Main)
      */
-    virtual void error(const std::string& msg) { log(LogLevel::Error, msg); }
+    virtual void error(const std::string& msg,
+                       LogCategory category = LogCategory::Main) {
+        log(LogLevel::Error, msg, category);
+    }
+
+    /**
+     * @brief Log a fatal error message
+     * @param msg The message to log
+     * @param category Optional category for filtering (default: Main)
+     */
+    virtual void fatal(const std::string& msg,
+                       LogCategory category = LogCategory::Main) {
+        log(LogLevel::Fatal, msg, category);
+    }
+
+    /**
+     * @brief Enable or disable colored console output
+     * @param enabled true to enable colors, false to disable
+     */
+    void setColorEnabled(bool enabled) noexcept {
+        ColorFormatter::setEnabled(enabled);
+    }
+
+    /**
+     * @brief Check if colored console output is enabled
+     * @return true if colors are enabled
+     */
+    [[nodiscard]] bool isColorEnabled() const noexcept {
+        return ColorFormatter::isEnabled();
+    }
 
    protected:
     mutable std::mutex _mutex;
     LogLevel _logLevel{LogLevel::Debug};
+    LogCategory _enabledCategories{LogCategory::All};
 
    private:
     static inline std::optional<std::reference_wrapper<Logger>> _customInstance{
@@ -153,22 +242,9 @@ class Logger {
      * @brief Internal logging function with level check and mutex protection
      * @param level Log level for this message
      * @param msg Message to log
+     * @param category Category for filtering
      */
-    void log(LogLevel level, const std::string& msg) {
-        std::lock_guard<std::mutex> lock(_mutex);
-
-        if (level < _logLevel) {
-            return;
-        }
-        const std::string formattedMsg =
-            std::format("[{}] [{}] {}", Timestamp::now(), toString(level), msg);
-
-        std::ostream& consoleStream =
-            (level >= LogLevel::Warning) ? std::cerr : std::cout;
-        consoleStream << formattedMsg << '\n';
-
-        _fileWriter.write(formattedMsg);
-    }
+    void log(LogLevel level, const std::string& msg, LogCategory category);
 };
 
 }  // namespace rtype

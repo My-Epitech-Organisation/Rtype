@@ -21,10 +21,12 @@ std::optional<rtype::network::Packet> PacketProcessor::processRawData(
                                                                  false);
 
         if (validationResult.isErr()) {
-            LOG_DEBUG("[PacketProcessor] Dropped packet from "
-                      << endpointKey << " (validation error: "
-                      << rtype::network::toString(validationResult.error())
-                      << ")");
+            LOG_DEBUG_CAT(
+                rtype::LogCategory::Network,
+                "[PacketProcessor] Dropped packet from "
+                    << endpointKey << " (validation error: "
+                    << rtype::network::toString(validationResult.error())
+                    << ")");
             _metrics->packetsDropped.fetch_add(1, std::memory_order_relaxed);
             return std::nullopt;
         }
@@ -34,10 +36,11 @@ std::optional<rtype::network::Packet> PacketProcessor::processRawData(
         auto seqResult =
             _securityContext.validateSequenceId(endpointKey, header.seqId);
         if (seqResult.isErr()) {
-            LOG_DEBUG("[PacketProcessor] Dropped packet from "
-                      << endpointKey << " (invalid sequence: "
-                      << rtype::network::toString(seqResult.error())
-                      << ", SeqID=" << header.seqId << ")");
+            LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                          "[PacketProcessor] Dropped packet from "
+                              << endpointKey << " (invalid sequence: "
+                              << rtype::network::toString(seqResult.error())
+                              << ", SeqID=" << header.seqId << ")");
             _metrics->packetsDropped.fetch_add(1, std::memory_order_relaxed);
             return std::nullopt;
         }
@@ -45,9 +48,10 @@ std::optional<rtype::network::Packet> PacketProcessor::processRawData(
         auto userIdResult =
             _securityContext.validateUserIdMapping(endpointKey, header.userId);
         if (userIdResult.isErr()) {
-            LOG_WARNING("[PacketProcessor] Dropped packet from "
-                        << endpointKey << " (UserID spoofing: claimed="
-                        << header.userId << ")");
+            LOG_WARNING_CAT(::rtype::LogCategory::Network,
+                            "[PacketProcessor] Dropped packet from "
+                                << endpointKey << " (UserID spoofing: claimed="
+                                << header.userId << ")");
             _metrics->packetsDropped.fetch_add(1, std::memory_order_relaxed);
             return std::nullopt;
         }
@@ -60,22 +64,27 @@ std::optional<rtype::network::Packet> PacketProcessor::processRawData(
         }
 
         if (_verbose) {
-            LOG_DEBUG(
-                "[PacketProcessor] Accepted packet from "
-                << endpointKey << " (OpCode=" << static_cast<int>(header.opcode)
-                << ", SeqID=" << header.seqId << ", UserID=" << header.userId
-                << ", Payload=" << header.payloadSize << " bytes)");
+            LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                          "[PacketProcessor] Accepted packet from "
+                              << endpointKey
+                              << " (OpCode=" << static_cast<int>(header.opcode)
+                              << ", SeqID=" << header.seqId
+                              << ", UserID=" << header.userId << ", Payload="
+                              << header.payloadSize << " bytes)");
         }
 
         return packet;
     } catch (const std::exception& e) {
-        LOG_ERROR("[PacketProcessor] Exception processing packet from "
-                  << endpointKey << ": " << e.what());
+        LOG_ERROR_CAT(::rtype::LogCategory::Network,
+                      "[PacketProcessor] Exception processing packet from "
+                          << endpointKey << ": " << e.what());
         _metrics->packetsDropped.fetch_add(1, std::memory_order_relaxed);
         return std::nullopt;
     } catch (...) {
-        LOG_ERROR("[PacketProcessor] Unknown exception processing packet from "
-                  << endpointKey);
+        LOG_ERROR_CAT(
+            ::rtype::LogCategory::Network,
+            "[PacketProcessor] Unknown exception processing packet from "
+                << endpointKey);
         _metrics->packetsDropped.fetch_add(1, std::memory_order_relaxed);
         return std::nullopt;
     }
@@ -84,13 +93,15 @@ std::optional<rtype::network::Packet> PacketProcessor::processRawData(
 void PacketProcessor::registerConnection(const std::string& endpointKey,
                                          std::uint32_t userId) {
     _securityContext.registerConnection(endpointKey, userId);
-    LOG_DEBUG("[PacketProcessor] Registered UserID "
-              << userId << " for endpoint " << endpointKey);
+    LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                  "[PacketProcessor] Registered UserID "
+                      << userId << " for endpoint " << endpointKey);
 }
 
 void PacketProcessor::unregisterConnection(const std::string& endpointKey) {
     _securityContext.removeConnection(endpointKey);
-    LOG_DEBUG("[PacketProcessor] Unregistered endpoint " << endpointKey);
+    LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                  "[PacketProcessor] Unregistered endpoint " << endpointKey);
 }
 
 }  // namespace rtype::server
