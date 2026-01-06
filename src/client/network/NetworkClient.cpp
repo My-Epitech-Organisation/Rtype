@@ -49,6 +49,8 @@ NetworkClient::NetworkClient(const Config& config)
             serverEndpoint_.reset();
             if (socket_) {
                 socket_->cancel();
+                ioContext_.poll();
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 socket_->close();
                 socket_ = network::createAsyncSocket(ioContext_.get());
             }
@@ -66,6 +68,8 @@ NetworkClient::NetworkClient(const Config& config)
             serverEndpoint_.reset();
             if (socket_) {
                 socket_->cancel();
+                ioContext_.poll();
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 socket_->close();
                 socket_ = network::createAsyncSocket(ioContext_.get());
             }
@@ -112,6 +116,8 @@ NetworkClient::NetworkClient(const Config& config,
             serverEndpoint_.reset();
             if (socket_) {
                 socket_->cancel();
+                ioContext_.poll();
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 socket_->close();
                 socket_ = network::createAsyncSocket(ioContext_.get());
             }
@@ -129,6 +135,8 @@ NetworkClient::NetworkClient(const Config& config,
             serverEndpoint_.reset();
             if (socket_) {
                 socket_->cancel();
+                ioContext_.poll();
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 socket_->close();
                 socket_ = network::createAsyncSocket(ioContext_.get());
             }
@@ -230,6 +238,8 @@ void NetworkClient::disconnect() {
 
     if (socket_) {
         socket_->cancel();
+        ioContext_.poll();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         socket_->close();
         socket_ = network::createAsyncSocket(ioContext_.get());
     }
@@ -426,7 +436,7 @@ void NetworkClient::queueCallback(std::function<void()> callback) {
 
 void NetworkClient::startReceive() {
     if (receiveInProgress_.load(std::memory_order_acquire) ||
-        !socket_->isOpen()) {
+        !socket_ || !socket_->isOpen()) {
         return;
     }
 
@@ -449,7 +459,9 @@ void NetworkClient::handleReceive(network::Result<std::size_t> result) {
         processIncomingPacket(*receiveBuffer_, *receiveSender_);
     }
 
-    if (socket_->isOpen()) {
+    // Check if socket still exists and is open before starting next receive
+    // This prevents use-after-free if disconnect() is called concurrently
+    if (socket_ && socket_->isOpen()) {
         startReceive();
     }
 }
