@@ -172,7 +172,7 @@ if ($t) {
     cmake --build --preset $CMakePreset --parallel $NumProcs
 } else {
     Write-Host "  Building client and server only..." -ForegroundColor Green
-    cmake --build --preset $CMakePreset --target r-type_client r-type_server --parallel $NumProcs
+    cmake --build --preset $CMakePreset --target r-type_client r-type_server rtype-display-sfml --parallel $NumProcs
 }
 
 if ($LASTEXITCODE -ne 0) {
@@ -189,12 +189,16 @@ Write-Host "→ Step 4/4: Copying executables to repository root..." -Foreground
 
 $ClientExe = Join-Path $ProjectRoot "$BuildDir\src\client\Release\r-type_client.exe"
 $ServerExe = Join-Path $ProjectRoot "$BuildDir\src\server\Release\r-type_server.exe"
+$DisplayDLL="$BuildDir\lib\display\SFML\librtype-display-sfml.dll"
 
 if (-not (Test-Path $ClientExe)) {
     $ClientExe = Join-Path $ProjectRoot "$BuildDir\src\client\r-type_client.exe"
 }
 if (-not (Test-Path $ServerExe)) {
     $ServerExe = Join-Path $ProjectRoot "$BuildDir\src\server\r-type_server.exe"
+}
+if (-not (Test-Path $DisplayDLL)) {
+    $ServerExe = Join-Path $ProjectRoot "$BuildDir\lib\display\SFML\librtype-display-sfml.dll"
 }
 
 if (Test-Path $ClientExe) {
@@ -209,6 +213,13 @@ if (Test-Path $ServerExe) {
     Write-Host "  ✓ Copied r-type_server.exe" -ForegroundColor Green
 } else {
     Write-Host "  ⚠ Warning: Server executable not found" -ForegroundColor Yellow
+}
+
+if (Test-Path $DisplayDLL) {
+    Copy-Item $DisplayDLL "$ProjectRoot\display.dll" -Force
+    Write-Host "  ✓ Copied display.dll" -ForegroundColor Green
+} else {
+    Write-Host "  ⚠ Warning: Display dll not found" -ForegroundColor Yellow
 }
 
 Write-Host ""

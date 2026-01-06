@@ -355,9 +355,15 @@ Graphic::Graphic(
     if (!assetsConfig.has_value()) throw std::exception();
     this->_keybinds = std::make_shared<KeyboardActions>();
 
+#ifdef _WIN32
+    this->_displayLoader =
+    std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
+        "./display.dll");
+#else
     this->_displayLoader =
         std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
             "./display.so");
+#endif
     this->_display = std::shared_ptr<rtype::display::IDisplay>(
         this->_displayLoader->getInstance("createInstanceDisplay"));
     this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT, "R-Type - Epitech 2025");

@@ -168,7 +168,7 @@ void RtypeEntityFactory::setupPlayerEntity(
                   "[RtypeEntityFactory] TextureRect set to: left="
                       << left << " top=" << top << " width=" << width
                       << " height=" << height);
-    reg.emplaceComponent<Size>(entity, 4, 4);
+    reg.emplaceComponent<Size>(entity, 4.0f, 4.0f);
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] Size component added");
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
@@ -198,7 +198,7 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.emplaceComponent<Image>(entity, "bdos_enemy");
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 34}));
-    reg.emplaceComponent<Size>(entity, 2, 2);
+    reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, 66.0f, 68.0f);
     reg.emplaceComponent<BoxingComponent>(
@@ -224,7 +224,7 @@ void RtypeEntityFactory::setupMissileEntity(
     reg.emplaceComponent<Image>(entity, "projectile_player_laser");
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 34}));
-    reg.emplaceComponent<Size>(entity, 1.75, 1.75);
+    reg.emplaceComponent<Size>(entity, 1.75f, 1.75f);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, 33.0f, 34.0f);
     reg.emplaceComponent<shared::ProjectileTag>(entity);
@@ -292,7 +292,7 @@ void RtypeEntityFactory::setupObstacleEntity(
     std::string textureName = "projectile" + std::to_string(value);
 
     reg.emplaceComponent<Image>(entity, textureName);
-    reg.emplaceComponent<Size>(entity, 0.5, 0.5);
+    reg.emplaceComponent<Size>(entity, 0.5f, 0.5f);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
 }
