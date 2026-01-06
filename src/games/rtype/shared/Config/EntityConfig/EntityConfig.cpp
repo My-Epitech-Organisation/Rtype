@@ -57,20 +57,17 @@ PowerUpConfig::EffectType stringToEffect(const std::string& str) {
  */
 std::string findConfigPath(const std::string& filepath) {
     namespace fs = std::filesystem;
-    
-    const std::vector<std::string> searchPaths = {
-        filepath,
-        "../" + filepath,
-        "../../" + filepath,
-        "../../../" + filepath
-    };
-    
+
+    const std::vector<std::string> searchPaths = {filepath, "../" + filepath,
+                                                  "../../" + filepath,
+                                                  "../../../" + filepath};
+
     for (const auto& path : searchPaths) {
         if (fs::exists(path)) {
             return path;
         }
     }
-    
+
     return filepath;
 }
 
@@ -451,7 +448,8 @@ bool EntityConfigRegistry::loadEnemiesWithSearch(const std::string& filepath) {
     return loadEnemies(findConfigPath(filepath));
 }
 
-bool EntityConfigRegistry::loadProjectilesWithSearch(const std::string& filepath) {
+bool EntityConfigRegistry::loadProjectilesWithSearch(
+    const std::string& filepath) {
     return loadProjectiles(findConfigPath(filepath));
 }
 

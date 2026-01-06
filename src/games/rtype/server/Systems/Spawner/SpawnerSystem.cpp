@@ -225,9 +225,8 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
         enemy, enemyConfig.damage, true);
 
     if (enemyConfig.canShoot) {
-        float shootCooldown = (enemyConfig.fireRate > 0)
-                                  ? (1.0F / enemyConfig.fireRate)
-                                  : 0.3F;
+        float shootCooldown =
+            (enemyConfig.fireRate > 0) ? (1.0F / enemyConfig.fireRate) : 0.3F;
         registry.emplaceComponent<shared::ShootCooldownComponent>(
             enemy, shootCooldown);
     }

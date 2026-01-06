@@ -46,13 +46,14 @@ bool GameEngine::initialize() {
     try {
         entityConfigRegistry.loadEnemiesWithSearch("config/game/enemies.toml");
         entityConfigRegistry.loadPlayersWithSearch("config/game/players.toml");
-        entityConfigRegistry.loadProjectilesWithSearch("config/game/projectiles.toml");
-        entityConfigRegistry.loadPowerUpsWithSearch("config/game/powerups.toml");
+        entityConfigRegistry.loadProjectilesWithSearch(
+            "config/game/projectiles.toml");
+        entityConfigRegistry.loadPowerUpsWithSearch(
+            "config/game/powerups.toml");
         LOG_INFO("[GameEngine] Entity configurations loaded");
     } catch (const std::exception& e) {
         LOG_WARNING("[GameEngine] Failed to load some entity configurations: "
-                    << e.what()
-                    << " - Continuing with available configs");
+                    << e.what() << " - Continuing with available configs");
     }
 
     _prefabManager = std::make_unique<ECS::PrefabManager>(std::ref(*_registry));
