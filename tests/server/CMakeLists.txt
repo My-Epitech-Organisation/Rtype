@@ -384,6 +384,33 @@ target_link_libraries(test_wave_manager PRIVATE
     rtype_game_shared
 )
 
+# DataDrivenSpawner unit tests
+add_executable(test_datadriven_spawner test_datadriven_spawner.cpp)
+
+target_include_directories(test_datadriven_spawner PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/server
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+    ${CMAKE_SOURCE_DIR}/src/common
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/common/src
+    ${CMAKE_SOURCE_DIR}/lib/common/src/Logger
+)
+
+target_compile_features(test_datadriven_spawner PRIVATE cxx_std_20)
+
+target_link_libraries(test_datadriven_spawner PRIVATE
+    GTest::gtest_main
+    common
+    rtype_toml_parser
+    network
+    engine
+    ecs
+    rtype_game_server
+    rtype_game_shared
+)
+
 include(GoogleTest)
 if(WIN32)
     gtest_discover_tests(test_server_network_messages WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -400,6 +427,7 @@ if(WIN32)
     gtest_discover_tests(test_game_state_manager WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_entity_spawner_factory WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_wave_manager WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_datadriven_spawner WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_server_network_messages)
     gtest_discover_tests(test_client_manager)
@@ -415,4 +443,5 @@ else()
     gtest_discover_tests(test_game_state_manager)
     gtest_discover_tests(test_entity_spawner_factory)
     gtest_discover_tests(test_wave_manager)
+    gtest_discover_tests(test_datadriven_spawner)
 endif()

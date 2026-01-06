@@ -497,5 +497,414 @@ count = 1
     EXPECT_EQ(manager.getState(), WaveState::NotStarted);
 }
 
+// =============================================================================
+// Random Spawn Position Tests (Optional Coordinates)
+// =============================================================================
+
+TEST_F(WaveManagerTest, SpawnWithoutCoordinates) {
+    createTestLevel("random_spawn.toml", R"(
+[level]
+id = "random_spawn"
+name = "Random Spawn Test"
+background = "test.png"
+scroll_speed = 50.0
+
+[[wave]]
+number = 1
+spawn_delay = 0.0
+
+[[wave.spawn]]
+enemy = "basic"
+delay = 0.0
+count = 3
+)");
+
+    WaveManager manager;
+    ASSERT_TRUE(manager.loadLevel("random_spawn"));
+    manager.start();
+
+    // Spawn entries without x,y should still work
+    auto spawns = manager.update(0.01F, 0);
+    EXPECT_GE(spawns.size(), 1);
+    if (!spawns.empty()) {
+        EXPECT_EQ(spawns[0].enemyId, "basic");
+        // Coordinates should be nullopt
+        EXPECT_FALSE(spawns[0].hasFixedX());
+        EXPECT_FALSE(spawns[0].hasFixedY());
+    }
+}
+
+TEST_F(WaveManagerTest, SpawnWithOnlyXCoordinate) {
+    createTestLevel("x_only.toml", R"(
+[level]
+id = "x_only"
+name = "X Only Test"
+background = "test.png"
+scroll_speed = 50.0
+
+[[wave]]
+number = 1
+spawn_delay = 0.0
+
+[[wave.spawn]]
+enemy = "basic"
+x = 750.0
+delay = 0.0
+count = 1
+)");
+
+    WaveManager manager;
+    ASSERT_TRUE(manager.loadLevel("x_only"));
+    manager.start();
+
+    auto spawns = manager.update(0.01F, 0);
+    EXPECT_EQ(spawns.size(), 1);
+    if (!spawns.empty()) {
+        EXPECT_TRUE(spawns[0].hasFixedX());
+        EXPECT_FALSE(spawns[0].hasFixedY());
+        EXPECT_FLOAT_EQ(*spawns[0].x, 750.0F);
+    }
+}
+
+TEST_F(WaveManagerTest, SpawnWithOnlyYCoordinate) {
+    createTestLevel("y_only.toml", R"(
+[level]
+id = "y_only"
+name = "Y Only Test"
+background = "test.png"
+scroll_speed = 50.0
+
+[[wave]]
+number = 1
+spawn_delay = 0.0
+
+[[wave.spawn]]
+enemy = "basic"
+y = 400.0
+delay = 0.0
+count = 1
+)");
+
+    WaveManager manager;
+    ASSERT_TRUE(manager.loadLevel("y_only"));
+    manager.start();
+
+    auto spawns = manager.update(0.01F, 0);
+    EXPECT_EQ(spawns.size(), 1);
+    if (!spawns.empty()) {
+        EXPECT_FALSE(spawns[0].hasFixedX());
+        EXPECT_TRUE(spawns[0].hasFixedY());
+        EXPECT_FLOAT_EQ(*spawns[0].y, 400.0F);
+    }
+}
+
+// =============================================================================
+// Boss Spawning Tests
+// =============================================================================
+
+TEST_F(WaveManagerTest, BossSpawning) {
+    // First add boss to enemy registry
+    std::ofstream bossFile(_testDir / "boss.toml");
+    bossFile << R"(
+[[enemy]]
+id = "boss_1"
+name = "Boss Enemy"
+sprite_sheet = "assets/sprites/enemies/boss.png"
+health = 500
+damage = 50
+score_value = 1000
+behavior = "stationary"
+speed = 0.0
+hitbox_width = 128.0
+hitbox_height = 128.0
+can_shoot = true
+fire_rate = 2.0
+projectile_type = "enemy_bullet"
+)";
+    bossFile.close();
+    shared::EntityConfigRegistry::getInstance().loadEnemies(
+        (_testDir / "boss.toml").string());
+
+    createTestLevel("boss_level.toml", R"(
+[level]
+id = "boss_level"
+name = "Boss Level"
+background = "test.png"
+scroll_speed = 50.0
+boss = "boss_1"
+
+[[wave]]
+number = 1
+spawn_delay = 0.0
+
+[[wave.spawn]]
+enemy = "basic"
+x = 800.0
+y = 300.0
+delay = 0.0
+count = 1
+)");
+
+    WaveManager manager;
+    ASSERT_TRUE(manager.loadLevel("boss_level"));
+    manager.start();
+
+    // Complete the wave
+    auto spawns = manager.update(0.01F, 0);
+    EXPECT_GE(spawns.size(), 1);
+
+    // Wait for wave completion
+    spawns = manager.update(5.0F, 0);  // All enemies cleared
+
+    // Boss ID should be available
+    auto bossId = manager.getBossId();
+    EXPECT_TRUE(bossId.has_value());
+    EXPECT_EQ(*bossId, "boss_1");
+}
+
+TEST_F(WaveManagerTest, LevelWithoutBoss) {
+    createTestLevel("no_boss.toml", R"(
+[level]
+id = "no_boss"
+name = "No Boss Level"
+background = "test.png"
+scroll_speed = 50.0
+
+[[wave]]
+number = 1
+spawn_delay = 0.0
+
+[[wave.spawn]]
+enemy = "basic"
+x = 800.0
+y = 300.0
+delay = 0.0
+count = 1
+)");
+
+    WaveManager manager;
+    ASSERT_TRUE(manager.loadLevel("no_boss"));
+    manager.start();
+
+    auto bossId = manager.getBossId();
+    EXPECT_FALSE(bossId.has_value());
+}
+
+// =============================================================================
+// Error and Edge Cases
+// =============================================================================
+
+TEST_F(WaveManagerTest, LoadInvalidFilePath) {
+    WaveManager manager;
+    EXPECT_FALSE(manager.loadLevelFromFile("/nonexistent/path.toml"));
+    EXPECT_EQ(manager.getState(), WaveState::Failed);
+}
+
+TEST_F(WaveManagerTest, LoadNonExistentLevelId) {
+    WaveManager manager;
+    EXPECT_FALSE(manager.loadLevel("does_not_exist"));
+    EXPECT_EQ(manager.getState(), WaveState::Failed);
+}
+
+TEST_F(WaveManagerTest, InvalidWaveConfig) {
+    createTestLevel("invalid.toml", R"(
+[level]
+id = "invalid"
+name = "Invalid Level"
+background = "test.png"
+scroll_speed = 50.0
+
+[[wave]]
+number = 0
+spawn_delay = 0.0
+)");
+
+    WaveManager manager;
+    // Should handle invalid wave gracefully
+    bool loaded = manager.loadLevel("invalid");
+    // May load or fail depending on validation
+    if (loaded) {
+        manager.start();
+        auto spawns = manager.update(0.1F, 0);
+        // Should not crash
+    }
+}
+
+TEST_F(WaveManagerTest, EmptySpawnArray) {
+    createTestLevel("empty_spawns.toml", R"(
+[level]
+id = "empty_spawns"
+name = "Empty Spawns"
+background = "test.png"
+scroll_speed = 50.0
+
+[[wave]]
+number = 1
+spawn_delay = 0.0
+)");
+
+    WaveManager manager;
+    bool loaded = manager.loadLevel("empty_spawns");
+    if (loaded) {
+        manager.start();
+        auto spawns = manager.update(0.1F, 0);
+        EXPECT_EQ(spawns.size(), 0);
+    }
+}
+
+TEST_F(WaveManagerTest, GettersBeforeLoading) {
+    WaveManager manager;
+    EXPECT_EQ(manager.getCurrentWave(), 1);
+    EXPECT_FALSE(manager.getBossId().has_value());
+    EXPECT_FALSE(manager.isLevelLoaded());
+    EXPECT_FALSE(manager.isAllWavesComplete());
+}
+
+TEST_F(WaveManagerTest, WaveTransitionWithDelay) {
+    createTestLevel("transition.toml", R"(
+[level]
+id = "transition"
+name = "Transition Test"
+background = "test.png"
+scroll_speed = 50.0
+
+[[wave]]
+number = 1
+spawn_delay = 0.0
+
+[[wave.spawn]]
+enemy = "basic"
+x = 800.0
+y = 300.0
+delay = 0.0
+count = 1
+
+[[wave]]
+number = 2
+spawn_delay = 0.0
+
+[[wave.spawn]]
+enemy = "shooter"
+x = 800.0
+y = 300.0
+delay = 0.0
+count = 1
+)");
+
+    WaveManager manager;
+    manager.setWaveTransitionDelay(1.0F);
+    ASSERT_TRUE(manager.loadLevel("transition"));
+    manager.start();
+
+    // Complete wave 1
+    auto spawns = manager.update(0.01F, 0);
+    EXPECT_GE(spawns.size(), 1);
+
+    // All enemies cleared, enter transition
+    spawns = manager.update(1.0F, 0);
+    EXPECT_EQ(manager.getState(), WaveState::WaveComplete);
+
+    // Wait for transition delay
+    spawns = manager.update(1.5F, 0);
+    
+    // Should advance to wave 2
+    EXPECT_EQ(manager.getCurrentWave(), 2);
+}
+
+TEST_F(WaveManagerTest, WaitForClearEnabled) {
+    createTestLevel("wait_clear.toml", R"(
+[level]
+id = "wait_clear"
+name = "Wait Clear Test"
+background = "test.png"
+scroll_speed = 50.0
+
+[[wave]]
+number = 1
+spawn_delay = 0.0
+
+[[wave.spawn]]
+enemy = "basic"
+x = 800.0
+y = 300.0
+delay = 0.0
+count = 1
+
+[[wave]]
+number = 2
+spawn_delay = 0.0
+
+[[wave.spawn]]
+enemy = "shooter"
+x = 800.0
+y = 300.0
+delay = 0.0
+count = 1
+)");
+
+    WaveManager manager;
+    manager.setWaitForClear(true);
+    ASSERT_TRUE(manager.loadLevel("wait_clear"));
+    manager.start();
+
+    // Spawn wave 1
+    auto spawns = manager.update(0.01F, 0);
+    EXPECT_GE(spawns.size(), 1);
+
+    // Try to progress with enemies still alive
+    spawns = manager.update(2.0F, 1);  // 1 enemy alive
+    EXPECT_EQ(manager.getState(), WaveState::InProgress);
+
+    // Clear enemies
+    spawns = manager.update(2.0F, 0);  // All cleared
+    // Should transition
+}
+
+TEST_F(WaveManagerTest, WaitForClearDisabled) {
+    createTestLevel("no_wait.toml", R"(
+[level]
+id = "no_wait"
+name = "No Wait Test"
+background = "test.png"
+scroll_speed = 50.0
+
+[[wave]]
+number = 1
+spawn_delay = 0.0
+
+[[wave.spawn]]
+enemy = "basic"
+x = 800.0
+y = 300.0
+delay = 0.0
+count = 1
+
+[[wave]]
+number = 2
+spawn_delay = 0.0
+
+[[wave.spawn]]
+enemy = "shooter"
+x = 800.0
+y = 300.0
+delay = 0.0
+count = 1
+)");
+
+    WaveManager manager;
+    manager.setWaitForClear(false);
+    manager.setWaveTransitionDelay(0.0F);
+    ASSERT_TRUE(manager.loadLevel("no_wait"));
+    manager.start();
+
+    // Spawn wave 1
+    auto spawns = manager.update(0.01F, 0);
+    EXPECT_GE(spawns.size(), 1);
+
+    // Progress immediately even with enemies alive
+    spawns = manager.update(2.0F, 5);  // 5 enemies alive
+    // Should still progress to next wave
+}
+
 }  // namespace
 }  // namespace rtype::games::rtype::server
