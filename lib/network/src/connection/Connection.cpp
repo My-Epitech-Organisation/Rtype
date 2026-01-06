@@ -311,7 +311,7 @@ Buffer Connection::buildDisconnectPacket() {
 Buffer Connection::buildAckPacketInternal(std::uint32_t userId) {
     Header header;
     header.magic = kMagicByte;
-    header.opcode = static_cast<std::uint8_t>(OpCode::ACK);  // ACK packets use opcode ACK
+    header.opcode = static_cast<std::uint8_t>(OpCode::ACK);
     header.payloadSize = 0;
     header.userId = ByteOrderSpec::toNetwork(userId);
     header.seqId = ByteOrderSpec::toNetwork(nextSequenceId());
@@ -330,7 +330,7 @@ Buffer Connection::buildAckPacketInternal(std::uint32_t userId,
                                           std::uint16_t ackSeqId) {
     Header header;
     header.magic = kMagicByte;
-    header.opcode = static_cast<std::uint8_t>(OpCode::ACK);  // ACK packets use opcode ACK
+    header.opcode = static_cast<std::uint8_t>(OpCode::ACK);
     header.payloadSize = 0;
     header.userId = ByteOrderSpec::toNetwork(userId);
     header.seqId = ByteOrderSpec::toNetwork(nextSequenceId());
