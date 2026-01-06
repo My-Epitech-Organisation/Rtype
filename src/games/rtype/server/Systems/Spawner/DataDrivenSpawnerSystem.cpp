@@ -35,6 +35,8 @@ using shared::PowerUpTypeComponent;
 using shared::PowerUpVariant;
 using shared::TransformComponent;
 using shared::VelocityComponent;
+constexpr int32_t KBOSS_HEALTH_THRESHOLD = 500;
+
 
 DataDrivenSpawnerSystem::DataDrivenSpawnerSystem(EventEmitter emitter,
                                                  DataDrivenSpawnerConfig config)
@@ -112,8 +114,6 @@ void DataDrivenSpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
     enemyView.each([&aliveEnemies](ECS::Entity, const shared::EnemyTag&) {
         aliveEnemies++;
     });
-    
-    // Only spawn obstacles and power-ups if a level is loaded or fallback is enabled
     if (_waveManager.isLevelLoaded() || _config.enableFallbackSpawning) {
         _obstacleSpawnTimer += deltaTime;
         _powerUpSpawnTimer += deltaTime;
@@ -130,7 +130,7 @@ void DataDrivenSpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
             generateNextPowerUpSpawnTime();
         }
     }
-    
+
     if (_waveManager.isLevelLoaded() && _levelStarted) {
         auto spawns = _waveManager.update(deltaTime, aliveEnemies);
         for (const auto& spawn : spawns) {
@@ -146,8 +146,13 @@ void DataDrivenSpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
                     spawnBoss(registry, *bossId);
                     _bossSpawned = true;
                 }
-            } else if (aliveEnemies == 0 &&
-                       (!bossId.has_value() || _bossSpawned)) {
+                return;
+            }
+            bool noBossRequired = !bossId.has_value();
+            bool bossDefeated = _bossSpawned;
+            bool allEnemiesDefeated = aliveEnemies == 0;
+
+            if (allEnemiesDefeated && (noBossRequired || bossDefeated)) {
                 LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                              "[DataDrivenSpawner] Level complete!");
                 _gameOverEmitted = true;
@@ -296,7 +301,7 @@ void DataDrivenSpawnerSystem::updateFallbackSpawning(ECS::Registry& registry,
             if (!allEnemies.empty()) {
                 std::vector<std::string> enemyPool;
                 for (const auto& [id, config] : allEnemies) {
-                    if (id.find("boss") == std::string::npos) {
+                    if (!isBossEnemy(id, config)) {
                         enemyPool.push_back(id);
                     }
                 }
@@ -331,6 +336,22 @@ void DataDrivenSpawnerSystem::generateNextObstacleSpawnTime() {
 
 void DataDrivenSpawnerSystem::generateNextPowerUpSpawnTime() {
     _nextPowerUpSpawnTime = _powerUpSpawnTimeDist(_rng);
+}
+
+bool DataDrivenSpawnerSystem::isBossEnemy(
+    const std::string& enemyId, const shared::EnemyConfig& config) const {
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    const auto& allLevels = configRegistry.getAllLevels();
+    for (const auto& [levelId, levelConfig] : allLevels) {
+        if (levelConfig.bossId.has_value() && 
+            *levelConfig.bossId == enemyId) {
+            return true;
+        }
+    }
+    if (config.health >= KBOSS_HEALTH_THRESHOLD) {
+        return true;
+    }
+    return false;
 }
 
 void DataDrivenSpawnerSystem::spawnObstacle(ECS::Registry& registry) {

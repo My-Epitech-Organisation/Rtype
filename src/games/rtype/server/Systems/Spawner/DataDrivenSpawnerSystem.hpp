@@ -158,6 +158,14 @@ class DataDrivenSpawnerSystem : public ::rtype::engine::ASystem {
     void generateNextObstacleSpawnTime();
     void generateNextPowerUpSpawnTime();
 
+    /**
+     * @brief Check if an enemy ID represents a boss enemy
+     * @param enemyId Enemy identifier to check
+     * @param config Enemy configuration
+     * @return true if the enemy is identified as a boss
+     */
+    bool isBossEnemy(const std::string& enemyId, const shared::EnemyConfig& config) const;
+
     std::random_device::result_type getRandomSeed() {
         std::random_device rd;
         return rd();
