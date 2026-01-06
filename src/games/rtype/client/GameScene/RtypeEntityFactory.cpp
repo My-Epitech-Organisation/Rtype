@@ -391,8 +391,8 @@ void RtypeEntityFactory::setupObstacleEntity(
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] Adding Obstacle components");
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    static thread_local std::random_device rd;
+    static thread_local std::mt19937 gen(rd());
     std::uniform_int_distribution<> dist(1, GraphicsConfig::NBR_MAX_OBSTACLES);
 
     int value = dist(gen);
