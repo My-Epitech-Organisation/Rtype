@@ -298,16 +298,16 @@ void MainMenuScene::_onConnectClicked(
                 auto& text =
                     reg->getComponent<rtype::games::rtype::client::Text>(
                         statusEntity);
-                text.textContent = "Connected! Starting game...";
-                text.text.setString("Connected! Starting game...");
+                text.textContent = "Connected! Entering lobby...";
+                text.text.setString("Connected! Entering lobby...");
                 text.text.setFillColor(sf::Color::Green);
             }
 
             try {
-                switchToScene(SceneManager::IN_GAME);
+                switchToScene(SceneManager::LOBBY);
             } catch (SceneNotFound& e) {
                 LOG_ERROR_CAT(::rtype::LogCategory::UI,
-                              std::string("Error switching to Game: ") +
+                              std::string("Error switching to Lobby: ") +
                                   std::string(e.what()));
             }
         });
