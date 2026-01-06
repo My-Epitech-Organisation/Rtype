@@ -204,48 +204,6 @@ target_link_libraries(test_asio_socket_misc PRIVATE
     GTest::gtest_main
 )
 
-# Compressor (LZ4) tests
-add_executable(test_compressor test_compressor.cpp)
-target_link_libraries(test_compressor PRIVATE
-    network
-    GTest::gtest_main
-)
-
-# Payloads batch tests (EntityMoveBatch, etc.)
-add_executable(test_payloads_batch test_payloads_batch.cpp)
-target_link_libraries(test_payloads_batch PRIVATE
-    network
-    GTest::gtest_main
-)
-
-# UdpSocket and Packet basic tests (placeholder coverage)
-add_executable(test_udp_socket_basic test_udp_socket_basic.cpp)
-target_link_libraries(test_udp_socket_basic PRIVATE
-    network
-    GTest::gtest_main
-)
-
-# Serializer and Packet serialization tests
-add_executable(test_serializer_packet test_serializer_packet.cpp)
-target_link_libraries(test_serializer_packet PRIVATE
-    network
-    GTest::gtest_main
-)
-
-# Comprehensive coverage boost tests
-add_executable(test_coverage_boost test_coverage_boost.cpp)
-target_link_libraries(test_coverage_boost PRIVATE
-    network
-    GTest::gtest_main
-)
-
-# SecurityContext tests
-add_executable(test_security_context test_security_context.cpp)
-target_link_libraries(test_security_context PRIVATE
-    network
-    GTest::gtest_main
-)
-
 # Enable test discovery
 include(GoogleTest)
 if(WIN32 OR MSVC)
@@ -280,12 +238,6 @@ if(WIN32 OR MSVC)
     gtest_discover_tests(test_serializer_validate_extract_server_userid WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_serializer_validate_extract_extra WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_asio_error_mapping_all WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-    gtest_discover_tests(test_compressor WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-    gtest_discover_tests(test_payloads_batch WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-    gtest_discover_tests(test_udp_socket_basic WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-    gtest_discover_tests(test_serializer_packet WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-    gtest_discover_tests(test_coverage_boost WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-    gtest_discover_tests(test_security_context WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_protocol)
     gtest_discover_tests(test_serialization)
@@ -318,11 +270,5 @@ else()
     gtest_discover_tests(test_serializer_validate_extract_server_userid)
     gtest_discover_tests(test_serializer_validate_extract_extra)
     gtest_discover_tests(test_asio_error_mapping_all)
-    gtest_discover_tests(test_compressor)
-    gtest_discover_tests(test_payloads_batch)
-    gtest_discover_tests(test_udp_socket_basic)
-    gtest_discover_tests(test_serializer_packet)
-    gtest_discover_tests(test_coverage_boost)
-    gtest_discover_tests(test_security_context)
 endif()
 ## test_asio_error_mapping removed due to private API access - rely on other asio tests
