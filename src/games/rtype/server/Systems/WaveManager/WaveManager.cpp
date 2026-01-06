@@ -221,7 +221,11 @@ void WaveManager::advanceToNextWave() {
 void WaveManager::prepareCurrentWave() {
     _pendingSpawns.clear();
 
-    if (!_levelConfig || _currentWaveIndex >= _levelConfig->waves.size()) {
+    if (!_levelConfig) {
+        return;
+    }
+
+    if (_currentWaveIndex >= _levelConfig->waves.size()) {
         return;
     }
 
