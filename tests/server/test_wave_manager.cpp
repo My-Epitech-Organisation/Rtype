@@ -844,20 +844,29 @@ count = 1
 
     WaveManager manager;
     manager.setWaitForClear(true);
+    manager.setWaveTransitionDelay(0.5F);  // Small transition delay
     ASSERT_TRUE(manager.loadLevel("wait_clear"));
     manager.start();
 
-    // Spawn wave 1
-    auto spawns = manager.update(0.01F, 0);
-    EXPECT_GE(spawns.size(), 1);
+    // Spawn wave 1 and let all spawns complete with enemies alive
+    for (int i = 0; i < 10; ++i) {
+        [[maybe_unused]] auto spawns = manager.update(0.1F, 1);  // 1 enemy alive
+    }
+    
+    // Wave spawning is complete, should be in WaveComplete state
+    EXPECT_EQ(manager.getState(), WaveState::WaveComplete);
+    // But should not advance to next wave with enemies alive
+    EXPECT_EQ(manager.getCurrentWave(), 1);
 
-    // Try to progress with enemies still alive
-    spawns = manager.update(2.0F, 1);  // 1 enemy alive
+    // Try to advance with enemies still alive - should stay on wave 1
+    [[maybe_unused]] auto spawns2 = manager.update(1.0F, 1);  // Still 1 enemy alive
+    EXPECT_EQ(manager.getState(), WaveState::WaveComplete);
+    EXPECT_EQ(manager.getCurrentWave(), 1);
+
+    // Clear enemies - now it should transition to wave 2
+    [[maybe_unused]] auto spawns3 = manager.update(1.0F, 0);  // All cleared, wait for transition delay
     EXPECT_EQ(manager.getState(), WaveState::InProgress);
-
-    // Clear enemies
-    spawns = manager.update(2.0F, 0);  // All cleared
-    // Should transition
+    EXPECT_EQ(manager.getCurrentWave(), 2);
 }
 
 TEST_F(WaveManagerTest, WaitForClearDisabled) {
