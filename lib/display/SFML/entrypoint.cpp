@@ -5,11 +5,17 @@
 ** entrypoint.cpp
 */
 
+#ifdef _WIN32
+    #define RTYPE_EXPORT __declspec(dllexport)
+#else
+    #define RTYPE_EXPORT
+#endif
+
 #include <iostream>
 #include "SFMLDisplay.hpp"
 
 extern "C" {
-    rtype::display::IDisplay* createInstanceDisplay(void) {
+    RTYPE_EXPORT rtype::display::IDisplay* createInstanceDisplay(void) {
         return new rtype::display::SFMLDisplay();
     }
 }
