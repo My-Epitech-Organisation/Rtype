@@ -152,6 +152,17 @@ if(BUILD_DOCS)
     endif()
 endif()
 
+target_include_directories(rtype-graphic-audio
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_include_directories(rtype-display-sfml
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+
 target_include_directories(rtype-graphic-main-menu-scene
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
