@@ -2,7 +2,7 @@
 
 | Metadata | Details |
 | :---- | :---- |
-| **Version** | 1.4.1 (Entity Move Batching) |
+| **Version** | 1.4.1 (Entity Move Batching + Lobby System) |
 | **Status** | Draft / Experimental |
 | **Date** | 2026-01-05 |
 | **Authors** | R-Type Project Team |
@@ -209,6 +209,31 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 * **Payload:**
   * Final Score (uint32): The final accumulated score.
 
+#### **0x08 - C\_READY**
+
+* **Sender:** Client
+* **Reliability:** **RELIABLE** (Flag 0x01)
+* **Description:** Client signals ready/unready state in the lobby. When all players are ready, the server initiates the game start sequence.
+* **Payload:**
+  * Is Ready (uint8): 1 if ready, 0 if not ready.
+
+#### **0x09 - S\_GAME\_START**
+
+* **Sender:** Server
+* **Reliability:** **RELIABLE** (Flag 0x01)
+* **Description:** Server signals that all players are ready and the game is starting. Includes countdown duration for client-side countdown display. Sent when the server determines all required players are ready.
+* **Payload:**
+  * Countdown Duration (float): Duration in seconds for the countdown timer (e.g., 3.0 for 3 seconds).
+
+#### **0x0A - S\_PLAYER\_READY\_STATE**
+
+* **Sender:** Server
+* **Reliability:** **RELIABLE** (Flag 0x01)
+* **Description:** Broadcasts the ready/unready state of a specific player to all clients in the lobby. Typically sent by the server in response to a client's **C\_READY** message, or when synchronizing lobby state after a client joins.
+* **Payload:**
+  * Player ID (uint32): Unique identifier of the player whose state changed.
+  * Is Ready (uint8): 1 if the player is ready, 0 if not ready.
+
 ### **5.2. Gameplay & Entity Management**
 
 #### **0x10 - S\_ENTITY\_SPAWN**
@@ -348,6 +373,9 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 | R_GET_USERS | Variable | 1 + (count * 4) |
 | S_UPDATE_STATE | 1 | uint8 |
 | S_GAME_OVER | 4 | uint32 |
+| C_READY | 1 | uint8 |
+| S_GAME_START | 4 | float |
+| S_PLAYER_READY_STATE | 5 | uint32 + uint8 |
 | S_ENTITY_SPAWN | 13 | uint32 + uint8 + float + float |
 | S_ENTITY_MOVE | 20 | uint32 + 4 * float |
 | S_ENTITY_MOVE_BATCH | Variable | 1 + (count * 20), max 1381 bytes |
@@ -366,6 +394,10 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 * **Added OpCode 0x15 - S_ENTITY_MOVE_BATCH:** Batched entity position/velocity updates for bandwidth optimization
 * **Optimization:** Entity updates are now grouped into a single packet per tick, enabling LZ4 compression
 * **Estimated bandwidth savings:** 50-60% for entity movement traffic
+* **Added OpCode 0x08 - C_READY:** Client lobby ready/unready signal
+* **Added OpCode 0x09 - S_GAME_START:** Server-initiated game start with countdown
+* **Added OpCode 0x0A - S_PLAYER_READY_STATE:** Broadcast player ready state changes
+* **Lobby Workflow:** Clients send C_READY when toggling ready state. Server broadcasts S_GAME_START when all players ready
 
 ### **Version 1.3.0 (2025-12-15)**
 

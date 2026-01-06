@@ -16,6 +16,7 @@
 #include "Scenes/GameOverScene/GameOverScene.hpp"
 #include "Scenes/GameScene/GameScene.hpp"
 #include "Scenes/HowToPlayScene/HowToPlayScene.hpp"
+#include "Scenes/Lobby/Lobby.hpp"
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
 #include "Scenes/SettingsScene/SettingsScene.hpp"
 
@@ -52,8 +53,8 @@ void SceneManager::setCurrentScene(const Scene scene) {
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[SceneManager] Scene change requested to: "
                       << static_cast<int>(scene));
-    if (scene == IN_GAME && this->_networkSystem && this->_registry &&
-        this->_assetManager) {
+    if ((scene == IN_GAME || scene == LOBBY) && this->_networkSystem &&
+        this->_registry && this->_assetManager) {
         LOG_DEBUG_CAT(
             ::rtype::LogCategory::UI,
             "[SceneManager] Pre-configuring entity factory for IN_GAME scene");
@@ -123,6 +124,11 @@ SceneManager::SceneManager(
         return std::make_unique<HowToPlayScene>(ecs, texture, this->_window,
                                                 this->_keybinds, this->_audio,
                                                 this->_switchToScene);
+    });
+    this->_sceneList.emplace(LOBBY, [ecs, texture, this]() {
+        return std::make_unique<Lobby>(
+            ecs, texture, this->_window, this->_switchToScene,
+            this->_networkClient, this->_networkSystem, this->_audio);
     });
     this->_sceneList.emplace(GAME_OVER, [ecs, texture, this]() {
         return std::make_unique<GameOverScene>(

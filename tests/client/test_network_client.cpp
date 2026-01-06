@@ -9,6 +9,8 @@
 
 #include <chrono>
 #include <cstring>
+#include <memory>
+#include <queue>
 #include <thread>
 #include <vector>
 
@@ -26,9 +28,97 @@
 #include "protocol/Header.hpp"
 #include "protocol/OpCode.hpp"
 #include "protocol/Payloads.hpp"
+#include "transport/IAsyncSocket.hpp"
 
 using namespace rtype::client;
 using namespace rtype::network;
+
+// =============================================================================
+// Mock Socket for Integration Tests
+// =============================================================================
+
+class MockSocket : public IAsyncSocket {
+   public:
+    MockSocket() : open_(true) {}
+
+    Result<void> bind(std::uint16_t) override { return Ok(); }
+    bool isOpen() const noexcept override { return open_; }
+    std::uint16_t localPort() const noexcept override { return 4242; }
+
+    void asyncSendTo(const Buffer& data, const Endpoint& dest,
+                     SendCallback handler) override {
+        lastSent_ = data;
+        lastDest_ = dest;
+        if (handler) handler(Ok(data.size()));
+    }
+
+    void asyncReceiveFrom(std::shared_ptr<Buffer> buffer,
+                          std::shared_ptr<Endpoint> sender,
+                          ReceiveCallback handler) override {
+        if (!incoming_.empty()) {
+            auto pkt = incoming_.front();
+            incoming_.pop();
+            buffer->resize(pkt.first.size());
+            std::memcpy(buffer->data(), pkt.first.data(), pkt.first.size());
+            if (sender) *sender = pkt.second;
+            if (handler) handler(Ok(pkt.first.size()));
+        } else {
+            pendingReceive_ = {buffer, sender, handler};
+        }
+    }
+
+    void pushIncoming(const std::vector<std::uint8_t>& pkt, const Endpoint& ep) {
+        if (pendingReceive_.handler) {
+            auto b = pendingReceive_.buffer;
+            auto s = pendingReceive_.sender;
+            auto h = pendingReceive_.handler;
+            pendingReceive_ = {};
+            b->resize(pkt.size());
+            std::memcpy(b->data(), pkt.data(), pkt.size());
+            if (s) *s = ep;
+            if (h) h(Ok(pkt.size()));
+            return;
+        }
+        incoming_.push({pkt, ep});
+    }
+
+    void cancel() override {}
+    void close() override { open_ = false; }
+
+    std::vector<std::uint8_t> lastSent_;
+    Endpoint lastDest_;
+
+   private:
+    struct Pending {
+        std::shared_ptr<Buffer> buffer;
+        std::shared_ptr<Endpoint> sender;
+        ReceiveCallback handler;
+    } pendingReceive_;
+
+    bool open_;
+    std::queue<std::pair<std::vector<std::uint8_t>, Endpoint>> incoming_;
+};
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+static Buffer buildPacket(OpCode opcode, const Buffer& payload, uint32_t userId = 1) {
+    Header header;
+    header.magic = kMagicByte;
+    header.opcode = static_cast<std::uint8_t>(opcode);
+    header.payloadSize = ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(payload.size()));
+    header.userId = ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(userId));
+    header.seqId = ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(0));
+    header.ackId = 0;
+    header.flags = 0;
+    header.reserved = {0, 0, 0};
+
+    Buffer pkt(kHeaderSize + payload.size());
+    std::memcpy(pkt.data(), &header, kHeaderSize);
+    if (!payload.empty()) std::memcpy(pkt.data() + kHeaderSize, payload.data(), payload.size());
+    return pkt;
+}
 
 // =============================================================================
 // Test Fixtures
@@ -39,7 +129,6 @@ class NetworkClientTest : public ::testing::Test {
     void SetUp() override {}
     void TearDown() override {}
 
-    // Helper to create a valid header
     static Header createHeader(OpCode opcode, std::uint16_t payloadSize = 0,
                                std::uint8_t flags = 0) {
         Header header{};
@@ -52,7 +141,6 @@ class NetworkClientTest : public ::testing::Test {
         return header;
     }
 
-    // Helper to create a packet buffer from header and payload
     static Buffer createPacket(const Header& header, const Buffer& payload) {
         Buffer packet(kHeaderSize + payload.size());
         std::memcpy(packet.data(), &header, kHeaderSize);
@@ -119,18 +207,16 @@ TEST_F(NetworkClientTest, HandleEntityMoveBatch_EmptyPayload) {
     Header header = createHeader(OpCode::S_ENTITY_MOVE_BATCH, 0);
     Buffer emptyPayload;
 
-    // Should not crash with empty payload
     client.handleEntityMoveBatch(header, emptyPayload);
 }
 
 TEST_F(NetworkClientTest, HandleEntityMoveBatch_ZeroCount) {
     NetworkClient client;
-    Buffer payload = {0};  // count = 0
+    Buffer payload = {0};
 
     Header header = createHeader(OpCode::S_ENTITY_MOVE_BATCH, 1);
 
     client.handleEntityMoveBatch(header, payload);
-    // Should return early without processing
 }
 
 TEST_F(NetworkClientTest, HandleEntityMoveBatch_CountTooHigh) {
@@ -140,17 +226,15 @@ TEST_F(NetworkClientTest, HandleEntityMoveBatch_CountTooHigh) {
     Header header = createHeader(OpCode::S_ENTITY_MOVE_BATCH, 1);
 
     client.handleEntityMoveBatch(header, payload);
-    // Should return early due to count > max
 }
 
 TEST_F(NetworkClientTest, HandleEntityMoveBatch_PayloadTooSmall) {
     NetworkClient client;
-    Buffer payload = {5};  // count = 5, but no entity data
+    Buffer payload = {5};
 
     Header header = createHeader(OpCode::S_ENTITY_MOVE_BATCH, 1);
 
     client.handleEntityMoveBatch(header, payload);
-    // Should return early due to insufficient data
 }
 
 TEST_F(NetworkClientTest, HandleEntityMoveBatch_ValidSingleEntity) {
@@ -163,7 +247,6 @@ TEST_F(NetworkClientTest, HandleEntityMoveBatch_ValidSingleEntity) {
         receivedEvent = event;
     });
 
-    // Create payload with 1 entity
     EntityMovePayload movePayload{};
     movePayload.entityId = 42;
     movePayload.posX = 100.0f;
@@ -174,7 +257,7 @@ TEST_F(NetworkClientTest, HandleEntityMoveBatch_ValidSingleEntity) {
     auto serialized = Serializer::serializeForNetwork(movePayload);
 
     Buffer payload;
-    payload.push_back(1);  // count = 1
+    payload.push_back(1);
     payload.insert(payload.end(), serialized.begin(), serialized.end());
 
     Header header =
@@ -201,9 +284,8 @@ TEST_F(NetworkClientTest, HandleEntityMoveBatch_MultipleEntities) {
         receivedEvent = event;
     });
 
-    // Create payload with 3 entities
     Buffer payload;
-    payload.push_back(3);  // count = 3
+    payload.push_back(3);
 
     for (int i = 0; i < 3; ++i) {
         EntityMovePayload movePayload{};
@@ -235,12 +317,10 @@ TEST_F(NetworkClientTest, HandleEntityMoveBatch_FallbackToMoveCallback) {
     NetworkClient client;
     int moveCallbackCount = 0;
 
-    // Only set onEntityMove, not onEntityMoveBatch
     client.onEntityMove([&](EntityMoveEvent) { ++moveCallbackCount; });
 
-    // Create payload with 2 entities
     Buffer payload;
-    payload.push_back(2);  // count = 2
+    payload.push_back(2);
 
     for (int i = 0; i < 2; ++i) {
         EntityMovePayload movePayload{};
@@ -261,7 +341,6 @@ TEST_F(NetworkClientTest, HandleEntityMoveBatch_FallbackToMoveCallback) {
     client.handleEntityMoveBatch(header, payload);
     client.dispatchCallbacks();
 
-    // Should call onEntityMove for each entity
     EXPECT_EQ(moveCallbackCount, 2);
 }
 
@@ -271,12 +350,11 @@ TEST_F(NetworkClientTest, HandleEntityMoveBatch_FallbackToMoveCallback) {
 
 TEST_F(NetworkClientTest, HandleEntityHealth_PayloadTooSmall) {
     NetworkClient client;
-    Buffer smallPayload = {0, 1, 2};  // Too small for EntityHealthPayload
+    Buffer smallPayload = {0, 1, 2};
 
     Header header = createHeader(OpCode::S_ENTITY_HEALTH, 3);
 
     client.handleEntityHealth(header, smallPayload);
-    // Should return early
 }
 
 TEST_F(NetworkClientTest, HandleEntityHealth_ValidPayload) {
@@ -321,7 +399,6 @@ TEST_F(NetworkClientTest, HandleEntityHealth_NoCallback) {
     Header header = createHeader(OpCode::S_ENTITY_HEALTH,
                                  static_cast<std::uint16_t>(serialized.size()));
 
-    // Should not crash even without callback set
     client.handleEntityHealth(header, serialized);
     client.dispatchCallbacks();
 }
@@ -332,12 +409,11 @@ TEST_F(NetworkClientTest, HandleEntityHealth_NoCallback) {
 
 TEST_F(NetworkClientTest, HandlePowerUpEvent_PayloadTooSmall) {
     NetworkClient client;
-    Buffer smallPayload = {0, 1};  // Too small
+    Buffer smallPayload = {0, 1};
 
     Header header = createHeader(OpCode::S_POWERUP_EVENT, 2);
 
     client.handlePowerUpEvent(header, smallPayload);
-    // Should return early
 }
 
 TEST_F(NetworkClientTest, HandlePowerUpEvent_ValidPayload) {
@@ -382,7 +458,6 @@ TEST_F(NetworkClientTest, HandlePowerUpEvent_NoCallback) {
     Header header = createHeader(OpCode::S_POWERUP_EVENT,
                                  static_cast<std::uint16_t>(serialized.size()));
 
-    // Should not crash without callback
     client.handlePowerUpEvent(header, serialized);
     client.dispatchCallbacks();
 }
@@ -393,12 +468,11 @@ TEST_F(NetworkClientTest, HandlePowerUpEvent_NoCallback) {
 
 TEST_F(NetworkClientTest, HandleGameOver_PayloadTooSmall) {
     NetworkClient client;
-    Buffer smallPayload = {0, 1, 2};  // Too small for GameOverPayload
+    Buffer smallPayload = {0, 1, 2};
 
     Header header = createHeader(OpCode::S_GAME_OVER, 3);
 
     client.handleGameOver(header, smallPayload);
-    // Should return early
 }
 
 TEST_F(NetworkClientTest, HandleGameOver_ValidPayload) {
@@ -437,7 +511,6 @@ TEST_F(NetworkClientTest, HandleGameOver_NoCallback) {
     Header header = createHeader(OpCode::S_GAME_OVER,
                                  static_cast<std::uint16_t>(serialized.size()));
 
-    // Should not crash without callback
     client.handleGameOver(header, serialized);
     client.dispatchCallbacks();
 }
@@ -448,12 +521,11 @@ TEST_F(NetworkClientTest, HandleGameOver_NoCallback) {
 
 TEST_F(NetworkClientTest, HandleEntitySpawn_PayloadTooSmall) {
     NetworkClient client;
-    Buffer smallPayload = {0, 1, 2};  // Too small
+    Buffer smallPayload = {0, 1, 2};
 
     Header header = createHeader(OpCode::S_ENTITY_SPAWN, 3);
 
     client.handleEntitySpawn(header, smallPayload);
-    // Should return early
 }
 
 TEST_F(NetworkClientTest, HandleEntitySpawn_ValidPayload) {
@@ -491,12 +563,11 @@ TEST_F(NetworkClientTest, HandleEntitySpawn_ValidPayload) {
 
 TEST_F(NetworkClientTest, HandleEntityMove_PayloadTooSmall) {
     NetworkClient client;
-    Buffer smallPayload = {0, 1, 2};  // Too small
+    Buffer smallPayload = {0, 1, 2};
 
     Header header = createHeader(OpCode::S_ENTITY_MOVE, 3);
 
     client.handleEntityMove(header, smallPayload);
-    // Should return early
 }
 
 TEST_F(NetworkClientTest, HandleEntityMove_ValidPayload) {
@@ -536,12 +607,11 @@ TEST_F(NetworkClientTest, HandleEntityMove_ValidPayload) {
 
 TEST_F(NetworkClientTest, HandleEntityDestroy_PayloadTooSmall) {
     NetworkClient client;
-    Buffer smallPayload = {0, 1, 2};  // Too small
+    Buffer smallPayload = {0, 1, 2};
 
     Header header = createHeader(OpCode::S_ENTITY_DESTROY, 3);
 
     client.handleEntityDestroy(header, smallPayload);
-    // Should return early
 }
 
 TEST_F(NetworkClientTest, HandleEntityDestroy_ValidPayload) {
@@ -575,12 +645,11 @@ TEST_F(NetworkClientTest, HandleEntityDestroy_ValidPayload) {
 
 TEST_F(NetworkClientTest, HandleUpdatePos_PayloadTooSmall) {
     NetworkClient client;
-    Buffer smallPayload = {0, 1, 2};  // Too small
+    Buffer smallPayload = {0, 1, 2};
 
     Header header = createHeader(OpCode::S_UPDATE_POS, 3);
 
     client.handleUpdatePos(header, smallPayload);
-    // Should return early
 }
 
 TEST_F(NetworkClientTest, HandleUpdatePos_ValidPayload) {
@@ -623,7 +692,6 @@ TEST_F(NetworkClientTest, HandleUpdateState_PayloadTooSmall) {
     Header header = createHeader(OpCode::S_UPDATE_STATE, 0);
 
     client.handleUpdateState(header, emptyPayload);
-    // Should return early
 }
 
 TEST_F(NetworkClientTest, HandleUpdateState_ValidPayload) {
@@ -708,8 +776,6 @@ TEST_F(NetworkClientTest, QueueCallback_MultipleCallbacks) {
 TEST_F(NetworkClientTest, StartReceive_DoesNotCrash) {
     NetworkClient client;
 
-    // Should not crash even if socket is not connected
-    // startReceive has early return if socket is not open
     client.startReceive();
 }
 
@@ -722,7 +788,6 @@ TEST_F(NetworkClientTest, HandlePong_DoesNotCrash) {
     Header header = createHeader(OpCode::PONG, 0);
     Buffer emptyPayload;
 
-    // Should not crash
     client.handlePong(header, emptyPayload);
 }
 
@@ -766,7 +831,6 @@ TEST(PowerUpEventTest, DefaultValues) {
 
 TEST(GameStateEventTest, DefaultValues) {
     GameStateEvent event{};
-    // Default enum value
 }
 
 TEST(GameOverEventTest, DefaultValues) {
@@ -780,6 +844,262 @@ TEST(GameOverEventTest, DefaultValues) {
 
 TEST(NetworkClientConfigTest, DefaultConstruction) {
     NetworkClient::Config config;
-    // Should compile and not crash
     SUCCEED();
+}
+
+// =============================================================================
+// Integration Tests with MockSocket
+// =============================================================================
+
+TEST(NetworkClientIntegrationTest, ConnectAndAcceptInvokesOnConnected) {
+    NetworkClient::Config cfg;
+    auto mock = std::make_unique<MockSocket>();
+    MockSocket* mockPtr = mock.get();
+
+    NetworkClient client(cfg, std::move(mock), false);
+
+    bool called = false;
+    std::uint32_t gotId = 0;
+    client.onConnected([&](std::uint32_t myId) {
+        called = true;
+        gotId = myId;
+    });
+
+    EXPECT_TRUE(client.connect("127.0.0.1", 4242));
+
+    AcceptPayload ap{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(42))};
+    Buffer payload(sizeof(AcceptPayload));
+    std::memcpy(payload.data(), &ap, sizeof(AcceptPayload));
+    auto pkt = buildPacket(OpCode::S_ACCEPT, payload, 0);
+
+    Endpoint ep{"127.0.0.1", 4242};
+    mockPtr->pushIncoming(pkt, ep);
+
+    client.poll();
+
+    EXPECT_TRUE(called);
+    EXPECT_EQ(gotId, 42u);
+    EXPECT_TRUE(client.isConnected());
+}
+
+TEST(NetworkClientIntegrationTest, SendInputSendsPacketWhenConnected) {
+    NetworkClient::Config cfg;
+    auto mock = std::make_unique<MockSocket>();
+    MockSocket* mockPtr = mock.get();
+
+    NetworkClient client(cfg, std::move(mock), false);
+
+    EXPECT_TRUE(client.connect("127.0.0.1", 4242));
+    AcceptPayload ap{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(7))};
+    Buffer payload(sizeof(AcceptPayload));
+    std::memcpy(payload.data(), &ap, sizeof(AcceptPayload));
+    auto pkt = buildPacket(OpCode::S_ACCEPT, payload, 0);
+    Endpoint ep{"127.0.0.1", 4242};
+    mockPtr->pushIncoming(pkt, ep);
+    client.poll();
+
+    EXPECT_TRUE(client.isConnected());
+    EXPECT_TRUE(client.sendInput(InputMask::kUp | InputMask::kShoot));
+    ASSERT_GT(mockPtr->lastSent_.size(), 0u);
+    Header h; std::memcpy(&h, mockPtr->lastSent_.data(), kHeaderSize);
+    EXPECT_EQ(static_cast<OpCode>(h.opcode), OpCode::C_INPUT);
+}
+
+TEST(NetworkClientIntegrationTest, EntitySpawnAndDestroyCallbacks) {
+    NetworkClient::Config cfg;
+    auto mock = std::make_unique<MockSocket>();
+    MockSocket* mockPtr = mock.get();
+
+    NetworkClient client(cfg, std::move(mock), false);
+
+    bool spawnCalled = false;
+    std::uint32_t spawnedId = 0;
+    client.onEntitySpawn([&](EntitySpawnEvent ev) {
+        spawnCalled = true;
+        spawnedId = ev.entityId;
+    });
+
+    std::vector<std::uint32_t> destroyed;
+    client.onEntityDestroy([&](std::uint32_t id) { destroyed.push_back(id); });
+
+    EXPECT_TRUE(client.connect("127.0.0.1", 4242));
+    AcceptPayload ap{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(9))};
+    Buffer acc(sizeof(AcceptPayload)); std::memcpy(acc.data(), &ap, sizeof(AcceptPayload));
+    mockPtr->pushIncoming(buildPacket(OpCode::S_ACCEPT, acc, 0), {"127.0.0.1", 4242});
+    client.poll();
+
+    EntitySpawnPayload spawn{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(123)), static_cast<std::uint8_t>(EntityType::Player), 1.0f, 2.0f};
+    Buffer sp(sizeof(EntitySpawnPayload)); std::memcpy(sp.data(), &spawn, sizeof(spawn));
+    auto pkt_spawn = buildPacket(OpCode::S_ENTITY_SPAWN, sp, 0);
+    Header hspawn; std::memcpy(&hspawn, pkt_spawn.data(), kHeaderSize);
+    hspawn.flags |= Flags::kReliable;
+    hspawn.seqId = ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(55));
+    std::memcpy(pkt_spawn.data(), &hspawn, kHeaderSize);
+    mockPtr->pushIncoming(pkt_spawn, {"127.0.0.1", 4242});
+
+    client.poll();
+    ASSERT_GT(mockPtr->lastSent_.size(), 0u);
+    Header ackHdr; std::memcpy(&ackHdr, mockPtr->lastSent_.data(), kHeaderSize);
+    EXPECT_EQ(static_cast<OpCode>(ackHdr.opcode), OpCode::ACK);
+
+    EntityDestroyPayload d{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(123))};
+    Buffer dp(sizeof(EntityDestroyPayload)); std::memcpy(dp.data(), &d, sizeof(d));
+    mockPtr->pushIncoming(buildPacket(OpCode::S_ENTITY_DESTROY, dp, 0), {"127.0.0.1", 4242});
+
+    client.poll();
+
+    EXPECT_TRUE(spawnCalled);
+    EXPECT_EQ(spawnedId, 123u);
+    ASSERT_EQ(destroyed.size(), 1u);
+    EXPECT_EQ(destroyed[0], 123u);
+}
+
+TEST(NetworkClientIntegrationTest, ProcessIncomingTooSmallPacketIgnored) {
+    NetworkClient::Config cfg;
+    auto mock = std::make_unique<MockSocket>();
+    MockSocket* mockPtr = mock.get();
+
+    NetworkClient client(cfg, std::move(mock), false);
+
+    EXPECT_TRUE(client.connect("127.0.0.1", 4242));
+    AcceptPayload ap{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(7))};
+    Buffer payload(sizeof(AcceptPayload));
+    std::memcpy(payload.data(), &ap, sizeof(AcceptPayload));
+    mockPtr->pushIncoming(buildPacket(OpCode::S_ACCEPT, payload, 0), {"127.0.0.1", 4242});
+    client.poll();
+
+    mockPtr->lastSent_.clear();
+
+    std::vector<std::uint8_t> smallPkt(2, 0x00);
+    mockPtr->pushIncoming(smallPkt, {"127.0.0.1", 4242});
+
+    client.poll();
+
+    EXPECT_EQ(mockPtr->lastSent_.size(), 0u);
+}
+
+TEST(NetworkClientIntegrationTest, SendFunctionsReturnFalseWhenNotConnected) {
+    NetworkClient::Config cfg;
+    auto mock = std::make_unique<MockSocket>();
+
+    NetworkClient client(cfg, std::move(mock), false);
+
+    EXPECT_FALSE(client.sendInput(InputMask::kUp));
+    EXPECT_FALSE(client.ping());
+    EXPECT_FALSE(client.sendReady(true));
+}
+
+TEST(NetworkClientIntegrationTest, DisconnectOpcodeResetsConnection) {
+    NetworkClient::Config cfg;
+    auto mock = std::make_unique<MockSocket>();
+    MockSocket* mockPtr = mock.get();
+
+    NetworkClient client(cfg, std::move(mock), false);
+
+    EXPECT_TRUE(client.connect("127.0.0.1", 4242));
+    AcceptPayload ap{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(7))};
+    Buffer payload(sizeof(AcceptPayload));
+    std::memcpy(payload.data(), &ap, sizeof(AcceptPayload));
+    mockPtr->pushIncoming(buildPacket(OpCode::S_ACCEPT, payload, 0), {"127.0.0.1", 4242});
+    client.poll();
+
+    EXPECT_TRUE(client.isConnected());
+
+    mockPtr->pushIncoming(buildPacket(OpCode::DISCONNECT, {}, 0), {"127.0.0.1", 4242});
+    client.poll();
+
+    EXPECT_FALSE(client.isConnected());
+    EXPECT_FALSE(client.userId().has_value());
+}
+
+TEST(NetworkClientIntegrationTest, PingSendsPacket) {
+    NetworkClient::Config cfg;
+    auto mock = std::make_unique<MockSocket>();
+    MockSocket* mockPtr = mock.get();
+
+    NetworkClient client(cfg, std::move(mock), false);
+
+    EXPECT_TRUE(client.connect("127.0.0.1", 4242));
+    AcceptPayload ap{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(7))};
+    Buffer payload(sizeof(AcceptPayload));
+    std::memcpy(payload.data(), &ap, sizeof(AcceptPayload));
+    mockPtr->pushIncoming(buildPacket(OpCode::S_ACCEPT, payload, 0), {"127.0.0.1", 4242});
+    client.poll();
+
+    mockPtr->lastSent_.clear();
+
+    EXPECT_TRUE(client.ping());
+    client.poll();
+
+    ASSERT_GT(mockPtr->lastSent_.size(), 0u);
+    Header sentHdr; std::memcpy(&sentHdr, mockPtr->lastSent_.data(), kHeaderSize);
+    EXPECT_EQ(static_cast<OpCode>(sentHdr.opcode), OpCode::PING);
+}
+
+TEST(NetworkClientIntegrationTest, SendReadySendsPacketWhenConnected) {
+    NetworkClient::Config cfg;
+    auto mock = std::make_unique<MockSocket>();
+    MockSocket* mockPtr = mock.get();
+
+    NetworkClient client(cfg, std::move(mock), false);
+
+    EXPECT_TRUE(client.connect("127.0.0.1", 4242));
+    AcceptPayload ap{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(7))};
+    Buffer payload(sizeof(AcceptPayload));
+    std::memcpy(payload.data(), &ap, sizeof(AcceptPayload));
+    mockPtr->pushIncoming(buildPacket(OpCode::S_ACCEPT, payload, 0), {"127.0.0.1", 4242});
+    client.poll();
+
+    mockPtr->lastSent_.clear();
+
+    EXPECT_TRUE(client.sendReady(true));
+    client.poll();
+
+    ASSERT_GT(mockPtr->lastSent_.size(), 0u);
+    Header sentHdr; std::memcpy(&sentHdr, mockPtr->lastSent_.data(), kHeaderSize);
+    EXPECT_EQ(static_cast<OpCode>(sentHdr.opcode), OpCode::C_READY);
+}
+
+TEST(NetworkClientIntegrationTest, AddRemoveConnectedCallback) {
+    NetworkClient::Config cfg;
+    auto mock = std::make_unique<MockSocket>();
+    MockSocket* mockPtr = mock.get();
+
+    NetworkClient client(cfg, std::move(mock), false);
+
+    bool called = false;
+    auto id = client.addConnectedCallback([&](std::uint32_t) { called = true; });
+    client.removeConnectedCallback(id);
+
+    EXPECT_TRUE(client.connect("127.0.0.1", 4242));
+    AcceptPayload ap{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(7))};
+    Buffer payload(sizeof(AcceptPayload));
+    std::memcpy(payload.data(), &ap, sizeof(AcceptPayload));
+    mockPtr->pushIncoming(buildPacket(OpCode::S_ACCEPT, payload, 0), {"127.0.0.1", 4242});
+    client.poll();
+
+    EXPECT_FALSE(called);
+}
+
+TEST(NetworkClientIntegrationTest, AddRemoveDisconnectedCallback) {
+    NetworkClient::Config cfg;
+    auto mock = std::make_unique<MockSocket>();
+    MockSocket* mockPtr = mock.get();
+
+    NetworkClient client(cfg, std::move(mock), false);
+
+    bool called = false;
+    auto id = client.addDisconnectedCallback([&](DisconnectReason) { called = true; });
+    client.removeDisconnectedCallback(id);
+
+    EXPECT_TRUE(client.connect("127.0.0.1", 4242));
+    AcceptPayload ap{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(7))};
+    Buffer payload(sizeof(AcceptPayload)); std::memcpy(payload.data(), &ap, sizeof(AcceptPayload));
+    mockPtr->pushIncoming(buildPacket(OpCode::S_ACCEPT, payload, 0), {"127.0.0.1", 4242});
+    client.poll();
+
+    mockPtr->pushIncoming(buildPacket(OpCode::DISCONNECT, {}, 0), {"127.0.0.1", 4242});
+    client.poll();
+
+    EXPECT_FALSE(called);
 }

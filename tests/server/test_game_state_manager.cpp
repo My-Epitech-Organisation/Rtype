@@ -77,13 +77,71 @@ TEST_F(GameStateManagerTest, PlayerReady_DuplicatePlayer) {
 TEST_F(GameStateManagerTest, PlayerReady_WhenAlreadyPlaying) {
     GameStateManager manager(1);
 
-    manager.playerReady(1);  // This triggers playing
-    EXPECT_TRUE(manager.isPlaying());
+    manager.playerReady(1);
+    // Now countdown should be active instead of immediate playing
+    EXPECT_FALSE(manager.isPlaying());
+    EXPECT_TRUE(manager.isCountdownActive());
 
     bool result = manager.playerReady(2);
 
-    EXPECT_FALSE(result);
+    // Adding another player should succeed and increase ready count
+    EXPECT_TRUE(result);
+    EXPECT_EQ(manager.getReadyPlayerCount(), 2u);
+}
+
+TEST_F(GameStateManagerTest, PlayerReady_WithZeroMinPlayers) {
+    GameStateManager manager(0);
+
+    // With 0 min players, should start countdown (but not immediately play)
+    manager.playerReady(1);
+    EXPECT_FALSE(manager.isPlaying());
+    EXPECT_TRUE(manager.isCountdownActive());
+}
+
+TEST_F(GameStateManagerTest, PlayerLeft_LastPlayer_PausesGame) {
+    GameStateManager manager(1);
+
+    manager.playerReady(1);
+    EXPECT_TRUE(manager.isCountdownActive());
+
+    manager.playerLeft(1);
+    // Countdown cancelled and no game started
+    EXPECT_FALSE(manager.isCountdownActive());
+    EXPECT_FALSE(manager.isPlaying());
+    EXPECT_EQ(manager.getReadyPlayerCount(), 0u);
+}
+
+TEST_F(GameStateManagerTest, PlayerLeft_NotLastPlayer_ContinuesGame) {
+    GameStateManager manager(2);
+
+    manager.playerReady(1);
+    manager.playerReady(2);
+    EXPECT_TRUE(manager.isCountdownActive());
+
+    // Leave player 1, player 2 still in ready set
+    manager.playerLeft(1);
+    
+    // Countdown should be cancelled because ready < min required
+    EXPECT_FALSE(manager.isCountdownActive());
+    EXPECT_FALSE(manager.isPlaying());
     EXPECT_EQ(manager.getReadyPlayerCount(), 1u);
+}
+
+TEST_F(GameStateManagerTest, PlayerLeft_WithZeroConnected_CancelsCountdown) {
+    GameStateManager manager(1);
+
+    // Simulate uninitialized/zero connected players
+    manager.setConnectedPlayerCount(0);
+
+    manager.playerReady(1);
+    EXPECT_TRUE(manager.isCountdownActive());
+
+    manager.playerLeft(1);
+
+    EXPECT_FALSE(manager.isCountdownActive());
+    EXPECT_FALSE(manager.isPlaying());
+    EXPECT_TRUE(manager.isWaiting());
+    EXPECT_EQ(manager.getReadyPlayerCount(), 0u);
 }
 
 TEST_F(GameStateManagerTest, PlayerReady_TriggersAutoStart) {
@@ -93,15 +151,51 @@ TEST_F(GameStateManagerTest, PlayerReady_TriggersAutoStart) {
     EXPECT_FALSE(manager.isPlaying());
 
     manager.playerReady(2);
+    // Now countdown should be active but game should not yet be playing
+    EXPECT_FALSE(manager.isPlaying());
+    EXPECT_TRUE(manager.isCountdownActive());
+}
+
+TEST_F(GameStateManagerTest, Countdown_Finishes_StartsGame) {
+    GameStateManager manager(2);
+
+    manager.playerReady(1);
+    manager.playerReady(2);
+    EXPECT_TRUE(manager.isCountdownActive());
+
+    // Fast-forward beyond default countdown
+    manager.update(5.0f);
     EXPECT_TRUE(manager.isPlaying());
 }
 
-TEST_F(GameStateManagerTest, PlayerReady_WithZeroMinPlayers) {
-    GameStateManager manager(0);
+TEST_F(GameStateManagerTest, Countdown_Cancelled_ByUnready) {
+    GameStateManager manager(2);
 
-    // With 0 min players, should auto-start immediately
     manager.playerReady(1);
-    EXPECT_TRUE(manager.isPlaying());
+    manager.playerReady(2);
+    EXPECT_TRUE(manager.isCountdownActive());
+
+    // One player becomes not ready
+    manager.playerNotReady(2);
+    EXPECT_FALSE(manager.isCountdownActive());
+    EXPECT_FALSE(manager.isPlaying());
+    EXPECT_TRUE(manager.isWaiting());
+}
+
+TEST_F(GameStateManagerTest, Countdown_Cancelled_FromPaused_ByUnready) {
+    GameStateManager manager(2);
+
+    // Start from Paused and then satisfy auto-start conditions
+    manager.transitionTo(GameState::Paused);
+    manager.playerReady(1);
+    manager.playerReady(2);
+    EXPECT_TRUE(manager.isCountdownActive());
+
+    // One player becomes not ready - countdown should cancel and state should be WaitingForPlayers
+    manager.playerNotReady(2);
+    EXPECT_FALSE(manager.isCountdownActive());
+    EXPECT_FALSE(manager.isPlaying());
+    EXPECT_TRUE(manager.isWaiting());
 }
 
 // ============================================================================
@@ -128,31 +222,7 @@ TEST_F(GameStateManagerTest, PlayerLeft_NonExistentPlayer) {
     EXPECT_EQ(manager.getReadyPlayerCount(), 1u);
 }
 
-TEST_F(GameStateManagerTest, PlayerLeft_LastPlayer_PausesGame) {
-    GameStateManager manager(1);
 
-    manager.playerReady(1);
-    EXPECT_TRUE(manager.isPlaying());
-
-    manager.playerLeft(1);
-    EXPECT_TRUE(manager.isGameOver());
-    EXPECT_EQ(manager.getReadyPlayerCount(), 0u);
-}
-
-TEST_F(GameStateManagerTest, PlayerLeft_NotLastPlayer_ContinuesGame) {
-    GameStateManager manager(2);
-
-    manager.playerReady(1);
-    manager.playerReady(2);
-    EXPECT_TRUE(manager.isPlaying());
-
-    // Leave player 1, player 2 still in ready set
-    manager.playerLeft(1);
-    
-    // Game continues because there's still one player
-    EXPECT_TRUE(manager.isPlaying());  // Still playing because 1 player remains
-    EXPECT_EQ(manager.getReadyPlayerCount(), 1u);
-}
 
 // ============================================================================
 // STATE TRANSITION TESTS
@@ -377,7 +447,8 @@ TEST_F(GameStateManagerTest, AutoStart_FromPaused) {
 
     manager.playerReady(1);
 
-    EXPECT_TRUE(manager.isPlaying());
+    // Paused -> ready should start countdown, not immediately play
+    EXPECT_TRUE(manager.isCountdownActive());
 }
 
 TEST_F(GameStateManagerTest, CheckAutoStart_FromPlaying_NoTransition) {

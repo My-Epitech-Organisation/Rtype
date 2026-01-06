@@ -125,6 +125,11 @@ class Connection {
      */
     void recordAck(std::uint16_t ackId) noexcept;
 
+    /**
+     * @brief Record that a packet was sent (updates last sent time)
+     */
+    void recordPacketSent() noexcept;
+
 
     [[nodiscard]] ConnectionState state() const noexcept;
 
@@ -207,11 +212,10 @@ class Connection {
     void processReliabilityAck(const Header& header);
     void queuePacket(Buffer data, bool reliable);
     [[nodiscard]] std::uint16_t nextSequenceId() noexcept;
-    void recordPacketSent() noexcept;
     [[nodiscard]] bool shouldSendKeepalive() const noexcept;
     void updatePingTracking() noexcept;
 
-    static constexpr Duration kKeepaliveInterval{3000};  // 3 seconds
+    static constexpr Duration kKeepaliveInterval{3000};   // 3 seconds
     static constexpr int kMaxMissedPings{3};
 
     Config config_;
