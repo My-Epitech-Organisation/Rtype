@@ -17,7 +17,7 @@ ColorTintSystem::ColorTintSystem()
     : ::rtype::engine::ASystem("ColorTintSystem") {}
 
 void ColorTintSystem::update(ECS::Registry& registry, float dt) {
-    registry.view<Image, ColorTint>().each([](auto entity, auto& spriteData,
+    registry.view<Image, ColorTint>().each([](auto /*entity*/, auto& spriteData,
                                               auto& tint) {
         spriteData.sprite.setColor(sf::Color(tint.r, tint.g, tint.b, tint.a));
     });
