@@ -351,6 +351,25 @@ else()
     gtest_discover_tests(test_network_client)
 endif()
 
+# Network client branch coverage tests
+add_executable(test_network_client_branches test_network_client_branches.cpp)
+
+target_link_libraries(test_network_client_branches PRIVATE
+    GTest::gtest_main
+    network
+    rtype_client_network
+)
+
+target_include_directories(test_network_client_branches PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_network_client_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_network_client_branches)
+endif()
+
     target_include_directories(test_pause_menu PRIVATE
         ${CMAKE_SOURCE_DIR}/src
     )
