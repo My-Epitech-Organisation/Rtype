@@ -401,7 +401,8 @@ Graphic::Graphic(
         rtype::games::rtype::shared::EntityConfigRegistry::getInstance();
     entityConfigRegistry.loadEnemiesWithSearch("config/game/enemies.toml");
     entityConfigRegistry.loadPlayersWithSearch("config/game/players.toml");
-    entityConfigRegistry.loadProjectilesWithSearch("config/game/projectiles.toml");
+    entityConfigRegistry.loadProjectilesWithSearch(
+        "config/game/projectiles.toml");
     entityConfigRegistry.loadPowerUpsWithSearch("config/game/powerups.toml");
     LOG_DEBUG("[Graphic] Entity configurations loaded");
 
