@@ -236,7 +236,7 @@ TEST(NetworkIntegration, ReliableSpawnDeliveredDespitePacketLoss) {
 
     // Ask server to spawn an entity reliably
     constexpr std::uint32_t entityId = 10001;
-    server.spawnEntity(entityId, network::EntityType::Bydos, 100.0f, 200.0f);
+    server.spawnEntity(entityId, network::EntityType::Bydos, 0, 100.0f, 200.0f);
 
     // Wait for client to receive spawn (with a generous timeout; retransmits will happen automatically)
     start = std::chrono::steady_clock::now();

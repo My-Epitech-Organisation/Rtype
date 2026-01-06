@@ -61,7 +61,7 @@ TEST(NetworkServerMessages, DeliverVariousMessages) {
 
     // Spawn entity (reliable)
     constexpr std::uint32_t entityId = 5001;
-    server.spawnEntity(entityId, network::EntityType::Bydos, 10.0f, 20.0f);
+    server.spawnEntity(entityId, network::EntityType::Bydos, 0, 10.0f, 20.0f);
 
     // Move entity (unreliable)
     server.moveEntity(entityId, 15.0f, 25.0f, 1.0f, 1.0f);
