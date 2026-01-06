@@ -26,7 +26,6 @@ bool GameStateManager::playerReady(std::uint32_t userId) {
 
     auto [_, inserted] = _readyPlayers.insert(userId);
     if (inserted) {
-
         LOG_INFO_CAT(rtype::LogCategory::GameEngine,
                      "[GameState] Player "
                          << userId << " is ready (" << _readyPlayers.size()
