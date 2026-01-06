@@ -91,6 +91,9 @@ TEST(OpCodeCoverage, IsValidOpCodeAllValues) {
     EXPECT_TRUE(isValidOpCode(0x05));  // R_GET_USERS
     EXPECT_TRUE(isValidOpCode(0x06));  // S_UPDATE_STATE
     EXPECT_TRUE(isValidOpCode(0x07));  // S_GAME_OVER
+    EXPECT_TRUE(isValidOpCode(0x08));  // C_READY
+    EXPECT_TRUE(isValidOpCode(0x09));  // S_GAME_START
+    EXPECT_TRUE(isValidOpCode(0x0A));  // S_PLAYER_READY_STATE
     EXPECT_TRUE(isValidOpCode(0x10));  // S_ENTITY_SPAWN
     EXPECT_TRUE(isValidOpCode(0x11));  // S_ENTITY_MOVE
     EXPECT_TRUE(isValidOpCode(0x12));  // S_ENTITY_DESTROY
@@ -101,9 +104,10 @@ TEST(OpCodeCoverage, IsValidOpCodeAllValues) {
     EXPECT_TRUE(isValidOpCode(0x21));  // S_UPDATE_POS
     EXPECT_TRUE(isValidOpCode(0xF0));  // PING
     EXPECT_TRUE(isValidOpCode(0xF1));  // PONG
+    EXPECT_TRUE(isValidOpCode(0xF2));  // ACK
 
     EXPECT_FALSE(isValidOpCode(0x00));
-    EXPECT_FALSE(isValidOpCode(0x08));
+    EXPECT_FALSE(isValidOpCode(0x0B));
     EXPECT_FALSE(isValidOpCode(0x0F));
     EXPECT_FALSE(isValidOpCode(0x16));
     EXPECT_FALSE(isValidOpCode(0x30));
