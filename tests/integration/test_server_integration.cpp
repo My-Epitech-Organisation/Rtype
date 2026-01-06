@@ -192,6 +192,7 @@ TEST_F(ServerIntegrationTest, StartsInWaitingForPlayersState) {
  */
 TEST_F(ServerIntegrationTest, PlayerReadyStartsGame) {
     ServerApp server(4254, 4, 60, _shutdownFlag, 10, false);
+    server.setDefaultCountdown(0.0f);
 
     std::thread serverThread([&server]() {
         server.run();

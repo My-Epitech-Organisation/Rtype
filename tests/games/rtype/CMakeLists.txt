@@ -151,6 +151,27 @@ else()
     gtest_discover_tests(test_collision)
 endif()
 
+# Extra collision tests (covers pickups and obstacles)
+add_executable(test_collision_extra test_collision_extra.cpp)
+
+target_link_libraries(test_collision_extra PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_collision_extra PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_collision_extra WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_collision_extra)
+endif()
+
 # Engine base class tests (AGameEngine, ASystem)
 add_executable(test_engine test_engine.cpp)
 
@@ -294,12 +315,31 @@ else()
     gtest_discover_tests(test_aabb)
 endif()
 
-# RTypeEntitySpawner tests - DISABLED due to complex NetworkServer mocking requirements
-# These tests require significant refactoring of ServerNetworkSystem to support proper mocking
-# add_executable(test_entity_spawner test_entity_spawner.cpp)
-# target_link_libraries(test_entity_spawner PRIVATE rtype_game_shared rtype_game_server rtype_server_core rtype_server_network network engine GTest::gtest_main)
-# target_include_directories(test_entity_spawner PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
-# gtest_discover_tests(test_entity_spawner)
+# RTypeEntitySpawner tests
+# These tests were previously disabled due to complex NetworkServer mocking requirements.
+# The tests provide an in-test mock (MockServerNetworkSystem) so enabling the target is safe.
+add_executable(test_entity_spawner test_entity_spawner.cpp)
+
+target_link_libraries(test_entity_spawner PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    rtype_server_core
+    rtype_server_network
+    network
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_entity_spawner PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_entity_spawner WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_entity_spawner)
+endif()
 
 # PowerUpSystem tests
 add_executable(test_powerup_system test_powerup_system.cpp)
