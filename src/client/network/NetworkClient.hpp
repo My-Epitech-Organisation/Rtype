@@ -76,6 +76,24 @@ struct PowerUpEvent {
 };
 
 /**
+ * @brief Event data for lobby information
+ */
+struct LobbyInfo {
+    std::string code;
+    std::uint16_t port;
+    std::uint8_t playerCount;
+    std::uint8_t maxPlayers;
+    bool isActive;
+};
+
+/**
+ * @brief Event data for lobby list response
+ */
+struct LobbyListEvent {
+    std::vector<LobbyInfo> lobbies;
+};
+
+/**
  * @brief Event data for game state change
  */
 struct GameStateEvent {
@@ -242,6 +260,22 @@ class NetworkClient {
     bool sendReady(bool isReady);
 
     /**
+     * @brief Request lobby list from discovery server
+     *
+     * Sends C_REQUEST_LOBBIES to the server. Response will be delivered
+     * via onLobbyListReceived callback.
+     *
+     * Note: Should be sent to discovery server port (typically base port),
+     * not a specific lobby port.
+     *
+     * @param discoveryIp IP address of discovery server (default: 127.0.0.1)
+     * @param discoveryPort Port of discovery server (default: 4242)
+     * @return true if sent successfully
+     */
+    bool requestLobbyList(const std::string& discoveryIp = "127.0.0.1",
+                          std::uint16_t discoveryPort = 4242);
+
+    /**
      * @brief Register callback for successful connection
      * @param callback Function receiving the assigned user ID
      */
@@ -325,6 +359,12 @@ class NetworkClient {
         std::function<void(std::uint32_t userId, bool isReady)> callback);
 
     /**
+     * @brief Register callback for lobby list response
+     * @param callback Function receiving the list of available lobbies
+     */
+    void onLobbyListReceived(std::function<void(LobbyListEvent)> callback);
+
+    /**
      * @brief Process network events and dispatch callbacks
      *
      * Must be called regularly (e.g., each game frame) to:
@@ -371,6 +411,8 @@ class NetworkClient {
                          const network::Buffer& payload);
     void handlePlayerReadyState(const network::Header& header,
                                 const network::Buffer& payload);
+    void handleLobbyList(const network::Header& header,
+                         const network::Buffer& payload);
     void handlePong(const network::Header& header,
                     const network::Buffer& payload);
 
@@ -417,6 +459,7 @@ class NetworkClient {
     std::function<void(float)> onGameStartCallback_;
     std::function<void(std::uint32_t, bool)> onPlayerReadyStateChangedCallback_;
     std::function<void(PowerUpEvent)> onPowerUpCallback_;
+    std::function<void(LobbyListEvent)> onLobbyListReceivedCallback_;
 
     std::thread networkThread_;
     std::atomic<bool> networkThreadRunning_{false};
