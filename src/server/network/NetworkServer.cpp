@@ -511,12 +511,10 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
     if (header.flags & network::Flags::kIsAck) {
         auto client = findClient(sender);
         if (client) {
-            auto ackId = network::ByteOrderSpec::fromNetwork(header.ackId);
             LOG_DEBUG("[NetworkServer] Processing ACK from userId="
-                      << header.userId << " ackId=" << ackId << " (seqId="
-                      << network::ByteOrderSpec::fromNetwork(header.seqId)
-                      << ")");
-            client->reliableChannel.recordAck(ackId);
+                      << header.userId << " ackId=" << header.ackId << " (seqId="
+                      << header.seqId << ")");
+            client->reliableChannel.recordAck(header.ackId);
             client->lastActivity = std::chrono::steady_clock::now();
         }
     }
