@@ -359,8 +359,6 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
                                 WaveConfig::SpawnEntry spawn;
                                 spawn.enemyId =
                                     (*spawnTbl)["enemy"].value_or("");
-                                // Use optional for x,y - nullopt if not
-                                // specified
                                 if (auto xVal =
                                         (*spawnTbl)["x"].value<double>()) {
                                     spawn.x = static_cast<float>(*xVal);
