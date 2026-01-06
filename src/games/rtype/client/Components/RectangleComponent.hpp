@@ -24,7 +24,7 @@ struct Rectangle {
     std::pair<float, float> size;
     display::Color mainColor;
     display::Color hoveredColor;
-    display::Color currentColor = mainColor;
+    display::Color currentColor;
     float outlineThickness = 0;
     display::Color outlineColor = display::Color::Black();
 
@@ -36,7 +36,10 @@ struct Rectangle {
      */
     Rectangle(const std::pair<float, float>& size, const display::Color& color,
               const display::Color& hoveredColor)
-        : size(size), mainColor(color), hoveredColor(hoveredColor) {}
+        : size(size),
+          mainColor(color),
+          hoveredColor(hoveredColor),
+          currentColor(color) {}
 
     Rectangle(const Rectangle& other) = default;
     Rectangle(Rectangle&& other) noexcept = default;

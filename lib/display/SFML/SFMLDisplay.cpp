@@ -276,7 +276,14 @@ std::shared_ptr<ISound> SFMLDisplay::createSound(std::shared_ptr<ISoundBuffer> b
 
 void SFMLDisplay::loadShader(const std::string& name, const std::string& vertexPath, const std::string& fragmentPath) {
     auto shader = std::make_unique<sf::Shader>();
-    if (shader->loadFromFile(vertexPath, fragmentPath)) {
+    bool loaded = false;
+    if (vertexPath.empty() && !fragmentPath.empty()) {
+        loaded = shader->loadFromFile(fragmentPath, sf::Shader::Type::Fragment);
+    } else {
+        loaded = shader->loadFromFile(vertexPath, fragmentPath);
+    }
+
+    if (loaded) {
         _shaders[name] = std::move(shader);
     }
 }

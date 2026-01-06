@@ -341,6 +341,11 @@ void Graphic::_initializeCommonAssets() {
     manager->textureManager->get("bg_big_asteroids")->setRepeated(true);
     manager->textureManager->get("bg_fst_plan_asteroids")->setRepeated(true);
     manager->textureManager->get("bg_snd_plan_asteroids")->setRepeated(true);
+
+    if (_display) {
+        _display->loadShader("colorShader", "",
+                             "assets/shaders/colorblind.frag");
+    }
 }
 
 Graphic::Graphic(

@@ -271,7 +271,7 @@ void SettingsScene::_initAudioSection() {
                 }
             }));
         this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-            minusBtn);
+            minusBtn, 1);
         this->_listEntity.push_back(minusBtn);
 
         auto plusBtn = EntityFactory::createButton(
@@ -280,7 +280,7 @@ void SettingsScene::_initAudioSection() {
                 font, rtype::display::Color::White(), 24, "+"),
             rtype::games::rtype::shared::TransformComponent(plusX, y),
             rtype::games::rtype::client::Rectangle(
-                {50, 50}, rtype::display::Color::Blue(),
+                {50, 50}, rtype::display::Color::Yellow(),
                 rtype::display::Color::Red()),
             this->_assetsManager,
             std::function<void()>([this, valueEntity, isMusic, label]() {
@@ -305,7 +305,7 @@ void SettingsScene::_initAudioSection() {
                 }
             }));
         this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-            plusBtn);
+            plusBtn, 1);
         this->_listEntity.push_back(plusBtn);
     };
 
