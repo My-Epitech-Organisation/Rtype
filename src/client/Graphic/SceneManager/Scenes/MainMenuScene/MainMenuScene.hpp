@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "AudioLib/AudioLib.hpp"
 
@@ -22,6 +23,7 @@ static constexpr int nbr_vessels = 7;
 
 class MainMenuScene : public AScene {
    private:
+    bool _connectPopUpVisible = false;
     /// @brief Network client for server communication
     std::shared_ptr<rtype::client::NetworkClient> _networkClient;
 
@@ -88,6 +90,9 @@ class MainMenuScene : public AScene {
 
    private:
     std::shared_ptr<AudioLib> _audioLib;
+    std::vector<rtype::client::NetworkClient::CallbackId> _connectedCallbackIds;
+    std::vector<rtype::client::NetworkClient::CallbackId>
+        _disconnectedCallbackIds;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_MAINMENUSCENE_MAINMENUSCENE_HPP_

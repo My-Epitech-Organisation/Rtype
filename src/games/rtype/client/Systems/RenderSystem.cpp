@@ -68,7 +68,7 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry,
         registry.hasComponent<HudTag>(entity) ||
         registry.hasComponent<rs::DestroyTag>(entity))
         return;
-    auto& rectData = registry.getComponent<Rectangle>(entity);
+    auto& rectData = registry.getComponent<Rectangle>(entity);  // Référence !
     const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
     display::Vector2f position = {static_cast<float>(pos.x),
@@ -106,7 +106,7 @@ void RenderSystem::_renderHudRectangles(ECS::Registry& registry,
     this->_display->setView(center, viewSize);
 }
 
-void RenderSystem::_renderTextInput(ECS::Registry& registry,
+void RenderSystem::_renderTextInputs(ECS::Registry& registry,
                                     ECS::Entity entity) {
     if (!registry.hasComponent<TextInput>(entity) ||
         !registry.hasComponent<rs::TransformComponent>(entity) ||
@@ -231,12 +231,17 @@ void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
 
     std::sort(sortedEntities.begin(), sortedEntities.end(),
               [&registry](ECS::Entity a, ECS::Entity b) {
+                  if (!registry.isAlive(a) || !registry.hasComponent<ZIndex>(a))
+                      return true;
+                  if (!registry.isAlive(b) || !registry.hasComponent<ZIndex>(b))
+                      return false;
                   const auto& za = registry.getComponent<ZIndex>(a);
                   const auto& zb = registry.getComponent<ZIndex>(b);
                   return za.depth < zb.depth;
               });
 
     for (auto entity : sortedEntities) {
+        if (!registry.isAlive(entity)) continue;
         if (isEntityHidden(registry, entity)) continue;
 
         if (registry.hasComponent<Image>(entity))
@@ -248,7 +253,7 @@ void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
         if (registry.hasComponent<StaticTextTag>(entity))
             this->_renderStaticText(registry, entity);
         if (registry.hasComponent<TextInput>(entity))
-            this->_renderTextInput(registry, entity);
+            this->_renderTextInputs(registry, entity);
         if (registry.hasComponent<HudTag>(entity))
             this->_renderHudRectangles(registry, entity);
     }

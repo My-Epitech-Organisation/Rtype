@@ -134,14 +134,13 @@ std::vector<ECS::Entity> EntityFactory::createBackground(
 std::vector<ECS::Entity> EntityFactory::createSection(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> /*assets*/, std::string_view title,
-    const ::rtype::display::Vector2f& position,
-    const ::rtype::display::Vector2f& size) {
+    const ::rtype::display::Rect<float>& bounds, int ZindexRect) {
     std::vector<ECS::Entity> entities;
     auto bg = registry->spawnEntity();
     registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
-        bg, position.x, position.y);
+        bg, bounds.left, bounds.top);
     registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
-        bg, std::pair<float, float>{size.x, size.y},
+        bg, std::pair<float, float>{bounds.width, bounds.height},
         ::rtype::display::Color(0, 0, 0, 150),
         ::rtype::display::Color(0, 0, 0, 150));
 
@@ -159,14 +158,16 @@ std::vector<ECS::Entity> EntityFactory::createSection(
 
     auto titleEnt = registry->spawnEntity();
     registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
-        titleEnt, position.x + 20.f,
-        position.y + cfg::SECTION_TITLE_OFFSET_Y +
+        titleEnt, bounds.left + 20.f,
+        bounds.top + cfg::SECTION_TITLE_OFFSET_Y +
             cfg::SECTION_TITLE_FONT_SIZE / 2.0f);
     registry->emplaceComponent<rtype::games::rtype::client::Text>(
         titleEnt, "title_font", ::rtype::display::Color::White(),
         cfg::SECTION_TITLE_FONT_SIZE, std::string(title));
     registry->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
         titleEnt);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        titleEnt, ZindexRect + 1);
     entities.push_back(titleEnt);
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(titleEnt,
                                                                     1);
@@ -185,6 +186,26 @@ ECS::Entity EntityFactory::createRectangle(
         fill, fill);
     registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
         entt, position.x, position.y);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entt, 1);
+    return entt;
+}
+
+ECS::Entity EntityFactory::createLobbyPlayer(
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assetManager, ::rtype::display::Vector2<float> position,
+    ::rtype::display::Vector2<int> scale, bool isControllable) {
+    auto entt = registry->spawnEntity();
+    registry->emplaceComponent<rtype::games::rtype::client::Image>(entt,
+                                                                   "player_vessel");
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        entt, position.x, position.y);
+    registry->emplaceComponent<rtype::games::rtype::client::Size>(
+        entt, static_cast<float>(scale.x), static_cast<float>(scale.y));
+    if (isControllable) {
+        registry
+            ->emplaceComponent<rtype::games::rtype::client::ControllableTag>(
+                entt);
+    }
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entt, 1);
     return entt;
 }

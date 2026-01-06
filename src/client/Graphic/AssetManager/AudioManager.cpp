@@ -16,12 +16,13 @@ void AudioManager::load(const std::string& id, const std::string& filePath) {
     auto music = _display->getMusic(id);
 
     if (!music) {
-        LOG_ERROR("Error unable to open music: " + filePath);
+        LOG_ERROR_CAT(::rtype::LogCategory::Audio,
+                      "Error unable to open music: " + filePath);
         throw std::runtime_error("Error while loading music: " + filePath);
     }
 
     this->_assets[id] = music;
-    LOG_INFO("Audio saved with ID: " + id);
+    LOG_INFO_CAT(::rtype::LogCategory::Audio, "Audio saved with ID: " + id);
 }
 
 std::shared_ptr<::rtype::display::IMusic> AudioManager::get(
@@ -29,7 +30,8 @@ std::shared_ptr<::rtype::display::IMusic> AudioManager::get(
     auto it = this->_assets.find(id);
 
     if (it == this->_assets.end()) {
-        LOG_ERROR("Error music not found: " + id);
+        LOG_ERROR_CAT(::rtype::LogCategory::Audio,
+                      "Error music not found: " + id);
         throw std::out_of_range("Error music not found: " + id);
     }
 

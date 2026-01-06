@@ -15,9 +15,9 @@
 
 namespace {
 static constexpr float kSectionX = 350.f;
-static constexpr float kSectionY = 220.f;
+static constexpr float kSectionY = 250.f;
 static constexpr float kSectionW = 1220.f;
-static constexpr float kSectionH = 700.f;
+static constexpr float kSectionH = 600.f;
 }  // namespace
 
 HowToPlayScene::HowToPlayScene(
@@ -32,8 +32,7 @@ HowToPlayScene::HowToPlayScene(
       _switchToScene(std::move(switchToScene)) {
     this->_listEntity = EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "How to Play");
-    _initLayout();
-
+    this->_initLayout();
     auto backBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
@@ -46,8 +45,9 @@ HowToPlayScene::HowToPlayScene(
             try {
                 this->_switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Main Menu: ") +
-                          std::string(e.what()));
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              std::string("Error switching to Main Menu: ") +
+                                  std::string(e.what()));
             }
         }));
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
@@ -64,8 +64,7 @@ std::string HowToPlayScene::_keyName(GameAction action) const {
 void HowToPlayScene::_initLayout() {
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "How to Play",
-        rtype::display::Vector2<float>(kSectionX, kSectionY),
-        rtype::display::Vector2<float>(kSectionW, kSectionH));
+        rtype::display::Rect<float>(kSectionX, kSectionY, kSectionW, kSectionH));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
@@ -109,8 +108,9 @@ void HowToPlayScene::pollEvents(const rtype::display::Event& e) {
             try {
                 _switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& err) {
-                LOG_ERROR(std::string("Error switching to Main Menu: ") +
-                          std::string(err.what()));
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              std::string("Error switching to Main Menu: ") +
+                                  std::string(err.what()));
             }
         }
     }

@@ -240,12 +240,12 @@ void RTypeEntitySpawner::updateAllPlayersMovement(
         return;
     }
 
-    auto view =
-        _registry
-            ->view<shared::TransformComponent, shared::VelocityComponent>();
+    auto view = _registry->view<shared::TransformComponent,
+                                shared::VelocityComponent, shared::PlayerTag>();
     view.each([this, deltaTime, &callback](ECS::Entity entity,
                                            shared::TransformComponent& pos,
-                                           shared::VelocityComponent& vel) {
+                                           shared::VelocityComponent& vel,
+                                           const shared::PlayerTag& /*tag*/) {
         if (vel.vx == 0.0F && vel.vy == 0.0F) {
             return;
         }

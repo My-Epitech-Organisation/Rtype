@@ -14,6 +14,7 @@ namespace rtype::games::rtype::server {
 
 using shared::DestroyTag;
 using shared::EnemyTag;
+using shared::ProjectileTag;
 using shared::TransformComponent;
 
 CleanupSystem::CleanupSystem(EventEmitter emitter, CleanupConfig config)
@@ -22,21 +23,25 @@ CleanupSystem::CleanupSystem(EventEmitter emitter, CleanupConfig config)
       _config(config) {}
 
 void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
-    auto view = registry.view<TransformComponent, EnemyTag>();
+    auto isOutOfBounds = [this](const TransformComponent& transform) {
+        return transform.x < _config.leftBoundary ||
+               transform.x > _config.rightBoundary ||
+               transform.y < _config.topBoundary ||
+               transform.y > _config.bottomBoundary;
+    };
 
-    view.each([this, &registry](ECS::Entity entity,
-                                const TransformComponent& transform,
-                                const EnemyTag& /*tag*/) {
-        bool outOfBounds = transform.x < _config.leftBoundary ||
-                           transform.x > _config.rightBoundary ||
-                           transform.y < _config.topBoundary ||
-                           transform.y > _config.bottomBoundary;
+    auto enemyView = registry.view<TransformComponent, EnemyTag>();
 
-        if (outOfBounds && !registry.hasComponent<DestroyTag>(entity)) {
-            LOG_DEBUG("[CleanupSystem] Enemy "
-                      << entity.id << " escaped out of bounds at ("
-                      << transform.x << ", " << transform.y
-                      << ") - Damaging all players");
+    enemyView.each([this, &registry, &isOutOfBounds](
+                       ECS::Entity entity, const TransformComponent& transform,
+                       const EnemyTag& /*tag*/) {
+        if (isOutOfBounds(transform) &&
+            !registry.hasComponent<DestroyTag>(entity)) {
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[CleanupSystem] Enemy "
+                              << entity.id << " escaped out of bounds at ("
+                              << transform.x << ", " << transform.y
+                              << ") - Damaging all players");
             auto playerView =
                 registry.view<shared::PlayerTag, shared::HealthComponent,
                               shared::NetworkIdComponent>();
@@ -51,10 +56,11 @@ void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
                         health.current = 0;
                     }
 
-                    LOG_INFO("[CleanupSystem] Player "
-                             << netId.networkId
-                             << " took 30 damage (enemy escaped): " << oldHealth
-                             << " -> " << health.current);
+                    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                                 "[CleanupSystem] Player "
+                                     << netId.networkId
+                                     << " took 30 damage (enemy escaped): "
+                                     << oldHealth << " -> " << health.current);
                     engine::GameEvent event{};
                     event.type = engine::GameEventType::EntityHealthChanged;
                     event.entityNetworkId = netId.networkId;
@@ -72,6 +78,18 @@ void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
             registry.emplaceComponent<DestroyTag>(entity, DestroyTag{});
         }
     });
+
+    auto projectileView = registry.view<TransformComponent, ProjectileTag>();
+
+    projectileView.each(
+        [this, &registry, &isOutOfBounds](ECS::Entity entity,
+                                          const TransformComponent& transform,
+                                          const ProjectileTag& /*tag*/) {
+            if (isOutOfBounds(transform) &&
+                !registry.hasComponent<DestroyTag>(entity)) {
+                registry.emplaceComponent<DestroyTag>(entity, DestroyTag{});
+            }
+        });
 }
 
 }  // namespace rtype::games::rtype::server

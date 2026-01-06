@@ -70,20 +70,6 @@ class AGameScene : public IGameScene {
     void pollEvents(const rtype::display::Event& event) override {}
 
     /**
-     * @brief Get the last input mask
-     * @return The last input mask sent
-     */
-    [[nodiscard]] std::uint8_t getLastInputMask() const {
-        return _lastInputMask;
-    }
-
-    /**
-     * @brief Set the last input mask
-     * @param mask The input mask to store
-     */
-    void setLastInputMask(std::uint8_t mask) { _lastInputMask = mask; }
-
-    /**
      * @brief Get the network system
      * @return Shared pointer to the network system
      */

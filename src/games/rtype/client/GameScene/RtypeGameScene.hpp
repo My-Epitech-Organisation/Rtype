@@ -18,6 +18,7 @@
 #include "AudioLib/AudioLib.hpp"
 #include "Graphic/SceneManager/Scenes/GameScene/AGameScene.hpp"
 #include "rtype/display/DisplayTypes.hpp"
+#include "../lib/display/Clock/Clock.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -129,6 +130,10 @@ class RtypeGameScene : public AGameScene {
     static constexpr float kVignetteFadeSpeed = 300.0F;
     static constexpr float kVignetteMaxAlpha = 180.0F;
     ::rtype::display::Vector2i _lastVignetteSize{0, 0};
+
+    static constexpr float kShootSendInterval = 0.05F;
+
+    ::rtype::display::Clock _shootInputClock;
 
     void setupDamageVignette();
     void refreshDamageVignetteLayout();

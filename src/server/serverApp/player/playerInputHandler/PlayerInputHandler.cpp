@@ -47,9 +47,11 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
     }
 
     if (_verbose) {
-        LOG_DEBUG("[InputHandler] Input from userId="
-                  << userId << " inputMask=" << static_cast<int>(inputMask)
-                  << " hasEntity=" << entity.has_value());
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[InputHandler] Input from userId="
+                          << userId
+                          << " inputMask=" << static_cast<int>(inputMask)
+                          << " hasEntity=" << entity.has_value());
     }
 
     if (_stateManager && !_stateManager->isPlaying()) {
@@ -114,8 +116,10 @@ void PlayerInputHandler::processShoot(std::uint32_t userId,
     if (!_registry->hasComponent<Transform>(entity) ||
         !_registry->hasComponent<ShootCooldown>(entity)) {
         if (_verbose) {
-            LOG_DEBUG("[InputHandler] Player "
-                      << userId << " missing Transform or ShootCooldown");
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[InputHandler] Player "
+                              << userId
+                              << " missing Position or ShootCooldown");
         }
         return;
     }
@@ -123,9 +127,10 @@ void PlayerInputHandler::processShoot(std::uint32_t userId,
     auto& cooldown = _registry->getComponent<ShootCooldown>(entity);
     if (!cooldown.canShoot()) {
         if (_verbose) {
-            LOG_DEBUG("[InputHandler] Player "
-                      << userId
-                      << " cooldown not ready: " << cooldown.currentCooldown);
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[InputHandler] Player " << userId
+                                                   << " cooldown not ready: "
+                                                   << cooldown.currentCooldown);
         }
         return;
     }
@@ -137,8 +142,9 @@ void PlayerInputHandler::processShoot(std::uint32_t userId,
     auto networkIdOpt = _networkSystem->getNetworkId(entity);
     if (!networkIdOpt.has_value()) {
         if (_verbose) {
-            LOG_DEBUG("[InputHandler] Player " << userId
-                                               << " has no networkId");
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[InputHandler] Player " << userId << " has no networkId");
         }
         return;
     }
@@ -148,8 +154,9 @@ void PlayerInputHandler::processShoot(std::uint32_t userId,
 
     if (projectileId != 0) {
         cooldown.triggerCooldown();
-        LOG_DEBUG("[InputHandler] Player " << userId << " fired projectile "
-                                           << projectileId);
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[InputHandler] Player " << userId << " fired projectile "
+                                               << projectileId);
     }
 }
 

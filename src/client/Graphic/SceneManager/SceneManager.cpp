@@ -16,6 +16,7 @@
 #include "Scenes/GameOverScene/GameOverScene.hpp"
 #include "Scenes/GameScene/GameScene.hpp"
 #include "Scenes/HowToPlayScene/HowToPlayScene.hpp"
+#include "Scenes/Lobby/Lobby.hpp"
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
 #include "Scenes/SettingsScene/SettingsScene.hpp"
 
@@ -24,19 +25,22 @@ void SceneManager::_applySceneChange() {
         Scene scene = this->_nextScene.value();
 
         if (this->_currentScene == scene) {
-            LOG_DEBUG(
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::UI,
                 "[SceneManager] Ignoring scene change - already on scene: "
-                << static_cast<int>(scene));
+                    << static_cast<int>(scene));
             this->_nextScene = std::nullopt;
             return;
         }
 
-        LOG_DEBUG("[SceneManager] Applying scene change from "
-                  << static_cast<int>(this->_currentScene) << " to "
-                  << static_cast<int>(scene));
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[SceneManager] Applying scene change from "
+                          << static_cast<int>(this->_currentScene) << " to "
+                          << static_cast<int>(scene));
         this->_currentScene = scene;
         this->_activeScene = this->_sceneList[this->_currentScene]();
-        LOG_DEBUG("[SceneManager] Scene change applied successfully");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[SceneManager] Scene change applied successfully");
 
         this->_nextScene = std::nullopt;
     }
@@ -46,11 +50,13 @@ void SceneManager::setCurrentScene(const Scene scene) {
     if (!this->_sceneList.contains(scene)) {
         throw SceneNotFound();
     }
-    LOG_DEBUG("[SceneManager] Scene change requested to: "
-              << static_cast<int>(scene));
-    if (scene == IN_GAME && this->_networkSystem && this->_registry &&
-        this->_assetManager) {
-        LOG_DEBUG(
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[SceneManager] Scene change requested to: "
+                      << static_cast<int>(scene));
+    if ((scene == IN_GAME || scene == LOBBY) && this->_networkSystem &&
+        this->_registry && this->_assetManager) {
+        LOG_DEBUG_CAT(
+            ::rtype::LogCategory::UI,
             "[SceneManager] Pre-configuring entity factory for IN_GAME scene");
         this->_networkSystem->setEntityFactory(
             rtype::games::rtype::client::RtypeEntityFactory::
@@ -119,13 +125,19 @@ SceneManager::SceneManager(
                                                 this->_keybinds, this->_audio,
                                                 this->_switchToScene);
     });
+    this->_sceneList.emplace(LOBBY, [ecs, texture, this]() {
+        return std::make_unique<Lobby>(
+            ecs, texture, this->_display, this->_switchToScene,
+            this->_networkClient, this->_networkSystem, this->_audio);
+    });
     this->_sceneList.emplace(GAME_OVER, [ecs, texture, this]() {
         return std::make_unique<GameOverScene>(
             ecs, texture, this->_display, this->_audio, this->_switchToScene);
     });
     this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
         if (this->_networkSystem) {
-            LOG_DEBUG(
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::UI,
                 "[SceneManager] Setting up entity factory before scene "
                 "creation");
             this->_networkSystem->setEntityFactory(

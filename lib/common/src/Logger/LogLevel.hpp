@@ -20,7 +20,8 @@ enum class LogLevel {
     Info = 1,     ///< Informational messages
     Warning = 2,  ///< Warning messages
     Error = 3,    ///< Error messages
-    None = 4      ///< Disable all logging
+    Fatal = 4,    ///< Fatal error messages (critical failures)
+    None = 5      ///< Disable all logging
 };
 
 /**
@@ -39,6 +40,8 @@ enum class LogLevel {
             return "WARNING";
         case LogLevel::Error:
             return "ERROR";
+        case LogLevel::Fatal:
+            return "FATAL";
         case LogLevel::None:
             return "NONE";
     }

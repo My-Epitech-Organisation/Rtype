@@ -1,5 +1,6 @@
 add_subdirectory(MainMenuScene)
 add_subdirectory(SettingsScene)
+add_subdirectory(Lobby)
 add_subdirectory(GameScene)
 add_subdirectory(HowToPlayScene)
 add_subdirectory(GameOverScene)

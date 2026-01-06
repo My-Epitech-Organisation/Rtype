@@ -45,6 +45,14 @@ NetworkClient::NetworkClient(const Config& config)
 
     connCallbacks.onDisconnected = [this](network::DisconnectReason reason) {
         queueCallback([this, reason]() {
+            connection_.reset();
+            serverEndpoint_.reset();
+            if (socket_) {
+                socket_->cancel();
+                socket_->close();
+                socket_ = network::createAsyncSocket(ioContext_.get());
+            }
+
             for (const auto& cb : onDisconnectedCallbacks_) {
                 if (cb) cb(reason);
             }
@@ -54,6 +62,14 @@ NetworkClient::NetworkClient(const Config& config)
     connCallbacks.onConnectFailed = [this](network::NetworkError error) {
         (void)error;
         queueCallback([this]() {
+            connection_.reset();
+            serverEndpoint_.reset();
+            if (socket_) {
+                socket_->cancel();
+                socket_->close();
+                socket_ = network::createAsyncSocket(ioContext_.get());
+            }
+
             for (const auto& cb : onDisconnectedCallbacks_) {
                 if (cb) cb(DisconnectReason::ProtocolError);
             }
@@ -64,6 +80,73 @@ NetworkClient::NetworkClient(const Config& config)
 
     networkThreadRunning_.store(true, std::memory_order_release);
     networkThread_ = std::thread([this]() { networkThreadLoop(); });
+}
+
+// Testable constructor: allows injecting a mock socket and optionally disabling
+// the background network thread to keep tests deterministic.
+NetworkClient::NetworkClient(const Config& config,
+                             std::unique_ptr<network::IAsyncSocket> socket,
+                             bool startNetworkThread)
+    : config_(config),
+      ioContext_(),
+      socket_(std::move(socket)),
+      connection_(config.connectionConfig),
+      receiveBuffer_(
+          std::make_shared<network::Buffer>(network::kMaxPacketSize)),
+      receiveSender_(std::make_shared<network::Endpoint>()) {
+    network::ConnectionCallbacks connCallbacks;
+
+    connCallbacks.onConnected = [this](std::uint32_t userId) {
+        queueCallback([this, userId]() {
+            for (const auto& callback : onConnectedCallbacks_) {
+                if (callback) {
+                    callback(userId);
+                }
+            }
+        });
+    };
+
+    connCallbacks.onDisconnected = [this](network::DisconnectReason reason) {
+        queueCallback([this, reason]() {
+            connection_.reset();
+            serverEndpoint_.reset();
+            if (socket_) {
+                socket_->cancel();
+                socket_->close();
+                socket_ = network::createAsyncSocket(ioContext_.get());
+            }
+
+            for (const auto& cb : onDisconnectedCallbacks_) {
+                if (cb) cb(reason);
+            }
+        });
+    };
+
+    connCallbacks.onConnectFailed = [this](network::NetworkError error) {
+        (void)error;
+        queueCallback([this]() {
+            connection_.reset();
+            serverEndpoint_.reset();
+            if (socket_) {
+                socket_->cancel();
+                socket_->close();
+                socket_ = network::createAsyncSocket(ioContext_.get());
+            }
+
+            for (const auto& cb : onDisconnectedCallbacks_) {
+                if (cb) cb(DisconnectReason::ProtocolError);
+            }
+        });
+    };
+
+    connection_.setCallbacks(connCallbacks);
+
+    if (startNetworkThread) {
+        networkThreadRunning_.store(true, std::memory_order_release);
+        networkThread_ = std::thread([this]() { networkThreadLoop(); });
+    } else {
+        networkThreadRunning_.store(false, std::memory_order_release);
+    }
 }
 
 NetworkClient::~NetworkClient() {
@@ -89,7 +172,8 @@ NetworkClient::~NetworkClient() {
 
 bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
     if (!connection_.isDisconnected()) {
-        LOG_DEBUG("[NetworkClient] Cannot connect: not disconnected");
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Cannot connect: not disconnected");
         return false;
     }
 
@@ -103,7 +187,8 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
 
     auto bindResult = socket_->bind(0);
     if (!bindResult) {
-        LOG_ERROR("[NetworkClient] Failed to bind socket");
+        LOG_ERROR_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Failed to bind socket");
         socket_->close();
         socket_ = network::createAsyncSocket(ioContext_.get());
         return false;
@@ -115,7 +200,8 @@ bool NetworkClient::connect(const std::string& host, std::uint16_t port) {
 
     auto result = connection_.connect();
     if (!result) {
-        LOG_ERROR("[NetworkClient] Failed to initiate connection");
+        LOG_ERROR_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Failed to initiate connection");
         socket_->cancel();
         socket_->close();
         socket_ = network::createAsyncSocket(ioContext_.get());
@@ -183,14 +269,77 @@ bool NetworkClient::sendInput(std::uint8_t inputMask) {
     return true;
 }
 
+bool NetworkClient::ping() {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    auto result = connection_.buildPacket(network::OpCode::PING, {});
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    return true;
+}
+
+bool NetworkClient::sendReady(bool isReady) {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    network::LobbyReadyPayload payload;
+    payload.isReady = isReady ? 1 : 0;
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    auto result = connection_.buildPacket(network::OpCode::C_READY, serialized);
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    return true;
+}
+
 void NetworkClient::onConnected(
     std::function<void(std::uint32_t myUserId)> callback) {
     onConnectedCallbacks_.push_back(std::move(callback));
 }
 
+NetworkClient::CallbackId NetworkClient::addConnectedCallback(
+    std::function<void(std::uint32_t myUserId)> callback) {
+    onConnectedCallbacks_.push_back(std::move(callback));
+    return onConnectedCallbacks_.size() - 1;
+}
+
+void NetworkClient::removeConnectedCallback(CallbackId id) {
+    if (id < onConnectedCallbacks_.size()) {
+        onConnectedCallbacks_[id] = nullptr;
+    }
+}
+
 void NetworkClient::onDisconnected(
     std::function<void(DisconnectReason)> callback) {
     onDisconnectedCallbacks_.push_back(std::move(callback));
+}
+
+NetworkClient::CallbackId NetworkClient::addDisconnectedCallback(
+    std::function<void(DisconnectReason)> callback) {
+    onDisconnectedCallbacks_.push_back(std::move(callback));
+    return onDisconnectedCallbacks_.size() - 1;
+}
+
+void NetworkClient::removeDisconnectedCallback(CallbackId id) {
+    if (id < onDisconnectedCallbacks_.size()) {
+        onDisconnectedCallbacks_[id] = nullptr;
+    }
 }
 
 void NetworkClient::onEntitySpawn(
@@ -205,7 +354,7 @@ void NetworkClient::onEntityMove(
 
 void NetworkClient::onEntityDestroy(
     std::function<void(std::uint32_t entityId)> callback) {
-    onEntityDestroyCallback_ = std::move(callback);
+    onEntityDestroyCallbacks_.push_back(std::move(callback));
 }
 
 void NetworkClient::onEntityHealth(
@@ -229,6 +378,15 @@ void NetworkClient::onGameStateChange(
 
 void NetworkClient::onGameOver(std::function<void(GameOverEvent)> callback) {
     onGameOverCallback_ = std::move(callback);
+}
+
+void NetworkClient::onGameStart(std::function<void(float)> callback) {
+    onGameStartCallback_ = std::move(callback);
+}
+
+void NetworkClient::onPlayerReadyStateChanged(
+    std::function<void(std::uint32_t userId, bool isReady)> callback) {
+    onPlayerReadyStateChangedCallback_ = std::move(callback);
 }
 
 void NetworkClient::poll() {
@@ -326,10 +484,11 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
     auto opcode = static_cast<network::OpCode>(header.opcode);
 
     if (network::isReliable(opcode)) {
-        LOG_DEBUG("[NetworkClient] Received reliable packet: opcode="
-                  << static_cast<int>(opcode) << " seqId=" << header.seqId
-                  << " flags=0x" << std::hex << static_cast<int>(header.flags)
-                  << std::dec);
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Received reliable packet: opcode="
+                          << static_cast<int>(opcode) << " seqId="
+                          << header.seqId << " flags=0x" << std::hex
+                          << static_cast<int>(header.flags) << std::dec);
         sendAck(header.seqId);
     }
 
@@ -366,6 +525,14 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
             handleGameOver(header, payload);
             break;
 
+        case network::OpCode::S_GAME_START:
+            handleGameStart(header, payload);
+            break;
+
+        case network::OpCode::S_PLAYER_READY_STATE:
+            handlePlayerReadyState(header, payload);
+            break;
+
         case network::OpCode::PONG:
             handlePong(header, payload);
             break;
@@ -386,11 +553,14 @@ void NetworkClient::handleEntitySpawn(const network::Header& header,
                                       const network::Buffer& payload) {
     (void)header;
 
-    LOG_DEBUG("[NetworkClient] handleEntitySpawn called, payload size=" +
-              std::to_string(payload.size()));
+    LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                  "[NetworkClient] handleEntitySpawn called, payload size=" +
+                      std::to_string(payload.size()));
 
     if (payload.size() < sizeof(network::EntitySpawnPayload)) {
-        LOG_DEBUG("[NetworkClient] Payload too small for EntitySpawnPayload");
+        LOG_DEBUG_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] Payload too small for EntitySpawnPayload");
         return;
     }
 
@@ -398,11 +568,12 @@ void NetworkClient::handleEntitySpawn(const network::Header& header,
         auto deserialized = network::Serializer::deserializeFromNetwork<
             network::EntitySpawnPayload>(payload);
 
-        LOG_DEBUG("[NetworkClient] Deserialized spawn: entityId=" +
-                  std::to_string(deserialized.entityId) + " type=" +
-                  std::to_string(static_cast<int>(deserialized.type)) +
-                  " pos=(" + std::to_string(deserialized.posX) + ", " +
-                  std::to_string(deserialized.posY) + ")");
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Deserialized spawn: entityId=" +
+                          std::to_string(deserialized.entityId) + " type=" +
+                          std::to_string(static_cast<int>(deserialized.type)) +
+                          " pos=(" + std::to_string(deserialized.posX) + ", " +
+                          std::to_string(deserialized.posY) + ")");
 
         EntitySpawnEvent event;
         event.entityId = deserialized.entityId;
@@ -468,8 +639,8 @@ void NetworkClient::handleEntityDestroy(const network::Header& header,
         std::uint32_t entityId = deserialized.entityId;
 
         queueCallback([this, entityId]() {
-            if (onEntityDestroyCallback_) {
-                onEntityDestroyCallback_(entityId);
+            for (const auto& cb : onEntityDestroyCallbacks_) {
+                if (cb) cb(entityId);
             }
         });
     } catch (...) {
@@ -481,11 +652,14 @@ void NetworkClient::handleEntityHealth(const network::Header& header,
                                        const network::Buffer& payload) {
     (void)header;
 
-    LOG_DEBUG("[NetworkClient] handleEntityHealth called, payload size="
-              << payload.size());
+    LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                  "[NetworkClient] handleEntityHealth called, payload size="
+                      << payload.size());
 
     if (payload.size() < sizeof(network::EntityHealthPayload)) {
-        LOG_DEBUG("[NetworkClient] Payload too small for EntityHealthPayload");
+        LOG_DEBUG_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] Payload too small for EntityHealthPayload");
         return;
     }
 
@@ -493,9 +667,11 @@ void NetworkClient::handleEntityHealth(const network::Header& header,
         auto deserialized = network::Serializer::deserializeFromNetwork<
             network::EntityHealthPayload>(payload);
 
-        LOG_DEBUG("[NetworkClient] Deserialized health: entityId="
-                  << deserialized.entityId << " current="
-                  << deserialized.current << " max=" << deserialized.max);
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Deserialized health: entityId="
+                          << deserialized.entityId
+                          << " current=" << deserialized.current
+                          << " max=" << deserialized.max);
 
         EntityHealthEvent event{};
         event.entityId = deserialized.entityId;
@@ -508,7 +684,8 @@ void NetworkClient::handleEntityHealth(const network::Header& header,
             }
         });
     } catch (...) {
-        LOG_DEBUG("[NetworkClient] Exception deserializing health payload");
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Exception deserializing health payload");
     }
 }
 
@@ -613,6 +790,55 @@ void NetworkClient::handleGameOver(const network::Header& header,
     }
 }
 
+void NetworkClient::handleGameStart(const network::Header& header,
+                                    const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::GameStartPayload)) {
+        return;
+    }
+
+    try {
+        auto deserialized = network::Serializer::deserializeFromNetwork<
+            network::GameStartPayload>(payload);
+
+        float countdownDuration = deserialized.countdownDuration;
+
+        queueCallback([this, countdownDuration]() {
+            if (onGameStartCallback_) {
+                onGameStartCallback_(countdownDuration);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
+void NetworkClient::handlePlayerReadyState(const network::Header& header,
+                                           const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::PlayerReadyStatePayload)) {
+        return;
+    }
+
+    try {
+        auto deserialized = network::Serializer::deserializeFromNetwork<
+            network::PlayerReadyStatePayload>(payload);
+
+        uint32_t userId = deserialized.userId;
+        bool isReady = (deserialized.isReady != 0);
+
+        queueCallback([this, userId, isReady]() {
+            if (onPlayerReadyStateChangedCallback_) {
+                onPlayerReadyStateChangedCallback_(userId, isReady);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
 void NetworkClient::handlePong(const network::Header& header,
                                const network::Buffer& payload) {
     (void)header;
@@ -650,27 +876,37 @@ void NetworkClient::flushOutgoing() {
 
 void NetworkClient::sendAck(std::uint16_t ackSeqId) {
     if (!serverEndpoint_.has_value() || !socket_->isOpen()) {
-        LOG_DEBUG("[NetworkClient] sendAck: no endpoint or socket not open");
+        LOG_DEBUG_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] sendAck: no endpoint or socket not open");
         return;
     }
 
     auto ackPacket = connection_.buildAckPacket(ackSeqId);
     if (ackPacket.has_value()) {
-        LOG_DEBUG("[NetworkClient] sendAck: sending ACK for seqId="
-                  << ackSeqId << " packet size=" << ackPacket.value().size());
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] sendAck: sending ACK for seqId="
+                          << ackSeqId
+                          << " packet size=" << ackPacket.value().size());
         socket_->asyncSendTo(
             ackPacket.value(), *serverEndpoint_,
             [ackSeqId](network::Result<std::size_t> result) {
                 if (result) {
-                    LOG_DEBUG("[NetworkClient] ACK sent successfully for seqId="
-                              << ackSeqId << " bytes=" << result.value());
+                    LOG_DEBUG_CAT(
+                        rtype::LogCategory::Network,
+                        "[NetworkClient] ACK sent successfully for seqId="
+                            << ackSeqId << " bytes=" << result.value());
                 } else {
-                    LOG_WARNING("[NetworkClient] ACK send failed for seqId="
-                                << ackSeqId);
+                    LOG_WARNING_CAT(rtype::LogCategory::Network,
+                                    "[NetworkClient] ACK send failed for seqId="
+                                        << ackSeqId);
                 }
             });
+        connection_.recordPacketSent();
     } else {
-        LOG_WARNING("[NetworkClient] sendAck: buildAckPacket returned nullopt");
+        LOG_WARNING_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] sendAck: buildAckPacket returned nullopt");
     }
 }
 

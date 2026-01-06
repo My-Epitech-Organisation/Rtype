@@ -44,15 +44,18 @@ void KeyboardActions::initialize(::rtype::display::IDisplay& display) {
     for (unsigned int i = 0; i < count; ++i) {
         if (display.isJoystickConnected(i)) {
             controllerFound = true;
-            LOG_INFO("[KeyboardActions] Controller detected (Joystick " +
-                     std::to_string(i) + ") - defaulting to Controller mode");
+            LOG_INFO_CAT(::rtype::LogCategory::Input,
+                         "[KeyboardActions] Controller detected (Joystick " +
+                             std::to_string(i) +
+                             ") - defaulting to Controller mode");
             this->_inputMode = InputMode::Controller;
             break;
         }
     }
 
     if (!controllerFound) {
-        LOG_INFO(
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::Input,
             "[KeyboardActions] No controller detected - defaulting to Keyboard "
             "mode");
         this->_inputMode = InputMode::Keyboard;

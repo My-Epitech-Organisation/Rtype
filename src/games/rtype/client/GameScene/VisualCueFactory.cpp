@@ -57,8 +57,10 @@ void VisualCueFactory::createDamagePopup(
     int damage, const std::string& fontName,
     const ::rtype::display::Color& color) {
     auto entity = registry.spawnEntity();
-    LOG_DEBUG("[VisualCueFactory] Damage popup entity=" +
-              std::to_string(entity.id) + " dmg=" + std::to_string(damage));
+    LOG_DEBUG_CAT(
+        ::rtype::LogCategory::Graphics,
+        "[VisualCueFactory] Damage popup entity=" + std::to_string(entity.id) +
+            " dmg=" + std::to_string(damage));
 
     std::string damageText = "-" + std::to_string(damage);
     registry.emplaceComponent<Text>(entity, fontName, color, 32, damageText);

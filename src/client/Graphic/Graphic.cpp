@@ -79,9 +79,12 @@ void Graphic::_update() {
                     ->getSingleton<rtype::games::rtype::client::PauseState>()
                     .isPaused;
         } catch (const std::exception& e) {
-            LOG_ERROR("[Graphic] Exception accessing PauseState: " << e.what());
+            LOG_ERROR_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[Graphic] Exception accessing PauseState: " << e.what());
         } catch (...) {
-            LOG_ERROR("[Graphic] Unknown exception accessing PauseState");
+            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                          "[Graphic] Unknown exception accessing PauseState");
         }
     }
 
@@ -142,7 +145,8 @@ void Graphic::_setupNetworkEntityFactory() {
         [registry](std::uint32_t /*userId*/, ECS::Entity entity) {
             if (registry->isAlive(entity)) {
                 registry->emplaceComponent<rc::ControllableTag>(entity);
-                LOG_DEBUG("[Graphic] Local player entity assigned");
+                LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                              "[Graphic] Local player entity assigned");
             }
         });
 }

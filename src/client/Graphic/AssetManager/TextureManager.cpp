@@ -13,7 +13,8 @@
 void TextureManager::load(const std::string& id, const std::string& filePath) {
     if (!_display) return;
     _display->loadTexture(id, filePath);
-    LOG_DEBUG("Texture loaded with ID: " << id);
+    LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
+                  "Texture loaded with ID: " << id);
 }
 
 std::shared_ptr<::rtype::display::ITexture> TextureManager::get(
@@ -22,7 +23,8 @@ std::shared_ptr<::rtype::display::ITexture> TextureManager::get(
     auto texture = _display->getTexture(id);
 
     if (!texture) {
-        LOG_ERROR("Texture not found: " << id);
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
+                      "Texture not found: " << id);
         throw std::out_of_range("Texture not found: " + id);
     }
 
