@@ -193,10 +193,10 @@ static int runServer(const ServerConfig& config,
     // TODO(Clem): Implement hot reload in main loop when reloadConfigFlag
     (void)reloadConfigFlag;
 
-    if (config.instanceCount > 1) {
+    if (config.instanceCount >= 1) {
         LOG_INFO_CAT(rtype::LogCategory::Main,
-                     "[Main] Starting multi-instance mode with "
-                         << config.instanceCount << " lobbies");
+                     "[Main] Starting lobby manager with "
+                         << config.instanceCount << " instance(s)");
 
         rtype::server::LobbyManager::Config managerConfig;
         managerConfig.basePort = config.port;
@@ -235,27 +235,6 @@ static int runServer(const ServerConfig& config,
             return 1;
         }
     }
-
-    auto gameConfig = rtype::games::rtype::server::createRTypeGameConfig();
-
-    if (!gameConfig->initialize(config.configPath)) {
-        LOG_ERROR_CAT(rtype::LogCategory::Main,
-                      "[Main] Failed to initialize game configuration: "
-                          << gameConfig->getLastError());
-        return 1;
-    }
-
-    rtype::server::ServerApp server(std::move(gameConfig), shutdownFlag,
-                                    config.verbose);
-
-    if (!server.run()) {
-        LOG_ERROR_CAT(rtype::LogCategory::Main,
-                      "[Main] Server failed to start.");
-        return 1;
-    }
-
-    LOG_INFO_CAT(rtype::LogCategory::Main, "[Main] Server terminated.");
-    return 0;
 }
 
 int main(int argc, char** argv) {
