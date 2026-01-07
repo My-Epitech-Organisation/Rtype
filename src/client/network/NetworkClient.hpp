@@ -398,7 +398,8 @@ class NetworkClient {
                                     const network::Endpoint& sender);
     void test_queueCallback(std::function<void()> callback);
     void test_startReceive();
-    void test_handlePong(const network::Header& header, const network::Buffer& payload);
+    void test_handlePong(const network::Header& header,
+                         const network::Buffer& payload);
 
    private:
     void dispatchCallbacks();
