@@ -419,6 +419,36 @@ void NetworkClient::onPowerUpEvent(std::function<void(PowerUpEvent)> callback) {
     onPowerUpCallback_ = std::move(callback);
 }
 
+bool NetworkClient::sendJoinLobby(const std::string& code) {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    network::JoinLobbyPayload payload{};
+    for (size_t i = 0; i < 6 && i < code.size(); ++i) {
+        payload.code[i] = code[i];
+    }
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    auto result =
+        connection_.buildPacket(network::OpCode::C_JOIN_LOBBY, serialized);
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    return true;
+}
+
+void NetworkClient::onJoinLobbyResponse(
+    std::function<void(bool, uint8_t)> callback) {
+    onJoinLobbyResponseCallback_ = std::move(callback);
+}
+
 void NetworkClient::onPositionCorrection(
     std::function<void(float x, float y)> callback) {
     onPositionCorrectionCallback_ = std::move(callback);
@@ -613,6 +643,10 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
 
         case network::OpCode::S_PLAYER_READY_STATE:
             handlePlayerReadyState(header, payload);
+            break;
+
+        case network::OpCode::S_JOIN_LOBBY_RESPONSE:
+            handleJoinLobbyResponse(header, payload);
             break;
 
         case network::OpCode::S_LOBBY_LIST:
@@ -971,6 +1005,28 @@ void NetworkClient::handlePlayerReadyState(const network::Header& header,
         queueCallback([this, userId, isReady]() {
             if (onPlayerReadyStateChangedCallback_) {
                 onPlayerReadyStateChangedCallback_(userId, isReady);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
+void NetworkClient::handleJoinLobbyResponse(const network::Header& header,
+                                            const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::JoinLobbyResponsePayload)) {
+        return;
+    }
+
+    try {
+        auto resp = network::Serializer::deserializeFromNetwork<
+            network::JoinLobbyResponsePayload>(payload);
+
+        queueCallback([this, resp]() {
+            if (onJoinLobbyResponseCallback_) {
+                onJoinLobbyResponseCallback_(resp.accepted == 1, resp.reason);
             }
         });
     } catch (...) {

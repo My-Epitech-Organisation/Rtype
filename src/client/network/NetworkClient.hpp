@@ -365,6 +365,19 @@ class NetworkClient {
     void onLobbyListReceived(std::function<void(LobbyListEvent)> callback);
 
     /**
+     * @brief Send the lobby join code to the server (must be used after
+     * connect)
+     * @param code 6-character lobby code
+     */
+    bool sendJoinLobby(const std::string& code);
+
+    /**
+     * @brief Register callback for join lobby response
+     * @param callback Function receiving (accepted, reason)
+     */
+    void onJoinLobbyResponse(std::function<void(bool, uint8_t)> callback);
+
+    /**
      * @brief Process network events and dispatch callbacks
      *
      * Must be called regularly (e.g., each game frame) to:
@@ -418,6 +431,8 @@ class NetworkClient {
                                 const network::Buffer& payload);
     void handleLobbyList(const network::Header& header,
                          const network::Buffer& payload);
+    void handleJoinLobbyResponse(const network::Header& header,
+                                 const network::Buffer& payload);
     void handlePong(const network::Header& header,
                     const network::Buffer& payload);
 
@@ -465,6 +480,7 @@ class NetworkClient {
     std::function<void(std::uint32_t, bool)> onPlayerReadyStateChangedCallback_;
     std::function<void(PowerUpEvent)> onPowerUpCallback_;
     std::function<void(LobbyListEvent)> onLobbyListReceivedCallback_;
+    std::function<void(bool, uint8_t)> onJoinLobbyResponseCallback_;
 
     std::thread networkThread_;
     std::atomic<bool> networkThreadRunning_{false};
