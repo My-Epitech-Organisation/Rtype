@@ -101,6 +101,9 @@ class MainMenuScene : public AScene {
     std::vector<rtype::client::NetworkClient::CallbackId> _connectedCallbackIds;
     std::vector<rtype::client::NetworkClient::CallbackId>
         _disconnectedCallbackIds;
+
+    /// @brief Pending join code to send after successful connect
+    std::string _pendingLobbyCode;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_MAINMENUSCENE_MAINMENUSCENE_HPP_

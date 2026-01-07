@@ -25,13 +25,13 @@
 #include "SceneManager/SceneException.hpp"
 #include "Scenes/Lobby/Lobby.hpp"
 
-static constexpr float kConnectionPanelX = 750.f;
+static constexpr float kConnectionPanelX = 610.f;
 static constexpr float kConnectionPanelY = 350.f;
-static constexpr float kConnectionPanelWidth = 450.f;
-static constexpr float kConnectionPanelHeight = 350.f;
+static constexpr float kConnectionPanelWidth = 680.f;
+static constexpr float kConnectionPanelHeight = 480.f;
 static constexpr float kInputWidth = 300.f;
 static constexpr float kInputHeight = 40.f;
-static constexpr float kInputOffsetX = 120.f;
+static constexpr float kInputOffsetX = 180.f;
 static constexpr std::string kIp = "127.0.0.1";
 static constexpr std::uint16_t kPort = 4242;
 
@@ -147,7 +147,7 @@ void MainMenuScene::_createConnectionPanel(
 
     auto lobbyCodeText = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager,
-        "Lobby Code (e.g. ABC123):", "main_font",
+        "Lobby Code:", "main_font",
         sf::Vector2f(kConnectionPanelX + kInputOffsetX / 2,
                      kConnectionPanelY + 210.f + kInputHeight / 2),
         20);
@@ -182,7 +182,7 @@ void MainMenuScene::_createConnectionPanel(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 28, "Connect"),
         rtype::games::rtype::shared::TransformComponent(
-            kConnectionPanelX + 15.f, kConnectionPanelY + 340.f),
+            kConnectionPanelX + 15.f, kConnectionPanelY + kConnectionPanelHeight - 70.f),
         rtype::games::rtype::client::Rectangle({200, 60}, sf::Color(0, 150, 0),
                                                sf::Color(0, 200, 0)),
         this->_assetsManager, std::function<void()>([this, switchToScene]() {
@@ -198,7 +198,7 @@ void MainMenuScene::_createConnectionPanel(
             this->_assetsManager->fontManager->get("main_font"),
             sf::Color::White, 26, "Close"),
         rtype::games::rtype::shared::TransformComponent(
-            kConnectionPanelX + 235.f, kConnectionPanelY + 275.f),
+            kConnectionPanelX + kConnectionPanelWidth - 215.f, kConnectionPanelY + kConnectionPanelHeight - 70.f),
         rtype::games::rtype::client::Rectangle({200, 60}, sf::Color(150, 0, 0),
                                                sf::Color(200, 0, 0)),
         this->_assetsManager, std::function<void()>([this]() {
@@ -336,7 +336,7 @@ void MainMenuScene::_onConnectClicked(
     }
 
     _networkClient->onLobbyListReceived(
-        [weakRegistry, switchToScene, statusEntity, weakClient, discoveryIp,
+        [this, weakRegistry, switchToScene, statusEntity, weakClient, discoveryIp,
          lobbyCode](rtype::client::LobbyListEvent event) {
             auto reg = weakRegistry.lock();
             auto client = weakClient.lock();
@@ -400,16 +400,26 @@ void MainMenuScene::_onConnectClicked(
                 text.text.setFillColor(sf::Color::Yellow);
             }
 
+            this->_pendingLobbyCode = lobby.code;
             client->connect(discoveryIp, lobby.port);
         });
 
     auto onConnectedId = _networkClient->addConnectedCallback(
-        [weakRegistry, switchToScene, statusEntity](std::uint32_t userId) {
+        [this, weakRegistry, switchToScene, statusEntity](std::uint32_t userId) {
             auto reg = weakRegistry.lock();
             if (!reg) return;
 
             LOG_INFO_CAT(::rtype::LogCategory::UI,
                          "[Client] Connected with user ID: " << userId);
+
+            if (!this->_pendingLobbyCode.empty()) {
+                LOG_INFO_CAT(::rtype::LogCategory::UI,
+                             "[Client] Sending join code " << this->_pendingLobbyCode);
+                if (this->_networkClient) {
+                    this->_networkClient->sendJoinLobby(this->_pendingLobbyCode);
+                }
+                this->_pendingLobbyCode.clear();
+            }
 
             if (reg->isAlive(statusEntity) &&
                 reg->hasComponent<rtype::games::rtype::client::Text>(
