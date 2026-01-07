@@ -11,6 +11,7 @@
 
 #include "../shared/Components/BoundingBoxComponent.hpp"
 #include "../shared/Components/CooldownComponent.hpp"
+#include "../shared/Components/ForcePodComponent.hpp"
 #include "../shared/Components/HealthComponent.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
 #include "../shared/Components/PlayerIdComponent.hpp"
@@ -272,6 +273,28 @@ void RTypeEntitySpawner::updateAllPlayersMovement(
 ::rtype::server::WorldBounds RTypeEntitySpawner::getWorldBounds()
     const noexcept {
     return {kWorldMinX, kWorldMaxX, kWorldMinY, kWorldMaxY};
+}
+
+ECS::Entity RTypeEntitySpawner::spawnForcePod(std::uint32_t ownerNetworkId,
+                                              float offsetX, float offsetY) {
+    using shared::ForcePodComponent;
+    using shared::ForcePodTag;
+    using shared::TransformComponent;
+
+    if (!_registry) {
+        return ECS::Entity{};
+    }
+
+    ECS::Entity forcePodEntity = _registry->spawnEntity();
+
+    _registry->emplaceComponent<ForcePodComponent>(
+        forcePodEntity, shared::ForcePodState::Attached, offsetX, offsetY,
+        ownerNetworkId);
+    _registry->emplaceComponent<ForcePodTag>(forcePodEntity);
+    _registry->emplaceComponent<TransformComponent>(forcePodEntity, 0.0F, 0.0F,
+                                                    0.0F);
+
+    return forcePodEntity;
 }
 
 std::unique_ptr<::rtype::server::IEntitySpawner> createRTypeEntitySpawner(
