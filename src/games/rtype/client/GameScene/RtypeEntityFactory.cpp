@@ -353,8 +353,8 @@ void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
     ::rtype::display::Color color = ::rtype::display::Color::White();
     if (powerUpConfig.has_value()) {
         const auto& config = powerUpConfig->get();
-        color = ::rtype::display::Color(config.colorR, config.colorG, config.colorB,
-                          config.colorA);
+        color = ::rtype::display::Color(config.colorR, config.colorG,
+                                        config.colorB, config.colorA);
         LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                       "[RtypeEntityFactory] Adding ColorTint: R="
                           << static_cast<int>(config.colorR)

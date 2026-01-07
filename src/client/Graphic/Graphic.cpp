@@ -163,8 +163,7 @@ void Graphic::_initializeSystems() {
     this->_playerPowerUpVisualSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_powerUpCollectionSystem = std::make_unique<
-        ::rtype::games::rtype::client::PowerUpCollectionSystem>(
-        "main_font");
+        ::rtype::games::rtype::client::PowerUpCollectionSystem>("main_font");
     this->_buttonUpdateSystem =
         std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(
             this->_display);
@@ -201,11 +200,11 @@ void Graphic::_initializeSystems() {
         });
 
     this->_systemScheduler->addSystem("color_tint",
-                                  [this](ECS::Registry& reg) {
-                                      _colorTintSystem->update(
-                                          reg, _currentDeltaTime);
-                                  },
-                                  {"sprite_position"});
+                                      [this](ECS::Registry& reg) {
+                                          _colorTintSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"sprite_position"});
 
     this->_systemScheduler->addSystem("player_animation",
                                       [this](ECS::Registry& reg) {

@@ -17,9 +17,8 @@ ColorTintSystem::ColorTintSystem()
     : ::rtype::engine::ASystem("ColorTintSystem") {}
 
 void ColorTintSystem::update(ECS::Registry& registry, float dt) {
-    registry.view<Image, ColorTint>().each([](auto /*entity*/, auto& spriteData,
-                                              auto& tint) {
-    });
+    registry.view<Image, ColorTint>().each(
+        [](auto /*entity*/, auto& spriteData, auto& tint) {});
 }
 
 }  // namespace rtype::games::rtype::client

@@ -26,13 +26,13 @@ namespace rtype::games::rtype::client {
  */
 class PowerUpCollectionSystem : public ::rtype::engine::ASystem {
    public:
-    explicit PowerUpCollectionSystem(const std::string &font);
+    explicit PowerUpCollectionSystem(const std::string& font);
     ~PowerUpCollectionSystem() override = default;
 
     void update(ECS::Registry& registry, float dt) override;
 
    private:
-    const std::string &_font;
+    const std::string& _font;
 
     struct PowerUpState {
         ::rtype::games::rtype::shared::PowerUpType type;

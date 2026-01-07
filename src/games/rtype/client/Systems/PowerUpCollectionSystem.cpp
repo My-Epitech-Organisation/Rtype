@@ -22,7 +22,7 @@ namespace rtype::games::rtype::client {
 
 constexpr float kPowerUpRenewalThreshold = 0.5f;
 
-PowerUpCollectionSystem::PowerUpCollectionSystem(const std::string &font)
+PowerUpCollectionSystem::PowerUpCollectionSystem(const std::string& font)
     : ::rtype::engine::ASystem("PowerUpCollectionSystem"), _font(font) {
     LOG_INFO("[PowerUpCollectionSystem] Initialized");
 }
@@ -78,7 +78,9 @@ void PowerUpCollectionSystem::update(ECS::Registry& registry, float /*dt*/) {
                 << " (remainingTime=" << activePowerUp.remainingTime << ")");
 
             VisualCueFactory::createPowerUpPopup(
-                registry, ::rtype::display::Vector2<float>(transform.x + 20.f, transform.y),
+                registry,
+                ::rtype::display::Vector2<float>(transform.x + 20.f,
+                                                 transform.y),
                 displayName, _font, color);
         }
         _lastPowerUpState[playerId.playerId] = {activePowerUp.type,
@@ -107,7 +109,8 @@ std::string PowerUpCollectionSystem::getPowerUpDisplayName(
     }
 }
 
-::rtype::display::Color PowerUpCollectionSystem::getPowerUpColor(rs::PowerUpType type) const {
+::rtype::display::Color PowerUpCollectionSystem::getPowerUpColor(
+    rs::PowerUpType type) const {
     switch (type) {
         case rs::PowerUpType::SpeedBoost:
             return ::rtype::display::Color(255, 255, 0);  // Yellow

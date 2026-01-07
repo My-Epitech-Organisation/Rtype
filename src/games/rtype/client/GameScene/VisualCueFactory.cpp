@@ -86,11 +86,10 @@ void VisualCueFactory::createDamagePopup(
     registry.emplaceComponent<GameTag>(entity);
 }
 
-void VisualCueFactory::createPowerUpPopup(ECS::Registry& registry,
-                                          const ::rtype::display::Vector2<float>& position,
-                                          const std::string& powerUpName,
-                                          const std::string &font,
-                                          const ::rtype::display::Color& color) {
+void VisualCueFactory::createPowerUpPopup(
+    ECS::Registry& registry, const ::rtype::display::Vector2<float>& position,
+    const std::string& powerUpName, const std::string& font,
+    const ::rtype::display::Color& color) {
     auto entity = registry.spawnEntity();
     LOG_DEBUG("[VisualCueFactory] PowerUp popup entity=" +
               std::to_string(entity.id) + " name=" + powerUpName);
