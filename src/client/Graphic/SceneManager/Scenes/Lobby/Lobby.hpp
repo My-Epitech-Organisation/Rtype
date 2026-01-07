@@ -18,6 +18,7 @@
 class Lobby : public AScene {
    private:
     bool _isConnected = false;
+    bool _initialized = false;
     unsigned int _nbrUser = 0;
     bool _isReady = false;
     bool _countdownActive = false;

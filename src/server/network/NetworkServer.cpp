@@ -603,6 +603,10 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
             handlePing(header, sender);
             break;
 
+        case network::OpCode::C_JOIN_LOBBY:
+            handleJoinLobby(header, payload, sender);
+            break;
+
         case network::OpCode::C_READY:
             handleReady(header, payload, sender);
             break;
@@ -724,9 +728,15 @@ void NetworkServer::handleInput(const network::Header& header,
         std::uint8_t inputMask = deserialized.inputMask;
 
         auto client = findClientByUserId(userId);
-        if (client) {
-            client->lastActivity = std::chrono::steady_clock::now();
+        if (!client) {
+            return;
         }
+
+        if (!config_.expectedLobbyCode.empty() && !client->joined) {
+            return;
+        }
+
+        client->lastActivity = std::chrono::steady_clock::now();
 
         queueCallback([this, userId, inputMask]() {
             if (onClientInputCallback_) {
@@ -743,6 +753,14 @@ void NetworkServer::handleGetUsers(const network::Header& header,
     (void)sender;
 
     std::uint32_t userId = header.userId;
+
+    auto client = findClientByUserId(userId);
+    if (!client) {
+        return;
+    }
+    if (!config_.expectedLobbyCode.empty() && !client->joined) {
+        return;
+    }
 
     queueCallback([this, userId]() {
         if (onGetUsersRequestCallback_) {
@@ -779,6 +797,9 @@ void NetworkServer::handleReady(const network::Header& header,
     if (!client) {
         return;
     }
+    if (!config_.expectedLobbyCode.empty() && !client->joined) {
+        return;
+    }
 
     if (payload.size() < sizeof(network::LobbyReadyPayload)) {
         return;
@@ -799,6 +820,52 @@ void NetworkServer::handleReady(const network::Header& header,
             onClientReadyCallback_(userId, isReady);
         });
     }
+}
+
+void NetworkServer::handleJoinLobby(const network::Header& header,
+                                    const network::Buffer& payload,
+                                    const network::Endpoint& sender) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::JoinLobbyPayload)) {
+        return;
+    }
+
+    network::JoinLobbyPayload joinPayload;
+    std::memcpy(&joinPayload, payload.data(), sizeof(joinPayload));
+
+    std::string code(joinPayload.code.data(), joinPayload.code.size());
+
+    auto client = findClient(sender);
+
+    network::JoinLobbyResponsePayload resp{};
+
+    if (!client) {
+        resp.accepted = 0;
+        resp.reason = 1;
+        auto ser = network::Serializer::serializeForNetwork(resp);
+        auto tempClient = std::make_shared<ClientConnection>(
+            sender, 0, config_.reliabilityConfig);
+        sendToClient(tempClient, network::OpCode::S_JOIN_LOBBY_RESPONSE, ser);
+        return;
+    }
+
+    if (config_.expectedLobbyCode.empty() ||
+        config_.expectedLobbyCode == code) {
+        client->joined = true;
+        resp.accepted = 1;
+        resp.reason = 0;
+        LOG_INFO("[NetworkServer] Client userId="
+                 << client->userId << " joined lobby successfully");
+    } else {
+        resp.accepted = 0;
+        resp.reason = 1;
+        LOG_INFO("[NetworkServer] Client userId="
+                 << client->userId << " provided invalid lobby code: " << code);
+    }
+
+    auto ser = network::Serializer::serializeForNetwork(resp);
+    sendToClient(client, network::OpCode::S_JOIN_LOBBY_RESPONSE, ser);
 }
 
 std::string NetworkServer::makeConnectionKey(

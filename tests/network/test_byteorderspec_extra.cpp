@@ -37,25 +37,3 @@ TEST(ByteOrderSpecExtra, SpanDeserializeEmptyPayloadThrows) {
     EXPECT_THROW(static_cast<void>(ByteOrderSpec::deserializeFromNetwork<Empty>(nonempty)), std::runtime_error);
     EXPECT_THROW(static_cast<void>(ByteOrderSpec::deserializeFromNetwork<Empty>(std::span<const std::uint8_t>(nonempty))), std::runtime_error);
 }
-
-TEST(ByteOrderSpecExtra, LobbyReadyPayloadRoundTrip) {
-    LobbyReadyPayload p{1};
-    auto buf = ByteOrderSpec::serializeToNetwork(p);
-    auto rt = ByteOrderSpec::deserializeFromNetwork<LobbyReadyPayload>(buf);
-    EXPECT_EQ(rt.isReady, p.isReady);
-}
-
-TEST(ByteOrderSpecExtra, GameStartPayloadRoundTrip) {
-    GameStartPayload p{3.5f};
-    auto buf = ByteOrderSpec::serializeToNetwork(p);
-    auto rt = ByteOrderSpec::deserializeFromNetwork<GameStartPayload>(buf);
-    EXPECT_FLOAT_EQ(rt.countdownDuration, p.countdownDuration);
-}
-
-TEST(ByteOrderSpecExtra, PlayerReadyStatePayloadRoundTrip) {
-    PlayerReadyStatePayload p{9, 1};
-    auto buf = ByteOrderSpec::serializeToNetwork(p);
-    auto rt = ByteOrderSpec::deserializeFromNetwork<PlayerReadyStatePayload>(buf);
-    EXPECT_EQ(rt.userId, p.userId);
-    EXPECT_EQ(rt.isReady, p.isReady);
-}

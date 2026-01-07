@@ -154,7 +154,11 @@ if $GENERATE_HTML; then
 
     LCOV_OPTS="--rc branch_coverage=1 --ignore-errors mismatch,gcov,inconsistent,negative,unused,source"
 
-    lcov --capture --directory . --output-file "$COVERAGE_DIR/coverage.info" $LCOV_OPTS
+    lcov --capture --directory . --output-file "$COVERAGE_DIR/coverage.info" $LCOV_OPTS || true
+    if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
+        echo "Error: lcov did not generate coverage data (capture failed)." >&2
+        exit 1
+    fi
 
     lcov --remove "$COVERAGE_DIR/coverage.info" \
         '/usr/*' \
@@ -176,7 +180,11 @@ if $GENERATE_HTML; then
         '*/tools/*' \
         '*/saves/*' \
         --output-file "$COVERAGE_DIR/coverage.info" \
-        $LCOV_OPTS
+        $LCOV_OPTS || true
+    if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
+        echo "Error: lcov did not produce a filtered coverage data file (remove failed)." >&2
+        exit 1
+    fi
 
     echo ""
     echo ">>> Generating HTML report..."
@@ -207,12 +215,12 @@ if $GENERATE_HTML; then
 
     echo "Coverage thresholds: Lines ≥${LINES_THRESHOLD}%, Functions ≥${FUNCTIONS_THRESHOLD}%, Branches ≥${BRANCHES_THRESHOLD}%"
 
-    COVERAGE_OUTPUT=$(lcov --summary "$COVERAGE_DIR/coverage.info" $LCOV_OPTS 2>/dev/null)
+    COVERAGE_OUTPUT=$(lcov --summary "$COVERAGE_DIR/coverage.info" $LCOV_OPTS 2>&1 || true)
     echo "$COVERAGE_OUTPUT"
 
-    LINES_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "lines" | sed -E 's/.* ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
-    FUNCTIONS_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "functions" | sed -E 's/.* ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
-    BRANCHES_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "branches" | sed -E 's/.* ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
+    LINES_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep -E 'lines.*: [0-9]+\.[0-9]+%' | sed -E 's/.*: ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
+    FUNCTIONS_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep -E 'functions.*: [0-9]+\.[0-9]+%' | sed -E 's/.*: ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
+    BRANCHES_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep -E 'branches.*: [0-9]+\.[0-9]+%' | sed -E 's/.*: ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
 
     if [[ -z "$LINES_COVERAGE" || -z "$FUNCTIONS_COVERAGE" || -z "$BRANCHES_COVERAGE" ]]; then
         echo "Error: Could not parse coverage percentages"
@@ -271,7 +279,11 @@ else
     LCOV_OPTS="--rc branch_coverage=1 --ignore-errors mismatch,gcov,inconsistent,negative,unused"
 
     echo ">>> Capturing coverage data..."
-    lcov --capture --directory . --output-file "$COVERAGE_DIR/coverage.info" $LCOV_OPTS
+    lcov --capture --directory . --output-file "$COVERAGE_DIR/coverage.info" $LCOV_OPTS || true
+    if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
+        echo "Error: lcov did not generate coverage data (capture failed)." >&2
+        exit 1
+    fi
 
     echo ">>> Filtering coverage data..."
     lcov --remove "$COVERAGE_DIR/coverage.info" \
@@ -294,7 +306,11 @@ else
         '*/tools/*' \
         '*/saves/*' \
         --output-file "$COVERAGE_DIR/coverage.info" \
-        $LCOV_OPTS
+        $LCOV_OPTS || true
+    if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
+        echo "Error: lcov did not produce a filtered coverage data file (remove failed)." >&2
+        exit 1
+    fi
 
     echo ""
     echo "=== Coverage Summary ==="

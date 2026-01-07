@@ -20,6 +20,7 @@
 #include "games/rtype/client/Components/BoxingComponent.hpp"
 #include "games/rtype/client/Components/ImageComponent.hpp"
 #include "games/rtype/client/Components/RectangleComponent.hpp"
+#include "games/rtype/client/Components/TagComponent.hpp"
 #include "games/rtype/client/Components/ZIndexComponent.hpp"
 #include "games/rtype/client/GameScene/VisualCueFactory.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
@@ -231,6 +232,11 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
 
     if (!registry_->isAlive(entity)) {
         networkIdToEntity_.erase(it);
+        return;
+    }
+
+    if (registry_->hasComponent<rtype::games::rtype::client::LobbyTag>(
+            entity)) {
         return;
     }
 

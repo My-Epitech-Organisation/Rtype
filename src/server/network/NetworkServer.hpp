@@ -42,6 +42,8 @@ struct NetworkServerConfig {
     network::ReliableChannel::Config reliabilityConfig{};
     network::Compressor::Config compressionConfig{};
     bool enableCompression = true;
+
+    std::string expectedLobbyCode{};
 };
 
 /**
@@ -121,6 +123,14 @@ class NetworkServer {
      * @return true if started successfully, false on error
      */
     bool start(std::uint16_t port = network::kDefaultPort);
+
+    /**
+     * @brief Configure expected lobby code for validation
+     * @param code 6-char lobby code that clients must send via C_JOIN_LOBBY
+     */
+    void setExpectedLobbyCode(const std::string& code) {
+        config_.expectedLobbyCode = code;
+    }
 
     /**
      * @brief Stop the server and disconnect all clients
@@ -387,6 +397,7 @@ class NetworkServer {
         network::ReliableChannel reliableChannel;
         std::chrono::steady_clock::time_point lastActivity;
         std::uint16_t nextSeqId{0};
+        bool joined{false};
 
         explicit ClientConnection(const network::Endpoint& ep, std::uint32_t id,
                                   const network::ReliableChannel::Config& cfg)
@@ -419,6 +430,10 @@ class NetworkServer {
     void handleReady(const network::Header& header,
                      const network::Buffer& payload,
                      const network::Endpoint& sender);
+
+    void handleJoinLobby(const network::Header& header,
+                         const network::Buffer& payload,
+                         const network::Endpoint& sender);
 
     [[nodiscard]] std::string makeConnectionKey(
         const network::Endpoint& ep) const;

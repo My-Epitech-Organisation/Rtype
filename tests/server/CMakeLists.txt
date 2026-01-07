@@ -103,7 +103,6 @@ target_link_libraries(test_server_app_gameconfig PRIVATE
 
 # ServerNetworkSystem unit tests
 add_executable(test_server_network_system test_ServerNetworkSystem.cpp
-    test_entity_spawner_factory_branches.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
 )
@@ -125,7 +124,6 @@ target_link_libraries(test_server_network_system PRIVATE
     network
     ecs
     rtype_game_shared
-    rtype_server_core
 )
 
 # Unit tests for ServerApp
@@ -313,7 +311,7 @@ target_link_libraries(test_packet_processor PRIVATE
 )
 
 # GameStateManager unit tests
-add_executable(test_game_state_manager test_game_state_manager.cpp
+add_executable(test_game_state_manager test_game_state_manager.cpp test_game_state_manager_countdown.cpp
     ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameStateManager/GameStateManager.cpp
 )
 

@@ -309,6 +309,53 @@ bool NetworkClient::sendReady(bool isReady) {
     return true;
 }
 
+bool NetworkClient::requestLobbyList(const std::string& discoveryIp,
+                                     std::uint16_t discoveryPort) {
+    if (!socket_->isOpen()) {
+        if (!socket_->bind(0)) {
+            LOG_ERROR_CAT(
+                rtype::LogCategory::Network,
+                "[NetworkClient] Failed to bind socket for lobby discovery");
+            return false;
+        }
+        LOG_INFO_CAT(rtype::LogCategory::Network,
+                     "[NetworkClient] Socket bound for lobby discovery");
+    }
+
+    if (!receiveInProgress_.load(std::memory_order_acquire)) {
+        LOG_INFO_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] Starting receive loop for lobby discovery");
+        startReceive();
+    }
+
+    network::Endpoint discoveryEndpoint{discoveryIp, discoveryPort};
+
+    network::Header header =
+        network::Header::create(network::OpCode::C_REQUEST_LOBBIES, 0, 0, 0);
+
+    network::Buffer packet(network::kHeaderSize);
+    std::memcpy(packet.data(), &header, network::kHeaderSize);
+
+    socket_->asyncSendTo(
+        packet, discoveryEndpoint,
+        [discoveryEndpoint](network::Result<std::size_t> sendResult) {
+            if (sendResult) {
+                LOG_INFO_CAT(rtype::LogCategory::Network,
+                             "[NetworkClient] Sent C_REQUEST_LOBBIES to "
+                                 << discoveryEndpoint.address << ":"
+                                 << discoveryEndpoint.port);
+            } else {
+                LOG_ERROR_CAT(
+                    rtype::LogCategory::Network,
+                    "[NetworkClient] Failed to send C_REQUEST_LOBBIES");
+            }
+        });
+
+    LOG_DEBUG("[NetworkClient] Sent C_REQUEST_LOBBIES to discovery server");
+    return true;
+}
+
 void NetworkClient::onConnected(
     std::function<void(std::uint32_t myUserId)> callback) {
     onConnectedCallbacks_.push_back(std::move(callback));
@@ -372,6 +419,36 @@ void NetworkClient::onPowerUpEvent(std::function<void(PowerUpEvent)> callback) {
     onPowerUpCallback_ = std::move(callback);
 }
 
+bool NetworkClient::sendJoinLobby(const std::string& code) {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    network::JoinLobbyPayload payload{};
+    for (size_t i = 0; i < 6 && i < code.size(); ++i) {
+        payload.code[i] = code[i];
+    }
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    auto result =
+        connection_.buildPacket(network::OpCode::C_JOIN_LOBBY, serialized);
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    return true;
+}
+
+void NetworkClient::onJoinLobbyResponse(
+    std::function<void(bool, uint8_t)> callback) {
+    onJoinLobbyResponseCallback_ = std::move(callback);
+}
+
 void NetworkClient::onPositionCorrection(
     std::function<void(float x, float y)> callback) {
     onPositionCorrectionCallback_ = std::move(callback);
@@ -393,6 +470,11 @@ void NetworkClient::onGameStart(std::function<void(float)> callback) {
 void NetworkClient::onPlayerReadyStateChanged(
     std::function<void(std::uint32_t userId, bool isReady)> callback) {
     onPlayerReadyStateChangedCallback_ = std::move(callback);
+}
+
+void NetworkClient::onLobbyListReceived(
+    std::function<void(LobbyListEvent)> callback) {
+    onLobbyListReceivedCallback_ = std::move(callback);
 }
 
 void NetworkClient::poll() {
@@ -423,6 +505,24 @@ void NetworkClient::dispatchCallbacks() {
         toDispatch.front()();
         toDispatch.pop();
     }
+}
+
+void NetworkClient::test_dispatchCallbacks() { dispatchCallbacks(); }
+
+void NetworkClient::test_processIncomingPacket(
+    const network::Buffer& data, const network::Endpoint& sender) {
+    processIncomingPacket(data, sender);
+}
+
+void NetworkClient::test_queueCallback(std::function<void()> callback) {
+    queueCallback(std::move(callback));
+}
+
+void NetworkClient::test_startReceive() { startReceive(); }
+
+void NetworkClient::test_handlePong(const network::Header& header,
+                                    const network::Buffer& payload) {
+    handlePong(header, payload);
 }
 
 void NetworkClient::queueCallback(std::function<void()> callback) {
@@ -554,6 +654,14 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
 
         case network::OpCode::S_PLAYER_READY_STATE:
             handlePlayerReadyState(header, payload);
+            break;
+
+        case network::OpCode::S_JOIN_LOBBY_RESPONSE:
+            handleJoinLobbyResponse(header, payload);
+            break;
+
+        case network::OpCode::S_LOBBY_LIST:
+            handleLobbyList(header, payload);
             break;
 
         case network::OpCode::PONG:
@@ -912,6 +1020,94 @@ void NetworkClient::handlePlayerReadyState(const network::Header& header,
         });
     } catch (...) {
         // Invalid payload, ignore
+    }
+}
+
+void NetworkClient::handleJoinLobbyResponse(const network::Header& header,
+                                            const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::JoinLobbyResponsePayload)) {
+        return;
+    }
+
+    try {
+        auto resp = network::Serializer::deserializeFromNetwork<
+            network::JoinLobbyResponsePayload>(payload);
+
+        queueCallback([this, resp]() {
+            if (onJoinLobbyResponseCallback_) {
+                onJoinLobbyResponseCallback_(resp.accepted == 1, resp.reason);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
+void NetworkClient::handleLobbyList(const network::Header& header,
+                                    const network::Buffer& payload) {
+    (void)header;
+
+    LOG_INFO_CAT(rtype::LogCategory::Network,
+                 "[NetworkClient] Received S_LOBBY_LIST with payload size: "
+                     << payload.size());
+
+    if (payload.empty()) {
+        LOG_DEBUG("[NetworkClient] Received empty lobby list");
+        queueCallback([this]() {
+            if (onLobbyListReceivedCallback_) {
+                onLobbyListReceivedCallback_(LobbyListEvent{{}});
+            }
+        });
+        return;
+    }
+
+    try {
+        std::size_t offset = 0;
+
+        if (payload.size() < 1) {
+            return;
+        }
+        std::uint8_t lobbyCount = payload[offset++];
+
+        LobbyListEvent event;
+        event.lobbies.reserve(lobbyCount);
+
+        constexpr std::size_t kLobbyInfoSize = 11;
+
+        for (std::uint8_t i = 0;
+             i < lobbyCount && offset + kLobbyInfoSize <= payload.size(); ++i) {
+            LobbyInfo info;
+
+            info.code.assign(
+                reinterpret_cast<const char*>(payload.data() + offset), 6);
+            offset += 6;
+
+            std::uint16_t portNet;
+            std::memcpy(&portNet, payload.data() + offset, sizeof(portNet));
+            info.port = network::ByteOrderSpec::fromNetwork(portNet);
+            offset += sizeof(portNet);
+
+            info.playerCount = payload[offset++];
+
+            info.maxPlayers = payload[offset++];
+
+            info.isActive = (payload[offset++] != 0);
+
+            event.lobbies.push_back(std::move(info));
+        }
+
+        LOG_DEBUG("[NetworkClient] Received lobby list with "
+                  << event.lobbies.size() << " lobbies");
+
+        queueCallback([this, event = std::move(event)]() {
+            if (onLobbyListReceivedCallback_) {
+                onLobbyListReceivedCallback_(event);
+            }
+        });
+    } catch (...) {
+        LOG_ERROR("[NetworkClient] Failed to parse lobby list");
     }
 }
 

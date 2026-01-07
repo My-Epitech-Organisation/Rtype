@@ -188,10 +188,11 @@ TEST_F(ServerIntegrationTest, StartsInWaitingForPlayersState) {
 }
 
 /**
- * @brief Test that playerReady() starts a countdown and can be forced to start
+ * @brief Test that playerReady() transitions to Playing state
  */
 TEST_F(ServerIntegrationTest, PlayerReadyStartsGame) {
     ServerApp server(4254, 4, 60, _shutdownFlag, 10, false);
+    server.setDefaultCountdown(0.0f);
 
     std::thread serverThread([&server]() {
         server.run();
@@ -206,54 +207,13 @@ TEST_F(ServerIntegrationTest, PlayerReadyStartsGame) {
     // Simulate player ready signal
     server.playerReady(1);
 
-    // Give time for countdown to start
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-
-    // Countdown should be active, but game not yet playing
-    EXPECT_TRUE(server.isCountdownActive());
-    EXPECT_FALSE(server.isPlaying());
-    EXPECT_EQ(server.getReadyPlayerCount(), 1u);
-
-    // Force finish countdown (test helper)
-    server.forceStart();
-
     // Give time for state transition
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     // Should now be playing
     EXPECT_EQ(server.getGameState(), GameState::Playing);
     EXPECT_TRUE(server.isPlaying());
-
-    _shutdownFlag->store(true);
-    if (serverThread.joinable()) {
-        serverThread.join();
-    }
-}
-
-/**
- * @brief Test that unready cancels a running countdown
- */
-TEST_F(ServerIntegrationTest, PlayerUnreadyCancelsCountdown) {
-    ServerApp server(4255, 4, 60, _shutdownFlag, 10, false);
-
-    std::thread serverThread([&server]() {
-        server.run();
-    });
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    // Start countdown
-    server.playerReady(1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    EXPECT_TRUE(server.isCountdownActive());
     EXPECT_EQ(server.getReadyPlayerCount(), 1u);
-
-    // Player becomes unready, countdown should be cancelled
-    server.playerNotReady(1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    EXPECT_FALSE(server.isCountdownActive());
-    EXPECT_FALSE(server.isPlaying());
-    EXPECT_EQ(server.getReadyPlayerCount(), 0u);
 
     _shutdownFlag->store(true);
     if (serverThread.joinable()) {

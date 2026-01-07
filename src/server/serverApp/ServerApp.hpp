@@ -151,6 +151,21 @@ class ServerApp {
         _onGameStartBroadcastCallback = std::move(cb);
     }
 
+    /**
+     * @brief Set the expected lobby code for join validation
+     */
+    void setLobbyCode(const std::string& code);
+
+    /**
+     * @brief Test hook: set default countdown duration used by GameStateManager
+     * (useful to make tests deterministic)
+     */
+    void setDefaultCountdown(float seconds) {
+        if (_stateManager) {
+            _stateManager->setDefaultCountdown(seconds);
+        }
+    }
+
     [[nodiscard]] bool reloadConfiguration();
 
     void registerUserIdMapping(const Endpoint& endpoint,

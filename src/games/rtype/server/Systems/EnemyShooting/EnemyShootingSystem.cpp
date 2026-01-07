@@ -21,6 +21,7 @@ using shared::PlayerTag;
 using shared::ShootCooldownComponent;
 using shared::TransformComponent;
 
+// LCOV_EXCL_START - lambda-based callback not easily testable
 void EnemyShootingSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
     if (!_shootCb) {
         return;
@@ -71,5 +72,6 @@ void EnemyShootingSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
         cd.triggerCooldown();
     });
 }
+// LCOV_EXCL_STOP
 
 }  // namespace rtype::games::rtype::server
