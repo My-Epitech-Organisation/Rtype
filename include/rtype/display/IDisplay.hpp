@@ -144,13 +144,17 @@ namespace rtype::display {
     public:
         virtual ~IDisplay() = default;
 
-        virtual void open(unsigned int width, unsigned int height, const std::string& title) = 0;
+        [[nodiscard]] virtual std::string getLibName(void) const = 0;
+
+        virtual void open(unsigned int width, unsigned int height, const std::string& title, const bool setFullscreen) = 0;
         [[nodiscard]] virtual bool isOpen() const = 0;
         virtual void close() = 0;
         virtual bool pollEvent(Event& event) = 0;
         virtual void clear(const Color& color = {0, 0, 0, 255}) = 0;
         virtual void display() = 0;
         virtual void setFramerateLimit(unsigned int limit) = 0;
+        virtual void setFullscreen(bool) = 0;
+        [[nodiscard]] virtual bool isFullscreen() const = 0;
 
         // Rendering methods
         virtual void drawSprite(const std::string& textureName, const Vector2<float>& position, const Rect<int>& rect, const Vector2<float>& scale, const Color& color) = 0;

@@ -371,7 +371,7 @@ Graphic::Graphic(
 #endif
     this->_display = std::shared_ptr<rtype::display::IDisplay>(
         this->_displayLoader->getInstance("createInstanceDisplay"));
-    this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT, "R-Type - Epitech 2025");
+    this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT, "R-Type - Epitech 2025", false);
 
     this->_keybinds->initialize(*this->_display);
 
@@ -398,14 +398,11 @@ Graphic::Graphic(
 }
 
 Graphic::~Graphic() {
-    // 1. Destroy things that definitely use the display/DLL
     _sceneManager.reset();
     _systemScheduler.reset();
     _assetsManager.reset();
     _audioLib.reset();
 
-    // 2. Clear registry to ensure components/singletons containing DLL objects
-    // are destroyed before we unload the DLL.
     if (_registry) {
         _registry->clear();
     }

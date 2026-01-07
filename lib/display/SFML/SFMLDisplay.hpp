@@ -20,16 +20,27 @@
 
 namespace rtype::display {
     class SFMLDisplay : public ::rtype::display::IDisplay {
+    private:
+        unsigned int _windowSizeWidth = 1920;
+        unsigned int _windowSizeHeight = 1080;
+        bool _windowIsFullscreen = false;
+        std::string _windowTitleName = "";
+
     public:
         SFMLDisplay();
         ~SFMLDisplay() override;
-        void open(unsigned int width, unsigned int height, const std::string& title) override;
+
+        [[nodiscard]] std::string getLibName(void) const override;
+
+        void open(unsigned int width, unsigned int height, const std::string& title, bool setFullscreen) override;
         [[nodiscard]] bool isOpen() const override;
         void close() override;
         bool pollEvent(Event& event) override;
         void clear(const Color& color = {0, 0, 0, 255}) override;
         void display() override;
         void setFramerateLimit(unsigned int limit) override;
+        void setFullscreen(bool) override;
+        [[nodiscard]] bool isFullscreen() const override;
 
         // Rendering methods
         void drawSprite(const std::string& textureName, const Vector2<float>& position, const Rect<int>& rect, const Vector2<float>& scale, const Color& color) override;

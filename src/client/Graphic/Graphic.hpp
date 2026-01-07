@@ -86,6 +86,9 @@ class Graphic {
     /// @brief Display interface loaded from DLL
     std::shared_ptr<rtype::display::IDisplay> _display;
 
+     /// @brief Name of the Display lib loaded from DLL
+    std::string _displayName;
+
     // ========================================================================
     // Shared resources (owned by Graphic, shared with subsystems)
     // ========================================================================

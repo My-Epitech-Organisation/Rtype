@@ -41,8 +41,8 @@ SettingsScene::SettingsScene(
         this->_registry,
         rtype::games::rtype::client::Text(
             "main_font", rtype::display::Color::White(), 36, "Back"),
-        rtype::games::rtype::shared::TransformComponent(100, 900),
-        rtype::games::rtype::client::Rectangle({400, 75},
+        rtype::games::rtype::shared::TransformComponent(100.f, 900.f),
+        rtype::games::rtype::client::Rectangle({400.f, 75.f},
                                                rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([switchToScene]() {
@@ -53,6 +53,11 @@ SettingsScene::SettingsScene(
                           std::string(e.what()));
             }
         })));
+    this->_listEntity.push_back(EntityFactory::createStaticText(this->_registry, this->_assetsManager,
+                                "Loaded display lib: " + this->_window->getLibName(), "main_font",
+                                rtype::display::Vector2<float>(
+                                    1500.f, 932.5f),
+                                24));
 
     this->_assetsManager->audioManager->load(
         "main_settings_music",
@@ -280,7 +285,7 @@ void SettingsScene::_initAudioSection() {
                 font, rtype::display::Color::White(), 24, "+"),
             rtype::games::rtype::shared::TransformComponent(plusX, y),
             rtype::games::rtype::client::Rectangle(
-                {50, 50}, rtype::display::Color::Yellow(),
+                {50, 50}, rtype::display::Color::Blue(),
                 rtype::display::Color::Red()),
             this->_assetsManager,
             std::function<void()>([this, valueEntity, isMusic, label]() {
@@ -322,6 +327,19 @@ void SettingsScene::_initWindowSection() {
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Window",
         rtype::display::Rect<float>(sectionX, sectionY, sectionW, sectionH));
+
+    sectionEntities.push_back(EntityFactory::createButton(this->_registry,
+        rtype::games::rtype::client::Text(
+            "main_font", rtype::display::Color::White(), 24, "Toggle Fullscreen"),
+        rtype::games::rtype::shared::TransformComponent(sectionX + 50, sectionY + 80),
+        rtype::games::rtype::client::Rectangle({400, 60},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
+        this->_assetsManager, std::function<void()>([this]() {
+            bool isFullscreen = this->_window->isFullscreen();
+            this->_window->setFullscreen(!isFullscreen);
+        })));
+
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 }

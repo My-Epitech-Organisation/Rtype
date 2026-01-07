@@ -17,8 +17,15 @@ SFMLDisplay::~SFMLDisplay() {
     }
 }
 
-void SFMLDisplay::open(unsigned int width, unsigned int height, const std::string& title) {
-    this->_window = std::make_unique<sf::RenderWindow>(sf::VideoMode({width, height}), title);
+std::string SFMLDisplay::getLibName() const {
+    return "SFML";
+}
+
+void SFMLDisplay::open(unsigned int width, unsigned int height, const std::string& title, const bool setFullscreen) {
+    this->_window = std::make_unique<sf::RenderWindow>(sf::VideoMode({width, height}), title, setFullscreen ? sf::State::Fullscreen : sf::State::Windowed);
+    this->_windowSizeHeight = height;
+    this->_windowSizeWidth = width;
+    this->_windowTitleName = title;
     this->_renderTarget = this->_window.get();
     this->_view = this->_window->getDefaultView();
 }
@@ -111,15 +118,27 @@ void SFMLDisplay::clear(const Color& color) {
 }
 
 void SFMLDisplay::display() {
-    if (_window) {
-        _window->display();
+    if (this->_window) {
+        this->_window->display();
     }
 }
 
 void SFMLDisplay::setFramerateLimit(unsigned int limit) {
-    if (_window) {
-        _window->setFramerateLimit(limit);
+    if (this->_window) {
+        this->_window->setFramerateLimit(limit);
     }
+}
+
+void SFMLDisplay::setFullscreen(bool setFullscreen) {
+    this->_window.reset();
+    this->close();
+    this->open(this->_windowSizeWidth, this->_windowSizeHeight, this->_windowTitleName, setFullscreen);
+    this->_windowIsFullscreen = setFullscreen;
+
+}
+
+bool SFMLDisplay::isFullscreen() const {
+    return this->_windowIsFullscreen;
 }
 
 void SFMLDisplay::drawSprite(const std::string& textureName, const Vector2f& position, const IntRect& rect, const Vector2f& scale, const Color& color) {
