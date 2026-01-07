@@ -247,6 +247,9 @@ void SFMLDisplay::loadFont(const std::string& name, const std::string& path) {
     auto font = std::make_shared<SFMLFont>();
     if (font->openFromFile(path)) {
         _fonts[name] = std::move(font);
+    } else {
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
+                      "[SFMLDisplay] Failed to load font: " << path);
     }
 }
 
@@ -261,6 +264,9 @@ void SFMLDisplay::loadSoundBuffer(const std::string& name, const std::string& pa
     auto buffer = std::make_shared<SFMLSoundBuffer>();
     if (buffer->loadFromFile(path)) {
         _soundBuffers[name] = std::move(buffer);
+    } else {
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
+                      "[SFMLDisplay] Failed to load sound buffer: " << path);
     }
 }
 
@@ -275,6 +281,9 @@ void SFMLDisplay::loadMusic(const std::string& name, const std::string& path) {
     auto music = std::make_shared<SFMLMusic>();
     if (music->openFromFile(path)) {
         _musics[name] = std::move(music);
+    } else {
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
+                      "[SFMLDisplay] Failed to load music: " << path);
     }
 }
 
@@ -289,6 +298,9 @@ std::shared_ptr<ISound> SFMLDisplay::createSound(std::shared_ptr<ISoundBuffer> b
     auto sfmlBuffer = std::dynamic_pointer_cast<SFMLSoundBuffer>(buffer);
     if (sfmlBuffer) {
         return std::make_shared<SFMLSound>(sfmlBuffer);
+    } else {
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
+                      "[SFMLDisplay] Failed to create sound: Invalid sound buffer type");
     }
     return nullptr;
 }
@@ -304,6 +316,9 @@ void SFMLDisplay::loadShader(const std::string& name, const std::string& vertexP
 
     if (loaded) {
         _shaders[name] = std::move(shader);
+    } else {
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
+                      "[SFMLDisplay] Failed to load shader: " << vertexPath << ", " << fragmentPath);
     }
 }
 
