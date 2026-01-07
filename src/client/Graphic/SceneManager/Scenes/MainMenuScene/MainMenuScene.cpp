@@ -231,7 +231,6 @@ void MainMenuScene::_createConnectionPanel(
 
 void MainMenuScene::_onConnectClicked(
     std::function<void(const SceneManager::Scene&)> switchToScene) {
-    std::cout << "Connect button clicked\n";
     if (!this->_networkClient) {
         this->_updateStatus("Error: Network not available",
                             rtype::display::Color::Red());
