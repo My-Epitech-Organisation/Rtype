@@ -35,20 +35,19 @@ void ForcePodAttachmentSystem::updateAttachedPods(ECS::Registry& registry) {
             return;
         }
 
-        auto playerView = registry.view<PlayerTag, NetworkIdComponent,
-                                        TransformComponent>();
+        auto playerView =
+            registry.view<PlayerTag, NetworkIdComponent, TransformComponent>();
 
-        playerView.each(
-            [&forcePod, &podTransform](
-                ECS::Entity /*playerEntity*/, const PlayerTag&,
-                const NetworkIdComponent& networkId,
-                const TransformComponent& playerTransform) {
-                if (networkId.networkId == forcePod.ownerNetworkId) {
-                    podTransform.x = playerTransform.x + forcePod.offsetX;
-                    podTransform.y = playerTransform.y + forcePod.offsetY;
-                    podTransform.rotation = playerTransform.rotation;
-                }
-            });
+        playerView.each([&forcePod, &podTransform](
+                            ECS::Entity /*playerEntity*/, const PlayerTag&,
+                            const NetworkIdComponent& networkId,
+                            const TransformComponent& playerTransform) {
+            if (networkId.networkId == forcePod.ownerNetworkId) {
+                podTransform.x = playerTransform.x + forcePod.offsetX;
+                podTransform.y = playerTransform.y + forcePod.offsetY;
+                podTransform.rotation = playerTransform.rotation;
+            }
+        });
     });
 }
 

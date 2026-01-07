@@ -11,11 +11,7 @@
 
 namespace rtype::games::rtype::shared {
 
-enum class ForcePodState : uint8_t {
-    Attached = 0,
-    Detached,
-    Returning
-};
+enum class ForcePodState : uint8_t { Attached = 0, Detached, Returning };
 
 struct ForcePodComponent {
     ForcePodState state{ForcePodState::Attached};

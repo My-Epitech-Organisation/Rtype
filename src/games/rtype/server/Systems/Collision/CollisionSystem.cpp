@@ -507,15 +507,16 @@ void CollisionSystem::handleForcePodCollision(ECS::Registry& registry,
             return;
         }
         cmdBuffer.emplaceComponentDeferred<DestroyTag>(target, DestroyTag{});
-        LOG_DEBUG_CAT(
-            ::rtype::LogCategory::GameEngine,
-            "[CollisionSystem] Force Pod blocked enemy projectile " << target.id);
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[CollisionSystem] Force Pod blocked enemy projectile "
+                          << target.id);
     } else if (isEnemy) {
         if (!registry.hasComponent<HealthComponent>(target)) {
-            cmdBuffer.emplaceComponentDeferred<DestroyTag>(target, DestroyTag{});
-            LOG_DEBUG_CAT(
-                ::rtype::LogCategory::GameEngine,
-                "[CollisionSystem] Force Pod destroyed weak enemy " << target.id);
+            cmdBuffer.emplaceComponentDeferred<DestroyTag>(target,
+                                                           DestroyTag{});
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[CollisionSystem] Force Pod destroyed weak enemy "
+                              << target.id);
         }
     }
 }
