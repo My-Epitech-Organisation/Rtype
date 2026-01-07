@@ -19,37 +19,7 @@ spawn_delay = 0.8
 
 [[wave.spawn]]
 enemy = "basic"
-x = 850.0
-y = 100.0
 delay = 0.0
-count = 1
-
-[[wave.spawn]]
-enemy = "basic"
-x = 850.0
-y = 200.0
-delay = 1.0
-count = 1
-
-[[wave.spawn]]
-enemy = "basic"
-x = 850.0
-y = 300.0
-delay = 2.0
-count = 1
-
-[[wave.spawn]]
-enemy = "basic"
-x = 850.0
-y = 400.0
-delay = 3.0
-count = 1
-
-[[wave.spawn]]
-enemy = "basic"
-x = 850.0
-y = 500.0
-delay = 4.0
 count = 1
 
 # -----------------------------------------------------------------------------
@@ -61,24 +31,8 @@ spawn_delay = 0.5
 
 [[wave.spawn]]
 enemy = "wave"
-x = 850.0
-y = 150.0
 delay = 0.0
 count = 3
-
-[[wave.spawn]]
-enemy = "wave"
-x = 850.0
-y = 350.0
-delay = 2.0
-count = 3
-
-[[wave.spawn]]
-enemy = "basic"
-x = 850.0
-y = 250.0
-delay = 4.0
-count = 2
 
 # -----------------------------------------------------------------------------
 # Wave 3 - Mixed enemies with first shooter
@@ -89,31 +43,9 @@ spawn_delay = 0.6
 
 [[wave.spawn]]
 enemy = "basic"
-x = 850.0
-y = 100.0
 delay = 0.0
 count = 2
 
-[[wave.spawn]]
-enemy = "shooter"
-x = 750.0
-y = 300.0
-delay = 1.5
-count = 1
-
-[[wave.spawn]]
-enemy = "wave"
-x = 850.0
-y = 450.0
-delay = 2.5
-count = 2
-
-[[wave.spawn]]
-enemy = "basic"
-x = 850.0
-y = 200.0
-delay = 4.0
-count = 3
 
 # -----------------------------------------------------------------------------
 # Wave 4 - Chasers introduced
@@ -124,31 +56,8 @@ spawn_delay = 0.4
 
 [[wave.spawn]]
 enemy = "chaser"
-x = 850.0
-y = 200.0
 delay = 0.0
 count = 2
-
-[[wave.spawn]]
-enemy = "shooter"
-x = 700.0
-y = 100.0
-delay = 1.0
-count = 1
-
-[[wave.spawn]]
-enemy = "shooter"
-x = 700.0
-y = 500.0
-delay = 1.0
-count = 1
-
-[[wave.spawn]]
-enemy = "wave"
-x = 850.0
-y = 300.0
-delay = 3.0
-count = 4
 
 # -----------------------------------------------------------------------------
 # Wave 5 - Pre-boss wave (challenging)
@@ -159,35 +68,6 @@ spawn_delay = 0.3
 
 [[wave.spawn]]
 enemy = "heavy"
-x = 850.0
-y = 300.0
 delay = 0.0
 count = 1
 
-[[wave.spawn]]
-enemy = "patrol"
-x = 850.0
-y = 100.0
-delay = 1.0
-count = 2
-
-[[wave.spawn]]
-enemy = "patrol"
-x = 850.0
-y = 500.0
-delay = 1.0
-count = 2
-
-[[wave.spawn]]
-enemy = "chaser"
-x = 850.0
-y = 250.0
-delay = 3.0
-count = 3
-
-[[wave.spawn]]
-enemy = "shooter"
-x = 650.0
-y = 300.0
-delay = 5.0
-count = 2
