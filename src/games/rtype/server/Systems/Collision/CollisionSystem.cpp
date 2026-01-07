@@ -18,6 +18,7 @@
 #include <rtype/network/Protocol.hpp>
 
 #include "../../../shared/Components.hpp"
+#include "../../../shared/Components/ForcePodComponent.hpp"
 #include "../../../shared/Systems/Collision/AABB.hpp"
 #include "Logger/Macros.hpp"
 
@@ -31,6 +32,9 @@ using shared::DestroyTag;
 using shared::EnemyProjectileTag;
 using shared::EnemyTag;
 using shared::EntityType;
+using shared::ForcePodComponent;
+using shared::ForcePodState;
+using shared::ForcePodTag;
 using shared::HealthComponent;
 using shared::InvincibleTag;
 using shared::NetworkIdComponent;
@@ -99,6 +103,8 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         bool bIsPickup = registry.hasComponent<PickupTag>(entityB);
         bool aIsObstacle = registry.hasComponent<ObstacleTag>(entityA);
         bool bIsObstacle = registry.hasComponent<ObstacleTag>(entityB);
+        bool aIsForcePod = registry.hasComponent<ForcePodTag>(entityA);
+        bool bIsForcePod = registry.hasComponent<ForcePodTag>(entityB);
         bool aHasHealth = registry.hasComponent<HealthComponent>(entityA);
         bool bHasHealth = registry.hasComponent<HealthComponent>(entityB);
 
@@ -119,6 +125,15 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         if (bIsObstacle && (aIsPlayer || aIsProjectile)) {
             handleObstacleCollision(registry, cmdBuffer, entityB, entityA,
                                     aIsPlayer);
+            continue;
+        }
+
+        if (aIsForcePod && (bIsEnemy || bIsProjectile)) {
+            handleForcePodCollision(registry, cmdBuffer, entityA, entityB);
+            continue;
+        }
+        if (bIsForcePod && (aIsEnemy || aIsProjectile)) {
+            handleForcePodCollision(registry, cmdBuffer, entityB, entityA);
             continue;
         }
 
@@ -460,6 +475,48 @@ void CollisionSystem::handleEnemyPlayerCollision(ECS::Registry& registry,
         LOG_DEBUG("[CollisionSystem] Enemy " << enemy.id
                                              << " destroyed on contact");
         cmdBuffer.emplaceComponentDeferred<DestroyTag>(enemy, DestroyTag{});
+    }
+}
+
+void CollisionSystem::handleForcePodCollision(ECS::Registry& registry,
+                                              ECS::CommandBuffer& cmdBuffer,
+                                              ECS::Entity forcePod,
+                                              ECS::Entity target) {
+    if (registry.hasComponent<DestroyTag>(forcePod) ||
+        registry.hasComponent<DestroyTag>(target)) {
+        return;
+    }
+
+    if (!registry.hasComponent<ForcePodComponent>(forcePod)) {
+        return;
+    }
+
+    const auto& forcePodComp =
+        registry.getComponent<ForcePodComponent>(forcePod);
+    if (forcePodComp.state != ForcePodState::Attached) {
+        return;
+    }
+
+    bool isProjectile = registry.hasComponent<ProjectileTag>(target);
+    bool isEnemy = registry.hasComponent<EnemyTag>(target);
+
+    if (isProjectile) {
+        bool isEnemyProjectile =
+            registry.hasComponent<EnemyProjectileTag>(target);
+        if (!isEnemyProjectile) {
+            return;
+        }
+        cmdBuffer.emplaceComponentDeferred<DestroyTag>(target, DestroyTag{});
+        LOG_DEBUG_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[CollisionSystem] Force Pod blocked enemy projectile " << target.id);
+    } else if (isEnemy) {
+        if (!registry.hasComponent<HealthComponent>(target)) {
+            cmdBuffer.emplaceComponentDeferred<DestroyTag>(target, DestroyTag{});
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[CollisionSystem] Force Pod destroyed weak enemy " << target.id);
+        }
     }
 }
 

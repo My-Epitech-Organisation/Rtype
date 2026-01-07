@@ -78,6 +78,10 @@ class CollisionSystem : public ::rtype::engine::ASystem {
                                  ECS::Entity obstacle, ECS::Entity other,
                                  bool otherIsPlayer);
 
+    void handleForcePodCollision(ECS::Registry& registry,
+                                 ECS::CommandBuffer& cmdBuffer,
+                                 ECS::Entity forcePod, ECS::Entity target);
+
     EventEmitter _emitEvent;
     std::unique_ptr<shared::QuadTreeSystem> _quadTreeSystem;
 };
