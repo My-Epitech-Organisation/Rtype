@@ -65,7 +65,7 @@ class Lobby : public AScene {
      */
     Lobby(std::shared_ptr<ECS::Registry> ecs,
           std::shared_ptr<AssetManager> textureManager,
-          std::shared_ptr<sf::RenderWindow> window,
+          std::shared_ptr<::rtype::display::IDisplay> window,
           std::function<void(const SceneManager::Scene&)> switchToScene,
           std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,
           std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =
@@ -73,8 +73,8 @@ class Lobby : public AScene {
           std::shared_ptr<AudioLib> audioLib = nullptr);
 
     void update(float dt) override;
-    void render(std::shared_ptr<sf::RenderWindow> window) override;
-    void pollEvents(const sf::Event& e) override;
+    void render(std::shared_ptr<rtype::display::IDisplay> window) override;
+    void pollEvents(const rtype::display::Event& e) override;
 
     /**
      * @brief Destroy the Lobby scene

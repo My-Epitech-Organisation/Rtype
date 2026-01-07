@@ -40,7 +40,7 @@ target_link_libraries(r-type_client PUBLIC
     network
     rtype_game_shared
     rtype_game_client
-    rtype-graphic-SFML
+    rtype-graphic
     rtype_game_client
     rtype_client_network
 )
@@ -68,7 +68,7 @@ target_include_directories(rtype-graphic-main-menu-scene
         ./
 )
 
-target_link_libraries(rtype-graphic-SFML
+target_link_libraries(rtype-graphic
     PRIVATE
     engine
     rtype_game_client_systems

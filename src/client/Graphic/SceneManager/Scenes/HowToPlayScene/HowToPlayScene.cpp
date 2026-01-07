@@ -7,8 +7,6 @@
 
 #include "HowToPlayScene.hpp"
 
-#include <SFML/Graphics/Color.hpp>
-
 #include "Components/ZIndexComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "Graphic/SceneManager/Scenes/SettingsScene/SettingsSceneUtils.hpp"
@@ -25,7 +23,7 @@ static constexpr float kSectionH = 600.f;
 HowToPlayScene::HowToPlayScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> assetsManager,
-    std::shared_ptr<sf::RenderWindow> window,
+    std::shared_ptr<rtype::display::IDisplay> window,
     std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(std::move(ecs), std::move(assetsManager), std::move(window),
@@ -38,11 +36,11 @@ HowToPlayScene::HowToPlayScene(
     auto backBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 36, "Back"),
+            "main_font", rtype::display::Color::White(), 36, "Back"),
         rtype::games::rtype::shared::TransformComponent(100, 900),
-        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
-                                               sf::Color::Red),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([this]() {
             try {
                 this->_switchToScene(SceneManager::MAIN_MENU);
@@ -66,8 +64,8 @@ std::string HowToPlayScene::_keyName(GameAction action) const {
 void HowToPlayScene::_initLayout() {
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "How to Play",
-        sf::FloatRect(sf::Vector2f(kSectionX, kSectionY),
-                      sf::Vector2f(kSectionW, kSectionH)));
+        rtype::display::Rect<float>(kSectionX, kSectionY, kSectionW,
+                                    kSectionH));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
@@ -95,16 +93,19 @@ void HowToPlayScene::_initLayout() {
         float y = startY + static_cast<float>(i) * lineGap;
         auto text = EntityFactory::createStaticText(
             this->_registry, this->_assetsManager, lines[i], fontId,
-            sf::Vector2f{textX, y}, 28.f);
+            rtype::display::Vector2<float>{textX, y}, 28.f);
+        this->_registry
+            ->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(
+                text);
         this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
             text, 2);
         this->_listEntity.push_back(text);
     }
 }
 
-void HowToPlayScene::pollEvents(const sf::Event& e) {
-    if (const auto* key = e.getIf<sf::Event::KeyPressed>()) {
-        if (key->code == sf::Keyboard::Key::Escape) {
+void HowToPlayScene::pollEvents(const rtype::display::Event& e) {
+    if (e.type == rtype::display::EventType::KeyPressed) {
+        if (e.key.code == rtype::display::Key::Escape) {
             try {
                 _switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& err) {
@@ -118,4 +119,5 @@ void HowToPlayScene::pollEvents(const sf::Event& e) {
 
 void HowToPlayScene::update(float /*dt*/) {}
 
-void HowToPlayScene::render(std::shared_ptr<sf::RenderWindow> /*window*/) {}
+void HowToPlayScene::render(
+    std::shared_ptr<rtype::display::IDisplay> /*window*/) {}

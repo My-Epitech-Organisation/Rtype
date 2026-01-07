@@ -10,18 +10,17 @@
 
 #include <memory>
 
-#include <SFML/Graphics/RenderTarget.hpp>
-
 #include "ASystem.hpp"
 #include "ECS.hpp"
+#include "rtype/display/IDisplay.hpp"
 
 namespace rtype::games::rtype::client {
 class BoxingSystem : public ::rtype::engine::ASystem {
    private:
-    std::shared_ptr<sf::RenderTarget> _target;
+    std::shared_ptr<::rtype::display::IDisplay> _display;
 
    public:
-    explicit BoxingSystem(std::shared_ptr<sf::RenderTarget> target);
+    explicit BoxingSystem(std::shared_ptr<::rtype::display::IDisplay> display);
     void update(ECS::Registry& registry, float dt) override;
 };
 }  // namespace rtype::games::rtype::client

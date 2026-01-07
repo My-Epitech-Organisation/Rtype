@@ -12,8 +12,6 @@
 #include <optional>
 #include <vector>
 
-#include <SFML/Graphics/RenderWindow.hpp>
-
 #include "../AScene.hpp"
 #include "GameAction.hpp"
 #include "Graphic/Accessibility.hpp"
@@ -43,13 +41,13 @@ class SettingsScene : public AScene {
 
    public:
     void update(float dt) override;
-    void render(std::shared_ptr<sf::RenderWindow> window) override;
-    void pollEvents(const sf::Event& e) override;
+    void render(std::shared_ptr<rtype::display::IDisplay> window) override;
+    void pollEvents(const rtype::display::Event& e) override;
 
     SettingsScene(
         std::shared_ptr<ECS::Registry> ecs,
         std::shared_ptr<AssetManager> textureManager,
-        std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<rtype::display::IDisplay> window,
         std::shared_ptr<KeyboardActions> keybinds,
         std::shared_ptr<AudioLib> audio,
         std::function<void(const SceneManager::Scene&)> switchToScene);

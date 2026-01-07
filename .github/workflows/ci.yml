@@ -394,7 +394,7 @@ jobs:
             -DUSE_SFML=ON
 
       - name: Build
-        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server
+        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml
 
       - name: Prepare Windows dist (exe + DLLs only)
         if: matrix.os == 'windows-latest'
@@ -407,6 +407,12 @@ jobs:
             exit 1
           fi
           cp -v build/src/client/*.exe build/dist/client/
+          echo "Staging Display lib"
+          if ! ls build/lib/display/**/*.dll >/dev/null 2>&1; then
+            echo "Error: No display lib found"
+            exit 1
+          fi
+          cp -v build/lib/display/**/*.dll build/dist/client/
           if ! ls build/vcpkg_installed/x64-windows/bin/*.dll >/dev/null 2>&1; then
             echo "Error: No DLLs found for client"
             exit 1
@@ -447,7 +453,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: r-type_client-${{ matrix.os }}
-          path: build/src/client/r-type_client
+          path: |
+            build/src/client/r-type_client
+            build/lib/display/**/*.so
           if-no-files-found: warn
 
       - name: Upload Server Artifact (Linux)

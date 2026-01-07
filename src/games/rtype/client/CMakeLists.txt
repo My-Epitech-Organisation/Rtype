@@ -1,14 +1,3 @@
-find_package(SFML
-        COMPONENTS
-        Network
-        Graphics
-        Window
-        Audio
-        System
-        CONFIG
-        REQUIRED
-)
-
 add_subdirectory(Components)
 add_subdirectory(Systems)
 add_subdirectory(GameScene)
@@ -34,4 +23,5 @@ target_link_libraries(rtype_game_client PUBLIC
 
 target_link_libraries(rtype_game_client PRIVATE
     rtype_game_client_components
+    rtype-display-clock
 )

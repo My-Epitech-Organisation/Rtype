@@ -15,32 +15,30 @@
 #include "../AllComponents.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Components/SoundComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
-EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window,
+EventSystem::EventSystem(std::shared_ptr<::rtype::display::IDisplay> display,
                          std::shared_ptr<AudioLib> audio)
     : ASystem("EventSystem"),
-      _window(std::move(window)),
+      _display(std::move(display)),
       _audioLib(std::move(audio)) {}
 
-EventSystem::EventSystem(std::shared_ptr<sf::RenderWindow> window,
-                         std::shared_ptr<AudioLib> audio,
-                         const sf::Event& event)
-    : ASystem("EventSystem"),
-      _event(event),
-      _window(std::move(window)),
-      _audioLib(std::move(audio)) {}
-
-void EventSystem::setEvent(const sf::Event& event) { _event = event; }
+void EventSystem::setEvent(const ::rtype::display::Event& event) {
+    _event = event;
+}
 
 void EventSystem::clearEvent() { _event.reset(); }
 
-bool EventSystem::_isPointInRect(sf::Vector2i pixelPos,
-                                 const Rectangle& rect) const {
-    if (!_window) return false;
-    sf::Vector2f worldPos = _window->mapPixelToCoords(pixelPos);
-    return rect.rectangle.getGlobalBounds().contains(worldPos);
+bool EventSystem::_isPointInRect(::rtype::display::Vector2i pixelPos,
+                                 const Rectangle& rect,
+                                 ::rtype::display::Vector2f position) const {
+    if (!_display) return false;
+    return (pixelPos.x >= position.x &&
+            pixelPos.x <= position.x + rect.size.first &&
+            pixelPos.y >= position.y &&
+            pixelPos.y <= position.y + rect.size.second);
 }
 
 void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
@@ -53,59 +51,67 @@ void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
     });
 
     if (!buttonEntities.empty()) {
-        if (const auto& keyEvent = _event->getIf<sf::Event::KeyPressed>()) {
-            if (keyEvent->code == sf::Keyboard::Key::Up ||
-                keyEvent->code == sf::Keyboard::Key::Down) {
+        if (_event->type == ::rtype::display::EventType::KeyPressed) {
+            if (_event->key.code == ::rtype::display::Key::Up ||
+                _event->key.code == ::rtype::display::Key::Down) {
                 _handleMenuNavigation(
                     registry, buttonEntities,
-                    keyEvent->code == sf::Keyboard::Key::Down);
-            } else if (keyEvent->code == sf::Keyboard::Key::Enter) {
+                    _event->key.code == ::rtype::display::Key::Down);
+            } else if (_event->key.code == ::rtype::display::Key::Return) {
                 _handleMenuActivation(registry, buttonEntities);
             }
-        } else if (const auto& joyEvent =
-                       _event->getIf<sf::Event::JoystickMoved>()) {
-            if (joyEvent->axis == sf::Joystick::Axis::Y) {
+        } else if (_event->type == ::rtype::display::EventType::JoystickMoved) {
+            if (_event->joystickMove.axis ==
+                ::rtype::display::JoystickAxis::Y) {
                 static std::map<unsigned int, bool> lastUpPressed;
                 static std::map<unsigned int, bool> lastDownPressed;
 
-                if (joyEvent->position > 95.0f) {
-                    if (!lastUpPressed[joyEvent->joystickId]) {
+                if (_event->joystickMove.position > 95.0f) {
+                    if (!lastUpPressed[_event->joystickMove.joystickId]) {
                         _handleMenuNavigation(registry, buttonEntities, true);
-                        lastUpPressed[joyEvent->joystickId] = true;
+                        lastUpPressed[_event->joystickMove.joystickId] = true;
                     }
-                } else if (joyEvent->position < -95.0f) {
-                    if (!lastDownPressed[joyEvent->joystickId]) {
+                } else if (_event->joystickMove.position < -95.0f) {
+                    if (!lastDownPressed[_event->joystickMove.joystickId]) {
                         _handleMenuNavigation(registry, buttonEntities, false);
-                        lastDownPressed[joyEvent->joystickId] = true;
+                        lastDownPressed[_event->joystickMove.joystickId] = true;
                     }
                 } else {
-                    lastUpPressed[joyEvent->joystickId] = false;
-                    lastDownPressed[joyEvent->joystickId] = false;
+                    lastUpPressed[_event->joystickMove.joystickId] = false;
+                    lastDownPressed[_event->joystickMove.joystickId] = false;
                 }
             }
-        } else if (const auto& joyBtnEvent =
-                       _event->getIf<sf::Event::JoystickButtonPressed>()) {
-            if (joyBtnEvent->button == 0) {
+        } else if (_event->type ==
+                   ::rtype::display::EventType::JoystickButtonPressed) {
+            if (_event->joystickButton.button == 0) {
                 _handleMenuActivation(registry, buttonEntities);
             }
         }
     }
 
-    registry.view<Rectangle, UserEvent>().each(
-        [this, &registry](ECS::Entity entity, const Rectangle& rect,
-                          UserEvent& actionType) {
+    registry
+        .view<Rectangle, UserEvent,
+              ::rtype::games::rtype::shared::TransformComponent>()
+        .each([this, &registry](
+                  ECS::Entity entity, const Rectangle& rect,
+                  UserEvent& actionType,
+                  const ::rtype::games::rtype::shared::TransformComponent&
+                      transform) {
             if (registry.hasComponent<HiddenComponent>(entity)) {
                 if (registry.getComponent<HiddenComponent>(entity).isHidden) {
                     return;
                 }
             }
 
+            ::rtype::display::Vector2f position{transform.x, transform.y};
+
             bool interaction = false;
+            interaction |= this->_handleMouseMoved(actionType, rect, registry,
+                                                   entity, position);
+            interaction |= this->_handleMousePressed(actionType, rect, registry,
+                                                     entity, position);
             interaction |=
-                this->_handleMouseMoved(actionType, rect, registry, entity);
-            interaction |=
-                this->_handleMousePressed(actionType, rect, registry, entity);
-            interaction |= this->_handleMouseReleased(actionType, rect);
+                this->_handleMouseReleased(actionType, rect, position);
 
             if (interaction || actionType.isHovered || actionType.isPressed) {
                 actionType.idle = false;
@@ -115,18 +121,19 @@ void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
 
 bool EventSystem::_handleMouseMoved(UserEvent& actionType,
                                     const Rectangle& rect, ECS::Registry& reg,
-                                    ECS::Entity entt) const {
-    const auto* mouseMove = _event->getIf<sf::Event::MouseMoved>();
-    if (!mouseMove) return false;
+                                    ECS::Entity entt,
+                                    ::rtype::display::Vector2f position) const {
+    if (_event->type != ::rtype::display::EventType::MouseMoved) return false;
 
-    bool isInside = _isPointInRect(mouseMove->position, rect);
+    bool isInside = _isPointInRect({_event->mouseMove.x, _event->mouseMove.y},
+                                   rect, position);
     bool interacted = false;
 
     if (!actionType.isHovered && isInside) {
         if (reg.hasComponent<ButtonSoundComponent>(entt)) {
             const auto& data = reg.getComponent<ButtonSoundComponent>(entt);
             if (_audioLib && data.hoverSFX) {
-                _audioLib->playSFX(*data.hoverSFX);
+                _audioLib->playSFX(data.hoverSFX);
             }
         }
         interacted = true;
@@ -141,20 +148,21 @@ bool EventSystem::_handleMouseMoved(UserEvent& actionType,
     return interacted || isInside;
 }
 
-bool EventSystem::_handleMousePressed(UserEvent& actionType,
-                                      const Rectangle& rect, ECS::Registry& reg,
-                                      ECS::Entity entt) const {
-    const auto* mousePress = _event->getIf<sf::Event::MouseButtonPressed>();
-    if (!mousePress) return false;
+bool EventSystem::_handleMousePressed(
+    UserEvent& actionType, const Rectangle& rect, ECS::Registry& reg,
+    ECS::Entity entt, ::rtype::display::Vector2f position) const {
+    if (_event->type != ::rtype::display::EventType::MouseButtonPressed)
+        return false;
 
-    if (mousePress->button == sf::Mouse::Button::Left &&
-        _isPointInRect(mousePress->position, rect)) {
+    if (_event->mouseButton.button == ::rtype::display::MouseButton::Left &&
+        _isPointInRect({_event->mouseButton.x, _event->mouseButton.y}, rect,
+                       position)) {
         actionType.isPressed = true;
 
         if (reg.hasComponent<ButtonSoundComponent>(entt)) {
             const auto& data = reg.getComponent<ButtonSoundComponent>(entt);
             if (_audioLib && data.clickSFX) {
-                _audioLib->playSFX(*data.clickSFX);
+                _audioLib->playSFX(data.clickSFX);
             }
         }
         return true;
@@ -162,16 +170,19 @@ bool EventSystem::_handleMousePressed(UserEvent& actionType,
     return false;
 }
 
-bool EventSystem::_handleMouseReleased(UserEvent& actionType,
-                                       const Rectangle& rect) const {
-    const auto* mouseRelease = _event->getIf<sf::Event::MouseButtonReleased>();
-    if (!mouseRelease) return false;
+bool EventSystem::_handleMouseReleased(
+    UserEvent& actionType, const Rectangle& rect,
+    ::rtype::display::Vector2f position) const {
+    if (_event->type != ::rtype::display::EventType::MouseButtonReleased)
+        return false;
 
-    if (mouseRelease->button == sf::Mouse::Button::Left) {
+    if (_event->mouseButton.button == ::rtype::display::MouseButton::Left) {
         bool wasPressed = actionType.isPressed;
         actionType.isPressed = false;
 
-        if (wasPressed && _isPointInRect(mouseRelease->position, rect)) {
+        if (wasPressed &&
+            _isPointInRect({_event->mouseButton.x, _event->mouseButton.y}, rect,
+                           position)) {
             actionType.isReleased = true;
             return true;
         }
@@ -214,7 +225,7 @@ void EventSystem::_handleMenuNavigation(ECS::Registry& registry,
             const auto& data =
                 registry.getComponent<ButtonSoundComponent>(buttons[nextIndex]);
             if (_audioLib && data.hoverSFX) {
-                _audioLib->playSFX(*data.hoverSFX);
+                _audioLib->playSFX(data.hoverSFX);
             }
         }
     }
@@ -233,7 +244,7 @@ void EventSystem::_handleMenuActivation(
                     const auto& data =
                         registry.getComponent<ButtonSoundComponent>(button);
                     if (_audioLib && data.clickSFX) {
-                        _audioLib->playSFX(*data.clickSFX);
+                        _audioLib->playSFX(data.clickSFX);
                     }
                 }
                 break;

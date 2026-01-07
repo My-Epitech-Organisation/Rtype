@@ -6,7 +6,7 @@ add_library(rtype-graphic-entity-factory
 
 target_link_libraries(rtype-graphic-entity-factory
     PUBLIC
-    rtype-graphic-SFML
+    rtype-graphic
     rtype-graphic-asset-manager
     rtype-graphic-scene-manager
     rtype_game_shared
