@@ -38,239 +38,249 @@ namespace rtype::display {
      */
 
     /**
-     * @brief Interface abstraite d'affichage utilisée par le moteur.
+     * @brief Abstract display interface used by the engine.
      *
-     * Fournit les opérations de création/fermeture de fenêtre, gestion
-     * d'événements, rendu (sprites, textes, formes) et gestion des
-     * ressources (textures, polices, sons, shaders, etc.).
+     * Provides operations for window creation/closure, event management,
+     * rendering (sprites, texts, shapes), and resource management
+     * (textures, fonts, sounds, shaders, etc.).
      */
     class IDisplay {
     public:
         virtual ~IDisplay() = default;
 
         /**
-         * @brief Retourne le nom de la bibliothèque d'affichage (par ex. "SFML").
-         * @return Nom de la bibliothèque
+         * @brief Returns the name of the display library (e.g., "SFML").
+         * @return Name of the library
          */
         [[nodiscard]] virtual std::string getLibName(void) const = 0;
 
         /**
-         * @brief Ouvre une fenêtre d'affichage.
-         * @param width Largeur de la fenêtre en pixels
-         * @param height Hauteur de la fenêtre en pixels
-         * @param title Titre de la fenêtre
-         * @param setFullscreen true pour ouvrir en plein écran
+         * @brief Opens a display window.
+         * @param width Width of the window in pixels
+         * @param height Height of the window in pixels
+         * @param title Title of the window
+         * @param setFullscreen true to open in fullscreen mode
          */
         virtual void open(unsigned int width, unsigned int height, const std::string& title, const bool setFullscreen) = 0;
 
         /**
-         * @brief Indique si la fenêtre est actuellement ouverte.
-         * @return true si ouverte
+         * @brief Indicates if the window is currently open.
+         * @return true if open
          */
         [[nodiscard]] virtual bool isOpen() const = 0;
 
         /**
-         * @brief Ferme la fenêtre et libère les ressources associées.
+         * @brief Closes the window and releases associated resources.
          */
         virtual void close() = 0;
 
         /**
-         * @brief Récupère l'événement suivant de la file d'événements.
-         * @param event Référence où stocker l'événement récupéré
-         * @return true si un événement a été récupéré
+         * @brief Retrieves the next event from the event queue.
+         * @param event Reference where the retrieved event will be stored
+         * @return true if an event was retrieved
          */
         virtual bool pollEvent(Event& event) = 0;
 
         /**
-         * @brief Efface la cible de rendu avec une couleur donnée.
-         * @param color Couleur de remplissage (valeur par défaut : noir opaque)
+         * @brief Clears the render target with a given color.
+         * @param color Fill color (default value: opaque black)
          */
         virtual void clear(const Color& color = {0, 0, 0, 255}) = 0;
 
         /**
-         * @brief Présente le contenu rendu à l'écran (swap buffers).
+         * @brief Presents the rendered content to the screen (swap buffers).
          */
         virtual void display() = 0;
 
         /**
-         * @brief Limite la fréquence de rafraîchissement (FPS).
-         * @param limit Nombre maximal d'images par seconde
+         * @brief Limits the refresh rate (FPS).
+         * @param limit Maximum number of frames per second
          */
         virtual void setFramerateLimit(unsigned int limit) = 0;
 
         /**
-         * @brief Active/désactive le mode plein écran.
-         * @param fullscreen true pour plein écran
+         * @brief Enables/disables fullscreen mode.
+         * @param fullscreen true for fullscreen
          */
-        virtual void setFullscreen(bool) = 0;
+        virtual void setFullscreen(bool fullscreen) = 0;
 
         /**
-         * @brief Indique si le mode plein écran est actif.
-         * @return true si plein écran
+         * @brief Indicates if fullscreen mode is active.
+         * @return true if fullscreen
          */
         [[nodiscard]] virtual bool isFullscreen() const = 0;
 
         // Rendering methods
         /**
-         * @brief Dessine un sprite à l'écran.
-         * @param textureName Nom de la texture chargée
-         * @param position Position du sprite
-         * @param rect Zone source de la texture à utiliser
-         * @param scale Échelle appliquée au sprite
-         * @param color Couleur modulatrice (tint)
+         * @brief Draws a sprite to the screen.
+         * @param textureName Name of the loaded texture
+         * @param position Sprite position
+         * @param rect Source area of the texture to use
+         * @param scale Scale applied to the sprite
+         * @param color Modulation color (tint)
          */
         virtual void drawSprite(const std::string& textureName, const Vector2<float>& position, const Rect<int>& rect, const Vector2<float>& scale, const Color& color) = 0;
 
         /**
-         * @brief Dessine du texte à l'écran.
-         * @param text Chaîne à afficher
-         * @param fontName Nom de la police chargée
-         * @param position Position du texte
-         * @param size Taille du texte en points
-         * @param color Couleur du texte
+         * @brief Draws text to the screen.
+         * @param text String to display
+         * @param fontName Name of the loaded font
+         * @param position Text position
+         * @param size Font size in points
+         * @param color Text color
          */
         virtual void drawText(const std::string& text, const std::string& fontName, const Vector2<float>& position, unsigned int size, const Color& color) = 0;
 
         /**
-         * @brief Dessine un rectangle rempli et optionnellement avec contour.
-         * @param position Position du rectangle
-         * @param size Taille du rectangle
-         * @param fillColor Couleur de remplissage
-         * @param outlineColor Couleur du contour
-         * @param outlineThickness Épaisseur du contour
+         * @brief Draws a filled rectangle, optionally with an outline.
+         * @param position Rectangle position
+         * @param size Rectangle size
+         * @param fillColor Fill color
+         * @param outlineColor Outline color
+         * @param outlineThickness Thickness of the outline
          */
         virtual void drawRectangle(const Vector2<float>& position, const Vector2<float>& size, const Color& fillColor, const Color& outlineColor, float outlineThickness) = 0;
 
         /**
-         * @brief Calcule les dimensions (largeur, hauteur) d'un texte donné.
-         * @param text Chaîne de texte
-         * @param fontName Nom de la police chargée
-         * @param size Taille du texte en points
-         * @return Dimensions du texte en pixels
+         * @brief Calculates the dimensions (width, height) of a given text.
+         * @param text Text string
+         * @param fontName Name of the loaded font
+         * @param size Font size in points
+         * @return Text dimensions in pixels
          */
         virtual Vector2<float> getTextBounds(const std::string& text, const std::string& fontName, unsigned int size) = 0;
 
         /**
-         * @brief Retourne la taille (en pixels) d'une texture chargée.
-         * @param textureName Nom de la texture
-         * @return Taille de la texture
+         * @brief Returns the size (in pixels) of a loaded texture.
+         * @param textureName Name of the texture
+         * @return Texture size
          */
         virtual Vector2<float> getTextureSize(const std::string& textureName) = 0;
 
         // View management
         /**
-         * @brief Définit la vue (centre et taille) utilisée pour le rendu.
-         * @param center Centre de la vue
-         * @param size Taille de la vue
+         * @brief Sets the view (center and size) used for rendering.
+         * @param center Center of the view
+         * @param size Size of the view
          */
         virtual void setView(const Vector2<float>& center, const Vector2<float>& size) = 0;
+
         /**
-         * @brief Retourne le centre actuel de la vue.
-         * @return Centre de la vue
+         * @brief Returns the current center of the view.
+         * @return View center
          */
         [[nodiscard]] virtual Vector2<float> getViewCenter() const = 0;
+
         /**
-         * @brief Retourne la taille actuelle de la vue.
-         * @return Taille de la vue
+         * @brief Returns the current size of the view.
+         * @return View size
          */
         [[nodiscard]] virtual Vector2<float> getViewSize() const = 0;
 
         /**
-         * @brief Réinitialise la vue sur la valeur par défaut (généralement la taille de la fenêtre).
+         * @brief Resets the view to the default value (usually the window size).
          */
         virtual void resetView() = 0;
 
         /**
-         * @brief Retourne la taille actuelle de la fenêtre en pixels.
-         * @return Taille de la fenêtre
+         * @brief Returns the current window size in pixels.
+         * @return Window size
          */
         [[nodiscard]] virtual Vector2<int> getWindowSize() const = 0;
 
-        // Asset management (might be better elsewhere, but for now...)
+        // Asset management
         /**
-        * @brief Charge une texture depuis un fichier et l'associe à un nom.
-        * @param name nom de la texture
-        * @param path chemin vers le fichier de texture
+        * @brief Loads a texture from a file and associates it with a name.
+        * @param name Name of the texture
+        * @param path Path to the texture file
         */
         virtual void loadTexture(const std::string& name, const std::string& path) = 0;
+
         /**
-        * @brief Charge une police depuis un fichier et l'associe à un nom.
-        * @param name nom de la police
-        * @param path chemin vers le fichier de police
+        * @brief Loads a font from a file and associates it with a name.
+        * @param name Name of the font
+        * @param path Path to the font file
         */
         virtual void loadFont(const std::string& name, const std::string& path) = 0;
+
         /**
-        * @brief Charge un sfx depuis un fichier et l'associe à un nom.
-        * @param name nom du sfx
-        * @param path chemin vers le fichier de son
+        * @brief Loads a sound buffer from a file and associates it with a name.
+        * @param name Name of the sound buffer (sfx)
+        * @param path Path to the sound file
         */
         virtual void loadSoundBuffer(const std::string& name, const std::string& path) = 0;
+
         /**
-        * @brief Charge une musique depuis un fichier et l'associe à un nom.
-        * @param name nom de la musique
-        * @param path chemin vers le fichier de musique
+        * @brief Loads music from a file and associates it with a name.
+        * @param name Name of the music
+        * @param path Path to the music file
         */
         virtual void loadMusic(const std::string& name, const std::string& path) = 0;
+
         /**
-        * @brief Recupère une ressource chargée par son nom.
-        * @param name nom de la ressource précédemment chargée
-        * @return un shared_ptr vers la ressource
+        * @brief Retrieves a loaded resource by its name.
+        * @param name Name of the previously loaded resource
+        * @return A shared_ptr to the resource
         */
         virtual std::shared_ptr<ITexture> getTexture(const std::string& name) = 0;
 
         /**
-         * @brief Récupère une ressource chargée par son nom.
-         * @param name nom de la ressource précédemment chargée
-         * @return un shared_ptr vers la ressource
+         * @brief Retrieves a loaded resource by its name.
+         * @param name Name of the previously loaded resource
+         * @return A shared_ptr to the resource
          */
         virtual std::shared_ptr<IFont> getFont(const std::string& name) = 0;
+
         /**
-         * @brief Récupère une ressource chargée par son nom.
-         * @param name nom de la ressource précédemment chargée
-         * @return un shared_ptr vers la ressource
+         * @brief Retrieves a loaded resource by its name.
+         * @param name Name of the previously loaded resource
+         * @return A shared_ptr to the resource
          */
         virtual std::shared_ptr<ISoundBuffer> getSoundBuffer(const std::string& name) = 0;
+
         /**
-         * @brief Récupère une ressource chargée par son nom.
-         * @param name nom de la ressource précédemment chargée
-         * @return un shared_ptr vers la ressource
+         * @brief Retrieves a loaded resource by its name.
+         * @param name Name of the previously loaded resource
+         * @return A shared_ptr to the resource
          */
         virtual std::shared_ptr<IMusic> getMusic(const std::string& name) = 0;
+
         /**
-         * @brief Crée un objet son à partir d'un buffer sonore.
-         * @param buffer shared_ptr vers le buffer sonore
-         * @return shared_ptr vers l'objet son créé
+         * @brief Creates a sound object from a sound buffer.
+         * @param buffer shared_ptr to the sound buffer
+         * @return shared_ptr to the created sound object
          */
         virtual std::shared_ptr<ISound> createSound(std::shared_ptr<ISoundBuffer> buffer) = 0;
+
         /**
-         * @brief Charge un shader depuis des fichiers de vertex et fragment, et l'associe à un nom.
-         * @param name nom du shader
-         * @param vertexPath chemin vers le fichier de shader vertex
-         * @param fragmentPath chemin vers le fichier de shader fragment
+         * @brief Loads a shader from vertex and fragment files, and associates it with a name.
+         * @param name Name of the shader
+         * @param vertexPath Path to the vertex shader file
+         * @param fragmentPath Path to the fragment shader file
          */
         virtual void loadShader(const std::string& name, const std::string& vertexPath, const std::string& fragmentPath) = 0;
 
         // Shader uniforms
         /**
-         * @brief Définit une valeur uniforme float pour un shader donné.
-         * @param shaderName Nom du shader
-         * @param uniformName Nom de l'uniforme dans le shader
-         * @param value Valeur float à assigner
+         * @brief Sets a float uniform value for a given shader.
+         * @param shaderName Name of the shader
+         * @param uniformName Name of the uniform in the shader
+         * @param value Float value to assign
          */
         virtual void setShaderUniform(const std::string& shaderName, const std::string& uniformName, float value) = 0;
 
         /**
-         * @brief Définit une matrice (vecteur de floats) comme uniforme pour un shader.
-         * @param shaderName Nom du shader
-         * @param uniformName Nom de l'uniforme dans le shader
-         * @param matrix Vecteur de floats représentant la matrice
+         * @brief Sets a matrix (vector of floats) as a uniform for a shader.
+         * @param shaderName Name of the shader
+         * @param uniformName Name of the uniform in the shader
+         * @param matrix Vector of floats representing the matrix
          */
         virtual void setShaderUniform(const std::string& shaderName, const std::string& uniformName, const std::vector<float>& matrix) = 0;
 
         // Render to texture
         /**
-         * @brief Commence le rendu vers une texture rendable identifiée par son nom.
-         * @param textureName Nom de la texture rendable
+         * @brief Starts rendering to a renderable texture identified by its name.
+         * @param textureName Name of the renderable texture
          */
         virtual void beginRenderToTexture(const std::string& textureName) = 0;
         virtual void endRenderToTexture() = 0;
@@ -278,14 +288,15 @@ namespace rtype::display {
 
         // Joystick
         /**
-         * @brief Indique si un joystick est connecté.
-         * @param joystickId Identifiant du joystick
-         * @return true si connecté
+         * @brief Indicates if a joystick is connected.
+         * @param joystickId ID of the joystick
+         * @return true if connected
          */
         [[nodiscard]] virtual bool isJoystickConnected(unsigned int joystickId) const = 0;
+
         /**
-         * @brief Retourne le nombre de joysticks connectés.
-         * @return Nombre de joysticks
+         * @brief Returns the number of connected joysticks.
+         * @return Number of joysticks
          */
         [[nodiscard]] virtual unsigned int getJoystickCount() const = 0;
     };

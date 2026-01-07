@@ -8,6 +8,9 @@
 #ifndef R_TYPE_DISPLAYENUM_HPP
 #define R_TYPE_DISPLAYENUM_HPP
 namespace rtype::display {
+    /**
+    * @brief Enumeration of all possible window events.
+    */
     enum class EventType {
         Closed,
         KeyPressed,
@@ -24,6 +27,9 @@ namespace rtype::display {
         Unknown
     };
 
+    /**
+    * @brief Enumeration of keyboard keys.
+    */
     enum class Key {
         Unknown = -1,
         A = 0, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
@@ -37,6 +43,9 @@ namespace rtype::display {
         Pause
     };
 
+    /**
+    * @brief Enumeration of mouse buttons.
+    */
     enum class MouseButton {
         Left,
         Right,
@@ -46,6 +55,9 @@ namespace rtype::display {
         ButtonCount
     };
 
+    /**
+    * @brief Enumeration of joystick axes.
+    */
     enum class JoystickAxis {
         X, Y, Z, R, U, V, PovX, PovY
     };

@@ -13,6 +13,9 @@
 
 namespace rtype::display {
 
+    /**
+     * @brief Representation of an RGBA color.
+     */
     struct Color {
         uint8_t r = 0, g = 0, b = 0;
         uint8_t a = 255;
@@ -27,11 +30,17 @@ namespace rtype::display {
         static Color Transparent() { return {0, 0, 0, 0}; }
     };
 
+    /**
+     * @brief Generic 2D vector structure.
+     */
     template<typename T>
     struct Vector2 {
         T x, y;
     };
 
+    /**
+     * @brief Generic rectangle structure.
+     */
     template<typename T>
     struct Rect {
         T left, top, width, height;
@@ -43,6 +52,10 @@ namespace rtype::display {
     using IntRect = Rect<int>;
     using FloatRect = Rect<float>;
 
+    /**
+     * @brief Structure representing a polled event.
+     * Uses a union to store data specific to the event type.
+     */
     struct Event {
         EventType type;
         union {
