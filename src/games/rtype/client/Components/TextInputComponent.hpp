@@ -68,13 +68,6 @@ struct TextInput {
           size({width, height}) {}
 
     /**
-     * @brief Update the displayed text
-     */
-    void updateDisplay() {
-        // Logic moved to RenderSystem or handled by IDisplay
-    }
-
-    /**
      * @brief Handle text input character
      * @param character The character to add
      * @return true if character was accepted
@@ -86,7 +79,6 @@ struct TextInput {
         if (!std::isprint(character)) return false;
 
         content += character;
-        updateDisplay();
         if (onChanged) onChanged(content);
         return true;
     }
@@ -97,7 +89,6 @@ struct TextInput {
     void handleBackspace() {
         if (!isFocused || content.empty()) return;
         content.pop_back();
-        updateDisplay();
         if (onChanged) onChanged(content);
     }
 
@@ -106,7 +97,6 @@ struct TextInput {
      */
     void setFocus(bool focused) {
         isFocused = focused;
-        updateDisplay();
     }
 
     TextInput(const TextInput& other) = default;

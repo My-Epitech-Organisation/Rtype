@@ -33,10 +33,6 @@ void Graphic::_pollEvents() {
         if (event.type == rtype::display::EventType::Closed) {
             this->_display->close();
         }
-        // Note: FocusLost logic needs to be adapted if needed
-        // if (event.type == rtype::display::EventType::FocusLost) {
-        //     rtype::games::rtype::client::RtypeInputHandler::clearKeyStates();
-        // }
 
         this->_eventSystem->setEvent(event);
         this->_eventSystem->update(*this->_registry, 0.f);
@@ -89,7 +85,7 @@ void Graphic::_update() {
         }
     }
 
-    // _updateViewScrolling();
+    this->_updateViewScrolling();
     this->_systemScheduler->runSystem("parallax");
 
     if (!isPaused) {

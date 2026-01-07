@@ -41,12 +41,9 @@ void ParallaxScrolling::update(ECS::Registry& registry, float dt) {
     const float spriteX = center.x - _cachedHalfWidth;
     const float spriteY = center.y - _cachedHalfHeight;
 
-    // Only process entities that HAVE the Parallax component.
-    // We also need Image and Transform. TextureRect will be added if missing.
     registry.view<rc::Parallax, rc::Image, rs::TransformComponent>().each(
         [&registry, this, &center, viewWidth, spriteX, spriteY](
             auto entity, auto& parallax, auto& img, auto& transform) {
-            // Ensure TextureRect exists
             if (!registry.hasComponent<rc::TextureRect>(entity)) {
                 registry.emplaceComponent<rc::TextureRect>(entity);
             }
@@ -55,7 +52,6 @@ void ParallaxScrolling::update(ECS::Registry& registry, float dt) {
             float effectiveOffset = _totalScroll * parallax.scrollFactor;
             int intOffset = static_cast<int>(effectiveOffset);
 
-            // Pin to camera
             transform.x = spriteX;
             transform.y = spriteY;
 

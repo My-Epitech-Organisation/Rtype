@@ -35,9 +35,6 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
         .view<::rtype::games::rtype::shared::TransformComponent,
               ::rtype::games::rtype::shared::BoundingBoxComponent>()
         .each([this](auto /*entt*/, const auto& pos, const auto& bbox) {
-            // Note: IDisplay::drawRectangle might need an origin or we adjust
-            // position Original code used setOrigin({bbox.width / 2.0F,
-            // bbox.height / 2.0F})
             ::rtype::display::Vector2f position = {pos.x - bbox.width / 2.0f,
                                                    pos.y - bbox.height / 2.0f};
             ::rtype::display::Vector2f size = {bbox.width, bbox.height};
@@ -54,9 +51,6 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
         .each([this](ECS::Entity _,
                      const ::rtype::games::rtype::client::Image& img,
                      ::rtype::games::rtype::client::BoxingComponent& box) {
-            // We don't have img.sprite.getGlobalBounds() anymore.
-            // We should probably use the transform or something else.
-            // For now, let's just draw the box as it is.
             this->_display->drawRectangle(box.position, box.size, box.fillColor,
                                           box.outlineColor,
                                           box.outlineThickness);

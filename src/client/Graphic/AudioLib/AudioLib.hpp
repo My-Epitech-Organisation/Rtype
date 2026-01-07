@@ -10,7 +10,7 @@
 
 #include <list>
 
-#include "../../../../include/rtype/display/IDisplay.hpp"
+#include "rtype/display/IDisplay.hpp"
 
 class AudioLib {
    private:

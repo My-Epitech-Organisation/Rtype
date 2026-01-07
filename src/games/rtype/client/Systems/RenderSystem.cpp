@@ -52,10 +52,6 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
     display::Vector2f position = {static_cast<float>(pos.x),
                                   static_cast<float>(pos.y)};
 
-    // Note: GameTag logic for centering might need adjustment if we don't have
-    // sprite bounds here. For now, let's assume the display implementation
-    // handles it or we pass it. Actually, let's just pass the position.
-
     this->_display->drawSprite(img.textureName, position, rect, scale,
                                img.color);
 }
@@ -124,13 +120,11 @@ void RenderSystem::_renderTextInputs(ECS::Registry& registry,
                                   static_cast<float>(pos.y)};
     display::Vector2f size = {input.size.x, input.size.y};
 
-    // Draw background
     this->_display->drawRectangle(
         position, size, input.backgroundColor,
         input.isFocused ? input.focusedBorderColor : input.unfocusedBorderColor,
         3.0f);
 
-    // Draw text or placeholder
     std::string textToDraw;
     display::Color colorToUse = input.textColor;
 
