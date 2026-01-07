@@ -53,10 +53,11 @@ class RtypeEntityFactory {
      * @param reg ECS registry
      * @param assetsManager Asset manager
      * @param entity Entity to configure
+     * @param subType Enemy variant (0=Basic, 1=Shooter, 2=Chaser, etc...)
      */
     static void setupBydosEntity(ECS::Registry& reg,
                                  std::shared_ptr<AssetManager> assetsManager,
-                                 ECS::Entity entity);
+                                 ECS::Entity entity, std::uint8_t subType = 0);
 
     /**
      * @brief Create a missile entity with all components
@@ -73,9 +74,10 @@ class RtypeEntityFactory {
      * @param registry ECS registry
      * @param entity Entity to configure
      * @param networkId Network identifier for the entity
+     * @param subType Power-up variant type
      */
     static void setupPickupEntity(ECS::Registry& registry, ECS::Entity entity,
-                                  std::uint32_t networkId);
+                                  std::uint32_t networkId, uint8_t subType);
     /**
      * @brief Create an obstacle entity with all components
      *

@@ -53,7 +53,8 @@ void GameEventProcessor::processEvents() {
                         processed.networkEntityType);
 
                 _networkSystem->broadcastEntitySpawn(
-                    processed.networkId, networkType, processed.x, processed.y);
+                    processed.networkId, networkType, processed.subType,
+                    processed.x, processed.y);
 
                 if (_verbose) {
                     LOG_DEBUG_CAT(

@@ -18,11 +18,29 @@ PlayerPowerUpVisualSystem::PlayerPowerUpVisualSystem()
     : ::rtype::engine::ASystem("PlayerPowerUpVisualSystem") {}
 
 void PlayerPowerUpVisualSystem::update(ECS::Registry& registry, float /*dt*/) {
+    registry.view<Image, PlayerTag>().each(
+        [&](auto entity, Image& img, PlayerTag& /*tag*/) {
+            if (registry.hasComponent<ColorTint>(entity)) {
+                return;
+            }
+            if (registry.hasComponent<BoxingComponent>(entity)) {
+                auto& box = registry.getComponent<BoxingComponent>(entity);
+                box.outlineColor = ::rtype::display::Color::Red();
+                box.fillColor = ::rtype::display::Color(255, 255, 255, 30);
+            }
+        });
+
     registry.view<Image, PlayerTag, rs::ActivePowerUpComponent>().each(
         [&](auto entity, Image& img, PlayerTag& /*tag*/,
             const rs::ActivePowerUpComponent& active) {
             ::rtype::display::Color tint = ::rtype::display::Color::White();
 
+            if (registry.hasComponent<ColorTint>(entity)) {
+                return;
+            }
+            if (active.remainingTime <= 0.0f) {
+                return;
+            }
             switch (active.type) {
                 case rs::PowerUpType::Shield:
                     tint = {255, 215, 0, 220};
@@ -40,15 +58,12 @@ void PlayerPowerUpVisualSystem::update(ECS::Registry& registry, float /*dt*/) {
                     tint = {220, 180, 255, 220};
                     break;
                 default:
-                    tint = ::rtype::display::Color::White();
-                    break;
+                    return;
             }
             if (active.shieldActive) {
                 tint = {255, 215, 0, 240};
             }
-
             img.color = tint;
-
             if (registry.hasComponent<BoxingComponent>(entity)) {
                 auto& box = registry.getComponent<BoxingComponent>(entity);
                 box.outlineColor = tint;

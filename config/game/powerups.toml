@@ -13,6 +13,7 @@ sprite_sheet = "assets/sprites/powerups/health_small.png"
 effect = "health"
 value = 25
 duration = 0.0  # 0 = instant/permanent
+color = [0, 255, 0, 255]  # Green
 
 hitbox_width = 16.0
 hitbox_height = 16.0
@@ -25,6 +26,7 @@ sprite_sheet = "assets/sprites/powerups/health_large.png"
 effect = "health"
 value = 75
 duration = 0.0
+color = [0, 200, 0, 255]  # Dark green
 
 hitbox_width = 24.0
 hitbox_height = 24.0
@@ -37,6 +39,7 @@ sprite_sheet = "assets/sprites/powerups/speed.png"
 effect = "speed_boost"
 value = 50  # 50% speed increase
 duration = 10.0
+color = [255, 255, 0, 255]  # Yellow
 
 hitbox_width = 20.0
 hitbox_height = 20.0
@@ -49,6 +52,7 @@ sprite_sheet = "assets/sprites/powerups/weapon.png"
 effect = "weapon_upgrade"
 value = 1  # Upgrade level
 duration = 0.0  # Permanent until death
+color = [255, 0, 0, 255]  # Red
 
 hitbox_width = 24.0
 hitbox_height = 24.0
@@ -61,6 +65,33 @@ sprite_sheet = "assets/sprites/powerups/shield.png"
 effect = "shield"
 value = 100  # Shield HP
 duration = 15.0
+color = [0, 100, 255, 255]  # Blue
+
+hitbox_width = 24.0
+hitbox_height = 24.0
+
+[[powerup]]
+id = "rapid_fire"
+name = "Rapid Fire"
+sprite_sheet = "assets/sprites/powerups/rapid_fire.png"
+
+effect = "weapon_upgrade"
+value = 2
+duration = 12.0
+color = [0, 255, 255, 255]  # Cyan
+
+hitbox_width = 24.0
+hitbox_height = 24.0
+
+[[powerup]]
+id = "double_damage"
+name = "Double Damage"
+sprite_sheet = "assets/sprites/powerups/double_damage.png"
+
+effect = "weapon_upgrade"
+value = 3
+duration = 15.0
+color = [255, 128, 0, 255]  # Orange
 
 hitbox_width = 24.0
 hitbox_height = 24.0
@@ -73,6 +104,7 @@ sprite_sheet = "assets/sprites/powerups/life.png"
 effect = "extra_life"
 value = 1
 duration = 0.0
+color = [255, 0, 255, 255]  # Magenta
 
 hitbox_width = 24.0
 hitbox_height = 24.0

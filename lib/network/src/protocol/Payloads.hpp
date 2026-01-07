@@ -129,6 +129,7 @@ struct GameOverPayload {
 struct EntitySpawnPayload {
     std::uint32_t entityId;
     std::uint8_t type;
+    std::uint8_t subType;
     float posX;
     float posY;
 
@@ -281,8 +282,8 @@ static_assert(sizeof(UpdateStatePayload) == 1,
               "UpdateStatePayload must be 1 byte");
 static_assert(sizeof(GameOverPayload) == 4,
               "GameOverPayload must be 4 bytes (uint32_t)");
-static_assert(sizeof(EntitySpawnPayload) == 13,
-              "EntitySpawnPayload must be 13 bytes (4+1+4+4)");
+static_assert(sizeof(EntitySpawnPayload) == 14,
+              "EntitySpawnPayload must be 14 bytes (4+1+1+4+4)");
 static_assert(sizeof(EntityMovePayload) == 20,
               "EntityMovePayload must be 20 bytes (4+4+4+4+4)");
 static_assert(sizeof(EntityDestroyPayload) == 4,

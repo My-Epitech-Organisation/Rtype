@@ -19,10 +19,12 @@
 #include "../../games/rtype/client/Systems/BoxingSystem.hpp"
 #include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
 #include "../../games/rtype/client/Systems/ClientDestroySystem.hpp"
+#include "../../games/rtype/client/Systems/ColorTintSystem.hpp"
 #include "../../games/rtype/client/Systems/EventSystem.hpp"
 #include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
 #include "../../games/rtype/client/Systems/PlayerAnimationSystem.hpp"
 #include "../../games/rtype/client/Systems/PlayerPowerUpVisualSystem.hpp"
+#include "../../games/rtype/client/Systems/PowerUpCollectionSystem.hpp"
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "../../games/rtype/client/Systems/ShaderRenderSystem.hpp"
@@ -125,12 +127,16 @@ class Graphic {
     // ECS Systems (unique ownership, registered with scheduler)
     // ========================================================================
 
+    std::unique_ptr<::rtype::games::rtype::client::ColorTintSystem>
+        _colorTintSystem;
     std::unique_ptr<::rtype::games::rtype::client::PlayerAnimationSystem>
         _playerAnimationSystem;
     std::unique_ptr<::rtype::games::rtype::client::AnimationSystem>
         _animationSystem;
     std::unique_ptr<::rtype::games::rtype::client::PlayerPowerUpVisualSystem>
         _playerPowerUpVisualSystem;
+    std::unique_ptr<::rtype::games::rtype::client::PowerUpCollectionSystem>
+        _powerUpCollectionSystem;
     std::unique_ptr<::rtype::games::rtype::client::ButtonUpdateSystem>
         _buttonUpdateSystem;
     std::unique_ptr<::rtype::games::rtype::client::ParallaxScrolling>

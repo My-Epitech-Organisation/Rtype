@@ -86,4 +86,34 @@ void VisualCueFactory::createDamagePopup(
     registry.emplaceComponent<GameTag>(entity);
 }
 
+void VisualCueFactory::createPowerUpPopup(ECS::Registry& registry,
+                                          const ::rtype::display::Vector2<float>& position,
+                                          const std::string& powerUpName,
+                                          const std::string &font,
+                                          const ::rtype::display::Color& color) {
+    auto entity = registry.spawnEntity();
+    LOG_DEBUG("[VisualCueFactory] PowerUp popup entity=" +
+              std::to_string(entity.id) + " name=" + powerUpName);
+
+    registry.emplaceComponent<Text>(entity, font, color, 28, powerUpName);
+    registry.emplaceComponent<StaticTextTag>(entity);
+
+    static thread_local std::random_device rd;
+    static thread_local std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dist(-15, 15);
+    float offsetX = static_cast<float>(dist(gen));
+    registry
+        .emplaceComponent<::rtype::games::rtype::shared::TransformComponent>(
+            entity, position.x + offsetX, position.y - 30.f);
+
+    registry.emplaceComponent<::rtype::games::rtype::shared::VelocityComponent>(
+        entity, 0.f, -60.f);
+
+    registry.emplaceComponent<ZIndex>(entity, 200);
+
+    registry.emplaceComponent<::rtype::games::rtype::shared::LifetimeComponent>(
+        entity, 1.5f);
+    registry.emplaceComponent<GameTag>(entity);
+}
+
 }  // namespace rtype::games::rtype::client

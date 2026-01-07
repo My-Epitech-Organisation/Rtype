@@ -24,6 +24,7 @@
 #include "games/rtype/client/PauseState.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
+#include "games/rtype/shared/Config/EntityConfig/EntityConfig.hpp"
 
 void Graphic::_pollEvents() {
     this->_systemScheduler->runSystem("reset_triggers");
@@ -92,6 +93,7 @@ void Graphic::_update() {
     this->_systemScheduler->runSystem("parallax");
 
     if (!isPaused) {
+        this->_systemScheduler->runSystem("color_tint");
         this->_systemScheduler->runSystem("player_animation");
         this->_systemScheduler->runSystem("animation");
         this->_systemScheduler->runSystem("powerup_visuals");
@@ -152,12 +154,17 @@ void Graphic::_setupNetworkEntityFactory() {
 }
 
 void Graphic::_initializeSystems() {
+    this->_colorTintSystem =
+        std::make_unique<::rtype::games::rtype::client::ColorTintSystem>();
     this->_playerAnimationSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerAnimationSystem>();
     this->_animationSystem =
         std::make_unique<::rtype::games::rtype::client::AnimationSystem>();
     this->_playerPowerUpVisualSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
+    this->_powerUpCollectionSystem = std::make_unique<
+        ::rtype::games::rtype::client::PowerUpCollectionSystem>(
+        "main_font");
     this->_buttonUpdateSystem =
         std::make_unique<::rtype::games::rtype::client::ButtonUpdateSystem>(
             this->_display);
@@ -193,12 +200,19 @@ void Graphic::_initializeSystems() {
             this->_resetTriggersSystem->update(reg, 0.f);
         });
 
+    this->_systemScheduler->addSystem("color_tint",
+                                  [this](ECS::Registry& reg) {
+                                      _colorTintSystem->update(
+                                          reg, _currentDeltaTime);
+                                  },
+                                  {"sprite_position"});
+
     this->_systemScheduler->addSystem("player_animation",
                                       [this](ECS::Registry& reg) {
                                           _playerAnimationSystem->update(
                                               reg, _currentDeltaTime);
                                       },
-                                      {"reset_triggers"});
+                                      {"color_tint"});
 
     this->_systemScheduler->addSystem("animation",
                                       [this](ECS::Registry& reg) {
@@ -213,6 +227,13 @@ void Graphic::_initializeSystems() {
                                               reg, _currentDeltaTime);
                                       },
                                       {"reset_triggers"});
+
+    this->_systemScheduler->addSystem("powerup_collection",
+                                      [this](ECS::Registry& reg) {
+                                          _powerUpCollectionSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"powerup_visuals"});
 
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {
@@ -378,6 +399,16 @@ Graphic::Graphic(
 
     this->_assetsManager =
         std::make_shared<AssetManager>(assetsConfig.value(), this->_display);
+
+    LOG_DEBUG("[Graphic] Loading entity configurations");
+    auto& entityConfigRegistry =
+        rtype::games::rtype::shared::EntityConfigRegistry::getInstance();
+    entityConfigRegistry.loadEnemiesWithSearch("config/game/enemies.toml");
+    entityConfigRegistry.loadPlayersWithSearch("config/game/players.toml");
+    entityConfigRegistry.loadProjectilesWithSearch(
+        "config/game/projectiles.toml");
+    entityConfigRegistry.loadPowerUpsWithSearch("config/game/powerups.toml");
+    LOG_DEBUG("[Graphic] Entity configurations loaded");
 
     this->_initializeCommonAssets();
 
