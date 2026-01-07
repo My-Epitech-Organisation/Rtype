@@ -54,7 +54,7 @@ class RtypeEntityFactory {
      * @param reg ECS registry
      * @param assetsManager Asset manager
      * @param entity Entity to configure
-     * @param EnemyVariant Enemy variant (0=Basic, 1=Shooter, 2=Chaser, etc...)
+     * @param subType Enemy variant enum value (Basic, Shooter, Chaser, etc.)
      */
     static void setupBydosEntity(
         ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,

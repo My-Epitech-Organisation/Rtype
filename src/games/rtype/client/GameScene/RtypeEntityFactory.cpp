@@ -259,15 +259,14 @@ void RtypeEntityFactory::setupBydosEntity(
                                               std::pair<int, int>({33, 34}));
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
-        case shared::EnemyVariant::Wave:
+        case shared::EnemyVariant::Shooter:
             LOG_INFO_CAT(::rtype::LogCategory::ECS,
-                         "[RtypeEntityFactory] Setting up Wave Bydos enemy");
-            reg.emplaceComponent<Image>(entity, "bdos_enemy_wave");
+                         "[RtypeEntityFactory] Setting up Shooter Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_shooter");
             reg.emplaceComponent<TextureRect>(entity,
-                                              std::pair<int, int>({132, 34}),
-                                              std::pair<int, int>({33, 34}));
+                                              std::pair<int, int>({82, 64}),
+                                              std::pair<int, int>({33, 32}));
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
-
             break;
         case shared::EnemyVariant::Chaser:
             LOG_INFO_CAT(::rtype::LogCategory::ECS,
@@ -278,14 +277,14 @@ void RtypeEntityFactory::setupBydosEntity(
                                               std::pair<int, int>({64, 54}));
             reg.emplaceComponent<Size>(entity, 1.0f, 1.0f);
             break;
-        case shared::EnemyVariant::Heavy:
+        case shared::EnemyVariant::Wave:
             LOG_INFO_CAT(::rtype::LogCategory::ECS,
-                         "[RtypeEntityFactory] Setting up Heavy Bydos enemy");
-            reg.emplaceComponent<Image>(entity, "bdos_enemy_heavy");
+                         "[RtypeEntityFactory] Setting up Wave Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_wave");
             reg.emplaceComponent<TextureRect>(entity,
-                                              std::pair<int, int>({17, 66}),
-                                              std::pair<int, int>({33, 33}));
-            reg.emplaceComponent<Size>(entity, 2.f, 2.f);
+                                              std::pair<int, int>({132, 34}),
+                                              std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
         case shared::EnemyVariant::Patrol:
             LOG_INFO_CAT(::rtype::LogCategory::ECS,
@@ -296,13 +295,13 @@ void RtypeEntityFactory::setupBydosEntity(
                                               std::pair<int, int>({33, 36}));
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
-        case shared::EnemyVariant::Shooter:
+        case shared::EnemyVariant::Heavy:
             LOG_INFO_CAT(::rtype::LogCategory::ECS,
-                         "[RtypeEntityFactory] Setting up Shooter Bydos enemy");
-            reg.emplaceComponent<Image>(entity, "bdos_enemy_shooter");
+                         "[RtypeEntityFactory] Setting up Heavy Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_heavy");
             reg.emplaceComponent<TextureRect>(entity,
-                                              std::pair<int, int>({82, 64}),
-                                              std::pair<int, int>({33, 32}));
+                                              std::pair<int, int>({17, 66}),
+                                              std::pair<int, int>({33, 33}));
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
         default:

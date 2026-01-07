@@ -23,7 +23,7 @@ EnemyHeavy = "img/bdosTextureHeavy.gif"
 EnemyPatrol = "img/bdosTexturePatrol.gif"
 EnemyShooter = "img/bdosTextureShooter.gif"
 EnemyWave = "img/bdosTextureWave.gif"
-# Backougrnd assets
+# Background assets
 Background = "img/bgMainMenu.png"
 Sun = "img/sun.png"
 BigAsteroids = "img/bigAsteroids.png"
