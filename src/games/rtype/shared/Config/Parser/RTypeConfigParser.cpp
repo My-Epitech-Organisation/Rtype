@@ -262,9 +262,9 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.textures.Player =
         "assets/" + _parser.getString(table, "Textures", "Player",
                                       defaults.assets.textures.Player);
-    config.assets.textures.Enemy =
-        "assets/" + _parser.getString(table, "Textures", "Enemy",
-                                      defaults.assets.textures.Enemy);
+    config.assets.textures.EnemyNormal =
+        "assets/" + _parser.getString(table, "Textures", "EnemyNormal",
+                                      defaults.assets.textures.EnemyNormal);
     config.assets.textures.EnemyChaser =
         "assets/" + _parser.getString(table, "Textures", "EnemyChaser",
                                       defaults.assets.textures.EnemyChaser);

@@ -253,7 +253,7 @@ void RtypeEntityFactory::setupBydosEntity(
         case shared::EnemyVariant::Basic:
             LOG_INFO_CAT(::rtype::LogCategory::ECS,
                          "[RtypeEntityFactory] Setting up Basic Bydos enemy");
-            reg.emplaceComponent<Image>(entity, "bdos_enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_normal");
             reg.emplaceComponent<TextureRect>(entity,
                                               std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 34}));
@@ -309,9 +309,9 @@ void RtypeEntityFactory::setupBydosEntity(
             LOG_WARNING_CAT(
                 ::rtype::LogCategory::ECS,
                 std::string("[RtypeEntityFactory] Unknown Bydos variant, "
-                            "defaulting to Basic" +
+                            "defaulting to Bydos normal, type received: " +
                             std::to_string(static_cast<uint8_t>(subType))));
-            reg.emplaceComponent<Image>(entity, "bdos_enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_normal");
             reg.emplaceComponent<TextureRect>(entity,
                                               std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 34}));

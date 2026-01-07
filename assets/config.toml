@@ -17,7 +17,7 @@ EnemySpawn = "audio/enemySpawn.mp3"
 # Textures Réferences
 [Textures]
 Player = "img/playerTexture.gif"
-Enemy = "img/bdosTextureNormal.gif"
+EnemyNormal = "img/bdosTextureNormal.gif"
 EnemyChaser = "img/bdosTextureChaser.gif"
 EnemyHeavy = "img/bdosTextureHeavy.gif"
 EnemyPatrol = "img/bdosTexturePatrol.gif"

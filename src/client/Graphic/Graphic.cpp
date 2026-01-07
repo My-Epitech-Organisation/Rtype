@@ -314,7 +314,8 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.astroVessel);
     manager->textureManager->load("player_vessel",
                                   config.assets.textures.Player);
-    manager->textureManager->load("bdos_enemy", config.assets.textures.Enemy);
+    manager->textureManager->load("bdos_enemy_normal",
+                                  config.assets.textures.EnemyNormal);
     manager->textureManager->load("bdos_enemy_chaser",
                                   config.assets.textures.EnemyChaser);
     manager->textureManager->load("bdos_enemy_shooter",
