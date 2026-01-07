@@ -480,6 +480,53 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
         }
     });
 
+    this->_networkClient->onGameStateChange(
+        [this](rtype::client::GameStateEvent event) {
+            try {
+                if (!_initialized || !this->_registry) {
+                    return;
+                }
+
+                LOG_INFO("[Lobby] Received game state change: "
+                         << static_cast<int>(event.state));
+
+                if (event.state == rtype::network::GameState::Running) {
+                    LOG_INFO(
+                        "[Lobby] Server indicates game is now Running - "
+                        "switching to game scene");
+                    _countdownActive = false;
+                    this->_switchToScene(SceneManager::Scene::IN_GAME);
+                }
+            } catch (const std::exception& e) {
+                LOG_ERROR(
+                    "[Lobby] Exception in onGameStateChange: " << e.what());
+            } catch (...) {
+                LOG_ERROR("[Lobby] Unknown exception in onGameStateChange");
+            }
+        });
+
+    this->_networkClient->onJoinLobbyResponse([this](bool accepted,
+                                                     uint8_t reason) {
+        try {
+            if (!_initialized || !this->_registry) {
+                return;
+            }
+
+            if (!accepted) {
+                LOG_ERROR("[Lobby] Join lobby rejected by server, reason="
+                          << static_cast<int>(reason));
+                this->_networkClient->disconnect();
+                return;
+            }
+
+            LOG_INFO("[Lobby] Join lobby accepted by server");
+        } catch (const std::exception& e) {
+            LOG_ERROR("[Lobby] Exception in onJoinLobbyResponse: " << e.what());
+        } catch (...) {
+            LOG_ERROR("[Lobby] Unknown exception in onJoinLobbyResponse");
+        }
+    });
+
     this->_networkClient->onPlayerReadyStateChanged([this](std::uint32_t userId,
                                                            bool isReady) {
         try {
