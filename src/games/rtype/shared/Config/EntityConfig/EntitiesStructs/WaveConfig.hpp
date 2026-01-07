@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -23,10 +24,14 @@ struct WaveConfig {
 
     struct SpawnEntry {
         std::string enemyId;
-        float x = 800.0F;
-        float y = 300.0F;
+        std::optional<float>
+            x;  ///< X position (nullopt = random on right edge)
+        std::optional<float> y;  ///< Y position (nullopt = random)
         float delay = 0.0F;
         int32_t count = 1;
+
+        [[nodiscard]] bool hasFixedX() const noexcept { return x.has_value(); }
+        [[nodiscard]] bool hasFixedY() const noexcept { return y.has_value(); }
     };
 
     std::vector<SpawnEntry> spawns;
