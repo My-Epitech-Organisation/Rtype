@@ -25,6 +25,7 @@ namespace rtype::server {
 
 NetworkServer::NetworkServer(const Config& config)
     : config_(config),
+      compressor_(config.compressionConfig),
       ioContext_(),
       socket_(network::createAsyncSocket(ioContext_.get())),
       receiveBuffer_(
@@ -114,6 +115,30 @@ void NetworkServer::moveEntity(std::uint32_t id, float x, float y, float vx,
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
     broadcastToAll(network::OpCode::S_ENTITY_MOVE, serialized);
+}
+
+void NetworkServer::moveEntitiesBatch(
+    const std::vector<std::tuple<std::uint32_t, float, float, float, float>>&
+        entities) {
+    if (entities.empty()) {
+        return;
+    }
+
+    auto count = static_cast<std::uint8_t>(
+        std::min(entities.size(), network::kMaxEntitiesPerBatch));
+
+    network::Buffer payload;
+    payload.reserve(1 + count * sizeof(network::EntityMovePayload));
+    payload.push_back(count);
+
+    for (std::size_t i = 0; i < count; ++i) {
+        const auto& [id, x, y, vx, vy] = entities[i];
+        network::EntityMovePayload entry{id, x, y, vx, vy};
+        auto serialized = network::Serializer::serializeForNetwork(entry);
+        payload.insert(payload.end(), serialized.begin(), serialized.end());
+    }
+
+    broadcastToAll(network::OpCode::S_ENTITY_MOVE_BATCH, payload);
 }
 
 void NetworkServer::destroyEntity(std::uint32_t id) {
@@ -543,7 +568,18 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
     network::Buffer payload;
     if (header.payloadSize > 0 &&
         data.size() >= network::kHeaderSize + header.payloadSize) {
-        payload.assign(data.begin() + network::kHeaderSize, data.end());
+        network::Buffer rawPayload(data.begin() + network::kHeaderSize,
+                                   data.end());
+
+        if (header.flags & network::Flags::kCompressed) {
+            auto decompressResult = compressor_.decompress(rawPayload);
+            if (!decompressResult) {
+                return;
+            }
+            payload = std::move(decompressResult.value());
+        } else {
+            payload = std::move(rawPayload);
+        }
     }
 
     switch (opcode) {
@@ -865,11 +901,23 @@ network::Buffer NetworkServer::buildPacket(network::OpCode opcode,
                                            std::uint32_t userId,
                                            std::uint16_t seqId,
                                            std::uint16_t ackId, bool reliable) {
+    network::Buffer finalPayload = payload;
+    bool isCompressed = false;
+
+    if (config_.enableCompression &&
+        compressor_.shouldCompress(payload.size())) {
+        auto compressionResult = compressor_.compress(payload);
+        if (compressionResult.wasCompressed) {
+            finalPayload = std::move(compressionResult.data);
+            isCompressed = true;
+        }
+    }
+
     network::Header header;
     header.magic = network::kMagicByte;
     header.opcode = static_cast<std::uint8_t>(opcode);
     header.payloadSize = network::ByteOrderSpec::toNetwork(
-        static_cast<std::uint16_t>(payload.size()));
+        static_cast<std::uint16_t>(finalPayload.size()));
     header.userId = network::ByteOrderSpec::toNetwork(userId);
     header.seqId = network::ByteOrderSpec::toNetwork(seqId);
     header.ackId = network::ByteOrderSpec::toNetwork(ackId);
@@ -880,11 +928,15 @@ network::Buffer NetworkServer::buildPacket(network::OpCode opcode,
         header.flags |= network::Flags::kReliable;
     }
 
-    network::Buffer packet(network::kHeaderSize + payload.size());
+    if (isCompressed) {
+        header.flags |= network::Flags::kCompressed;
+    }
+
+    network::Buffer packet(network::kHeaderSize + finalPayload.size());
     std::memcpy(packet.data(), &header, network::kHeaderSize);
-    if (!payload.empty()) {
-        std::memcpy(packet.data() + network::kHeaderSize, payload.data(),
-                    payload.size());
+    if (!finalPayload.empty()) {
+        std::memcpy(packet.data() + network::kHeaderSize, finalPayload.data(),
+                    finalPayload.size());
     }
 
     return packet;

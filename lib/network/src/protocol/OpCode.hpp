@@ -68,6 +68,9 @@ enum class OpCode : std::uint8_t {
     /// Server notifies a power-up pickup (RELIABLE)
     S_POWERUP_EVENT = 0x14,
 
+    /// Server broadcasts batched entity position/velocity updates (UNRELIABLE)
+    S_ENTITY_MOVE_BATCH = 0x15,
+
     /// Client sends input state (UNRELIABLE)
     C_INPUT = 0x20,
 
@@ -124,6 +127,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return true;
 
         case OpCode::S_ENTITY_MOVE:
+        case OpCode::S_ENTITY_MOVE_BATCH:
         case OpCode::C_INPUT:
         case OpCode::S_UPDATE_POS:
         case OpCode::PING:
@@ -171,6 +175,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_PLAYER_READY_STATE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
+        case OpCode::S_ENTITY_MOVE_BATCH:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
         case OpCode::S_POWERUP_EVENT:
@@ -205,6 +210,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_PLAYER_READY_STATE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
+        case OpCode::S_ENTITY_MOVE_BATCH:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
         case OpCode::S_POWERUP_EVENT:
@@ -272,6 +278,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "S_ENTITY_SPAWN";
         case OpCode::S_ENTITY_MOVE:
             return "S_ENTITY_MOVE";
+        case OpCode::S_ENTITY_MOVE_BATCH:
+            return "S_ENTITY_MOVE_BATCH";
         case OpCode::S_ENTITY_DESTROY:
             return "S_ENTITY_DESTROY";
         case OpCode::S_ENTITY_HEALTH:

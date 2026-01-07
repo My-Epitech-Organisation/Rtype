@@ -152,6 +152,24 @@ struct EntityMovePayload {
 };
 
 /**
+ * @brief Header for S_ENTITY_MOVE_BATCH (0x15)
+ *
+ * Variable-length payload: count + array of EntityMovePayload entries.
+ * The full payload size is: 1 + (count * 20) bytes.
+ */
+struct EntityMoveBatchHeader {
+    std::uint8_t count;  ///< Number of entity updates in this batch (1-69)
+};
+
+/**
+ * @brief Maximum entities per batch packet
+ *
+ * Limited by payload size: (kMaxPayloadSize - 1) / sizeof(EntityMovePayload)
+ * = (1384 - 1) / 20 = 69 entities
+ */
+inline constexpr std::size_t kMaxEntitiesPerBatch = 69;
+
+/**
  * @brief Payload for S_ENTITY_DESTROY (0x12)
  *
  * Server instructs clients to remove an entity.
@@ -285,6 +303,8 @@ static_assert(sizeof(EntitySpawnPayload) == 13,
               "EntitySpawnPayload must be 13 bytes (4+1+4+4)");
 static_assert(sizeof(EntityMovePayload) == 20,
               "EntityMovePayload must be 20 bytes (4+4+4+4+4)");
+static_assert(sizeof(EntityMoveBatchHeader) == 1,
+              "EntityMoveBatchHeader must be 1 byte");
 static_assert(sizeof(EntityDestroyPayload) == 4,
               "EntityDestroyPayload must be 4 bytes");
 static_assert(sizeof(EntityHealthPayload) == 12,
@@ -304,6 +324,7 @@ static_assert(std::is_trivially_copyable_v<UpdateStatePayload>);
 static_assert(std::is_trivially_copyable_v<GameOverPayload>);
 static_assert(std::is_trivially_copyable_v<EntitySpawnPayload>);
 static_assert(std::is_trivially_copyable_v<EntityMovePayload>);
+static_assert(std::is_trivially_copyable_v<EntityMoveBatchHeader>);
 static_assert(std::is_trivially_copyable_v<EntityDestroyPayload>);
 static_assert(std::is_trivially_copyable_v<EntityHealthPayload>);
 static_assert(std::is_trivially_copyable_v<PowerUpEventPayload>);
@@ -318,6 +339,7 @@ static_assert(std::is_standard_layout_v<UpdateStatePayload>);
 static_assert(std::is_standard_layout_v<GameOverPayload>);
 static_assert(std::is_standard_layout_v<EntitySpawnPayload>);
 static_assert(std::is_standard_layout_v<EntityMovePayload>);
+static_assert(std::is_standard_layout_v<EntityMoveBatchHeader>);
 static_assert(std::is_standard_layout_v<EntityDestroyPayload>);
 static_assert(std::is_standard_layout_v<EntityHealthPayload>);
 static_assert(std::is_standard_layout_v<PowerUpEventPayload>);
@@ -362,6 +384,8 @@ static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
             return sizeof(EntitySpawnPayload);
         case OpCode::S_ENTITY_MOVE:
             return sizeof(EntityMovePayload);
+        case OpCode::S_ENTITY_MOVE_BATCH:
+            return 0;  // Variable-length payload
         case OpCode::S_ENTITY_DESTROY:
             return sizeof(EntityDestroyPayload);
         case OpCode::S_ENTITY_HEALTH:
@@ -383,7 +407,7 @@ static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
  * @brief Check if an OpCode has a variable-length payload
  */
 [[nodiscard]] constexpr bool hasVariablePayload(OpCode opcode) noexcept {
-    return opcode == OpCode::R_GET_USERS;
+    return opcode == OpCode::R_GET_USERS || opcode == OpCode::S_ENTITY_MOVE_BATCH;
 }
 
 }  // namespace rtype::network

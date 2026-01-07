@@ -11,6 +11,7 @@
 #include <cstring>
 #include <memory>
 #include <queue>
+#include <span>
 #include <string>
 #include <thread>
 #include <utility>
@@ -352,6 +353,11 @@ void NetworkClient::onEntityMove(
     onEntityMoveCallback_ = std::move(callback);
 }
 
+void NetworkClient::onEntityMoveBatch(
+    std::function<void(EntityMoveBatchEvent)> callback) {
+    onEntityMoveBatchCallback_ = std::move(callback);
+}
+
 void NetworkClient::onEntityDestroy(
     std::function<void(std::uint32_t entityId)> callback) {
     onEntityDestroyCallbacks_.push_back(std::move(callback));
@@ -478,7 +484,20 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
     network::Buffer payload;
     if (header.payloadSize > 0 &&
         data.size() >= network::kHeaderSize + header.payloadSize) {
-        payload.assign(data.begin() + network::kHeaderSize, data.end());
+        network::Buffer rawPayload(data.begin() + network::kHeaderSize,
+                                   data.end());
+
+        if (header.flags & network::Flags::kCompressed) {
+            auto decompressResult = compressor_.decompress(rawPayload);
+            if (!decompressResult) {
+                LOG_WARNING_CAT(rtype::LogCategory::Network,
+                                "[NetworkClient] Failed to decompress payload");
+                return;
+            }
+            payload = std::move(decompressResult.value());
+        } else {
+            payload = std::move(rawPayload);
+        }
     }
 
     auto opcode = static_cast<network::OpCode>(header.opcode);
@@ -499,6 +518,10 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
 
         case network::OpCode::S_ENTITY_MOVE:
             handleEntityMove(header, payload);
+            break;
+
+        case network::OpCode::S_ENTITY_MOVE_BATCH:
+            handleEntityMoveBatch(header, payload);
             break;
 
         case network::OpCode::S_ENTITY_DESTROY:
@@ -617,6 +640,59 @@ void NetworkClient::handleEntityMove(const network::Header& header,
         queueCallback([this, event]() {
             if (onEntityMoveCallback_) {
                 onEntityMoveCallback_(event);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
+void NetworkClient::handleEntityMoveBatch(const network::Header& header,
+                                          const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < 1) {
+        return;
+    }
+
+    std::uint8_t count = payload[0];
+    if (count == 0 || count > network::kMaxEntitiesPerBatch) {
+        return;
+    }
+
+    constexpr std::size_t entrySize = sizeof(network::EntityMovePayload);
+    if (payload.size() < 1 + count * entrySize) {
+        return;
+    }
+
+    try {
+        EntityMoveBatchEvent batchEvent;
+        batchEvent.entities.reserve(count);
+
+        for (std::uint8_t i = 0; i < count; ++i) {
+            std::size_t offset = 1 + i * entrySize;
+            auto entry = network::Serializer::deserializeFromNetwork<
+                network::EntityMovePayload>(
+                std::span(payload.data() + offset, entrySize));
+
+            EntityMoveEvent event;
+            event.entityId = entry.entityId;
+            event.x = entry.posX;
+            event.y = entry.posY;
+            event.vx = entry.velX;
+            event.vy = entry.velY;
+            batchEvent.entities.push_back(event);
+        }
+
+        queueCallback([this, batchEvent]() {
+            if (onEntityMoveBatchCallback_) {
+                onEntityMoveBatchCallback_(batchEvent);
+            } else {
+                for (const auto& e : batchEvent.entities) {
+                    if (onEntityMoveCallback_) {
+                        onEntityMoveCallback_(e);
+                    }
+                }
             }
         });
     } catch (...) {

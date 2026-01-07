@@ -43,6 +43,7 @@ enum class NetworkError : std::uint8_t {
     InvalidUserId = 26,
     DuplicatePacket = 27,
     InvalidSender = 28,
+    DecompressionFailed = 29,
 
     // Operation Errors (40-59)
     Cancelled = 40,
@@ -65,7 +66,7 @@ enum class NetworkError : std::uint8_t {
  * @return A string view containing the error message
  */
 [[nodiscard]] constexpr std::string_view toString(NetworkError error) noexcept {
-    constexpr std::array<std::pair<NetworkError, std::string_view>, 23>
+    constexpr std::array<std::pair<NetworkError, std::string_view>, 24>
         kErrorMessages = {{
             {NetworkError::None, "Success"},
             {NetworkError::NotConnected, "Not connected"},
@@ -83,6 +84,7 @@ enum class NetworkError : std::uint8_t {
             {NetworkError::InvalidUserId, "Invalid user ID"},
             {NetworkError::DuplicatePacket, "Duplicate packet"},
             {NetworkError::InvalidSender, "Invalid sender endpoint"},
+            {NetworkError::DecompressionFailed, "Decompression failed"},
             {NetworkError::Cancelled, "Operation cancelled"},
             {NetworkError::WouldBlock, "Would block"},
             {NetworkError::BufferFull, "Buffer full"},

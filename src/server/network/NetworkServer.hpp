@@ -16,11 +16,13 @@
 #include <optional>
 #include <queue>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
 #include <asio.hpp>
 
+#include "compression/Compressor.hpp"
 #include "connection/ConnectionEvents.hpp"
 #include "core/Types.hpp"
 #include "protocol/Header.hpp"
@@ -38,6 +40,8 @@ namespace rtype::server {
 struct NetworkServerConfig {
     std::chrono::milliseconds clientTimeout{10000};
     network::ReliableChannel::Config reliabilityConfig{};
+    network::Compressor::Config compressionConfig{};
+    bool enableCompression = true;
 };
 
 /**
@@ -159,6 +163,18 @@ class NetworkServer {
      * @param vy Y velocity
      */
     void moveEntity(std::uint32_t id, float x, float y, float vx, float vy);
+
+    /**
+     * @brief Broadcast batched entity moves to all clients
+     *
+     * More efficient than individual moveEntity calls - reduces packet overhead
+     * and enables LZ4 compression for larger batches.
+     *
+     * @param entities Vector of (entityId, x, y, vx, vy) tuples
+     */
+    void moveEntitiesBatch(
+        const std::vector<
+            std::tuple<std::uint32_t, float, float, float, float>>& entities);
 
     /**
      * @brief Destroy an entity on all clients
@@ -425,6 +441,7 @@ class NetworkServer {
     [[nodiscard]] std::uint32_t nextUserId();
 
     Config config_;
+    network::Compressor compressor_;
 
     bool running_{false};
 

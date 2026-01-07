@@ -53,6 +53,12 @@ void ClientNetworkSystem::registerCallbacks() {
     client_->onEntityMove(
         [this](EntityMoveEvent event) { handleEntityMove(event); });
 
+    client_->onEntityMoveBatch([this](EntityMoveBatchEvent event) {
+        for (const auto& moveEvent : event.entities) {
+            handleEntityMove(moveEvent);
+        }
+    });
+
     client_->onEntityDestroy(
         [this](std::uint32_t entityId) { handleEntityDestroy(entityId); });
 

@@ -102,6 +102,8 @@ struct is_rfc_type<PingPayload> : std::true_type {};
 template <>
 struct is_rfc_type<PongPayload> : std::true_type {};
 template <>
+struct is_rfc_type<EntityMoveBatchHeader> : std::true_type {};
+template <>
 struct is_rfc_type<LobbyReadyPayload> : std::true_type {};
 template <>
 struct is_rfc_type<GameStartPayload> : std::true_type {};
@@ -369,6 +371,15 @@ fromNetwork(const T& data) noexcept {
 }
 [[nodiscard]] inline PongPayload fromNetwork(const PongPayload& p) noexcept {
     return p;
+}
+
+[[nodiscard]] inline EntityMoveBatchHeader toNetwork(
+    const EntityMoveBatchHeader& p) noexcept {
+    return p;  // Single byte, no conversion needed
+}
+[[nodiscard]] inline EntityMoveBatchHeader fromNetwork(
+    const EntityMoveBatchHeader& p) noexcept {
+    return p;  // Single byte, no conversion needed
 }
 
 [[nodiscard]] inline LobbyReadyPayload toNetwork(const LobbyReadyPayload& p) noexcept {

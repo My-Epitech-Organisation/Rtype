@@ -20,6 +20,7 @@
 
 #include <asio.hpp>
 
+#include "compression/Compressor.hpp"
 #include "connection/Connection.hpp"
 #include "connection/ConnectionEvents.hpp"
 #include "core/Types.hpp"
@@ -50,6 +51,13 @@ struct EntityMoveEvent {
     float y;
     float vx;
     float vy;
+};
+
+/**
+ * @brief Event data for batched entity movement notifications
+ */
+struct EntityMoveBatchEvent {
+    std::vector<EntityMoveEvent> entities;
 };
 
 /**
@@ -264,6 +272,12 @@ class NetworkClient {
     void onEntityMove(std::function<void(EntityMoveEvent)> callback);
 
     /**
+     * @brief Register callback for batched entity movement updates
+     * @param callback Function receiving batch event data
+     */
+    void onEntityMoveBatch(std::function<void(EntityMoveBatchEvent)> callback);
+
+    /**
      * @brief Register callback for entity destruction
      * @param callback Function receiving the destroyed entity ID
      */
@@ -339,6 +353,8 @@ class NetworkClient {
                            const network::Buffer& payload);
     void handleEntityMove(const network::Header& header,
                           const network::Buffer& payload);
+    void handleEntityMoveBatch(const network::Header& header,
+                               const network::Buffer& payload);
     void handleEntityDestroy(const network::Header& header,
                              const network::Buffer& payload);
     void handleEntityHealth(const network::Header& header,
@@ -371,6 +387,8 @@ class NetworkClient {
 
     Config config_;
 
+    network::Compressor compressor_;
+
     network::IoContext ioContext_;
 
     std::unique_ptr<network::IAsyncSocket> socket_;
@@ -390,6 +408,7 @@ class NetworkClient {
     std::vector<std::function<void(DisconnectReason)>> onDisconnectedCallbacks_;
     std::function<void(EntitySpawnEvent)> onEntitySpawnCallback_;
     std::function<void(EntityMoveEvent)> onEntityMoveCallback_;
+    std::function<void(EntityMoveBatchEvent)> onEntityMoveBatchCallback_;
     std::vector<std::function<void(std::uint32_t)>> onEntityDestroyCallbacks_;
     std::function<void(EntityHealthEvent)> onEntityHealthCallback_;
     std::function<void(float, float)> onPositionCorrectionCallback_;

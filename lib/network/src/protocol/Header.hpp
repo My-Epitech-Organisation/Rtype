@@ -50,6 +50,9 @@ inline constexpr std::uint8_t kReliable = 0x01;
 
 /// Ack ID field is valid (acknowledging a previous packet)
 inline constexpr std::uint8_t kIsAck = 0x02;
+
+/// Payload is LZ4-compressed (RFC RTGP v1.4.0)
+inline constexpr std::uint8_t kCompressed = 0x04;
 }  // namespace Flags
 
 #pragma pack(push, 1)
@@ -136,6 +139,10 @@ struct Header {
         return (flags & Flags::kIsAck) != 0;
     }
 
+    [[nodiscard]] constexpr bool isCompressed() const noexcept {
+        return (flags & Flags::kCompressed) != 0;
+    }
+
     constexpr void setReliable(bool value = true) noexcept {
         if (value) {
             flags |= Flags::kReliable;
@@ -147,6 +154,14 @@ struct Header {
     constexpr void setAck(std::uint16_t ackSeqId) noexcept {
         flags |= Flags::kIsAck;
         ackId = ackSeqId;
+    }
+
+    constexpr void setCompressed(bool value = true) noexcept {
+        if (value) {
+            flags |= Flags::kCompressed;
+        } else {
+            flags &= ~Flags::kCompressed;
+        }
     }
 
     [[nodiscard]] constexpr bool hasValidMagic() const noexcept {
