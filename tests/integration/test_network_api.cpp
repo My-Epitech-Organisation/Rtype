@@ -286,7 +286,7 @@ TEST_F(NetworkApiTest, ServerBroadcastEntitySpawn) {
     ASSERT_TRUE(clientConnected.load());
 
     // Spawn entity
-    server_->spawnEntity(42, network::EntityType::Player, 100.0f, 200.0f);
+    server_->spawnEntity(42, network::EntityType::Player, 0, 100.0f, 200.0f);
 
     // Wait for spawn to be received
     for (int i = 0; i < 100 && !spawnReceived; ++i) {
@@ -570,7 +570,7 @@ TEST_F(NetworkApiTest, SpawnEntityToClient) {
 
     // Use ToClient method
     server_->spawnEntityToClient(clients[0], 999, network::EntityType::Bydos,
-                                 100.0f, 200.0f);
+                                 0, 100.0f, 200.0f);
 
     ASSERT_TRUE(waitFor(spawnReceived, std::chrono::milliseconds(3000)));
     EXPECT_EQ(receivedSpawn.entityId, 999u);
@@ -693,7 +693,7 @@ TEST_F(NetworkApiTest, ToClientMethodsWithInvalidUser) {
 
     // These should not crash when user doesn't exist
     EXPECT_NO_THROW(server_->spawnEntityToClient(
-        99999, 1, network::EntityType::Player, 0.0f, 0.0f));
+        99999, 1, network::EntityType::Player, 0, 0.0f, 0.0f));
     EXPECT_NO_THROW(
         server_->moveEntityToClient(99999, 1, 0.0f, 0.0f, 0.0f, 0.0f));
     EXPECT_NO_THROW(server_->destroyEntityToClient(99999, 1));
@@ -721,7 +721,7 @@ TEST_F(NetworkApiTest, ServerBroadcastWithoutClients) {
 
     // Broadcasting to no clients should not crash
     EXPECT_NO_THROW(
-        server_->spawnEntity(1, network::EntityType::Bydos, 0.0f, 0.0f));
+        server_->spawnEntity(1, network::EntityType::Bydos, 0, 0.0f, 0.0f));
     EXPECT_NO_THROW(server_->moveEntity(1, 0.0f, 0.0f, 0.0f, 0.0f));
     EXPECT_NO_THROW(server_->destroyEntity(1));
     EXPECT_NO_THROW(server_->updateGameState(network::GameState::Running));

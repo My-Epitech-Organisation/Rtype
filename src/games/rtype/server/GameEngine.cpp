@@ -19,6 +19,8 @@
 #include "../shared/Components/Tags.hpp"
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
+#include "../shared/Config/EntityConfig/EntityConfig.hpp"
+#include "../shared/Config/PrefabLoader.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 #include "Logger/Macros.hpp"
 namespace rtype::games::rtype::server {
@@ -39,6 +41,27 @@ bool GameEngine::initialize() {
     }
     _registry->reserveEntities(GameConfig::MAX_ENEMIES + 100);
 
+    LOG_INFO("[GameEngine] Loading entity configurations");
+    auto& entityConfigRegistry = shared::EntityConfigRegistry::getInstance();
+    try {
+        entityConfigRegistry.loadEnemiesWithSearch("config/game/enemies.toml");
+        entityConfigRegistry.loadPlayersWithSearch("config/game/players.toml");
+        entityConfigRegistry.loadProjectilesWithSearch(
+            "config/game/projectiles.toml");
+        entityConfigRegistry.loadPowerUpsWithSearch(
+            "config/game/powerups.toml");
+        LOG_INFO("[GameEngine] Entity configurations loaded");
+    } catch (const std::exception& e) {
+        LOG_WARNING("[GameEngine] Failed to load some entity configurations: "
+                    << e.what() << " - Continuing with available configs");
+    }
+
+    _prefabManager = std::make_unique<ECS::PrefabManager>(std::ref(*_registry));
+    shared::PrefabLoader::registerAllPrefabs(*_prefabManager);
+    LOG_INFO("[GameEngine] Registered "
+             << _prefabManager->getPrefabNames().size()
+             << " prefabs from entity configs");
+
     setupECSSignals();
     auto eventEmitter = [this](const engine::GameEvent& event) {
         emitEvent(event);
@@ -47,7 +70,7 @@ bool GameEngine::initialize() {
     spawnerConfig.minSpawnInterval = GameConfig::MIN_SPAWN_INTERVAL;
     spawnerConfig.maxSpawnInterval = GameConfig::MAX_SPAWN_INTERVAL;
     spawnerConfig.maxEnemies = GameConfig::MAX_ENEMIES;
-    spawnerConfig.spawnX = GameConfig::SCREEN_WIDTH + GameConfig::SPAWN_MARGIN;
+    spawnerConfig.spawnX = GameConfig::SCREEN_WIDTH + GameConfig::SPAWN_OFFSET;
     spawnerConfig.minSpawnY = GameConfig::SPAWN_MARGIN;
     spawnerConfig.maxSpawnY =
         GameConfig::SCREEN_HEIGHT - GameConfig::SPAWN_MARGIN;
@@ -217,6 +240,7 @@ engine::ProcessedEvent GameEngine::processEvent(
     engine::ProcessedEvent result{};
     result.type = event.type;
     result.networkId = event.entityNetworkId;
+    result.subType = event.subType;
     result.x = event.x;
     result.y = event.y;
     result.vx = event.velocityX;

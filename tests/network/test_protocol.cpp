@@ -231,7 +231,7 @@ TEST_F(PayloadTest, PayloadSizesMatchRFC) {
     EXPECT_EQ(sizeof(AcceptPayload), 4u);
     EXPECT_EQ(sizeof(GetUsersResponseHeader), 1u);
     EXPECT_EQ(sizeof(UpdateStatePayload), 1u);
-    EXPECT_EQ(sizeof(EntitySpawnPayload), 13u);
+    EXPECT_EQ(sizeof(EntitySpawnPayload), 14u);
     EXPECT_EQ(sizeof(EntityMovePayload), 20u);
     EXPECT_EQ(sizeof(EntityDestroyPayload), 4u);
     EXPECT_EQ(sizeof(InputPayload), 1u);
@@ -276,7 +276,7 @@ TEST_F(PayloadTest, InputMaskFlags) {
 }
 
 TEST_F(PayloadTest, EntitySpawnPayloadType) {
-    EntitySpawnPayload spawn{1, static_cast<uint8_t>(EntityType::Player),
+    EntitySpawnPayload spawn{1, static_cast<uint8_t>(EntityType::Player), 0,
                              100.0f, 200.0f};
     EXPECT_EQ(spawn.getType(), EntityType::Player);
 

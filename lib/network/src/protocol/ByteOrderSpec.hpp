@@ -222,6 +222,7 @@ fromNetwork(const T& data) noexcept {
     EntitySpawnPayload result;
     result.entityId = ByteOrder::toNetwork(p.entityId);
     result.type = p.type;
+    result.subType = p.subType;
     result.posX = ByteOrder::toNetwork(p.posX);
     result.posY = ByteOrder::toNetwork(p.posY);
     return result;
@@ -232,6 +233,7 @@ fromNetwork(const T& data) noexcept {
     EntitySpawnPayload result;
     result.entityId = ByteOrder::fromNetwork(p.entityId);
     result.type = p.type;
+    result.subType = p.subType;
     result.posX = ByteOrder::fromNetwork(p.posX);
     result.posY = ByteOrder::fromNetwork(p.posY);
     return result;

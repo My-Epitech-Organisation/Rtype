@@ -22,6 +22,7 @@
 #include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 #include "games/rtype/shared/Components/WeaponComponent.hpp"
+#include "games/rtype/shared/Config/EntityConfig/EntityConfig.hpp"
 
 using namespace rtype::server;
 using namespace ECS;
@@ -33,6 +34,11 @@ using namespace ECS;
 class PlayerSpawnerTest : public ::testing::Test {
    protected:
     void SetUp() override {
+        // Load entity configurations required by PlayerSpawner
+        auto& entityConfigRegistry =
+            rtype::games::rtype::shared::EntityConfigRegistry::getInstance();
+        entityConfigRegistry.loadPlayersWithSearch("config/game/players.toml");
+
         registry_ = std::make_shared<Registry>();
         NetworkServer::Config config;
         config.clientTimeout = std::chrono::milliseconds(5000);
@@ -168,8 +174,9 @@ TEST_F(PlayerSpawnerTest, SpawnPlayer_HealthSetCorrectly) {
     auto result = spawner.spawnPlayer(1, 0);
     auto& health = registry_->getComponent<Health>(result.entity);
 
-    EXPECT_EQ(health.current, 7);
-    EXPECT_EQ(health.max, 7);
+    // Health comes from player config, should be positive and at max
+    EXPECT_GT(health.current, 0);
+    EXPECT_EQ(health.current, health.max);
 }
 
 TEST_F(PlayerSpawnerTest, SpawnPlayer_WithoutNetworkSystem) {

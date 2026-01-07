@@ -41,6 +41,20 @@ class VisualCueFactory {
                                   const sf::Vector2f& position, int damage,
                                   std::shared_ptr<sf::Font> font,
                                   const sf::Color& color = sf::Color::Red);
+
+    /**
+     * @brief Create a power-up collection popup text
+     * @param registry The ECS registry
+     * @param position Position where the popup appears
+     * @param powerUpName Name of the power-up (e.g. "+Speed", "+Shield")
+     * @param font The font to use
+     * @param color Text color
+     */
+    static void createPowerUpPopup(ECS::Registry& registry,
+                                   const sf::Vector2f& position,
+                                   const std::string& powerUpName,
+                                   std::shared_ptr<sf::Font> font,
+                                   const sf::Color& color);
 };
 
 }  // namespace rtype::games::rtype::client

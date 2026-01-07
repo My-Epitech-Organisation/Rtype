@@ -58,6 +58,17 @@ class CollisionSystem : public ::rtype::engine::ASystem {
                                    ECS::Entity projectile, ECS::Entity target,
                                    bool isTargetPlayer);
 
+    /**
+     * @brief Handle collision between an enemy and a player
+     * @param registry ECS registry
+     * @param cmdBuffer Command buffer
+     * @param enemy The enemy entity
+     * @param player The player entity
+     */
+    void handleEnemyPlayerCollision(ECS::Registry& registry,
+                                    ECS::CommandBuffer& cmdBuffer,
+                                    ECS::Entity enemy, ECS::Entity player);
+
     void handlePickupCollision(ECS::Registry& registry,
                                ECS::CommandBuffer& cmdBuffer,
                                ECS::Entity player, ECS::Entity pickup);

@@ -77,6 +77,15 @@ if(BUILD_TESTS)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(googletest)
 
+    # Copy config directory to build directory for tests
+    if(NOT EXISTS ${CMAKE_BINARY_DIR}/config)
+        execute_process(
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/config
+            ${CMAKE_BINARY_DIR}/config
+        )
+    endif()
+
     add_subdirectory(tests)
 endif()
 

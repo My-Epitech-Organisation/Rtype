@@ -335,6 +335,30 @@ target_link_libraries(test_game_state_manager PRIVATE
     rtype_toml_parser
 )
 
+# EntitySpawnerFactory unit tests
+add_executable(test_entity_spawner_factory test_entity_spawner_factory.cpp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/entitySpawnerFactory/EntitySpawnerFactory.cpp
+)
+
+target_include_directories(test_entity_spawner_factory PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game
+    ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/entitySpawnerFactory
+    ${CMAKE_SOURCE_DIR}/src/server/shared
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_entity_spawner_factory PRIVATE cxx_std_20)
+
+target_link_libraries(test_entity_spawner_factory PRIVATE
+    GTest::gtest_main
+    common
+    ecs
+    network
+)
+
 include(GoogleTest)
 if(WIN32)
     gtest_discover_tests(test_server_network_messages WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -349,6 +373,7 @@ if(WIN32)
     gtest_discover_tests(test_game_event_processor WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_packet_processor WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_game_state_manager WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_entity_spawner_factory WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_server_network_messages)
     gtest_discover_tests(test_client_manager)
@@ -362,4 +387,5 @@ else()
     gtest_discover_tests(test_game_event_processor)
     gtest_discover_tests(test_packet_processor)
     gtest_discover_tests(test_game_state_manager)
+    gtest_discover_tests(test_entity_spawner_factory)
 endif()
