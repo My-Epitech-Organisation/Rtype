@@ -36,6 +36,12 @@ ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
     }
 }
 
+void ServerApp::setLobbyCode(const std::string& code) {
+    if (_networkServer) {
+        _networkServer->setExpectedLobbyCode(code);
+    }
+}
+
 ServerApp::ServerApp(std::unique_ptr<IGameConfig> gameConfig,
                      std::shared_ptr<std::atomic<bool>> shutdownFlag,
                      bool verbose)

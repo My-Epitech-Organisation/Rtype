@@ -152,6 +152,11 @@ class ServerApp {
     }
 
     /**
+     * @brief Set the expected lobby code for join validation
+     */
+    void setLobbyCode(const std::string& code);
+
+    /**
      * @brief Test hook: set default countdown duration used by GameStateManager
      * (useful to make tests deterministic)
      */
