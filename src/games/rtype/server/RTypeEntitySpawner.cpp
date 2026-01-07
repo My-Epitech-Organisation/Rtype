@@ -277,6 +277,7 @@ void RTypeEntitySpawner::updateAllPlayersMovement(
 
 ECS::Entity RTypeEntitySpawner::spawnForcePod(std::uint32_t ownerNetworkId,
                                               float offsetX, float offsetY) {
+    using shared::BoundingBoxComponent;
     using shared::ForcePodComponent;
     using shared::ForcePodTag;
     using shared::TransformComponent;
@@ -293,6 +294,8 @@ ECS::Entity RTypeEntitySpawner::spawnForcePod(std::uint32_t ownerNetworkId,
     _registry->emplaceComponent<ForcePodTag>(forcePodEntity);
     _registry->emplaceComponent<TransformComponent>(forcePodEntity, 0.0F, 0.0F,
                                                     0.0F);
+    _registry->emplaceComponent<BoundingBoxComponent>(forcePodEntity, 32.0F,
+                                                      32.0F);
 
     return forcePodEntity;
 }
