@@ -2,11 +2,7 @@
 
 | Metadata | Details |
 | :---- | :---- |
-<<<<<<<< HEAD:docs/RFC/RFC_RTGP_v1.4.0.md
-| **Version** | 1.4.1 (Entity Move Batching) |
-========
-| **Version** | 1.3.1 (Lobby Ready & Game Start System) |
->>>>>>>> 96fa14d067f80a11e09526fb050aaa3aab9641cd:docs/RFC/RFC_RTGP_v1.3.1.md
+| **Version** | 1.4.1 (Entity Move Batching + Lobby System) |
 | **Status** | Draft / Experimental |
 | **Date** | 2026-01-05 |
 | **Authors** | R-Type Project Team |
@@ -393,21 +389,15 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 
 ## **8. Changes from Previous Versions**
 
-<<<<<<<< HEAD:docs/RFC/RFC_RTGP_v1.4.0.md
 ### **Version 1.4.1 (2026-01-05)**
 
 * **Added OpCode 0x15 - S_ENTITY_MOVE_BATCH:** Batched entity position/velocity updates for bandwidth optimization
 * **Optimization:** Entity updates are now grouped into a single packet per tick, enabling LZ4 compression
 * **Estimated bandwidth savings:** 50-60% for entity movement traffic
-========
-### **Version 1.3.1 (2026-01-05)**
-
 * **Added OpCode 0x08 - C_READY:** Client lobby ready/unready signal
 * **Added OpCode 0x09 - S_GAME_START:** Server-initiated game start with countdown
-* **Added Section 5.1:** Extended session management documentation for lobby ready workflow
-* **Updated Section 7:** Added C_READY, S_GAME_START, and S_PLAYER_READY_STATE to payload size reference table
-* **Lobby Workflow:** Clients send C_READY when toggling ready state. Server broadcasts S_GAME_START when all players ready, triggering synchronized countdown on all clients.
->>>>>>>> 96fa14d067f80a11e09526fb050aaa3aab9641cd:docs/RFC/RFC_RTGP_v1.3.1.md
+* **Added OpCode 0x0A - S_PLAYER_READY_STATE:** Broadcast player ready state changes
+* **Lobby Workflow:** Clients send C_READY when toggling ready state. Server broadcasts S_GAME_START when all players ready
 
 ### **Version 1.3.0 (2025-12-15)**
 

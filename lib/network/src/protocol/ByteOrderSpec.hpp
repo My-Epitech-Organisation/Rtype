@@ -110,10 +110,6 @@ template <>
 struct is_rfc_type<GameStartPayload> : std::true_type {};
 template <>
 struct is_rfc_type<PlayerReadyStatePayload> : std::true_type {};
-template <>
-struct is_rfc_type<JoinLobbyPayload> : std::true_type {};
-template <>
-struct is_rfc_type<JoinLobbyResponsePayload> : std::true_type {};
 
 template <typename T>
 inline constexpr bool is_rfc_type_v = is_rfc_type<T>::value;
@@ -382,7 +378,6 @@ fromNetwork(const T& data) noexcept {
     const EntityMoveBatchHeader& p) noexcept {
     return p;  // Single byte, no conversion needed
 }
-
 [[nodiscard]] inline EntityMoveBatchHeader fromNetwork(
     const EntityMoveBatchHeader& p) noexcept {
     return p;  // Single byte, no conversion needed

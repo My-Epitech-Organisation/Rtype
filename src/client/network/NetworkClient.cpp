@@ -514,6 +514,12 @@ void NetworkClient::test_processIncomingPacket(
     processIncomingPacket(data, sender);
 }
 
+void NetworkClient::test_queueCallback(std::function<void()> callback) { queueCallback(std::move(callback)); }
+
+void NetworkClient::test_startReceive() { startReceive(); }
+
+void NetworkClient::test_handlePong(const network::Header& header, const network::Buffer& payload) { handlePong(header, payload); }
+
 void NetworkClient::queueCallback(std::function<void()> callback) {
     std::lock_guard<std::mutex> lock(callbackMutex_);
     callbackQueue_.push(std::move(callback));

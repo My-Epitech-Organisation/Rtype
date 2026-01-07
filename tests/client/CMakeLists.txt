@@ -420,3 +420,26 @@ if(WIN32 OR MSVC)
 else()
     gtest_discover_tests(test_network_client_handlers)
 endif()
+
+# NetworkClient unit tests (no graphical dependencies)
+add_executable(test_network_client test_network_client.cpp)
+
+target_link_libraries(test_network_client PRIVATE
+    GTest::gtest_main
+    rtype_client_network
+    network
+    common
+)
+
+target_include_directories(test_network_client PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib/network/src
+    ${CMAKE_SOURCE_DIR}/lib/common/src
+)
+
+include(GoogleTest)
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_network_client WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_network_client)
+endif()

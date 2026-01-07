@@ -4,13 +4,7 @@ Category: Experimental                                    January 2026
 
 
                      R-Type Game Protocol (RTGP)
-<<<<<<<< HEAD:docs/RFC/RFC_RTGP_v1.4.0.txt
-                 Version 1.4.0 (LZ4 Compression Support)
-========
-              Version 1.3.1 (Lobby Ready & Game Start System)
-
-Date: January 5 2026
->>>>>>>> 96fa14d067f80a11e09526fb050aaa3aab9641cd:docs/RFC/RFC_RTGP_v1.3.1.txt
+           Version 1.4.1 (LZ4 Compression + Lobby System)
 
 Abstract
 
@@ -359,6 +353,25 @@ Table of Contents
       *  Duration (float) - Duration in seconds for temporary power-ups
          (0.0 for permanent)
 
+5.2.6.  0x15 - S_ENTITY_MOVE_BATCH
+
+   o  Sender: Server
+   o  Reliability: UNRELIABLE (Flag 0x00)
+   o  Description: Batched position/velocity updates for multiple
+      entities.  More bandwidth-efficient than individual S_ENTITY_MOVE
+      packets, especially when combined with LZ4 compression.
+   o  Payload:
+      *  Count (uint8): Number of entities in the batch (1-69)
+      *  Entries (EntityMovePayload[]): Array of entity updates:
+         -  Entity ID (uint32)
+         -  PosX (float)
+         -  PosY (float)
+         -  VelX (float)
+         -  VelY (float)
+   o  Notes:
+      *  Maximum 69 entities per batch due to MTU constraints
+      *  LZ4 compression applied when batch size exceeds 64 bytes
+
 5.3.  Input & Reconciliation
 
 5.3.1.  0x20 - C_INPUT
@@ -432,6 +445,7 @@ Table of Contents
    | S_ENTITY_DESTROY | 4                 | uint32                    |
    | S_ENTITY_HEALTH  | 12                | uint32+int32+int32        |
    | S_POWERUP_EVENT  | 9                 | uint32+uint8+float        |
+   | S_ENTITY_MOVE_BATCH | Variable       | 1 + (count * 20)          |
    | C_INPUT          | 1                 | uint8                     |
    | S_UPDATE_POS     | 8                 | 2*float                   |
    | PING             | 0                 | Empty                     |
@@ -440,8 +454,7 @@ Table of Contents
 
 8.  Changes from Previous Versions
 
-<<<<<<<< HEAD:docs/RFC/RFC_RTGP_v1.4.0.txt
-8.1.  Version 1.4.0 (2026-01-05)
+8.1.  Version 1.4.1 (2026-01-05)
 
    o  Added Flag 0x04 - COMPRESSED: Indicates payload is LZ4 compressed
    o  Added Section 4.4 - Compression: Describes LZ4 compression
@@ -452,16 +465,11 @@ Table of Contents
    o  Updated 0x03 - DISCONNECT: Payload now includes Reason (uint8)
       instead of being empty
    o  Updated Section 4.3: Added COMPRESSED flag documentation
-========
-8.1.  Version 1.3.1 (2026-01-05)
-
+   o  Added OpCode 0x15 - S_ENTITY_MOVE_BATCH: Batched entity updates
    o  Added OpCode 0x08 - C_READY: Client lobby ready/unready signal
-   o  Added OpCode 0x09 - S_GAME_START: Server-initiated game start with countdown
-   o  Added OpCode 0x0A - S_PLAYER_READY_STATE: Server broadcasts individual player ready state
-   o  Added Section 5.1: Extended session management documentation for lobby ready workflow
-   o  Updated Section 7: Added C_READY, S_GAME_START, and S_PLAYER_READY_STATE to payload size reference table
-   o  Lobby Workflow: Clients send C_READY when toggling ready state. Server broadcasts S_GAME_START when all players ready, triggering synchronized countdown on all clients.
->>>>>>>> 96fa14d067f80a11e09526fb050aaa3aab9641cd:docs/RFC/RFC_RTGP_v1.3.1.txt
+   o  Added OpCode 0x09 - S_GAME_START: Server-initiated game start
+   o  Added OpCode 0x0A - S_PLAYER_READY_STATE: Broadcast player ready state
+   o  Lobby Workflow: Clients send C_READY to toggle ready state
 
 8.2.  Version 1.3.0 (2025-12-15)
 
