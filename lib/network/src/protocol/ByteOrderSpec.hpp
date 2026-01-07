@@ -110,6 +110,10 @@ template <>
 struct is_rfc_type<GameStartPayload> : std::true_type {};
 template <>
 struct is_rfc_type<PlayerReadyStatePayload> : std::true_type {};
+template <>
+struct is_rfc_type<JoinLobbyPayload> : std::true_type {};
+template <>
+struct is_rfc_type<JoinLobbyResponsePayload> : std::true_type {};
 
 template <typename T>
 inline constexpr bool is_rfc_type_v = is_rfc_type<T>::value;
@@ -388,6 +392,20 @@ fromNetwork(const T& data) noexcept {
     return p;
 }
 [[nodiscard]] inline LobbyReadyPayload fromNetwork(const LobbyReadyPayload& p) noexcept {
+    return p;
+}
+
+[[nodiscard]] inline JoinLobbyPayload toNetwork(const JoinLobbyPayload& p) noexcept {
+    return p;
+}
+[[nodiscard]] inline JoinLobbyPayload fromNetwork(const JoinLobbyPayload& p) noexcept {
+    return p;
+}
+
+[[nodiscard]] inline JoinLobbyResponsePayload toNetwork(const JoinLobbyResponsePayload& p) noexcept {
+    return p;
+}
+[[nodiscard]] inline JoinLobbyResponsePayload fromNetwork(const JoinLobbyResponsePayload& p) noexcept {
     return p;
 }
 
