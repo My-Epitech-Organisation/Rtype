@@ -7,6 +7,7 @@ add_library(rtype_game_server_systems OBJECT
     Destroy/DestroySystem.cpp
     Projectile/ProjectileSpawnerSystem.cpp
     EnemyShooting/EnemyShootingSystem.cpp
+    ForcePod/ForcePodAttachmentSystem.cpp
 )
 
 target_include_directories(rtype_game_server_systems PUBLIC
