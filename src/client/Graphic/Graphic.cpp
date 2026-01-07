@@ -315,6 +315,16 @@ void Graphic::_initializeCommonAssets() {
     manager->textureManager->load("player_vessel",
                                   config.assets.textures.Player);
     manager->textureManager->load("bdos_enemy", config.assets.textures.Enemy);
+    manager->textureManager->load("bdos_enemy_chaser",
+                                  config.assets.textures.EnemyChaser);
+    manager->textureManager->load("bdos_enemy_shooter",
+                                  config.assets.textures.EnemyShooter);
+    manager->textureManager->load("bdos_enemy_heavy",
+                                  config.assets.textures.EnemyHeavy);
+    manager->textureManager->load("bdos_enemy_patrol",
+                                  config.assets.textures.EnemyPatrol);
+    manager->textureManager->load("bdos_enemy_wave",
+                                  config.assets.textures.EnemyWave);
     manager->textureManager->load("projectile_player_laser",
                                   config.assets.textures.missileLaser);
 
