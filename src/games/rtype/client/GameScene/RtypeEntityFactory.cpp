@@ -108,7 +108,7 @@ RtypeEntityFactory::createNetworkEntityFactory(
             }
 
             case ::rtype::network::EntityType::Bydos:
-                setupBydosEntity(reg, assetsManager, entity, event.subType);
+                setupBydosEntity(reg, assetsManager, entity, static_cast<shared::EnemyVariant>(event.subType));
                 break;
 
             case ::rtype::network::EntityType::Missile:
@@ -215,7 +215,7 @@ void RtypeEntityFactory::setupPlayerEntity(
 
 void RtypeEntityFactory::setupBydosEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
-    ECS::Entity entity, std::uint8_t subType) {
+    ECS::Entity entity, shared::EnemyVariant subType) {
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] Adding Bydos components");
 

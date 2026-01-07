@@ -12,6 +12,7 @@
 
 #include "../../../../client/Graphic/AssetManager/AssetManager.hpp"
 #include "../../../../client/network/ClientNetworkSystem.hpp"
+#include "Components/EnemyTypeComponent.hpp"
 #include "ECS.hpp"
 
 namespace rtype::games::rtype::client {
@@ -53,11 +54,11 @@ class RtypeEntityFactory {
      * @param reg ECS registry
      * @param assetsManager Asset manager
      * @param entity Entity to configure
-     * @param subType Enemy variant (0=Basic, 1=Shooter, 2=Chaser, etc...)
+     * @param EnemyVariant Enemy variant (0=Basic, 1=Shooter, 2=Chaser, etc...)
      */
     static void setupBydosEntity(ECS::Registry& reg,
                                  std::shared_ptr<AssetManager> assetsManager,
-                                 ECS::Entity entity, std::uint8_t subType = 0);
+                                 ECS::Entity entity, shared::EnemyVariant subType = shared::EnemyVariant::Basic);
 
     /**
      * @brief Create a missile entity with all components
