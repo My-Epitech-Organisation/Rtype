@@ -37,12 +37,11 @@ bool Lobby::start() {
             std::format("Creating ServerApp for lobby {} on port {}...", code_,
                         config_.port));
 
-        serverApp_ =
-            std::make_unique<ServerApp>(config_.port, config_.maxPlayers,
-                                        config_.tickRate, shutdownFlagPtr_,
-                                        10,    // clientTimeoutSeconds
-                                        false  // verbose
-            );
+        serverApp_ = std::make_unique<ServerApp>(
+            config_.port, config_.maxPlayers, config_.tickRate,
+            shutdownFlagPtr_, 10, false);
+
+        serverApp_->setLobbyCode(code_);
 
         rtype::Logger::instance().info(std::format(
             "ServerApp created, starting thread for lobby {}...", code_));
