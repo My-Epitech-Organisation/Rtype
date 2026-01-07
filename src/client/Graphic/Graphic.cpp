@@ -371,7 +371,8 @@ Graphic::Graphic(
 #endif
     this->_display = std::shared_ptr<rtype::display::IDisplay>(
         this->_displayLoader->getInstance("createInstanceDisplay"));
-    this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT, "R-Type - Epitech 2025", false);
+    this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT, "R-Type - Epitech 2025",
+                         false);
 
     this->_keybinds->initialize(*this->_display);
 

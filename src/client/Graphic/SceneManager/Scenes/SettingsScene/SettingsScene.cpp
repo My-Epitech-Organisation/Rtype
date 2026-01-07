@@ -53,11 +53,10 @@ SettingsScene::SettingsScene(
                           std::string(e.what()));
             }
         })));
-    this->_listEntity.push_back(EntityFactory::createStaticText(this->_registry, this->_assetsManager,
-                                "Loaded display lib: " + this->_window->getLibName(), "main_font",
-                                rtype::display::Vector2<float>(
-                                    1500.f, 932.5f),
-                                24));
+    this->_listEntity.push_back(EntityFactory::createStaticText(
+        this->_registry, this->_assetsManager,
+        "Loaded display lib: " + this->_window->getLibName(), "main_font",
+        rtype::display::Vector2<float>(1500.f, 932.5f), 24));
 
     this->_assetsManager->audioManager->load(
         "main_settings_music",
@@ -328,10 +327,13 @@ void SettingsScene::_initWindowSection() {
         this->_registry, this->_assetsManager, "Window",
         rtype::display::Rect<float>(sectionX, sectionY, sectionW, sectionH));
 
-    sectionEntities.push_back(EntityFactory::createButton(this->_registry,
-        rtype::games::rtype::client::Text(
-            "main_font", rtype::display::Color::White(), 24, "Toggle Fullscreen"),
-        rtype::games::rtype::shared::TransformComponent(sectionX + 50, sectionY + 80),
+    sectionEntities.push_back(EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text("main_font",
+                                          rtype::display::Color::White(), 24,
+                                          "Toggle Fullscreen"),
+        rtype::games::rtype::shared::TransformComponent(sectionX + 50,
+                                                        sectionY + 80),
         rtype::games::rtype::client::Rectangle({400, 60},
                                                rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
