@@ -95,9 +95,7 @@ struct TextInput {
     /**
      * @brief Set focus state
      */
-    void setFocus(bool focused) {
-        isFocused = focused;
-    }
+    void setFocus(bool focused) { isFocused = focused; }
 
     TextInput(const TextInput& other) = default;
     TextInput(TextInput&& other) noexcept = default;
