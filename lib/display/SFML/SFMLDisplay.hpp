@@ -17,15 +17,10 @@
 #include "SFMLMusic.hpp"
 #include "SFMLSoundBuffer.hpp"
 #include "SFMLSound.hpp"
+#include "lib/display/ADisplay.hpp"
 
 namespace rtype::display {
-    class SFMLDisplay : public ::rtype::display::IDisplay {
-    private:
-        unsigned int _windowSizeWidth = 1920;
-        unsigned int _windowSizeHeight = 1080;
-        bool _windowIsFullscreen = false;
-        std::string _windowTitleName = "";
-
+    class SFMLDisplay : public ::rtype::display::ADisplay {
     public:
         SFMLDisplay();
         ~SFMLDisplay() override;

@@ -11,6 +11,8 @@
     SFMLSoundBuffer.hpp
     SFMLFont.cpp
     SFMLFont.hpp
+    ../ADisplay.cpp
+    ../ADisplay.hpp
     entrypoint.cpp
 )
 
