@@ -9,6 +9,7 @@
 #define DISPLAYTYPES_HPP_
 
 #include <cstdint>
+#include "DisplayEnum.hpp"
 
 namespace rtype::display {
 
@@ -41,6 +42,40 @@ namespace rtype::display {
     using Vector2u = Vector2<unsigned int>;
     using IntRect = Rect<int>;
     using FloatRect = Rect<float>;
+
+    struct Event {
+        EventType type;
+        union {
+            struct {
+                Key code;
+                bool alt;
+                bool control;
+                bool shift;
+                bool system;
+            } key;
+            struct {
+                MouseButton button;
+                int x;
+                int y;
+            } mouseButton;
+            struct {
+                int x;
+                int y;
+            } mouseMove;
+            struct {
+                unsigned int joystickId;
+                unsigned int button;
+            } joystickButton;
+            struct {
+                unsigned int joystickId;
+                JoystickAxis axis;
+                float position;
+            } joystickMove;
+            struct {
+                uint32_t unicode;
+            } text;
+        };
+    };
 
 } // namespace rtype::display
 

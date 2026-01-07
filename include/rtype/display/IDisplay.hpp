@@ -12,133 +12,13 @@
 #include <memory>
 #include <vector>
 #include "DisplayTypes.hpp"
+#include "IFont.hpp"
+#include "IMusic.hpp"
+#include "ISound.hpp"
+#include "ISoundBuffer.hpp"
+#include "ITexture.hpp"
 
 namespace rtype::display {
-
-    enum class EventType {
-        Closed,
-        KeyPressed,
-        KeyReleased,
-        MouseButtonPressed,
-        MouseButtonReleased,
-        MouseMoved,
-        JoystickButtonPressed,
-        JoystickButtonReleased,
-        JoystickMoved,
-        FocusLost,
-        FocusGained,
-        TextEntered,
-        Unknown
-    };
-
-    class ITexture {
-    public:
-        virtual ~ITexture() = default;
-
-        virtual bool loadFromFile(const std::string& path) = 0;
-        virtual void setRepeated(bool repeated) = 0;
-        virtual void setSmooth(bool smooth) = 0;
-        virtual Vector2u getSize() const = 0;
-    };
-
-    class IFont {
-    public:
-        virtual ~IFont() = default;
-
-        virtual bool openFromFile(const std::string& path) = 0;
-    };
-
-    class ISoundBuffer {
-    public:
-        virtual ~ISoundBuffer() = default;
-
-        virtual bool loadFromFile(const std::string& path) = 0;
-    };
-
-    class ISound {
-    public:
-        virtual ~ISound() = default;
-
-        enum class Status {
-            Stopped,
-            Paused,
-            Playing
-        };
-        virtual void setVolume(float volume) = 0;
-        virtual void play() = 0;
-        virtual Status getStatus() const = 0;
-    };
-    class IMusic {
-    public:
-        virtual ~IMusic() = default;
-
-        virtual bool openFromFile(const std::string& path) = 0;
-        virtual void setLooping(bool loop) = 0;
-        virtual void setVolume(float volume) = 0;
-        virtual void play() = 0;
-        virtual void pause() = 0;
-        virtual void stop() = 0;
-    };
-
-    enum class Key {
-        Unknown = -1,
-        A = 0, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
-        Num0, Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9,
-        Escape, LControl, LShift, LAlt, LSystem, RControl, RShift, RAlt, RSystem,
-        Menu, LBracket, RBracket, SemiColon, Comma, Period, Quote, Slash, BackSlash,
-        Tilde, Equal, Dash, Space, Return, BackSpace, Tab, PageUp, PageDown, End, Home,
-        Insert, Delete, Add, Subtract, Multiply, Divide, Left, Right, Up, Down,
-        Numpad0, Numpad1, Numpad2, Numpad3, Numpad4, Numpad5, Numpad6, Numpad7, Numpad8, Numpad9,
-        F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15,
-        Pause
-    };
-
-    enum class MouseButton {
-        Left,
-        Right,
-        Middle,
-        XButton1,
-        XButton2,
-        ButtonCount
-    };
-
-    enum class JoystickAxis {
-        X, Y, Z, R, U, V, PovX, PovY
-    };
-
-    struct Event {
-        EventType type;
-        union {
-            struct {
-                Key code;
-                bool alt;
-                bool control;
-                bool shift;
-                bool system;
-            } key;
-            struct {
-                MouseButton button;
-                int x;
-                int y;
-            } mouseButton;
-            struct {
-                int x;
-                int y;
-            } mouseMove;
-            struct {
-                unsigned int joystickId;
-                unsigned int button;
-            } joystickButton;
-            struct {
-                unsigned int joystickId;
-                JoystickAxis axis;
-                float position;
-            } joystickMove;
-            struct {
-                uint32_t unicode;
-            } text;
-        };
-    };
 
     /**
      * @file IDisplay.hpp
@@ -253,25 +133,46 @@ namespace rtype::display {
 
         /**
          * @brief Dessine un rectangle rempli et optionnellement avec contour.
+         * @param position Position du rectangle
+         * @param size Taille du rectangle
+         * @param fillColor Couleur de remplissage
+         * @param outlineColor Couleur du contour
+         * @param outlineThickness Épaisseur du contour
          */
         virtual void drawRectangle(const Vector2<float>& position, const Vector2<float>& size, const Color& fillColor, const Color& outlineColor, float outlineThickness) = 0;
 
         /**
          * @brief Calcule les dimensions (largeur, hauteur) d'un texte donné.
+         * @param text Chaîne de texte
+         * @param fontName Nom de la police chargée
+         * @param size Taille du texte en points
+         * @return Dimensions du texte en pixels
          */
         virtual Vector2<float> getTextBounds(const std::string& text, const std::string& fontName, unsigned int size) = 0;
 
         /**
          * @brief Retourne la taille (en pixels) d'une texture chargée.
+         * @param textureName Nom de la texture
+         * @return Taille de la texture
          */
         virtual Vector2<float> getTextureSize(const std::string& textureName) = 0;
 
         // View management
         /**
          * @brief Définit la vue (centre et taille) utilisée pour le rendu.
+         * @param center Centre de la vue
+         * @param size Taille de la vue
          */
         virtual void setView(const Vector2<float>& center, const Vector2<float>& size) = 0;
+        /**
+         * @brief Retourne le centre actuel de la vue.
+         * @return Centre de la vue
+         */
         [[nodiscard]] virtual Vector2<float> getViewCenter() const = 0;
+        /**
+         * @brief Retourne la taille actuelle de la vue.
+         * @return Taille de la vue
+         */
         [[nodiscard]] virtual Vector2<float> getViewSize() const = 0;
 
         /**
@@ -281,38 +182,95 @@ namespace rtype::display {
 
         /**
          * @brief Retourne la taille actuelle de la fenêtre en pixels.
+         * @return Taille de la fenêtre
          */
         [[nodiscard]] virtual Vector2<int> getWindowSize() const = 0;
 
         // Asset management (might be better elsewhere, but for now...)
         /**
-         * @brief Charge une texture depuis un fichier et l'associe à un nom.
-         */
+        * @brief Charge une texture depuis un fichier et l'associe à un nom.
+        * @param name nom de la texture
+        * @param path chemin vers le fichier de texture
+        */
         virtual void loadTexture(const std::string& name, const std::string& path) = 0;
+        /**
+        * @brief Charge une police depuis un fichier et l'associe à un nom.
+        * @param name nom de la police
+        * @param path chemin vers le fichier de police
+        */
         virtual void loadFont(const std::string& name, const std::string& path) = 0;
+        /**
+        * @brief Charge un sfx depuis un fichier et l'associe à un nom.
+        * @param name nom du sfx
+        * @param path chemin vers le fichier de son
+        */
         virtual void loadSoundBuffer(const std::string& name, const std::string& path) = 0;
+        /**
+        * @brief Charge une musique depuis un fichier et l'associe à un nom.
+        * @param name nom de la musique
+        * @param path chemin vers le fichier de musique
+        */
         virtual void loadMusic(const std::string& name, const std::string& path) = 0;
+        /**
+        * @brief Recupère une ressource chargée par son nom.
+        * @param name nom de la ressource précédemment chargée
+        * @return un shared_ptr vers la ressource
+        */
         virtual std::shared_ptr<ITexture> getTexture(const std::string& name) = 0;
+
+        /**
+         * @brief Récupère une ressource chargée par son nom.
+         * @param name nom de la ressource précédemment chargée
+         * @return un shared_ptr vers la ressource
+         */
         virtual std::shared_ptr<IFont> getFont(const std::string& name) = 0;
+        /**
+         * @brief Récupère une ressource chargée par son nom.
+         * @param name nom de la ressource précédemment chargée
+         * @return un shared_ptr vers la ressource
+         */
         virtual std::shared_ptr<ISoundBuffer> getSoundBuffer(const std::string& name) = 0;
+        /**
+         * @brief Récupère une ressource chargée par son nom.
+         * @param name nom de la ressource précédemment chargée
+         * @return un shared_ptr vers la ressource
+         */
         virtual std::shared_ptr<IMusic> getMusic(const std::string& name) = 0;
+        /**
+         * @brief Crée un objet son à partir d'un buffer sonore.
+         * @param buffer shared_ptr vers le buffer sonore
+         * @return shared_ptr vers l'objet son créé
+         */
         virtual std::shared_ptr<ISound> createSound(std::shared_ptr<ISoundBuffer> buffer) = 0;
+        /**
+         * @brief Charge un shader depuis des fichiers de vertex et fragment, et l'associe à un nom.
+         * @param name nom du shader
+         * @param vertexPath chemin vers le fichier de shader vertex
+         * @param fragmentPath chemin vers le fichier de shader fragment
+         */
         virtual void loadShader(const std::string& name, const std::string& vertexPath, const std::string& fragmentPath) = 0;
 
         // Shader uniforms
         /**
          * @brief Définit une valeur uniforme float pour un shader donné.
+         * @param shaderName Nom du shader
+         * @param uniformName Nom de l'uniforme dans le shader
+         * @param value Valeur float à assigner
          */
         virtual void setShaderUniform(const std::string& shaderName, const std::string& uniformName, float value) = 0;
 
         /**
          * @brief Définit une matrice (vecteur de floats) comme uniforme pour un shader.
+         * @param shaderName Nom du shader
+         * @param uniformName Nom de l'uniforme dans le shader
+         * @param matrix Vecteur de floats représentant la matrice
          */
         virtual void setShaderUniform(const std::string& shaderName, const std::string& uniformName, const std::vector<float>& matrix) = 0;
 
         // Render to texture
         /**
          * @brief Commence le rendu vers une texture rendable identifiée par son nom.
+         * @param textureName Nom de la texture rendable
          */
         virtual void beginRenderToTexture(const std::string& textureName) = 0;
         virtual void endRenderToTexture() = 0;
@@ -321,8 +279,14 @@ namespace rtype::display {
         // Joystick
         /**
          * @brief Indique si un joystick est connecté.
+         * @param joystickId Identifiant du joystick
+         * @return true si connecté
          */
         [[nodiscard]] virtual bool isJoystickConnected(unsigned int joystickId) const = 0;
+        /**
+         * @brief Retourne le nombre de joysticks connectés.
+         * @return Nombre de joysticks
+         */
         [[nodiscard]] virtual unsigned int getJoystickCount() const = 0;
     };
 
