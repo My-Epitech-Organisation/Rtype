@@ -14,7 +14,7 @@
 param(
     [switch]$r,  # Incremental build (hot reload mode)
     [switch]$t,  # Build with tests
-    [switch]$c   # Force CPM (skip vcpkg)
+    [switch]$c,  # Force CPM (skip vcpkg)
     [switch]$h   # Help
 )
 
