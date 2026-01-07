@@ -156,6 +156,29 @@ TEST(NetworkClientTest, SendInputSendsPacketWhenConnected) {
     EXPECT_EQ(static_cast<OpCode>(h.opcode), OpCode::C_INPUT);
 }
 
+TEST(NetworkClientTest, SendJoinLobbySendsPacketWhenConnected) {
+    NetworkClient::Config cfg;
+    auto mock = std::make_unique<MockSocket>();
+    MockSocket* mockPtr = mock.get();
+
+    NetworkClient client(cfg, std::move(mock), false);
+
+    EXPECT_TRUE(client.connect("127.0.0.1", 4242));
+    AcceptPayload ap{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(8))};
+    Buffer payload(sizeof(AcceptPayload));
+    std::memcpy(payload.data(), &ap, sizeof(AcceptPayload));
+    auto pkt = buildPacket(OpCode::S_ACCEPT, payload, 0);
+    Endpoint ep{"127.0.0.1", 4242};
+    mockPtr->pushIncoming(pkt, ep);
+    client.poll();
+
+    EXPECT_TRUE(client.isConnected());
+    EXPECT_TRUE(client.sendJoinLobby("ABCDEF"));
+    ASSERT_GT(mockPtr->lastSent_.size(), 0u);
+    Header h; std::memcpy(&h, mockPtr->lastSent_.data(), kHeaderSize);
+    EXPECT_EQ(static_cast<OpCode>(h.opcode), OpCode::C_JOIN_LOBBY);
+}
+
 TEST(NetworkClientTest, EntitySpawnAndDestroyCallbacks) {
     NetworkClient::Config cfg;
     auto mock = std::make_unique<MockSocket>();

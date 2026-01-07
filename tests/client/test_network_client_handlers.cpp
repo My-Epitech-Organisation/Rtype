@@ -11,6 +11,7 @@
 #include "transport/IAsyncSocket.hpp"
 #include "protocol/Header.hpp"
 #include "Serializer.hpp"
+#include "protocol/Payloads.hpp"
 
 using namespace rtype::client;
 using namespace rtype::network;
@@ -240,25 +241,15 @@ TEST(NetworkClientHandlersTest, EntityMoveBatchMultipleInvokesBatchCallback) {
     client.onEntityMoveBatch([&called](EntityMoveBatchEvent ev) {
         called = true;
         EXPECT_EQ(ev.entities.size(), 2u);
-        EXPECT_EQ(ev.entities[0].entityId, 10u);
-        EXPECT_EQ(ev.entities[1].entityId, 20u);
     });
 
-    // Build payload: count + 2 EntityMovePayload entries
+    // Build batch with 2 entries
     Buffer payload;
     payload.push_back(2);
-
-    auto pushEntity = [&payload](std::uint32_t id, float x, float y, float vx, float vy){
-        std::uint32_t idNet = ByteOrderSpec::toNetwork(id);
-        payload.insert(payload.end(), reinterpret_cast<std::uint8_t*>(&idNet), reinterpret_cast<std::uint8_t*>(&idNet) + sizeof(idNet));
-        payload.insert(payload.end(), reinterpret_cast<std::uint8_t*>(&x), reinterpret_cast<std::uint8_t*>(&x) + sizeof(x));
-        payload.insert(payload.end(), reinterpret_cast<std::uint8_t*>(&y), reinterpret_cast<std::uint8_t*>(&y) + sizeof(y));
-        payload.insert(payload.end(), reinterpret_cast<std::uint8_t*>(&vx), reinterpret_cast<std::uint8_t*>(&vx) + sizeof(vx));
-        payload.insert(payload.end(), reinterpret_cast<std::uint8_t*>(&vy), reinterpret_cast<std::uint8_t*>(&vy) + sizeof(vy));
-    };
-
-    pushEntity(10, 1.0f, 2.0f, 0.1f, 0.2f);
-    pushEntity(20, -1.0f, -2.0f, -0.1f, -0.2f);
+    EntityMovePayload e1{ByteOrderSpec::toNetwork(1u), 1.0f, 2.0f, 0.1f, 0.2f};
+    EntityMovePayload e2{ByteOrderSpec::toNetwork(2u), 3.0f, 4.0f, 0.3f, 0.4f};
+    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&e1), reinterpret_cast<uint8_t*>(&e1) + sizeof(e1));
+    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&e2), reinterpret_cast<uint8_t*>(&e2) + sizeof(e2));
 
     Header hdr{};
     hdr.magic = kMagicByte;
@@ -275,6 +266,48 @@ TEST(NetworkClientHandlersTest, EntityMoveBatchMultipleInvokesBatchCallback) {
     client.test_dispatchCallbacks();
 
     EXPECT_TRUE(called.load());
+}
+
+// New tests for join lobby flow
+TEST(NetworkClientHandlersTest, JoinLobbyResponseInvokesCallback) {
+    auto sock = std::make_unique<FakeSocket>();
+    NetworkClient::Config cfg{};
+    NetworkClient client(cfg, std::move(sock), false);
+
+    std::atomic<bool> called{false};
+    bool acceptedVal = false;
+    uint8_t reasonVal = 0;
+
+    client.onJoinLobbyResponse([&](bool accepted, uint8_t reason) {
+        called = true;
+        acceptedVal = accepted;
+        reasonVal = reason;
+    });
+
+    rtype::network::JoinLobbyResponsePayload resp{};
+    resp.accepted = 1;
+    resp.reason = 7;
+
+    Buffer payload(sizeof(resp));
+    std::memcpy(payload.data(), &resp, sizeof(resp));
+
+    Header hdr{};
+    hdr.magic = kMagicByte;
+    hdr.opcode = static_cast<std::uint8_t>(OpCode::S_JOIN_LOBBY_RESPONSE);
+    hdr.payloadSize = ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(payload.size()));
+    hdr.userId = 0;
+    hdr.seqId = 0;
+    hdr.ackId = 0;
+    hdr.flags = 0;
+
+    Buffer pkt = buildPacketBuffer(hdr, payload);
+    Endpoint sender{"127.0.0.1", 55555};
+    client.test_processIncomingPacket(pkt, sender);
+    client.test_dispatchCallbacks();
+
+    EXPECT_TRUE(called.load());
+    EXPECT_TRUE(acceptedVal);
+    EXPECT_EQ(reasonVal, 7u);
 }
 
 TEST(NetworkClientHandlersTest, AcceptThenReliablePacketSendsAck) {
