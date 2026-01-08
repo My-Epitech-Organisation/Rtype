@@ -386,9 +386,15 @@ function(rtype_find_httplib)
 
     # Fallback to CPM
     message(STATUS "[deps] cpp-httplib not found in vcpkg, using CPM")
+
+    # Security: pin to an immutable commit SHA instead of relying solely on a mutable
+    # tag. The tag v0.28.0 points to commit adf58bf474fac638160592d6c3f67da4ebc7df20
+    # (recorded here to make the intent explicit). This prevents transparent
+    # upgrades if the upstream tag is force-updated or compromised.
     CPMAddPackage(
         NAME httplib
-        GITHUB_REPOSITORY yhirose/cpp-httplib
+        GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
+        GIT_TAG adf58bf474fac638160592d6c3f67da4ebc7df20
         VERSION 0.28.0
         OPTIONS
             "HTTPLIB_REQUIRE_OPENSSL OFF"
