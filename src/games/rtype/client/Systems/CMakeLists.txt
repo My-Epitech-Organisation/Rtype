@@ -29,6 +29,8 @@ add_library(rtype_game_client_systems STATIC
     ClientDestroySystem.hpp
     ShaderRenderSystem.cpp
     ShaderRenderSystem.hpp
+    ForcePodVisualSystem.cpp
+    ForcePodVisualSystem.hpp
 )
 
 target_link_libraries(rtype_game_client_systems
