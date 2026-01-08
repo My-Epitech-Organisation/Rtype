@@ -12,13 +12,14 @@
 #include <mutex>
 
 #ifdef _WIN32
-    #include <winsock2.h>
-    #include <ws2tcpip.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #else
-    #include <unistd.h>
-    #include <arpa/inet.h>
-    #include <netinet/in.h>
-    #include <sys/socket.h>
+#include <unistd.h>
+
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #endif
 
 #include "Logger/Macros.hpp"
@@ -29,9 +30,9 @@ namespace rtype::server {
 static bool ensure_winsock_initialized() noexcept {
     static std::once_flag flag;
     static bool initialized = false;
-    std::call_once(flag, [](){
+    std::call_once(flag, []() {
         WSADATA wsa{};
-        initialized = (WSAStartup(MAKEWORD(2,2), &wsa) == 0);
+        initialized = (WSAStartup(MAKEWORD(2, 2), &wsa) == 0);
     });
     return initialized;
 }
