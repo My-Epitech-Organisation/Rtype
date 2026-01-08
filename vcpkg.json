@@ -12,6 +12,9 @@
     "name" : "asio",
     "version>=" : "1.28.0"
   }, {
+    "name" : "cpp-httplib",
+    "version>=" : "0.14.0"
+  }, {
     "name" : "tomlplusplus",
     "version>=" : "3.4.0"
   }, {
