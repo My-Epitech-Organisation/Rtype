@@ -1,7 +1,14 @@
 
+# Find cpp-httplib for admin server
+find_package(httplib CONFIG REQUIRED)
+# JSON library used for admin endpoint parsing
+find_package(nlohmann_json CONFIG REQUIRED)
+
 # Library for server core logic (game state, processing, spawning)
 add_library(rtype_server_core STATIC
     serverApp/ServerLoop.cpp
+    serverApp/ServerApp.cpp
+    clientManager/ClientManager.cpp
     serverApp/game/entitySpawnerFactory/EntitySpawnerFactory.cpp
     serverApp/game/gameStateManager/GameStateManager.cpp
     serverApp/game/gameEvent/GameEventProcessor.cpp
@@ -9,6 +16,12 @@ add_library(rtype_server_core STATIC
     serverApp/packetProcessor/PacketProcessor.cpp
     serverApp/player/playerInputHandler/PlayerInputHandler.cpp
     serverApp/player/playerSpawner/PlayerSpawner.cpp
+    shared/AdminServer.cpp
+    shared/BanManager.cpp
+    shared/NetworkUtils.cpp
+    lobby/Lobby.cpp
+    lobby/LobbyManager.cpp
+    lobby/LobbyDiscoveryServer.cpp
 )
 
 target_compile_features(rtype_server_core PRIVATE cxx_std_20)
@@ -36,7 +49,12 @@ target_link_libraries(rtype_server_core
     network
     rtype_game_server
     rtype_game_shared
+    nlohmann_json::nlohmann_json
 )
+
+if(WIN32)
+    target_link_libraries(rtype_server_core PUBLIC ws2_32)
+endif()
 
 add_library(rtype_server_network STATIC
     network/NetworkServer.cpp
@@ -58,11 +76,7 @@ target_link_libraries(rtype_server_network
 
 add_executable(r-type_server
     main.cpp
-    serverApp/ServerApp.cpp
     clientManager/ClientManager.cpp
-    lobby/Lobby.cpp
-    lobby/LobbyManager.cpp
-    lobby/LobbyDiscoveryServer.cpp
 )
 
 target_compile_features(r-type_server PRIVATE cxx_std_20)
@@ -79,4 +93,5 @@ target_link_libraries(r-type_server PRIVATE
     rtype_game_server
     rtype_server_network
     rtype_server_core
+    httplib::httplib
 )

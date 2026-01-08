@@ -35,6 +35,8 @@ class Lobby : public AScene {
     std::shared_ptr<rtype::client::NetworkClient> _networkClient;
     std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
     std::function<void(const SceneManager::Scene&)> _switchToScene;
+    rtype::client::NetworkClient::CallbackId _disconnectedCallbackId = 0;
+    bool _hasDisconnectedCallback = false;
 
     void _initInfoMenu();
 

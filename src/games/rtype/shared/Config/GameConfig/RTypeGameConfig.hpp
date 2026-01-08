@@ -174,6 +174,11 @@ struct ServerConfig {
     uint32_t tickrate = 60;
     std::string mapName = "default";
 
+    uint16_t adminPort = 8080;
+    bool adminEnabled = true;
+    bool adminLocalhostOnly = true;
+    std::string adminToken = "";
+
     bool operator==(const ServerConfig&) const = default;
 };
 

@@ -22,6 +22,7 @@
 #include "games/rtype/server/RTypeEntitySpawner.hpp"
 #include "games/rtype/server/RTypeGameConfig.hpp"
 #include "lobby/LobbyManager.hpp"
+#include "shared/NetworkUtils.hpp"
 
 /**
  * @brief Signal handler for graceful shutdown and config reload
@@ -193,6 +194,30 @@ static int runServer(const ServerConfig& config,
     // TODO(Clem): Implement hot reload in main loop when reloadConfigFlag
     (void)reloadConfigFlag;
 
+    if (config.instanceCount == 0) {
+        LOG_WARNING_CAT(rtype::LogCategory::Main,
+                        "[Main] No lobby instances configured; exiting.");
+        return 0;
+    }
+
+    if (!rtype::server::isUdpPortAvailable(
+            static_cast<uint16_t>(config.port))) {
+        LOG_ERROR_CAT(rtype::LogCategory::Main,
+                      "[Main] Requested base port "
+                          << config.port << " is unavailable; exiting.");
+        return 1;
+    }
+
+    for (std::uint32_t i = 0; i < config.instanceCount; ++i) {
+        std::uint16_t p = static_cast<std::uint16_t>(config.port + 1 + i);
+        if (!rtype::server::isUdpPortAvailable(p)) {
+            LOG_ERROR_CAT(rtype::LogCategory::Main,
+                          "[Main] Required lobby port "
+                              << p << " is unavailable; exiting.");
+            return 1;
+        }
+    }
+
     if (config.instanceCount >= 1) {
         LOG_INFO_CAT(rtype::LogCategory::Main,
                      "[Main] Starting lobby manager with "
@@ -235,6 +260,7 @@ static int runServer(const ServerConfig& config,
             return 1;
         }
     }
+    return 0;
 }
 
 int main(int argc, char** argv) {

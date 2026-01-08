@@ -20,6 +20,7 @@
 #include "Serializer.hpp"
 #include "protocol/ByteOrderSpec.hpp"
 #include "protocol/Validator.hpp"
+#include "server/shared/ServerMetrics.hpp"
 
 namespace rtype::server {
 
@@ -453,6 +454,57 @@ std::size_t NetworkServer::clientCount() const noexcept {
     return clients_.size();
 }
 
+std::optional<network::Endpoint> NetworkServer::getClientEndpoint(
+    std::uint32_t userId) const {
+    std::lock_guard<std::mutex> lock(clientsMutex_);
+    auto keyIt = userIdToKey_.find(userId);
+    if (keyIt == userIdToKey_.end()) {
+        return std::nullopt;
+    }
+    auto clientIt = clients_.find(keyIt->second);
+    if (clientIt == clients_.end()) {
+        return std::nullopt;
+    }
+    return clientIt->second->endpoint;
+}
+
+bool NetworkServer::disconnectClient(std::uint32_t userId,
+                                     network::DisconnectReason reason) {
+    std::shared_ptr<ClientConnection> client;
+    {
+        std::lock_guard<std::mutex> lock(clientsMutex_);
+        auto keyIt = userIdToKey_.find(userId);
+        if (keyIt == userIdToKey_.end()) {
+            return false;
+        }
+        auto clientIt = clients_.find(keyIt->second);
+        if (clientIt == clients_.end()) {
+            return false;
+        }
+        client = clientIt->second;
+    }
+
+    network::DisconnectPayload payload;
+    payload.reason = static_cast<std::uint8_t>(reason);
+    auto serialized = network::Serializer::serialize(payload);
+
+    auto disconnectPacket = buildPacket(network::OpCode::DISCONNECT, serialized,
+                                        network::kServerUserId, 0, 0, false);
+
+    socket_->asyncSendTo(
+        disconnectPacket, client->endpoint,
+        [](network::Result<std::size_t> result) { (void)result; });
+
+    queueCallback([this, userId, reason]() {
+        if (onClientDisconnectedCallback_) {
+            onClientDisconnectedCallback_(userId, reason);
+        }
+    });
+
+    removeClient(userId);
+    return true;
+}
+
 void NetworkServer::dispatchCallbacks() {
     std::queue<std::function<void()>> toDispatch;
 
@@ -507,6 +559,12 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
     auto sizeResult = network::Validator::validatePacketSize(data.size());
     if (!sizeResult) {
         return;
+    }
+
+    if (_metrics) {
+        _metrics->packetsReceived.fetch_add(1, std::memory_order_relaxed);
+        _metrics->bytesReceived.fetch_add(data.size(),
+                                          std::memory_order_relaxed);
     }
 
     network::Header header;
@@ -640,6 +698,24 @@ void NetworkServer::handleConnect(const network::Header& header,
 
         sendToClient(it->second, network::OpCode::S_ACCEPT, serialized);
         return;
+    }
+
+    if (auto bm = banManager_.lock()) {
+        rtype::Endpoint ep{sender.address, sender.port};
+        if (bm->isEndpointBanned(ep)) {
+            network::DisconnectPayload payload;
+            payload.reason =
+                static_cast<std::uint8_t>(network::DisconnectReason::Banned);
+            auto serialized = network::Serializer::serialize(payload);
+
+            auto packet =
+                buildPacket(network::OpCode::DISCONNECT, serialized,
+                            network::kServerUserId, 0, header.seqId, false);
+            socket_->asyncSendTo(
+                packet, sender,
+                [](network::Result<std::size_t> result) { (void)result; });
+            return;
+        }
     }
 
     std::uint32_t newUserId = nextUserId();
@@ -1025,6 +1101,12 @@ void NetworkServer::sendToClient(
 
     if (reliable) {
         (void)client->reliableChannel.trackOutgoing(seqId, packet);
+    }
+
+    // Track metrics
+    if (_metrics) {
+        _metrics->packetsSent.fetch_add(1, std::memory_order_relaxed);
+        _metrics->bytesSent.fetch_add(packet.size(), std::memory_order_relaxed);
     }
 
     socket_->asyncSendTo(

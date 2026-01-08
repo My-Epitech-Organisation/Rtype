@@ -670,8 +670,33 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
 
         case network::OpCode::DISCONNECT: {
             LOG_DEBUG("[NetworkClient] Received DISCONNECT from server");
-            connection_.reset();
-            serverEndpoint_.reset();
+            network::DisconnectReason reason =
+                network::DisconnectReason::RemoteRequest;
+            if (payload.size() >= sizeof(network::DisconnectPayload)) {
+                try {
+                    auto deserialized =
+                        network::Serializer::deserializeFromNetwork<
+                            network::DisconnectPayload>(payload);
+                    reason = static_cast<network::DisconnectReason>(
+                        deserialized.reason);
+                } catch (...) {
+                    // If payload is invalid, default to RemoteRequest
+                }
+            }
+
+            queueCallback([this, reason]() {
+                connection_.reset();
+                serverEndpoint_.reset();
+                if (socket_) {
+                    socket_->cancel();
+                    socket_->close();
+                    socket_ = network::createAsyncSocket(ioContext_.get());
+                }
+
+                for (const auto& cb : onDisconnectedCallbacks_) {
+                    if (cb) cb(reason);
+                }
+            });
             break;
         }
 

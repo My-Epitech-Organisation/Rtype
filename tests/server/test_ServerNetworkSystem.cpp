@@ -18,6 +18,8 @@
 #include "../../src/server/network/ServerNetworkSystem.hpp"
 #include "../../src/server/network/NetworkServer.hpp"
 #include "../../lib/ecs/src/core/Registry/Registry.hpp"
+#include "../../src/games/rtype/shared/Components/HealthComponent.hpp"
+#include "../../src/games/rtype/shared/Components/NetworkIdComponent.hpp"
 
 using namespace rtype::server;
 using namespace ECS;
@@ -328,6 +330,31 @@ TEST_F(ServerNetworkSystemTest, BroadcastEntityUpdates_WithDirtyEntities) {
 TEST_F(ServerNetworkSystemTest, BroadcastGameStart) {
     EXPECT_NO_THROW({
         system_->broadcastGameStart();
+    });
+}
+
+TEST_F(ServerNetworkSystemTest, BroadcastEntitySpawn_WithRegisteredEntityHealth) {
+    // Entity has been registered with NetworkSystem and has health component
+    ECS::Entity entity = registry_->spawnEntity();
+    registry_->emplaceComponent<rtype::games::rtype::shared::HealthComponent>(entity, 42, 100);
+    system_->registerNetworkedEntity(entity, 300,
+        ServerNetworkSystem::EntityType::Player, 10.0f, 20.0f);
+
+    // Should run through the branch that sends initial health to clients
+    EXPECT_NO_THROW({
+        system_->broadcastEntitySpawn(300, ServerNetworkSystem::EntityType::Player, 10.0f, 20.0f);
+    });
+}
+
+TEST_F(ServerNetworkSystemTest, BroadcastEntitySpawn_FindsEntityByNetworkIdComponent_WithHealth) {
+    // Do not register the entity with the system; instead provide NetworkIdComponent
+    ECS::Entity entity = registry_->spawnEntity();
+    registry_->emplaceComponent<rtype::games::rtype::shared::NetworkIdComponent>(entity, 444);
+    registry_->emplaceComponent<rtype::games::rtype::shared::HealthComponent>(entity, 7, 11);
+
+    // This should exercise the code path that searches the registry for matching NetworkIdComponent
+    EXPECT_NO_THROW({
+        system_->broadcastEntitySpawn(444, ServerNetworkSystem::EntityType::Player, 1.0f, 2.0f);
     });
 }
 
@@ -747,5 +774,31 @@ TEST_F(ServerNetworkSystemTest, NextNetworkId_ManyIds) {
     std::sort(ids.begin(), ids.end());
     auto last = std::unique(ids.begin(), ids.end());
     EXPECT_EQ(last, ids.end());  // No duplicates
+}
+
+TEST_F(ServerNetworkSystemTest, BroadcastEntityUpdates_Batching_MultipleBatches) {
+    // Create a number of entities greater than network::kMaxEntitiesPerBatch to force batching
+    constexpr std::size_t total = 69 + 6; // force multiple batches (kMaxEntitiesPerBatch=69)
+    std::vector<std::uint32_t> ids;
+    ids.reserve(total);
+
+    for (std::size_t i = 0; i < total; ++i) {
+        ECS::Entity ent = registry_->spawnEntity();
+        std::uint32_t id = system_->nextNetworkId();
+        system_->registerNetworkedEntity(ent, id, ServerNetworkSystem::EntityType::Bydos,
+                                        static_cast<float>(i), static_cast<float>(i));
+        // mark dirty by updating position
+        system_->updateEntityPosition(id, static_cast<float>(i+1), static_cast<float>(i+2), 0.0f, 0.0f);
+        ids.push_back(id);
+    }
+
+    // Should split into multiple batches and not throw
+    EXPECT_NO_THROW({ system_->broadcastEntityUpdates(); });
+
+    // After broadcast, entities remain registered but not dirty
+    for (auto id : ids) {
+        // Ensure entity still present
+        EXPECT_TRUE(system_->findEntityByNetworkId(id).has_value());
+    }
 }
 

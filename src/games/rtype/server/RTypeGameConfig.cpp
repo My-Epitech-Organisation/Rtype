@@ -101,7 +101,11 @@ server_ns::GenericServerSettings RTypeGameConfig::getServerSettings()
     return {.port = _config.server.port,
             .maxPlayers = _config.server.maxPlayers,
             .tickRate = _config.server.tickrate,
-            .mapName = _config.server.mapName};
+            .mapName = _config.server.mapName,
+            .adminPort = _config.server.adminPort,
+            .adminEnabled = _config.server.adminEnabled,
+            .adminLocalhostOnly = _config.server.adminLocalhostOnly,
+            .adminToken = _config.server.adminToken};
 }
 
 server_ns::GenericGameplaySettings RTypeGameConfig::getGameplaySettings()

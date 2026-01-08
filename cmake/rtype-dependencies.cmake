@@ -369,3 +369,39 @@ function(rtype_find_lz4)
         add_library(lz4::lz4 ALIAS LZ4::lz4_static)
     endif()
 endfunction()
+
+# Add cpp-httplib for admin server
+function(rtype_find_httplib)
+    if(TARGET httplib::httplib)
+        message(STATUS "[deps] cpp-httplib already configured")
+        return()
+    endif()
+
+    # Try vcpkg first
+    find_package(httplib CONFIG QUIET)
+    if(httplib_FOUND AND TARGET httplib::httplib)
+        message(STATUS "[deps] Using cpp-httplib from vcpkg")
+        return()
+    endif()
+
+    # Fallback to CPM
+    message(STATUS "[deps] cpp-httplib not found in vcpkg, using CPM")
+
+    # Security: pin to an immutable commit SHA instead of relying solely on a mutable
+    # tag. The tag v0.28.0 points to commit adf58bf474fac638160592d6c3f67da4ebc7df20
+    # (recorded here to make the intent explicit). This prevents transparent
+    # upgrades if the upstream tag is force-updated or compromised.
+    CPMAddPackage(
+        NAME httplib
+        GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
+        GIT_TAG adf58bf474fac638160592d6c3f67da4ebc7df20
+        VERSION 0.28.0
+        OPTIONS
+            "HTTPLIB_REQUIRE_OPENSSL OFF"
+            "HTTPLIB_REQUIRE_ZLIB OFF"
+            "HTTPLIB_REQUIRE_BROTLI ON"
+    )
+    if(httplib_ADDED)
+        add_library(httplib::httplib ALIAS httplib)
+    endif()
+endfunction()

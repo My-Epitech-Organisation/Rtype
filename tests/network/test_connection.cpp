@@ -70,14 +70,16 @@ TEST_F(ConnectionTest, Connect_Success) {
 
 TEST_F(ConnectionTest, Connect_AlreadyConnecting) {
     Connection conn(config_);
-    conn.connect();
+    auto r1 = conn.connect();
+    EXPECT_TRUE(r1.isOk());
     auto result = conn.connect();
     EXPECT_TRUE(result.isErr());
 }
 
 TEST_F(ConnectionTest, Connect_GeneratesPacket) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    EXPECT_TRUE(r.isOk());
 
     auto packets = conn.getOutgoingPackets();
     EXPECT_EQ(packets.size(), 1);
@@ -87,7 +89,8 @@ TEST_F(ConnectionTest, Connect_GeneratesPacket) {
 
 TEST_F(ConnectionTest, Connect_PacketHasCorrectOpcode) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    EXPECT_TRUE(r.isOk());
 
     auto packets = conn.getOutgoingPackets();
     ASSERT_EQ(packets.size(), 1);
@@ -110,7 +113,8 @@ TEST_F(ConnectionTest, Disconnect_FromDisconnected_Fails) {
 
 TEST_F(ConnectionTest, Disconnect_FromConnecting_Success) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    EXPECT_TRUE(r.isOk());
     auto result = conn.disconnect();
     EXPECT_TRUE(result.isOk());
     EXPECT_EQ(conn.state(), ConnectionState::Disconnecting);
@@ -118,10 +122,12 @@ TEST_F(ConnectionTest, Disconnect_FromConnecting_Success) {
 
 TEST_F(ConnectionTest, Disconnect_GeneratesPacket) {
     Connection conn(config_);
-    conn.connect();
-    conn.getOutgoingPackets();  // Clear connect packet
+    auto r = conn.connect();
+    EXPECT_TRUE(r.isOk());
+    auto _clear = conn.getOutgoingPackets();  // Clear connect packet
 
-    conn.disconnect();
+    auto dres = conn.disconnect();
+    EXPECT_TRUE(dres.isOk());
     auto packets = conn.getOutgoingPackets();
     EXPECT_EQ(packets.size(), 1);
     EXPECT_TRUE(packets[0].isReliable);
@@ -129,10 +135,12 @@ TEST_F(ConnectionTest, Disconnect_GeneratesPacket) {
 
 TEST_F(ConnectionTest, Disconnect_PacketHasCorrectOpcode) {
     Connection conn(config_);
-    conn.connect();
-    conn.getOutgoingPackets();  // Clear connect packet
+    auto r = conn.connect();
+    EXPECT_TRUE(r.isOk());
+    auto _clear = conn.getOutgoingPackets();  // Clear connect packet
 
-    conn.disconnect();
+    auto dres = conn.disconnect();
+    EXPECT_TRUE(dres.isOk());
     auto packets = conn.getOutgoingPackets();
     ASSERT_EQ(packets.size(), 1);
 
@@ -221,7 +229,8 @@ TEST_F(ConnectionTest, ProcessPacket_InvalidSender) {
     std::memcpy(acceptPacket.data(), &acceptHeader, kHeaderSize);
     std::memcpy(acceptPacket.data() + kHeaderSize, &payload, sizeof(AcceptPayload));
 
-    conn.processPacket(acceptPacket, testEndpoint_);  // Sets server endpoint
+    auto r = conn.processPacket(acceptPacket, testEndpoint_);  // Sets server endpoint
+    EXPECT_TRUE(r.isOk());
 
     // Now try from different sender
     Endpoint wrongEndpoint{"192.168.1.1", 5555};

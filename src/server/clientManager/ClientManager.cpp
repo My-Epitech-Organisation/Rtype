@@ -17,9 +17,11 @@ namespace rtype::server {
 
 ClientManager::ClientManager(size_t maxPlayers,
                              std::shared_ptr<ServerMetrics> metrics,
+                             std::shared_ptr<BanManager> banManager,
                              bool verbose)
     : _maxPlayers(maxPlayers),
       _metrics(std::move(metrics)),
+      _banManager(std::move(banManager)),
       _verbose(verbose),
       _rateLimitResetTimeMs(
           std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -33,6 +35,15 @@ ClientId ClientManager::handleNewConnection(const Endpoint& endpoint) {
     const auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
                            std::chrono::steady_clock::now().time_since_epoch())
                            .count();
+
+    if (auto banManager = _banManager.lock()) {
+        if (banManager->isEndpointBanned(endpoint)) {
+            LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                            "[Server] Connection rejected: endpoint is banned: "
+                                << endpoint.toString());
+            return INVALID_CLIENT_ID;
+        }
+    }
 
     updateRateLimitWindow(nowMs);
     if (isRateLimitExceeded(endpoint)) {
