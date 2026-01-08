@@ -115,20 +115,17 @@ void AdminServer::runServer() noexcept {
 
 bool authenticateRequest(const AdminServer::Config& config,
                          const Request& req) {
+    const auto& remote_addr = req.remote_addr;
+    bool localhost = remote_addr == "127.0.0.1" ||
+                     remote_addr == "localhost" || remote_addr == "::1";
+
     if (config.localhostOnly) {
-        const auto& remote_addr = req.remote_addr;
-        bool localhost = remote_addr == "127.0.0.1" ||
-                         remote_addr == "localhost" || remote_addr == "::1";
-        if (!localhost) {
-            return false;
-        }
+        return localhost;
     }
 
     if (!config.token.empty()) {
         const auto& auth = req.get_header_value("Authorization");
-        if (auth.empty() || auth != ("Bearer " + config.token)) {
-            return false;
-        }
+        return (!auth.empty() && auth == ("Bearer " + config.token));
     }
 
     return true;
