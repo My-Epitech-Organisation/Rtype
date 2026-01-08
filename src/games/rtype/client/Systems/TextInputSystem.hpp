@@ -55,6 +55,8 @@ class TextInputSystem {
 
     std::shared_ptr<::rtype::display::IDisplay> _display;
     std::optional<ECS::Entity> _focusedInput;
+
+    void ensureCursorVisible(TextInput& input);
 };
 
 }  // namespace rtype::games::rtype::client

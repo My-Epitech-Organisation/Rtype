@@ -132,11 +132,32 @@ void RenderSystem::_renderTextInputs(ECS::Registry& registry,
         textToDraw = input.placeholder;
         colorToUse = display::Color(150, 150, 150, 255);
     } else {
-        textToDraw = input.content + (input.isFocused ? "_" : "");
+        if (input.viewStart <= input.content.length()) {
+            textToDraw = input.content.substr(input.viewStart);
+        }
+        if (input.isFocused) {
+            std::size_t relativePos = 0;
+            if (input.cursorPosition >= input.viewStart) {
+                relativePos = input.cursorPosition - input.viewStart;
+            }
+            if (relativePos <= textToDraw.length()) {
+                textToDraw.insert(relativePos, "|");
+            } else {
+                textToDraw += "|";
+            }
+        }
     }
 
+    float maxWidth = size.x - (2 * kOffsetTextInput);
+    
     display::Vector2f textBounds = this->_display->getTextBounds(
         textToDraw, input.fontName, input.fontSize);
+        
+    while (textToDraw.length() > 0 && textBounds.x > maxWidth) {
+        textToDraw.pop_back();
+        textBounds = this->_display->getTextBounds(
+            textToDraw, input.fontName, input.fontSize);
+    }
     float posX = position.x + kOffsetTextInput;
     float posY = position.y + ((size.y / 2) - (textBounds.y / 2));
 

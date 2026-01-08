@@ -39,6 +39,48 @@ bool TextInputSystem::handleEvent(ECS::Registry& registry,
     return false;
 }
 
+void TextInputSystem::ensureCursorVisible(TextInput& input) {
+    constexpr float kOffsetTextInput = 20.0f;
+    const float maxWidth = input.size.x - (kOffsetTextInput * 2);
+
+    if (input.content.empty()) {
+        input.viewStart = 0;
+        return;
+    }
+
+    if (input.viewStart > input.content.length()) {
+        input.viewStart = input.content.length();
+    }
+
+    if (input.cursorPosition < input.viewStart) {
+        input.viewStart = input.cursorPosition;
+    }
+
+    std::string visibleText = input.content.substr(input.viewStart, input.cursorPosition - input.viewStart);
+
+    auto bounds =
+        _display->getTextBounds(visibleText, input.fontName, input.fontSize);
+    
+    while (bounds.x > maxWidth && input.viewStart < input.cursorPosition) {
+        input.viewStart++;
+        visibleText = input.content.substr(input.viewStart, input.cursorPosition - input.viewStart);
+        bounds = _display->getTextBounds(visibleText, input.fontName, input.fontSize);
+    }
+
+    std::string fullVisible = input.content.substr(input.viewStart);
+    auto fullBounds = _display->getTextBounds(fullVisible, input.fontName, input.fontSize);
+    
+    if (fullBounds.x < maxWidth && input.viewStart > 0) {
+        while (input.viewStart > 0) {
+             std::string testStr = input.content.substr(input.viewStart - 1);
+             if (_display->getTextBounds(testStr, input.fontName, input.fontSize).x > maxWidth) {
+                 break;
+             }
+             input.viewStart--;
+         }
+    }
+}
+
 void TextInputSystem::update(ECS::Registry& /*registry*/, float /*deltaTime*/) {
 }
 
@@ -116,7 +158,10 @@ bool TextInputSystem::handleTextEntered(ECS::Registry& registry,
 
     auto& input = registry.getComponent<TextInput>(*_focusedInput);
     if (unicode >= 32 && unicode < 127) {
-        return input.handleTextInput(static_cast<char>(unicode));
+        if (input.handleTextInput(static_cast<char>(unicode))) {
+            ensureCursorVisible(input);
+            return true;
+        }
     }
     return false;
 }
@@ -129,6 +174,25 @@ bool TextInputSystem::handleKeyPressed(ECS::Registry& registry,
 
     if (key == ::rtype::display::Key::BackSpace) {
         input.handleBackspace();
+        ensureCursorVisible(input);
+        return true;
+    }
+
+    if (key == ::rtype::display::Key::Delete) {
+        input.handleDelete();
+        ensureCursorVisible(input);
+        return true;
+    }
+
+    if (key == ::rtype::display::Key::Left) {
+        input.moveCursorLeft();
+        ensureCursorVisible(input);
+        return true;
+    }
+
+    if (key == ::rtype::display::Key::Right) {
+        input.moveCursorRight();
+        ensureCursorVisible(input);
         return true;
     }
 

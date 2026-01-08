@@ -76,6 +76,11 @@ namespace rtype::display {
                 int y;
             } mouseMove;
             struct {
+                float delta;
+                int x;
+                int y;
+            } mouseWheel;
+            struct {
                 unsigned int joystickId;
                 unsigned int button;
             } joystickButton;

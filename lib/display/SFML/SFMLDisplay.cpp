@@ -80,6 +80,12 @@ bool SFMLDisplay::pollEvent(Event& event) {
             event.mouseButton.x = mouseReleased->position.x;
             event.mouseButton.y = mouseReleased->position.y;
             return true;
+        } else if (const auto* mouseWheel = sfEvent->getIf<sf::Event::MouseWheelScrolled>()) {
+            event.type = EventType::MouseWheelScrolled;
+            event.mouseWheel.delta = mouseWheel->delta;
+            event.mouseWheel.x = mouseWheel->position.x;
+            event.mouseWheel.y = mouseWheel->position.y;
+            return true;
         } else if (const auto* joyPressed = sfEvent->getIf<sf::Event::JoystickButtonPressed>()) {
             event.type = EventType::JoystickButtonPressed;
             event.joystickButton.joystickId = joyPressed->joystickId;
