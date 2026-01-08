@@ -18,7 +18,6 @@
 #include "SFMLSoundBuffer.hpp"
 #include "SFMLSound.hpp"
 #include "lib/display/ADisplay.hpp"
-#include "lib/common/src/Logger/Macros.hpp"
 
 namespace rtype::display {
     class SFMLDisplay : public ::rtype::display::ADisplay {
