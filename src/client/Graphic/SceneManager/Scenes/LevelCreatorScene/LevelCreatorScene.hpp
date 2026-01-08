@@ -35,6 +35,8 @@ constexpr float kLevelSectionHeight = 500.f;
 constexpr float kLevelSectionPosLeft = 50.f;
 /** @brief Default top Y position (pixels) for level sections on screen. */
 constexpr float kLevelSectionPosTop = 200.f;
+/** @brief Maximum number of waves allowed in the level editor. */
+constexpr int kMaxWaves = 10;
 
 /**
  * @class LevelCreatorScene

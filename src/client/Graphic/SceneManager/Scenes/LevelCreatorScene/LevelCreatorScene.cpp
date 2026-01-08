@@ -299,8 +299,8 @@ void LevelCreatorScene::saveToToml() {
 
     std::ofstream file(filename);
     if (!file.is_open()) {
-        std::cerr << "Failed to open " << filename << " for writing."
-                  << std::endl;
+        LOG_ERROR_CAT(rtype::LogCategory::UI, std::string("Failed to open ") +
+                                                  filename + " for writing.");
         return;
     }
 
@@ -385,7 +385,7 @@ void LevelCreatorScene::saveToToml() {
 }
 
 void LevelCreatorScene::addWave() {
-    if (this->_waves.size() >= 10) return;
+    if (this->_waves.size() >= kMaxWaves) return;
     saveCurrentWaveStats();
     Wave newWave;
     newWave.number = this->_waves.size() + 1;

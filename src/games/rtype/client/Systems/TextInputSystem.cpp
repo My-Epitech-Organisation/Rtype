@@ -40,8 +40,8 @@ bool TextInputSystem::handleEvent(ECS::Registry& registry,
 }
 
 void TextInputSystem::ensureCursorVisible(TextInput& input) {
-    constexpr float kOffsetTextInput = 20.0f;
-    const float maxWidth = input.size.x - (kOffsetTextInput * 2);
+    constexpr float kTextInputHorizontalPadding = 20.0f;
+    const float maxWidth = input.size.x - (kTextInputHorizontalPadding * 2);
 
     if (input.content.empty()) {
         input.viewStart = 0;

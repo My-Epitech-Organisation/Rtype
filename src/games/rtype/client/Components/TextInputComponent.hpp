@@ -37,7 +37,9 @@ struct TextInput {
     bool isFocused;
     bool isNumericOnly;
     ::rtype::display::Vector2f size;
+    // Cursor position within the content string
     std::size_t cursorPosition{0};
+    // Index of the first visible character for horizontal scrolling
     std::size_t viewStart{0};
     std::function<void(const std::string&)> onChanged;
     std::function<void(const std::string&)> onSubmit;
