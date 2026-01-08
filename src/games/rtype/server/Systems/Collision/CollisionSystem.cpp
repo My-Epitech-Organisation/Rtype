@@ -334,6 +334,37 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                     std::min(health.current + healthBoost, health.max);
             }
             break;
+        case shared::PowerUpType::ForcePod:
+            if (!registry.hasComponent<shared::ForcePodTag>(player) &&
+                registry.hasComponent<NetworkIdComponent>(player)) {
+                const auto& playerNetId =
+                    registry.getComponent<NetworkIdComponent>(player);
+                
+                ECS::Entity forcePod = registry.spawnEntity();
+                registry.emplaceComponent<shared::ForcePodComponent>(
+                    forcePod, shared::ForcePodState::Attached, 40.0F, 0.0F,
+                    playerNetId.networkId);
+                registry.emplaceComponent<shared::ForcePodTag>(forcePod);
+                registry.emplaceComponent<TransformComponent>(forcePod, 0.0F,
+                                                             0.0F, 0.0F);
+                registry.emplaceComponent<BoundingBoxComponent>(forcePod, 32.0F,
+                                                               32.0F);
+                
+                if (_emitEvent) {
+                    uint32_t forcePodNetId = playerNetId.networkId + 10000;
+                    registry.emplaceComponent<NetworkIdComponent>(forcePod,
+                                                                 forcePodNetId);
+                    
+                    engine::GameEvent evt{};
+                    evt.type = engine::GameEventType::EntitySpawned;
+                    evt.entityNetworkId = forcePodNetId;
+                    evt.entityType = 5;
+                    evt.x = 0.0F;
+                    evt.y = 0.0F;
+                    _emitEvent(evt);
+                }
+            }
+            break;
         case shared::PowerUpType::None:
         default:
             break;
