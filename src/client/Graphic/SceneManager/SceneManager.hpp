@@ -27,6 +27,7 @@ class SceneManager {
         MAIN_MENU,
         IN_GAME,
         SETTINGS_MENU,
+        LEVEL_CREATOR,
         HOW_TO_PLAY,
         LOBBY,
         GAME_OVER,

@@ -6,9 +6,6 @@
 */
 
 #include "PowerUpCollectionSystem.hpp"
-
-#include <SFML/System/Vector2.hpp>
-
 #include "../../shared/Components/PlayerIdComponent.hpp"
 #include "../../shared/Components/TransformComponent.hpp"
 #include "../AllComponents.hpp"

@@ -401,7 +401,6 @@ void MainMenuScene::update(float dt) {
 }
 
 void MainMenuScene::render(std::shared_ptr<rtype::display::IDisplay> window) {
-    // TextInput rendering is handled by RenderSystem
 }
 
 void MainMenuScene::pollEvents(const rtype::display::Event& e) {
