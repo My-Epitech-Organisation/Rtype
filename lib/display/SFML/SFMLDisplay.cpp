@@ -298,6 +298,8 @@ void SFMLDisplay::loadShader(const std::string& name, const std::string& vertexP
     bool loaded = false;
     if (vertexPath.empty() && !fragmentPath.empty()) {
         loaded = shader->loadFromFile(fragmentPath, sf::Shader::Type::Fragment);
+    } else {
+        loaded = shader->loadFromFile(vertexPath, fragmentPath);
     }
 
     if (loaded) {
