@@ -119,7 +119,12 @@ struct TexturesConfig {
     BackgroundTextureConfig backgroundTexture;
     WallTextureConfig wallTexture;
     std::string Player;
-    std::string Enemy;
+    std::string EnemyNormal;
+    std::string EnemyChaser;
+    std::string EnemyShooter;
+    std::string EnemyHeavy;
+    std::string EnemyPatrol;
+    std::string EnemyWave;
     std::string astroVessel;
     std::string missileLaser;
 

@@ -63,8 +63,8 @@ GameScene::GameScene(
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[GameScene] Loading game textures");
     this->_assetsManager->textureManager->load(
-        "bdos_enemy",
-        this->_assetsManager->configGameAssets.assets.textures.Enemy);
+        "bdos_enemy_normal",
+        this->_assetsManager->configGameAssets.assets.textures.EnemyNormal);
     this->_assetsManager->textureManager->load(
         "projectile_player_laser",
         this->_assetsManager->configGameAssets.assets.textures.missileLaser);

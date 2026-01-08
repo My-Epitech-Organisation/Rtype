@@ -108,7 +108,9 @@ RtypeEntityFactory::createNetworkEntityFactory(
             }
 
             case ::rtype::network::EntityType::Bydos:
-                setupBydosEntity(reg, assetsManager, entity, event.subType);
+                setupBydosEntity(
+                    reg, assetsManager, entity,
+                    static_cast<shared::EnemyVariant>(event.subType));
                 break;
 
             case ::rtype::network::EntityType::Missile:
@@ -215,7 +217,7 @@ void RtypeEntityFactory::setupPlayerEntity(
 
 void RtypeEntityFactory::setupBydosEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
-    ECS::Entity entity, std::uint8_t subType) {
+    ECS::Entity entity, shared::EnemyVariant subType) {
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] Adding Bydos components");
 
@@ -247,11 +249,74 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.emplaceComponent<::rtype::games::rtype::shared::EnemyTypeComponent>(
         entity, variant, enemyId);
 
-    reg.emplaceComponent<Image>(entity, "bdos_enemy");
-    reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
-                                      std::pair<int, int>({33, 34}));
-    reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
-
+    switch (subType) {
+        case shared::EnemyVariant::Basic:
+            LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                         "[RtypeEntityFactory] Setting up Basic Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_normal");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({0, 0}),
+                                              std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+            break;
+        case shared::EnemyVariant::Shooter:
+            LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                         "[RtypeEntityFactory] Setting up Shooter Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_shooter");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({82, 64}),
+                                              std::pair<int, int>({33, 32}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+            break;
+        case shared::EnemyVariant::Chaser:
+            LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                         "[RtypeEntityFactory] Setting up Chaser Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_chaser");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({20, 0}),
+                                              std::pair<int, int>({64, 54}));
+            reg.emplaceComponent<Size>(entity, 1.0f, 1.0f);
+            break;
+        case shared::EnemyVariant::Wave:
+            LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                         "[RtypeEntityFactory] Setting up Wave Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_wave");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({132, 34}),
+                                              std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+            break;
+        case shared::EnemyVariant::Patrol:
+            LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                         "[RtypeEntityFactory] Setting up Patrol Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_patrol");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({0, 0}),
+                                              std::pair<int, int>({33, 36}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+            break;
+        case shared::EnemyVariant::Heavy:
+            LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                         "[RtypeEntityFactory] Setting up Heavy Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_heavy");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({17, 66}),
+                                              std::pair<int, int>({33, 33}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+            break;
+        default:
+            LOG_WARNING_CAT(
+                ::rtype::LogCategory::ECS,
+                std::string("[RtypeEntityFactory] Unknown Bydos variant, "
+                            "defaulting to Bydos normal, type received: " +
+                            std::to_string(static_cast<uint8_t>(subType))));
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_normal");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({0, 0}),
+                                              std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+            break;
+    }
     if (enemyConfigOpt.has_value()) {
         const auto& enemyConfig = enemyConfigOpt.value().get();
         LOG_INFO("[RtypeEntityFactory] Adding ColorTint: R="
