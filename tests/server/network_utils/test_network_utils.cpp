@@ -70,3 +70,35 @@ TEST(NetworkUtils, PortUnavailableWhenBound) {
     EXPECT_TRUE(isUdpPortAvailable(port));
 #endif
 }
+
+TEST(NetworkUtils, EnsureWinsockInitializedIdempotent) {
+    // Calling multiple times should always return true on Linux, 
+    // and consistently return the same result on Windows
+    bool first = ensureWinsockInitialized();
+    bool second = ensureWinsockInitialized();
+    bool third = ensureWinsockInitialized();
+    EXPECT_EQ(first, second);
+    EXPECT_EQ(second, third);
+#ifndef _WIN32
+    // On Linux, it should always return true
+    EXPECT_TRUE(first);
+#endif
+}
+
+TEST(NetworkUtils, HighPortAvailable) {
+    // A high ephemeral port should typically be available
+    // Port 49152+ are dynamic/private ports
+    uint16_t highPort = 59999;
+    // Just verify it doesn't crash and returns a boolean
+    bool available = isUdpPortAvailable(highPort);
+    // We can't guarantee it's available, but the call should succeed
+    (void)available;
+    SUCCEED();
+}
+
+TEST(NetworkUtils, MultiplePortChecks) {
+    // Verify multiple consecutive port availability checks work
+    EXPECT_TRUE(isUdpPortAvailable(0));
+    EXPECT_TRUE(isUdpPortAvailable(0));
+    EXPECT_TRUE(isUdpPortAvailable(0));
+}

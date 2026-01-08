@@ -44,7 +44,7 @@ bool isUdpPortAvailable(std::uint16_t port) noexcept {
     if (port == 0) return true;  // 0 = OS assigns, considered available
 
 #ifdef _WIN32
-    if (!ensure_winsock_initialized()) {
+    if (!ensureWinsockInitialized()) {
         LOG_DEBUG_CAT(::rtype::LogCategory::Network,
                       "[NetworkUtils] WSAStartup failed");
         return false;
