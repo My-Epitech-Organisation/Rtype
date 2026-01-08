@@ -29,11 +29,12 @@ enum class GameState : std::uint8_t {
  * @brief Entity type enumeration for S_ENTITY_SPAWN payload
  */
 enum class EntityType : std::uint8_t {
-    Player = 0,   ///< Player spaceship
-    Bydos = 1,    ///< Enemy (Bydos)
-    Missile = 2,  ///< Projectile
-    Pickup = 3,   ///< Collectible / power-up
-    Obstacle = 4  ///< Static or moving obstacle
+    Player = 0,    ///< Player spaceship
+    Bydos = 1,     ///< Enemy (Bydos)
+    Missile = 2,   ///< Projectile
+    Pickup = 3,    ///< Collectible / power-up
+    Obstacle = 4,  ///< Static or moving obstacle
+    ForcePod = 5   ///< Force Pod companion
 };
 
 /**
