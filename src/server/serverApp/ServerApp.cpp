@@ -21,14 +21,17 @@ namespace rtype::server {
 
 ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
                      std::shared_ptr<std::atomic<bool>> shutdownFlag,
-                     uint32_t clientTimeoutSeconds, bool verbose)
+                     uint32_t clientTimeoutSeconds, bool verbose,
+                     std::shared_ptr<BanManager> banManager)
     : _port(port),
       _tickRate(tickRate),
       _clientTimeoutSeconds(clientTimeoutSeconds),
       _verbose(verbose),
       _shutdownFlag(std::move(shutdownFlag)),
       _metrics(std::make_shared<ServerMetrics>()),
-      _clientManager(maxPlayers, _metrics, verbose),
+      _banManager(banManager ? std::move(banManager)
+                             : std::make_shared<BanManager>()),
+      _clientManager(maxPlayers, _metrics, _banManager, verbose),
       _stateManager(std::make_shared<GameStateManager>(MIN_PLAYERS_TO_START)),
       _packetProcessor(_metrics, verbose) {
     if (tickRate == 0) {
@@ -44,7 +47,7 @@ void ServerApp::setLobbyCode(const std::string& code) {
 
 ServerApp::ServerApp(std::unique_ptr<IGameConfig> gameConfig,
                      std::shared_ptr<std::atomic<bool>> shutdownFlag,
-                     bool verbose)
+                     bool verbose, std::shared_ptr<BanManager> banManager)
     : _port(gameConfig && gameConfig->isInitialized()
                 ? gameConfig->getServerSettings().port
                 : 4000),
@@ -55,10 +58,12 @@ ServerApp::ServerApp(std::unique_ptr<IGameConfig> gameConfig,
       _verbose(verbose),
       _shutdownFlag(std::move(shutdownFlag)),
       _metrics(std::make_shared<ServerMetrics>()),
+      _banManager(banManager ? std::move(banManager)
+                             : std::make_shared<BanManager>()),
       _clientManager(gameConfig && gameConfig->isInitialized()
                          ? gameConfig->getServerSettings().maxPlayers
                          : 4,
-                     _metrics, verbose),
+                     _metrics, _banManager, verbose),
       _gameConfig(std::move(gameConfig)),
       _stateManager(std::make_shared<GameStateManager>(MIN_PLAYERS_TO_START)),
       _packetProcessor(_metrics, verbose) {
@@ -83,8 +88,10 @@ bool ServerApp::run() {
     logStartupInfo();
 
     ServerLoop loop(_tickRate, _shutdownFlag);
+    _serverLoop = &loop;
     loop.run([this]() { onFrame(); }, [this](float dt) { onUpdate(dt); },
              [this]() { onPostUpdate(); });
+    _serverLoop = nullptr;
 
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine, "[Server] Shutting down...");
     shutdown();
@@ -98,6 +105,41 @@ void ServerApp::onFrame() {
 
 void ServerApp::onUpdate(float deltaTime) {
     _clientManager.checkClientTimeouts(_clientTimeoutSeconds);
+
+    uint32_t playerCount =
+        _networkServer ? _networkServer->getClientCount() : 0;
+
+    _metricSnapshotCounter++;
+    if (_metricSnapshotCounter >= METRICS_SNAPSHOT_INTERVAL) {
+        _metricSnapshotCounter = 0;
+
+        MetricsSnapshot snapshot;
+        snapshot.timestamp = std::chrono::system_clock::now();
+        snapshot.playerCount = playerCount;
+        snapshot.packetsReceived =
+            _metrics->packetsReceived.load(std::memory_order_relaxed);
+        snapshot.packetsSent =
+            _metrics->packetsSent.load(std::memory_order_relaxed);
+        snapshot.bytesReceived =
+            _metrics->bytesReceived.load(std::memory_order_relaxed);
+        snapshot.bytesSent =
+            _metrics->bytesSent.load(std::memory_order_relaxed);
+
+        uint64_t totalPackets =
+            snapshot.packetsReceived +
+            _metrics->packetsDropped.load(std::memory_order_relaxed);
+        snapshot.packetLossPercent =
+            (totalPackets > 0)
+                ? (100.0 *
+                   _metrics->packetsDropped.load(std::memory_order_relaxed) /
+                   totalPackets)
+                : 0.0;
+
+        snapshot.tickOverruns =
+            _serverLoop ? _serverLoop->getTickOverruns() : 0;
+
+        _metrics->addSnapshot(snapshot);
+    }
 
     _stateManager->update(deltaTime);
 
@@ -190,20 +232,52 @@ void ServerApp::stop() noexcept {
     _shutdownFlag->store(true, std::memory_order_release);
 }
 
+void ServerApp::setLobbyManager(LobbyManager* lobbyManager) {
+    _lobbyManager = lobbyManager;
+    if (_adminServer) {
+        _adminServer.reset();
+        AdminServer::Config adminConfig;
+        adminConfig.port = 8080;
+        adminConfig.enabled = true;
+        adminConfig.localhostOnly = true;
+        _adminServer =
+            std::make_unique<AdminServer>(adminConfig, this, _lobbyManager);
+        _adminServer->start();
+    }
+}
+
 bool ServerApp::isRunning() const noexcept {
     return !_shutdownFlag->load(std::memory_order_acquire);
 }
 
 size_t ServerApp::getConnectedClientCount() const noexcept {
+    if (_networkServer) {
+        return _networkServer->getClientCount();
+    }
     return _clientManager.getConnectedClientCount();
 }
 
 std::vector<ClientId> ServerApp::getConnectedClientIds() const {
+    if (_networkServer) {
+        auto users = _networkServer->getConnectedClients();
+        return std::vector<ClientId>(users.begin(), users.end());
+    }
     return _clientManager.getConnectedClientIds();
 }
 
 std::optional<Client> ServerApp::getClientInfo(ClientId clientId) const {
     return _clientManager.getClientInfo(clientId);
+}
+
+std::optional<rtype::Endpoint> ServerApp::getClientEndpoint(
+    ClientId clientId) const {
+    if (_networkServer) {
+        auto epOpt = _networkServer->getClientEndpoint(clientId);
+        if (epOpt) {
+            return *epOpt;
+        }
+    }
+    return std::nullopt;
 }
 
 bool ServerApp::initialize() {
@@ -226,6 +300,9 @@ bool ServerApp::initialize() {
     netConfig.clientTimeout =
         std::chrono::milliseconds(_clientTimeoutSeconds * 1000);
     _networkServer = std::make_shared<NetworkServer>(netConfig);
+    _networkServer->setMetrics(_metrics);
+
+    _networkServer->setBanManager(_banManager);
     _networkSystem =
         std::make_shared<ServerNetworkSystem>(_registry, _networkServer);
 
@@ -346,6 +423,22 @@ bool ServerApp::initialize() {
 
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                  "[Server] Server initialized successfully");
+
+    AdminServer::Config adminConfig;
+    adminConfig.port = 8080;
+    adminConfig.enabled = true;
+    adminConfig.localhostOnly = true;
+    _adminServer =
+        std::make_unique<AdminServer>(adminConfig, this, _lobbyManager);
+    if (!_adminServer->start()) {
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[Server] Failed to start admin server on port 8080");
+    } else {
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[Server] Admin panel available at http://localhost:8080/admin");
+    }
+
     return true;
 }
 
@@ -354,6 +447,12 @@ void ServerApp::shutdown() noexcept {
         LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                       "[Server] Shutdown already performed, skipping");
         return;
+    }
+
+    if (_adminServer) {
+        _adminServer->stop();
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Admin server stopped");
     }
 
     stopNetworkThread();
