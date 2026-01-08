@@ -15,15 +15,7 @@
 using namespace rtype::server;
 
 #ifdef _WIN32
-struct WinSockScope {
-    WinSockScope() {
-        WSADATA wsa{};
-        WSAStartup(MAKEWORD(2,2), &wsa);
-    }
-    ~WinSockScope() {
-        WSACleanup();
-    }
-};
+// Prefer using NetworkUtils helper so tests can skip gracefully if Winsock isn't available
 #endif
 
 TEST(NetworkUtils, Port0IsAvailable) {
@@ -33,7 +25,9 @@ TEST(NetworkUtils, Port0IsAvailable) {
 
 TEST(NetworkUtils, PortUnavailableWhenBound) {
 #ifdef _WIN32
-    WinSockScope wsaScope;
+    if (!ensureWinsockInitialized()) {
+        GTEST_SKIP() << "Winsock not available";
+    }
     SOCKET fd = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     ASSERT_NE(fd, INVALID_SOCKET);
 #else

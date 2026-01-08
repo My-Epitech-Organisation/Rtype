@@ -8,4 +8,8 @@ target_link_libraries(test_network_utils
     rtype_server_core
 )
 
+if(WIN32)
+    target_link_libraries(test_network_utils PRIVATE ws2_32)
+endif()
+
 add_test(NAME test_network_utils COMMAND test_network_utils)
