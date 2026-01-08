@@ -20,7 +20,10 @@
 namespace rtype::server {
 
 LobbyManager::LobbyManager(const Config& config)
-    : config_(config), rng_(std::random_device()()), charDist_(0, 35) {
+    : config_(config),
+      rng_(std::random_device()()),
+      charDist_(0, 35),
+      banManager_(std::make_shared<BanManager>()) {
     if (config_.instanceCount == 0) {
         throw std::invalid_argument("Instance count must be at least 1");
     }
@@ -73,7 +76,8 @@ bool LobbyManager::start() {
         lobbyConfig.configPath = config_.configPath;
         lobbyConfig.emptyTimeout = config_.emptyTimeout;
 
-        auto lobby = std::make_unique<Lobby>(code, lobbyConfig);
+        auto lobby =
+            std::make_unique<Lobby>(code, lobbyConfig, this, banManager_);
 
         if (!lobby->start()) {
             rtype::Logger::instance().error(
@@ -198,6 +202,100 @@ Lobby* LobbyManager::findLobbyByCode(const std::string& code) const {
     }
 
     return nullptr;
+}
+
+std::vector<Lobby*> LobbyManager::getAllLobbies() const {
+    std::vector<Lobby*> result;
+    std::lock_guard<std::mutex> lock(lobbiesMutex_);
+
+    for (const auto& lobby : lobbies_) {
+        if (lobby && lobby->isRunning()) {
+            result.push_back(lobby.get());
+        }
+    }
+
+    return result;
+}
+
+std::string LobbyManager::createLobby(bool isPrivate) {
+    std::lock_guard<std::mutex> lock(lobbiesMutex_);
+
+    if (lobbies_.size() >= config_.maxInstances) {
+        rtype::Logger::instance().warning(
+            std::format("Cannot create lobby: max instances ({}) reached",
+                        config_.maxInstances));
+        return "";
+    }
+
+    std::string code;
+    if (isPrivate) {
+        code = generateLobbyCode();
+    } else {
+        int nextNum = 1;
+        while (lobbyByCode_.find(std::format("{:06}", nextNum)) !=
+               lobbyByCode_.end()) {
+            ++nextNum;
+        }
+        code = std::format("{:06}", nextNum);
+    }
+
+    std::uint16_t port =
+        config_.basePort + 1 + static_cast<std::uint16_t>(lobbies_.size());
+
+    Lobby::Config lobbyConfig;
+    lobbyConfig.port = port;
+    lobbyConfig.maxPlayers = config_.maxPlayers;
+    lobbyConfig.tickRate = config_.tickRate;
+    lobbyConfig.configPath = config_.configPath;
+    lobbyConfig.emptyTimeout = config_.emptyTimeout;
+
+    auto lobby = std::make_unique<Lobby>(code, lobbyConfig, this, banManager_);
+
+    if (!lobby->start()) {
+        rtype::Logger::instance().error(
+            std::format("Failed to start dynamically created lobby {}", code));
+        return "";
+    }
+
+    lobbyByCode_[code] = lobby.get();
+    lobbies_.push_back(std::move(lobby));
+
+    rtype::Logger::instance().info(
+        std::format("Dynamically created lobby {} ({}) on port {}", code,
+                    isPrivate ? "private" : "public", port));
+
+    return code;
+}
+
+bool LobbyManager::deleteLobby(const std::string& code) {
+    std::lock_guard<std::mutex> lock(lobbiesMutex_);
+
+    auto it = lobbyByCode_.find(code);
+    if (it == lobbyByCode_.end()) {
+        rtype::Logger::instance().warning(
+            std::format("Cannot delete lobby: code {} not found", code));
+        return false;
+    }
+
+    Lobby* lobbyPtr = it->second;
+    auto lobbyIt = std::find_if(lobbies_.begin(), lobbies_.end(),
+                                [lobbyPtr](const std::unique_ptr<Lobby>& l) {
+                                    return l.get() == lobbyPtr;
+                                });
+
+    if (lobbyIt != lobbies_.end()) {
+        rtype::Logger::instance().info(std::format(
+            "Deleting lobby {} on port {}", code, (*lobbyIt)->getPort()));
+
+        (*lobbyIt)->stop();
+        lobbies_.erase(lobbyIt);
+    }
+
+    lobbyByCode_.erase(it);
+
+    rtype::Logger::instance().info(
+        std::format("Lobby {} deleted successfully", code));
+    return true;
 }
 
 void LobbyManager::cleanupLoop() {

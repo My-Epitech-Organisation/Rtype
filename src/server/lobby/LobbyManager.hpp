@@ -121,6 +121,37 @@ class LobbyManager {
      */
     Lobby* findLobbyByCode(const std::string& code) const;
 
+    /**
+     * @brief Get all lobby instances for metrics aggregation
+     *
+     * @return std::vector<Lobby*> Pointers to all lobbies
+     */
+    std::vector<Lobby*> getAllLobbies() const;
+
+    /**
+     * @brief Create a new lobby dynamically
+     *
+     * @param isPrivate If true, generates alphanumeric code; if false, uses
+     * next numeric code
+     * @return std::string The lobby code, or empty string on failure
+     */
+    std::string createLobby(bool isPrivate = true);
+
+    /**
+     * @brief Delete a lobby by code
+     *
+     * @param code The lobby code to delete
+     * @return bool True if deleted, false if not found
+     */
+    bool deleteLobby(const std::string& code);
+
+    /**
+     * @brief Get the shared ban manager used across all lobbies
+     *
+     * @return std::shared_ptr<BanManager> Shared ban manager instance
+     */
+    std::shared_ptr<BanManager> getBanManager() { return banManager_; }
+
    private:
     /**
      * @brief Generate a unique 6-character alphanumeric lobby code
@@ -157,6 +188,9 @@ class LobbyManager {
 
     std::mt19937 rng_;
     std::uniform_int_distribution<> charDist_;  ///< For code generation
+
+    std::shared_ptr<BanManager>
+        banManager_;  ///< Shared ban manager for all lobbies
 };
 
 }  // namespace rtype::server
