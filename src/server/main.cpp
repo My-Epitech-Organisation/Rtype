@@ -193,6 +193,12 @@ static int runServer(const ServerConfig& config,
     // TODO(Clem): Implement hot reload in main loop when reloadConfigFlag
     (void)reloadConfigFlag;
 
+    if (config.instanceCount == 0) {
+        LOG_WARNING_CAT(rtype::LogCategory::Main,
+                        "[Main] No lobby instances configured; exiting.");
+        return 0;
+    }
+
     if (config.instanceCount >= 1) {
         LOG_INFO_CAT(rtype::LogCategory::Main,
                      "[Main] Starting lobby manager with "
@@ -235,8 +241,6 @@ static int runServer(const ServerConfig& config,
             return 1;
         }
     }
-    LOG_WARNING_CAT(rtype::LogCategory::Main,
-                    "[Main] No lobby instances configured; exiting.");
     return 0;
 }
 
