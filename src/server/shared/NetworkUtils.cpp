@@ -27,7 +27,7 @@
 namespace rtype::server {
 
 #ifdef _WIN32
-static bool ensure_winsock_initialized() noexcept {
+bool ensureWinsockInitialized() noexcept {
     static std::once_flag flag;
     static bool initialized = false;
     std::call_once(flag, []() {
@@ -35,6 +35,10 @@ static bool ensure_winsock_initialized() noexcept {
         initialized = (WSAStartup(MAKEWORD(2, 2), &wsa) == 0);
     });
     return initialized;
+}
+#else
+bool ensureWinsockInitialized() noexcept {
+    return true;
 }
 #endif
 

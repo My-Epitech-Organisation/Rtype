@@ -20,6 +20,11 @@ namespace rtype::server {
  */
 [[nodiscard]] bool isUdpPortAvailable(std::uint16_t port) noexcept;
 
+// Ensure Winsock is initialized on Windows. Returns true on success or non-Windows
+// platforms. Use this before calling low-level socket APIs in tests that run on
+// Windows to allow skipping tests cleanly if initialization fails.
+[[nodiscard]] bool ensureWinsockInitialized() noexcept;
+
 }  // namespace rtype::server
 
 #endif  // SRC_SERVER_SHARED_NETWORKUTILS_HPP_
