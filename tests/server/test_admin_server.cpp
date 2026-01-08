@@ -107,3 +107,70 @@ TEST(AdminServerTest, BanAndUnbanIp) {
     server.stop();
     EXPECT_FALSE(server.isRunning());
 }
+
+TEST(AdminServerTest, StartStopMultipleTimes) {
+    AdminServer::Config cfg;
+    cfg.port = 9093;
+    cfg.token = "testtoken";
+    cfg.localhostOnly = true;
+
+    AdminServer server(cfg, nullptr, nullptr);
+
+    // Start
+    ASSERT_TRUE(server.start());
+    ASSERT_TRUE(server.isRunning());
+
+    // Start again (should return true, already running)
+    EXPECT_TRUE(server.start());
+
+    // Stop
+    server.stop();
+    EXPECT_FALSE(server.isRunning());
+
+    // Stop again (should be no-op)
+    server.stop();
+    EXPECT_FALSE(server.isRunning());
+}
+
+TEST(AdminServerTest, LobbiesEndpointNoManager) {
+    AdminServer::Config cfg;
+    cfg.port = 9095;
+    cfg.token = "testtoken";
+    cfg.localhostOnly = true;
+
+    AdminServer server(cfg, nullptr, nullptr);
+    ASSERT_TRUE(server.start());
+    ASSERT_TRUE(server.isRunning());
+
+    httplib::Client cli("127.0.0.1", cfg.port);
+    httplib::Headers goodAuth{{"Authorization", "Bearer testtoken"}};
+
+    // /api/lobbies returns 200 with empty list when no lobby manager
+    auto res = cli.Get("/api/lobbies", goodAuth);
+    ASSERT_NE(res, nullptr);
+    EXPECT_EQ(res->status, 200);
+
+    server.stop();
+}
+
+TEST(AdminServerTest, BansEndpointNoServerApp) {
+    AdminServer::Config cfg;
+    cfg.port = 9099;
+    cfg.token = "testtoken";
+    cfg.localhostOnly = true;
+
+    AdminServer server(cfg, nullptr, nullptr);
+    ASSERT_TRUE(server.start());
+    ASSERT_TRUE(server.isRunning());
+
+    httplib::Client cli("127.0.0.1", cfg.port);
+    httplib::Headers goodAuth{{"Authorization", "Bearer testtoken"}};
+
+    // Bans endpoint returns empty list when no server app (uses internal empty ban manager)
+    auto res = cli.Get("/api/bans", goodAuth);
+    ASSERT_NE(res, nullptr);
+    // The endpoint should still return 200 with empty bans
+    EXPECT_EQ(res->status, 200);
+
+    server.stop();
+}
