@@ -16,6 +16,7 @@
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
 #include "server/serverApp/game/entitySpawnerFactory/EntitySpawnerFactory.hpp"
+#include "shared/NetworkUtils.hpp"
 
 namespace rtype::server {
 
@@ -236,13 +237,28 @@ void ServerApp::setLobbyManager(LobbyManager* lobbyManager) {
     _lobbyManager = lobbyManager;
     if (_adminServer) {
         _adminServer.reset();
-        AdminServer::Config adminConfig;
-        adminConfig.port = 8080;
-        adminConfig.enabled = true;
-        adminConfig.localhostOnly = true;
-        _adminServer =
-            std::make_unique<AdminServer>(adminConfig, this, _lobbyManager);
-        _adminServer->start();
+    }
+
+    AdminServer::Config adminConfig;
+    if (_gameConfig && _gameConfig->isInitialized()) {
+        auto settings = _gameConfig->getServerSettings();
+        adminConfig.port = settings.adminPort;
+        adminConfig.enabled = settings.adminEnabled;
+        adminConfig.localhostOnly = settings.adminLocalhostOnly;
+        adminConfig.token = settings.adminToken;
+    }
+
+    if (!adminConfig.enabled) {
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[Server] Admin server disabled by configuration");
+        return;
+    }
+
+    _adminServer = std::make_unique<AdminServer>(adminConfig, this, _lobbyManager);
+    if (!_adminServer->start()) {
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[Server] Failed to start admin server on port " << adminConfig.port << ". Admin panel will be unavailable.");
+        _adminServer.reset();
     }
 }
 
@@ -405,6 +421,13 @@ bool ServerApp::initialize() {
         }
         onGameEvent(event);
     });
+
+    if (!rtype::server::isUdpPortAvailable(static_cast<uint16_t>(_port))) {
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[Server] Port " << _port
+                          << " unavailable; cannot start network server");
+        return false;
+    }
 
     if (!_networkServer->start(_port)) {
         LOG_ERROR_CAT(
