@@ -29,10 +29,13 @@
 #include "protocol/Payloads.hpp"
 #include "protocol/SecurityContext.hpp"
 #include "reliability/ReliableChannel.hpp"
+#include "server/shared/BanManager.hpp"
 #include "transport/AsioUdpSocket.hpp"
 #include "transport/IoContext.hpp"
 
 namespace rtype::server {
+
+class ServerMetrics;
 
 /**
  * @brief Configuration for NetworkServer
@@ -130,6 +133,23 @@ class NetworkServer {
      */
     void setExpectedLobbyCode(const std::string& code) {
         config_.expectedLobbyCode = code;
+    }
+
+    /**
+     * @brief Set the server metrics for tracking packet statistics
+     * @param metrics Shared pointer to ServerMetrics
+     */
+    void setMetrics(std::shared_ptr<ServerMetrics> metrics) {
+        _metrics = std::move(metrics);
+    }
+
+    /**
+     * @brief Get the connected client count
+     * @return Number of connected clients
+     */
+    [[nodiscard]] std::size_t getClientCount() const {
+        std::lock_guard lock(clientsMutex_);
+        return clients_.size();
     }
 
     /**
@@ -387,6 +407,25 @@ class NetworkServer {
      */
     [[nodiscard]] std::size_t clientCount() const noexcept;
 
+    /**
+     * @brief Get the network endpoint for a connected user ID
+     * @param userId Network user ID assigned to the client
+     * @return Optional endpoint if the client exists
+     */
+    [[nodiscard]] std::optional<network::Endpoint> getClientEndpoint(
+        std::uint32_t userId) const;
+
+    /**
+     * @brief Disconnect a client by user ID
+     * Sends a DISCONNECT packet and removes the client from server maps.
+     * @param userId Target client's user ID
+     * @param reason Optional reason (default: RemoteRequest)
+     * @return true if client was found and disconnected, false otherwise
+     */
+    bool disconnectClient(std::uint32_t userId,
+                          network::DisconnectReason reason =
+                              network::DisconnectReason::RemoteRequest);
+
    private:
     /**
      * @brief Client connection state
@@ -489,6 +528,13 @@ class NetworkServer {
     std::function<void(std::uint32_t, bool)> onClientReadyCallback_;
 
     mutable std::mutex clientsMutex_;
+
+    std::shared_ptr<ServerMetrics> _metrics{nullptr};
+
+    std::weak_ptr<BanManager> banManager_;
+
+   public:
+    void setBanManager(std::shared_ptr<BanManager> bm) { banManager_ = bm; }
 };
 
 }  // namespace rtype::server
