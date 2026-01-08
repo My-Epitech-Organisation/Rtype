@@ -13,11 +13,14 @@ PlayerDeath = "audio/playerDeath.mp3"
 PlayerSpawn = "audio/playerSpawn.mp3"
 EnemyDeath = "audio/enemyDeath.mp3"
 EnemySpawn = "audio/enemySpawn.mp3"
+ForcePodLaunch = "audio/laserSound.mp3"
+ForcePodReturn = "audio/laserSound.mp3"
 
 # Textures Réferences
 [Textures]
 Player = "img/playerTexture.gif"
 Enemy = "img/bdosTexture.gif"
+ForcePod = "img/forcepod.gif"
 # Backougrnd assets
 Background = "img/bgMainMenu.png"
 Sun = "img/sun.png"
