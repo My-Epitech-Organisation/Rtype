@@ -108,3 +108,16 @@ color = [255, 0, 255, 255]  # Magenta
 
 hitbox_width = 24.0
 hitbox_height = 24.0
+
+[[powerup]]
+id = "force_pod"
+name = "Force Pod"
+sprite_sheet = "assets/img/forcepod.gif"
+
+effect = "weapon_upgrade"
+value = 10
+duration = 0.0
+color = [255, 255, 255, 255]
+
+hitbox_width = 32.0
+hitbox_height = 32.0

@@ -17,6 +17,7 @@
 #include "Components/BoundingBoxComponent.hpp"
 #include "Components/DamageOnContactComponent.hpp"
 #include "Components/EnemyTypeComponent.hpp"
+#include "Components/ForcePodComponent.hpp"
 #include "Components/HealthComponent.hpp"
 #include "Components/PowerUpComponent.hpp"
 #include "Components/PowerUpTypeComponent.hpp"

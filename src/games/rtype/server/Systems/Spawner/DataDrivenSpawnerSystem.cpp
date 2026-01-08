@@ -416,6 +416,11 @@ void DataDrivenSpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
             magnitude = 50.0F;
             variant = shared::PowerUpVariant::HealthBoost;
             break;
+        case shared::PowerUpType::ForcePod:
+            duration = 0.0F;
+            magnitude = 1.0F;
+            variant = shared::PowerUpVariant::ForcePod;
+            break;
         default:
             variant = shared::PowerUpVariant::HealthBoost;
             break;
