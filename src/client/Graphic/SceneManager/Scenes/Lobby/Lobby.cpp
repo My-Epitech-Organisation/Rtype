@@ -614,6 +614,7 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
             _countdownTimer = 3.0f;
 
             _isConnected = false;
+            _initialized = false;
             try {
                 this->_switchToScene(SceneManager::Scene::MAIN_MENU);
             } catch (SceneNotFound& e) {
@@ -722,6 +723,8 @@ void Lobby::onEntityDestroyEvent(std::uint32_t entityId) {
 
 Lobby::~Lobby() {
     LOG_INFO("[Lobby] Destroying Lobby scene...");
+
+    _initialized = false;
 
     if (this->_registry) {
         LOG_INFO("[Lobby] Resetting player positions for game scene...");
