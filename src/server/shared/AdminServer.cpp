@@ -47,14 +47,35 @@ bool AdminServer::start() {
     _httpServer = new Server();
     setupRoutes();
 
-    _running = true;
     _serverThread = std::thread([this]() { runServer(); });
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    const int attempts = 25;
+    const auto sleepMs = std::chrono::milliseconds(20);
+    for (int i = 0; i < attempts; ++i) {
+        std::this_thread::sleep_for(sleepMs);
+        if (_httpServer && static_cast<Server*>(_httpServer)->is_running()) {
+            _running = true;
+            LOG_INFO_CAT(::rtype::LogCategory::Network,
+                         "[AdminServer] Started on port " << _config.port);
+            return true;
+        }
+    }
 
-    LOG_INFO_CAT(::rtype::LogCategory::Network,
-                 "[AdminServer] Started on port " << _config.port);
-    return true;
+    LOG_ERROR_CAT(::rtype::LogCategory::Network,
+                  "[AdminServer] Failed to start on port " << _config.port
+                      << "; port may be in use or insufficient privileges");
+
+    if (_serverThread.joinable()) {
+        _serverThread.join();
+    }
+
+    if (_httpServer) {
+        delete static_cast<Server*>(_httpServer);
+        _httpServer = nullptr;
+    }
+
+    _running = false;
+    return false;
 }
 
 void AdminServer::stop() {
@@ -81,7 +102,12 @@ bool AdminServer::isRunning() const noexcept {
 
 void AdminServer::runServer() noexcept {
     if (_httpServer) {
-        static_cast<Server*>(_httpServer)->listen("0.0.0.0", _config.port);
+        const char* bindAddr = _config.localhostOnly ? "127.0.0.1" : "0.0.0.0";
+        bool ok = static_cast<Server*>(_httpServer)->listen(bindAddr, _config.port);
+        if (!ok) {
+            LOG_ERROR_CAT(::rtype::LogCategory::Network,
+                          "[AdminServer] listen() failed on " << bindAddr << ":" << _config.port);
+        }
     }
 }
 
