@@ -76,6 +76,13 @@ class LobbyDiscoveryServer {
      */
     void poll();
 
+    /**
+     * @brief Build a S_LOBBY_LIST response packet (public for testing)
+     *
+     * @return network::Buffer The complete packet
+     */
+    network::Buffer buildLobbyListPacket();
+
    private:
     /**
      * @brief Handle an incoming packet
@@ -92,13 +99,6 @@ class LobbyDiscoveryServer {
      * @param sender Client endpoint to send response to
      */
     void handleLobbyListRequest(const network::Endpoint& sender);
-
-    /**
-     * @brief Build a S_LOBBY_LIST response packet
-     *
-     * @return network::Buffer The complete packet
-     */
-    network::Buffer buildLobbyListPacket();
 
     /**
      * @brief Start receiving packets asynchronously
