@@ -235,6 +235,9 @@ static int runServer(const ServerConfig& config,
             return 1;
         }
     }
+    LOG_WARNING_CAT(rtype::LogCategory::Main,
+                    "[Main] No lobby instances configured; exiting.");
+    return 0;
 }
 
 int main(int argc, char** argv) {
