@@ -37,9 +37,7 @@ bool ensureWinsockInitialized() noexcept {
     return initialized;
 }
 #else
-bool ensureWinsockInitialized() noexcept {
-    return true;
-}
+bool ensureWinsockInitialized() noexcept { return true; }
 #endif
 
 bool isUdpPortAvailable(std::uint16_t port) noexcept {
