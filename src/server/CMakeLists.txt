@@ -52,6 +52,10 @@ target_link_libraries(rtype_server_core
     nlohmann_json::nlohmann_json
 )
 
+if(WIN32)
+    target_link_libraries(rtype_server_core PUBLIC ws2_32)
+endif()
+
 add_library(rtype_server_network STATIC
     network/NetworkServer.cpp
     network/ServerNetworkSystem.cpp
