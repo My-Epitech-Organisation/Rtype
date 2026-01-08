@@ -17,6 +17,8 @@
 
 namespace rtype::server {
 
+class LobbyManager;
+
 /**
  * @brief Represents a single game lobby instance
  *
@@ -42,8 +44,12 @@ class Lobby {
      *
      * @param code Unique 6-character alphanumeric lobby code
      * @param config Lobby configuration
+     * @param manager Pointer to the lobby manager (optional)
+     * @param banManager Shared ban manager for connection enforcement
      */
-    Lobby(const std::string& code, const Config& config);
+    Lobby(const std::string& code, const Config& config,
+          LobbyManager* manager = nullptr,
+          std::shared_ptr<BanManager> banManager = nullptr);
 
     /**
      * @brief Destroy the Lobby
@@ -124,6 +130,13 @@ class Lobby {
     std::chrono::seconds getTimeSinceEmpty() const;
 
     /**
+     * @brief Get the lobby's ServerApp for metrics access
+     *
+     * @return ServerApp* Pointer to the server app, or nullptr if not running
+     */
+    ServerApp* getServerApp() const { return serverApp_.get(); }
+
+    /**
      * @brief Update the last activity timestamp
      *
      * Called when players join/leave to track empty timeout
@@ -136,19 +149,19 @@ class Lobby {
      */
     void run();
 
-    std::string code_;             ///< Unique lobby code
-    Config config_;                ///< Lobby configuration
+    std::string code_;
+    Config config_;
     std::uint16_t actualPort_{0};  ///< Actual port after binding
 
-    std::shared_ptr<std::atomic<bool>>
-        shutdownFlagPtr_;                   ///< Shutdown signal for ServerApp
-    std::unique_ptr<ServerApp> serverApp_;  ///< The actual server instance
-    std::unique_ptr<std::thread> thread_;   ///< Dedicated thread for this lobby
+    std::shared_ptr<std::atomic<bool>> shutdownFlagPtr_;
+    std::unique_ptr<ServerApp> serverApp_;
+    std::unique_ptr<std::thread> thread_;
 
     std::atomic<bool> running_{false};
-    std::chrono::steady_clock::time_point
-        lastActivity_;                  ///< Last player activity
-    mutable std::mutex activityMutex_;  ///< Protect activity timestamp
+    std::chrono::steady_clock::time_point lastActivity_;
+    mutable std::mutex activityMutex_;
+    LobbyManager* lobbyManager_{nullptr};
+    std::shared_ptr<BanManager> banManager_;
 };
 
 }  // namespace rtype::server

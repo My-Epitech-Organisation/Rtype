@@ -13,11 +13,14 @@
 
 namespace rtype::server {
 
-Lobby::Lobby(const std::string& code, const Config& config)
+Lobby::Lobby(const std::string& code, const Config& config,
+             LobbyManager* manager, std::shared_ptr<BanManager> banManager)
     : code_(code),
       config_(config),
       shutdownFlagPtr_(std::make_shared<std::atomic<bool>>(false)),
-      lastActivity_(std::chrono::steady_clock::now()) {
+      lastActivity_(std::chrono::steady_clock::now()),
+      lobbyManager_(manager),
+      banManager_(std::move(banManager)) {
     if (code_.length() != 6) {
         throw std::invalid_argument("Lobby code must be exactly 6 characters");
     }
@@ -39,9 +42,12 @@ bool Lobby::start() {
 
         serverApp_ = std::make_unique<ServerApp>(
             config_.port, config_.maxPlayers, config_.tickRate,
-            shutdownFlagPtr_, 10, false);
+            shutdownFlagPtr_, 10, false, banManager_);
 
         serverApp_->setLobbyCode(code_);
+        if (lobbyManager_) {
+            serverApp_->setLobbyManager(lobbyManager_);
+        }
 
         rtype::Logger::instance().info(std::format(
             "ServerApp created, starting thread for lobby {}...", code_));
