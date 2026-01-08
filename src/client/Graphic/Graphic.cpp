@@ -183,6 +183,8 @@ void Graphic::_initializeSystems() {
     this->_shaderRenderSystem =
         std::make_unique<::rtype::games::rtype::client::ShaderRenderSystem>(
             this->_window, this->_sceneTexture, this->_colorShader);
+    this->_forcePodVisualSystem =
+        std::make_unique<::rtype::games::rtype::client::ForcePodVisualSystem>();
 
     this->_systemScheduler =
         std::make_unique<ECS::SystemScheduler>(*this->_registry);
@@ -233,6 +235,13 @@ void Graphic::_initializeSystems() {
                                               reg, _currentDeltaTime);
                                       },
                                       {"powerup_visuals"});
+
+    this->_systemScheduler->addSystem("forcepod_visual",
+                                      [this](ECS::Registry& reg) {
+                                          _forcePodVisualSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"animation"});
 
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {
@@ -321,6 +330,7 @@ void Graphic::_initializeCommonAssets() {
     manager->textureManager->load("bdos_enemy", config.assets.textures.Enemy);
     manager->textureManager->load("projectile_player_laser",
                                   config.assets.textures.missileLaser);
+    manager->textureManager->load("force_pod", config.assets.textures.forcePod);
 
     manager->textureManager->load(
         "projectile1", config.assets.textures.wallTexture.engrenage1);
@@ -352,6 +362,8 @@ void Graphic::_initializeCommonAssets() {
     manager->soundManager->load("bydos_spawn", config.assets.sfx.enemySpawn);
     manager->soundManager->load("bydos_death", config.assets.sfx.enemyDeath);
     manager->soundManager->load("laser_sfx", config.assets.sfx.laser);
+    manager->soundManager->load("forcepod_launch", config.assets.sfx.forcePodLaunch);
+    manager->soundManager->load("forcepod_return", config.assets.sfx.forcePodReturn);
 
     manager->textureManager->get("bg_menu").setRepeated(true);
     manager->textureManager->get("bg_planet_1").setRepeated(true);

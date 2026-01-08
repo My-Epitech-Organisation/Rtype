@@ -19,6 +19,7 @@
 #include "../../games/rtype/client/Systems/ClientDestroySystem.hpp"
 #include "../../games/rtype/client/Systems/ColorTintSystem.hpp"
 #include "../../games/rtype/client/Systems/EventSystem.hpp"
+#include "../../games/rtype/client/Systems/ForcePodVisualSystem.hpp"
 #include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
 #include "../../games/rtype/client/Systems/PlayerAnimationSystem.hpp"
 #include "../../games/rtype/client/Systems/PlayerPowerUpVisualSystem.hpp"
@@ -153,6 +154,8 @@ class Graphic {
         _clientDestroySystem;
     std::unique_ptr<::rtype::games::rtype::client::ShaderRenderSystem>
         _shaderRenderSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ForcePodVisualSystem>
+        _forcePodVisualSystem;
 
     // ========================================================================
     // Runtime state
