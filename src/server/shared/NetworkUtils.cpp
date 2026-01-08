@@ -7,12 +7,14 @@
 
 #include "NetworkUtils.hpp"
 
+#include <unistd.h>
+
+#include <cerrno>
+#include <cstring>
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <unistd.h>
-#include <cerrno>
-#include <cstring>
 
 #include "Logger/Macros.hpp"
 

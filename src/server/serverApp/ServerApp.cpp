@@ -254,10 +254,13 @@ void ServerApp::setLobbyManager(LobbyManager* lobbyManager) {
         return;
     }
 
-    _adminServer = std::make_unique<AdminServer>(adminConfig, this, _lobbyManager);
+    _adminServer =
+        std::make_unique<AdminServer>(adminConfig, this, _lobbyManager);
     if (!_adminServer->start()) {
         LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
-                        "[Server] Failed to start admin server on port " << adminConfig.port << ". Admin panel will be unavailable.");
+                        "[Server] Failed to start admin server on port "
+                            << adminConfig.port
+                            << ". Admin panel will be unavailable.");
         _adminServer.reset();
     }
 }
@@ -424,7 +427,8 @@ bool ServerApp::initialize() {
 
     if (!rtype::server::isUdpPortAvailable(static_cast<uint16_t>(_port))) {
         LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
-                      "[Server] Port " << _port
+                      "[Server] Port "
+                          << _port
                           << " unavailable; cannot start network server");
         return false;
     }

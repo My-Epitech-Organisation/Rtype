@@ -200,10 +200,11 @@ static int runServer(const ServerConfig& config,
         return 0;
     }
 
-    if (!rtype::server::isUdpPortAvailable(static_cast<uint16_t>(config.port))) {
+    if (!rtype::server::isUdpPortAvailable(
+            static_cast<uint16_t>(config.port))) {
         LOG_ERROR_CAT(rtype::LogCategory::Main,
-                      "[Main] Requested base port " << config.port
-                          << " is unavailable; exiting.");
+                      "[Main] Requested base port "
+                          << config.port << " is unavailable; exiting.");
         return 1;
     }
 
@@ -211,8 +212,8 @@ static int runServer(const ServerConfig& config,
         std::uint16_t p = static_cast<std::uint16_t>(config.port + 1 + i);
         if (!rtype::server::isUdpPortAvailable(p)) {
             LOG_ERROR_CAT(rtype::LogCategory::Main,
-                          "[Main] Required lobby port " << p
-                              << " is unavailable; exiting.");
+                          "[Main] Required lobby port "
+                              << p << " is unavailable; exiting.");
             return 1;
         }
     }

@@ -12,13 +12,13 @@
 #include <fstream>
 #include <sstream>
 
+#include <nlohmann/json.hpp>
 #include <rtype/common.hpp>
 
 #include "httplib.h"
 #include "server/lobby/Lobby.hpp"
 #include "server/lobby/LobbyManager.hpp"
 #include "server/serverApp/ServerApp.hpp"
-#include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 namespace rtype::server {
@@ -64,7 +64,8 @@ bool AdminServer::start() {
     }
 
     LOG_ERROR_CAT(::rtype::LogCategory::Network,
-                  "[AdminServer] Failed to start on port " << _config.port
+                  "[AdminServer] Failed to start on port "
+                      << _config.port
                       << "; port may be in use or insufficient privileges");
 
     if (_serverThread.joinable()) {
@@ -105,10 +106,12 @@ bool AdminServer::isRunning() const noexcept {
 void AdminServer::runServer() noexcept {
     if (_httpServer) {
         const char* bindAddr = _config.localhostOnly ? "127.0.0.1" : "0.0.0.0";
-        bool ok = static_cast<Server*>(_httpServer)->listen(bindAddr, _config.port);
+        bool ok =
+            static_cast<Server*>(_httpServer)->listen(bindAddr, _config.port);
         if (!ok) {
             LOG_ERROR_CAT(::rtype::LogCategory::Network,
-                          "[AdminServer] listen() failed on " << bindAddr << ":" << _config.port);
+                          "[AdminServer] listen() failed on " << bindAddr << ":"
+                                                              << _config.port);
         }
     }
 }
@@ -116,8 +119,8 @@ void AdminServer::runServer() noexcept {
 bool authenticateRequest(const AdminServer::Config& config,
                          const Request& req) {
     const auto& remote_addr = req.remote_addr;
-    bool localhost = remote_addr == "127.0.0.1" ||
-                     remote_addr == "localhost" || remote_addr == "::1";
+    bool localhost = remote_addr == "127.0.0.1" || remote_addr == "localhost" ||
+                     remote_addr == "::1";
 
     if (config.localhostOnly) {
         return localhost;
@@ -155,8 +158,9 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
         try {
             auto j = json::parse(req.body);
             if (!j.contains("ip") || !j["ip"].is_string()) {
-                res.set_content(R"({"success":false,"error":"Missing or invalid 'ip'"})",
-                                "application/json");
+                res.set_content(
+                    R"({"success":false,"error":"Missing or invalid 'ip'"})",
+                    "application/json");
                 res.status = 400;
                 return;
             }
@@ -647,14 +651,16 @@ void AdminServer::registerBanRoutes(void* serverPtr) {
         try {
             if (!req.body.empty()) {
                 auto j = json::parse(req.body);
-                if (j.contains("clientId") && j["clientId"].is_number_unsigned()) {
+                if (j.contains("clientId") &&
+                    j["clientId"].is_number_unsigned()) {
                     clientId = j["clientId"].get<std::uint32_t>();
                 }
                 if (j.contains("ip") && j["ip"].is_string()) {
                     ip = j["ip"].get<std::string>();
                 }
                 if (j.contains("port") && j["port"].is_number_unsigned()) {
-                    port = static_cast<std::uint16_t>(j["port"].get<unsigned>());
+                    port =
+                        static_cast<std::uint16_t>(j["port"].get<unsigned>());
                 }
                 if (j.contains("reason") && j["reason"].is_string()) {
                     banReason = j["reason"].get<std::string>();
