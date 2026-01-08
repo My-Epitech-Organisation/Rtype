@@ -14,14 +14,13 @@
  * the level configuration to a TOML file via saveToToml().
  */
 
-#ifndef R_TYPE_LEVELCREATORSCENE_HPP
-#define R_TYPE_LEVELCREATORSCENE_HPP
-
+#ifndef SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_LEVELCREATORSCENE_LEVELCREATORSCENE_HPP_
+#define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_LEVELCREATORSCENE_LEVELCREATORSCENE_HPP_
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
-#include <map>
 
 #include "Graphic/KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
@@ -46,7 +45,7 @@ constexpr float kLevelSectionPosTop = 200.f;
  * manage temporary UI elements (like save status messages).
  */
 class LevelCreatorScene : public AScene {
-public:
+   public:
     /**
      * @brief Single spawn configuration inside a wave.
      *
@@ -95,14 +94,15 @@ public:
         ECS::Entity spawnDelayInputVal{0};
     };
 
-private:
-
-    /** @brief Number of waves for legacy display; prefer `_waves.size()` for authoritative count. */
+   private:
+    /** @brief Number of waves for legacy display; prefer `_waves.size()` for
+     * authoritative count. */
     unsigned int _nbrWaves = 0;
 
     /**
      * @name Level metadata input entities
-     * Entities for UI inputs that represent the level metadata (name, id, background, etc.).
+     * Entities for UI inputs that represent the level metadata (name, id,
+     * background, etc.).
      * @{
      */
     /** @brief Entity id for the level name input field. */
@@ -119,13 +119,16 @@ private:
 
     /** @brief List of waves defined for the level. */
     std::vector<Wave> _waves;
-    /** @brief Index of the current wave being edited; -1 when none is selected. */
+    /** @brief Index of the current wave being edited; -1 when none is selected.
+     */
     int _currentWaveIndex = -1;
-    
-    /** @brief Dynamic UI entities created by the scene (labels, inputs, buttons). */
+
+    /** @brief Dynamic UI entities created by the scene (labels, inputs,
+     * buttons). */
     std::vector<ECS::Entity> _uiEntities;
-    /** @brief Entities used for the wave section layout (background/title rows and static layout elements). */
-    std::vector<ECS::Entity> _waveUiEntities; 
+    /** @brief Entities used for the wave section layout (background/title rows
+     * and static layout elements). */
+    std::vector<ECS::Entity> _waveUiEntities;
 
     /**
      * @brief Represents a scrollable section of UI and its tracked entities.
@@ -137,29 +140,33 @@ private:
     struct ScrollSection {
         /** @brief Unique identifier for the section. */
         std::string id;
-        /** @brief Visible rectangle area of the section in screen coordinates. */
+        /** @brief Visible rectangle area of the section in screen coordinates.
+         */
         rtype::display::Rect<float> bounds;
-        /** @brief Current vertical scroll offset in pixels (positive moves content up). */
+        /** @brief Current vertical scroll offset in pixels (positive moves
+         * content up). */
         float currentScroll = 0.0f;
         /** @brief Maximum scrollable offset computed from content size. */
         float maxScroll = 0.0f;
-        /** @brief Entities contained in the section paired with their relative Y offset. */
+        /** @brief Entities contained in the section paired with their relative
+         * Y offset. */
         std::vector<std::pair<ECS::Entity, float>> entities;
     };
     /** @brief All scroll sections managed by this scene. */
     std::vector<ScrollSection> _sections;
-    
+
     /**
      * @brief Adds an entity to a scrollable section.
      * @param sectionId Identifier of the section to attach the entity to.
      * @param entity The ECS entity that should be tracked by the section.
-     * @param relativeY Vertical offset (in pixels) of the entity relative to the
-     *        top of the section bounds. Used to compute absolute Y when scrolling.
+     * @param relativeY Vertical offset (in pixels) of the entity relative to
+     * the top of the section bounds. Used to compute absolute Y when scrolling.
      *
      * This registers the entity with the internal section so it will be moved
      * when the section's scroll position changes.
      */
-    void addElementToSection(const std::string& sectionId, ECS::Entity entity, float relativeY);
+    void addElementToSection(const std::string& sectionId, ECS::Entity entity,
+                             float relativeY);
     /**
      * @brief Creates a new scrollable section with a title and bounds.
      * @param id Unique identifier for the section.
@@ -169,7 +176,8 @@ private:
      * The created section is appended to the scene's _sections list and used to
      * group related UI entities for independent scrolling.
      */
-    void createSection(const std::string& id, const std::string& title, const rtype::display::Rect<float>& bounds);
+    void createSection(const std::string& id, const std::string& title,
+                       const rtype::display::Rect<float>& bounds);
 
     /**
      * @brief Text input handling system.
@@ -186,19 +194,21 @@ private:
      * @brief Callback used to request a scene switch.
      * @param scene The target scene to switch to.
      */
-    std::function<void(const SceneManager::Scene &)> _switchToScene;
-    
+    std::function<void(const SceneManager::Scene&)> _switchToScene;
+
     /**
      * @brief Temporary status message entity.
      *
      * Holds an entity id pointing to a transient message shown after operations
      * such as saving (e.g., "File saved as ..."). The scene ensures only one
-     * status message exists by removing the previous entity before creating a new one.
+     * status message exists by removing the previous entity before creating a
+     * new one.
      */
     ECS::Entity _statusMessageEntity{0};
 
     /**
-     * @brief Refreshes the wave configuration UI to reflect `_waves[_currentWaveIndex]`.
+     * @brief Refreshes the wave configuration UI to reflect
+     * `_waves[_currentWaveIndex]`.
      *
      * Rebuilds or updates UI elements for the current wave (spawn/powerup rows,
      * labels, input fields) and applies stored values to the input components.
@@ -206,7 +216,8 @@ private:
     void refreshWaveUI();
 
     /**
-     * @brief Recomputes absolute positions for section entities after scroll changes.
+     * @brief Recomputes absolute positions for section entities after scroll
+     * changes.
      *
      * Updates entity transforms based on each section's currentScroll so that
      * scrolling is visually reflected in the scene.
@@ -253,7 +264,7 @@ private:
      */
     std::string getInputValue(ECS::Entity entity);
 
-public:
+   public:
     /**
      * @brief Construct a LevelCreatorScene.
      * @param ecs Shared registry used to spawn and manage entities.
@@ -280,7 +291,8 @@ public:
      * @brief Process a display event (keyboard, mouse).
      * @param e Event received from the display.
      *
-     * Forwards events to input systems and handles UI interactions like button clicks.
+     * Forwards events to input systems and handles UI interactions like button
+     * clicks.
      */
     void pollEvents(const rtype::display::Event& e) override;
 
@@ -299,5 +311,4 @@ public:
     void render(std::shared_ptr<::rtype::display::IDisplay> window) override;
 };
 
-
-#endif //R_TYPE_LEVELCREATORSCENE_HPP
+#endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_LEVELCREATORSCENE_LEVELCREATORSCENE_HPP_

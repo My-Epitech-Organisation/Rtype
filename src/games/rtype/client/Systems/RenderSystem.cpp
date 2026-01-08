@@ -149,14 +149,14 @@ void RenderSystem::_renderTextInputs(ECS::Registry& registry,
     }
 
     float maxWidth = size.x - (2 * kOffsetTextInput);
-    
+
     display::Vector2f textBounds = this->_display->getTextBounds(
         textToDraw, input.fontName, input.fontSize);
-        
+
     while (textToDraw.length() > 0 && textBounds.x > maxWidth) {
         textToDraw.pop_back();
-        textBounds = this->_display->getTextBounds(
-            textToDraw, input.fontName, input.fontSize);
+        textBounds = this->_display->getTextBounds(textToDraw, input.fontName,
+                                                   input.fontSize);
     }
     float posX = position.x + kOffsetTextInput;
     float posY = position.y + ((size.y / 2) - (textBounds.y / 2));

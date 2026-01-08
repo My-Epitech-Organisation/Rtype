@@ -6,6 +6,7 @@
 */
 
 #include "PowerUpCollectionSystem.hpp"
+
 #include "../../shared/Components/PlayerIdComponent.hpp"
 #include "../../shared/Components/TransformComponent.hpp"
 #include "../AllComponents.hpp"

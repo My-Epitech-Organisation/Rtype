@@ -122,9 +122,9 @@ SceneManager::SceneManager(
                                                this->_switchToScene);
     });
     this->_sceneList.emplace(LEVEL_CREATOR, [ecs, texture, this]() {
-        return std::make_unique<LevelCreatorScene>(ecs, texture, this->_display,
-                                               this->_keybinds, this->_audio,
-                                               this->_switchToScene);
+        return std::make_unique<LevelCreatorScene>(
+            ecs, texture, this->_display, this->_keybinds, this->_audio,
+            this->_switchToScene);
     });
     this->_sceneList.emplace(HOW_TO_PLAY, [ecs, texture, this]() {
         return std::make_unique<HowToPlayScene>(ecs, texture, this->_display,

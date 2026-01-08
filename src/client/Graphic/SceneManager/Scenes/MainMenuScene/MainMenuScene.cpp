@@ -400,8 +400,7 @@ void MainMenuScene::update(float dt) {
             });
 }
 
-void MainMenuScene::render(std::shared_ptr<rtype::display::IDisplay> window) {
-}
+void MainMenuScene::render(std::shared_ptr<rtype::display::IDisplay> window) {}
 
 void MainMenuScene::pollEvents(const rtype::display::Event& e) {
     if (_textInputSystem) {
@@ -443,8 +442,9 @@ MainMenuScene::MainMenuScene(
     this->_listEntity.push_back(playBtn);
     auto LevelConfiguratorBtn = EntityFactory::createButton(
         this->_registry,
-        rtype::games::rtype::client::Text(
-            "main_font", rtype::display::Color::White(), 36, "Level Configurator"),
+        rtype::games::rtype::client::Text("main_font",
+                                          rtype::display::Color::White(), 36,
+                                          "Level Configurator"),
         rtype::games::rtype::shared::TransformComponent(100, 470),
         rtype::games::rtype::client::Rectangle({400, 75},
                                                rtype::display::Color::Blue(),
@@ -453,9 +453,10 @@ MainMenuScene::MainMenuScene(
             try {
                 switchToScene(SceneManager::LEVEL_CREATOR);
             } catch (SceneNotFound& e) {
-                LOG_ERROR_CAT(::rtype::LogCategory::UI,
-                              std::string("Error switching to Level Configurator: ") +
-                                  std::string(e.what()));
+                LOG_ERROR_CAT(
+                    ::rtype::LogCategory::UI,
+                    std::string("Error switching to Level Configurator: ") +
+                        std::string(e.what()));
             }
         }));
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(

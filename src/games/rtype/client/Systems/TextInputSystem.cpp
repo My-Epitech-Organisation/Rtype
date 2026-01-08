@@ -56,28 +56,33 @@ void TextInputSystem::ensureCursorVisible(TextInput& input) {
         input.viewStart = input.cursorPosition;
     }
 
-    std::string visibleText = input.content.substr(input.viewStart, input.cursorPosition - input.viewStart);
+    std::string visibleText = input.content.substr(
+        input.viewStart, input.cursorPosition - input.viewStart);
 
     auto bounds =
         _display->getTextBounds(visibleText, input.fontName, input.fontSize);
-    
+
     while (bounds.x > maxWidth && input.viewStart < input.cursorPosition) {
         input.viewStart++;
-        visibleText = input.content.substr(input.viewStart, input.cursorPosition - input.viewStart);
-        bounds = _display->getTextBounds(visibleText, input.fontName, input.fontSize);
+        visibleText = input.content.substr(
+            input.viewStart, input.cursorPosition - input.viewStart);
+        bounds = _display->getTextBounds(visibleText, input.fontName,
+                                         input.fontSize);
     }
 
     std::string fullVisible = input.content.substr(input.viewStart);
-    auto fullBounds = _display->getTextBounds(fullVisible, input.fontName, input.fontSize);
-    
+    auto fullBounds =
+        _display->getTextBounds(fullVisible, input.fontName, input.fontSize);
+
     if (fullBounds.x < maxWidth && input.viewStart > 0) {
         while (input.viewStart > 0) {
-             std::string testStr = input.content.substr(input.viewStart - 1);
-             if (_display->getTextBounds(testStr, input.fontName, input.fontSize).x > maxWidth) {
-                 break;
-             }
-             input.viewStart--;
-         }
+            std::string testStr = input.content.substr(input.viewStart - 1);
+            if (_display->getTextBounds(testStr, input.fontName, input.fontSize)
+                    .x > maxWidth) {
+                break;
+            }
+            input.viewStart--;
+        }
     }
 }
 

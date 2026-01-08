@@ -68,8 +68,8 @@ struct TextInput {
           isFocused(false),
           isNumericOnly(isNumericOnly),
           size({width, height}) {
-            cursorPosition = content.length();
-          }
+        cursorPosition = content.length();
+    }
 
     /**
      * @brief Handle text input character
@@ -120,7 +120,8 @@ struct TextInput {
      * @brief Handle delete key
      */
     void handleDelete() {
-        if (!isFocused || content.empty() || cursorPosition >= content.length()) return;
+        if (!isFocused || content.empty() || cursorPosition >= content.length())
+            return;
         content.erase(cursorPosition, 1);
         if (onChanged) onChanged(content);
     }
