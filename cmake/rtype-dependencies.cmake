@@ -369,3 +369,33 @@ function(rtype_find_lz4)
         add_library(lz4::lz4 ALIAS LZ4::lz4_static)
     endif()
 endfunction()
+
+# Add cpp-httplib for admin server
+function(rtype_find_httplib)
+    if(TARGET httplib::httplib)
+        message(STATUS "[deps] cpp-httplib already configured")
+        return()
+    endif()
+
+    # Try vcpkg first
+    find_package(httplib CONFIG QUIET)
+    if(httplib_FOUND AND TARGET httplib::httplib)
+        message(STATUS "[deps] Using cpp-httplib from vcpkg")
+        return()
+    endif()
+
+    # Fallback to CPM
+    message(STATUS "[deps] cpp-httplib not found in vcpkg, using CPM")
+    CPMAddPackage(
+        NAME httplib
+        GITHUB_REPOSITORY yhirose/cpp-httplib
+        VERSION 0.28.0
+        OPTIONS
+            "HTTPLIB_REQUIRE_OPENSSL OFF"
+            "HTTPLIB_REQUIRE_ZLIB OFF"
+            "HTTPLIB_REQUIRE_BROTLI ON"
+    )
+    if(httplib_ADDED)
+        add_library(httplib::httplib ALIAS httplib)
+    endif()
+endfunction()
