@@ -10,6 +10,7 @@
 // Include all client components
 #include "Components/BoxingComponent.hpp"
 #include "Components/ButtonComponent.hpp"
+#include "Components/ColorTintComponent.hpp"
 #include "Components/HiddenComponent.hpp"
 #include "Components/ImageComponent.hpp"
 #include "Components/ParallaxComponent.hpp"

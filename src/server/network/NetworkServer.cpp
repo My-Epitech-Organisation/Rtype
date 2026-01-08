@@ -91,11 +91,12 @@ std::uint16_t NetworkServer::port() const noexcept {
     return socket_->localPort();
 }
 
-void NetworkServer::spawnEntity(std::uint32_t id, EntityType type, float x,
-                                float y) {
+void NetworkServer::spawnEntity(std::uint32_t id, EntityType type,
+                                std::uint8_t subType, float x, float y) {
     network::EntitySpawnPayload payload;
     payload.entityId = id;
     payload.type = static_cast<std::uint8_t>(type);
+    payload.subType = subType;
     payload.posX = x;
     payload.posY = y;
 
@@ -229,7 +230,8 @@ void NetworkServer::broadcastPlayerReadyState(std::uint32_t userId,
 }
 
 void NetworkServer::spawnEntityToClient(std::uint32_t userId, std::uint32_t id,
-                                        EntityType type, float x, float y) {
+                                        EntityType type, std::uint8_t subType,
+                                        float x, float y) {
     auto client = findClientByUserId(userId);
     if (!client) {
         return;
@@ -238,6 +240,7 @@ void NetworkServer::spawnEntityToClient(std::uint32_t userId, std::uint32_t id,
     network::EntitySpawnPayload payload;
     payload.entityId = id;
     payload.type = static_cast<std::uint8_t>(type);
+    payload.subType = subType;
     payload.posX = x;
     payload.posY = y;
 

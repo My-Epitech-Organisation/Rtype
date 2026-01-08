@@ -28,14 +28,14 @@ class HowToPlayScene : public AScene {
     HowToPlayScene(
         std::shared_ptr<ECS::Registry> ecs,
         std::shared_ptr<AssetManager> assetsManager,
-        std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<::rtype::display::IDisplay> window,
         std::shared_ptr<KeyboardActions> keybinds,
         std::shared_ptr<AudioLib> audio,
         std::function<void(const SceneManager::Scene&)> switchToScene);
 
-    void pollEvents(const sf::Event& e) override;
+    void pollEvents(const rtype::display::Event& e) override;
     void update(float dt) override;
-    void render(std::shared_ptr<sf::RenderWindow> window) override;
+    void render(std::shared_ptr<::rtype::display::IDisplay> window) override;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_HOWTOPLAYSCENE_HOWTOPLAYSCENE_HPP_

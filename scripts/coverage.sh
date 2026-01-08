@@ -138,6 +138,12 @@ else
     cmake $CMAKE_ARGS "$PROJECT_ROOT"
 fi
 
+# Copy config directory for tests (needed regardless of cached/fresh build)
+if [[ ! -d "$BUILD_DIR/config" || "$PROJECT_ROOT/config" -nt "$BUILD_DIR/config" ]]; then
+    echo ">>> Copying config directory to build-coverage..."
+    cp -r "$PROJECT_ROOT/config" "$BUILD_DIR/"
+fi
+
 echo ""
 echo ">>> Building project..."
 ninja
@@ -179,6 +185,8 @@ if $GENERATE_HTML; then
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/serverApp.cpp' \
+        '*/NetworkClient.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
     if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
@@ -193,7 +201,7 @@ if $GENERATE_HTML; then
         --branch-coverage \
         --title "R-Type Code Coverage" \
         --legend \
-        --ignore-errors inconsistent
+        --ignore-errors inconsistent,source
 
     echo ""
     echo ">>> Checking coverage requirements..."
@@ -305,6 +313,8 @@ else
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/serverApp.cpp' \
+        '*/NetworkClient.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
     if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then

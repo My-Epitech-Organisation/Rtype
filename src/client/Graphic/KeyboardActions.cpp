@@ -12,30 +12,37 @@
 #include "Logger/Macros.hpp"
 
 KeyboardActions::KeyboardActions() {
-    this->_keyBindings.emplace(GameAction::MOVE_UP, sf::Keyboard::Key::Up);
-    this->_keyBindings.emplace(GameAction::MOVE_DOWN, sf::Keyboard::Key::Down);
+    this->_keyBindings.emplace(GameAction::MOVE_UP, ::rtype::display::Key::Up);
+    this->_keyBindings.emplace(GameAction::MOVE_DOWN,
+                               ::rtype::display::Key::Down);
     this->_keyBindings.emplace(GameAction::MOVE_RIGHT,
-                               sf::Keyboard::Key::Right);
-    this->_keyBindings.emplace(GameAction::MOVE_LEFT, sf::Keyboard::Key::Left);
-    this->_keyBindings.emplace(GameAction::SHOOT, sf::Keyboard::Key::Space);
-    this->_keyBindings.emplace(GameAction::PAUSE, sf::Keyboard::Key::Escape);
-    this->_keyBindings.emplace(GameAction::CHANGE_AMMO, sf::Keyboard::Key::Tab);
+                               ::rtype::display::Key::Right);
+    this->_keyBindings.emplace(GameAction::MOVE_LEFT,
+                               ::rtype::display::Key::Left);
+    this->_keyBindings.emplace(GameAction::SHOOT, ::rtype::display::Key::Space);
+    this->_keyBindings.emplace(GameAction::PAUSE,
+                               ::rtype::display::Key::Escape);
+    this->_keyBindings.emplace(GameAction::CHANGE_AMMO,
+                               ::rtype::display::Key::Tab);
 
-    this->_joyAxisBindings.emplace(GameAction::MOVE_UP, sf::Joystick::Axis::Y);
+    this->_joyAxisBindings.emplace(GameAction::MOVE_UP,
+                                   ::rtype::display::JoystickAxis::Y);
     this->_joyAxisBindings.emplace(GameAction::MOVE_DOWN,
-                                   sf::Joystick::Axis::Y);
+                                   ::rtype::display::JoystickAxis::Y);
     this->_joyAxisBindings.emplace(GameAction::MOVE_LEFT,
-                                   sf::Joystick::Axis::X);
+                                   ::rtype::display::JoystickAxis::X);
     this->_joyAxisBindings.emplace(GameAction::MOVE_RIGHT,
-                                   sf::Joystick::Axis::X);
+                                   ::rtype::display::JoystickAxis::X);
     this->_joyButtonBindings.emplace(GameAction::SHOOT, 0);
     this->_joyButtonBindings.emplace(GameAction::PAUSE, 7);
     this->_joyButtonBindings.emplace(GameAction::CHANGE_AMMO, 2);
+}
 
-    sf::Joystick::update();
+void KeyboardActions::initialize(::rtype::display::IDisplay& display) {
     bool controllerFound = false;
-    for (unsigned int i = 0; i < sf::Joystick::Count; ++i) {
-        if (sf::Joystick::isConnected(i)) {
+    unsigned int count = display.getJoystickCount();
+    for (unsigned int i = 0; i < count; ++i) {
+        if (display.isJoystickConnected(i)) {
             controllerFound = true;
             LOG_INFO_CAT(::rtype::LogCategory::Input,
                          "[KeyboardActions] Controller detected (Joystick " +
@@ -56,12 +63,12 @@ KeyboardActions::KeyboardActions() {
 }
 
 auto KeyboardActions::getKeyBinding(const GameAction& action)
-    -> std::optional<sf::Keyboard::Key> {
+    -> std::optional<::rtype::display::Key> {
     if (!this->_keyBindings.contains(action)) return {};
     return this->_keyBindings[action];
 }
 
-auto KeyboardActions::getKeyBinding(const sf::Keyboard::Key& key)
+auto KeyboardActions::getKeyBinding(const ::rtype::display::Key& key)
     -> std::optional<GameAction> {
     for (const auto& [fst, snd] : this->_keyBindings) {
         if (snd == key) {
@@ -72,7 +79,7 @@ auto KeyboardActions::getKeyBinding(const sf::Keyboard::Key& key)
 }
 
 void KeyboardActions::setKeyBinding(const GameAction& action,
-                                    const sf::Keyboard::Key& key) {
+                                    const ::rtype::display::Key& key) {
     this->_keyBindings[action] = key;
 }
 
@@ -87,13 +94,13 @@ auto KeyboardActions::getJoyButtonBinding(const GameAction& action)
     return this->_joyButtonBindings[action];
 }
 
-void KeyboardActions::setJoyAxisBinding(const GameAction& action,
-                                        const sf::Joystick::Axis& axis) {
+void KeyboardActions::setJoyAxisBinding(
+    const GameAction& action, const ::rtype::display::JoystickAxis& axis) {
     this->_joyAxisBindings[action] = axis;
 }
 
 auto KeyboardActions::getJoyAxisBinding(const GameAction& action)
-    -> std::optional<sf::Joystick::Axis> {
+    -> std::optional<::rtype::display::JoystickAxis> {
     if (!this->_joyAxisBindings.contains(action)) return {};
     return this->_joyAxisBindings[action];
 }

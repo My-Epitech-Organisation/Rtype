@@ -39,7 +39,7 @@ class SceneManager {
 
     std::map<Scene, std::function<std::unique_ptr<IScene>()>> _sceneList;
     std::unique_ptr<IScene> _activeScene;
-    std::shared_ptr<sf::RenderWindow> _window;
+    std::shared_ptr<rtype::display::IDisplay> _display;
     std::shared_ptr<AudioLib> _audio;
 
     std::function<void(const Scene&)> _switchToScene;
@@ -64,7 +64,7 @@ class SceneManager {
     [[nodiscard]] Scene getCurrentScene() const { return _currentScene; }
     void setCurrentScene(Scene scene);
 
-    void pollEvents(const sf::Event& e);
+    void pollEvents(const rtype::display::Event& e);
     void update(float dt);
     void draw();
 
@@ -94,7 +94,7 @@ class SceneManager {
     SceneManager(
         std::shared_ptr<ECS::Registry> ecs,
         std::shared_ptr<AssetManager> assetManager,
-        std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<rtype::display::IDisplay> display,
         std::shared_ptr<KeyboardActions> keybinds,
         std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,
         std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =

@@ -41,10 +41,9 @@ void PlayerAnimationSystem::update(ECS::Registry& registry, float /*dt*/) {
                 row = static_cast<int>(netId.networkId % kColorRows);
             }
 
-            tex.rect = sf::IntRect({kFrameWidth * column, kFrameHeight * row},
-                                   {kFrameWidth, kFrameHeight});
-
-            img.sprite.setTextureRect(tex.rect);
+            tex.rect = ::rtype::display::IntRect(kFrameWidth * column,
+                                                 kFrameHeight * row,
+                                                 kFrameWidth, kFrameHeight);
         });
 }
 

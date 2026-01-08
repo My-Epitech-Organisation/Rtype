@@ -44,8 +44,8 @@ class GameScene : public AScene {
 
    public:
     void update(float dt) override;
-    void render(std::shared_ptr<sf::RenderWindow> window) override;
-    void pollEvents(const sf::Event& e) override;
+    void render(std::shared_ptr<rtype::display::IDisplay> window) override;
+    void pollEvents(const rtype::display::Event& e) override;
 
     /**
      * @brief Construct a new GameScene
@@ -62,7 +62,7 @@ class GameScene : public AScene {
     GameScene(
         std::shared_ptr<ECS::Registry> ecs,
         std::shared_ptr<AssetManager> textureManager,
-        std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<rtype::display::IDisplay> window,
         std::shared_ptr<KeyboardActions> keybinds,
         std::function<void(const SceneManager::Scene&)> switchToScene,
         std::unique_ptr<IGameScene> gameScene,

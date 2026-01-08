@@ -11,53 +11,27 @@
 #include "Logger/Macros.hpp"
 
 void TextureManager::load(const std::string& id, const std::string& filePath) {
-    if (this->_assets.contains(id)) return;
-    auto texture = std::make_unique<sf::Texture>();
-
-    if (!texture->loadFromFile(filePath)) {
-        LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
-                      "Unable to open texture: " << filePath);
-        throw std::runtime_error("Error while loading texture: " + filePath);
-    }
-
-    this->_assets[id] = std::move(texture);
+    if (!_display) return;
+    _display->loadTexture(id, filePath);
     LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
                   "Texture loaded with ID: " << id);
 }
 
-sf::Texture& TextureManager::get(const std::string& id) {
-    auto it = this->_assets.find(id);
+std::shared_ptr<::rtype::display::ITexture> TextureManager::get(
+    const std::string& id) {
+    if (!_display) return nullptr;
+    auto texture = _display->getTexture(id);
 
-    if (it == this->_assets.end()) {
+    if (!texture) {
         LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
                       "Texture not found: " << id);
         throw std::out_of_range("Texture not found: " + id);
     }
 
-    return *it->second;
+    return texture;
 }
 
 bool TextureManager::isLoaded(const std::string& id) const {
-    return this->_assets.find(id) != this->_assets.end();
+    if (!_display) return false;
+    return _display->getTexture(id) != nullptr;
 }
-
-bool TextureManager::unload(const std::string& id) {
-    auto it = this->_assets.find(id);
-    if (it == this->_assets.end()) {
-        LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
-                      "Texture not found for unloading: " << id);
-        return false;
-    }
-    this->_assets.erase(it);
-    LOG_DEBUG_CAT(::rtype::LogCategory::Graphics, "Texture unloaded: " << id);
-    return true;
-}
-
-void TextureManager::unloadAll() {
-    std::size_t count = this->_assets.size();
-    this->_assets.clear();
-    LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
-                  "All textures unloaded (" << count << " textures)");
-}
-
-std::size_t TextureManager::size() const { return this->_assets.size(); }

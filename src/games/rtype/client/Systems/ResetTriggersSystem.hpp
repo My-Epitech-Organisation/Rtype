@@ -10,8 +10,6 @@
 
 #include <memory>
 
-#include <SFML/Graphics.hpp>
-
 #include "ASystem.hpp"
 #include "ECS.hpp"
 

@@ -12,9 +12,7 @@
 #include <memory>
 #include <optional>
 
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Window/Event.hpp>
-
+#include "../../../../../include/rtype/display/IDisplay.hpp"
 #include "Components/TextInputComponent.hpp"
 #include "ECS.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
@@ -28,15 +26,17 @@ namespace rtype::games::rtype::client {
  */
 class TextInputSystem {
    public:
-    explicit TextInputSystem(std::shared_ptr<sf::RenderWindow> window);
+    explicit TextInputSystem(
+        std::shared_ptr<::rtype::display::IDisplay> display);
 
     /**
      * @brief Handle a keyboard event for text inputs
      * @param registry ECS registry
-     * @param event The SFML event
+     * @param event The display event
      * @return true if the event was consumed by a text input
      */
-    bool handleEvent(ECS::Registry& registry, const sf::Event& event);
+    bool handleEvent(ECS::Registry& registry,
+                     const ::rtype::display::Event& event);
 
     /**
      * @brief Update and render text inputs
@@ -51,9 +51,9 @@ class TextInputSystem {
    private:
     void handleClick(ECS::Registry& registry, float mouseX, float mouseY);
     bool handleTextEntered(ECS::Registry& registry, std::uint32_t unicode);
-    bool handleKeyPressed(ECS::Registry& registry, sf::Keyboard::Key key);
+    bool handleKeyPressed(ECS::Registry& registry, ::rtype::display::Key key);
 
-    std::shared_ptr<sf::RenderWindow> _window;
+    std::shared_ptr<::rtype::display::IDisplay> _display;
     std::optional<ECS::Entity> _focusedInput;
 };
 

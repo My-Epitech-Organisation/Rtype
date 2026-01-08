@@ -13,9 +13,7 @@
 #include <string_view>
 #include <vector>
 
-#include <SFML/Graphics/Rect.hpp>
-#include <SFML/System/Vector2.hpp>
-
+#include "../../../include/rtype/display/DisplayTypes.hpp"
 #include "AssetManager/AssetManager.hpp"
 #include "Components/ButtonComponent.hpp"
 #include "Components/RectangleComponent.hpp"
@@ -43,7 +41,7 @@ static ECS::Entity createButton(
         entity, position);
     registry->emplaceComponent<rtype::games::rtype::client::Rectangle>(
         entity, rectangle);
-    registry->emplaceComponent<rtype::games::rtype::client::Button<Args...>>(
+    registry->emplaceComponent<rtype::games::rtype::client::Button<Args...> >(
         entity, onClick);
     registry->emplaceComponent<rtype::games::rtype::client::UserEvent>(entity);
     registry->emplaceComponent<rtype::games::rtype::client::ButtonTag>(entity);
@@ -61,7 +59,8 @@ static ECS::Entity createButton(
  * @brief Create a text input field entity
  * @param registry ECS registry
  * @param assetManager Asset manager for fonts
- * @param bounds Bounding rectangle (position and size) of the input field
+ * @param position Position of the input field
+ * @param size Size of the input field
  * @param placeholder Placeholder text
  * @param initialValue Initial text value
  * @param maxLength Maximum number of characters (0 = unlimited)
@@ -70,7 +69,8 @@ static ECS::Entity createButton(
  */
 ECS::Entity createTextInput(std::shared_ptr<ECS::Registry> registry,
                             std::shared_ptr<AssetManager> assetManager,
-                            const sf::FloatRect& bounds,
+                            const ::rtype::display::Vector2f& position,
+                            const ::rtype::display::Vector2f& size,
                             std::string_view placeholder = "",
                             std::string_view initialValue = "",
                             std::size_t maxLength = 0,
@@ -82,34 +82,35 @@ std::vector<ECS::Entity> createBackground(
 
 ECS::Entity createLobbyPlayer(std::shared_ptr<ECS::Registry> registry,
                               std::shared_ptr<AssetManager> assetManager,
-                              sf::Vector2f position,
-                              sf::Vector2i scale = sf::Vector2i(1, 1),
+                              ::rtype::display::Vector2<float> positon,
+                              ::rtype::display::Vector2<int> scale = {1, 1},
                               bool isControllable = false);
 
 /**
  * @brief Create a rectangle entity
  * @param registry ECS registry
- * @param size a sf::Vector2i defining the size of the rectangle
+ * @param size a Vector2i defining the size of the rectangle
  * @param fill Fill color of the rectangle
  * @param position Position of the rectangle
  * @return Created entity
  **/
 
-ECS::Entity createRectangle(std::shared_ptr<ECS::Registry> registry,
-                            sf::Vector2i size = sf::Vector2i(1, 1),
-                            sf::Color fill = sf::Color::White,
-                            sf::Vector2f position = sf::Vector2f(0, 0));
+ECS::Entity createRectangle(
+    std::shared_ptr<ECS::Registry> registry,
+    ::rtype::display::Vector2i size = {1, 1},
+    ::rtype::display::Color fill = ::rtype::display::Color::White(),
+    ::rtype::display::Vector2f position = {0, 0});
 
-std::vector<ECS::Entity> createSection(std::shared_ptr<ECS::Registry> registry,
-                                       std::shared_ptr<AssetManager> assets,
-                                       std::string_view title,
-                                       const sf::FloatRect& bounds,
-                                       int ZindexRect = 0);
+std::vector<ECS::Entity> createSection(
+    std::shared_ptr<ECS::Registry> registry,
+    std::shared_ptr<AssetManager> assets, std::string_view title,
+    const ::rtype::display::Rect<float>& bounds, int ZindexRect = 0);
 
 ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
                              std::shared_ptr<AssetManager> assets,
                              std::string_view title, std::string_view fontId,
-                             const sf::Vector2f& position, float size);
+                             const ::rtype::display::Vector2f& position,
+                             float size);
 };  // namespace EntityFactory
 
 #endif  // SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_

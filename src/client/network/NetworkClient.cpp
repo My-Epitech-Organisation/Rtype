@@ -50,6 +50,8 @@ NetworkClient::NetworkClient(const Config& config)
             serverEndpoint_.reset();
             if (socket_) {
                 socket_->cancel();
+                ioContext_.poll();
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 socket_->close();
                 socket_ = network::createAsyncSocket(ioContext_.get());
             }
@@ -67,6 +69,8 @@ NetworkClient::NetworkClient(const Config& config)
             serverEndpoint_.reset();
             if (socket_) {
                 socket_->cancel();
+                ioContext_.poll();
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 socket_->close();
                 socket_ = network::createAsyncSocket(ioContext_.get());
             }
@@ -113,6 +117,8 @@ NetworkClient::NetworkClient(const Config& config,
             serverEndpoint_.reset();
             if (socket_) {
                 socket_->cancel();
+                ioContext_.poll();
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 socket_->close();
                 socket_ = network::createAsyncSocket(ioContext_.get());
             }
@@ -130,6 +136,8 @@ NetworkClient::NetworkClient(const Config& config,
             serverEndpoint_.reset();
             if (socket_) {
                 socket_->cancel();
+                ioContext_.poll();
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 socket_->close();
                 socket_ = network::createAsyncSocket(ioContext_.get());
             }
@@ -231,6 +239,8 @@ void NetworkClient::disconnect() {
 
     if (socket_) {
         socket_->cancel();
+        ioContext_.poll();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         socket_->close();
         socket_ = network::createAsyncSocket(ioContext_.get());
     }
@@ -531,7 +541,7 @@ void NetworkClient::queueCallback(std::function<void()> callback) {
 }
 
 void NetworkClient::startReceive() {
-    if (receiveInProgress_.load(std::memory_order_acquire) ||
+    if (receiveInProgress_.load(std::memory_order_acquire) || !socket_ ||
         !socket_->isOpen()) {
         return;
     }
@@ -554,8 +564,7 @@ void NetworkClient::handleReceive(network::Result<std::size_t> result) {
 
         processIncomingPacket(*receiveBuffer_, *receiveSender_);
     }
-
-    if (socket_->isOpen()) {
+    if (socket_ && socket_->isOpen()) {
         startReceive();
     }
 }
@@ -734,6 +743,7 @@ void NetworkClient::handleEntitySpawn(const network::Header& header,
         EntitySpawnEvent event;
         event.entityId = deserialized.entityId;
         event.type = deserialized.getType();
+        event.subType = deserialized.subType;
         event.x = deserialized.posX;
         event.y = deserialized.posY;
 

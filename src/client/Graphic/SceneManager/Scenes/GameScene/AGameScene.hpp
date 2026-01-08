@@ -33,7 +33,7 @@ class AGameScene : public IGameScene {
    protected:
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<AssetManager> _assetsManager;
-    std::shared_ptr<sf::RenderWindow> _window;
+    std::shared_ptr<rtype::display::IDisplay> _display;
     std::shared_ptr<KeyboardActions> _keybinds;
     std::function<void(const SceneManager::Scene&)> _switchToScene;
 
@@ -50,14 +50,14 @@ class AGameScene : public IGameScene {
     AGameScene(
         std::shared_ptr<ECS::Registry> registry,
         std::shared_ptr<AssetManager> assetsManager,
-        std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<rtype::display::IDisplay> display,
         std::shared_ptr<KeyboardActions> keybinds,
         std::function<void(const SceneManager::Scene&)> switchToScene,
         std::shared_ptr<rtype::client::NetworkClient> networkClient,
         std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem)
         : _registry(std::move(registry)),
           _assetsManager(std::move(assetsManager)),
-          _window(std::move(window)),
+          _display(std::move(display)),
           _keybinds(std::move(keybinds)),
           _switchToScene(std::move(switchToScene)),
           _networkClient(std::move(networkClient)),
@@ -66,8 +66,8 @@ class AGameScene : public IGameScene {
     ~AGameScene() override = default;
 
     // Default implementations that can be overridden
-    void render(std::shared_ptr<sf::RenderWindow> window) override {}
-    void pollEvents(const sf::Event& event) override {}
+    void render(rtype::display::IDisplay& display) override {}
+    void pollEvents(const rtype::display::Event& event) override {}
 
     /**
      * @brief Get the network system

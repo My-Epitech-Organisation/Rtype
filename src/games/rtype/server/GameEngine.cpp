@@ -19,8 +19,11 @@
 #include "../shared/Components/Tags.hpp"
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
+#include "../shared/Config/EntityConfig/EntityConfig.hpp"
+#include "../shared/Config/PrefabLoader.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 #include "Logger/Macros.hpp"
+#include "Systems/Spawner/DataDrivenSpawnerSystem.hpp"
 namespace rtype::games::rtype::server {
 
 GameEngine::GameEngine(std::shared_ptr<ECS::Registry> registry)
@@ -39,15 +42,68 @@ bool GameEngine::initialize() {
     }
     _registry->reserveEntities(GameConfig::MAX_ENEMIES + 100);
 
+    LOG_INFO("[GameEngine] Loading entity configurations");
+    auto& entityConfigRegistry = shared::EntityConfigRegistry::getInstance();
+    try {
+        entityConfigRegistry.loadEnemiesWithSearch("config/game/enemies.toml");
+        entityConfigRegistry.loadPlayersWithSearch("config/game/players.toml");
+        entityConfigRegistry.loadProjectilesWithSearch(
+            "config/game/projectiles.toml");
+        entityConfigRegistry.loadPowerUpsWithSearch(
+            "config/game/powerups.toml");
+        if (entityConfigRegistry.loadFromDirectory("config/game")) {
+            LOG_INFO(
+                "[GameEngine] Level configurations loaded from config/game");
+        } else {
+            LOG_WARNING(
+                "[GameEngine] Failed to load level configurations - "
+                "data-driven spawning may not work correctly");
+        }
+        LOG_INFO("[GameEngine] Entity configurations loaded");
+    } catch (const std::exception& e) {
+        LOG_WARNING("[GameEngine] Failed to load some entity configurations: "
+                    << e.what() << " - Continuing with available configs");
+    }
+
+    _prefabManager = std::make_unique<ECS::PrefabManager>(std::ref(*_registry));
+    shared::PrefabLoader::registerAllPrefabs(*_prefabManager);
+    LOG_INFO("[GameEngine] Registered "
+             << _prefabManager->getPrefabNames().size()
+             << " prefabs from entity configs");
+
     setupECSSignals();
     auto eventEmitter = [this](const engine::GameEvent& event) {
         emitEvent(event);
     };
+
+    DataDrivenSpawnerConfig ddConfig{};
+    ddConfig.screenWidth = GameConfig::SCREEN_WIDTH;
+    ddConfig.screenHeight = GameConfig::SCREEN_HEIGHT;
+    ddConfig.spawnMargin = GameConfig::SPAWN_MARGIN;
+    ddConfig.maxEnemies = GameConfig::MAX_ENEMIES;
+    ddConfig.waveTransitionDelay = 2.0F;
+    ddConfig.waitForClear = true;
+    ddConfig.enableFallbackSpawning = true;
+    ddConfig.fallbackMinInterval = GameConfig::MIN_SPAWN_INTERVAL;
+    ddConfig.fallbackMaxInterval = GameConfig::MAX_SPAWN_INTERVAL;
+    ddConfig.fallbackEnemiesPerWave = 10;
+    _dataDrivenSpawnerSystem =
+        std::make_unique<DataDrivenSpawnerSystem>(eventEmitter, ddConfig);
+
+    if (_dataDrivenSpawnerSystem->loadLevel("level_1")) {
+        LOG_INFO(
+            "[GameEngine] Level 'level_1' loaded for data-driven spawning");
+        _dataDrivenSpawnerSystem->startLevel();
+    } else {
+        LOG_WARNING(
+            "[GameEngine] Could not load level_1 - using fallback spawning");
+    }
+
     SpawnerConfig spawnerConfig{};
     spawnerConfig.minSpawnInterval = GameConfig::MIN_SPAWN_INTERVAL;
     spawnerConfig.maxSpawnInterval = GameConfig::MAX_SPAWN_INTERVAL;
     spawnerConfig.maxEnemies = GameConfig::MAX_ENEMIES;
-    spawnerConfig.spawnX = GameConfig::SCREEN_WIDTH + GameConfig::SPAWN_MARGIN;
+    spawnerConfig.spawnX = GameConfig::SCREEN_WIDTH + GameConfig::SPAWN_OFFSET;
     spawnerConfig.minSpawnY = GameConfig::SPAWN_MARGIN;
     spawnerConfig.maxSpawnY =
         GameConfig::SCREEN_HEIGHT - GameConfig::SPAWN_MARGIN;
@@ -94,14 +150,22 @@ bool GameEngine::initialize() {
     _cleanupSystem =
         std::make_unique<CleanupSystem>(eventEmitter, cleanupConfig);
     auto entityDecrementer = [this]() {
-        _spawnerSystem->decrementEnemyCount();
+        if (_useDataDrivenSpawner && _dataDrivenSpawnerSystem) {
+            _dataDrivenSpawnerSystem->decrementEnemyCount();
+        } else if (_spawnerSystem) {
+            _spawnerSystem->decrementEnemyCount();
+        }
         _projectileSpawnerSystem->decrementProjectileCount();
     };
     _destroySystem =
         std::make_unique<DestroySystem>(eventEmitter, entityDecrementer);
 
     _systemScheduler->addSystem("Spawner", [this](ECS::Registry& reg) {
-        _spawnerSystem->update(reg, _lastDeltaTime);
+        if (_useDataDrivenSpawner && _dataDrivenSpawnerSystem) {
+            _dataDrivenSpawnerSystem->update(reg, _lastDeltaTime);
+        } else if (_spawnerSystem) {
+            _spawnerSystem->update(reg, _lastDeltaTime);
+        }
     });
     _systemScheduler->addSystem(
         "ProjectileSpawner", [this](ECS::Registry& reg) {
@@ -172,6 +236,7 @@ void GameEngine::shutdown() {
         _systemScheduler->clear();
     }
     _spawnerSystem.reset();
+    _dataDrivenSpawnerSystem.reset();
     _projectileSpawnerSystem.reset();
     _enemyShootingSystem.reset();
     _aiSystem.reset();
@@ -186,6 +251,32 @@ void GameEngine::shutdown() {
     }
     LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                   "[GameEngine] Shutdown: Complete");
+}
+
+bool GameEngine::loadLevel(const std::string& levelId) {
+    if (_dataDrivenSpawnerSystem) {
+        return _dataDrivenSpawnerSystem->loadLevel(levelId);
+    }
+    LOG_ERROR(
+        "[GameEngine] Cannot load level: DataDrivenSpawnerSystem not "
+        "initialized");
+    return false;
+}
+
+bool GameEngine::loadLevelFromFile(const std::string& filepath) {
+    if (_dataDrivenSpawnerSystem) {
+        return _dataDrivenSpawnerSystem->loadLevelFromFile(filepath);
+    }
+    LOG_ERROR(
+        "[GameEngine] Cannot load level: DataDrivenSpawnerSystem not "
+        "initialized");
+    return false;
+}
+
+void GameEngine::startLevel() {
+    if (_dataDrivenSpawnerSystem) {
+        _dataDrivenSpawnerSystem->startLevel();
+    }
 }
 
 void GameEngine::setEventCallback(EventCallback callback) {
@@ -204,6 +295,9 @@ void GameEngine::clearPendingEvents() {
 }
 
 std::size_t GameEngine::getEntityCount() const {
+    if (_useDataDrivenSpawner && _dataDrivenSpawnerSystem) {
+        return _dataDrivenSpawnerSystem->getEnemyCount();
+    }
     if (_spawnerSystem) {
         return _spawnerSystem->getEnemyCount();
     }
@@ -217,6 +311,7 @@ engine::ProcessedEvent GameEngine::processEvent(
     engine::ProcessedEvent result{};
     result.type = event.type;
     result.networkId = event.entityNetworkId;
+    result.subType = event.subType;
     result.x = event.x;
     result.y = event.y;
     result.vx = event.velocityX;

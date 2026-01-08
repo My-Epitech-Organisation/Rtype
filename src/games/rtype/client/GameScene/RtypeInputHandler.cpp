@@ -11,9 +11,6 @@
 #include <map>
 #include <memory>
 
-#include <SFML/Window/Joystick.hpp>
-#include <SFML/Window/Keyboard.hpp>
-
 #include "GameAction.hpp"
 #include "Graphic/ControllerRumble.hpp"
 #include "Graphic/KeyboardActions.hpp"
@@ -23,11 +20,15 @@
 
 namespace rtype::games::rtype::client {
 
-std::unordered_set<sf::Keyboard::Key> RtypeInputHandler::pressedKeys_;
+std::unordered_set<::rtype::display::Key> RtypeInputHandler::pressedKeys_;
+std::unordered_map<unsigned int,
+                   std::unordered_map<::rtype::display::JoystickAxis, float>>
+    RtypeInputHandler::joystickAxes_;
+std::unordered_map<unsigned int, std::unordered_set<unsigned int>>
+    RtypeInputHandler::joystickButtons_;
 
 std::uint8_t RtypeInputHandler::getInputMask(
     std::shared_ptr<KeyboardActions> keybinds) {
-    sf::Joystick::update();
     ControllerRumble::update();
 
     std::uint8_t inputMask = ::rtype::network::InputMask::kNone;
@@ -61,8 +62,8 @@ std::uint8_t RtypeInputHandler::getInputMask(
         }
     } else {
         std::optional<unsigned int> jid;
-        for (unsigned int i = 0; i < sf::Joystick::Count; ++i) {
-            if (sf::Joystick::isConnected(i)) {
+        for (unsigned int i = 0; i < 8; ++i) {
+            if (joystickAxes_.contains(i) || joystickButtons_.contains(i)) {
                 jid = i;
                 break;
             }
@@ -71,10 +72,8 @@ std::uint8_t RtypeInputHandler::getInputMask(
         if (jid.has_value()) {
             const float deadZone = 30.f;
 
-            float x =
-                sf::Joystick::getAxisPosition(*jid, sf::Joystick::Axis::X);
-            float y =
-                sf::Joystick::getAxisPosition(*jid, sf::Joystick::Axis::Y);
+            float x = joystickAxes_[*jid][::rtype::display::JoystickAxis::X];
+            float y = joystickAxes_[*jid][::rtype::display::JoystickAxis::Y];
 
             if (keybinds->isJoyAxisInverted(GameAction::MOVE_UP)) {
                 y = -y;
@@ -91,8 +90,7 @@ std::uint8_t RtypeInputHandler::getInputMask(
             auto shootBtn = keybinds->getJoyButtonBinding(GameAction::SHOOT);
             unsigned int shootBtnNum = shootBtn.has_value() ? *shootBtn : 0;
 
-            bool shootPressed =
-                sf::Joystick::isButtonPressed(*jid, shootBtnNum);
+            bool shootPressed = joystickButtons_[*jid].contains(shootBtnNum);
 
             if (shootPressed) {
                 inputMask |= ::rtype::network::InputMask::kShoot;
@@ -123,21 +121,20 @@ std::uint8_t RtypeInputHandler::getInputMask(
 }
 
 bool RtypeInputHandler::handleKeyReleasedEvent(
-    const sf::Event& event, std::shared_ptr<KeyboardActions> keybinds,
+    const ::rtype::display::Event& event,
+    std::shared_ptr<KeyboardActions> keybinds,
     std::shared_ptr<ECS::Registry> registry) {
-    auto eventKeyRelease = event.getIf<sf::Event::KeyReleased>();
     auto keyPause = keybinds->getKeyBinding(GameAction::PAUSE);
 
-    if (eventKeyRelease && keyPause.has_value() &&
-        eventKeyRelease->code == *keyPause) {
+    if (event.type == ::rtype::display::EventType::KeyReleased &&
+        keyPause.has_value() && event.key.code == *keyPause) {
         RtypePauseMenu::togglePauseMenu(registry);
         return true;
     }
 
-    if (const auto* joyButton =
-            event.getIf<sf::Event::JoystickButtonReleased>()) {
+    if (event.type == ::rtype::display::EventType::JoystickButtonReleased) {
         auto pauseBtn = keybinds->getJoyButtonBinding(GameAction::PAUSE);
-        if (pauseBtn.has_value() && joyButton->button == *pauseBtn) {
+        if (pauseBtn.has_value() && event.joystickButton.button == *pauseBtn) {
             RtypePauseMenu::togglePauseMenu(registry);
             return true;
         }
@@ -146,15 +143,29 @@ bool RtypeInputHandler::handleKeyReleasedEvent(
     return false;
 }
 
-void RtypeInputHandler::updateKeyState(const sf::Event& event) {
-    if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
-        pressedKeys_.insert(keyPressed->code);
-    } else if (const auto* keyReleased =
-                   event.getIf<sf::Event::KeyReleased>()) {
-        pressedKeys_.erase(keyReleased->code);
+void RtypeInputHandler::updateKeyState(const ::rtype::display::Event& event) {
+    if (event.type == ::rtype::display::EventType::KeyPressed) {
+        pressedKeys_.insert(event.key.code);
+    } else if (event.type == ::rtype::display::EventType::KeyReleased) {
+        pressedKeys_.erase(event.key.code);
+    } else if (event.type ==
+               ::rtype::display::EventType::JoystickButtonPressed) {
+        joystickButtons_[event.joystickButton.joystickId].insert(
+            event.joystickButton.button);
+    } else if (event.type ==
+               ::rtype::display::EventType::JoystickButtonReleased) {
+        joystickButtons_[event.joystickButton.joystickId].erase(
+            event.joystickButton.button);
+    } else if (event.type == ::rtype::display::EventType::JoystickMoved) {
+        joystickAxes_[event.joystickMove.joystickId][event.joystickMove.axis] =
+            event.joystickMove.position;
     }
 }
 
-void RtypeInputHandler::clearKeyStates() { pressedKeys_.clear(); }
+void RtypeInputHandler::clearKeyStates() {
+    pressedKeys_.clear();
+    joystickAxes_.clear();
+    joystickButtons_.clear();
+}
 
 }  // namespace rtype::games::rtype::client

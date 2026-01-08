@@ -83,6 +83,12 @@ class Registry {
     [[nodiscard]] auto isAlive(Entity entity) const noexcept -> bool;
 
     /**
+     * @brief Removes all entities, components, and singletons.
+     * Use this when shutting down or switching major states.
+     */
+    void clear();
+
+    /**
      * @brief Recycles tombstone entities by resetting their generations.
      * Call this periodically to reclaim entity slots. Thread-safe.
      * @return Number of tombstones recycled

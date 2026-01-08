@@ -3,7 +3,9 @@ add_subdirectory(AssetManager)
 add_subdirectory(AudioLib)
 add_subdirectory(EntityFactory)
 
-add_library(rtype-graphic-SFML
+rtype_find_sdl2()
+
+add_library(rtype-graphic
     STATIC
     Graphic.cpp
     Graphic.hpp
@@ -13,31 +15,19 @@ add_library(rtype-graphic-SFML
     ControllerRumble.hpp
 )
 
-target_include_directories(rtype-graphic-SFML PRIVATE
+target_include_directories(rtype-graphic PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 
-rtype_find_sfml()
-rtype_find_sdl2()
-
-target_link_libraries(rtype-graphic-SFML
-    PUBLIC
-    SFML::Network
-    SFML::Graphics
-    SFML::Window
-    SFML::Audio
-    SFML::System
-    SDL2::SDL2
-    engine
-    network
-    rtype-graphic-scene-manager
-    rtype_game_client_systems
-)
-
-target_include_directories(rtype-graphic-SFML
+target_include_directories(rtype-graphic
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ../
+)
+
+target_link_libraries(rtype-graphic
+    PRIVATE
+    SDL2::SDL2
 )
 
 target_include_directories(rtype-graphic-main-menu-scene

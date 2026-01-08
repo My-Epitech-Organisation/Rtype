@@ -110,6 +110,25 @@ else()
     gtest_discover_tests(test_config_branches)
 endif()
 
+# RTypeGameConfig bounds tests
+add_executable(test_rtypegameconfig_bounds test_rtypegameconfig_bounds.cpp)
+
+target_link_libraries(test_rtypegameconfig_bounds PRIVATE
+    GTest::gtest_main
+    rtype_game_config
+)
+
+target_include_directories(test_rtypegameconfig_bounds PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_rtypegameconfig_bounds WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_rtypegameconfig_bounds)
+endif()
+
 # Branch coverage tests for TomlParser
 add_executable(test_tomlparser_branches test_tomlparser_branches.cpp)
 
@@ -127,6 +146,46 @@ if(WIN32 OR MSVC)
     gtest_discover_tests(test_tomlparser_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_tomlparser_branches)
+endif()
+
+# Extended TomlParser tests
+add_executable(test_tomlparser_extended test_tomlparser_extended.cpp)
+
+target_link_libraries(test_tomlparser_extended PRIVATE
+    GTest::gtest_main
+    rtype_toml_parser
+)
+
+target_include_directories(test_tomlparser_extended PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib/common/src
+    ${CMAKE_SOURCE_DIR}/lib
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_tomlparser_extended WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_tomlparser_extended)
+endif()
+
+# TomlParser branch coverage tests
+add_executable(test_tomlparser_branch_coverage test_tomlparser_branch_coverage.cpp)
+
+target_link_libraries(test_tomlparser_branch_coverage PRIVATE
+    GTest::gtest_main
+    rtype_toml_parser
+)
+
+target_include_directories(test_tomlparser_branch_coverage PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib/common/src
+    ${CMAKE_SOURCE_DIR}/lib
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_tomlparser_branch_coverage WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_tomlparser_branch_coverage)
 endif()
 
 add_executable(test_scene_exception test_scene_exception.cpp)

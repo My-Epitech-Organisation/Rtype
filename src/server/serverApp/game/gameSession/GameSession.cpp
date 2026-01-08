@@ -290,7 +290,8 @@ void GameSession::processGameEvents() {
                     static_cast<network::EntityType>(
                         processed.networkEntityType);
                 _networkSystem->broadcastEntitySpawn(
-                    processed.networkId, networkType, processed.x, processed.y);
+                    processed.networkId, networkType, processed.subType,
+                    processed.x, processed.y);
                 break;
             }
             case engine::GameEventType::EntityDestroyed:

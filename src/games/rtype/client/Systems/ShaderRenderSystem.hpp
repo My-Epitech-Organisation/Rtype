@@ -9,11 +9,10 @@
 
 #include <memory>
 
-#include <SFML/Graphics.hpp>
-
 #include "ASystem.hpp"
 #include "Accessibility.hpp"
 #include "ECS.hpp"
+#include "rtype/display/IDisplay.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -26,13 +25,10 @@ class ShaderRenderSystem : public ::rtype::engine::ASystem {
     /**
      * @brief Construct a new Shader Render System
      *
-     * @param window The main window to draw to
-     * @param sceneTexture The texture containing the rendered scene
-     * @param colorShader The shader used for color blind mode effects
+     * @param display The display interface
      */
-    ShaderRenderSystem(std::shared_ptr<sf::RenderWindow> window,
-                       std::shared_ptr<sf::RenderTexture> sceneTexture,
-                       std::shared_ptr<sf::Shader> colorShader);
+    explicit ShaderRenderSystem(
+        std::shared_ptr<::rtype::display::IDisplay> display);
 
     ~ShaderRenderSystem() override = default;
 
@@ -45,18 +41,14 @@ class ShaderRenderSystem : public ::rtype::engine::ASystem {
     void update(ECS::Registry& registry, float deltaTime) override;
 
    private:
-    std::shared_ptr<sf::RenderWindow> _window;
-    std::shared_ptr<sf::RenderTexture> _sceneTexture;
-    std::shared_ptr<sf::Shader> _colorShader;
+    std::shared_ptr<::rtype::display::IDisplay> _display;
 
     /**
-     * @brief Get the shader to apply based on accessibility settings
+     * @brief Apply shader settings to the display
      *
      * @param settings Accessibility settings from registry
-     * @return sf::Shader* Shader to use, or nullptr if no shader should be
-     * applied
      */
-    sf::Shader* _getShaderForSettings(const AccessibilitySettings& settings);
+    void _applyShaderForSettings(const AccessibilitySettings& settings);
 };
 
 }  // namespace rtype::games::rtype::client

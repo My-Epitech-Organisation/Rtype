@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "../../../src/games/rtype/shared/Components.hpp"
+#include "../../../src/games/rtype/shared/Config/EntityConfig/EntityConfig.hpp"
 #include "../../../src/games/rtype/server/Systems/Spawner/SpawnerSystem.hpp"
 #include "../../../../lib/ecs/src/ECS.hpp"
 #include "../../../../lib/engine/src/IGameEngine.hpp"
@@ -25,6 +26,12 @@ using namespace rtype::games::rtype::server;
 class WaveSystemTest : public ::testing::Test {
    protected:
     void SetUp() override {
+        // Load entity configurations required by SpawnerSystem
+        auto& entityConfigRegistry =
+            rtype::games::rtype::shared::EntityConfigRegistry::getInstance();
+        entityConfigRegistry.loadEnemiesWithSearch("config/game/enemies.toml");
+        entityConfigRegistry.loadProjectilesWithSearch("config/game/projectiles.toml");
+        
         config.minSpawnInterval = 0.1F;
         config.maxSpawnInterval = 0.2F;
         config.maxEnemies = 50;

@@ -10,8 +10,6 @@
 #include <memory>
 #include <utility>
 
-#include <SFML/Graphics/Color.hpp>
-
 #include "Components/HealthComponent.hpp"
 #include "Components/SoundComponent.hpp"
 #include "Components/VelocityComponent.hpp"
@@ -263,8 +261,9 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
             auto& img =
                 registry_->getComponent<games::rtype::client::Image>(entity);
             const bool isEnemyShot = vel.vx < 0.0F;
-            img.sprite.setColor(isEnemyShot ? sf::Color(255, 80, 80)
-                                            : sf::Color(80, 255, 240));
+            img.color =
+                (isEnemyShot ? rtype::display::Color(255, 80, 80, 255)
+                             : rtype::display::Color(80, 255, 240, 255));
 
             if (registry_->hasComponent<games::rtype::client::BoxingComponent>(
                     entity)) {
@@ -272,10 +271,12 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
                     registry_
                         ->getComponent<games::rtype::client::BoxingComponent>(
                             entity);
-                box.outlineColor = isEnemyShot ? sf::Color(255, 80, 80)
-                                               : sf::Color(0, 220, 180);
-                box.fillColor = isEnemyShot ? sf::Color(255, 80, 80, 40)
-                                            : sf::Color(0, 220, 180, 35);
+                box.outlineColor =
+                    isEnemyShot ? rtype::display::Color(255, 80, 80, 255)
+                                : rtype::display::Color(0, 220, 180, 255);
+                box.fillColor = isEnemyShot
+                                    ? rtype::display::Color(255, 80, 80, 40)
+                                    : rtype::display::Color(0, 220, 180, 35);
             }
         }
     }
@@ -288,7 +289,7 @@ void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
             registry_->getComponent<games::rtype::client::EnemySoundComponent>(
                 entity);
         auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
-        audioLib->playSFX(*soundComp.deathSFX);
+        audioLib->playSFX(soundComp.deathSFX);
     }
     if (registry_->hasComponent<games::rtype::shared::TransformComponent>(
             entity)) {
@@ -296,7 +297,8 @@ void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
             registry_->getComponent<games::rtype::shared::TransformComponent>(
                 entity);
         games::rtype::client::VisualCueFactory::createFlash(
-            *registry_, {pos.x, pos.y}, sf::Color(255, 80, 0), 90.f, 0.45f, 20);
+            *registry_, {pos.x, pos.y}, rtype::display::Color(255, 80, 0, 255),
+            90.f, 0.45f, 20);
     }
     if (registry_->hasComponent<games::rtype::client::PlayerSoundComponent>(
             entity)) {
@@ -304,7 +306,7 @@ void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
             registry_->getComponent<games::rtype::client::PlayerSoundComponent>(
                 entity);
         auto audioLib = registry_->getSingleton<std::shared_ptr<AudioLib>>();
-        audioLib->playSFX(*soundComp.deathSFX);
+        audioLib->playSFX(soundComp.deathSFX);
     }
 }
 
@@ -417,8 +419,8 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
                 ->getComponent<rtype::games::rtype::shared::TransformComponent>(
                     entity);
         games::rtype::client::VisualCueFactory::createFlash(
-            *registry_, {pos.x, pos.y}, sf::Color(255, 80, 80), 70.f, 0.25f,
-            12);
+            *registry_, {pos.x, pos.y}, rtype::display::Color(255, 80, 80, 255),
+            70.f, 0.25f, 12);
     }
 
     lastKnownHealth_[event.entityId] = {event.current, event.max};
@@ -472,22 +474,23 @@ void ClientNetworkSystem::handlePowerUpEvent(const PowerUpEvent& event) {
             registry_
                 ->getComponent<rtype::games::rtype::shared::TransformComponent>(
                     entity);
-        sf::Color cueColor = sf::Color(180, 240, 255);
+        rtype::display::Color cueColor =
+            rtype::display::Color(180, 240, 255, 255);
         switch (powerUpType) {
             case rtype::games::rtype::shared::PowerUpType::Shield:
-                cueColor = sf::Color(255, 215, 0);
+                cueColor = rtype::display::Color(255, 215, 0, 255);
                 break;
             case rtype::games::rtype::shared::PowerUpType::SpeedBoost:
-                cueColor = sf::Color(120, 255, 200);
+                cueColor = rtype::display::Color(120, 255, 200, 255);
                 break;
             case rtype::games::rtype::shared::PowerUpType::RapidFire:
-                cueColor = sf::Color(120, 200, 255);
+                cueColor = rtype::display::Color(120, 200, 255, 255);
                 break;
             case rtype::games::rtype::shared::PowerUpType::DoubleDamage:
-                cueColor = sf::Color(255, 150, 150);
+                cueColor = rtype::display::Color(255, 150, 150, 255);
                 break;
             case rtype::games::rtype::shared::PowerUpType::HealthBoost:
-                cueColor = sf::Color(220, 180, 255);
+                cueColor = rtype::display::Color(220, 180, 255, 255);
                 break;
             default:
                 break;
@@ -582,20 +585,22 @@ ECS::Entity ClientNetworkSystem::defaultEntityFactory(
 
     switch (event.type) {
         case network::EntityType::Pickup: {
-            const sf::Color color(140, 220, 255);
+            const rtype::display::Color color(140, 220, 255);
             registry.emplaceComponent<games::rtype::client::Rectangle>(
                 entity, std::pair<float, float>{22.f, 22.f}, color, color);
             registry.emplaceComponent<games::rtype::client::BoxingComponent>(
-                entity, sf::FloatRect({0, 0}, {22.f, 22.f}));
+                entity, rtype::display::Vector2f{0, 0},
+                rtype::display::Vector2f{22.f, 22.f});
             registry.emplaceComponent<games::rtype::client::ZIndex>(entity, 0);
             break;
         }
         case network::EntityType::Obstacle: {
-            const sf::Color color(160, 160, 170);
+            const rtype::display::Color color(160, 160, 170);
             registry.emplaceComponent<games::rtype::client::Rectangle>(
                 entity, std::pair<float, float>{48.f, 48.f}, color, color);
             registry.emplaceComponent<games::rtype::client::BoxingComponent>(
-                entity, sf::FloatRect({0, 0}, {48.f, 48.f}));
+                entity, rtype::display::Vector2f{0, 0},
+                rtype::display::Vector2f{48.f, 48.f});
             registry.emplaceComponent<games::rtype::client::ZIndex>(entity, 0);
             break;
         }

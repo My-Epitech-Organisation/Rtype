@@ -15,7 +15,9 @@
 #include <rtype/ecs.hpp>
 #include <rtype/engine.hpp>
 
+#include "../shared/Config/PrefabLoader.hpp"
 #include "../shared/Systems/Systems.hpp"
+#include "Systems/Spawner/DataDrivenSpawnerSystem.hpp"
 #include "Systems/Systems.hpp"
 
 namespace rtype::games::rtype::server {
@@ -32,6 +34,7 @@ struct GameConfig {
     static constexpr float SCREEN_HEIGHT = 1080.0F;
     static constexpr float SPAWN_MARGIN = 50.0F;
     static constexpr float STATIONARY_SPAWN_INSET = 150.0F;
+    static constexpr float SPAWN_OFFSET = -30.0F;
 
     // Spawn parameters
     static constexpr float MIN_SPAWN_INTERVAL = 1.6F;
@@ -89,6 +92,41 @@ class GameEngine : public engine::AGameEngine {
         override;
 
     /**
+     * @brief Load a level for data-driven wave spawning
+     * @param levelId Level identifier (e.g., "level_1")
+     * @return true if level loaded successfully
+     */
+    bool loadLevel(const std::string& levelId);
+
+    /**
+     * @brief Load a level from file path
+     * @param filepath Path to level TOML file
+     * @return true if level loaded successfully
+     */
+    bool loadLevelFromFile(const std::string& filepath);
+
+    /**
+     * @brief Start the loaded level
+     */
+    void startLevel();
+
+    /**
+     * @brief Check if using data-driven spawning
+     * @return true if a level is loaded and data-driven mode is active
+     */
+    [[nodiscard]] bool isDataDrivenMode() const noexcept {
+        return _useDataDrivenSpawner;
+    }
+
+    /**
+     * @brief Set whether to use data-driven spawning
+     * @param enabled true to use data-driven spawner
+     */
+    void setDataDrivenMode(bool enabled) noexcept {
+        _useDataDrivenSpawner = enabled;
+    }
+
+    /**
      * @brief Spawn a projectile for a player
      * @param playerNetworkId Network ID of the player shooting
      * @param playerX Player X position
@@ -113,6 +151,14 @@ class GameEngine : public engine::AGameEngine {
         return _projectileSpawnerSystem;
     }
 
+    /**
+     * @brief Get the data-driven spawner (for wave management)
+     * @return Pointer to DataDrivenSpawnerSystem
+     */
+    DataDrivenSpawnerSystem* getDataDrivenSpawner() {
+        return _dataDrivenSpawnerSystem.get();
+    }
+
    private:
     /**
      * @brief Configure les signaux ECS pour les logs et statistiques
@@ -126,10 +172,13 @@ class GameEngine : public engine::AGameEngine {
 
     std::shared_ptr<ECS::Registry> _registry;
     std::unique_ptr<ECS::SystemScheduler> _systemScheduler;
+    std::unique_ptr<ECS::PrefabManager> _prefabManager;
 
     bool _running = false;
+    bool _useDataDrivenSpawner = true;
 
     std::unique_ptr<SpawnerSystem> _spawnerSystem;
+    std::unique_ptr<DataDrivenSpawnerSystem> _dataDrivenSpawnerSystem;
     std::unique_ptr<ProjectileSpawnerSystem> _projectileSpawnerSystem;
     std::unique_ptr<EnemyShootingSystem> _enemyShootingSystem;
     std::unique_ptr<shared::AISystem> _aiSystem;

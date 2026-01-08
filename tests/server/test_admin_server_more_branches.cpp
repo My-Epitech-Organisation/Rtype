@@ -81,7 +81,7 @@ TEST(AdminServerBranchesExtra, Lobby_Create_SucceedsAndDelete) {
         std::size_t getEntityCount() const override { return 0; }
         bool isRunning() const override { return true; }
         std::string getGameId() const override { return "test_game"; }
-        ProcessedEvent processEvent(const GameEvent&) override { return {GameEventType::GameOver, 0, 0, 0.0f, 0.0f, 0.0f, 0.0f, 0, false}; }
+        ProcessedEvent processEvent(const GameEvent&) override { return {GameEventType::GameOver, 0u, static_cast<uint8_t>(0), static_cast<uint8_t>(0), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, false}; }
         void syncEntityPositions(std::function<void(uint32_t, float, float, float, float)>) override {}
     };
 

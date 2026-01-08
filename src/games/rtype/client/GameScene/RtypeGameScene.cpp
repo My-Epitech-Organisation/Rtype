@@ -14,8 +14,6 @@
 #include <utility>
 #include <vector>
 
-#include <SFML/System/Clock.hpp>
-
 #include "AllComponents.hpp"
 #include "Components/CountdownComponent.hpp"
 #include "Components/TagComponent.hpp"
@@ -40,16 +38,15 @@ namespace rtype::games::rtype::client {
 RtypeGameScene::RtypeGameScene(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assetsManager,
-    std::shared_ptr<sf::RenderWindow> window,
+    std::shared_ptr<::rtype::display::IDisplay> display,
     std::shared_ptr<KeyboardActions> keybinds,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::shared_ptr<::rtype::client::NetworkClient> networkClient,
     std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem,
     std::shared_ptr<AudioLib> audioLib)
-    : AGameScene(std::move(registry), std::move(assetsManager),
-                 std::move(window), std::move(keybinds),
-                 std::move(switchToScene), std::move(networkClient),
-                 std::move(networkSystem)) {
+    : AGameScene(std::move(registry), std::move(assetsManager), display,
+                 std::move(keybinds), std::move(switchToScene),
+                 std::move(networkClient), std::move(networkSystem)) {
     if (_networkClient) {
         auto registry = _registry;
         auto switchToScene = _switchToScene;
@@ -155,7 +152,8 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
 }
 
 void RtypeGameScene::update() {
-    const float dt = _uiClock.restart().asSeconds();
+    const float dt = 0.016f;
+    _uiTimer += dt;
 
     updateDamageVignette(dt);
     updatePingDisplay();
@@ -230,17 +228,17 @@ void RtypeGameScene::update() {
     }
 }
 
-void RtypeGameScene::render(std::shared_ptr<sf::RenderWindow> window) {
+void RtypeGameScene::render(::rtype::display::IDisplay& display) {
     // R-Type specific rendering if needed
 }
 
-void RtypeGameScene::pollEvents(const sf::Event& event) {
-    if (event.is<sf::Event::KeyPressed>() ||
-        event.is<sf::Event::KeyReleased>()) {
+void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
+    if (event.type == ::rtype::display::EventType::KeyPressed ||
+        event.type == ::rtype::display::EventType::KeyReleased) {
         RtypeInputHandler::updateKeyState(event);
     }
-    if (event.is<sf::Event::KeyReleased>() ||
-        event.is<sf::Event::JoystickButtonReleased>()) {
+    if (event.type == ::rtype::display::EventType::KeyReleased ||
+        event.type == ::rtype::display::EventType::JoystickButtonReleased) {
         RtypeInputHandler::handleKeyReleasedEvent(event, _keybinds, _registry);
     }
 }
@@ -285,13 +283,14 @@ void RtypeGameScene::setupLocalPlayerCallback() {
 void RtypeGameScene::setupHud() {
     const float barWidth = 220.f;
     const float barHeight = 18.f;
-    const sf::Vector2f barPos{20.f, 20.f};
+    const ::rtype::display::Vector2f barPos{20.f, 20.f};
 
     auto bg = _registry->spawnEntity();
     _registry->emplaceComponent<rs::TransformComponent>(bg, barPos.x, barPos.y);
     _registry->emplaceComponent<Rectangle>(
         bg, std::pair<float, float>{barWidth, barHeight},
-        sf::Color(30, 35, 45, 220), sf::Color(30, 35, 45, 220));
+        ::rtype::display::Color(30, 35, 45, 220),
+        ::rtype::display::Color(30, 35, 45, 220));
     _registry->emplaceComponent<ZIndex>(bg, GraphicsConfig::ZINDEX_UI);
     _registry->emplaceComponent<HudTag>(bg);
     _registry->emplaceComponent<GameTag>(bg);
@@ -302,7 +301,8 @@ void RtypeGameScene::setupHud() {
                                                         barPos.y);
     _registry->emplaceComponent<Rectangle>(
         fill, std::pair<float, float>{barWidth, barHeight},
-        sf::Color(90, 220, 140, 240), sf::Color(90, 220, 140, 240));
+        ::rtype::display::Color(90, 220, 140, 240),
+        ::rtype::display::Color(90, 220, 140, 240));
     _registry->emplaceComponent<ZIndex>(fill, GraphicsConfig::ZINDEX_UI + 1);
     _registry->emplaceComponent<HudTag>(fill);
     _registry->emplaceComponent<GameTag>(fill);
@@ -310,9 +310,10 @@ void RtypeGameScene::setupHud() {
 
     auto hpText = EntityFactory::createStaticText(
         _registry, _assetsManager, "HP: --/--", "title_font",
-        sf::Vector2f{barPos.x + barWidth + strlen("HP: --/--") / 2 * 24,
-                     barPos.y + barHeight / 2},
-        24.f);
+        ::rtype::display::Vector2f{barPos.x + barWidth / 2.0f,
+                                   barPos.y + barHeight / 2.0f},
+        20.f);
+    _registry->emplaceComponent<CenteredTextTag>(hpText);
     _registry->emplaceComponent<ZIndex>(hpText, GraphicsConfig::ZINDEX_UI + 2);
     _registry->emplaceComponent<HudTag>(hpText);
     _registry->emplaceComponent<GameTag>(hpText);
@@ -321,7 +322,7 @@ void RtypeGameScene::setupHud() {
 
     auto pingText = EntityFactory::createStaticText(
         _registry, _assetsManager, "Ping: 0ms", "title_font",
-        sf::Vector2f{1800.f, 20.f}, 20.f);
+        ::rtype::display::Vector2f{1800.f, 20.f}, 20.f);
     _registry->emplaceComponent<ZIndex>(pingText,
                                         GraphicsConfig::ZINDEX_UI + 2);
     _registry->emplaceComponent<HudTag>(pingText);
@@ -408,20 +409,20 @@ void RtypeGameScene::updatePingDisplay() {
         text.textContent = "Ping: " + std::to_string(latency) + "ms";
 
         if (latency < 50) {
-            text.color = sf::Color(90, 220, 140);
+            text.color = ::rtype::display::Color(90, 220, 140, 255);
         } else if (latency < 100) {
-            text.color = sf::Color(220, 220, 90);
+            text.color = ::rtype::display::Color(220, 220, 90, 255);
         } else if (latency < 200) {
-            text.color = sf::Color(255, 165, 0);
+            text.color = ::rtype::display::Color(255, 165, 0, 255);
         } else {
-            text.color = sf::Color(220, 90, 90);
+            text.color = ::rtype::display::Color(220, 90, 90, 255);
         }
     }
 }
 
 void RtypeGameScene::setupDamageVignette() {
-    const float screenWidth = static_cast<float>(_window->getSize().x);
-    const float screenHeight = static_cast<float>(_window->getSize().y);
+    const float screenWidth = static_cast<float>(_display->getWindowSize().x);
+    const float screenHeight = static_cast<float>(_display->getWindowSize().y);
 
     _vignetteEntities.clear();
 
@@ -431,7 +432,7 @@ void RtypeGameScene::setupDamageVignette() {
         float inset = layerRatio * 80.f;
         float thickness = 50.f + layerRatio * 40.f;
 
-        const sf::Color vignetteColor(255, 0, 0, 0);
+        const ::rtype::display::Color vignetteColor(255, 0, 0, 0);
 
         auto top = _registry->spawnEntity();
         _registry->emplaceComponent<rs::TransformComponent>(top, 0.f, inset);
@@ -489,14 +490,13 @@ void RtypeGameScene::refreshDamageVignetteLayout() {
         return;
     }
 
-    const sf::Vector2u currentSize = _window->getSize();
-    const sf::View defaultView = _window->getDefaultView();
-    const float viewLeft =
-        defaultView.getCenter().x - defaultView.getSize().x / 2.0f;
-    const float viewTop =
-        defaultView.getCenter().y - defaultView.getSize().y / 2.0f;
-    const float screenWidth = defaultView.getSize().x;
-    const float screenHeight = defaultView.getSize().y;
+    const ::rtype::display::Vector2i currentSize = _display->getWindowSize();
+    const ::rtype::display::Vector2f viewCenter = _display->getViewCenter();
+    const ::rtype::display::Vector2f viewSize = _display->getViewSize();
+    const float viewLeft = viewCenter.x - viewSize.x / 2.0f;
+    const float viewTop = viewCenter.y - viewSize.y / 2.0f;
+    const float screenWidth = viewSize.x;
+    const float screenHeight = viewSize.y;
 
     int entityIndex = 0;
     for (int layer = 0; layer < kVignetteLayers; ++layer) {
@@ -583,8 +583,8 @@ void RtypeGameScene::updateDamageVignette(float deltaTime) {
             float layerAlpha = _vignetteAlpha * (1.0f - layerRatio * 0.7f);
 
             auto& rect = _registry->getComponent<Rectangle>(entity);
-            rect.currentColor =
-                sf::Color(255, 0, 0, static_cast<uint8_t>(layerAlpha));
+            rect.currentColor = ::rtype::display::Color(
+                255, 0, 0, static_cast<uint8_t>(layerAlpha));
             rect.mainColor = rect.currentColor;
         }
         ++layerIndex;
@@ -598,7 +598,7 @@ void RtypeGameScene::clearDamageVignette() {
         if (_registry->isAlive(entity) &&
             _registry->hasComponent<Rectangle>(entity)) {
             auto& rect = _registry->getComponent<Rectangle>(entity);
-            rect.currentColor = sf::Color(255, 0, 0, 0);
+            rect.currentColor = ::rtype::display::Color(255, 0, 0, 0);
             rect.mainColor = rect.currentColor;
         }
         ++layerIndex;
@@ -638,8 +638,8 @@ void RtypeGameScene::triggerDamageFlash(int damageAmount) {
             float layerAlpha = _vignetteAlpha * (1.0f - layerRatio * 0.7f);
 
             auto& rect = _registry->getComponent<Rectangle>(entity);
-            rect.currentColor =
-                sf::Color(255, 0, 0, static_cast<uint8_t>(layerAlpha));
+            rect.currentColor = ::rtype::display::Color(
+                255, 0, 0, static_cast<uint8_t>(layerAlpha));
             rect.mainColor = rect.currentColor;
         }
         ++layerIndex;
@@ -648,14 +648,14 @@ void RtypeGameScene::triggerDamageFlash(int damageAmount) {
     if (_healthBarFillEntity.has_value() &&
         _registry->isAlive(*_healthBarFillEntity)) {
         auto& rect = _registry->getComponent<Rectangle>(*_healthBarFillEntity);
-        rect.currentColor = sf::Color(255, 80, 80, 240);
+        rect.currentColor = ::rtype::display::Color(255, 80, 80, 240);
     }
 
     if (_healthTextEntity.has_value() &&
         _registry->isAlive(*_healthTextEntity) &&
         _registry->hasComponent<Text>(*_healthTextEntity)) {
         auto& text = _registry->getComponent<Text>(*_healthTextEntity);
-        text.color = sf::Color(255, 100, 100);
+        text.color = ::rtype::display::Color(255, 100, 100, 255);
     }
 }
 
@@ -703,10 +703,10 @@ void RtypeGameScene::spawnDamagePopup(int damage) {
     }
 
     try {
-        auto font = _assetsManager->fontManager->get("title_font");
+        auto font = "title_font";
         VisualCueFactory::createDamagePopup(
-            *_registry, sf::Vector2f(pos.x + 20.f, pos.y - 10.f), damage, font,
-            sf::Color(255, 60, 60));
+            *_registry, ::rtype::display::Vector2f(pos.x + 20.f, pos.y - 10.f),
+            damage, font, ::rtype::display::Color(255, 60, 60, 255));
         LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                       "[RtypeGameScene] Damage popup created successfully");
     } catch (const std::exception& e) {
@@ -720,14 +720,14 @@ void RtypeGameScene::resetHudColors() {
     if (_healthBarFillEntity.has_value() &&
         _registry->isAlive(*_healthBarFillEntity)) {
         auto& rect = _registry->getComponent<Rectangle>(*_healthBarFillEntity);
-        rect.currentColor = sf::Color(90, 220, 140, 240);
+        rect.currentColor = ::rtype::display::Color(90, 220, 140, 240);
     }
 
     if (_healthTextEntity.has_value() &&
         _registry->isAlive(*_healthTextEntity) &&
         _registry->hasComponent<Text>(*_healthTextEntity)) {
         auto& text = _registry->getComponent<Text>(*_healthTextEntity);
-        text.color = sf::Color::White;
+        text.color = ::rtype::display::Color::White();
     }
 }
 
@@ -746,16 +746,16 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     LOG_INFO("[RtypeGameScene] Disconnected from server, reason="
              << static_cast<int>(reason) << " message=" << reasonMessage);
 
-    const sf::Vector2u windowSize = _window->getSize();
+    const ::rtype::display::Vector2i windowSize = _display->getWindowSize();
     const float centerX = windowSize.x / 2.0F;
     const float centerY = windowSize.y / 2.0F;
 
     auto overlayEntity = _registry->spawnEntity();
     auto overlaySize = std::make_pair(static_cast<float>(windowSize.x),
                                       static_cast<float>(windowSize.y));
-    _registry->emplaceComponent<Rectangle>(overlayEntity, overlaySize,
-                                           sf::Color(0, 0, 0, 180),
-                                           sf::Color(0, 0, 0, 180));
+    _registry->emplaceComponent<Rectangle>(
+        overlayEntity, overlaySize, ::rtype::display::Color(0, 0, 0, 180),
+        ::rtype::display::Color(0, 0, 0, 180));
     auto& overlayPos =
         _registry->emplaceComponent<rs::TransformComponent>(overlayEntity);
     overlayPos.x = 0;
@@ -765,11 +765,11 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
 
     auto panelEntity = _registry->spawnEntity();
     auto panelSize = std::make_pair(500.0F, 300.0F);
-    _registry->emplaceComponent<Rectangle>(panelEntity, panelSize,
-                                           sf::Color(40, 40, 60, 255),
-                                           sf::Color(40, 40, 60, 255));
+    _registry->emplaceComponent<Rectangle>(
+        panelEntity, panelSize, ::rtype::display::Color(40, 40, 60, 255),
+        ::rtype::display::Color(40, 40, 60, 255));
     auto& panelRect = _registry->getComponent<Rectangle>(panelEntity);
-    panelRect.outlineColor = sf::Color(120, 120, 150, 255);
+    panelRect.outlineColor = ::rtype::display::Color(120, 120, 150, 255);
     panelRect.outlineThickness = 3.0F;
     auto& panelPos =
         _registry->emplaceComponent<rs::TransformComponent>(panelEntity);
@@ -779,10 +779,10 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     _disconnectPanelEntity = panelEntity;
 
     auto titleEntity = _registry->spawnEntity();
-    auto titleFont = _assetsManager->fontManager->get("title_font");
-    _registry->emplaceComponent<Text>(titleEntity, titleFont,
-                                      sf::Color(255, 100, 100), 36,
-                                      "Connection Lost");
+    auto titleFont = "title_font";
+    _registry->emplaceComponent<Text>(
+        titleEntity, titleFont, ::rtype::display::Color(255, 100, 100, 255), 36,
+        "Connection Lost");
     auto& titlePos =
         _registry->emplaceComponent<rs::TransformComponent>(titleEntity);
     titlePos.x = centerX - 150.0F;
@@ -792,9 +792,10 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     _disconnectTitleEntity = titleEntity;
 
     auto messageEntity = _registry->spawnEntity();
-    auto mainFont = _assetsManager->fontManager->get("main_font");
+    auto mainFont = "main_font";
     _registry->emplaceComponent<Text>(
-        messageEntity, mainFont, sf::Color(220, 220, 220), 20, reasonMessage);
+        messageEntity, mainFont, ::rtype::display::Color(220, 220, 220, 255),
+        20, reasonMessage);
     auto& messagePos =
         _registry->emplaceComponent<rs::TransformComponent>(messageEntity);
     messagePos.x = centerX - 220.0F;
@@ -805,12 +806,13 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     _registry->emplaceComponent<ZIndex>(messageEntity, 9002);
     _disconnectMessageEntity = messageEntity;
 
-    Text buttonText(mainFont, sf::Color::White, 22, "Return to Main Menu");
+    Text buttonText(mainFont, ::rtype::display::Color::White(), 22,
+                    "Return to Main Menu");
     rs::TransformComponent buttonPos{centerX - 125.0F, centerY + 80.0F};
     auto buttonSize = std::make_pair(250.0F, 50.0F);
-    Rectangle buttonRect(buttonSize, sf::Color(80, 120, 200, 255),
-                         sf::Color(100, 140, 220, 255));
-    buttonRect.outlineColor = sf::Color(120, 160, 240, 255);
+    Rectangle buttonRect(buttonSize, ::rtype::display::Color(80, 120, 200, 255),
+                         ::rtype::display::Color(100, 140, 220, 255));
+    buttonRect.outlineColor = ::rtype::display::Color(120, 160, 240, 255);
     buttonRect.outlineThickness = 2.0F;
 
     std::function<void()> buttonCallback = [this]() {

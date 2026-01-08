@@ -15,8 +15,6 @@
 
 #include <chrono>
 #include <map>
-
-#include <SFML/Window/Joystick.hpp>
 // clang-format on
 
 /**

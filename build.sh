@@ -205,7 +205,7 @@ echo "→ Step 3/4: Building project..."
 if [ "$BUILD_TESTS" = true ]; then
     cmake --build --preset "$CMAKE_PRESET" -- -j$(nproc 2>/dev/null || echo 4)
 else
-    cmake --build --preset "$CMAKE_PRESET" --target r-type_client r-type_server -- -j$(nproc 2>/dev/null || echo 4)
+    cmake --build --preset "$CMAKE_PRESET" --target r-type_client r-type_server rtype-display-sfml -- -j$(nproc 2>/dev/null || echo 4)
 fi
 echo "✓ Build complete"
 echo ""
@@ -217,6 +217,7 @@ echo "→ Step 4/4: Copying executables to repository root..."
 
 CLIENT_EXE="$BUILD_DIR/src/client/r-type_client"
 SERVER_EXE="$BUILD_DIR/src/server/r-type_server"
+DISPLAY_SO="$BUILD_DIR/lib/display/SFML/librtype-display-sfml.so"
 
 if [ -f "$CLIENT_EXE" ]; then
     cp "$CLIENT_EXE" "$PROJECT_ROOT/"
@@ -232,13 +233,20 @@ else
     echo "  ⚠ Warning: Server executable not found at $SERVER_EXE"
 fi
 
+if [ -f "$DISPLAY_SO" ]; then
+    cp "$DISPLAY_SO" "$PROJECT_ROOT/display.so"
+    echo "  ✓ Copied display.so"
+else
+    echo "  ⚠ Warning: Server executable not found at $DISPLAY_SO"
+fi
+
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║                   Build Complete!                        ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 echo "Executables are now in the repository root:"
-ls -lh "$PROJECT_ROOT"/r-type_* 2>/dev/null || echo "  (No executables found)"
+ls -lh "$PROJECT_ROOT"/r-type_* "$PROJECT_ROOT"/display.so 2>/dev/null || echo "  (No executables found)"
 echo ""
 echo "Dependency strategy used: $([ "$VCPKG_AVAILABLE" = true ] && echo "vcpkg" || echo "CPM")"
 echo "Build directory: $BUILD_DIR"

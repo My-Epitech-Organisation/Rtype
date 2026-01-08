@@ -24,13 +24,13 @@ void GameScene::update(float dt) {
     }
 }
 
-void GameScene::render(std::shared_ptr<sf::RenderWindow> window) {
+void GameScene::render(std::shared_ptr<rtype::display::IDisplay> window) {
     if (_gameScene) {
-        _gameScene->render(window);
+        _gameScene->render(*window);
     }
 }
 
-void GameScene::pollEvents(const sf::Event& e) {
+void GameScene::pollEvents(const rtype::display::Event& e) {
     if (_gameScene) {
         _gameScene->pollEvents(e);
     }
@@ -39,7 +39,7 @@ void GameScene::pollEvents(const sf::Event& e) {
 GameScene::GameScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> textureManager,
-    std::shared_ptr<sf::RenderWindow> window,
+    std::shared_ptr<rtype::display::IDisplay> window,
     std::shared_ptr<KeyboardActions> keybinds,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::unique_ptr<IGameScene> gameScene,
@@ -63,8 +63,8 @@ GameScene::GameScene(
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[GameScene] Loading game textures");
     this->_assetsManager->textureManager->load(
-        "bdos_enemy",
-        this->_assetsManager->configGameAssets.assets.textures.Enemy);
+        "bdos_enemy_normal",
+        this->_assetsManager->configGameAssets.assets.textures.EnemyNormal);
     this->_assetsManager->textureManager->load(
         "projectile_player_laser",
         this->_assetsManager->configGameAssets.assets.textures.missileLaser);

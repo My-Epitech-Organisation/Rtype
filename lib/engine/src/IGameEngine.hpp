@@ -58,6 +58,7 @@ struct ProcessedEvent {
     GameEventType type;
     uint32_t networkId;
     uint8_t networkEntityType;
+    uint8_t subType{0};
     float x;
     float y;
     float vx;

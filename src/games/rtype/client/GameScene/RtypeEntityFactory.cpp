@@ -11,13 +11,17 @@
 #include <random>
 #include <utility>
 
+#include "../../shared/Components/BoundingBoxComponent.hpp"
+#include "../../shared/Components/EnemyTypeComponent.hpp"
+#include "../../shared/Components/HealthComponent.hpp"
+#include "../../shared/Components/NetworkIdComponent.hpp"
+#include "../../shared/Components/PlayerIdComponent.hpp"
+#include "../../shared/Components/PowerUpTypeComponent.hpp"
+#include "../../shared/Config/EntityConfig/EntityConfig.hpp"
+#include "../../shared/Config/GameConfig/RTypeGameConfig.hpp"
+#include "../Components/ColorTintComponent.hpp"
 #include "../Components/RectangleComponent.hpp"
 #include "../Systems/PlayerAnimationSystem.hpp"
-#include "../shared/Components/BoundingBoxComponent.hpp"
-#include "../shared/Components/HealthComponent.hpp"
-#include "../shared/Components/NetworkIdComponent.hpp"
-#include "../shared/Components/PlayerIdComponent.hpp"
-#include "../shared/Config/GameConfig/RTypeGameConfig.hpp"
 #include "AllComponents.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Components/AnnimationComponent.hpp"
@@ -104,7 +108,9 @@ RtypeEntityFactory::createNetworkEntityFactory(
             }
 
             case ::rtype::network::EntityType::Bydos:
-                setupBydosEntity(reg, assetsManager, entity);
+                setupBydosEntity(
+                    reg, assetsManager, entity,
+                    static_cast<shared::EnemyVariant>(event.subType));
                 break;
 
             case ::rtype::network::EntityType::Missile:
@@ -112,7 +118,7 @@ RtypeEntityFactory::createNetworkEntityFactory(
                 break;
 
             case ::rtype::network::EntityType::Pickup:
-                setupPickupEntity(reg, entity, event.entityId);
+                setupPickupEntity(reg, entity, event.entityId, event.subType);
                 break;
 
             case ::rtype::network::EntityType::Obstacle:
@@ -159,12 +165,7 @@ void RtypeEntityFactory::setupPlayerEntity(
 
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] Getting player_vessel texture");
-    auto& playerTexture = assetsManager->textureManager->get("player_vessel");
-    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
-                  "[RtypeEntityFactory] Texture size: "
-                      << playerTexture.getSize().x << "x"
-                      << playerTexture.getSize().y);
-    reg.emplaceComponent<Image>(entity, playerTexture);
+    reg.emplaceComponent<Image>(entity, "player_vessel");
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] Image component added");
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({left, top}),
@@ -173,49 +174,180 @@ void RtypeEntityFactory::setupPlayerEntity(
                   "[RtypeEntityFactory] TextureRect set to: left="
                       << left << " top=" << top << " width=" << width
                       << " height=" << height);
-    reg.emplaceComponent<Size>(entity, 4, 4);
+    reg.emplaceComponent<Size>(entity, 4.0f, 4.0f);
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] Size component added");
+
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    auto playerConfigOpt = configRegistry.getPlayer("default_ship");
+
+    float hitboxWidth = 132.0f;
+    float hitboxHeight = 68.0f;
+    int32_t health = 1;
+
+    if (playerConfigOpt.has_value()) {
+        const auto& playerConfig = playerConfigOpt.value().get();
+        hitboxWidth = playerConfig.hitboxWidth;
+        hitboxHeight = playerConfig.hitboxHeight;
+        health = playerConfig.health;
+    } else {
+        LOG_WARNING(
+            "[RtypeEntityFactory] Could not load player config, using fallback "
+            "values");
+    }
+
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, 132.0f, 68.0f);
-    reg.emplaceComponent<shared::HealthComponent>(entity, 1, 1);
+        entity, hitboxWidth, hitboxHeight);
+    reg.emplaceComponent<shared::HealthComponent>(entity, health, health);
     reg.emplaceComponent<PlayerTag>(entity);
-    reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {132.f, 68.f}));
-    reg.getComponent<BoxingComponent>(entity).outlineColor = sf::Color::White;
-    reg.getComponent<BoxingComponent>(entity).fillColor =
-        sf::Color(0, 200, 255, 45);
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0, 0},
+        ::rtype::display::Vector2f{hitboxWidth, hitboxHeight});
+    reg.getComponent<BoxingComponent>(entity).outlineColor =
+        ::rtype::display::Color::White();
+    reg.getComponent<BoxingComponent>(entity).fillColor = {0, 200, 255, 45};
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<PlayerSoundComponent>(
         entity, assetsManager->soundManager->get("player_spawn"),
         assetsManager->soundManager->get("player_death"));
+    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+    lib->playSFX(assetsManager->soundManager->get("player_spawn"));
 }
 
 void RtypeEntityFactory::setupBydosEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
-    ECS::Entity entity) {
+    ECS::Entity entity, shared::EnemyVariant subType) {
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] Adding Bydos components");
-    reg.emplaceComponent<Image>(
-        entity, assetsManager->textureManager->get("bdos_enemy"));
-    reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
-                                      std::pair<int, int>({33, 34}));
-    reg.emplaceComponent<Size>(entity, 2, 2);
+
+    auto variant =
+        static_cast<::rtype::games::rtype::shared::EnemyVariant>(subType);
+    std::string enemyId =
+        ::rtype::games::rtype::shared::EnemyTypeComponent::variantToString(
+            variant);
+
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    auto enemyConfigOpt = configRegistry.getEnemy(enemyId);
+
+    float hitboxWidth = 66.0f;
+    float hitboxHeight = 68.0f;
+    int32_t health = 10;
+
+    if (enemyConfigOpt.has_value()) {
+        const auto& enemyConfig = enemyConfigOpt.value().get();
+        hitboxWidth = enemyConfig.hitboxWidth;
+        hitboxHeight = enemyConfig.hitboxHeight;
+        health = enemyConfig.health;
+        LOG_DEBUG(
+            "[RtypeEntityFactory] Loaded config for enemy type: " << enemyId);
+    } else {
+        LOG_WARNING("[RtypeEntityFactory] Could not load enemy config for "
+                    << enemyId << ", using fallback values");
+    }
+
+    reg.emplaceComponent<::rtype::games::rtype::shared::EnemyTypeComponent>(
+        entity, variant, enemyId);
+
+    switch (subType) {
+        case shared::EnemyVariant::Basic:
+            LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                         "[RtypeEntityFactory] Setting up Basic Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_normal");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({0, 0}),
+                                              std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+            break;
+        case shared::EnemyVariant::Shooter:
+            LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                         "[RtypeEntityFactory] Setting up Shooter Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_shooter");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({82, 64}),
+                                              std::pair<int, int>({33, 32}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+            break;
+        case shared::EnemyVariant::Chaser:
+            LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                         "[RtypeEntityFactory] Setting up Chaser Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_chaser");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({20, 0}),
+                                              std::pair<int, int>({64, 54}));
+            reg.emplaceComponent<Size>(entity, 1.0f, 1.0f);
+            break;
+        case shared::EnemyVariant::Wave:
+            LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                         "[RtypeEntityFactory] Setting up Wave Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_wave");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({132, 34}),
+                                              std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+            break;
+        case shared::EnemyVariant::Patrol:
+            LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                         "[RtypeEntityFactory] Setting up Patrol Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_patrol");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({0, 0}),
+                                              std::pair<int, int>({33, 36}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+            break;
+        case shared::EnemyVariant::Heavy:
+            LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                         "[RtypeEntityFactory] Setting up Heavy Bydos enemy");
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_heavy");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({17, 66}),
+                                              std::pair<int, int>({33, 33}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+            break;
+        default:
+            LOG_WARNING_CAT(
+                ::rtype::LogCategory::ECS,
+                std::string("[RtypeEntityFactory] Unknown Bydos variant, "
+                            "defaulting to Bydos normal, type received: " +
+                            std::to_string(static_cast<uint8_t>(subType))));
+            reg.emplaceComponent<Image>(entity, "bdos_enemy_normal");
+            reg.emplaceComponent<TextureRect>(entity,
+                                              std::pair<int, int>({0, 0}),
+                                              std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+            break;
+    }
+    if (enemyConfigOpt.has_value()) {
+        const auto& enemyConfig = enemyConfigOpt.value().get();
+        LOG_INFO("[RtypeEntityFactory] Adding ColorTint: R="
+                 << static_cast<int>(enemyConfig.colorR)
+                 << " G=" << static_cast<int>(enemyConfig.colorG)
+                 << " B=" << static_cast<int>(enemyConfig.colorB)
+                 << " A=" << static_cast<int>(enemyConfig.colorA));
+        reg.emplaceComponent<ColorTint>(entity, enemyConfig.colorR,
+                                        enemyConfig.colorG, enemyConfig.colorB,
+                                        enemyConfig.colorA);
+    } else {
+        LOG_WARNING(
+            "[RtypeEntityFactory] Could not load enemy config, adding default "
+            "ColorTint (white)");
+        reg.emplaceComponent<ColorTint>(entity, 255, 255, 255, 255);
+    }
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, 66.0f, 68.0f);
-    reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {66.f, 68.f}));
-    reg.getComponent<BoxingComponent>(entity).outlineColor =
-        sf::Color(255, 120, 0);
-    reg.getComponent<BoxingComponent>(entity).fillColor =
-        sf::Color(255, 120, 0, 40);
+        entity, hitboxWidth, hitboxHeight);
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0, 0},
+        ::rtype::display::Vector2f{hitboxWidth, hitboxHeight});
+    reg.getComponent<BoxingComponent>(entity).outlineColor = {255, 120, 0, 255};
+    reg.getComponent<BoxingComponent>(entity).fillColor = {255, 120, 0, 40};
     reg.emplaceComponent<ZIndex>(entity, 0);
-    reg.emplaceComponent<shared::HealthComponent>(entity, 10, 10);
+    reg.emplaceComponent<shared::HealthComponent>(entity, health, health);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<EnemySoundComponent>(
         entity, assetsManager->soundManager->get("bydos_spawn"),
         assetsManager->soundManager->get("bydos_death"));
+    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+    lib->playSFX(assetsManager->soundManager->get("bydos_spawn"));
 }
 
 void RtypeEntityFactory::setupMissileEntity(
@@ -223,52 +355,95 @@ void RtypeEntityFactory::setupMissileEntity(
     ECS::Entity entity) {
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] Adding Missile components");
-    reg.emplaceComponent<Image>(
-        entity, assetsManager->textureManager->get("projectile_player_laser"));
+
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    auto projectileConfigOpt = configRegistry.getProjectile("basic_bullet");
+
+    float hitboxWidth = 33.0f;
+    float hitboxHeight = 34.0f;
+
+    if (projectileConfigOpt.has_value()) {
+        const auto& projectileConfig = projectileConfigOpt.value().get();
+        hitboxWidth = projectileConfig.hitboxWidth;
+        hitboxHeight = projectileConfig.hitboxHeight;
+    } else {
+        LOG_WARNING(
+            "[RtypeEntityFactory] Could not load projectile config, using "
+            "fallback values");
+    }
+    reg.emplaceComponent<Image>(entity, "projectile_player_laser");
     reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
                                       std::pair<int, int>({33, 34}));
-    reg.emplaceComponent<Size>(entity, 1.75, 1.75);
+    reg.emplaceComponent<Size>(entity, 1.75f, 1.75f);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, 33.0f, 34.0f);
+        entity, hitboxWidth, hitboxHeight);
     reg.emplaceComponent<shared::ProjectileTag>(entity);
-    reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {33.f, 34.f}));
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0, 0},
+        ::rtype::display::Vector2f{hitboxWidth, hitboxHeight});
     reg.emplaceComponent<Animation>(entity, 4, 0.5, true);
-    reg.getComponent<BoxingComponent>(entity).outlineColor =
-        sf::Color(0, 220, 180);
-    reg.getComponent<BoxingComponent>(entity).fillColor =
-        sf::Color(0, 220, 180, 35);
+    reg.getComponent<BoxingComponent>(entity).outlineColor = {0, 220, 180, 255};
+    reg.getComponent<BoxingComponent>(entity).fillColor = {0, 220, 180, 35};
     reg.emplaceComponent<ZIndex>(entity, 1);
     reg.emplaceComponent<shared::LifetimeComponent>(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
     reg.emplaceComponent<GameTag>(entity);
+    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+    lib->playSFX(assetsManager->soundManager->get("laser_sfx"));
 
     if (reg.hasComponent<shared::TransformComponent>(entity)) {
         const auto& pos = reg.getComponent<shared::TransformComponent>(entity);
         VisualCueFactory::createFlash(reg, {pos.x, pos.y},
-                                      sf::Color(0, 255, 220), 52.f, 0.25f, 10);
+                                      ::rtype::display::Color{0, 255, 220, 255},
+                                      52.f, 0.25f, 10);
     }
 }
 
 void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
                                            ECS::Entity entity,
-                                           std::uint32_t networkId) {
+                                           std::uint32_t networkId,
+                                           uint8_t subType) {
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] Adding Pickup components");
-    static const std::array<sf::Color, 4> kColors = {
-        sf::Color(120, 200, 255), sf::Color(170, 120, 255),
-        sf::Color(120, 255, 170), sf::Color(255, 200, 120)};
-    const sf::Color color = kColors[networkId % kColors.size()];
+    auto variant = static_cast<shared::PowerUpVariant>(subType);
+    std::string configId =
+        shared::PowerUpTypeComponent::variantToString(variant);
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Pickup subType="
+                      << static_cast<int>(subType) << " variant=" << configId);
+
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    auto powerUpConfig = configRegistry.getPowerUp(configId);
+
+    ::rtype::display::Color color = ::rtype::display::Color::White();
+    if (powerUpConfig.has_value()) {
+        const auto& config = powerUpConfig->get();
+        color = ::rtype::display::Color(config.colorR, config.colorG,
+                                        config.colorB, config.colorA);
+        LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                      "[RtypeEntityFactory] Adding ColorTint: R="
+                          << static_cast<int>(config.colorR)
+                          << " G=" << static_cast<int>(config.colorG)
+                          << " B=" << static_cast<int>(config.colorB)
+                          << " A=" << static_cast<int>(config.colorA));
+        reg.emplaceComponent<ColorTint>(entity, config.colorR, config.colorG,
+                                        config.colorB, config.colorA);
+    } else {
+        LOG_WARNING(
+            "[RtypeEntityFactory] No config found for power-up: " << configId);
+    }
 
     reg.emplaceComponent<Rectangle>(entity, std::pair<float, float>{24.f, 24.f},
                                     color, color);
     reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
-    reg.getComponent<Rectangle>(entity).outlineColor = sf::Color::White;
-    reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {24.f, 24.f}));
+    reg.getComponent<Rectangle>(entity).outlineColor =
+        ::rtype::display::Color::White();
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0, 0},
+        ::rtype::display::Vector2f{24.f, 24.f});
     reg.getComponent<BoxingComponent>(entity).outlineColor = color;
-    reg.getComponent<BoxingComponent>(entity).fillColor =
-        sf::Color(color.r, color.g, color.b, 45);
+    reg.getComponent<BoxingComponent>(entity).fillColor = {color.r, color.g,
+                                                           color.b, 45};
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
@@ -281,16 +456,15 @@ void RtypeEntityFactory::setupObstacleEntity(
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] Adding Obstacle components");
 
-    std::random_device rd;   // Seed
-    std::mt19937 gen(rd());  // Mersenne Twister engine
+    static thread_local std::random_device rd;
+    static thread_local std::mt19937 gen(rd());
     std::uniform_int_distribution<> dist(1, GraphicsConfig::NBR_MAX_OBSTACLES);
 
     int value = dist(gen);
     std::string textureName = "projectile" + std::to_string(value);
 
-    auto& projectileTexture = assetsManager->textureManager->get(textureName);
-    reg.emplaceComponent<Image>(entity, projectileTexture);
-    reg.emplaceComponent<Size>(entity, 0.5, 0.5);
+    reg.emplaceComponent<Image>(entity, textureName);
+    reg.emplaceComponent<Size>(entity, 0.5f, 0.5f);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
 }

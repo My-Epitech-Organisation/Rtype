@@ -25,12 +25,9 @@ target_include_directories(rtype_game_client_gamescene PUBLIC
 target_compile_features(rtype_game_client_gamescene PUBLIC cxx_std_20)
 
 target_link_libraries(rtype_game_client_gamescene PUBLIC
-    SFML::Graphics
-    SFML::Window
-    SFML::Audio
-    SFML::System
     engine
     network
+    rtype-display-clock
     rtype_game_shared
     rtype_game_client_components
 )

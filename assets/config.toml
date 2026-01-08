@@ -17,8 +17,13 @@ EnemySpawn = "audio/enemySpawn.mp3"
 # Textures Réferences
 [Textures]
 Player = "img/playerTexture.gif"
-Enemy = "img/bdosTexture.gif"
-# Backougrnd assets
+EnemyNormal = "img/bdosTextureNormal.gif"
+EnemyChaser = "img/bdosTextureChaser.gif"
+EnemyHeavy = "img/bdosTextureHeavy.gif"
+EnemyPatrol = "img/bdosTexturePatrol.gif"
+EnemyShooter = "img/bdosTextureShooter.gif"
+EnemyWave = "img/bdosTextureWave.gif"
+# Background assets
 Background = "img/bgMainMenu.png"
 Sun = "img/sun.png"
 BigAsteroids = "img/bigAsteroids.png"

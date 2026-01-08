@@ -22,9 +22,9 @@
 namespace rtype::games::rtype::client {
 
 void VisualCueFactory::createFlash(ECS::Registry& registry,
-                                   const sf::Vector2f& center,
-                                   const sf::Color& color, float size,
-                                   float lifetime, int zIndex) {
+                                   const ::rtype::display::Vector2f& center,
+                                   const ::rtype::display::Color& color,
+                                   float size, float lifetime, int zIndex) {
     if (registry.hasSingleton<AccessibilitySettings>()) {
         const auto& acc = registry.getSingleton<AccessibilitySettings>();
         if (!acc.showVisualCues) {
@@ -40,7 +40,7 @@ void VisualCueFactory::createFlash(ECS::Registry& registry,
         entity, std::pair<float, float>({size, size}), color, color);
     auto& rect = registry.getComponent<Rectangle>(entity);
     rect.currentColor = color;
-    rect.outlineColor = sf::Color::White;
+    rect.outlineColor = ::rtype::display::Color::White();
     rect.outlineThickness = 3.f;
 
     registry
@@ -52,11 +52,10 @@ void VisualCueFactory::createFlash(ECS::Registry& registry,
     registry.emplaceComponent<GameTag>(entity);
 }
 
-void VisualCueFactory::createDamagePopup(ECS::Registry& registry,
-                                         const sf::Vector2f& position,
-                                         int damage,
-                                         std::shared_ptr<sf::Font> font,
-                                         const sf::Color& color) {
+void VisualCueFactory::createDamagePopup(
+    ECS::Registry& registry, const ::rtype::display::Vector2f& position,
+    int damage, const std::string& fontName,
+    const ::rtype::display::Color& color) {
     auto entity = registry.spawnEntity();
     LOG_DEBUG_CAT(
         ::rtype::LogCategory::Graphics,
@@ -64,9 +63,10 @@ void VisualCueFactory::createDamagePopup(ECS::Registry& registry,
             " dmg=" + std::to_string(damage));
 
     std::string damageText = "-" + std::to_string(damage);
-    registry.emplaceComponent<Text>(entity, font, color, 32, damageText);
+    registry.emplaceComponent<Text>(entity, fontName, color, 32, damageText);
 
     registry.emplaceComponent<StaticTextTag>(entity);
+    registry.emplaceComponent<CenteredTextTag>(entity);
 
     static thread_local std::random_device rd;
     static thread_local std::mt19937 gen(rd());
@@ -83,6 +83,35 @@ void VisualCueFactory::createDamagePopup(ECS::Registry& registry,
 
     registry.emplaceComponent<::rtype::games::rtype::shared::LifetimeComponent>(
         entity, 1.2f);
+    registry.emplaceComponent<GameTag>(entity);
+}
+
+void VisualCueFactory::createPowerUpPopup(
+    ECS::Registry& registry, const ::rtype::display::Vector2<float>& position,
+    const std::string& powerUpName, const std::string& font,
+    const ::rtype::display::Color& color) {
+    auto entity = registry.spawnEntity();
+    LOG_DEBUG("[VisualCueFactory] PowerUp popup entity=" +
+              std::to_string(entity.id) + " name=" + powerUpName);
+
+    registry.emplaceComponent<Text>(entity, font, color, 28, powerUpName);
+    registry.emplaceComponent<StaticTextTag>(entity);
+
+    static thread_local std::random_device rd;
+    static thread_local std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dist(-15, 15);
+    float offsetX = static_cast<float>(dist(gen));
+    registry
+        .emplaceComponent<::rtype::games::rtype::shared::TransformComponent>(
+            entity, position.x + offsetX, position.y - 30.f);
+
+    registry.emplaceComponent<::rtype::games::rtype::shared::VelocityComponent>(
+        entity, 0.f, -60.f);
+
+    registry.emplaceComponent<ZIndex>(entity, 200);
+
+    registry.emplaceComponent<::rtype::games::rtype::shared::LifetimeComponent>(
+        entity, 1.5f);
     registry.emplaceComponent<GameTag>(entity);
 }
 

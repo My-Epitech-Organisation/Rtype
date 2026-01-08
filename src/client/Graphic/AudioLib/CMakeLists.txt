@@ -7,3 +7,8 @@ target_link_libraries(rtype-graphic-audio
     PUBLIC
     SFML::Audio
 )
+
+target_include_directories(rtype-graphic-audio
+    PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+)

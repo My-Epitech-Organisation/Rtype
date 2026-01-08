@@ -189,10 +189,8 @@ void Lobby::update(float dt) {
                 int displayTime = static_cast<int>(std::ceil(_countdownTimer));
                 text.textContent =
                     "Game starting in: " + std::to_string(displayTime);
-                text.text.setString(text.textContent);
             } else {
                 text.textContent = "GO!";
-                text.text.setString(text.textContent);
             }
         }
 
@@ -207,9 +205,9 @@ void Lobby::update(float dt) {
     }
 }
 
-void Lobby::render(std::shared_ptr<sf::RenderWindow> window) {}
+void Lobby::render(std::shared_ptr<rtype::display::IDisplay> window) {}
 
-void Lobby::pollEvents(const sf::Event& e) {}
+void Lobby::pollEvents(const rtype::display::Event& e) {}
 
 void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
     LOG_INFO("[Lobby] Creating player info menu for userId: "
@@ -222,7 +220,9 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
 
     auto playerSection = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "",
-        sf::FloatRect({sectionX, kBoxTopY}, {kBoxWidth, kBoxHeight}), 1);
+        ::rtype::display::Rect<float>(sectionX, kBoxTopY, kBoxWidth,
+                                      kBoxHeight),
+        1);
     this->_listUser.insert({userId, playerSection});
     this->_listEntity.insert(this->_listEntity.end(), playerSection.begin(),
                              playerSection.end());
@@ -232,7 +232,7 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
     auto playerLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager,
         "Player " + std::to_string(userId), "main_font",
-        sf::Vector2f(myCenterX - 60, kBoxTopY + 20), 36);
+        ::rtype::display::Vector2<float>(myCenterX - 60, kBoxTopY + 20), 36);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         playerLabel, 3);
     if (this->_registry->hasComponent<rtype::games::rtype::client::Text>(
@@ -240,7 +240,7 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
         auto& text =
             this->_registry->getComponent<rtype::games::rtype::client::Text>(
                 playerLabel);
-        text.color = sf::Color::Yellow;
+        text.color = ::rtype::display::Color::Yellow();
     }
     this->_listUser[userId].push_back(playerLabel);
     this->_listEntity.push_back(playerLabel);
@@ -248,7 +248,7 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
 
     auto readyIndicator = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "WAITING...", "main_font",
-        sf::Vector2f(myCenterX - 80, kBoxTopY + 70), 28);
+        ::rtype::display::Vector2<float>(myCenterX - 80, kBoxTopY + 70), 28);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         readyIndicator, 3);
     if (this->_registry->hasComponent<rtype::games::rtype::client::Text>(
@@ -256,7 +256,7 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
         auto& text =
             this->_registry->getComponent<rtype::games::rtype::client::Text>(
                 readyIndicator);
-        text.color = sf::Color::Yellow;
+        text.color = ::rtype::display::Color::Yellow();
     }
     _playerReadyIndicators[userId] = readyIndicator;
     this->_listUser[userId].push_back(readyIndicator);
@@ -267,11 +267,11 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
     auto backBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 36, "Disconnect"),
+            "main_font", ::rtype::display::Color::White(), 36, "Disconnect"),
         rtype::games::rtype::shared::TransformComponent(100, 900),
-        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color(200, 0, 0),
-                                               sf::Color::Red),
+        rtype::games::rtype::client::Rectangle(
+            {400, 75}, ::rtype::display::Color(200, 0, 0),
+            ::rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([this]() {
             try {
                 LOG_INFO(
@@ -326,13 +326,14 @@ void Lobby::_removePlayerInfoMenu(uint32_t userId) {
 void Lobby::_initInfoMenu() {
     auto section = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "",
-        sf::FloatRect({kBaseX, kBaseY}, {kBaseW, kBaseH}));
+        ::rtype::display::Rect<float>(kBaseX, kBaseY, kBaseW, kBaseH));
     this->_listEntity.insert(this->_listEntity.end(), section.begin(),
                              section.end());
     auto title = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Game Info", "main_font",
-        sf::Vector2f(static_cast<float>(kBaseX + kBaseW / 2 - 100),
-                     static_cast<float>(kBaseY + 20)),
+        ::rtype::display::Vector2<float>(
+            static_cast<float>(kBaseX + kBaseW / 2 - 100),
+            static_cast<float>(kBaseY + 20)),
         48);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         title, 1);
@@ -341,14 +342,13 @@ void Lobby::_initInfoMenu() {
     _readyButtonEntity = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 32, "Ready"),
+            "main_font", ::rtype::display::Color::White(), 32, "Ready"),
         rtype::games::rtype::shared::TransformComponent(
             static_cast<float>(kBaseX + kBaseW - 280),
             static_cast<float>(kBaseY + kBaseH - 70)),
-        rtype::games::rtype::client::Rectangle(std::pair<int, int>(250, 50),
-                                               sf::Color(70, 130, 180),
-                                               sf::Color(0, 150, 0)),
+        rtype::games::rtype::client::Rectangle(
+            std::pair<int, int>(250, 50), ::rtype::display::Color(70, 130, 180),
+            ::rtype::display::Color(0, 150, 0)),
         this->_assetsManager, std::function<void()>([this]() {
             _isReady = !_isReady;
 
@@ -358,7 +358,6 @@ void Lobby::_initInfoMenu() {
                     _registry->getComponent<rtype::games::rtype::client::Text>(
                         _readyButtonEntity);
                 text.textContent = _isReady ? "Not Ready" : "Ready";
-                text.text.setString(text.textContent);
             }
             if (_registry->hasComponent<rtype::games::rtype::client::Rectangle>(
                     _readyButtonEntity)) {
@@ -366,10 +365,10 @@ void Lobby::_initInfoMenu() {
                     _registry
                         ->getComponent<rtype::games::rtype::client::Rectangle>(
                             _readyButtonEntity);
-                rect.mainColor =
-                    _isReady ? sf::Color(0, 150, 0) : sf::Color(70, 130, 180);
+                rect.mainColor = _isReady
+                                     ? ::rtype::display::Color(0, 150, 0)
+                                     : ::rtype::display::Color(70, 130, 180);
                 rect.currentColor = rect.mainColor;
-                rect.rectangle.setFillColor(rect.currentColor);
             }
 
             if (_networkSystem) {
@@ -396,7 +395,6 @@ void Lobby::_initInfoMenu() {
                             ->getComponent<rtype::games::rtype::client::Text>(
                                 _countdownTextEntity);
                     text.textContent = "";
-                    text.text.setString(text.textContent);
                 }
                 LOG_INFO("[Lobby] Countdown cancelled by player");
             }
@@ -408,14 +406,15 @@ void Lobby::_initInfoMenu() {
 
     _countdownTextEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "main_font",
-        sf::Vector2f(static_cast<float>(kBaseX + kBaseW / 2 - 150),
-                     static_cast<float>(kBaseY + kBaseH / 2)),
+        ::rtype::display::Vector2<float>(
+            static_cast<float>(kBaseX + kBaseW / 2 - 150),
+            static_cast<float>(kBaseY + kBaseH / 2)),
         64);
     if (_registry->hasComponent<rtype::games::rtype::client::Text>(
             _countdownTextEntity)) {
         auto& text = _registry->getComponent<rtype::games::rtype::client::Text>(
             _countdownTextEntity);
-        text.color = sf::Color::Yellow;
+        text.color = ::rtype::display::Color::Yellow();
     }
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         _countdownTextEntity, 10);
@@ -424,7 +423,7 @@ void Lobby::_initInfoMenu() {
 
 Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
              std::shared_ptr<AssetManager> assetManager,
-             std::shared_ptr<sf::RenderWindow> window,
+             std::shared_ptr<::rtype::display::IDisplay> window,
              std::function<void(const SceneManager::Scene&)> switchToScene,
              std::shared_ptr<rtype::client::NetworkClient> networkClient,
              std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem,
@@ -469,7 +468,6 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
                             ->getComponent<rtype::games::rtype::client::Text>(
                                 _countdownTextEntity);
                     text.textContent = "";
-                    text.text.setString(text.textContent);
                 }
                 LOG_INFO("[Lobby] Countdown cancelled by server");
             }
@@ -693,13 +691,11 @@ void Lobby::_updatePlayerReadyIndicator(uint32_t userId, bool isReady) {
             indicatorEntity);
         if (isReady) {
             text.textContent = "READY";
-            text.color = sf::Color::Green;
+            text.color = ::rtype::display::Color::Green();
         } else {
             text.textContent = "WAITING...";
-            text.color = sf::Color::Yellow;
+            text.color = ::rtype::display::Color::Yellow();
         }
-        text.text.setString(text.textContent);
-        text.text.setFillColor(text.color);
     }
 }
 

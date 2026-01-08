@@ -37,6 +37,7 @@ namespace rtype::client {
 struct EntitySpawnEvent {
     std::uint32_t entityId;
     network::EntityType type;
+    std::uint8_t subType{0};
     float x;
     float y;
     std::uint32_t userId = 0;

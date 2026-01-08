@@ -176,10 +176,12 @@ class NetworkServer {
      *
      * @param id Entity ID (must be unique)
      * @param type Entity type (Player, Bydos, Missile, etc.)
+     * @param subType Entity subtype (enemy variant, etc.)
      * @param x Initial X position
      * @param y Initial Y position
      */
-    void spawnEntity(std::uint32_t id, EntityType type, float x, float y);
+    void spawnEntity(std::uint32_t id, EntityType type, std::uint8_t subType,
+                     float x, float y);
 
     /**
      * @brief Update entity position/velocity on all clients
@@ -278,11 +280,13 @@ class NetworkServer {
      * @param userId Target client's user ID
      * @param id Entity ID
      * @param type Entity type
+     * @param subType Entity subtype (enemy variant, etc.)
      * @param x Initial X position
      * @param y Initial Y position
      */
     void spawnEntityToClient(std::uint32_t userId, std::uint32_t id,
-                             EntityType type, float x, float y);
+                             EntityType type, std::uint8_t subType, float x,
+                             float y);
 
     /**
      * @brief Update entity position/velocity on a specific client

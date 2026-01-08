@@ -50,6 +50,27 @@ PowerUpConfig::EffectType stringToEffect(const std::string& str) {
     return PowerUpConfig::EffectType::Health;
 }
 
+/**
+ * @brief Try to find a file in multiple locations
+ * @param filepath Relative path to search for
+ * @return First existing path, or original if none found
+ */
+std::string findConfigPath(const std::string& filepath) {
+    namespace fs = std::filesystem;
+
+    const std::vector<std::string> searchPaths = {filepath, "../" + filepath,
+                                                  "../../" + filepath,
+                                                  "../../../" + filepath};
+
+    for (const auto& path : searchPaths) {
+        if (fs::exists(path)) {
+            return path;
+        }
+    }
+
+    return filepath;
+}
+
 }  // namespace
 
 bool EntityConfigRegistry::loadFromDirectory(const std::string& configDir) {
@@ -122,6 +143,24 @@ bool EntityConfigRegistry::loadEnemies(const std::string& filepath) {
                     config.fireRate = (*enemyTbl)["fire_rate"].value_or(1.0F);
                     config.projectileType =
                         (*enemyTbl)["projectile_type"].value_or("");
+
+                    // Visual - Color filter
+                    if (auto* colorArray = (*enemyTbl)["color"].as_array()) {
+                        if (colorArray->size() >= 4) {
+                            config.colorR = static_cast<uint8_t>(
+                                colorArray->get(0)->value<int64_t>().value_or(
+                                    255));
+                            config.colorG = static_cast<uint8_t>(
+                                colorArray->get(1)->value<int64_t>().value_or(
+                                    255));
+                            config.colorB = static_cast<uint8_t>(
+                                colorArray->get(2)->value<int64_t>().value_or(
+                                    255));
+                            config.colorA = static_cast<uint8_t>(
+                                colorArray->get(3)->value<int64_t>().value_or(
+                                    255));
+                        }
+                    }
 
                     if (config.isValid()) {
                         m_enemies[config.id] = std::move(config);
@@ -257,6 +296,23 @@ bool EntityConfigRegistry::loadPowerUps(const std::string& filepath) {
                     config.hitboxHeight =
                         (*puTbl)["hitbox_height"].value_or(16.0F);
 
+                    if (auto* colorArray = (*puTbl)["color"].as_array()) {
+                        if (colorArray->size() >= 4) {
+                            config.colorR = static_cast<uint8_t>(
+                                colorArray->get(0)->value<int64_t>().value_or(
+                                    255));
+                            config.colorG = static_cast<uint8_t>(
+                                colorArray->get(1)->value<int64_t>().value_or(
+                                    255));
+                            config.colorB = static_cast<uint8_t>(
+                                colorArray->get(2)->value<int64_t>().value_or(
+                                    255));
+                            config.colorA = static_cast<uint8_t>(
+                                colorArray->get(3)->value<int64_t>().value_or(
+                                    255));
+                        }
+                    }
+
                     if (config.isValid()) {
                         m_powerUps[config.id] = std::move(config);
                     }
@@ -303,8 +359,14 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
                                 WaveConfig::SpawnEntry spawn;
                                 spawn.enemyId =
                                     (*spawnTbl)["enemy"].value_or("");
-                                spawn.x = (*spawnTbl)["x"].value_or(800.0F);
-                                spawn.y = (*spawnTbl)["y"].value_or(300.0F);
+                                if (auto xVal =
+                                        (*spawnTbl)["x"].value<double>()) {
+                                    spawn.x = static_cast<float>(*xVal);
+                                }
+                                if (auto yVal =
+                                        (*spawnTbl)["y"].value<double>()) {
+                                    spawn.y = static_cast<float>(*yVal);
+                                }
                                 spawn.delay =
                                     (*spawnTbl)["delay"].value_or(0.0F);
                                 spawn.count = (*spawnTbl)["count"].value_or(1);
@@ -386,6 +448,23 @@ void EntityConfigRegistry::clear() {
     m_players.clear();
     m_powerUps.clear();
     m_levels.clear();
+}
+
+bool EntityConfigRegistry::loadEnemiesWithSearch(const std::string& filepath) {
+    return loadEnemies(findConfigPath(filepath));
+}
+
+bool EntityConfigRegistry::loadProjectilesWithSearch(
+    const std::string& filepath) {
+    return loadProjectiles(findConfigPath(filepath));
+}
+
+bool EntityConfigRegistry::loadPlayersWithSearch(const std::string& filepath) {
+    return loadPlayers(findConfigPath(filepath));
+}
+
+bool EntityConfigRegistry::loadPowerUpsWithSearch(const std::string& filepath) {
+    return loadPowerUps(findConfigPath(filepath));
 }
 
 }  // namespace rtype::games::rtype::shared

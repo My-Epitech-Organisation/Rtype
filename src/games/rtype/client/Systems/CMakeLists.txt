@@ -7,8 +7,8 @@ add_library(rtype_game_client_systems STATIC
     ButtonUpdateSystem.hpp
     ParallaxScrolling.cpp
     ParallaxScrolling.hpp
-    SpritePositionSystem.cpp
-    SpritePositionSystem.hpp
+    ColorTintSystem.cpp
+    ColorTintSystem.hpp
     BoxingSystem.cpp
     BoxingSystem.hpp
     ResetTriggersSystem.cpp
@@ -19,6 +19,8 @@ add_library(rtype_game_client_systems STATIC
     PlayerAnimationSystem.hpp
     PlayerPowerUpVisualSystem.cpp
     PlayerPowerUpVisualSystem.hpp
+    PowerUpCollectionSystem.cpp
+    PowerUpCollectionSystem.hpp
     AnimationSystem.cpp
     AnimationSystem.hpp
     ClientDestroySystem.cpp
@@ -29,11 +31,6 @@ add_library(rtype_game_client_systems STATIC
 
 target_link_libraries(rtype_game_client_systems
     PUBLIC
-    SFML::Network
-    SFML::Graphics
-    SFML::Window
-    SFML::Audio
-    SFML::System
     engine
     rtype-graphic-scene-manager
     rtype_game_shared
