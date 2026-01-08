@@ -268,6 +268,9 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.textures.missileLaser =
         "assets/" + _parser.getString(table, "Textures", "MissileLaser",
                                       defaults.assets.textures.missileLaser);
+    config.assets.textures.forcePod =
+        "assets/" + _parser.getString(table, "Textures", "ForcePod",
+                                      defaults.assets.textures.forcePod);
     // Wall - Textures
     config.assets.textures.wallTexture.engrenage1 =
         "assets/" +
@@ -348,6 +351,12 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.sfx.enemyDeath =
         "assets/" + _parser.getString(table, "SFX", "EnemyDeath",
                                       defaults.assets.sfx.enemyDeath);
+    config.assets.sfx.forcePodLaunch =
+        "assets/" + _parser.getString(table, "SFX", "ForcePodLaunch",
+                                      defaults.assets.sfx.forcePodLaunch);
+    config.assets.sfx.forcePodReturn =
+        "assets/" + _parser.getString(table, "SFX", "ForcePodReturn",
+                                      defaults.assets.sfx.forcePodReturn);
 
     return config;
 }
