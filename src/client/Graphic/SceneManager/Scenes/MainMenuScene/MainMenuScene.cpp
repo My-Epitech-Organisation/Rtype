@@ -143,8 +143,9 @@ void MainMenuScene::_createConnectionPanel(
 
     auto lobbyCodeText = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Lobby Code:", "main_font",
-        rtype::display::Vector2<float>(kConnectionPanelX + kInputOffsetX / 2,
-                                       kConnectionPanelY + 210.f + kInputHeight / 2),
+        rtype::display::Vector2<float>(
+            kConnectionPanelX + kInputOffsetX / 2,
+            kConnectionPanelY + 210.f + kInputHeight / 2),
         20);
     this->_registry
         ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
@@ -155,8 +156,8 @@ void MainMenuScene::_createConnectionPanel(
         this->_registry, this->_assetsManager,
         rtype::display::Vector2<float>(kConnectionPanelX + kInputOffsetX,
                                        kConnectionPanelY + 210.f),
-        rtype::display::Vector2<float>(kInputWidth, kInputHeight),
-        "", "ABCXYZ", 6, false);
+        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "", "ABCXYZ",
+        6, false);
     this->_registry
         ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
             this->_lobbyCodeInputEntity);
@@ -164,8 +165,9 @@ void MainMenuScene::_createConnectionPanel(
 
     this->_statusEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "main_font",
-        rtype::display::Vector2<float>(kConnectionPanelX + kInputOffsetX / 2,
-                                       kConnectionPanelY + 265.f + kInputHeight / 2),
+        rtype::display::Vector2<float>(
+            kConnectionPanelX + kInputOffsetX / 2,
+            kConnectionPanelY + 265.f + kInputHeight / 2),
         18);
     this->_registry
         ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
@@ -305,12 +307,17 @@ void MainMenuScene::_onConnectClicked(
 
     if (!lobbyCode.empty()) {
         if (lobbyCode.length() != 6) {
-            this->_updateStatus("Lobby code must be 6 characters", rtype::display::Color::Red());
+            this->_updateStatus("Lobby code must be 6 characters",
+                                rtype::display::Color::Red());
             return;
         }
-        _updateStatus("Connecting to " + discoveryIp + ":" + std::to_string(discoveryPort) + "...", rtype::display::Color::Yellow());
+        _updateStatus("Connecting to " + discoveryIp + ":" +
+                          std::to_string(discoveryPort) + "...",
+                      rtype::display::Color::Yellow());
     } else {
-        _updateStatus("Requesting lobby list from " + discoveryIp + ":" + std::to_string(discoveryPort) + "...", rtype::display::Color::Yellow());
+        _updateStatus("Requesting lobby list from " + discoveryIp + ":" +
+                          std::to_string(discoveryPort) + "...",
+                      rtype::display::Color::Yellow());
     }
     std::weak_ptr<ECS::Registry> weakRegistry = _registry;
     ECS::Entity statusEntity = _statusEntity;
