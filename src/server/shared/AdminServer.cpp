@@ -18,6 +18,8 @@
 #include "server/lobby/Lobby.hpp"
 #include "server/lobby/LobbyManager.hpp"
 #include "server/serverApp/ServerApp.hpp"
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 namespace rtype::server {
 using ::httplib::Request;
@@ -149,33 +151,34 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
             res.status = 401;
             return;
         }
-        std::string body = req.body;
+
         std::string ip;
         std::uint16_t port = 0;
-        if (auto pos = body.find("\"ip\""); pos != std::string::npos) {
-            auto start = body.find("\"", pos + 4);
-            auto end = (start != std::string::npos) ? body.find("\"", start + 1)
-                                                    : std::string::npos;
-            if (start != std::string::npos && end != std::string::npos) {
-                ip = body.substr(start + 1, end - start - 1);
+
+        try {
+            auto j = json::parse(req.body);
+            if (!j.contains("ip") || !j["ip"].is_string()) {
+                res.set_content(R"({"success":false,"error":"Missing or invalid 'ip'"})",
+                                "application/json");
+                res.status = 400;
+                return;
             }
-        }
-        if (auto pos = body.find("\"port\""); pos != std::string::npos) {
-            auto colon = body.find(":", pos);
-            if (colon != std::string::npos) {
-                try {
-                    port = static_cast<std::uint16_t>(
-                        std::stoul(body.substr(colon + 1)));
-                } catch (...) {
-                }
+            ip = j["ip"].get<std::string>();
+            if (j.contains("port") && j["port"].is_number_unsigned()) {
+                port = static_cast<std::uint16_t>(j["port"].get<unsigned>());
             }
-        }
-        if (ip.empty()) {
-            res.set_content(R"({"success":false,"error":"Missing ip"})",
+        } catch (const json::parse_error&) {
+            res.set_content(R"({"success":false,"error":"Malformed JSON"})",
+                            "application/json");
+            res.status = 400;
+            return;
+        } catch (...) {
+            res.set_content(R"({"success":false,"error":"Invalid request"})",
                             "application/json");
             res.status = 400;
             return;
         }
+
         Endpoint ep;
         ep.address = ip;
         ep.port = port;
@@ -208,14 +211,22 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
             res.status = 401;
             return;
         }
-        std::string body = req.body;
+
         bool isPrivate = true;
-        if (auto pos = body.find("\"isPublic\""); pos != std::string::npos) {
-            auto colon = body.find(":", pos);
-            if (colon != std::string::npos) {
-                isPrivate = body.find("true", colon) == std::string::npos;
+        try {
+            if (!req.body.empty()) {
+                auto j = json::parse(req.body);
+                if (j.contains("isPublic") && j["isPublic"].is_boolean()) {
+                    isPrivate = !j["isPublic"].get<bool>();
+                }
             }
+        } catch (const json::parse_error&) {
+            res.set_content(R"({"success":false,"error":"Malformed JSON"})",
+                            "application/json");
+            res.status = 400;
+            return;
         }
+
         if (!_lobbyManager) {
             res.set_content(
                 R"({"success":false,"error":"Lobby manager not available"})",
@@ -631,46 +642,37 @@ void AdminServer::registerBanRoutes(void* serverPtr) {
             res.status = 401;
             return;
         }
-        std::string body = req.body;
         std::string ip;
         std::uint16_t port = 0;
         std::uint32_t clientId = 0;
         std::string banReason = "Admin ban";
-        if (auto pos = body.find("\"clientId\""); pos != std::string::npos) {
-            auto colon = body.find(":", pos);
-            if (colon != std::string::npos) {
-                try {
-                    clientId = static_cast<std::uint32_t>(
-                        std::stoul(body.substr(colon + 1)));
-                } catch (...) {
+
+        try {
+            if (!req.body.empty()) {
+                auto j = json::parse(req.body);
+                if (j.contains("clientId") && j["clientId"].is_number_unsigned()) {
+                    clientId = j["clientId"].get<std::uint32_t>();
+                }
+                if (j.contains("ip") && j["ip"].is_string()) {
+                    ip = j["ip"].get<std::string>();
+                }
+                if (j.contains("port") && j["port"].is_number_unsigned()) {
+                    port = static_cast<std::uint16_t>(j["port"].get<unsigned>());
+                }
+                if (j.contains("reason") && j["reason"].is_string()) {
+                    banReason = j["reason"].get<std::string>();
                 }
             }
-        }
-        if (auto pos = body.find("\"ip\""); pos != std::string::npos) {
-            auto start = body.find("\"", pos + 4);
-            auto end = (start != std::string::npos) ? body.find("\"", start + 1)
-                                                    : std::string::npos;
-            if (start != std::string::npos && end != std::string::npos) {
-                ip = body.substr(start + 1, end - start - 1);
-            }
-        }
-        if (auto pos = body.find("\"port\""); pos != std::string::npos) {
-            auto colon = body.find(":", pos);
-            if (colon != std::string::npos) {
-                try {
-                    port = static_cast<std::uint16_t>(
-                        std::stoul(body.substr(colon + 1)));
-                } catch (...) {
-                }
-            }
-        }
-        if (auto pos = body.find("\"reason\""); pos != std::string::npos) {
-            auto start = body.find("\"", pos + 8);
-            auto end = (start != std::string::npos) ? body.find("\"", start + 1)
-                                                    : std::string::npos;
-            if (start != std::string::npos && end != std::string::npos) {
-                banReason = body.substr(start + 1, end - start - 1);
-            }
+        } catch (const json::parse_error&) {
+            res.set_content(R"({"success":false,"error":"Malformed JSON"})",
+                            "application/json");
+            res.status = 400;
+            return;
+        } catch (...) {
+            res.set_content(R"({"success":false,"error":"Invalid request"})",
+                            "application/json");
+            res.status = 400;
+            return;
         }
         Endpoint ep;
         bool haveEndpoint = false;

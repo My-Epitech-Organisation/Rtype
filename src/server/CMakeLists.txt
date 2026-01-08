@@ -1,6 +1,8 @@
 
 # Find cpp-httplib for admin server
 find_package(httplib CONFIG REQUIRED)
+# JSON library used for admin endpoint parsing
+find_package(nlohmann_json CONFIG REQUIRED)
 
 # Library for server core logic (game state, processing, spawning)
 add_library(rtype_server_core STATIC
@@ -47,6 +49,7 @@ target_link_libraries(rtype_server_core
     network
     rtype_game_server
     rtype_game_shared
+    nlohmann_json::nlohmann_json
 )
 
 add_library(rtype_server_network STATIC
