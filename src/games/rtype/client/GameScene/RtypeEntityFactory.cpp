@@ -13,13 +13,16 @@
 
 #include "../../shared/Components/BoundingBoxComponent.hpp"
 #include "../../shared/Components/EnemyTypeComponent.hpp"
+#include "../../shared/Components/ForcePodComponent.hpp"
 #include "../../shared/Components/HealthComponent.hpp"
 #include "../../shared/Components/NetworkIdComponent.hpp"
 #include "../../shared/Components/PlayerIdComponent.hpp"
 #include "../../shared/Components/PowerUpTypeComponent.hpp"
+#include "../../shared/Components/Tags.hpp"
 #include "../../shared/Config/EntityConfig/EntityConfig.hpp"
 #include "../../shared/Config/GameConfig/RTypeGameConfig.hpp"
 #include "../Components/ColorTintComponent.hpp"
+#include "../Components/ForcePodVisualComponent.hpp"
 #include "../Components/RectangleComponent.hpp"
 #include "../Systems/PlayerAnimationSystem.hpp"
 #include "AllComponents.hpp"
@@ -121,6 +124,10 @@ RtypeEntityFactory::createNetworkEntityFactory(
 
             case ::rtype::network::EntityType::Obstacle:
                 setupObstacleEntity(reg, assetsManager, entity, event.entityId);
+                break;
+
+            case ::rtype::network::EntityType::ForcePod:
+                setupForcePodEntity(reg, assetsManager, entity);
                 break;
         }
 
@@ -403,6 +410,39 @@ void RtypeEntityFactory::setupObstacleEntity(
     reg.emplaceComponent<Size>(entity, 0.5, 0.5);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
+}
+
+void RtypeEntityFactory::setupForcePodEntity(
+    ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
+    ECS::Entity entity) {
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Adding Force Pod components");
+
+    constexpr int frameWidth = 17;
+    constexpr int frameHeight = 18;
+    constexpr int frameCount = 12;
+
+    auto& forcePodTexture = assetsManager->textureManager->get("force_pod");
+    reg.emplaceComponent<Image>(entity, forcePodTexture);
+    reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
+                                      std::pair<int, int>({frameWidth, frameHeight}));
+    reg.emplaceComponent<Animation>(entity, frameCount, 0.08f, false);
+    reg.emplaceComponent<Size>(entity, 2.0, 2.0);
+    
+    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+        entity, 32.0f, 32.0f);
+    reg.emplaceComponent<BoxingComponent>(
+        entity, sf::FloatRect({0, 0}, {32.0f, 32.0f}));
+    reg.getComponent<BoxingComponent>(entity).outlineColor = sf::Color(100, 200, 255);
+    reg.getComponent<BoxingComponent>(entity).fillColor = sf::Color(100, 200, 255, 40);
+    
+    reg.emplaceComponent<ForcePodVisual>(entity);
+    reg.emplaceComponent<ZIndex>(entity, 1);
+    reg.emplaceComponent<GameTag>(entity);
+    reg.emplaceComponent<shared::ForcePodTag>(entity);
+    
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Force Pod entity created with animation");
 }
 
 }  // namespace rtype::games::rtype::client

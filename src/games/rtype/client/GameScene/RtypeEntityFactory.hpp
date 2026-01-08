@@ -90,6 +90,17 @@ class RtypeEntityFactory {
                                     std::shared_ptr<AssetManager> assetsManager,
                                     ECS::Entity entity,
                                     std::uint32_t networkId);
+
+    /**
+     * @brief Create a Force Pod entity with all components
+     *
+     * @param registry ECS registry
+     * @param assetsManager Asset manager
+     * @param entity Entity to configure
+     */
+    static void setupForcePodEntity(ECS::Registry& registry,
+                                    std::shared_ptr<AssetManager> assetsManager,
+                                    ECS::Entity entity);
 };
 
 }  // namespace rtype::games::rtype::client
