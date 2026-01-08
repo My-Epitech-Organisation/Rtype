@@ -16,6 +16,7 @@ add_library(rtype_server_core STATIC
     serverApp/player/playerSpawner/PlayerSpawner.cpp
     shared/AdminServer.cpp
     shared/BanManager.cpp
+    shared/NetworkUtils.cpp
     lobby/Lobby.cpp
     lobby/LobbyManager.cpp
     lobby/LobbyDiscoveryServer.cpp
