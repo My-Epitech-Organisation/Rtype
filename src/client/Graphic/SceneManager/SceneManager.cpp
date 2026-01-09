@@ -16,6 +16,7 @@
 #include "Scenes/GameOverScene/GameOverScene.hpp"
 #include "Scenes/GameScene/GameScene.hpp"
 #include "Scenes/HowToPlayScene/HowToPlayScene.hpp"
+#include "Scenes/LevelCreatorScene/LevelCreatorScene.hpp"
 #include "Scenes/Lobby/Lobby.hpp"
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
 #include "Scenes/SettingsScene/SettingsScene.hpp"
@@ -119,6 +120,11 @@ SceneManager::SceneManager(
         return std::make_unique<SettingsScene>(ecs, texture, this->_display,
                                                this->_keybinds, this->_audio,
                                                this->_switchToScene);
+    });
+    this->_sceneList.emplace(LEVEL_CREATOR, [ecs, texture, this]() {
+        return std::make_unique<LevelCreatorScene>(
+            ecs, texture, this->_display, this->_keybinds, this->_audio,
+            this->_switchToScene);
     });
     this->_sceneList.emplace(HOW_TO_PLAY, [ecs, texture, this]() {
         return std::make_unique<HowToPlayScene>(ecs, texture, this->_display,
