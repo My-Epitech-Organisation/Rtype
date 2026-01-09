@@ -358,11 +358,13 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                 const auto& playerNetId =
                     registry.getComponent<NetworkIdComponent>(player);
                 int existingPodCount = 0;
-                auto view = registry.view<shared::ForcePodTag, shared::ForcePodComponent>();
+                auto view =
+                    registry
+                        .view<shared::ForcePodTag, shared::ForcePodComponent>();
                 view.each([&existingPodCount, &playerNetId](
-                    ECS::Entity /*entity*/, 
-                    const shared::ForcePodTag&,
-                    const shared::ForcePodComponent& podComp) {
+                              ECS::Entity /*entity*/,
+                              const shared::ForcePodTag&,
+                              const shared::ForcePodComponent& podComp) {
                     if (podComp.ownerNetworkId == playerNetId.networkId) {
                         existingPodCount++;
                     }
@@ -377,8 +379,7 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                     {distance * 0.7F, -distance * 0.7F},
                     {distance * 0.7F, distance * 0.7F},
                     {-distance * 0.7F, -distance * 0.7F},
-                    {-distance * 0.7F, distance * 0.7F}
-                };
+                    {-distance * 0.7F, distance * 0.7F}};
 
                 float offsetX = 0.0F;
                 float offsetY = 0.0F;
@@ -386,16 +387,18 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                     offsetX = positions[existingPodCount].first;
                     offsetY = positions[existingPodCount].second;
                 } else {
-                    const float angle = 2.0F * 3.14159265359F * existingPodCount / 8.0F;
+                    const float angle =
+                        2.0F * 3.14159265359F * existingPodCount / 8.0F;
                     offsetX = distance * std::cos(angle);
                     offsetY = distance * std::sin(angle);
                 }
 
                 LOG_INFO(
                     "[CollisionSystem] Creating Force Pod entity with "
-                    "parentNetId=" << playerNetId.networkId
-                    << " at position " << existingPodCount << " (offset: "
-                    << offsetX << ", " << offsetY << ")");
+                    "parentNetId="
+                    << playerNetId.networkId << " at position "
+                    << existingPodCount << " (offset: " << offsetX << ", "
+                    << offsetY << ")");
 
                 ECS::Entity forcePod = registry.spawnEntity();
                 registry.emplaceComponent<shared::ForcePodComponent>(
@@ -409,7 +412,8 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                                                                 32.0F);
 
                 if (_emitEvent) {
-                    uint32_t forcePodNetId = playerNetId.networkId + 10000 + existingPodCount;
+                    uint32_t forcePodNetId =
+                        playerNetId.networkId + 10000 + existingPodCount;
                     registry.emplaceComponent<NetworkIdComponent>(
                         forcePod, forcePodNetId);
 
@@ -427,8 +431,7 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                     _emitEvent(evt);
                 }
             } else {
-                LOG_INFO(
-                    "[CollisionSystem] Player missing NetworkIdComponent");
+                LOG_INFO("[CollisionSystem] Player missing NetworkIdComponent");
             }
             break;
         case shared::PowerUpType::None:
