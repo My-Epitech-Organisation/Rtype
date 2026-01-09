@@ -70,6 +70,8 @@ struct PowerUpTypeComponent {
                 return "weapon_upgrade";
             case PowerUpVariant::ExtraLife:
                 return "extra_life";
+            case PowerUpVariant::ForcePod:
+                return "force_pod";
             default:
                 return "health_small";
         }
