@@ -16,14 +16,25 @@
 
 namespace rtype::games::rtype::server {
 
+class ForcePodLaunchSystem;
+
 class ForcePodAttachmentSystem : public ::rtype::engine::ASystem {
    public:
     ForcePodAttachmentSystem();
 
     void update(ECS::Registry& registry, float deltaTime) override;
 
+    /**
+     * @brief Set the launch system to register Force Pods with
+     * @param launchSystem Pointer to Force Pod launch system
+     */
+    void setLaunchSystem(ForcePodLaunchSystem* launchSystem) {
+        _launchSystem = launchSystem;
+    }
+
    private:
     void updateAttachedPods(ECS::Registry& registry);
+    ForcePodLaunchSystem* _launchSystem = nullptr;
 };
 
 }  // namespace rtype::games::rtype::server
