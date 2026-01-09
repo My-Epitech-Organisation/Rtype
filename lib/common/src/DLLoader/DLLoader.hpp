@@ -40,7 +40,7 @@ class DLLoader {
                 throw std::runtime_error("Cannot load library: " + message);
             }
         #else
-            this->_handle = dlopen(path.c_str(), RTLD_LAZY);
+            this->_handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_NODELETE);
             if (!this->_handle) {
                 throw std::runtime_error("Cannot load library: " + std::string(dlerror()));
             }

@@ -450,12 +450,32 @@ Graphic::Graphic(
 }
 
 Graphic::~Graphic() {
+    if (_display) {
+        _display->close();
+    }
     _sceneManager.reset();
     _systemScheduler.reset();
-    _assetsManager.reset();
-    _audioLib.reset();
-
+    _forcePodVisualSystem.reset();
+    _shaderRenderSystem.reset();
+    _clientDestroySystem.reset();
+    _lifetimeSystem.reset();
+    _projectileSystem.reset();
+    _eventSystem.reset();
+    _resetTriggersSystem.reset();
+    _boxingSystem.reset();
+    _renderSystem.reset();
+    _parallaxScrolling.reset();
+    _buttonUpdateSystem.reset();
+    _powerUpCollectionSystem.reset();
+    _playerPowerUpVisualSystem.reset();
+    _animationSystem.reset();
+    _playerAnimationSystem.reset();
+    _colorTintSystem.reset();
     if (_registry) {
         _registry->clear();
     }
+    _assetsManager.reset();
+    _audioLib.reset();
+    _display.reset();
+    _displayLoader.reset();
 }
