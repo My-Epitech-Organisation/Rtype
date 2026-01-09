@@ -23,6 +23,8 @@ add_library(rtype_game_client_systems STATIC
     PowerUpCollectionSystem.hpp
     AnimationSystem.cpp
     AnimationSystem.hpp
+    ChaserRotationSystem.cpp
+    ChaserRotationSystem.hpp
     ClientDestroySystem.cpp
     ClientDestroySystem.hpp
     ShaderRenderSystem.cpp

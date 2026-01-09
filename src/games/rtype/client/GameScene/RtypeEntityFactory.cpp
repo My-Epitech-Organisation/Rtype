@@ -24,6 +24,7 @@
 #include "../Components/ColorTintComponent.hpp"
 #include "../Components/ForcePodVisualComponent.hpp"
 #include "../Components/RectangleComponent.hpp"
+#include "../Components/RotationComponent.hpp"
 #include "../Systems/PlayerAnimationSystem.hpp"
 #include "AllComponents.hpp"
 #include "AudioLib/AudioLib.hpp"
@@ -265,6 +266,7 @@ void RtypeEntityFactory::setupBydosEntity(
             reg.emplaceComponent<TextureRect>(entity,
                                               std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Animation>(entity, 8, 0.1f, false);
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
         case shared::EnemyVariant::Shooter:
@@ -272,8 +274,9 @@ void RtypeEntityFactory::setupBydosEntity(
                          "[RtypeEntityFactory] Setting up Shooter Bydos enemy");
             reg.emplaceComponent<Image>(entity, "bdos_enemy_shooter");
             reg.emplaceComponent<TextureRect>(entity,
-                                              std::pair<int, int>({82, 64}),
+                                              std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 32}));
+            reg.emplaceComponent<Animation>(entity, 7, 0.1f, false);
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
         case shared::EnemyVariant::Chaser:
@@ -281,17 +284,19 @@ void RtypeEntityFactory::setupBydosEntity(
                          "[RtypeEntityFactory] Setting up Chaser Bydos enemy");
             reg.emplaceComponent<Image>(entity, "bdos_enemy_chaser");
             reg.emplaceComponent<TextureRect>(entity,
-                                              std::pair<int, int>({20, 0}),
-                                              std::pair<int, int>({64, 54}));
-            reg.emplaceComponent<Size>(entity, 1.0f, 1.0f);
+                                              std::pair<int, int>({0, 0}),
+                                              std::pair<int, int>({113, 369}));
+            reg.emplaceComponent<Size>(entity, 0.6f, 0.6f);
+            reg.emplaceComponent<Rotation>(entity, 0.0f);
             break;
         case shared::EnemyVariant::Wave:
             LOG_INFO_CAT(::rtype::LogCategory::ECS,
                          "[RtypeEntityFactory] Setting up Wave Bydos enemy");
             reg.emplaceComponent<Image>(entity, "bdos_enemy_wave");
             reg.emplaceComponent<TextureRect>(entity,
-                                              std::pair<int, int>({132, 34}),
+                                              std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Animation>(entity, 8, 0.1f, false);
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
         case shared::EnemyVariant::Patrol:
@@ -301,6 +306,7 @@ void RtypeEntityFactory::setupBydosEntity(
             reg.emplaceComponent<TextureRect>(entity,
                                               std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 36}));
+            reg.emplaceComponent<Animation>(entity, 8, 0.1f, false);
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
         case shared::EnemyVariant::Heavy:
@@ -308,7 +314,7 @@ void RtypeEntityFactory::setupBydosEntity(
                          "[RtypeEntityFactory] Setting up Heavy Bydos enemy");
             reg.emplaceComponent<Image>(entity, "bdos_enemy_heavy");
             reg.emplaceComponent<TextureRect>(entity,
-                                              std::pair<int, int>({17, 66}),
+                                              std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 33}));
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
@@ -322,6 +328,7 @@ void RtypeEntityFactory::setupBydosEntity(
             reg.emplaceComponent<TextureRect>(entity,
                                               std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Animation>(entity, 8, 0.1f, false);
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
     }
