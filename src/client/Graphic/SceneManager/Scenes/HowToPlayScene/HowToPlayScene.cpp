@@ -7,8 +7,7 @@
 
 #include "HowToPlayScene.hpp"
 
-#include <SFML/Graphics/Color.hpp>
-
+#include "Components/ZIndexComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "Graphic/SceneManager/Scenes/SettingsScene/SettingsSceneUtils.hpp"
 #include "Logger/Macros.hpp"
@@ -16,15 +15,15 @@
 
 namespace {
 static constexpr float kSectionX = 350.f;
-static constexpr float kSectionY = 220.f;
+static constexpr float kSectionY = 250.f;
 static constexpr float kSectionW = 1220.f;
-static constexpr float kSectionH = 700.f;
+static constexpr float kSectionH = 600.f;
 }  // namespace
 
 HowToPlayScene::HowToPlayScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> assetsManager,
-    std::shared_ptr<sf::RenderWindow> window,
+    std::shared_ptr<rtype::display::IDisplay> window,
     std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(std::move(ecs), std::move(assetsManager), std::move(window),
@@ -33,24 +32,27 @@ HowToPlayScene::HowToPlayScene(
       _switchToScene(std::move(switchToScene)) {
     this->_listEntity = EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "How to Play");
-    _initLayout();
-
-    this->_listEntity.push_back(EntityFactory::createButton(
+    this->_initLayout();
+    auto backBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 36, "Back"),
-        rtype::games::rtype::shared::Position(100, 900),
-        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
-                                               sf::Color::Red),
+            "main_font", rtype::display::Color::White(), 36, "Back"),
+        rtype::games::rtype::shared::TransformComponent(100, 900),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([this]() {
             try {
                 this->_switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Main Menu: ") +
-                          std::string(e.what()));
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              std::string("Error switching to Main Menu: ") +
+                                  std::string(e.what()));
             }
-        })));
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        backBtn, 1);
+    this->_listEntity.push_back(backBtn);
 }
 
 std::string HowToPlayScene::_keyName(GameAction action) const {
@@ -62,13 +64,13 @@ std::string HowToPlayScene::_keyName(GameAction action) const {
 void HowToPlayScene::_initLayout() {
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "How to Play",
-        sf::FloatRect(sf::Vector2f(kSectionX, kSectionY),
-                      sf::Vector2f(kSectionW, kSectionH)));
+        rtype::display::Rect<float>(kSectionX, kSectionY, kSectionW,
+                                    kSectionH));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
-    float textX = kSectionX + 40.f;
-    float startY = kSectionY + 80.f;
+    float textX = kSectionX + kSectionW / 2;
+    float startY = kSectionY + kSectionH / 2 - 150.f;
     float lineGap = 55.f;
 
     const std::vector<std::string> lines = {
@@ -91,19 +93,25 @@ void HowToPlayScene::_initLayout() {
         float y = startY + static_cast<float>(i) * lineGap;
         auto text = EntityFactory::createStaticText(
             this->_registry, this->_assetsManager, lines[i], fontId,
-            sf::Vector2f{textX, y}, 28.f);
+            rtype::display::Vector2<float>{textX, y}, 28.f);
+        this->_registry
+            ->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(
+                text);
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            text, 2);
         this->_listEntity.push_back(text);
     }
 }
 
-void HowToPlayScene::pollEvents(const sf::Event& e) {
-    if (const auto* key = e.getIf<sf::Event::KeyPressed>()) {
-        if (key->code == sf::Keyboard::Key::Escape) {
+void HowToPlayScene::pollEvents(const rtype::display::Event& e) {
+    if (e.type == rtype::display::EventType::KeyPressed) {
+        if (e.key.code == rtype::display::Key::Escape) {
             try {
                 _switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& err) {
-                LOG_ERROR(std::string("Error switching to Main Menu: ") +
-                          std::string(err.what()));
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              std::string("Error switching to Main Menu: ") +
+                                  std::string(err.what()));
             }
         }
     }
@@ -111,4 +119,5 @@ void HowToPlayScene::pollEvents(const sf::Event& e) {
 
 void HowToPlayScene::update(float /*dt*/) {}
 
-void HowToPlayScene::render(std::shared_ptr<sf::RenderWindow> /*window*/) {}
+void HowToPlayScene::render(
+    std::shared_ptr<rtype::display::IDisplay> /*window*/) {}

@@ -16,12 +16,14 @@
 
 #include "../shared/Components/EntityType.hpp"
 #include "../shared/Components/NetworkIdComponent.hpp"
-#include "../shared/Components/PositionComponent.hpp"
 #include "../shared/Components/Tags.hpp"
 #include "../shared/Components/TransformComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
+#include "../shared/Config/EntityConfig/EntityConfig.hpp"
+#include "../shared/Config/PrefabLoader.hpp"
 #include "../shared/Systems/AISystem/Behaviors/BehaviorRegistry.hpp"
 #include "Logger/Macros.hpp"
+#include "Systems/Spawner/DataDrivenSpawnerSystem.hpp"
 namespace rtype::games::rtype::server {
 
 GameEngine::GameEngine(std::shared_ptr<ECS::Registry> registry)
@@ -39,14 +41,69 @@ bool GameEngine::initialize() {
         return false;
     }
     _registry->reserveEntities(GameConfig::MAX_ENEMIES + 100);
+
+    LOG_INFO("[GameEngine] Loading entity configurations");
+    auto& entityConfigRegistry = shared::EntityConfigRegistry::getInstance();
+    try {
+        entityConfigRegistry.loadEnemiesWithSearch("config/game/enemies.toml");
+        entityConfigRegistry.loadPlayersWithSearch("config/game/players.toml");
+        entityConfigRegistry.loadProjectilesWithSearch(
+            "config/game/projectiles.toml");
+        entityConfigRegistry.loadPowerUpsWithSearch(
+            "config/game/powerups.toml");
+        if (entityConfigRegistry.loadFromDirectory("config/game")) {
+            LOG_INFO(
+                "[GameEngine] Level configurations loaded from config/game");
+        } else {
+            LOG_WARNING(
+                "[GameEngine] Failed to load level configurations - "
+                "data-driven spawning may not work correctly");
+        }
+        LOG_INFO("[GameEngine] Entity configurations loaded");
+    } catch (const std::exception& e) {
+        LOG_WARNING("[GameEngine] Failed to load some entity configurations: "
+                    << e.what() << " - Continuing with available configs");
+    }
+
+    _prefabManager = std::make_unique<ECS::PrefabManager>(std::ref(*_registry));
+    shared::PrefabLoader::registerAllPrefabs(*_prefabManager);
+    LOG_INFO("[GameEngine] Registered "
+             << _prefabManager->getPrefabNames().size()
+             << " prefabs from entity configs");
+
+    setupECSSignals();
     auto eventEmitter = [this](const engine::GameEvent& event) {
         emitEvent(event);
     };
+
+    DataDrivenSpawnerConfig ddConfig{};
+    ddConfig.screenWidth = GameConfig::SCREEN_WIDTH;
+    ddConfig.screenHeight = GameConfig::SCREEN_HEIGHT;
+    ddConfig.spawnMargin = GameConfig::SPAWN_MARGIN;
+    ddConfig.maxEnemies = GameConfig::MAX_ENEMIES;
+    ddConfig.waveTransitionDelay = 2.0F;
+    ddConfig.waitForClear = true;
+    ddConfig.enableFallbackSpawning = true;
+    ddConfig.fallbackMinInterval = GameConfig::MIN_SPAWN_INTERVAL;
+    ddConfig.fallbackMaxInterval = GameConfig::MAX_SPAWN_INTERVAL;
+    ddConfig.fallbackEnemiesPerWave = 10;
+    _dataDrivenSpawnerSystem =
+        std::make_unique<DataDrivenSpawnerSystem>(eventEmitter, ddConfig);
+
+    if (_dataDrivenSpawnerSystem->loadLevel("level_1")) {
+        LOG_INFO(
+            "[GameEngine] Level 'level_1' loaded for data-driven spawning");
+        _dataDrivenSpawnerSystem->startLevel();
+    } else {
+        LOG_WARNING(
+            "[GameEngine] Could not load level_1 - using fallback spawning");
+    }
+
     SpawnerConfig spawnerConfig{};
     spawnerConfig.minSpawnInterval = GameConfig::MIN_SPAWN_INTERVAL;
     spawnerConfig.maxSpawnInterval = GameConfig::MAX_SPAWN_INTERVAL;
     spawnerConfig.maxEnemies = GameConfig::MAX_ENEMIES;
-    spawnerConfig.spawnX = GameConfig::SCREEN_WIDTH + GameConfig::SPAWN_MARGIN;
+    spawnerConfig.spawnX = GameConfig::SCREEN_WIDTH + GameConfig::SPAWN_OFFSET;
     spawnerConfig.minSpawnY = GameConfig::SPAWN_MARGIN;
     spawnerConfig.maxSpawnY =
         GameConfig::SCREEN_HEIGHT - GameConfig::SPAWN_MARGIN;
@@ -93,11 +150,67 @@ bool GameEngine::initialize() {
     _cleanupSystem =
         std::make_unique<CleanupSystem>(eventEmitter, cleanupConfig);
     auto entityDecrementer = [this]() {
-        _spawnerSystem->decrementEnemyCount();
+        if (_useDataDrivenSpawner && _dataDrivenSpawnerSystem) {
+            _dataDrivenSpawnerSystem->decrementEnemyCount();
+        } else if (_spawnerSystem) {
+            _spawnerSystem->decrementEnemyCount();
+        }
         _projectileSpawnerSystem->decrementProjectileCount();
     };
     _destroySystem =
         std::make_unique<DestroySystem>(eventEmitter, entityDecrementer);
+
+    _systemScheduler->addSystem("Spawner", [this](ECS::Registry& reg) {
+        if (_useDataDrivenSpawner && _dataDrivenSpawnerSystem) {
+            _dataDrivenSpawnerSystem->update(reg, _lastDeltaTime);
+        } else if (_spawnerSystem) {
+            _spawnerSystem->update(reg, _lastDeltaTime);
+        }
+    });
+    _systemScheduler->addSystem(
+        "ProjectileSpawner", [this](ECS::Registry& reg) {
+            _projectileSpawnerSystem->update(reg, _lastDeltaTime);
+        });
+    _systemScheduler->addSystem("EnemyShooting",
+                                [this](ECS::Registry& reg) {
+                                    _enemyShootingSystem->update(
+                                        reg, _lastDeltaTime);
+                                },
+                                {"Spawner"});
+    _systemScheduler->addSystem(
+        "AI",
+        [this](ECS::Registry& reg) { _aiSystem->update(reg, _lastDeltaTime); },
+        {"EnemyShooting"});
+    _systemScheduler->addSystem("Movement",
+                                [this](ECS::Registry& reg) {
+                                    _movementSystem->update(reg,
+                                                            _lastDeltaTime);
+                                },
+                                {"AI"});
+    _systemScheduler->addSystem("Lifetime", [this](ECS::Registry& reg) {
+        _lifetimeSystem->update(reg, _lastDeltaTime);
+    });
+    _systemScheduler->addSystem("PowerUp", [this](ECS::Registry& reg) {
+        _powerUpSystem->update(reg, _lastDeltaTime);
+    });
+    _systemScheduler->addSystem("Collision",
+                                [this](ECS::Registry& reg) {
+                                    _collisionSystem->update(reg,
+                                                             _lastDeltaTime);
+                                },
+                                {"Movement"});
+    _systemScheduler->addSystem("Cleanup",
+                                [this](ECS::Registry& reg) {
+                                    _cleanupSystem->update(reg, _lastDeltaTime);
+                                },
+                                {"Collision"});
+    _systemScheduler->addSystem(
+        "Destroy",
+        [this](ECS::Registry& reg) {
+            _destroySystem->update(reg, _lastDeltaTime);
+        },
+        {"Cleanup", "Collision", "Lifetime", "PowerUp"});
+
     _running = true;
     return true;
 }
@@ -106,23 +219,16 @@ void GameEngine::update(float deltaTime) {
     if (!_running) {
         return;
     }
-
-    _spawnerSystem->update(*_registry, deltaTime);
-    _projectileSpawnerSystem->update(*_registry, deltaTime);
-    _enemyShootingSystem->update(*_registry, deltaTime);
-    _aiSystem->update(*_registry, deltaTime);
-    _movementSystem->update(*_registry, deltaTime);
-    _lifetimeSystem->update(*_registry, deltaTime);
-    _powerUpSystem->update(*_registry, deltaTime);
-    _collisionSystem->update(*_registry, deltaTime);
-    _cleanupSystem->update(*_registry, deltaTime);
-    _destroySystem->update(*_registry, deltaTime);
+    _lastDeltaTime = deltaTime;
+    _systemScheduler->run();
 }
 
 void GameEngine::shutdown() {
-    LOG_DEBUG("[GameEngine] Shutdown: Checking running state");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                  "[GameEngine] Shutdown: Checking running state");
     if (!_running) {
-        LOG_DEBUG("[GameEngine] Already shut down, returning");
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[GameEngine] Already shut down, returning");
         return;
     }
     _running = false;
@@ -130,6 +236,7 @@ void GameEngine::shutdown() {
         _systemScheduler->clear();
     }
     _spawnerSystem.reset();
+    _dataDrivenSpawnerSystem.reset();
     _projectileSpawnerSystem.reset();
     _enemyShootingSystem.reset();
     _aiSystem.reset();
@@ -142,7 +249,34 @@ void GameEngine::shutdown() {
         std::lock_guard<std::mutex> lock(_eventMutex);
         _pendingEvents.clear();
     }
-    LOG_DEBUG("[GameEngine] Shutdown: Complete");
+    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                  "[GameEngine] Shutdown: Complete");
+}
+
+bool GameEngine::loadLevel(const std::string& levelId) {
+    if (_dataDrivenSpawnerSystem) {
+        return _dataDrivenSpawnerSystem->loadLevel(levelId);
+    }
+    LOG_ERROR(
+        "[GameEngine] Cannot load level: DataDrivenSpawnerSystem not "
+        "initialized");
+    return false;
+}
+
+bool GameEngine::loadLevelFromFile(const std::string& filepath) {
+    if (_dataDrivenSpawnerSystem) {
+        return _dataDrivenSpawnerSystem->loadLevelFromFile(filepath);
+    }
+    LOG_ERROR(
+        "[GameEngine] Cannot load level: DataDrivenSpawnerSystem not "
+        "initialized");
+    return false;
+}
+
+void GameEngine::startLevel() {
+    if (_dataDrivenSpawnerSystem) {
+        _dataDrivenSpawnerSystem->startLevel();
+    }
 }
 
 void GameEngine::setEventCallback(EventCallback callback) {
@@ -161,6 +295,9 @@ void GameEngine::clearPendingEvents() {
 }
 
 std::size_t GameEngine::getEntityCount() const {
+    if (_useDataDrivenSpawner && _dataDrivenSpawnerSystem) {
+        return _dataDrivenSpawnerSystem->getEnemyCount();
+    }
     if (_spawnerSystem) {
         return _spawnerSystem->getEnemyCount();
     }
@@ -174,6 +311,7 @@ engine::ProcessedEvent GameEngine::processEvent(
     engine::ProcessedEvent result{};
     result.type = event.type;
     result.networkId = event.entityNetworkId;
+    result.subType = event.subType;
     result.x = event.x;
     result.y = event.y;
     result.vx = event.velocityX;
@@ -231,6 +369,7 @@ engine::ProcessedEvent GameEngine::processEvent(
     return result;
 }
 
+// LCOV_EXCL_START - lambda-based callback not easily testable
 void GameEngine::syncEntityPositions(
     std::function<void(uint32_t, float, float, float, float)> callback) {
     if (!callback) {
@@ -254,6 +393,7 @@ void GameEngine::syncEntityPositions(
         callback(netId.networkId, transform.x, transform.y, vx, vy);
     });
 }
+// LCOV_EXCL_STOP
 
 uint32_t GameEngine::spawnProjectile(uint32_t playerNetworkId, float playerX,
                                      float playerY) {
@@ -274,6 +414,44 @@ void GameEngine::emitEvent(const engine::GameEvent& event) {
     if (callbackCopy) {
         callbackCopy(event);
     }
+}
+
+void GameEngine::setupECSSignals() {
+    using shared::EnemyTag;
+    using shared::NetworkIdComponent;
+    using shared::PlayerTag;
+    using shared::ProjectileTag;
+
+    _registry->onConstruct<NetworkIdComponent>([this](ECS::Entity entity) {
+        _totalEntitiesCreated.fetch_add(1, std::memory_order_relaxed);
+        if (_registry->hasComponent<NetworkIdComponent>(entity)) {
+            const auto& netId =
+                _registry->getComponent<NetworkIdComponent>(entity);
+            LOG_DEBUG("[GameEngine] Entity created: ID="
+                      << entity.id << ", NetworkID=" << netId.networkId);
+        }
+    });
+
+    _registry->onDestroy<NetworkIdComponent>([this](ECS::Entity entity) {
+        _totalEntitiesDestroyed.fetch_add(1, std::memory_order_relaxed);
+        LOG_DEBUG("[GameEngine] Entity with NetworkIdComponent destroyed: ID="
+                  << entity.id);
+    });
+    _registry->onConstruct<EnemyTag>([](ECS::Entity entity) {
+        LOG_DEBUG("[GameEngine] Enemy spawned: EntityID=" << entity.id);
+    });
+    _registry->onDestroy<EnemyTag>([](ECS::Entity entity) {
+        LOG_DEBUG("[GameEngine] Enemy destroyed: EntityID=" << entity.id);
+    });
+    _registry->onConstruct<ProjectileTag>([](ECS::Entity entity) {
+        LOG_DEBUG("[GameEngine] Projectile spawned: EntityID=" << entity.id);
+    });
+    _registry->onDestroy<ProjectileTag>([](ECS::Entity entity) {
+        LOG_DEBUG("[GameEngine] Projectile destroyed: EntityID=" << entity.id);
+    });
+
+    LOG_INFO(
+        "[GameEngine] ECS signals configured for entity lifecycle tracking");
 }
 
 void registerRTypeGameEngine() {

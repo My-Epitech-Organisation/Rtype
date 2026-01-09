@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
 
+if(WIN32)
+    add_definitions(-D_WIN32_WINNT=0x0A00)
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
+endif()
+
 # Prefer Clang over GCC for better diagnostics and modern C++ support
 # Override with: cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc ..
 if(NOT DEFINED CMAKE_CXX_COMPILER AND NOT DEFINED ENV{CXX})
@@ -34,6 +39,9 @@ option(BUILD_TESTS "Build tests" ON)
 option(BUILD_GRAPHICAL_TESTS "Build graphical tests" ON)
 option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 option(BUILD_DOCS "Build documentation (Doxygen + Docusaurus)" OFF)
+
+# Dependency management (vcpkg preferred, CPM fallback)
+include(${CMAKE_SOURCE_DIR}/cmake/rtype-dependencies.cmake)
 
 # Coverage configuration
 if(ENABLE_COVERAGE)
@@ -73,6 +81,15 @@ if(BUILD_TESTS)
     # For Windows: Prevent overriding the parent project's compiler/linker settings
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(googletest)
+
+    # Copy config directory to build directory for tests
+    if(NOT EXISTS ${CMAKE_BINARY_DIR}/config)
+        execute_process(
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/config
+            ${CMAKE_BINARY_DIR}/config
+        )
+    endif()
 
     add_subdirectory(tests)
 endif()
@@ -148,6 +165,17 @@ if(BUILD_DOCS)
         message(STATUS "Complete documentation target 'docs' available")
     endif()
 endif()
+
+target_include_directories(rtype-graphic-audio
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_include_directories(rtype-display-sfml
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 
 target_include_directories(rtype-graphic-main-menu-scene
         PUBLIC

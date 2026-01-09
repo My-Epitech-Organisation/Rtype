@@ -35,6 +35,11 @@ struct GenericServerSettings {
     uint32_t maxPlayers = 8;
     uint32_t tickRate = 60;
     std::string mapName = "default";
+
+    uint16_t adminPort = 8080;
+    bool adminEnabled = true;
+    bool adminLocalhostOnly = true;
+    std::string adminToken = "";
 };
 
 /**

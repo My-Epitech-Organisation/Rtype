@@ -12,6 +12,7 @@
 
 #include "../../../../client/Graphic/AssetManager/AssetManager.hpp"
 #include "../../../../client/network/ClientNetworkSystem.hpp"
+#include "Components/EnemyTypeComponent.hpp"
 #include "ECS.hpp"
 
 namespace rtype::games::rtype::client {
@@ -53,10 +54,12 @@ class RtypeEntityFactory {
      * @param reg ECS registry
      * @param assetsManager Asset manager
      * @param entity Entity to configure
+     * @param subType Enemy variant enum value (Basic, Shooter, Chaser, etc.)
      */
-    static void setupBydosEntity(ECS::Registry& reg,
-                                 std::shared_ptr<AssetManager> assetsManager,
-                                 ECS::Entity entity);
+    static void setupBydosEntity(
+        ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
+        ECS::Entity entity,
+        shared::EnemyVariant subType = shared::EnemyVariant::Basic);
 
     /**
      * @brief Create a missile entity with all components
@@ -73,17 +76,21 @@ class RtypeEntityFactory {
      * @param registry ECS registry
      * @param entity Entity to configure
      * @param networkId Network identifier for the entity
+     * @param subType Power-up variant type
      */
     static void setupPickupEntity(ECS::Registry& registry, ECS::Entity entity,
-                                  std::uint32_t networkId);
+                                  std::uint32_t networkId, uint8_t subType);
     /**
      * @brief Create an obstacle entity with all components
      *
      * @param registry ECS registry
+     * @param assetsManager Asset manager
      * @param entity Entity to configure
      * @param networkId Network identifier for the entity
      */
-    static void setupObstacleEntity(ECS::Registry& registry, ECS::Entity entity,
+    static void setupObstacleEntity(ECS::Registry& registry,
+                                    std::shared_ptr<AssetManager> assetsManager,
+                                    ECS::Entity entity,
                                     std::uint32_t networkId);
 };
 

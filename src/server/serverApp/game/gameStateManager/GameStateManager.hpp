@@ -12,6 +12,7 @@
 #include <functional>
 #include <set>
 #include <string>
+#include <utility>
 
 namespace rtype::server {
 
@@ -112,6 +113,13 @@ class GameStateManager {
     bool playerReady(std::uint32_t userId);
 
     /**
+     * @brief Mark a player as not ready
+     * @param userId The user ID
+     * @return true if player was marked not ready (was previously ready)
+     */
+    bool playerNotReady(std::uint32_t userId);
+
+    /**
      * @brief Remove a player from ready set
      * @param userId The user ID
      */
@@ -153,6 +161,58 @@ class GameStateManager {
     }
 
     /**
+     * @brief Set callback invoked when the countdown starts. Receives the
+     * countdown duration in seconds.
+     */
+    void setOnCountdownStarted(std::function<void(float)> callback) {
+        _onCountdownStartedCallback = std::move(callback);
+    }
+
+    /**
+     * @brief Set callback invoked when a previously-started countdown is
+     * cancelled (e.g., a player becomes unready).
+     */
+    void setOnCountdownCancelled(std::function<void()> callback) {
+        _onCountdownCancelledCallback = std::move(callback);
+    }
+
+    /**
+     * @brief Set the default countdown duration used when auto-starting
+     */
+    void setDefaultCountdown(float seconds) noexcept {
+        _defaultCountdown = seconds;
+    }
+
+    /**
+     * @brief Get the default countdown duration
+     */
+    [[nodiscard]] float getDefaultCountdown() const noexcept {
+        return _defaultCountdown;
+    }
+
+    /**
+     * @brief Set callback for when a player's ready state changes
+     */
+    void setOnPlayerReadyStateChanged(
+        std::function<void(std::uint32_t userId, bool isReady)> callback) {
+        _onPlayerReadyStateChangedCallback = std::move(callback);
+    }
+
+    /**
+     * @brief Get whether a countdown is currently active (for tests/inspection)
+     */
+    [[nodiscard]] bool isCountdownActive() const noexcept {
+        return _countdownActive;
+    }
+
+    /**
+     * @brief Get remaining countdown time in seconds
+     */
+    [[nodiscard]] float getCountdownRemaining() const noexcept {
+        return _countdownRemaining;
+    }
+
+    /**
      * @brief Force transition to Playing state (for testing)
      */
     void forceStart();
@@ -167,6 +227,28 @@ class GameStateManager {
      */
     void reset();
 
+    /**
+     * @brief Update countdown timer (call each frame)
+     * @param deltaTime Time since last update in seconds
+     */
+    void update(float deltaTime);
+
+    /**
+     * @brief Set the total number of connected players
+     * @param count Number of players currently connected
+     */
+    void setConnectedPlayerCount(size_t count) noexcept {
+        _connectedPlayerCount = count;
+        checkAutoStart();
+    }
+
+    /**
+     * @brief Get the total number of connected players
+     */
+    [[nodiscard]] size_t getConnectedPlayerCount() const noexcept {
+        return _connectedPlayerCount;
+    }
+
    private:
     /**
      * @brief Check if game should auto-start
@@ -176,7 +258,19 @@ class GameStateManager {
     GameState _state{GameState::WaitingForPlayers};
     std::set<std::uint32_t> _readyPlayers;
     size_t _minPlayersToStart;
+    size_t _connectedPlayerCount{0};
     StateChangeCallback _stateChangeCallback;
+
+    std::function<void(std::uint32_t userId, bool isReady)>
+        _onPlayerReadyStateChangedCallback;
+
+    bool _countdownActive{false};
+    float _countdownRemaining{0.0f};
+
+    static constexpr float DEFAULT_COUNTDOWN = 3.0f;
+    float _defaultCountdown{DEFAULT_COUNTDOWN};
+    std::function<void(float)> _onCountdownStartedCallback;
+    std::function<void()> _onCountdownCancelledCallback;
 };
 
 }  // namespace rtype::server

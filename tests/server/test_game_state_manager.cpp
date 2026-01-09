@@ -76,6 +76,7 @@ TEST_F(GameStateManagerTest, PlayerReady_DuplicatePlayer) {
 
 TEST_F(GameStateManagerTest, PlayerReady_WhenAlreadyPlaying) {
     GameStateManager manager(1);
+    manager.setDefaultCountdown(0.0f);
 
     manager.playerReady(1);  // This triggers playing
     EXPECT_TRUE(manager.isPlaying());
@@ -88,6 +89,7 @@ TEST_F(GameStateManagerTest, PlayerReady_WhenAlreadyPlaying) {
 
 TEST_F(GameStateManagerTest, PlayerReady_TriggersAutoStart) {
     GameStateManager manager(2);
+    manager.setDefaultCountdown(0.0f);
 
     manager.playerReady(1);
     EXPECT_FALSE(manager.isPlaying());
@@ -98,6 +100,7 @@ TEST_F(GameStateManagerTest, PlayerReady_TriggersAutoStart) {
 
 TEST_F(GameStateManagerTest, PlayerReady_WithZeroMinPlayers) {
     GameStateManager manager(0);
+    manager.setDefaultCountdown(0.0f);
 
     // With 0 min players, should auto-start immediately
     manager.playerReady(1);
@@ -130,6 +133,7 @@ TEST_F(GameStateManagerTest, PlayerLeft_NonExistentPlayer) {
 
 TEST_F(GameStateManagerTest, PlayerLeft_LastPlayer_PausesGame) {
     GameStateManager manager(1);
+    manager.setDefaultCountdown(0.0f);
 
     manager.playerReady(1);
     EXPECT_TRUE(manager.isPlaying());
@@ -141,6 +145,7 @@ TEST_F(GameStateManagerTest, PlayerLeft_LastPlayer_PausesGame) {
 
 TEST_F(GameStateManagerTest, PlayerLeft_NotLastPlayer_ContinuesGame) {
     GameStateManager manager(2);
+    manager.setDefaultCountdown(0.0f);
 
     manager.playerReady(1);
     manager.playerReady(2);
@@ -372,6 +377,7 @@ TEST_F(GameStateManagerTest, IsPlayerReady_AfterLeft) {
 
 TEST_F(GameStateManagerTest, AutoStart_FromPaused) {
     GameStateManager manager(1);
+    manager.setDefaultCountdown(0.0f);
 
     manager.transitionTo(GameState::Paused);
 

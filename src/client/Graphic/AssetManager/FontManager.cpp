@@ -12,26 +12,31 @@
 
 void FontManager::load(const std::string& id, const std::string& filePath) {
     if (this->_assets.contains(id)) return;
-    auto font = std::make_unique<sf::Font>();
 
-    if (!font->openFromFile(filePath)) {
-        LOG_ERROR("Unable to open font: " << filePath);
+    _display->loadFont(id, filePath);
+    auto font = _display->getFont(id);
+
+    if (!font) {
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
+                      "Unable to open font: " << filePath);
         throw std::runtime_error("Error while loading font: " + filePath);
     }
 
-    this->_assets[id] = std::move(font);
-    LOG_DEBUG("Font loaded with ID: " << id);
+    this->_assets[id] = font;
+    LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
+                  "Font loaded with ID: " << id);
 }
 
-sf::Font& FontManager::get(const std::string& id) {
+std::shared_ptr<::rtype::display::IFont> FontManager::get(
+    const std::string& id) {
     auto it = this->_assets.find(id);
 
     if (it == this->_assets.end()) {
-        LOG_ERROR("Font not found: " << id);
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics, "Font not found: " << id);
         throw std::out_of_range("Font not found: " + id);
     }
 
-    return *it->second;
+    return it->second;
 }
 
 bool FontManager::isLoaded(const std::string& id) const {
@@ -41,18 +46,20 @@ bool FontManager::isLoaded(const std::string& id) const {
 bool FontManager::unload(const std::string& id) {
     auto it = this->_assets.find(id);
     if (it == this->_assets.end()) {
-        LOG_DEBUG("Font not found for unloading: " << id);
+        LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
+                      "Font not found for unloading: " << id);
         return false;
     }
     this->_assets.erase(it);
-    LOG_DEBUG("Font unloaded: " << id);
+    LOG_DEBUG_CAT(::rtype::LogCategory::Graphics, "Font unloaded: " << id);
     return true;
 }
 
 void FontManager::unloadAll() {
     std::size_t count = this->_assets.size();
     this->_assets.clear();
-    LOG_DEBUG("All fonts unloaded (" << count << " fonts)");
+    LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
+                  "All fonts unloaded (" << count << " fonts)");
 }
 
 std::size_t FontManager::size() const { return this->_assets.size(); }

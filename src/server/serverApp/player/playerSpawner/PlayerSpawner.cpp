@@ -13,17 +13,16 @@
 #include "games/rtype/shared/Components/CooldownComponent.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 #include "games/rtype/shared/Components/WeaponComponent.hpp"
+#include "games/rtype/shared/Config/EntityConfig/EntityConfig.hpp"
 #include "network/ServerNetworkSystem.hpp"
 
 namespace rtype::server {
 
-using Position = rtype::games::rtype::shared::Position;
-using TransformComponent = rtype::games::rtype::shared::TransformComponent;
+using Transform = rtype::games::rtype::shared::TransformComponent;
 using Velocity = rtype::games::rtype::shared::VelocityComponent;
 using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
 using Weapon = rtype::games::rtype::shared::WeaponComponent;
@@ -42,6 +41,21 @@ PlayerSpawner::PlayerSpawner(std::shared_ptr<ECS::Registry> registry,
 
 PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
                                              size_t playerIndex) {
+    auto& configRegistry =
+        rtype::games::rtype::shared::EntityConfigRegistry::getInstance();
+    auto playerConfigOpt = configRegistry.getPlayer("default_ship");
+
+    if (!playerConfigOpt.has_value()) {
+        LOG_ERROR(
+            "[PlayerSpawner] Player config 'default_ship' not found in "
+            "registry!");
+        PlayerSpawnResult result;
+        result.success = false;
+        return result;
+    }
+
+    const auto& playerConfig = playerConfigOpt.value().get();
+
     PlayerSpawnResult result;
     result.networkId = userId;
     result.x = _config.baseX;
@@ -51,25 +65,25 @@ PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
     ECS::Entity playerEntity = _registry->spawnEntity();
     result.entity = playerEntity;
 
-    _registry->emplaceComponent<Position>(playerEntity, result.x, result.y);
-    _registry->emplaceComponent<TransformComponent>(playerEntity, result.x,
-                                                    result.y, 0.0F);
+    _registry->emplaceComponent<Transform>(playerEntity, result.x, result.y,
+                                           0.0F);
     _registry->emplaceComponent<Velocity>(playerEntity, 0.0F, 0.0F);
 
-    _registry->emplaceComponent<ShootCooldown>(playerEntity,
-                                               _config.shootCooldown);
+    float shootCooldown =
+        (playerConfig.fireRate > 0) ? (1.0F / playerConfig.fireRate) : 0.3F;
+    _registry->emplaceComponent<ShootCooldown>(playerEntity, shootCooldown);
     Weapon weapon{};
     weapon.weapons[0] = rtype::games::rtype::shared::WeaponPresets::LaserBeam;
     weapon.currentSlot = 0;
     weapon.unlockedSlots = 1;
     _registry->emplaceComponent<Weapon>(playerEntity, weapon);
 
-    _registry->emplaceComponent<BoundingBox>(playerEntity, _config.playerWidth,
-                                             _config.playerHeight);
+    _registry->emplaceComponent<BoundingBox>(
+        playerEntity, playerConfig.hitboxWidth, playerConfig.hitboxHeight);
 
     _registry->emplaceComponent<PlayerTag>(playerEntity);
-    _registry->emplaceComponent<Health>(playerEntity, _config.playerLives,
-                                        _config.playerLives);
+    _registry->emplaceComponent<Health>(playerEntity, playerConfig.health,
+                                        playerConfig.health);
     _registry->emplaceComponent<NetworkIdComponent>(playerEntity,
                                                     result.networkId);
 
@@ -78,14 +92,15 @@ PlayerSpawnResult PlayerSpawner::spawnPlayer(std::uint32_t userId,
                                                 EntityType::Player, result.x,
                                                 result.y);
         _networkSystem->updateEntityHealth(
-            result.networkId, _config.playerLives, _config.playerLives);
+            result.networkId, playerConfig.health, playerConfig.health);
         _networkSystem->setPlayerEntity(userId, playerEntity);
     }
 
     result.success = true;
-    LOG_INFO("[PlayerSpawner] Spawned player for userId="
-             << userId << " networkId=" << result.networkId << " pos=("
-             << result.x << ", " << result.y << ")");
+    LOG_INFO_CAT(rtype::LogCategory::GameEngine,
+                 "[PlayerSpawner] Spawned player for userId="
+                     << userId << " networkId=" << result.networkId << " pos=("
+                     << result.x << ", " << result.y << ")");
 
     return result;
 }
@@ -104,7 +119,9 @@ bool PlayerSpawner::destroyPlayer(std::uint32_t userId) {
     _networkSystem->unregisterNetworkedEntity(playerEntity);
     _registry->killEntity(playerEntity);
 
-    LOG_INFO("[PlayerSpawner] Destroyed player entity for userId=" << userId);
+    LOG_INFO_CAT(
+        rtype::LogCategory::GameEngine,
+        "[PlayerSpawner] Destroyed player entity for userId=" << userId);
     return true;
 }
 

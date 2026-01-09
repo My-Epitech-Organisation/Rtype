@@ -8,21 +8,19 @@
 #include "RenderSystem.hpp"
 
 #include <algorithm>
-#include <utility>
 #include <vector>
 
 #include "../AllComponents.hpp"
 #include "../shared/Components/Tags.hpp"
 #include "ECS.hpp"
+#include "Logger/Macros.hpp"
 
-// Use shorter aliases for readability
 namespace rc = ::rtype::games::rtype::client;
 namespace rs = ::rtype::games::rtype::shared;
 
 namespace rtype::games::rtype::client {
-
-RenderSystem::RenderSystem(std::shared_ptr<sf::RenderTarget> target)
-    : ::rtype::engine::ASystem("RenderSystem"), _target(std::move(target)) {}
+RenderSystem::RenderSystem(std::shared_ptr<::rtype::display::IDisplay> display)
+    : ::rtype::engine::ASystem("RenderSystem"), _display(std::move(display)) {}
 
 bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
     if (registry.hasComponent<HiddenComponent>(entity)) {
@@ -31,160 +29,250 @@ bool RenderSystem::isEntityHidden(ECS::Registry& registry, ECS::Entity entity) {
     return false;
 }
 
-void RenderSystem::_renderImages(ECS::Registry& registry) {
-    std::vector<ECS::Entity> drawableEntities;
-    registry.view<Image, rs::Position, ZIndex>().each(
-        [&drawableEntities](auto entt, auto, auto, auto) {
-            drawableEntities.push_back(entt);
-        });
-    std::sort(drawableEntities.begin(), drawableEntities.end(),
-              [&registry](ECS::Entity a, ECS::Entity b) {
-                  auto& za = registry.getComponent<ZIndex>(a);
-                  auto& zb = registry.getComponent<ZIndex>(b);
-                  return za.depth < zb.depth;
-              });
-    for (auto entt : drawableEntities) {
-        if (isEntityHidden(registry, entt)) continue;
-        if (registry.hasComponent<rs::DestroyTag>(entt)) continue;
+void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
+    if (!registry.hasComponent<Image>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity) ||
+        registry.hasComponent<rs::DestroyTag>(entity))
+        return;
 
-        auto& img = registry.getComponent<Image>(entt);
-        const auto& pos = registry.getComponent<rs::Position>(entt);
+    auto& img = registry.getComponent<Image>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
-        if (registry.hasComponent<Size>(entt)) {
-            const auto& size = registry.getComponent<Size>(entt);
-            img.sprite.setScale(sf::Vector2f({size.x, size.y}));
-        }
-        if (registry.hasComponent<TextureRect>(entt)) {
-            const auto& texture = registry.getComponent<TextureRect>(entt);
-            img.sprite.setTextureRect(texture.rect);
-        }
-
-        if (registry.hasComponent<GameTag>(entt)) {
-            auto bounds = img.sprite.getGlobalBounds();
-            float offsetX = pos.x - bounds.size.x / 2.0f;
-            float offsetY = pos.y - bounds.size.y / 2.0f;
-            img.sprite.setPosition({offsetX, offsetY});
-        } else {
-            img.sprite.setPosition(
-                {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-        }
-
-        _target->draw(img.sprite);
+    display::Vector2f scale = {1.0f, 1.0f};
+    if (registry.hasComponent<Size>(entity)) {
+        const auto& size = registry.getComponent<Size>(entity);
+        scale = {size.x, size.y};
     }
+
+    display::IntRect rect = {0, 0, 0, 0};
+    if (registry.hasComponent<TextureRect>(entity)) {
+        const auto& texture = registry.getComponent<TextureRect>(entity);
+        rect = texture.rect;
+    }
+
+    display::Vector2f position = {static_cast<float>(pos.x),
+                                  static_cast<float>(pos.y)};
+
+    this->_display->drawSprite(img.textureName, position, rect, scale,
+                               img.color);
 }
 
-void RenderSystem::_renderRectangles(ECS::Registry& registry) {
-    registry.view<Rectangle, rs::Position>().each(
-        [this, &registry](auto entt, auto& rectData, auto& pos) {
-            if (registry.hasComponent<ButtonTag>(entt)) return;
-            if (registry.hasComponent<HudTag>(entt)) return;
-            if (isEntityHidden(registry, entt)) return;
-            if (registry.hasComponent<rs::DestroyTag>(entt)) return;
+void RenderSystem::_renderRectangles(ECS::Registry& registry,
+                                     ECS::Entity entity) {
+    if (!registry.hasComponent<Rectangle>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity) ||
+        registry.hasComponent<ButtonTag>(entity) ||
+        registry.hasComponent<HudTag>(entity) ||
+        registry.hasComponent<rs::DestroyTag>(entity))
+        return;
+    auto& rectData = registry.getComponent<Rectangle>(entity);  // Référence !
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
-            rectData.rectangle.setSize(
-                sf::Vector2f(rectData.size.first, rectData.size.second));
-            rectData.rectangle.setOutlineThickness(rectData.outlineThickness);
-            rectData.rectangle.setOutlineColor(rectData.outlineColor);
-            rectData.rectangle.setFillColor(rectData.currentColor);
+    display::Vector2f position = {static_cast<float>(pos.x),
+                                  static_cast<float>(pos.y)};
+    display::Vector2f size = {rectData.size.first, rectData.size.second};
 
-            if (registry.hasComponent<GameTag>(entt)) {
-                float offsetX = pos.x - rectData.size.first / 2.0f;
-                float offsetY = pos.y - rectData.size.second / 2.0f;
-                rectData.rectangle.setPosition({offsetX, offsetY});
-            } else {
-                rectData.rectangle.setPosition(
-                    {static_cast<float>(pos.x), static_cast<float>(pos.y)});
+    this->_display->drawRectangle(position, size, rectData.currentColor,
+                                  rectData.outlineColor,
+                                  rectData.outlineThickness);
+}
+
+void RenderSystem::_renderHudRectangles(ECS::Registry& registry,
+                                        ECS::Entity entity) {
+    if (!registry.hasComponent<Rectangle>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity) ||
+        !registry.hasComponent<HudTag>(entity) ||
+        registry.hasComponent<rs::DestroyTag>(entity))
+        return;
+
+    auto center = this->_display->getViewCenter();
+    auto viewSize = this->_display->getViewSize();
+    this->_display->resetView();
+
+    auto& rectData = registry.getComponent<Rectangle>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
+
+    display::Vector2f position = {static_cast<float>(pos.x),
+                                  static_cast<float>(pos.y)};
+    display::Vector2f size = {rectData.size.first, rectData.size.second};
+
+    this->_display->drawRectangle(position, size, rectData.currentColor,
+                                  rectData.outlineColor,
+                                  rectData.outlineThickness);
+
+    this->_display->setView(center, viewSize);
+}
+
+void RenderSystem::_renderTextInputs(ECS::Registry& registry,
+                                     ECS::Entity entity) {
+    if (!registry.hasComponent<TextInput>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity) ||
+        registry.hasComponent<rs::DestroyTag>(entity))
+        return;
+
+    auto center = this->_display->getViewCenter();
+    auto viewSize = this->_display->getViewSize();
+    this->_display->resetView();
+
+    auto& input = registry.getComponent<TextInput>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
+
+    display::Vector2f position = {static_cast<float>(pos.x),
+                                  static_cast<float>(pos.y)};
+    display::Vector2f size = {input.size.x, input.size.y};
+
+    this->_display->drawRectangle(
+        position, size, input.backgroundColor,
+        input.isFocused ? input.focusedBorderColor : input.unfocusedBorderColor,
+        3.0f);
+
+    std::string textToDraw;
+    display::Color colorToUse = input.textColor;
+
+    if (input.content.empty() && !input.isFocused) {
+        textToDraw = input.placeholder;
+        colorToUse = display::Color(150, 150, 150, 255);
+    } else {
+        if (input.viewStart <= input.content.length()) {
+            textToDraw = input.content.substr(input.viewStart);
+        }
+        if (input.isFocused) {
+            std::size_t relativePos = 0;
+            if (input.cursorPosition >= input.viewStart) {
+                relativePos = input.cursorPosition - input.viewStart;
             }
+            if (relativePos <= textToDraw.length()) {
+                textToDraw.insert(relativePos, "|");
+            } else {
+                textToDraw += "|";
+            }
+        }
+    }
 
-            _target->draw(rectData.rectangle);
-        });
+    float maxWidth = size.x - (2 * kTextInputHorizontalPadding);
+
+    display::Vector2f textBounds = this->_display->getTextBounds(
+        textToDraw, input.fontName, input.fontSize);
+
+    while (textToDraw.length() > 0 && textBounds.x > maxWidth) {
+        textToDraw.pop_back();
+        textBounds = this->_display->getTextBounds(textToDraw, input.fontName,
+                                                   input.fontSize);
+    }
+    float posX = position.x + kTextInputHorizontalPadding;
+    float posY = position.y + ((size.y / 2) - (textBounds.y / 2));
+
+    this->_display->drawText(textToDraw, input.fontName, {posX, posY},
+                             input.fontSize, colorToUse);
+
+    this->_display->setView(center, viewSize);
 }
 
-void RenderSystem::_renderHudRectangles(ECS::Registry& registry) {
-    const sf::View savedView = _target->getView();
-    _target->setView(_target->getDefaultView());
+void RenderSystem::_renderButtons(ECS::Registry& registry, ECS::Entity entity) {
+    if (!registry.hasComponent<ButtonTag>(entity) ||
+        !registry.hasComponent<Rectangle>(entity) ||
+        !registry.hasComponent<Text>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity) ||
+        registry.hasComponent<rs::DestroyTag>(entity))
+        return;
 
-    registry.view<Rectangle, rs::Position, HudTag>().each(
-        [this, &registry](auto entt, auto& rectData, auto& pos, auto /*tag*/) {
-            if (isEntityHidden(registry, entt)) return;
-            if (registry.hasComponent<rs::DestroyTag>(entt)) return;
+    auto center = this->_display->getViewCenter();
+    auto viewSize = this->_display->getViewSize();
+    this->_display->resetView();
 
-            rectData.rectangle.setPosition(
-                {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-            rectData.rectangle.setSize(
-                sf::Vector2f(rectData.size.first, rectData.size.second));
-            rectData.rectangle.setOutlineThickness(rectData.outlineThickness);
-            rectData.rectangle.setOutlineColor(rectData.outlineColor);
-            rectData.rectangle.setFillColor(rectData.currentColor);
+    auto& rectData = registry.getComponent<Rectangle>(entity);
+    auto& textData = registry.getComponent<Text>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
-            _target->draw(rectData.rectangle);
-        });
+    display::Vector2f position = {static_cast<float>(pos.x),
+                                  static_cast<float>(pos.y)};
+    display::Vector2f size = {rectData.size.first, rectData.size.second};
 
-    _target->setView(savedView);
+    this->_display->drawRectangle(position, size, rectData.currentColor,
+                                  rectData.outlineColor,
+                                  rectData.outlineThickness);
+
+    display::Vector2f textBounds = this->_display->getTextBounds(
+        textData.textContent, textData.fontName, textData.size);
+
+    float centerX = position.x + (size.x / 2.0f) - (textBounds.x / 2.0f);
+    float centerY = position.y + (size.y / 2.0f) - (textBounds.y / 2.0f);
+
+    this->_display->drawText(textData.textContent, textData.fontName,
+                             {centerX, centerY}, textData.size, textData.color);
+
+    this->_display->setView(center, viewSize);
 }
 
-void RenderSystem::_renderButtons(ECS::Registry& registry) {
-    registry.view<Rectangle, Text, rs::Position, ButtonTag>().each(
-        [this, &registry](auto entt, auto& rectData, auto& textData, auto& pos,
-                          auto /*tag*/) {
-            if (isEntityHidden(registry, entt)) return;
-            if (registry.hasComponent<rs::DestroyTag>(entt)) return;
+void RenderSystem::_renderStaticText(ECS::Registry& registry,
+                                     ECS::Entity entity) {
+    if (!registry.hasComponent<StaticTextTag>(entity) ||
+        !registry.hasComponent<Text>(entity) ||
+        !registry.hasComponent<rs::TransformComponent>(entity) ||
+        registry.hasComponent<rs::DestroyTag>(entity))
+        return;
 
-            rectData.rectangle.setPosition(
-                {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-            rectData.rectangle.setSize(
-                sf::Vector2f(rectData.size.first, rectData.size.second));
-            rectData.rectangle.setOutlineThickness(rectData.outlineThickness);
-            rectData.rectangle.setOutlineColor(rectData.outlineColor);
-            rectData.rectangle.setFillColor(rectData.currentColor);
+    auto center = this->_display->getViewCenter();
+    auto viewSize = this->_display->getViewSize();
+    this->_display->resetView();
 
-            float rectX = rectData.rectangle.getPosition().x;
-            float rectY = rectData.rectangle.getPosition().y;
-            float rectWidth = rectData.size.first;
-            float rectHeight = rectData.size.second;
+    auto& textData = registry.getComponent<Text>(entity);
+    const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
 
-            textData.text.setCharacterSize(textData.size);
-            textData.text.setFillColor(textData.color);
-            textData.text.setString(textData.textContent);
+    display::Vector2f position = {static_cast<float>(pos.x),
+                                  static_cast<float>(pos.y)};
 
-            sf::FloatRect textBounds = textData.text.getLocalBounds();
-            float textWidth = textBounds.size.x;
-            float textHeight = textBounds.size.y;
-            float textTop = textBounds.position.y;
+    // Center the text if tag is present
+    if (registry.hasComponent<CenteredTextTag>(entity)) {
+        display::Vector2f textBounds = this->_display->getTextBounds(
+            textData.textContent, textData.fontName, textData.size);
+        position.x -= (textBounds.x / 2.0f);
+        position.y -= (textBounds.y / 2.0f);
+    }
 
-            float centerX = rectX + (rectWidth / 2.0f) - (textWidth / 2.0f);
-            float centerY =
-                rectY + (rectHeight / 2.0f) - (textHeight / 2.0f) - textTop;
+    this->_display->drawText(textData.textContent, textData.fontName, position,
+                             textData.size, textData.color);
 
-            textData.text.setPosition({centerX, centerY});
-
-            _target->draw(rectData.rectangle);
-            _target->draw(textData.text);
-        });
-}
-
-void RenderSystem::_renderStaticText(ECS::Registry& registry) {
-    registry.view<Text, rs::Position, StaticTextTag>().each(
-        [this, &registry](auto entt, auto& textData, auto& pos, auto /*tag*/) {
-            if (isEntityHidden(registry, entt)) return;
-            if (registry.hasComponent<rs::DestroyTag>(entt)) return;
-
-            textData.text.setPosition(
-                {static_cast<float>(pos.x), static_cast<float>(pos.y)});
-            textData.text.setCharacterSize(textData.size);
-            textData.text.setFillColor(textData.color);
-            textData.text.setString(textData.textContent);
-
-            _target->draw(textData.text);
-        });
+    this->_display->setView(center, viewSize);
 }
 
 void RenderSystem::update(ECS::Registry& registry, float /*dt*/) {
-    _renderImages(registry);
-    _renderRectangles(registry);
-    _renderButtons(registry);
-    _renderStaticText(registry);
-    _renderHudRectangles(registry);
+    std::vector<ECS::Entity> sortedEntities;
+
+    auto view = registry.view<ZIndex>();
+
+    view.each([&sortedEntities](auto entt, auto&) {
+        sortedEntities.push_back(entt);
+    });
+
+    std::sort(sortedEntities.begin(), sortedEntities.end(),
+              [&registry](ECS::Entity a, ECS::Entity b) {
+                  if (!registry.isAlive(a) || !registry.hasComponent<ZIndex>(a))
+                      return true;
+                  if (!registry.isAlive(b) || !registry.hasComponent<ZIndex>(b))
+                      return false;
+                  const auto& za = registry.getComponent<ZIndex>(a);
+                  const auto& zb = registry.getComponent<ZIndex>(b);
+                  return za.depth < zb.depth;
+              });
+
+    for (auto entity : sortedEntities) {
+        if (!registry.isAlive(entity)) continue;
+        if (isEntityHidden(registry, entity)) continue;
+
+        if (registry.hasComponent<Image>(entity))
+            this->_renderImages(registry, entity);
+        if (registry.hasComponent<Rectangle>(entity))
+            this->_renderRectangles(registry, entity);
+        if (registry.hasComponent<ButtonTag>(entity))
+            this->_renderButtons(registry, entity);
+        if (registry.hasComponent<StaticTextTag>(entity))
+            this->_renderStaticText(registry, entity);
+        if (registry.hasComponent<TextInput>(entity))
+            this->_renderTextInputs(registry, entity);
+        if (registry.hasComponent<HudTag>(entity))
+            this->_renderHudRectangles(registry, entity);
+    }
 }
 
 }  // namespace rtype::games::rtype::client

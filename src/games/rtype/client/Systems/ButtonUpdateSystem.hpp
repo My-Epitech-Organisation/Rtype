@@ -10,19 +10,18 @@
 
 #include <memory>
 
-#include <SFML/Graphics.hpp>
-
+#include "../../../../../include/rtype/display/IDisplay.hpp"
 #include "ASystem.hpp"
 #include "ECS.hpp"
-#include "SFML/Window.hpp"
 
 namespace rtype::games::rtype::client {
 class ButtonUpdateSystem : public ::rtype::engine::ASystem {
    private:
-    std::shared_ptr<sf::RenderWindow> _window;
+    std::shared_ptr<::rtype::display::IDisplay> _display;
 
    public:
-    explicit ButtonUpdateSystem(std::shared_ptr<sf::RenderWindow> window);
+    explicit ButtonUpdateSystem(
+        std::shared_ptr<::rtype::display::IDisplay> display);
     void update(ECS::Registry& registry, float dt) override;
 };
 }  // namespace rtype::games::rtype::client

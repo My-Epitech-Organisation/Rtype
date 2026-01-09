@@ -11,13 +11,13 @@
 #include <rtype/network.hpp>
 
 #include "games/rtype/shared/Components/CooldownComponent.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 #include "network/ServerNetworkSystem.hpp"
 
 namespace rtype::server {
 
-using Position = rtype::games::rtype::shared::Position;
+using Transform = rtype::games::rtype::shared::TransformComponent;
 using Velocity = rtype::games::rtype::shared::VelocityComponent;
 using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
 
@@ -47,9 +47,11 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
     }
 
     if (_verbose) {
-        LOG_DEBUG("[InputHandler] Input from userId="
-                  << userId << " inputMask=" << static_cast<int>(inputMask)
-                  << " hasEntity=" << entity.has_value());
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[InputHandler] Input from userId="
+                          << userId
+                          << " inputMask=" << static_cast<int>(inputMask)
+                          << " hasEntity=" << entity.has_value());
     }
 
     if (_stateManager && !_stateManager->isPlaying()) {
@@ -101,8 +103,8 @@ void PlayerInputHandler::processMovement(ECS::Entity entity,
     if (_networkSystem) {
         auto networkIdOpt = _networkSystem->getNetworkId(entity);
         if (networkIdOpt.has_value() &&
-            _registry->hasComponent<Position>(entity)) {
-            auto& pos = _registry->getComponent<Position>(entity);
+            _registry->hasComponent<Transform>(entity)) {
+            auto& pos = _registry->getComponent<Transform>(entity);
             _networkSystem->updateEntityPosition(*networkIdOpt, pos.x, pos.y,
                                                  vx, vy);
         }
@@ -111,11 +113,13 @@ void PlayerInputHandler::processMovement(ECS::Entity entity,
 
 void PlayerInputHandler::processShoot(std::uint32_t userId,
                                       ECS::Entity entity) {
-    if (!_registry->hasComponent<Position>(entity) ||
+    if (!_registry->hasComponent<Transform>(entity) ||
         !_registry->hasComponent<ShootCooldown>(entity)) {
         if (_verbose) {
-            LOG_DEBUG("[InputHandler] Player "
-                      << userId << " missing Position or ShootCooldown");
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[InputHandler] Player "
+                              << userId
+                              << " missing Position or ShootCooldown");
         }
         return;
     }
@@ -123,9 +127,10 @@ void PlayerInputHandler::processShoot(std::uint32_t userId,
     auto& cooldown = _registry->getComponent<ShootCooldown>(entity);
     if (!cooldown.canShoot()) {
         if (_verbose) {
-            LOG_DEBUG("[InputHandler] Player "
-                      << userId
-                      << " cooldown not ready: " << cooldown.currentCooldown);
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[InputHandler] Player " << userId
+                                                   << " cooldown not ready: "
+                                                   << cooldown.currentCooldown);
         }
         return;
     }
@@ -137,19 +142,21 @@ void PlayerInputHandler::processShoot(std::uint32_t userId,
     auto networkIdOpt = _networkSystem->getNetworkId(entity);
     if (!networkIdOpt.has_value()) {
         if (_verbose) {
-            LOG_DEBUG("[InputHandler] Player " << userId
-                                               << " has no networkId");
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[InputHandler] Player " << userId << " has no networkId");
         }
         return;
     }
 
-    auto& pos = _registry->getComponent<Position>(entity);
+    auto& pos = _registry->getComponent<Transform>(entity);
     std::uint32_t projectileId = _shootCallback(*networkIdOpt, pos.x, pos.y);
 
     if (projectileId != 0) {
         cooldown.triggerCooldown();
-        LOG_DEBUG("[InputHandler] Player " << userId << " fired projectile "
-                                           << projectileId);
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[InputHandler] Player " << userId << " fired projectile "
+                                               << projectileId);
     }
 }
 

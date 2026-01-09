@@ -102,6 +102,15 @@ struct is_rfc_type<PingPayload> : std::true_type {};
 template <>
 struct is_rfc_type<PongPayload> : std::true_type {};
 
+template <>
+struct is_rfc_type<EntityMoveBatchHeader> : std::true_type {};
+template <>
+struct is_rfc_type<LobbyReadyPayload> : std::true_type {};
+template <>
+struct is_rfc_type<GameStartPayload> : std::true_type {};
+template <>
+struct is_rfc_type<PlayerReadyStatePayload> : std::true_type {};
+
 template <typename T>
 inline constexpr bool is_rfc_type_v = is_rfc_type<T>::value;
 
@@ -216,6 +225,7 @@ fromNetwork(const T& data) noexcept {
     EntitySpawnPayload result;
     result.entityId = ByteOrder::toNetwork(p.entityId);
     result.type = p.type;
+    result.subType = p.subType;
     result.posX = ByteOrder::toNetwork(p.posX);
     result.posY = ByteOrder::toNetwork(p.posY);
     return result;
@@ -226,6 +236,7 @@ fromNetwork(const T& data) noexcept {
     EntitySpawnPayload result;
     result.entityId = ByteOrder::fromNetwork(p.entityId);
     result.type = p.type;
+    result.subType = p.subType;
     result.posX = ByteOrder::fromNetwork(p.posX);
     result.posY = ByteOrder::fromNetwork(p.posY);
     return result;
@@ -363,6 +374,64 @@ fromNetwork(const T& data) noexcept {
 }
 [[nodiscard]] inline PongPayload fromNetwork(const PongPayload& p) noexcept {
     return p;
+}
+
+[[nodiscard]] inline EntityMoveBatchHeader toNetwork(
+    const EntityMoveBatchHeader& p) noexcept {
+    return p;  // Single byte, no conversion needed
+}
+[[nodiscard]] inline EntityMoveBatchHeader fromNetwork(
+    const EntityMoveBatchHeader& p) noexcept {
+    return p;  // Single byte, no conversion needed
+}
+
+[[nodiscard]] inline LobbyReadyPayload toNetwork(const LobbyReadyPayload& p) noexcept {
+    return p;
+}
+[[nodiscard]] inline LobbyReadyPayload fromNetwork(const LobbyReadyPayload& p) noexcept {
+    return p;
+}
+
+[[nodiscard]] inline JoinLobbyPayload toNetwork(const JoinLobbyPayload& p) noexcept {
+    return p;
+}
+[[nodiscard]] inline JoinLobbyPayload fromNetwork(const JoinLobbyPayload& p) noexcept {
+    return p;
+}
+
+[[nodiscard]] inline JoinLobbyResponsePayload toNetwork(const JoinLobbyResponsePayload& p) noexcept {
+    return p;
+}
+[[nodiscard]] inline JoinLobbyResponsePayload fromNetwork(const JoinLobbyResponsePayload& p) noexcept {
+    return p;
+}
+
+[[nodiscard]] inline GameStartPayload toNetwork(const GameStartPayload& p) noexcept {
+    GameStartPayload result;
+    result.countdownDuration = ByteOrder::toNetwork(p.countdownDuration);
+    return result;
+}
+
+[[nodiscard]] inline GameStartPayload fromNetwork(const GameStartPayload& p) noexcept {
+    GameStartPayload result;
+    result.countdownDuration = ByteOrder::fromNetwork(p.countdownDuration);
+    return result;
+}
+
+[[nodiscard]] inline PlayerReadyStatePayload toNetwork(
+    const PlayerReadyStatePayload& p) noexcept {
+    PlayerReadyStatePayload result;
+    result.userId = ByteOrder::toNetwork(p.userId);
+    result.isReady = p.isReady;
+    return result;
+}
+
+[[nodiscard]] inline PlayerReadyStatePayload fromNetwork(
+    const PlayerReadyStatePayload& p) noexcept {
+    PlayerReadyStatePayload result;
+    result.userId = ByteOrder::fromNetwork(p.userId);
+    result.isReady = p.isReady;
+    return result;
 }
 
 /**

@@ -10,12 +10,11 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "AudioLib/AudioLib.hpp"
 
 static constexpr int nbr_vessels = 7;
-#include <SFML/Graphics/Color.hpp>
-
 #include "../../../../network/ClientNetworkSystem.hpp"
 #include "../../../../network/NetworkClient.hpp"
 #include "../AScene.hpp"
@@ -24,6 +23,7 @@ static constexpr int nbr_vessels = 7;
 
 class MainMenuScene : public AScene {
    private:
+    bool _connectPopUpVisible = false;
     /// @brief Network client for server communication
     std::shared_ptr<rtype::client::NetworkClient> _networkClient;
 
@@ -40,8 +40,15 @@ class MainMenuScene : public AScene {
     /// @brief Port input field entity
     ECS::Entity _portInputEntity;
 
+    /// @brief Lobby code input field entity
+    ECS::Entity _lobbyCodeInputEntity;
+
     /// @brief Status text entity
     ECS::Entity _statusEntity;
+
+    /// @brief Discovery server address
+    std::string _discoveryIp = "127.0.0.1";
+    std::uint16_t _discoveryPort = 4242;
 
     void _createAstroneerVessel();
     void _createFakePlayer();
@@ -65,17 +72,18 @@ class MainMenuScene : public AScene {
      * @param message Status message
      * @param color Text color
      */
-    void _updateStatus(const std::string& message, sf::Color color);
+    void _updateStatus(const std::string& message,
+                       ::rtype::display::Color color);
 
    public:
     void update(float dt) override;
-    void render(std::shared_ptr<sf::RenderWindow> window) override;
-    void pollEvents(const sf::Event& e) override;
+    void render(std::shared_ptr<::rtype::display::IDisplay> window) override;
+    void pollEvents(const ::rtype::display::Event& e) override;
 
     MainMenuScene(
         std::shared_ptr<ECS::Registry> ecs,
         std::shared_ptr<AssetManager> textureManager,
-        std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<::rtype::display::IDisplay> window,
         std::function<void(const SceneManager::Scene&)> switchToScene,
         std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,
         std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =
@@ -89,6 +97,12 @@ class MainMenuScene : public AScene {
 
    private:
     std::shared_ptr<AudioLib> _audioLib;
+    std::vector<rtype::client::NetworkClient::CallbackId> _connectedCallbackIds;
+    std::vector<rtype::client::NetworkClient::CallbackId>
+        _disconnectedCallbackIds;
+
+    /// @brief Pending join code to send after successful connect
+    std::string _pendingLobbyCode;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_MAINMENUSCENE_MAINMENUSCENE_HPP_

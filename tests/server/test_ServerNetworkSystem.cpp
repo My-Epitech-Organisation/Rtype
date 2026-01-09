@@ -18,6 +18,10 @@
 #include "../../src/server/network/ServerNetworkSystem.hpp"
 #include "../../src/server/network/NetworkServer.hpp"
 #include "../../lib/ecs/src/core/Registry/Registry.hpp"
+#include "../../src/games/rtype/shared/Components/HealthComponent.hpp"
+#include "../../src/games/rtype/shared/Components/NetworkIdComponent.hpp"
+#include "../../src/games/rtype/shared/Components/EnemyTypeComponent.hpp"
+#include "../../src/games/rtype/shared/Components/PowerUpTypeComponent.hpp"
 
 using namespace rtype::server;
 using namespace ECS;
@@ -55,7 +59,7 @@ class ServerNetworkSystemTest : public ::testing::Test {
 TEST_F(ServerNetworkSystemTest, Constructor_ValidParameters) {
     auto registry = std::make_shared<Registry>();
     auto server = std::make_shared<NetworkServer>();
-    
+
     EXPECT_NO_THROW({
         ServerNetworkSystem system(registry, server);
     });
@@ -331,6 +335,31 @@ TEST_F(ServerNetworkSystemTest, BroadcastGameStart) {
     });
 }
 
+TEST_F(ServerNetworkSystemTest, BroadcastEntitySpawn_WithRegisteredEntityHealth) {
+    // Entity has been registered with NetworkSystem and has health component
+    ECS::Entity entity = registry_->spawnEntity();
+    registry_->emplaceComponent<rtype::games::rtype::shared::HealthComponent>(entity, 42, 100);
+    system_->registerNetworkedEntity(entity, 300,
+        ServerNetworkSystem::EntityType::Player, 10.0f, 20.0f);
+
+    // Should run through the branch that sends initial health to clients
+    EXPECT_NO_THROW({
+        system_->broadcastEntitySpawn(300, ServerNetworkSystem::EntityType::Player, 0, 10.0f, 20.0f);
+    });
+}
+
+TEST_F(ServerNetworkSystemTest, BroadcastEntitySpawn_FindsEntityByNetworkIdComponent_WithHealth) {
+    // Do not register the entity with the system; instead provide NetworkIdComponent
+    ECS::Entity entity = registry_->spawnEntity();
+    registry_->emplaceComponent<rtype::games::rtype::shared::NetworkIdComponent>(entity, 444);
+    registry_->emplaceComponent<rtype::games::rtype::shared::HealthComponent>(entity, 7, 11);
+
+    // This should exercise the code path that searches the registry for matching NetworkIdComponent
+    EXPECT_NO_THROW({
+        system_->broadcastEntitySpawn(444, ServerNetworkSystem::EntityType::Player, 0, 1.0f, 2.0f);
+    });
+}
+
 // ============================================================================
 // UPDATE TESTS
 // ============================================================================
@@ -529,7 +558,7 @@ TEST_F(ServerNetworkSystemTest, EdgeCase_RegisterSameNetworkIdTwice) {
 
     system_->registerNetworkedEntity(entity1, 1,
         ServerNetworkSystem::EntityType::Player, 0.0f, 0.0f);
-    
+
     // Registering with same network ID should overwrite
     system_->registerNetworkedEntity(entity2, 1,
         ServerNetworkSystem::EntityType::Bydos, 100.0f, 100.0f);
@@ -554,7 +583,7 @@ TEST_F(ServerNetworkSystemTest, EdgeCase_UpdateAfterUnregister) {
 
 TEST_F(ServerNetworkSystemTest, EdgeCase_ZeroPosition) {
     ECS::Entity entity = registry_->spawnEntity();
-    
+
     EXPECT_NO_THROW({
         system_->registerNetworkedEntity(entity, 1,
             ServerNetworkSystem::EntityType::Player, 0.0f, 0.0f);
@@ -567,7 +596,7 @@ TEST_F(ServerNetworkSystemTest, EdgeCase_ZeroPosition) {
 
 TEST_F(ServerNetworkSystemTest, EdgeCase_NegativePosition) {
     ECS::Entity entity = registry_->spawnEntity();
-    
+
     EXPECT_NO_THROW({
         system_->registerNetworkedEntity(entity, 1,
             ServerNetworkSystem::EntityType::Player, -100.0f, -200.0f);
@@ -621,7 +650,7 @@ TEST_F(ServerNetworkSystemTest, InputHandler_NullHandler) {
     // Set handler then clear it
     system_->setInputHandler(
         [](std::uint32_t, std::uint8_t, std::optional<ECS::Entity>) {});
-    
+
     system_->setInputHandler(nullptr);
 
     // Should not crash when handler is null
@@ -637,18 +666,18 @@ TEST_F(ServerNetworkSystemTest, InputHandler_NullHandler) {
 TEST_F(ServerNetworkSystemTest, BroadcastWithRunningServer) {
     // Start the server
     EXPECT_TRUE(server_->start(14245));
-    
+
     ECS::Entity entity = registry_->spawnEntity();
     system_->registerNetworkedEntity(entity, 1,
         ServerNetworkSystem::EntityType::Player, 100.0f, 200.0f);
 
     // Update and broadcast
     system_->updateEntityPosition(1, 150.0f, 250.0f, 5.0f, 10.0f);
-    
+
     EXPECT_NO_THROW({
         system_->broadcastEntityUpdates();
     });
-    
+
     EXPECT_NO_THROW({
         system_->broadcastGameStart();
     });
@@ -658,7 +687,7 @@ TEST_F(ServerNetworkSystemTest, BroadcastWithRunningServer) {
 
 TEST_F(ServerNetworkSystemTest, CorrectPlayerPositionWithRunningServer) {
     EXPECT_TRUE(server_->start(14246));
-    
+
     EXPECT_NO_THROW({
         system_->correctPlayerPosition(1, 500.0f, 400.0f);
     });
@@ -672,7 +701,7 @@ TEST_F(ServerNetworkSystemTest, CorrectPlayerPositionWithRunningServer) {
 
 TEST_F(ServerNetworkSystemTest, MultipleEntities_RegisterUpdateUnregister) {
     std::vector<ECS::Entity> entities;
-    
+
     // Register multiple entities
     for (int i = 0; i < 10; ++i) {
         ECS::Entity entity = registry_->spawnEntity();
@@ -738,7 +767,7 @@ TEST_F(ServerNetworkSystemTest, AllEntityTypes) {
 
 TEST_F(ServerNetworkSystemTest, NextNetworkId_ManyIds) {
     std::vector<std::uint32_t> ids;
-    
+
     for (int i = 0; i < 100; ++i) {
         ids.push_back(system_->nextNetworkId());
     }
@@ -747,5 +776,352 @@ TEST_F(ServerNetworkSystemTest, NextNetworkId_ManyIds) {
     std::sort(ids.begin(), ids.end());
     auto last = std::unique(ids.begin(), ids.end());
     EXPECT_EQ(last, ids.end());  // No duplicates
+}
+
+TEST_F(ServerNetworkSystemTest, BroadcastEntityUpdates_Batching_MultipleBatches) {
+    // Create a number of entities greater than network::kMaxEntitiesPerBatch to force batching
+    constexpr std::size_t total = 69 + 6; // force multiple batches (kMaxEntitiesPerBatch=69)
+    std::vector<std::uint32_t> ids;
+    ids.reserve(total);
+
+    for (std::size_t i = 0; i < total; ++i) {
+        ECS::Entity ent = registry_->spawnEntity();
+        std::uint32_t id = system_->nextNetworkId();
+        system_->registerNetworkedEntity(ent, id, ServerNetworkSystem::EntityType::Bydos,
+                                        static_cast<float>(i), static_cast<float>(i));
+        // mark dirty by updating position
+        system_->updateEntityPosition(id, static_cast<float>(i+1), static_cast<float>(i+2), 0.0f, 0.0f);
+        ids.push_back(id);
+    }
+
+    // Should split into multiple batches and not throw
+    EXPECT_NO_THROW({ system_->broadcastEntityUpdates(); });
+
+    // After broadcast, entities remain registered but not dirty
+    for (auto id : ids) {
+        // Ensure entity still present
+        EXPECT_TRUE(system_->findEntityByNetworkId(id).has_value());
+    }
+
+}
+
+// ============================================================================
+// COMPONENT-SPECIFIC TESTS (EnemyType, PowerUpType)
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, RegisterEntity_WithEnemyTypeComponent) {
+    ECS::Entity entity = registry_->spawnEntity();
+    registry_->emplaceComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
+        entity, rtype::games::rtype::shared::EnemyVariant::Basic, "");
+
+    EXPECT_NO_THROW({
+        system_->registerNetworkedEntity(entity, 1,
+            ServerNetworkSystem::EntityType::Bydos, 100.0f, 200.0f);
+    });
+
+    EXPECT_TRUE(system_->findEntityByNetworkId(1).has_value());
+}
+
+TEST_F(ServerNetworkSystemTest, RegisterEntity_WithPowerUpTypeComponent) {
+    ECS::Entity entity = registry_->spawnEntity();
+    registry_->emplaceComponent<rtype::games::rtype::shared::PowerUpTypeComponent>(
+        entity, rtype::games::rtype::shared::PowerUpVariant::SpeedBoost);
+
+    EXPECT_NO_THROW({
+        system_->registerNetworkedEntity(entity, 1,
+            ServerNetworkSystem::EntityType::Pickup, 50.0f, 50.0f);
+    });
+
+    EXPECT_TRUE(system_->findEntityByNetworkId(1).has_value());
+}
+
+// ============================================================================
+// HANDLE CLIENT CONNECTED TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, HandleClientConnected_WithExistingEntities) {
+    // Register some entities
+    ECS::Entity entity1 = registry_->spawnEntity();
+    ECS::Entity entity2 = registry_->spawnEntity();
+
+    system_->registerNetworkedEntity(entity1, 1,
+        ServerNetworkSystem::EntityType::Player, 0.0f, 0.0f);
+    system_->registerNetworkedEntity(entity2, 2,
+        ServerNetworkSystem::EntityType::Bydos, 100.0f, 100.0f);
+
+    // Simulate client connection via callback
+    bool callbackTriggered = false;
+    system_->onClientConnected([&](std::uint32_t userId) {
+        callbackTriggered = true;
+    });
+
+    EXPECT_NO_THROW({
+        system_->update();
+    });
+}
+
+TEST_F(ServerNetworkSystemTest, HandleClientConnected_WithEnemyTypeEntities) {
+    ECS::Entity enemy = registry_->spawnEntity();
+    registry_->emplaceComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
+        enemy, rtype::games::rtype::shared::EnemyVariant::Shooter, "");
+    registry_->emplaceComponent<rtype::games::rtype::shared::NetworkIdComponent>(enemy, 1);
+
+    system_->registerNetworkedEntity(enemy, 1,
+        ServerNetworkSystem::EntityType::Bydos, 150.0f, 150.0f);
+
+    EXPECT_NO_THROW({
+        system_->update();
+    });
+}
+
+TEST_F(ServerNetworkSystemTest, HandleClientConnected_WithPowerUpTypeEntities) {
+    ECS::Entity powerup = registry_->spawnEntity();
+    registry_->emplaceComponent<rtype::games::rtype::shared::PowerUpTypeComponent>(
+        powerup, rtype::games::rtype::shared::PowerUpVariant::Shield);
+    registry_->emplaceComponent<rtype::games::rtype::shared::NetworkIdComponent>(powerup, 1);
+
+    system_->registerNetworkedEntity(powerup, 1,
+        ServerNetworkSystem::EntityType::Pickup, 200.0f, 200.0f);
+
+    EXPECT_NO_THROW({
+        system_->update();
+    });
+}
+
+TEST_F(ServerNetworkSystemTest, HandleClientConnected_WithHealthComponent) {
+    ECS::Entity entity = registry_->spawnEntity();
+    registry_->emplaceComponent<rtype::games::rtype::shared::NetworkIdComponent>(entity, 1);
+    registry_->emplaceComponent<rtype::games::rtype::shared::HealthComponent>(entity, 50, 100);
+
+    system_->registerNetworkedEntity(entity, 1,
+        ServerNetworkSystem::EntityType::Player, 0.0f, 0.0f);
+
+    EXPECT_NO_THROW({
+        system_->update();
+    });
+}
+
+// ============================================================================
+// HANDLE CLIENT DISCONNECTED TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, HandleClientDisconnected_ImmediateDisconnect) {
+    ECS::Entity player = registry_->spawnEntity();
+    system_->registerNetworkedEntity(player, 1,
+        ServerNetworkSystem::EntityType::Player, 0.0f, 0.0f);
+    system_->setPlayerEntity(100, player);
+
+    bool callbackTriggered = false;
+    system_->onClientDisconnected([&](std::uint32_t userId) {
+        callbackTriggered = true;
+    });
+
+    EXPECT_NO_THROW({
+        system_->update();
+    });
+}
+
+// ============================================================================
+// RESET STATE TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, ResetState_ClearsAllEntities) {
+    // Register multiple entities
+    for (int i = 0; i < 5; ++i) {
+        ECS::Entity entity = registry_->spawnEntity();
+        system_->registerNetworkedEntity(entity, static_cast<std::uint32_t>(i + 1),
+            ServerNetworkSystem::EntityType::Bydos, 0.0f, 0.0f);
+    }
+
+    // Register players
+    ECS::Entity player1 = registry_->spawnEntity();
+    ECS::Entity player2 = registry_->spawnEntity();
+    system_->setPlayerEntity(100, player1);
+    system_->setPlayerEntity(101, player2);
+
+    // Reset
+    EXPECT_NO_THROW({
+        system_->resetState();
+    });
+
+    // Verify all cleared
+    for (int i = 0; i < 5; ++i) {
+        EXPECT_FALSE(system_->findEntityByNetworkId(static_cast<std::uint32_t>(i + 1)).has_value());
+    }
+    EXPECT_FALSE(system_->getPlayerEntity(100).has_value());
+    EXPECT_FALSE(system_->getPlayerEntity(101).has_value());
+
+    // Next network ID should be reset to 1
+    EXPECT_EQ(system_->nextNetworkId(), 1u);
+}
+
+TEST_F(ServerNetworkSystemTest, ResetState_WithNoServer) {
+    auto registry = std::make_shared<Registry>();
+    ServerNetworkSystem system(registry, nullptr);
+
+    ECS::Entity entity = registry->spawnEntity();
+    system.registerNetworkedEntity(entity, 1,
+        ServerNetworkSystem::EntityType::Player, 0.0f, 0.0f);
+
+    EXPECT_NO_THROW({
+        system.resetState();
+    });
+
+    EXPECT_FALSE(system.findEntityByNetworkId(1).has_value());
+}
+
+// ============================================================================
+// UPDATE ENTITY HEALTH TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, UpdateEntityHealth_WithServer) {
+    EXPECT_NO_THROW({
+        system_->updateEntityHealth(1, 50, 100);
+    });
+}
+
+TEST_F(ServerNetworkSystemTest, UpdateEntityHealth_NoServer) {
+    auto registry = std::make_shared<Registry>();
+    ServerNetworkSystem system(registry, nullptr);
+
+    EXPECT_NO_THROW({
+        system.updateEntityHealth(1, 50, 100);
+    });
+}
+
+// ============================================================================
+// BROADCAST POWER UP TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, BroadcastPowerUp_WithServer) {
+    EXPECT_NO_THROW({
+        system_->broadcastPowerUp(1, 2, 5.0f);
+    });
+}
+
+TEST_F(ServerNetworkSystemTest, BroadcastPowerUp_NoServer) {
+    auto registry = std::make_shared<Registry>();
+    ServerNetworkSystem system(registry, nullptr);
+
+    EXPECT_NO_THROW({
+        system.broadcastPowerUp(1, 2, 5.0f);
+    });
+}
+
+// ============================================================================
+// BROADCAST GAME STATE TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, BroadcastGameState_Running) {
+    EXPECT_NO_THROW({
+        system_->broadcastGameState(NetworkServer::GameState::Running);
+    });
+}
+
+TEST_F(ServerNetworkSystemTest, BroadcastGameState_Lobby) {
+    EXPECT_NO_THROW({
+        system_->broadcastGameState(NetworkServer::GameState::Lobby);
+    });
+}
+
+TEST_F(ServerNetworkSystemTest, BroadcastGameState_GameOver) {
+    EXPECT_NO_THROW({
+        system_->broadcastGameState(NetworkServer::GameState::GameOver);
+    });
+}
+
+TEST_F(ServerNetworkSystemTest, BroadcastGameState_NoServer) {
+    auto registry = std::make_shared<Registry>();
+    ServerNetworkSystem system(registry, nullptr);
+
+    EXPECT_NO_THROW({
+        system.broadcastGameState(NetworkServer::GameState::Running);
+    });
+}
+
+// ============================================================================
+// BROADCAST GAME OVER TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, BroadcastGameOver_WithScore) {
+    EXPECT_NO_THROW({
+        system_->broadcastGameOver(12345);
+    });
+}
+
+TEST_F(ServerNetworkSystemTest, BroadcastGameOver_NoServer) {
+    auto registry = std::make_shared<Registry>();
+    ServerNetworkSystem system(registry, nullptr);
+
+    EXPECT_NO_THROW({
+        system.broadcastGameOver(99999);
+    });
+}
+
+// ============================================================================
+// HANDLE GET USERS REQUEST TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, HandleGetUsersRequest_NoServer) {
+    auto registry = std::make_shared<Registry>();
+    ServerNetworkSystem system(registry, nullptr);
+
+    // Should log but not crash
+    EXPECT_NO_THROW({
+        system.update();
+    });
+}
+
+// ============================================================================
+// UNREGISTER WITH NULL ENTITY TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, UnregisterNetworkedEntityById_WithNullEntity) {
+    // Manually add a networked entity with null ECS entity
+    ECS::Entity entity = registry_->spawnEntity();
+    system_->registerNetworkedEntity(entity, 1,
+        ServerNetworkSystem::EntityType::Player, 0.0f, 0.0f);
+
+    // Kill the entity in registry but not in system
+    registry_->killEntity(entity);
+
+    // Now unregister by ID - should handle null entity
+    EXPECT_NO_THROW({
+        system_->unregisterNetworkedEntityById(1);
+    });
+}
+
+// ============================================================================
+// BROADCAST ENTITY SPAWN - ENTITY LOOKUP TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, BroadcastEntitySpawn_FindsEntityByNetworkId) {
+    ECS::Entity entity = registry_->spawnEntity();
+    registry_->emplaceComponent<rtype::games::rtype::shared::NetworkIdComponent>(entity, 777);
+
+    // Call broadcastEntitySpawn without registering first
+    // Should find entity via NetworkIdComponent
+    EXPECT_NO_THROW({
+        system_->broadcastEntitySpawn(777, ServerNetworkSystem::EntityType::Bydos, 0, 50.0f, 75.0f);
+    });
+
+    EXPECT_TRUE(system_->findEntityByNetworkId(777).has_value());
+}
+
+// ============================================================================
+// UPDATE WITH NO SERVER TESTS
+// ============================================================================
+
+TEST_F(ServerNetworkSystemTest, Update_NoServer) {
+    auto registry = std::make_shared<Registry>();
+    ServerNetworkSystem system(registry, nullptr);
+
+    ECS::Entity entity = registry->spawnEntity();
+    system.registerNetworkedEntity(entity, 1,
+        ServerNetworkSystem::EntityType::Player, 0.0f, 0.0f);
+
+    EXPECT_NO_THROW({
+        system.update();
+    });
 }
 

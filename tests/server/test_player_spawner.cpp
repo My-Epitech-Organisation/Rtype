@@ -18,11 +18,11 @@
 #include "games/rtype/shared/Components/CooldownComponent.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
-#include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
+#include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 #include "games/rtype/shared/Components/WeaponComponent.hpp"
+#include "games/rtype/shared/Config/EntityConfig/EntityConfig.hpp"
 
 using namespace rtype::server;
 using namespace ECS;
@@ -34,6 +34,11 @@ using namespace ECS;
 class PlayerSpawnerTest : public ::testing::Test {
    protected:
     void SetUp() override {
+        // Load entity configurations required by PlayerSpawner
+        auto& entityConfigRegistry =
+            rtype::games::rtype::shared::EntityConfigRegistry::getInstance();
+        entityConfigRegistry.loadPlayersWithSearch("config/game/players.toml");
+
         registry_ = std::make_shared<Registry>();
         NetworkServer::Config config;
         config.clientTimeout = std::chrono::milliseconds(5000);
@@ -129,7 +134,7 @@ TEST_F(PlayerSpawnerTest, SpawnPlayer_MultiplePlayersWithDifferentIndices) {
 }
 
 TEST_F(PlayerSpawnerTest, SpawnPlayer_HasAllComponents) {
-    using Position = rtype::games::rtype::shared::Position;
+    using Transform = rtype::games::rtype::shared::TransformComponent;
     using TransformComponent = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
     using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
@@ -147,7 +152,7 @@ TEST_F(PlayerSpawnerTest, SpawnPlayer_HasAllComponents) {
 
     ECS::Entity entity = result.entity;
 
-    EXPECT_TRUE(registry_->hasComponent<Position>(entity));
+    EXPECT_TRUE(registry_->hasComponent<Transform>(entity));
     EXPECT_TRUE(registry_->hasComponent<TransformComponent>(entity));
     EXPECT_TRUE(registry_->hasComponent<Velocity>(entity));
     EXPECT_TRUE(registry_->hasComponent<ShootCooldown>(entity));
@@ -169,8 +174,9 @@ TEST_F(PlayerSpawnerTest, SpawnPlayer_HealthSetCorrectly) {
     auto result = spawner.spawnPlayer(1, 0);
     auto& health = registry_->getComponent<Health>(result.entity);
 
-    EXPECT_EQ(health.current, 7);
-    EXPECT_EQ(health.max, 7);
+    // Health comes from player config, should be positive and at max
+    EXPECT_GT(health.current, 0);
+    EXPECT_EQ(health.current, health.max);
 }
 
 TEST_F(PlayerSpawnerTest, SpawnPlayer_WithoutNetworkSystem) {

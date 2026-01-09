@@ -10,6 +10,7 @@
 // Include all client components
 #include "Components/BoxingComponent.hpp"
 #include "Components/ButtonComponent.hpp"
+#include "Components/ColorTintComponent.hpp"
 #include "Components/HiddenComponent.hpp"
 #include "Components/ImageComponent.hpp"
 #include "Components/ParallaxComponent.hpp"
@@ -23,8 +24,8 @@
 #include "Components/ZIndexComponent.hpp"
 
 // Include shared components commonly used with client components
-#include "../shared/Components/PositionComponent.hpp"
 #include "../shared/Components/VelocityComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace rtype::client {
 
@@ -60,13 +61,14 @@ using ButtonTag = ::rtype::games::rtype::client::ButtonTag;
 using StaticTextTag = ::rtype::games::rtype::client::StaticTextTag;
 using PauseMenuTag = ::rtype::games::rtype::client::PauseMenuTag;
 using HudTag = ::rtype::games::rtype::client::HudTag;
+using LobbyTag = ::rtype::games::rtype::client::LobbyTag;
 using TextInputTag = ::rtype::games::rtype::client::TextInputTag;
 
 // Text input component
 using TextInput = ::rtype::games::rtype::client::TextInput;
 
 // Position and movement (from shared)
-using Position = ::rtype::games::rtype::shared::Position;
+using Transform = ::rtype::games::rtype::shared::TransformComponent;
 using Velocity = ::rtype::games::rtype::shared::VelocityComponent;
 
 }  // namespace rtype::client

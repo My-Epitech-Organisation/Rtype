@@ -11,11 +11,16 @@
 namespace rtype::games::rtype::client {
 struct StaticTextTag {};
 struct ButtonTag {};
+struct CenteredTextTag {};
 struct RepeatingTag {};
 struct PlayerTag {};
 struct GameTag {};
 struct ControllableTag {};
 struct PauseMenuTag {};
 struct HudTag {};
+struct ConnectMenuTag {};
+struct ButtonMenuTag {};
+struct SectionItemTag {};
+struct LobbyTag {};
 }  // namespace rtype::games::rtype::client
 #endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_TAGCOMPONENT_HPP_

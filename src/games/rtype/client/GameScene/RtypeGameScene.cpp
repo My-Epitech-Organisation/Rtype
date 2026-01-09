@@ -14,8 +14,6 @@
 #include <utility>
 #include <vector>
 
-#include <SFML/System/Clock.hpp>
-
 #include "AllComponents.hpp"
 #include "Components/CountdownComponent.hpp"
 #include "Components/TagComponent.hpp"
@@ -40,16 +38,15 @@ namespace rtype::games::rtype::client {
 RtypeGameScene::RtypeGameScene(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<AssetManager> assetsManager,
-    std::shared_ptr<sf::RenderWindow> window,
+    std::shared_ptr<::rtype::display::IDisplay> display,
     std::shared_ptr<KeyboardActions> keybinds,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::shared_ptr<::rtype::client::NetworkClient> networkClient,
     std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem,
     std::shared_ptr<AudioLib> audioLib)
-    : AGameScene(std::move(registry), std::move(assetsManager),
-                 std::move(window), std::move(keybinds),
-                 std::move(switchToScene), std::move(networkClient),
-                 std::move(networkSystem)) {
+    : AGameScene(std::move(registry), std::move(assetsManager), display,
+                 std::move(keybinds), std::move(switchToScene),
+                 std::move(networkClient), std::move(networkSystem)) {
     if (_networkClient) {
         auto registry = _registry;
         auto switchToScene = _switchToScene;
@@ -78,66 +75,95 @@ RtypeGameScene::RtypeGameScene(
 }
 
 RtypeGameScene::~RtypeGameScene() {
-    LOG_DEBUG("[RtypeGameScene] Destructor called");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[RtypeGameScene] Destructor called");
+
+    _isDisconnected = true;
+
     clearDamageVignette();
     _vignetteEntities.clear();
     _vignetteAlpha = 0.0F;
-    LOG_DEBUG("[RtypeGameScene] Destructor completed");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[RtypeGameScene] Destructor completed");
 }
 
 std::vector<ECS::Entity> RtypeGameScene::initialize() {
-    LOG_DEBUG("[RtypeGameScene] Initialize called");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[RtypeGameScene] Initialize called");
     std::vector<ECS::Entity> entities;
 
     auto bgEntities = EntityFactory::createBackground(this->_registry,
                                                       this->_assetsManager, "");
     entities.insert(entities.end(), bgEntities.begin(), bgEntities.end());
-    LOG_DEBUG("[RtypeGameScene] Background created with " << bgEntities.size()
-                                                          << " entities");
-
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[RtypeGameScene] Background created with "
+                      << bgEntities.size() << " entities");
     if (_networkSystem) {
-        LOG_DEBUG("[RtypeGameScene] Setting up local player callback");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[RtypeGameScene] Setting up local player callback");
         setupLocalPlayerCallback();
-        LOG_DEBUG("[RtypeGameScene] Setting up health update callback");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[RtypeGameScene] Setting up health update callback");
         _networkSystem->onHealthUpdate(
             [this](const ::rtype::client::EntityHealthEvent& event) {
                 handleHealthUpdate(event);
             });
-        LOG_DEBUG("[RtypeGameScene] Network callbacks configured");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[RtypeGameScene] Setting up disconnect callback");
+        setupDisconnectCallback();
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[RtypeGameScene] Network callbacks configured");
     }
 
-    LOG_DEBUG("[RtypeGameScene] Constructor started");
-    LOG_DEBUG("[RtypeGameScene] _networkClient is "
-              << (_networkClient ? "valid" : "NULL"));
-    LOG_DEBUG("[RtypeGameScene] _registry is "
-              << (_registry ? "valid" : "NULL"));
-    LOG_DEBUG("[RtypeGameScene] Setting up HUD");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[RtypeGameScene] Constructor started");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[RtypeGameScene] _networkClient is "
+                      << (_networkClient ? "valid" : "NULL"));
+    LOG_DEBUG_CAT(
+        ::rtype::LogCategory::UI,
+        "[RtypeGameScene] _registry is " << (_registry ? "valid" : "NULL"));
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Setting up HUD");
     setupHud();
     setupDamageVignette();
-    LOG_DEBUG("[RtypeGameScene] HUD setup complete");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[RtypeGameScene] HUD setup complete");
     auto pauseEntities = RtypePauseMenu::createPauseMenu(
         _registry, _assetsManager, _switchToScene);
     entities.insert(entities.end(), pauseEntities.begin(), pauseEntities.end());
-    LOG_DEBUG("[RtypeGameScene] Pause menu created with "
-              << pauseEntities.size() << " entities");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[RtypeGameScene] Pause menu created with "
+                      << pauseEntities.size() << " entities");
 
     if (!_registry->hasSingleton<PauseState>()) {
         _registry->setSingleton<PauseState>(PauseState{false});
-        LOG_DEBUG("[RtypeGameScene] PauseState singleton created");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[RtypeGameScene] PauseState singleton created");
     } else {
         _registry->getSingleton<PauseState>().isPaused = false;
-        LOG_DEBUG("[RtypeGameScene] PauseState reset to unpaused");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[RtypeGameScene] PauseState reset to unpaused");
     }
 
-    LOG_DEBUG("[RtypeGameScene] Initialize completed, total entities: "
-              << entities.size());
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[RtypeGameScene] Initialize completed, total entities: "
+                      << entities.size());
     return entities;
 }
 
 void RtypeGameScene::update() {
-    const float dt = _uiClock.restart().asSeconds();
+    const float dt = 0.016f;
+    _uiTimer += dt;
 
     updateDamageVignette(dt);
+    updatePingDisplay();
+
+    if (_isDisconnected) {
+        if (_networkSystem) {
+            _networkSystem->update();
+        }
+        return;
+    }
 
     if (_damageFlashTimer > 0.0F) {
         _damageFlashTimer = std::max(0.0F, _damageFlashTimer - dt);
@@ -162,24 +188,57 @@ void RtypeGameScene::update() {
     std::uint8_t inputMask = getInputMask();
 
     if (_networkSystem && _networkSystem->isConnected()) {
-        if (inputMask != _lastInputMask) {
-            _networkSystem->sendInput(inputMask);
-            _lastInputMask = inputMask;
+        bool shouldSend = false;
+
+        constexpr std::uint8_t kMovementMask =
+            ::rtype::network::InputMask::kUp |
+            ::rtype::network::InputMask::kDown |
+            ::rtype::network::InputMask::kLeft |
+            ::rtype::network::InputMask::kRight;
+
+        std::uint8_t currentMovement = inputMask & kMovementMask;
+        std::uint8_t lastMovement = _lastInputMask & kMovementMask;
+
+        if (currentMovement != lastMovement) {
+            shouldSend = true;
         }
+
+        bool isShootingNow =
+            (inputMask & ::rtype::network::InputMask::kShoot) != 0;
+        bool wasShootingLast =
+            (_lastInputMask & ::rtype::network::InputMask::kShoot) != 0;
+
+        if (isShootingNow) {
+            if (!wasShootingLast) {
+                shouldSend = true;
+                _shootInputClock.restart();
+            } else if (_shootInputClock.getElapsedTime().asSeconds() >=
+                       kShootSendInterval) {
+                shouldSend = true;
+                _shootInputClock.restart();
+            }
+        } else if (wasShootingLast) {
+            shouldSend = true;
+        }
+
+        if (shouldSend) {
+            _networkSystem->sendInput(inputMask);
+        }
+        _lastInputMask = inputMask;
     }
 }
 
-void RtypeGameScene::render(std::shared_ptr<sf::RenderWindow> window) {
+void RtypeGameScene::render(::rtype::display::IDisplay& display) {
     // R-Type specific rendering if needed
 }
 
-void RtypeGameScene::pollEvents(const sf::Event& event) {
-    if (event.is<sf::Event::KeyPressed>() ||
-        event.is<sf::Event::KeyReleased>()) {
+void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
+    if (event.type == ::rtype::display::EventType::KeyPressed ||
+        event.type == ::rtype::display::EventType::KeyReleased) {
         RtypeInputHandler::updateKeyState(event);
     }
-    if (event.is<sf::Event::KeyReleased>() ||
-        event.is<sf::Event::JoystickButtonReleased>()) {
+    if (event.type == ::rtype::display::EventType::KeyReleased ||
+        event.type == ::rtype::display::EventType::JoystickButtonReleased) {
         RtypeInputHandler::handleKeyReleasedEvent(event, _keybinds, _registry);
     }
 }
@@ -189,7 +248,8 @@ std::uint8_t RtypeGameScene::getInputMask() const {
 }
 
 void RtypeGameScene::setupEntityFactory() {
-    LOG_DEBUG("[RtypeGameScene] Setting up entityFactory");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[RtypeGameScene] Setting up entityFactory");
     _networkSystem->setEntityFactory(
         RtypeEntityFactory::createNetworkEntityFactory(_registry,
                                                        _assetsManager));
@@ -197,46 +257,52 @@ void RtypeGameScene::setupEntityFactory() {
 
 void RtypeGameScene::setupLocalPlayerCallback() {
     auto registry = this->_registry;
-    _networkSystem->onLocalPlayerAssigned([this, registry](std::uint32_t userId,
-                                                           ECS::Entity entity) {
-        if (registry->isAlive(entity)) {
-            registry->emplaceComponent<ControllableTag>(entity);
-            LOG_DEBUG("[RtypeGameScene] Local player entity assigned");
-        }
-        _localPlayerEntity = entity;
-        _localPlayerId = userId;
-        LOG_DEBUG("[RtypeGameScene] Local player ID set to " << userId);
-        if (registry->isAlive(entity) &&
-            registry->hasComponent<rs::HealthComponent>(entity)) {
-            const auto& health =
-                registry->getComponent<rs::HealthComponent>(entity);
-            LOG_DEBUG("[RtypeGameScene] Initial health: " << health.current
-                                                          << "/" << health.max);
-            updateLivesDisplay(health.current, health.max);
-        }
-    });
+    _networkSystem->onLocalPlayerAssigned(
+        [this, registry](std::uint32_t userId, ECS::Entity entity) {
+            if (registry->isAlive(entity)) {
+                registry->emplaceComponent<ControllableTag>(entity);
+                LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                              "[RtypeGameScene] Local player entity assigned");
+            }
+            _localPlayerEntity = entity;
+            _localPlayerId = userId;
+            LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                          "[RtypeGameScene] Local player ID set to " << userId);
+            if (registry->isAlive(entity) &&
+                registry->hasComponent<rs::HealthComponent>(entity)) {
+                const auto& health =
+                    registry->getComponent<rs::HealthComponent>(entity);
+                LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                              "[RtypeGameScene] Initial health: "
+                                  << health.current << "/" << health.max);
+                updateLivesDisplay(health.current, health.max);
+            }
+        });
 }
 
 void RtypeGameScene::setupHud() {
     const float barWidth = 220.f;
     const float barHeight = 18.f;
-    const sf::Vector2f barPos{20.f, 20.f};
+    const ::rtype::display::Vector2f barPos{20.f, 20.f};
 
     auto bg = _registry->spawnEntity();
-    _registry->emplaceComponent<rs::Position>(bg, barPos.x, barPos.y);
+    _registry->emplaceComponent<rs::TransformComponent>(bg, barPos.x, barPos.y);
     _registry->emplaceComponent<Rectangle>(
         bg, std::pair<float, float>{barWidth, barHeight},
-        sf::Color(30, 35, 45, 220), sf::Color(30, 35, 45, 220));
+        ::rtype::display::Color(30, 35, 45, 220),
+        ::rtype::display::Color(30, 35, 45, 220));
     _registry->emplaceComponent<ZIndex>(bg, GraphicsConfig::ZINDEX_UI);
     _registry->emplaceComponent<HudTag>(bg);
     _registry->emplaceComponent<GameTag>(bg);
     _healthBarBgEntity = bg;
 
     auto fill = _registry->spawnEntity();
-    _registry->emplaceComponent<rs::Position>(fill, barPos.x, barPos.y);
+    _registry->emplaceComponent<rs::TransformComponent>(fill, barPos.x,
+                                                        barPos.y);
     _registry->emplaceComponent<Rectangle>(
         fill, std::pair<float, float>{barWidth, barHeight},
-        sf::Color(90, 220, 140, 240), sf::Color(90, 220, 140, 240));
+        ::rtype::display::Color(90, 220, 140, 240),
+        ::rtype::display::Color(90, 220, 140, 240));
     _registry->emplaceComponent<ZIndex>(fill, GraphicsConfig::ZINDEX_UI + 1);
     _registry->emplaceComponent<HudTag>(fill);
     _registry->emplaceComponent<GameTag>(fill);
@@ -244,16 +310,30 @@ void RtypeGameScene::setupHud() {
 
     auto hpText = EntityFactory::createStaticText(
         _registry, _assetsManager, "HP: --/--", "title_font",
-        sf::Vector2f{barPos.x + barWidth + 16.f, barPos.y - 2.f}, 24.f);
+        ::rtype::display::Vector2f{barPos.x + barWidth / 2.0f,
+                                   barPos.y + barHeight / 2.0f},
+        20.f);
+    _registry->emplaceComponent<CenteredTextTag>(hpText);
     _registry->emplaceComponent<ZIndex>(hpText, GraphicsConfig::ZINDEX_UI + 2);
     _registry->emplaceComponent<HudTag>(hpText);
     _registry->emplaceComponent<GameTag>(hpText);
     _healthTextEntity = hpText;
     _livesTextEntity = hpText;
+
+    auto pingText = EntityFactory::createStaticText(
+        _registry, _assetsManager, "Ping: 0ms", "title_font",
+        ::rtype::display::Vector2f{1800.f, 20.f}, 20.f);
+    _registry->emplaceComponent<ZIndex>(pingText,
+                                        GraphicsConfig::ZINDEX_UI + 2);
+    _registry->emplaceComponent<HudTag>(pingText);
+    _registry->emplaceComponent<GameTag>(pingText);
+    _pingTextEntity = pingText;
 }
 
 void RtypeGameScene::updateLivesDisplay(int current, int max) {
-    LOG_DEBUG("[RtypeGameScene] updateLivesDisplay: " << current << "/" << max);
+    LOG_DEBUG_CAT(
+        ::rtype::LogCategory::UI,
+        "[RtypeGameScene] updateLivesDisplay: " << current << "/" << max);
     _lastKnownLives = current;
     _lastKnownMaxLives = max;
     updateHealthBar(current, max);
@@ -261,8 +341,9 @@ void RtypeGameScene::updateLivesDisplay(int current, int max) {
 
 void RtypeGameScene::handleHealthUpdate(
     const ::rtype::client::EntityHealthEvent& event) {
-    LOG_DEBUG("[RtypeGameScene] Health update for local player: current="
-              << event.current << " max=" << event.max);
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[RtypeGameScene] Health update for local player: current="
+                      << event.current << " max=" << event.max);
 
     if (_lastKnownLives > event.current) {
         int damageAmount = _lastKnownLives - event.current;
@@ -279,11 +360,13 @@ void RtypeGameScene::handleHealthUpdate(
 }
 
 void RtypeGameScene::updateHealthBar(int current, int max) {
-    LOG_DEBUG("[RtypeGameScene] updateHealthBar called: " << current << "/"
-                                                          << max);
+    LOG_DEBUG_CAT(
+        ::rtype::LogCategory::UI,
+        "[RtypeGameScene] updateHealthBar called: " << current << "/" << max);
     if (!_healthBarFillEntity.has_value() ||
         !_registry->isAlive(*_healthBarFillEntity)) {
-        LOG_DEBUG("[RtypeGameScene] Health bar fill entity not valid");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[RtypeGameScene] Health bar fill entity not valid");
         return;
     }
 
@@ -294,7 +377,9 @@ void RtypeGameScene::updateHealthBar(int current, int max) {
             : 0.f;
     auto& rect = _registry->getComponent<Rectangle>(*_healthBarFillEntity);
     rect.size.first = barWidth * ratio;
-    LOG_DEBUG("[RtypeGameScene] Health bar width set to: " << rect.size.first);
+    LOG_DEBUG_CAT(
+        ::rtype::LogCategory::UI,
+        "[RtypeGameScene] Health bar width set to: " << rect.size.first);
 
     if (_healthTextEntity.has_value() &&
         _registry->isAlive(*_healthTextEntity) &&
@@ -302,15 +387,42 @@ void RtypeGameScene::updateHealthBar(int current, int max) {
         auto& text = _registry->getComponent<Text>(*_healthTextEntity);
         text.textContent =
             "HP: " + std::to_string(current) + "/" + std::to_string(max);
-        LOG_DEBUG("[RtypeGameScene] HP text updated to: " << text.textContent);
+        LOG_DEBUG_CAT(
+            ::rtype::LogCategory::UI,
+            "[RtypeGameScene] HP text updated to: " << text.textContent);
     } else {
-        LOG_DEBUG("[RtypeGameScene] Health text entity not valid for update");
+        LOG_DEBUG_CAT(
+            ::rtype::LogCategory::UI,
+            "[RtypeGameScene] Health text entity not valid for update");
+    }
+}
+
+void RtypeGameScene::updatePingDisplay() {
+    if (!_pingTextEntity.has_value() || !_registry->isAlive(*_pingTextEntity) ||
+        !_registry->hasComponent<Text>(*_pingTextEntity)) {
+        return;
+    }
+
+    if (_networkClient && _networkClient->isConnected()) {
+        std::uint32_t latency = _networkClient->latencyMs();
+        auto& text = _registry->getComponent<Text>(*_pingTextEntity);
+        text.textContent = "Ping: " + std::to_string(latency) + "ms";
+
+        if (latency < 50) {
+            text.color = ::rtype::display::Color(90, 220, 140, 255);
+        } else if (latency < 100) {
+            text.color = ::rtype::display::Color(220, 220, 90, 255);
+        } else if (latency < 200) {
+            text.color = ::rtype::display::Color(255, 165, 0, 255);
+        } else {
+            text.color = ::rtype::display::Color(220, 90, 90, 255);
+        }
     }
 }
 
 void RtypeGameScene::setupDamageVignette() {
-    const float screenWidth = static_cast<float>(_window->getSize().x);
-    const float screenHeight = static_cast<float>(_window->getSize().y);
+    const float screenWidth = static_cast<float>(_display->getWindowSize().x);
+    const float screenHeight = static_cast<float>(_display->getWindowSize().y);
 
     _vignetteEntities.clear();
 
@@ -320,10 +432,10 @@ void RtypeGameScene::setupDamageVignette() {
         float inset = layerRatio * 80.f;
         float thickness = 50.f + layerRatio * 40.f;
 
-        const sf::Color vignetteColor(255, 0, 0, 0);
+        const ::rtype::display::Color vignetteColor(255, 0, 0, 0);
 
         auto top = _registry->spawnEntity();
-        _registry->emplaceComponent<rs::Position>(top, 0.f, inset);
+        _registry->emplaceComponent<rs::TransformComponent>(top, 0.f, inset);
         _registry->emplaceComponent<Rectangle>(
             top, std::pair<float, float>{screenWidth, thickness}, vignetteColor,
             vignetteColor);
@@ -334,7 +446,7 @@ void RtypeGameScene::setupDamageVignette() {
         _vignetteEntities.push_back(top);
 
         auto bottom = _registry->spawnEntity();
-        _registry->emplaceComponent<rs::Position>(
+        _registry->emplaceComponent<rs::TransformComponent>(
             bottom, 0.f, screenHeight - inset - thickness);
         _registry->emplaceComponent<Rectangle>(
             bottom, std::pair<float, float>{screenWidth, thickness},
@@ -346,7 +458,7 @@ void RtypeGameScene::setupDamageVignette() {
         _vignetteEntities.push_back(bottom);
 
         auto left = _registry->spawnEntity();
-        _registry->emplaceComponent<rs::Position>(left, inset, 0.f);
+        _registry->emplaceComponent<rs::TransformComponent>(left, inset, 0.f);
         _registry->emplaceComponent<Rectangle>(
             left, std::pair<float, float>{thickness, screenHeight},
             vignetteColor, vignetteColor);
@@ -357,7 +469,7 @@ void RtypeGameScene::setupDamageVignette() {
         _vignetteEntities.push_back(left);
 
         auto right = _registry->spawnEntity();
-        _registry->emplaceComponent<rs::Position>(
+        _registry->emplaceComponent<rs::TransformComponent>(
             right, screenWidth - inset - thickness, 0.f);
         _registry->emplaceComponent<Rectangle>(
             right, std::pair<float, float>{thickness, screenHeight},
@@ -378,14 +490,13 @@ void RtypeGameScene::refreshDamageVignetteLayout() {
         return;
     }
 
-    const sf::Vector2u currentSize = _window->getSize();
-    const sf::View defaultView = _window->getDefaultView();
-    const float viewLeft =
-        defaultView.getCenter().x - defaultView.getSize().x / 2.0f;
-    const float viewTop =
-        defaultView.getCenter().y - defaultView.getSize().y / 2.0f;
-    const float screenWidth = defaultView.getSize().x;
-    const float screenHeight = defaultView.getSize().y;
+    const ::rtype::display::Vector2i currentSize = _display->getWindowSize();
+    const ::rtype::display::Vector2f viewCenter = _display->getViewCenter();
+    const ::rtype::display::Vector2f viewSize = _display->getViewSize();
+    const float viewLeft = viewCenter.x - viewSize.x / 2.0f;
+    const float viewTop = viewCenter.y - viewSize.y / 2.0f;
+    const float screenWidth = viewSize.x;
+    const float screenHeight = viewSize.y;
 
     int entityIndex = 0;
     for (int layer = 0; layer < kVignetteLayers; ++layer) {
@@ -397,9 +508,10 @@ void RtypeGameScene::refreshDamageVignetteLayout() {
         if (entityIndex < static_cast<int>(_vignetteEntities.size())) {
             auto ent = _vignetteEntities[entityIndex++];
             if (_registry->isAlive(ent) &&
-                _registry->hasComponent<rs::Position>(ent) &&
+                _registry->hasComponent<rs::TransformComponent>(ent) &&
                 _registry->hasComponent<Rectangle>(ent)) {
-                auto& pos = _registry->getComponent<rs::Position>(ent);
+                auto& pos =
+                    _registry->getComponent<rs::TransformComponent>(ent);
                 pos.x = viewLeft;
                 pos.y = viewTop + inset;
                 auto& rect = _registry->getComponent<Rectangle>(ent);
@@ -410,9 +522,10 @@ void RtypeGameScene::refreshDamageVignetteLayout() {
         if (entityIndex < static_cast<int>(_vignetteEntities.size())) {
             auto ent = _vignetteEntities[entityIndex++];
             if (_registry->isAlive(ent) &&
-                _registry->hasComponent<rs::Position>(ent) &&
+                _registry->hasComponent<rs::TransformComponent>(ent) &&
                 _registry->hasComponent<Rectangle>(ent)) {
-                auto& pos = _registry->getComponent<rs::Position>(ent);
+                auto& pos =
+                    _registry->getComponent<rs::TransformComponent>(ent);
                 pos.x = viewLeft;
                 pos.y = viewTop + screenHeight - inset - thickness;
                 auto& rect = _registry->getComponent<Rectangle>(ent);
@@ -423,9 +536,10 @@ void RtypeGameScene::refreshDamageVignetteLayout() {
         if (entityIndex < static_cast<int>(_vignetteEntities.size())) {
             auto ent = _vignetteEntities[entityIndex++];
             if (_registry->isAlive(ent) &&
-                _registry->hasComponent<rs::Position>(ent) &&
+                _registry->hasComponent<rs::TransformComponent>(ent) &&
                 _registry->hasComponent<Rectangle>(ent)) {
-                auto& pos = _registry->getComponent<rs::Position>(ent);
+                auto& pos =
+                    _registry->getComponent<rs::TransformComponent>(ent);
                 pos.x = viewLeft + inset;
                 pos.y = viewTop;
                 auto& rect = _registry->getComponent<Rectangle>(ent);
@@ -436,9 +550,10 @@ void RtypeGameScene::refreshDamageVignetteLayout() {
         if (entityIndex < static_cast<int>(_vignetteEntities.size())) {
             auto ent = _vignetteEntities[entityIndex++];
             if (_registry->isAlive(ent) &&
-                _registry->hasComponent<rs::Position>(ent) &&
+                _registry->hasComponent<rs::TransformComponent>(ent) &&
                 _registry->hasComponent<Rectangle>(ent)) {
-                auto& pos = _registry->getComponent<rs::Position>(ent);
+                auto& pos =
+                    _registry->getComponent<rs::TransformComponent>(ent);
                 pos.x = viewLeft + screenWidth - inset - thickness;
                 pos.y = viewTop;
                 auto& rect = _registry->getComponent<Rectangle>(ent);
@@ -468,8 +583,8 @@ void RtypeGameScene::updateDamageVignette(float deltaTime) {
             float layerAlpha = _vignetteAlpha * (1.0f - layerRatio * 0.7f);
 
             auto& rect = _registry->getComponent<Rectangle>(entity);
-            rect.currentColor =
-                sf::Color(255, 0, 0, static_cast<uint8_t>(layerAlpha));
+            rect.currentColor = ::rtype::display::Color(
+                255, 0, 0, static_cast<uint8_t>(layerAlpha));
             rect.mainColor = rect.currentColor;
         }
         ++layerIndex;
@@ -483,7 +598,7 @@ void RtypeGameScene::clearDamageVignette() {
         if (_registry->isAlive(entity) &&
             _registry->hasComponent<Rectangle>(entity)) {
             auto& rect = _registry->getComponent<Rectangle>(entity);
-            rect.currentColor = sf::Color(255, 0, 0, 0);
+            rect.currentColor = ::rtype::display::Color(255, 0, 0, 0);
             rect.mainColor = rect.currentColor;
         }
         ++layerIndex;
@@ -523,8 +638,8 @@ void RtypeGameScene::triggerDamageFlash(int damageAmount) {
             float layerAlpha = _vignetteAlpha * (1.0f - layerRatio * 0.7f);
 
             auto& rect = _registry->getComponent<Rectangle>(entity);
-            rect.currentColor =
-                sf::Color(255, 0, 0, static_cast<uint8_t>(layerAlpha));
+            rect.currentColor = ::rtype::display::Color(
+                255, 0, 0, static_cast<uint8_t>(layerAlpha));
             rect.mainColor = rect.currentColor;
         }
         ++layerIndex;
@@ -533,19 +648,20 @@ void RtypeGameScene::triggerDamageFlash(int damageAmount) {
     if (_healthBarFillEntity.has_value() &&
         _registry->isAlive(*_healthBarFillEntity)) {
         auto& rect = _registry->getComponent<Rectangle>(*_healthBarFillEntity);
-        rect.currentColor = sf::Color(255, 80, 80, 240);
+        rect.currentColor = ::rtype::display::Color(255, 80, 80, 240);
     }
 
     if (_healthTextEntity.has_value() &&
         _registry->isAlive(*_healthTextEntity) &&
         _registry->hasComponent<Text>(*_healthTextEntity)) {
         auto& text = _registry->getComponent<Text>(*_healthTextEntity);
-        text.color = sf::Color(255, 100, 100);
+        text.color = ::rtype::display::Color(255, 100, 100, 255);
     }
 }
 
 void RtypeGameScene::spawnDamagePopup(int damage) {
-    LOG_DEBUG(
+    LOG_DEBUG_CAT(
+        ::rtype::LogCategory::UI,
         "[RtypeGameScene] spawnDamagePopup called with damage=" << damage);
 
     std::optional<ECS::Entity> playerEntity = _localPlayerEntity;
@@ -554,39 +670,48 @@ void RtypeGameScene::spawnDamagePopup(int damage) {
     }
 
     if (!playerEntity.has_value()) {
-        LOG_DEBUG(
+        LOG_DEBUG_CAT(
+            ::rtype::LogCategory::UI,
             "[RtypeGameScene] No player entity available for damage popup");
         return;
     }
 
     if (!_registry->isAlive(*playerEntity)) {
-        LOG_DEBUG("[RtypeGameScene] Player entity not alive for damage popup");
+        LOG_DEBUG_CAT(
+            ::rtype::LogCategory::UI,
+            "[RtypeGameScene] Player entity not alive for damage popup");
         return;
     }
 
-    if (!_registry->hasComponent<rs::Position>(*playerEntity)) {
-        LOG_DEBUG(
+    if (!_registry->hasComponent<rs::TransformComponent>(*playerEntity)) {
+        LOG_DEBUG_CAT(
+            ::rtype::LogCategory::UI,
             "[RtypeGameScene] Player entity has no Position for damage popup");
         return;
     }
 
-    const auto& pos = _registry->getComponent<rs::Position>(*playerEntity);
-    LOG_DEBUG("[RtypeGameScene] Player position for popup: (" << pos.x << ", "
-                                                              << pos.y << ")");
+    const auto& pos =
+        _registry->getComponent<rs::TransformComponent>(*playerEntity);
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[RtypeGameScene] Player position for popup: ("
+                      << pos.x << ", " << pos.y << ")");
 
     if (!_assetsManager || !_assetsManager->fontManager) {
-        LOG_DEBUG("[RtypeGameScene] No assets manager for damage popup");
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[RtypeGameScene] No assets manager for damage popup");
         return;
     }
 
     try {
-        const sf::Font& font = _assetsManager->fontManager->get("title_font");
+        auto font = "title_font";
         VisualCueFactory::createDamagePopup(
-            *_registry, sf::Vector2f(pos.x + 20.f, pos.y - 10.f), damage, font,
-            sf::Color(255, 60, 60));
-        LOG_DEBUG("[RtypeGameScene] Damage popup created successfully");
+            *_registry, ::rtype::display::Vector2f(pos.x + 20.f, pos.y - 10.f),
+            damage, font, ::rtype::display::Color(255, 60, 60, 255));
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[RtypeGameScene] Damage popup created successfully");
     } catch (const std::exception& e) {
-        LOG_DEBUG(
+        LOG_DEBUG_CAT(
+            ::rtype::LogCategory::UI,
             "[RtypeGameScene] Failed to create damage popup: " << e.what());
     }
 }
@@ -595,14 +720,150 @@ void RtypeGameScene::resetHudColors() {
     if (_healthBarFillEntity.has_value() &&
         _registry->isAlive(*_healthBarFillEntity)) {
         auto& rect = _registry->getComponent<Rectangle>(*_healthBarFillEntity);
-        rect.currentColor = sf::Color(90, 220, 140, 240);
+        rect.currentColor = ::rtype::display::Color(90, 220, 140, 240);
     }
 
     if (_healthTextEntity.has_value() &&
         _registry->isAlive(*_healthTextEntity) &&
         _registry->hasComponent<Text>(*_healthTextEntity)) {
         auto& text = _registry->getComponent<Text>(*_healthTextEntity);
-        text.color = sf::Color::White;
+        text.color = ::rtype::display::Color::White();
+    }
+}
+
+void RtypeGameScene::setupDisconnectCallback() {
+    _networkSystem->onDisconnect([this](network::DisconnectReason reason) {
+        showDisconnectModal(reason);
+    });
+}
+
+void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
+    if (_isDisconnected) {
+        return;
+    }
+    _isDisconnected = true;
+    std::string reasonMessage = getDisconnectMessage(reason);
+    LOG_INFO("[RtypeGameScene] Disconnected from server, reason="
+             << static_cast<int>(reason) << " message=" << reasonMessage);
+
+    const ::rtype::display::Vector2i windowSize = _display->getWindowSize();
+    const float centerX = windowSize.x / 2.0F;
+    const float centerY = windowSize.y / 2.0F;
+
+    auto overlayEntity = _registry->spawnEntity();
+    auto overlaySize = std::make_pair(static_cast<float>(windowSize.x),
+                                      static_cast<float>(windowSize.y));
+    _registry->emplaceComponent<Rectangle>(
+        overlayEntity, overlaySize, ::rtype::display::Color(0, 0, 0, 180),
+        ::rtype::display::Color(0, 0, 0, 180));
+    auto& overlayPos =
+        _registry->emplaceComponent<rs::TransformComponent>(overlayEntity);
+    overlayPos.x = 0;
+    overlayPos.y = 0;
+    _registry->emplaceComponent<ZIndex>(overlayEntity, 9000);
+    _disconnectOverlayEntity = overlayEntity;
+
+    auto panelEntity = _registry->spawnEntity();
+    auto panelSize = std::make_pair(500.0F, 300.0F);
+    _registry->emplaceComponent<Rectangle>(
+        panelEntity, panelSize, ::rtype::display::Color(40, 40, 60, 255),
+        ::rtype::display::Color(40, 40, 60, 255));
+    auto& panelRect = _registry->getComponent<Rectangle>(panelEntity);
+    panelRect.outlineColor = ::rtype::display::Color(120, 120, 150, 255);
+    panelRect.outlineThickness = 3.0F;
+    auto& panelPos =
+        _registry->emplaceComponent<rs::TransformComponent>(panelEntity);
+    panelPos.x = centerX - 250.0F;
+    panelPos.y = centerY - 150.0F;
+    _registry->emplaceComponent<ZIndex>(panelEntity, 9001);
+    _disconnectPanelEntity = panelEntity;
+
+    auto titleEntity = _registry->spawnEntity();
+    auto titleFont = "title_font";
+    _registry->emplaceComponent<Text>(
+        titleEntity, titleFont, ::rtype::display::Color(255, 100, 100, 255), 36,
+        "Connection Lost");
+    auto& titlePos =
+        _registry->emplaceComponent<rs::TransformComponent>(titleEntity);
+    titlePos.x = centerX - 150.0F;
+    titlePos.y = centerY - 120.0F;
+    _registry->emplaceComponent<StaticTextTag>(titleEntity);
+    _registry->emplaceComponent<ZIndex>(titleEntity, 9002);
+    _disconnectTitleEntity = titleEntity;
+
+    auto messageEntity = _registry->spawnEntity();
+    auto mainFont = "main_font";
+    _registry->emplaceComponent<Text>(
+        messageEntity, mainFont, ::rtype::display::Color(220, 220, 220, 255),
+        20, reasonMessage);
+    auto& messagePos =
+        _registry->emplaceComponent<rs::TransformComponent>(messageEntity);
+    messagePos.x = centerX - 220.0F;
+    messagePos.y = centerY - 50.0F;
+    _registry->emplaceComponent<StaticTextTag>(messageEntity);
+    LOG_INFO("[RtypeGameScene] Created disconnect message entity with text: "
+             << reasonMessage);
+    _registry->emplaceComponent<ZIndex>(messageEntity, 9002);
+    _disconnectMessageEntity = messageEntity;
+
+    Text buttonText(mainFont, ::rtype::display::Color::White(), 22,
+                    "Return to Main Menu");
+    rs::TransformComponent buttonPos{centerX - 125.0F, centerY + 80.0F};
+    auto buttonSize = std::make_pair(250.0F, 50.0F);
+    Rectangle buttonRect(buttonSize, ::rtype::display::Color(80, 120, 200, 255),
+                         ::rtype::display::Color(100, 140, 220, 255));
+    buttonRect.outlineColor = ::rtype::display::Color(120, 160, 240, 255);
+    buttonRect.outlineThickness = 2.0F;
+
+    std::function<void()> buttonCallback = [this]() {
+        LOG_INFO("[RtypeGameScene] Returning to main menu after disconnect");
+        cleanupDisconnectModal();
+        _switchToScene(SceneManager::MAIN_MENU);
+    };
+
+    auto buttonEntity =
+        EntityFactory::createButton(_registry, buttonText, buttonPos,
+                                    buttonRect, _assetsManager, buttonCallback);
+
+    _registry->emplaceComponent<ZIndex>(buttonEntity, 9003);
+    _disconnectButtonEntity = buttonEntity;
+}
+
+void RtypeGameScene::cleanupDisconnectModal() {
+    auto destroyEntity = [this](std::optional<ECS::Entity>& entity) {
+        if (entity.has_value() && _registry->isAlive(*entity)) {
+            _registry->killEntity(*entity);
+        }
+        entity.reset();
+    };
+
+    destroyEntity(_disconnectOverlayEntity);
+    destroyEntity(_disconnectPanelEntity);
+    destroyEntity(_disconnectTitleEntity);
+    destroyEntity(_disconnectMessageEntity);
+    destroyEntity(_disconnectButtonEntity);
+    _isDisconnected = false;
+}
+
+std::string RtypeGameScene::getDisconnectMessage(
+    network::DisconnectReason reason) const {
+    switch (reason) {
+        case network::DisconnectReason::Timeout:
+            return "Server connection timed out.\nThe server may be down or "
+                   "unreachable.";
+        case network::DisconnectReason::MaxRetriesExceeded:
+            return "Failed to connect after multiple attempts.\nPlease check "
+                   "your connection.";
+        case network::DisconnectReason::ProtocolError:
+            return "A protocol error occurred.\nPlease restart the game.";
+        case network::DisconnectReason::RemoteRequest:
+            return "Server closed the connection.\nYou may have been kicked.";
+        case network::DisconnectReason::LocalRequest:
+            return "Disconnected from server.";
+        case network::DisconnectReason::Banned:
+            return "You have been banned from this server.";
+        default:
+            return "Connection lost for unknown reason.";
     }
 }
 

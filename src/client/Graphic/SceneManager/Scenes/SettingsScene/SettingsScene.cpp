@@ -15,10 +15,58 @@
 #include "AudioLib/AudioLib.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
+#include "Components/ZIndexComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "Graphic/Accessibility.hpp"
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
+
+SettingsScene::SettingsScene(
+    std::shared_ptr<ECS::Registry> ecs,
+    std::shared_ptr<AssetManager> textureManager,
+    std::shared_ptr<rtype::display::IDisplay> window,
+    std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
+    std::function<void(const SceneManager::Scene&)> switchToScene)
+    : AScene(ecs, textureManager, window, audio), _keybinds(keybinds) {
+    this->_listEntity = (EntityFactory::createBackground(
+        this->_registry, this->_assetsManager, "Settings"));
+
+    this->_initKeybindSection();
+    this->_initAudioSection();
+    this->_initWindowSection();
+    this->_initAccessibilitySection();
+    this->_initInputModeSection();
+
+    this->_listEntity.push_back(EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text(
+            "main_font", rtype::display::Color::White(), 36, "Back"),
+        rtype::games::rtype::shared::TransformComponent(100.f, 900.f),
+        rtype::games::rtype::client::Rectangle({400.f, 75.f},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
+        this->_assetsManager, std::function<void()>([switchToScene]() {
+            try {
+                switchToScene(SceneManager::MAIN_MENU);
+            } catch (SceneNotFound& e) {
+                LOG_ERROR(std::string("Error switching to Main Menu: ") +
+                          std::string(e.what()));
+            }
+        })));
+    this->_listEntity.push_back(EntityFactory::createStaticText(
+        this->_registry, this->_assetsManager,
+        "Loaded display lib: " + this->_window->getLibName(), "main_font",
+        rtype::display::Vector2<float>(1500.f, 932.5f), 24));
+
+    this->_assetsManager->audioManager->load(
+        "main_settings_music",
+        this->_assetsManager->configGameAssets.assets.music.settings);
+    auto settings =
+        this->_assetsManager->audioManager->get("main_settings_music");
+    this->_audio->loadMusic(settings);
+    this->_audio->setLoop(true);
+    this->_audio->play();
+}
 
 void SettingsScene::_initKeybindSection() {
     std::vector<GameAction> actions = {
@@ -32,8 +80,7 @@ void SettingsScene::_initKeybindSection() {
     float sectionH = 600;
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Input Bindings",
-        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
-                      sf::Vector2f(sectionW, sectionH)));
+        rtype::display::Rect<float>(sectionX, sectionY, sectionW, sectionH));
     this->_keybindSectionEntities.insert(this->_keybindSectionEntities.end(),
                                          sectionEntities.begin(),
                                          sectionEntities.end());
@@ -49,19 +96,21 @@ void SettingsScene::_initKeybindSection() {
         auto btn = EntityFactory::createButton(
             this->_registry,
             rtype::games::rtype::client::Text(
-                this->_assetsManager->fontManager->get("main_font"),
-                sf::Color::White, 24, textStr),
-            rtype::games::rtype::shared::Position(x, y),
-            rtype::games::rtype::client::Rectangle({500, 50}, sf::Color::Blue,
-                                                   sf::Color::Red),
+                "main_font", rtype::display::Color::White(), 24, textStr),
+            rtype::games::rtype::shared::TransformComponent(x, y),
+            rtype::games::rtype::client::Rectangle(
+                {500, 50}, rtype::display::Color::Blue(),
+                rtype::display::Color::Red()),
             this->_assetsManager, std::function<void()>([this, action]() {
                 if (this->_actionToRebind.has_value()) return;
 
                 InputMode mode = this->_keybinds->getInputMode();
-                LOG_DEBUG("[SettingsScene] Button clicked for action: "
-                          << static_cast<int>(action) << ", Mode: "
-                          << (mode == InputMode::Keyboard ? "Keyboard"
-                                                          : "Controller"));
+                LOG_DEBUG_CAT(
+                    ::rtype::LogCategory::Input,
+                    "[SettingsScene] Button clicked for action: "
+                        << static_cast<int>(action) << ", Mode: "
+                        << (mode == InputMode::Keyboard ? "Keyboard"
+                                                        : "Controller"));
 
                 if (mode == InputMode::Keyboard ||
                     action == GameAction::SHOOT ||
@@ -70,8 +119,10 @@ void SettingsScene::_initKeybindSection() {
                     action == GameAction::MOVE_UP ||
                     action == GameAction::MOVE_DOWN) {
                     this->_actionToRebind = action;
-                    LOG_DEBUG("[SettingsScene] Waiting for input for action: "
-                              << static_cast<int>(action));
+                    LOG_DEBUG_CAT(
+                        ::rtype::LogCategory::Input,
+                        "[SettingsScene] Waiting for input for action: "
+                            << static_cast<int>(action));
                     ECS::Entity entity = this->_actionButtons[action];
                     if (this->_registry
                             ->hasComponent<rtype::games::rtype::client::Text>(
@@ -84,10 +135,11 @@ void SettingsScene::_initKeybindSection() {
                                  ? ": Press any key..."
                                  : ": Press any button...");
                         textComp.textContent = waitText;
-                        textComp.text.setString(waitText);
                     }
                 }
             }));
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            btn, 2);
         this->_actionButtons[action] = btn;
         this->_keybindSectionEntities.push_back(btn);
         this->_listEntity.push_back(btn);
@@ -147,7 +199,6 @@ void SettingsScene::_refreshKeybindSection() {
         }
 
         textComp.textContent = textStr;
-        textComp.text.setString(textStr);
     }
 }
 
@@ -159,19 +210,17 @@ void SettingsScene::_initAudioSection() {
 
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Audio",
-        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
-                      sf::Vector2f(sectionW, sectionH)));
+        rtype::display::Rect<float>(sectionX, sectionY, sectionW, sectionH));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
-    auto& font = this->_assetsManager->fontManager->get("main_font");
+    auto font = "main_font";
     float startY = sectionY + 70;
     float gapY = 60;
 
     auto createVolumeControl = [&](std::string label, float y, bool isMusic) {
         float labelX = sectionX + 30;
         float minusX = sectionX + 250;
-        float valueX = sectionX + 320;
         float plusX = sectionX + 400;
 
         auto valueEntity = this->_registry->spawnEntity();
@@ -181,23 +230,28 @@ void SettingsScene::_initAudioSection() {
             label + ": " + std::to_string(static_cast<int>(currentVol));
 
         this->_registry->emplaceComponent<rtype::games::rtype::client::Text>(
-            valueEntity, rtype::games::rtype::client::Text(
-                             font, sf::Color::White, 24, textStr));
+            valueEntity,
+            rtype::games::rtype::client::Text(
+                font, rtype::display::Color::White(), 24, textStr));
         this->_registry
             ->emplaceComponent<rtype::games::rtype::client::StaticTextTag>(
                 valueEntity);
         this->_registry
-            ->emplaceComponent<rtype::games::rtype::shared::Position>(
-                valueEntity,
-                rtype::games::rtype::shared::Position(labelX, y + 10));
+            ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+                valueEntity, rtype::games::rtype::shared::TransformComponent(
+                                 labelX, y + 10));
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            valueEntity, 1);
         this->_listEntity.push_back(valueEntity);
 
         auto minusBtn = EntityFactory::createButton(
             this->_registry,
-            rtype::games::rtype::client::Text(font, sf::Color::White, 24, "-"),
-            rtype::games::rtype::shared::Position(minusX, y),
-            rtype::games::rtype::client::Rectangle({50, 50}, sf::Color::Blue,
-                                                   sf::Color::Red),
+            rtype::games::rtype::client::Text(
+                font, rtype::display::Color::White(), 24, "-"),
+            rtype::games::rtype::shared::TransformComponent(minusX, y),
+            rtype::games::rtype::client::Rectangle(
+                {50, 50}, rtype::display::Color::Blue(),
+                rtype::display::Color::Red()),
             this->_assetsManager,
             std::function<void()>([this, valueEntity, isMusic, label]() {
                 float vol = isMusic ? this->_audio->getMusicVolume()
@@ -218,17 +272,20 @@ void SettingsScene::_initAudioSection() {
                     std::string s =
                         label + ": " + std::to_string(static_cast<int>(vol));
                     textComp.textContent = s;
-                    textComp.text.setString(s);
                 }
             }));
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            minusBtn, 1);
         this->_listEntity.push_back(minusBtn);
 
         auto plusBtn = EntityFactory::createButton(
             this->_registry,
-            rtype::games::rtype::client::Text(font, sf::Color::White, 24, "+"),
-            rtype::games::rtype::shared::Position(plusX, y),
-            rtype::games::rtype::client::Rectangle({50, 50}, sf::Color::Blue,
-                                                   sf::Color::Red),
+            rtype::games::rtype::client::Text(
+                font, rtype::display::Color::White(), 24, "+"),
+            rtype::games::rtype::shared::TransformComponent(plusX, y),
+            rtype::games::rtype::client::Rectangle(
+                {50, 50}, rtype::display::Color::Blue(),
+                rtype::display::Color::Red()),
             this->_assetsManager,
             std::function<void()>([this, valueEntity, isMusic, label]() {
                 float vol = isMusic ? this->_audio->getMusicVolume()
@@ -249,9 +306,10 @@ void SettingsScene::_initAudioSection() {
                     std::string s =
                         label + ": " + std::to_string(static_cast<int>(vol));
                     textComp.textContent = s;
-                    textComp.text.setString(s);
                 }
             }));
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            plusBtn, 1);
         this->_listEntity.push_back(plusBtn);
     };
 
@@ -267,8 +325,23 @@ void SettingsScene::_initWindowSection() {
 
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Window",
-        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
-                      sf::Vector2f(sectionW, sectionH)));
+        rtype::display::Rect<float>(sectionX, sectionY, sectionW, sectionH));
+
+    sectionEntities.push_back(EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text("main_font",
+                                          rtype::display::Color::White(), 24,
+                                          "Toggle Fullscreen"),
+        rtype::games::rtype::shared::TransformComponent(sectionX + 50,
+                                                        sectionY + 80),
+        rtype::games::rtype::client::Rectangle({400, 60},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
+        this->_assetsManager, std::function<void()>([this]() {
+            bool isFullscreen = this->_window->isFullscreen();
+            this->_window->setFullscreen(!isFullscreen);
+        })));
+
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 }
@@ -281,43 +354,55 @@ void SettingsScene::_initInputModeSection() {
 
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Input Device",
-        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
-                      sf::Vector2f(sectionW, sectionH)));
+        rtype::display::Rect<float>(sectionX, sectionY, sectionW, sectionH));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
-    this->_listEntity.push_back(EntityFactory::createButton(
+    auto keyboardBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 28, "Keyboard"),
-        rtype::games::rtype::shared::Position(sectionX + 50, sectionY + 60),
-        rtype::games::rtype::client::Rectangle({200, 60}, sf::Color::Blue,
-                                               sf::Color::Red),
+            "main_font", rtype::display::Color::White(), 28, "Keyboard"),
+        rtype::games::rtype::shared::TransformComponent(sectionX + 50,
+                                                        sectionY + 60),
+        rtype::games::rtype::client::Rectangle({200, 60},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([this]() {
             this->_keybinds->setInputMode(InputMode::Keyboard);
             this->_refreshInputModeLabel();
             this->_refreshKeybindSection();
-        })));
+        }));
 
-    this->_listEntity.push_back(EntityFactory::createButton(
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        keyboardBtn, 1);
+    this->_listEntity.push_back(keyboardBtn);
+
+    auto controllerBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 28, "Controller"),
-        rtype::games::rtype::shared::Position(sectionX + 280, sectionY + 60),
-        rtype::games::rtype::client::Rectangle({250, 60}, sf::Color::Blue,
-                                               sf::Color::Red),
+            "main_font", rtype::display::Color::White(), 28, "Controller"),
+        rtype::games::rtype::shared::TransformComponent(sectionX + 280,
+                                                        sectionY + 60),
+        rtype::games::rtype::client::Rectangle({250, 60},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([this]() {
             this->_keybinds->setInputMode(InputMode::Controller);
             this->_refreshInputModeLabel();
             this->_refreshKeybindSection();
-        })));
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        controllerBtn, 1);
+    this->_listEntity.push_back(controllerBtn);
 
-    _inputModeLabel = EntityFactory::createStaticText(
+    this->_inputModeLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Current: Keyboard", "main_font",
-        sf::Vector2f(sectionX + sectionW - 220, sectionY + 20), 20);
-    this->_listEntity.push_back(_inputModeLabel);
+        rtype::display::Vector2<float>(sectionX + sectionW - 215,
+                                       sectionY + 35),
+        20);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        this->_inputModeLabel, 1);
+    this->_listEntity.push_back(this->_inputModeLabel);
 
     this->_refreshInputModeLabel();
 }
@@ -336,7 +421,6 @@ void SettingsScene::_refreshInputModeLabel() {
         this->_registry->getComponent<rtype::games::rtype::client::Text>(
             _inputModeLabel);
     text.textContent = "Current: " + modeStr;
-    text.text.setString(text.textContent);
 }
 
 void SettingsScene::_initAccessibilitySection() {
@@ -347,8 +431,7 @@ void SettingsScene::_initAccessibilitySection() {
 
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Accessibility",
-        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
-                      sf::Vector2f(sectionW, sectionH)));
+        rtype::display::Rect<float>(sectionX, sectionY, sectionW, sectionH));
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
@@ -359,16 +442,19 @@ void SettingsScene::_initAccessibilitySection() {
 
     auto makeButton = [&](const std::string& label, float x, float y,
                           ColorBlindMode mode) {
-        this->_listEntity.push_back(EntityFactory::createButton(
+        auto btn = EntityFactory::createButton(
             this->_registry,
             rtype::games::rtype::client::Text(
-                this->_assetsManager->fontManager->get("main_font"),
-                sf::Color::White, 24, label),
-            rtype::games::rtype::shared::Position(x, y),
+                "main_font", rtype::display::Color::White(), 24, label),
+            rtype::games::rtype::shared::TransformComponent(x, y),
             rtype::games::rtype::client::Rectangle(
-                {400, 55}, sf::Color(60, 60, 120), sf::Color(80, 80, 180)),
+                {400, 55}, rtype::display::Color(60, 60, 120, 255),
+                rtype::display::Color(80, 80, 180, 255)),
             this->_assetsManager,
-            std::function<void()>([this, mode]() { _setColorMode(mode); })));
+            std::function<void()>([this, mode]() { _setColorMode(mode); }));
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            btn, 1);
+        this->_listEntity.push_back(btn);
     };
 
     float startX = sectionX + 40;
@@ -388,9 +474,9 @@ void SettingsScene::_initAccessibilitySection() {
                ColorBlindMode::HighContrast);
 
     float sliderY = startY + gapY * 6;
-    float labelX = startX;
-    float minusX = startX + 300;
-    float plusX = startX + 420;
+    float labelX = startX + strlen("Intensity") / 2 * 24;
+    float minusX = startX + 280;
+    float plusX = startX + 340;
 
     float currentIntensity =
         this->_registry->getSingleton<AccessibilitySettings>().intensity;
@@ -400,73 +486,45 @@ void SettingsScene::_initAccessibilitySection() {
     this->_intensityLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager,
         "Intensity: " + std::to_string(percent) + "%", "main_font",
-        sf::Vector2f(labelX, sliderY), 24);
+        rtype::display::Vector2<float>(labelX, sliderY + 50 / 2), 24);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(
+            *this->_intensityLabel);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        *this->_intensityLabel, 1);
     this->_listEntity.push_back(*this->_intensityLabel);
 
-    this->_listEntity.push_back(EntityFactory::createButton(
+    auto btnMinus = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 28, "-"),
-        rtype::games::rtype::shared::Position(minusX, sliderY - 10),
-        rtype::games::rtype::client::Rectangle({60, 50}, sf::Color(40, 40, 90),
-                                               sf::Color(70, 70, 140)),
+            "main_font", rtype::display::Color::White(), 28, "-"),
+        rtype::games::rtype::shared::TransformComponent(minusX, sliderY),
+        rtype::games::rtype::client::Rectangle(
+            {60, 50}, rtype::display::Color(40, 40, 90, 255),
+            rtype::display::Color(70, 70, 140, 255)),
         this->_assetsManager,
-        std::function<void()>([this]() { _adjustColorIntensity(-0.1f); })));
+        std::function<void()>([this]() { _adjustColorIntensity(-0.1f); }));
 
-    this->_listEntity.push_back(EntityFactory::createButton(
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        btnMinus, 1);
+    this->_listEntity.push_back(btnMinus);
+
+    auto btnPlus = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 28, "+"),
-        rtype::games::rtype::shared::Position(plusX, sliderY - 10),
-        rtype::games::rtype::client::Rectangle({60, 50}, sf::Color(40, 40, 90),
-                                               sf::Color(70, 70, 140)),
+            "main_font", rtype::display::Color::White(), 28, "+"),
+        rtype::games::rtype::shared::TransformComponent(plusX, sliderY),
+        rtype::games::rtype::client::Rectangle(
+            {60, 50}, rtype::display::Color(40, 40, 90, 255),
+            rtype::display::Color(70, 70, 140, 255)),
         this->_assetsManager,
-        std::function<void()>([this]() { _adjustColorIntensity(0.1f); })));
+        std::function<void()>([this]() { _adjustColorIntensity(0.1f); }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        btnPlus, 1);
+    this->_listEntity.push_back(btnPlus);
 }
 
-void SettingsScene::_setColorMode(ColorBlindMode mode) {
-    auto& acc = this->_registry->hasSingleton<AccessibilitySettings>()
-                    ? this->_registry->getSingleton<AccessibilitySettings>()
-                    : this->_registry->setSingleton<AccessibilitySettings>(
-                          AccessibilitySettings{});
-    acc.colorMode = mode;
-}
-
-void SettingsScene::_adjustColorIntensity(float delta) {
-    auto& acc = this->_registry->hasSingleton<AccessibilitySettings>()
-                    ? this->_registry->getSingleton<AccessibilitySettings>()
-                    : this->_registry->setSingleton<AccessibilitySettings>(
-                          AccessibilitySettings{});
-    acc.intensity = std::clamp(acc.intensity + delta, 0.0f, 1.5f);
-    _refreshIntensityLabel();
-}
-
-void SettingsScene::_refreshIntensityLabel() {
-    if (!this->_intensityLabel.has_value()) return;
-    if (!this->_registry->isAlive(*this->_intensityLabel)) return;
-    if (!this->_registry->hasComponent<rtype::games::rtype::client::Text>(
-            *this->_intensityLabel))
-        return;
-
-    float value =
-        this->_registry->getSingleton<AccessibilitySettings>().intensity;
-    int percent =
-        static_cast<int>(std::clamp(value, 0.0f, 1.5f) * 100.f + 0.5f);
-
-    auto& text =
-        this->_registry->getComponent<rtype::games::rtype::client::Text>(
-            *this->_intensityLabel);
-    text.textContent = "Intensity: " + std::to_string(percent) + "%";
-    text.text.setString(text.textContent);
-}
-
-void SettingsScene::update(float dt) {}
-
-void SettingsScene::render(std::shared_ptr<sf::RenderWindow> window) {}
-
-void SettingsScene::pollEvents(const sf::Event& e) {
+void SettingsScene::pollEvents(const ::rtype::display::Event& e) {
     if (this->_actionToRebind.has_value()) {
         GameAction action = *this->_actionToRebind;
         InputMode mode = this->_keybinds->getInputMode();
@@ -474,130 +532,63 @@ void SettingsScene::pollEvents(const sf::Event& e) {
                   << static_cast<int>(action));
 
         if (mode == InputMode::Keyboard) {
-            if (const auto& keyEvent = e.getIf<sf::Event::KeyPressed>()) {
-                LOG_DEBUG("[SettingsScene] Keyboard key pressed: "
-                          << static_cast<int>(keyEvent->code));
-                sf::Keyboard::Key key = keyEvent->code;
-
-                this->_keybinds->setKeyBinding(action, key);
-
-                std::string keyName = SettingsSceneUtils::keyToString(key);
-                std::string text =
-                    SettingsSceneUtils::actionToString(action) + ": " + keyName;
-
-                ECS::Entity entity = this->_actionButtons[action];
-                if (this->_registry
-                        ->hasComponent<rtype::games::rtype::client::Text>(
-                            entity)) {
-                    auto& textComp =
-                        this->_registry
-                            ->getComponent<rtype::games::rtype::client::Text>(
-                                entity);
-                    textComp.textContent = text;
-                    textComp.text.setString(text);
+            if (e.type == rtype::display::EventType::KeyPressed) {
+                auto key = e.key.code;
+                if (key != rtype::display::Key::Escape) {
+                    this->_keybinds->setKeyBinding(action, key);
+                    LOG_DEBUG("[SettingsScene] Rebound action "
+                              << static_cast<int>(action) << " to key "
+                              << static_cast<int>(key));
                 }
-
-                this->_actionToRebind = std::nullopt;
+                this->_actionToRebind.reset();
+                this->_refreshKeybindSection();
             }
-        } else if (mode == InputMode::Controller) {
-            if (const auto& btnEvent =
-                    e.getIf<sf::Event::JoystickButtonPressed>()) {
-                unsigned int button = btnEvent->button;
-                LOG_DEBUG(
-                    "[SettingsScene] Controller button pressed: " << button);
-
-                if (action == GameAction::SHOOT ||
-                    action == GameAction::PAUSE ||
-                    action == GameAction::CHANGE_AMMO) {
-                    this->_keybinds->setJoyButtonBinding(action, button);
-
-                    std::string buttonName =
-                        KeyboardActions::getXboxButtonName(button);
-                    std::string text =
-                        SettingsSceneUtils::actionToString(action) + ": " +
-                        buttonName;
-
-                    ECS::Entity entity = this->_actionButtons[action];
-                    if (this->_registry
-                            ->hasComponent<rtype::games::rtype::client::Text>(
-                                entity)) {
-                        auto& textComp = this->_registry->getComponent<
-                            rtype::games::rtype::client::Text>(entity);
-                        textComp.textContent = text;
-                        textComp.text.setString(text);
-                    }
-
-                    this->_actionToRebind = std::nullopt;
-                } else if (action == GameAction::MOVE_UP ||
-                           action == GameAction::MOVE_DOWN) {
-                    bool currentInvert =
-                        this->_keybinds->isJoyAxisInverted(GameAction::MOVE_UP);
-                    this->_keybinds->setJoyAxisInverted(GameAction::MOVE_UP,
-                                                        !currentInvert);
-                    this->_keybinds->setJoyAxisInverted(GameAction::MOVE_DOWN,
-                                                        !currentInvert);
-
-                    std::string text =
-                        SettingsSceneUtils::actionToString(action) +
-                        ((!currentInvert) ? ": Left Stick Y (Inverted)"
-                                          : ": Left Stick Y");
-
-                    ECS::Entity entity = this->_actionButtons[action];
-                    if (this->_registry
-                            ->hasComponent<rtype::games::rtype::client::Text>(
-                                entity)) {
-                        auto& textComp = this->_registry->getComponent<
-                            rtype::games::rtype::client::Text>(entity);
-                        textComp.textContent = text;
-                        textComp.text.setString(text);
-                    }
-
-                    this->_actionToRebind = std::nullopt;
-                }
+        } else {
+            if (e.type == rtype::display::EventType::JoystickButtonPressed) {
+                unsigned int btn = e.joystickButton.button;
+                this->_keybinds->setJoyButtonBinding(action, btn);
+                LOG_DEBUG("[SettingsScene] Rebound action "
+                          << static_cast<int>(action) << " to button " << btn);
+                this->_actionToRebind.reset();
+                this->_refreshKeybindSection();
             }
         }
     }
 }
 
-SettingsScene::SettingsScene(
-    std::shared_ptr<ECS::Registry> ecs,
-    std::shared_ptr<AssetManager> textureManager,
-    std::shared_ptr<sf::RenderWindow> window,
-    std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
-    std::function<void(const SceneManager::Scene&)> switchToScene)
-    : AScene(ecs, textureManager, window, audio), _keybinds(keybinds) {
-    this->_listEntity = (EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "Settings"));
+void SettingsScene::update(float dt) { (void)dt; }
 
-    this->_initKeybindSection();
-    this->_initAudioSection();
-    this->_initWindowSection();
-    this->_initAccessibilitySection();
-    this->_initInputModeSection();
+void SettingsScene::render(std::shared_ptr<rtype::display::IDisplay> window) {
+    (void)window;
+}
 
-    this->_listEntity.push_back(EntityFactory::createButton(
-        this->_registry,
-        rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 36, "Back"),
-        rtype::games::rtype::shared::Position(100, 900),
-        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
-                                               sf::Color::Red),
-        this->_assetsManager, std::function<void()>([switchToScene]() {
-            try {
-                switchToScene(SceneManager::MAIN_MENU);
-            } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Main Menu: ") +
-                          std::string(e.what()));
-            }
-        })));
+void SettingsScene::_setColorMode(ColorBlindMode mode) {
+    auto& settings = this->_registry->getSingleton<AccessibilitySettings>();
+    settings.colorMode = mode;
+    // Accessibility::apply(this->_registry, settings);
+}
 
-    this->_assetsManager->audioManager->load(
-        "main_settings_music",
-        this->_assetsManager->configGameAssets.assets.music.settings);
-    auto settings =
-        this->_assetsManager->audioManager->get("main_settings_music");
-    this->_audio->loadMusic(settings);
-    this->_audio->setLoop(true);
-    this->_audio->play();
+void SettingsScene::_adjustColorIntensity(float delta) {
+    auto& settings = this->_registry->getSingleton<AccessibilitySettings>();
+    settings.intensity = std::clamp(settings.intensity + delta, 0.0f, 1.5f);
+    // Accessibility::apply(this->_registry, settings);
+    _refreshIntensityLabel();
+}
+
+void SettingsScene::_refreshIntensityLabel() {
+    if (!this->_intensityLabel.has_value() ||
+        !this->_registry->isAlive(*this->_intensityLabel))
+        return;
+
+    if (!this->_registry->hasComponent<rtype::games::rtype::client::Text>(
+            *this->_intensityLabel))
+        return;
+
+    auto& settings = this->_registry->getSingleton<AccessibilitySettings>();
+    int percent = static_cast<int>(settings.intensity * 100.f + 0.5f);
+
+    auto& text =
+        this->_registry->getComponent<rtype::games::rtype::client::Text>(
+            *this->_intensityLabel);
+    text.textContent = "Intensity: " + std::to_string(percent) + "%";
 }

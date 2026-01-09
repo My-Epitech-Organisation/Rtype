@@ -8,10 +8,12 @@
 #include "ServerNetworkSystem.hpp"
 
 #include <memory>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 #include "Logger/Macros.hpp"
+#include "games/rtype/shared/Components.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
 
@@ -21,20 +23,23 @@ ServerNetworkSystem::ServerNetworkSystem(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<NetworkServer> server)
     : registry_(std::move(registry)), server_(std::move(server)) {
-    server_->onClientConnected(
-        [this](std::uint32_t userId) { handleClientConnected(userId); });
+    if (server_) {
+        server_->onClientConnected(
+            [this](std::uint32_t userId) { handleClientConnected(userId); });
 
-    server_->onClientDisconnected(
-        [this](std::uint32_t userId, network::DisconnectReason reason) {
-            handleClientDisconnected(userId, reason);
-        });
+        server_->onClientDisconnected(
+            [this](std::uint32_t userId, network::DisconnectReason reason) {
+                handleClientDisconnected(userId, reason);
+            });
 
-    server_->onClientInput([this](std::uint32_t userId, std::uint8_t input) {
-        handleClientInput(userId, input);
-    });
+        server_->onClientInput(
+            [this](std::uint32_t userId, std::uint8_t input) {
+                handleClientInput(userId, input);
+            });
 
-    server_->onGetUsersRequest(
-        [this](std::uint32_t userId) { handleGetUsersRequest(userId); });
+        server_->onGetUsersRequest(
+            [this](std::uint32_t userId) { handleGetUsersRequest(userId); });
+    }
 }
 
 void ServerNetworkSystem::registerNetworkedEntity(ECS::Entity entity,
@@ -54,7 +59,25 @@ void ServerNetworkSystem::registerNetworkedEntity(ECS::Entity entity,
     networkedEntities_[networkId] = info;
     entityToNetworkId_[entity.id] = networkId;
 
-    server_->spawnEntity(networkId, type, x, y);
+    std::uint8_t subType = 0;
+    if (registry_
+            ->hasComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
+                entity)) {
+        const auto& enemyType =
+            registry_
+                ->getComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
+                    entity);
+        subType = static_cast<std::uint8_t>(enemyType.variant);
+    } else if (registry_->hasComponent<
+                   rtype::games::rtype::shared::PowerUpTypeComponent>(entity)) {
+        const auto& powerUpType = registry_->getComponent<
+            rtype::games::rtype::shared::PowerUpTypeComponent>(entity);
+        subType = static_cast<std::uint8_t>(powerUpType.variant);
+    }
+
+    if (server_) {
+        server_->spawnEntity(networkId, type, subType, x, y);
+    }
 }
 
 void ServerNetworkSystem::unregisterNetworkedEntity(ECS::Entity entity) {
@@ -82,7 +105,9 @@ void ServerNetworkSystem::unregisterNetworkedEntityById(
 
     networkedEntities_.erase(it);
 
-    server_->destroyEntity(networkId);
+    if (server_) {
+        server_->destroyEntity(networkId);
+    }
 
     if (registry_ && !entity.isNull() && registry_->isAlive(entity)) {
         registry_->killEntity(entity);
@@ -133,33 +158,58 @@ void ServerNetworkSystem::updateEntityPosition(std::uint32_t networkId, float x,
 
 void ServerNetworkSystem::correctPlayerPosition(std::uint32_t userId, float x,
                                                 float y) {
-    server_->correctPosition(userId, x, y);
+    if (server_) {
+        server_->correctPosition(userId, x, y);
+    }
 }
 
 void ServerNetworkSystem::updateEntityHealth(std::uint32_t networkId,
                                              std::int32_t current,
                                              std::int32_t max) {
-    server_->updateEntityHealth(networkId, current, max);
+    if (server_) {
+        server_->updateEntityHealth(networkId, current, max);
+    }
 }
 
 void ServerNetworkSystem::broadcastPowerUp(std::uint32_t playerNetworkId,
                                            std::uint8_t powerUpType,
                                            float duration) {
-    server_->broadcastPowerUp(playerNetworkId, powerUpType, duration);
+    if (server_) {
+        server_->broadcastPowerUp(playerNetworkId, powerUpType, duration);
+    }
 }
 
 void ServerNetworkSystem::broadcastEntityUpdates() {
+    std::vector<std::tuple<std::uint32_t, float, float, float, float>>
+        dirtyEntities;
+
     for (auto& [networkId, info] : networkedEntities_) {
         if (info.dirty) {
-            server_->moveEntity(networkId, info.lastX, info.lastY, info.lastVx,
-                                info.lastVy);
+            dirtyEntities.emplace_back(networkId, info.lastX, info.lastY,
+                                       info.lastVx, info.lastVy);
             info.dirty = false;
         }
+    }
+
+    if (dirtyEntities.empty()) {
+        return;
+    }
+
+    constexpr std::size_t maxPerBatch = network::kMaxEntitiesPerBatch;
+
+    for (std::size_t offset = 0; offset < dirtyEntities.size();
+         offset += maxPerBatch) {
+        auto end = std::min(offset + maxPerBatch, dirtyEntities.size());
+        std::vector<std::tuple<std::uint32_t, float, float, float, float>>
+            batch(dirtyEntities.begin() + static_cast<std::ptrdiff_t>(offset),
+                  dirtyEntities.begin() + static_cast<std::ptrdiff_t>(end));
+        server_->moveEntitiesBatch(batch);
     }
 }
 
 void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
-                                               EntityType type, float x,
+                                               EntityType type,
+                                               std::uint8_t subType, float x,
                                                float y) {
     NetworkedEntity info{};
 
@@ -189,41 +239,57 @@ void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
     info.dirty = false;
 
     networkedEntities_[networkId] = info;
-    server_->spawnEntity(networkId, type, x, y);
+    if (server_) {
+        server_->spawnEntity(networkId, type, subType, x, y);
 
-    if (registry_ && !info.entity.isNull() && registry_->isAlive(info.entity) &&
-        registry_->hasComponent<rtype::games::rtype::shared::HealthComponent>(
-            info.entity)) {
-        const auto& health =
+        if (registry_ && !info.entity.isNull() &&
+            registry_->isAlive(info.entity) &&
             registry_
-                ->getComponent<rtype::games::rtype::shared::HealthComponent>(
-                    info.entity);
-        LOG_DEBUG("[ServerNetworkSystem] Sending initial health for entity " +
-                  std::to_string(networkId) + ": " +
-                  std::to_string(health.current) + "/" +
-                  std::to_string(health.max));
-        server_->updateEntityHealth(networkId, health.current, health.max);
+                ->hasComponent<rtype::games::rtype::shared::HealthComponent>(
+                    info.entity)) {
+            const auto& health = registry_->getComponent<
+                rtype::games::rtype::shared::HealthComponent>(info.entity);
+            LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                          "[NetworkServer] Sending initial health for entity " +
+                              std::to_string(networkId) + ": " +
+                              std::to_string(health.current) + "/" +
+                              std::to_string(health.max));
+            server_->updateEntityHealth(networkId, health.current, health.max);
+        } else {
+            LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                          "[NetworkServer] No health component for entity " +
+                              std::to_string(networkId));
+        }
     } else {
-        LOG_DEBUG("[ServerNetworkSystem] No health component for entity " +
-                  std::to_string(networkId));
+        LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                      "[NetworkServer] No health component for entity " +
+                          std::to_string(networkId));
     }
 }
 
 void ServerNetworkSystem::broadcastGameStart() {
-    server_->updateGameState(NetworkServer::GameState::Running);
+    if (server_) {
+        server_->updateGameState(NetworkServer::GameState::Running);
+    }
 }
 
 void ServerNetworkSystem::broadcastGameState(NetworkServer::GameState state) {
-    server_->updateGameState(state);
+    if (server_) {
+        server_->updateGameState(state);
+    }
 }
 
 void ServerNetworkSystem::broadcastGameOver(std::uint32_t finalScore) {
-    server_->sendGameOver(finalScore);
+    if (server_) {
+        server_->sendGameOver(finalScore);
+    }
 }
 
 void ServerNetworkSystem::resetState() {
     for (const auto& [networkId, _] : networkedEntities_) {
-        server_->destroyEntity(networkId);
+        if (server_) {
+            server_->destroyEntity(networkId);
+        }
     }
 
     networkedEntities_.clear();
@@ -234,7 +300,9 @@ void ServerNetworkSystem::resetState() {
 }
 
 void ServerNetworkSystem::update() {
-    server_->poll();
+    if (server_) {
+        server_->poll();
+    }
 
     processExpiredGracePeriods();
 
@@ -283,17 +351,36 @@ void ServerNetworkSystem::handleClientConnected(std::uint32_t userId) {
     }
 
     for (const auto& [networkId, info] : networkedEntities_) {
-        server_->spawnEntityToClient(userId, networkId, info.type, info.lastX,
-                                     info.lastY);
-
+        std::uint8_t subType = 0;
         if (registry_->isAlive(info.entity) &&
             registry_
-                ->hasComponent<rtype::games::rtype::shared::HealthComponent>(
+                ->hasComponent<rtype::games::rtype::shared::EnemyTypeComponent>(
                     info.entity)) {
-            const auto& health = registry_->getComponent<
-                rtype::games::rtype::shared::HealthComponent>(info.entity);
-            server_->updateEntityHealthToClient(userId, networkId,
-                                                health.current, health.max);
+            const auto& enemyType = registry_->getComponent<
+                rtype::games::rtype::shared::EnemyTypeComponent>(info.entity);
+            subType = static_cast<std::uint8_t>(enemyType.variant);
+        } else if (registry_->isAlive(info.entity) &&
+                   registry_->hasComponent<
+                       rtype::games::rtype::shared::PowerUpTypeComponent>(
+                       info.entity)) {
+            const auto& powerUpType = registry_->getComponent<
+                rtype::games::rtype::shared::PowerUpTypeComponent>(info.entity);
+            subType = static_cast<std::uint8_t>(powerUpType.variant);
+        }
+
+        if (server_) {
+            server_->spawnEntityToClient(userId, networkId, info.type, subType,
+                                         info.lastX, info.lastY);
+
+            if (registry_->isAlive(info.entity) &&
+                registry_->hasComponent<
+                    rtype::games::rtype::shared::HealthComponent>(
+                    info.entity)) {
+                const auto& health = registry_->getComponent<
+                    rtype::games::rtype::shared::HealthComponent>(info.entity);
+                server_->updateEntityHealthToClient(userId, networkId,
+                                                    health.current, health.max);
+            }
         }
     }
 
@@ -308,9 +395,10 @@ void ServerNetworkSystem::handleClientDisconnected(
         (reason == network::DisconnectReason::Timeout ||
          reason == network::DisconnectReason::MaxRetriesExceeded);
 
-    LOG_INFO("[ServerNetworkSystem] Client disconnected userId="
-             << userId << " reason=" << static_cast<int>(reason)
-             << (useGracePeriod ? " (grace)" : ""));
+    LOG_INFO_CAT(::rtype::LogCategory::Network,
+                 "[NetworkServer] Client disconnected userId="
+                     << userId << " reason=" << static_cast<int>(reason)
+                     << (useGracePeriod ? " (grace)" : ""));
 
     if (useGracePeriod) {
         auto it = userIdToEntity_.find(userId);
@@ -356,7 +444,8 @@ void ServerNetworkSystem::finalizeDisconnection(std::uint32_t userId) {
         userIdToEntity_.erase(it);
     }
 
-    LOG_INFO(
+    LOG_INFO_CAT(
+        ::rtype::LogCategory::Network,
         "[ServerNetworkSystem] Finalized disconnection for userId=" << userId);
 
     if (onClientDisconnectedCallback_) {
@@ -375,8 +464,13 @@ void ServerNetworkSystem::handleClientInput(std::uint32_t userId,
 }
 
 void ServerNetworkSystem::handleGetUsersRequest(std::uint32_t userId) {
-    auto connectedClients = server_->getConnectedClients();
-    server_->sendUserList(userId, connectedClients);
+    if (server_) {
+        auto connectedClients = server_->getConnectedClients();
+        server_->sendUserList(userId, connectedClients);
+    } else {
+        LOG_DEBUG(
+            "[ServerNetworkSystem] No server available to send user list");
+    }
 }
 
 }  // namespace rtype::server

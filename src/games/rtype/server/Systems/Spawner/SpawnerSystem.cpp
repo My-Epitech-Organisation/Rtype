@@ -14,6 +14,7 @@
 #include <rtype/network/Protocol.hpp>
 
 #include "../../../shared/Components.hpp"
+#include "../../../shared/Config/EntityConfig/EntityConfig.hpp"
 #include "Logger/Macros.hpp"
 
 namespace rtype::games::rtype::server {
@@ -25,14 +26,14 @@ using shared::BoundingBoxComponent;
 using shared::BydosSlaveTag;
 using shared::DamageOnContactComponent;
 using shared::EnemyTag;
+using shared::EnemyTypeComponent;
 using shared::HealthComponent;
 using shared::NetworkIdComponent;
 using shared::ObstacleTag;
 using shared::PowerUpComponent;
+using shared::PowerUpTypeComponent;
 using shared::TransformComponent;
 using shared::VelocityComponent;
-static constexpr float BYDOS_SLAVE_SIZE = 32.0F;
-static constexpr int BYDOS_SLAVE_HEALTH = 10;
 
 SpawnerSystem::SpawnerSystem(EventEmitter emitter, SpawnerConfig config)
     : ASystem("SpawnerSystem"),
@@ -69,11 +70,14 @@ void SpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
     if (_config.maxWaves > 0 &&
         _enemiesSpawnedThisWave >= _config.enemiesPerWave &&
         aliveEnemies == 0) {
-        LOG_INFO("[SpawnerSystem] Wave "
-                 << _currentWave << " complete! All enemies eliminated.");
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[SpawnerSystem] Wave "
+                         << _currentWave
+                         << " complete! All enemies eliminated.");
 
         if (_currentWave >= _config.maxWaves) {
-            LOG_INFO(
+            LOG_INFO_CAT(
+                ::rtype::LogCategory::GameEngine,
                 "[SpawnerSystem] All waves completed! Emitting GameOver event");
             _gameOverEmitted = true;
             engine::GameEvent event{};
@@ -84,23 +88,26 @@ void SpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
 
         _currentWave++;
         _enemiesSpawnedThisWave = 0;
-        LOG_INFO("[SpawnerSystem] Starting wave " << _currentWave);
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[SpawnerSystem] Starting wave " << _currentWave);
     }
 
     if (_spawnTimer >= _nextSpawnTime &&
         _enemiesSpawnedThisWave < _config.enemiesPerWave) {
         if (_enemyCount >= _config.maxEnemies) {
-            LOG_DEBUG("[SpawnerSystem] Cannot spawn: enemyCount="
-                      << _enemyCount
-                      << " >= maxEnemies=" << _config.maxEnemies);
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[SpawnerSystem] Cannot spawn: enemyCount="
+                              << _enemyCount
+                              << " >= maxEnemies=" << _config.maxEnemies);
         } else {
             spawnBydosSlave(registry);
             _enemiesSpawnedThisWave++;
-            LOG_DEBUG("[SpawnerSystem] Enemy spawned. Total this wave: "
-                      << _enemiesSpawnedThisWave << "/"
-                      << _config.enemiesPerWave
-                      << " | Current wave: " << _currentWave << "/"
-                      << _config.maxWaves << " | Alive: " << aliveEnemies);
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[SpawnerSystem] Enemy spawned. Total this wave: "
+                    << _enemiesSpawnedThisWave << "/" << _config.enemiesPerWave
+                    << " | Current wave: " << _currentWave << "/"
+                    << _config.maxWaves << " | Alive: " << aliveEnemies);
             _spawnTimer = 0.0F;
             generateNextSpawnTime();
         }
@@ -120,8 +127,32 @@ void SpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
 }
 
 void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    const auto& allEnemies = configRegistry.getAllEnemies();
+    if (allEnemies.empty()) {
+        LOG_ERROR("[SpawnerSystem] No enemy configs loaded!");
+        return;
+    }
+    std::vector<std::string> enemyPool = {"basic", "shooter", "chaser", "wave"};
+    std::uniform_int_distribution<size_t> enemyTypeDist(0,
+                                                        enemyPool.size() - 1);
+    std::string selectedEnemyId = enemyPool[enemyTypeDist(_rng)];
+
+    auto enemyConfigOpt = configRegistry.getEnemy(selectedEnemyId);
+    if (!enemyConfigOpt.has_value()) {
+        selectedEnemyId = allEnemies.begin()->first;
+        enemyConfigOpt = configRegistry.getEnemy(selectedEnemyId);
+        if (!enemyConfigOpt.has_value()) {
+            LOG_ERROR("[SpawnerSystem] Failed to get any enemy config!");
+            return;
+        }
+    }
+
+    const auto& enemyConfig = enemyConfigOpt.value().get();
+    LOG_DEBUG("[SpawnerSystem] Spawning enemy type: " << selectedEnemyId);
     ECS::Entity enemy = registry.spawnEntity();
     float spawnY = _spawnYDist(_rng);
+
     const std::vector<std::pair<AIBehavior, float>> behaviors = {
         {AIBehavior::MoveLeft, _config.weightMoveLeft},
         {AIBehavior::SineWave, _config.weightSineWave},
@@ -136,7 +167,7 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     }
     std::uniform_real_distribution<float> weightDist(0.0F, totalWeight);
     float pick = weightDist(_rng);
-    AIBehavior chosenBehavior = AIBehavior::MoveLeft;
+    AIBehavior chosenBehavior = enemyConfig.behavior;
     float accumulator = 0.0F;
     for (const auto& [behavior, weight] : behaviors) {
         accumulator += weight;
@@ -152,16 +183,23 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     }
 
     registry.emplaceComponent<TransformComponent>(enemy, spawnX, spawnY, 0.0F);
-    registry.emplaceComponent<VelocityComponent>(
-        enemy, -_config.bydosSlaveSpeed, 0.0F);
+
+    float speedX = 0.0F;
+    if (chosenBehavior == AIBehavior::MoveLeft) {
+        speedX = -enemyConfig.speed;
+    } else if (chosenBehavior == AIBehavior::Stationary) {
+        speedX = -enemyConfig.speed;
+    }
+    registry.emplaceComponent<VelocityComponent>(enemy, speedX, 0.0F);
+
     AIComponent ai{};
     ai.behavior = chosenBehavior;
-    ai.speed = _config.bydosSlaveSpeed;
+    ai.speed = enemyConfig.speed;
 
     switch (chosenBehavior) {
         case AIBehavior::Chase:
-            ai.targetX = -200.0F;
-            ai.targetY = _spawnYDist(_rng);
+            ai.targetX = 0.0F;
+            ai.targetY = 0.0F;
             break;
         case AIBehavior::DiveBomb:
             ai.targetY = _spawnYDist(_rng);
@@ -179,16 +217,26 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     }
 
     registry.emplaceComponent<AIComponent>(enemy, ai);
-    registry.emplaceComponent<HealthComponent>(enemy, BYDOS_SLAVE_HEALTH,
-                                               BYDOS_SLAVE_HEALTH);
-    registry.emplaceComponent<BoundingBoxComponent>(enemy, BYDOS_SLAVE_SIZE,
-                                                    BYDOS_SLAVE_SIZE);
-    registry.emplaceComponent<shared::ShootCooldownComponent>(
-        enemy, shared::WeaponPresets::EnemyBullet.cooldown);
+    registry.emplaceComponent<HealthComponent>(enemy, enemyConfig.health,
+                                               enemyConfig.health);
+    registry.emplaceComponent<BoundingBoxComponent>(
+        enemy, enemyConfig.hitboxWidth, enemyConfig.hitboxHeight);
+    registry.emplaceComponent<DamageOnContactComponent>(
+        enemy, enemyConfig.damage, true);
+
+    if (enemyConfig.canShoot) {
+        float shootCooldown =
+            (enemyConfig.fireRate > 0) ? (1.0F / enemyConfig.fireRate) : 0.3F;
+        registry.emplaceComponent<shared::ShootCooldownComponent>(
+            enemy, shootCooldown);
+    }
     uint32_t networkId = _nextNetworkId++;
     registry.emplaceComponent<NetworkIdComponent>(enemy, networkId);
     registry.emplaceComponent<EnemyTag>(enemy);
     registry.emplaceComponent<BydosSlaveTag>(enemy);
+    auto variant = EnemyTypeComponent::stringToVariant(selectedEnemyId);
+    registry.emplaceComponent<EnemyTypeComponent>(enemy, variant,
+                                                  selectedEnemyId);
 
     _enemyCount++;
 
@@ -198,7 +246,9 @@ void SpawnerSystem::spawnBydosSlave(ECS::Registry& registry) {
     event.x = spawnX;
     event.y = spawnY;
     event.rotation = 0.0F;
-    event.entityType = static_cast<uint8_t>(EntityType::Bydos);
+    event.entityType =
+        static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
+    event.subType = static_cast<uint8_t>(variant);
     _emitEvent(event);
 }
 
@@ -256,6 +306,36 @@ void SpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
     power.magnitude = 0.5F;
     registry.emplaceComponent<shared::PowerUpComponent>(pickup, power);
 
+    std::string powerUpId = "health_small";
+    shared::PowerUpVariant variant = shared::PowerUpVariant::Unknown;
+
+    switch (power.type) {
+        case shared::PowerUpType::SpeedBoost:
+            powerUpId = "speed_boost";
+            variant = shared::PowerUpVariant::SpeedBoost;
+            break;
+        case shared::PowerUpType::Shield:
+            powerUpId = "shield";
+            variant = shared::PowerUpVariant::Shield;
+            break;
+        case shared::PowerUpType::RapidFire:
+            powerUpId = "rapid_fire";
+            variant = shared::PowerUpVariant::RapidFire;
+            break;
+        case shared::PowerUpType::DoubleDamage:
+            powerUpId = "double_damage";
+            variant = shared::PowerUpVariant::DoubleDamage;
+            break;
+        case shared::PowerUpType::HealthBoost:
+            powerUpId = "health_small";
+            variant = shared::PowerUpVariant::HealthBoost;
+            break;
+        default:
+            powerUpId = "health_small";
+            variant = shared::PowerUpVariant::HealthBoost;
+            break;
+    }
+    registry.emplaceComponent<PowerUpTypeComponent>(pickup, variant);
     uint32_t networkId = _nextNetworkId++;
     registry.emplaceComponent<NetworkIdComponent>(pickup, networkId);
     engine::GameEvent event{};
@@ -264,6 +344,7 @@ void SpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
     event.x = _config.spawnX;
     event.y = spawnY;
     event.entityType = static_cast<uint8_t>(EntityType::Pickup);
+    event.subType = static_cast<uint8_t>(variant);
     _emitEvent(event);
 }
 

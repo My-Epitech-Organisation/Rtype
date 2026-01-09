@@ -16,21 +16,26 @@
 #include <optional>
 #include <queue>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
 #include <asio.hpp>
 
+#include "compression/Compressor.hpp"
 #include "connection/ConnectionEvents.hpp"
 #include "core/Types.hpp"
 #include "protocol/Header.hpp"
 #include "protocol/Payloads.hpp"
 #include "protocol/SecurityContext.hpp"
 #include "reliability/ReliableChannel.hpp"
+#include "server/shared/BanManager.hpp"
 #include "transport/AsioUdpSocket.hpp"
 #include "transport/IoContext.hpp"
 
 namespace rtype::server {
+
+class ServerMetrics;
 
 /**
  * @brief Configuration for NetworkServer
@@ -38,6 +43,10 @@ namespace rtype::server {
 struct NetworkServerConfig {
     std::chrono::milliseconds clientTimeout{10000};
     network::ReliableChannel::Config reliabilityConfig{};
+    network::Compressor::Config compressionConfig{};
+    bool enableCompression = true;
+
+    std::string expectedLobbyCode{};
 };
 
 /**
@@ -119,6 +128,31 @@ class NetworkServer {
     bool start(std::uint16_t port = network::kDefaultPort);
 
     /**
+     * @brief Configure expected lobby code for validation
+     * @param code 6-char lobby code that clients must send via C_JOIN_LOBBY
+     */
+    void setExpectedLobbyCode(const std::string& code) {
+        config_.expectedLobbyCode = code;
+    }
+
+    /**
+     * @brief Set the server metrics for tracking packet statistics
+     * @param metrics Shared pointer to ServerMetrics
+     */
+    void setMetrics(std::shared_ptr<ServerMetrics> metrics) {
+        _metrics = std::move(metrics);
+    }
+
+    /**
+     * @brief Get the connected client count
+     * @return Number of connected clients
+     */
+    [[nodiscard]] std::size_t getClientCount() const {
+        std::lock_guard lock(clientsMutex_);
+        return clients_.size();
+    }
+
+    /**
      * @brief Stop the server and disconnect all clients
      */
     void stop();
@@ -142,10 +176,12 @@ class NetworkServer {
      *
      * @param id Entity ID (must be unique)
      * @param type Entity type (Player, Bydos, Missile, etc.)
+     * @param subType Entity subtype (enemy variant, etc.)
      * @param x Initial X position
      * @param y Initial Y position
      */
-    void spawnEntity(std::uint32_t id, EntityType type, float x, float y);
+    void spawnEntity(std::uint32_t id, EntityType type, std::uint8_t subType,
+                     float x, float y);
 
     /**
      * @brief Update entity position/velocity on all clients
@@ -159,6 +195,18 @@ class NetworkServer {
      * @param vy Y velocity
      */
     void moveEntity(std::uint32_t id, float x, float y, float vx, float vy);
+
+    /**
+     * @brief Broadcast batched entity moves to all clients
+     *
+     * More efficient than individual moveEntity calls - reduces packet overhead
+     * and enables LZ4 compression for larger batches.
+     *
+     * @param entities Vector of (entityId, x, y, vx, vy) tuples
+     */
+    void moveEntitiesBatch(
+        const std::vector<
+            std::tuple<std::uint32_t, float, float, float, float>>& entities);
 
     /**
      * @brief Destroy an entity on all clients
@@ -206,6 +254,25 @@ class NetworkServer {
     void sendGameOver(std::uint32_t finalScore);
 
     /**
+     * @brief Broadcast game start with countdown
+     *
+     * Sent reliably to all clients to trigger countdown timer.
+     *
+     * @param countdownDuration Countdown duration in seconds (e.g., 3.0f)
+     */
+    void broadcastGameStart(float countdownDuration);
+
+    /**
+     * @brief Broadcast player ready state change to all clients
+     *
+     * Sent reliably to all clients to update lobby UI with ready status.
+     *
+     * @param userId User ID of the player whose ready state changed
+     * @param isReady True if player is ready, false otherwise
+     */
+    void broadcastPlayerReadyState(std::uint32_t userId, bool isReady);
+
+    /**
      * @brief Spawn an entity on a specific client
      *
      * Useful for syncing existing entities to newly connected clients.
@@ -213,11 +280,13 @@ class NetworkServer {
      * @param userId Target client's user ID
      * @param id Entity ID
      * @param type Entity type
+     * @param subType Entity subtype (enemy variant, etc.)
      * @param x Initial X position
      * @param y Initial Y position
      */
     void spawnEntityToClient(std::uint32_t userId, std::uint32_t id,
-                             EntityType type, float x, float y);
+                             EntityType type, std::uint8_t subType, float x,
+                             float y);
 
     /**
      * @brief Update entity position/velocity on a specific client
@@ -312,6 +381,13 @@ class NetworkServer {
     void onGetUsersRequest(std::function<void(std::uint32_t userId)> callback);
 
     /**
+     * @brief Register callback for client ready/not ready signals
+     * @param callback Function receiving user ID and ready state (true=ready)
+     */
+    void onClientReady(
+        std::function<void(std::uint32_t userId, bool isReady)> callback);
+
+    /**
      * @brief Process incoming packets and dispatch callbacks
      *
      * Must be called regularly (e.g., each game frame) to:
@@ -335,6 +411,25 @@ class NetworkServer {
      */
     [[nodiscard]] std::size_t clientCount() const noexcept;
 
+    /**
+     * @brief Get the network endpoint for a connected user ID
+     * @param userId Network user ID assigned to the client
+     * @return Optional endpoint if the client exists
+     */
+    [[nodiscard]] std::optional<network::Endpoint> getClientEndpoint(
+        std::uint32_t userId) const;
+
+    /**
+     * @brief Disconnect a client by user ID
+     * Sends a DISCONNECT packet and removes the client from server maps.
+     * @param userId Target client's user ID
+     * @param reason Optional reason (default: RemoteRequest)
+     * @return true if client was found and disconnected, false otherwise
+     */
+    bool disconnectClient(std::uint32_t userId,
+                          network::DisconnectReason reason =
+                              network::DisconnectReason::RemoteRequest);
+
    private:
     /**
      * @brief Client connection state
@@ -345,6 +440,7 @@ class NetworkServer {
         network::ReliableChannel reliableChannel;
         std::chrono::steady_clock::time_point lastActivity;
         std::uint16_t nextSeqId{0};
+        bool joined{false};
 
         explicit ClientConnection(const network::Endpoint& ep, std::uint32_t id,
                                   const network::ReliableChannel::Config& cfg)
@@ -374,6 +470,13 @@ class NetworkServer {
                         const network::Endpoint& sender);
     void handlePing(const network::Header& header,
                     const network::Endpoint& sender);
+    void handleReady(const network::Header& header,
+                     const network::Buffer& payload,
+                     const network::Endpoint& sender);
+
+    void handleJoinLobby(const network::Header& header,
+                         const network::Buffer& payload,
+                         const network::Endpoint& sender);
 
     [[nodiscard]] std::string makeConnectionKey(
         const network::Endpoint& ep) const;
@@ -396,6 +499,7 @@ class NetworkServer {
     [[nodiscard]] std::uint32_t nextUserId();
 
     Config config_;
+    network::Compressor compressor_;
 
     bool running_{false};
 
@@ -425,8 +529,16 @@ class NetworkServer {
         onClientDisconnectedCallback_;
     std::function<void(std::uint32_t, std::uint8_t)> onClientInputCallback_;
     std::function<void(std::uint32_t)> onGetUsersRequestCallback_;
+    std::function<void(std::uint32_t, bool)> onClientReadyCallback_;
 
     mutable std::mutex clientsMutex_;
+
+    std::shared_ptr<ServerMetrics> _metrics{nullptr};
+
+    std::weak_ptr<BanManager> banManager_;
+
+   public:
+    void setBanManager(std::shared_ptr<BanManager> bm) { banManager_ = bm; }
 };
 
 }  // namespace rtype::server

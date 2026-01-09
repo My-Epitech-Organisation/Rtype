@@ -15,3 +15,4 @@
 #include "EnemyShooting/EnemyShootingSystem.hpp"
 #include "Projectile/ProjectileSpawnerSystem.hpp"
 #include "Spawner/SpawnerSystem.hpp"
+#include "WaveManager/WaveManager.hpp"

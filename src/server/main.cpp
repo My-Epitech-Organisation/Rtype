@@ -21,6 +21,8 @@
 #include "games/rtype/server/GameEngine.hpp"
 #include "games/rtype/server/RTypeEntitySpawner.hpp"
 #include "games/rtype/server/RTypeGameConfig.hpp"
+#include "lobby/LobbyManager.hpp"
+#include "shared/NetworkUtils.hpp"
 
 /**
  * @brief Signal handler for graceful shutdown and config reload
@@ -28,12 +30,14 @@
  */
 static void signalHandler(int signal) {
     if (signal == SIGINT || signal == SIGTERM) {
-        LOG_INFO("\n[Main] Received shutdown signal");
+        LOG_INFO_CAT(rtype::LogCategory::Main,
+                     "\n[Main] Received shutdown signal");
         ServerSignals::shutdown()->store(true);
     }
 #ifndef _WIN32
     if (signal == SIGHUP) {
-        LOG_INFO("\n[Main] Received SIGHUP - config reload requested");
+        LOG_INFO_CAT(rtype::LogCategory::Main,
+                     "\n[Main] Received SIGHUP - config reload requested");
         ServerSignals::reloadConfig()->store(true);
     }
 #endif
@@ -67,9 +71,35 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
                   }
                   return rtype::ParseResult::Exit;
               })
-        .flag("-v", "--verbose", "Enable verbose debug output",
+        .flag("-v", "--verbose",
+              "Enable verbose debug output for all categories",
               [config]() {
                   config->verbose = true;
+                  config->verboseCategories = rtype::LogCategory::All;
+                  return rtype::ParseResult::Success;
+              })
+        .option("-vc", "--verbose-category", "category",
+                "Enable verbose output for specific categories "
+                "(main,network,game,ecs,input,audio,graphics,physics,ai,ui). "
+                "Can be specified multiple times.",
+                [config](std::string_view val) {
+                    rtype::LogCategory cat = rtype::categoryFromString(val);
+                    if (cat == rtype::LogCategory::None) {
+                        LOG_ERROR_CAT(rtype::LogCategory::Main,
+                                      "Unknown category: " << val);
+                        return rtype::ParseResult::Error;
+                    }
+                    config->verbose = true;
+                    if (config->verboseCategories == rtype::LogCategory::All) {
+                        config->verboseCategories = cat;
+                    } else {
+                        config->verboseCategories |= cat;
+                    }
+                    return rtype::ParseResult::Success;
+                })
+        .flag("-nc", "--no-color", "Disable colored console output",
+              [config]() {
+                  config->noColor = true;
                   return rtype::ParseResult::Success;
               })
         .option("-c", "--config", "path",
@@ -106,6 +136,24 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
                     config->tickRate = v.value();
                     config->tickRateOverride = true;
                     return rtype::ParseResult::Success;
+                })
+        .option("-i", "--instances", "n",
+                "Number of lobby instances (1-16, default: 1)",
+                [config](std::string_view val) {
+                    auto v =
+                        rtype::parseNumber<uint32_t>(val, "instances", 1, 16);
+                    if (!v.has_value()) return rtype::ParseResult::Error;
+                    config->instanceCount = v.value();
+                    return rtype::ParseResult::Success;
+                })
+        .option("", "--lobby-timeout", "seconds",
+                "Empty lobby timeout in seconds (default: 300)",
+                [config](std::string_view val) {
+                    auto v = rtype::parseNumber<uint32_t>(val, "lobby-timeout",
+                                                          10, 3600);
+                    if (!v.has_value()) return rtype::ParseResult::Error;
+                    config->lobbyTimeout = v.value();
+                    return rtype::ParseResult::Success;
                 });
     return parser;
 }
@@ -115,19 +163,22 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
  * @param config The server configuration to display
  */
 static void printBanner(const ServerConfig& config) {
-    LOG_INFO(
-        "==================================\n"
-        << "    R-Type Server\n"
-        << "==================================\n"
-        << std::format("  Config Dir:  {}\n", config.configPath)
-        << std::format("  Port:        {}{}\n", config.port,
-                       config.portOverride ? " (override)" : "")
-        << std::format("  Max Players: {}{}\n", config.maxPlayers,
-                       config.maxPlayersOverride ? " (override)" : "")
-        << std::format("  Tick Rate:   {} Hz{}\n", config.tickRate,
-                       config.tickRateOverride ? " (override)" : "")
-        << std::format("  Verbose:     {}\n", config.verbose ? "yes" : "no")
-        << "==================================");
+    LOG_INFO_CAT(
+        rtype::LogCategory::Main,
+        "\n==================================\n"
+            << "    R-Type Server\n"
+            << "==================================\n"
+            << std::format("  Config Dir:  {}\n", config.configPath)
+            << std::format("  Port:        {}{}\n", config.port,
+                           config.portOverride ? " (override)" : "")
+            << std::format("  Max Players: {}{}\n", config.maxPlayers,
+                           config.maxPlayersOverride ? " (override)" : "")
+            << std::format("  Tick Rate:   {} Hz{}\n", config.tickRate,
+                           config.tickRateOverride ? " (override)" : "")
+            << std::format("  Instances:   {}\n", config.instanceCount)
+            << std::format("  Lobby Timeout: {} seconds\n", config.lobbyTimeout)
+            << std::format("  Verbose:     {}\n", config.verbose ? "yes" : "no")
+            << "==================================");
 }
 
 /**
@@ -140,26 +191,75 @@ static void printBanner(const ServerConfig& config) {
 static int runServer(const ServerConfig& config,
                      std::shared_ptr<std::atomic<bool>> shutdownFlag,
                      std::shared_ptr<std::atomic<bool>> reloadConfigFlag) {
-    auto gameConfig = rtype::games::rtype::server::createRTypeGameConfig();
-
-    if (!gameConfig->initialize(config.configPath)) {
-        LOG_ERROR("[Main] Failed to initialize game configuration: "
-                  << gameConfig->getLastError());
-        return 1;
-    }
-
-    rtype::server::ServerApp server(std::move(gameConfig), shutdownFlag,
-                                    config.verbose);
-
     // TODO(Clem): Implement hot reload in main loop when reloadConfigFlag
     (void)reloadConfigFlag;
 
-    if (!server.run()) {
-        LOG_ERROR("[Main] Server failed to start.");
+    if (config.instanceCount == 0) {
+        LOG_WARNING_CAT(rtype::LogCategory::Main,
+                        "[Main] No lobby instances configured; exiting.");
+        return 0;
+    }
+
+    if (!rtype::server::isUdpPortAvailable(
+            static_cast<uint16_t>(config.port))) {
+        LOG_ERROR_CAT(rtype::LogCategory::Main,
+                      "[Main] Requested base port "
+                          << config.port << " is unavailable; exiting.");
         return 1;
     }
 
-    LOG_INFO("[Main] Server terminated.");
+    for (std::uint32_t i = 0; i < config.instanceCount; ++i) {
+        std::uint16_t p = static_cast<std::uint16_t>(config.port + 1 + i);
+        if (!rtype::server::isUdpPortAvailable(p)) {
+            LOG_ERROR_CAT(rtype::LogCategory::Main,
+                          "[Main] Required lobby port "
+                              << p << " is unavailable; exiting.");
+            return 1;
+        }
+    }
+
+    if (config.instanceCount >= 1) {
+        LOG_INFO_CAT(rtype::LogCategory::Main,
+                     "[Main] Starting lobby manager with "
+                         << config.instanceCount << " instance(s)");
+
+        rtype::server::LobbyManager::Config managerConfig;
+        managerConfig.basePort = config.port;
+        managerConfig.instanceCount = config.instanceCount;
+        managerConfig.maxPlayers = config.maxPlayers;
+        managerConfig.tickRate = config.tickRate;
+        managerConfig.configPath = config.configPath;
+        managerConfig.emptyTimeout = std::chrono::seconds(config.lobbyTimeout);
+        managerConfig.maxInstances = 16;
+
+        try {
+            rtype::server::LobbyManager manager(managerConfig);
+
+            if (!manager.start()) {
+                LOG_ERROR_CAT(rtype::LogCategory::Main,
+                              "[Main] Failed to start lobby manager");
+                return 1;
+            }
+
+            while (!shutdownFlag->load() && manager.isRunning()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            LOG_INFO_CAT(
+                rtype::LogCategory::Main,
+                "[Main] Shutdown signal received, stopping lobbies...");
+
+            manager.stop();
+
+            LOG_INFO_CAT(rtype::LogCategory::Main,
+                         "[Main] Lobby manager terminated.");
+            return 0;
+        } catch (const std::exception& e) {
+            LOG_ERROR_CAT(rtype::LogCategory::Main,
+                          "[Main] Lobby manager error: " << e.what());
+            return 1;
+        }
+    }
     return 0;
 }
 
@@ -184,15 +284,40 @@ int main(int argc, char** argv) {
             parser->clear();
         }
 
+        auto& logger = rtype::Logger::instance();
+
+        if (config->verbose) {
+            logger.setLogLevel(rtype::LogLevel::Debug);
+            logger.setEnabledCategories(config->verboseCategories);
+        } else {
+            logger.setLogLevel(rtype::LogLevel::Info);
+        }
+
+        if (config->noColor) {
+            logger.setColorEnabled(false);
+        }
+        const auto logFile =
+            rtype::Logger::generateLogFilename("server_session");
+        if (logger.setLogFile(logFile, false)) {
+            LOG_INFO_CAT(rtype::LogCategory::Main,
+                         "[Main] Logging to file: " << logFile.string());
+        } else {
+            LOG_WARNING_CAT(
+                rtype::LogCategory::Main,
+                "[Main] Failed to open log file: " << logFile.string());
+        }
+
         printBanner(*config);
         setupSignalHandlers();
         return runServer(*config, ServerSignals::shutdown(),
                          ServerSignals::reloadConfig());
     } catch (const std::exception& e) {
-        LOG_ERROR("[Main] Fatal error: " << std::string(e.what()));
+        LOG_FATAL_CAT(rtype::LogCategory::Main,
+                      "[Main] Fatal error: " << std::string(e.what()));
         return 1;
     } catch (...) {
-        LOG_ERROR("[Main] Unknown fatal error occurred");
+        LOG_FATAL_CAT(rtype::LogCategory::Main,
+                      "[Main] Unknown fatal error occurred");
         return 1;
     }
 }

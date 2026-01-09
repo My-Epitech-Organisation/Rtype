@@ -15,11 +15,10 @@
 #include <utility>
 #include <vector>
 
-#include <SFML/System/Clock.hpp>
-#include <SFML/System/Vector2.hpp>
-
+#include "../lib/display/Clock/Clock.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Graphic/SceneManager/Scenes/GameScene/AGameScene.hpp"
+#include "rtype/display/DisplayTypes.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -41,7 +40,7 @@ class RtypeGameScene : public AGameScene {
     RtypeGameScene(
         std::shared_ptr<ECS::Registry> registry,
         std::shared_ptr<AssetManager> assetsManager,
-        std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<::rtype::display::IDisplay> display,
         std::shared_ptr<KeyboardActions> keybinds,
         std::function<void(const SceneManager::Scene&)> switchToScene,
         std::shared_ptr<::rtype::client::NetworkClient> networkClient,
@@ -67,15 +66,15 @@ class RtypeGameScene : public AGameScene {
 
     /**
      * @brief Render R-Type specific elements
-     * @param window The render window
+     * @param display The display interface
      */
-    void render(std::shared_ptr<sf::RenderWindow> window) override;
+    void render(::rtype::display::IDisplay& display) override;
 
     /**
      * @brief Handle R-Type specific events
-     * @param event The SFML event
+     * @param event The display event
      */
-    void pollEvents(const sf::Event& event) override;
+    void pollEvents(const ::rtype::display::Event& event) override;
 
     /**
      * @brief Get current input mask for R-Type controls
@@ -117,19 +116,24 @@ class RtypeGameScene : public AGameScene {
     std::optional<ECS::Entity> _healthBarBgEntity;
     std::optional<ECS::Entity> _healthBarFillEntity;
     std::optional<ECS::Entity> _healthTextEntity;
+    std::optional<ECS::Entity> _pingTextEntity;
     std::optional<std::uint32_t> _localPlayerId;
     std::optional<ECS::Entity> _localPlayerEntity;
     int _lastKnownLives{0};
     int _lastKnownMaxLives{0};
     float _damageFlashTimer{0.0F};
-    sf::Clock _uiClock;
+    float _uiTimer{0.0F};
 
     static constexpr int kVignetteLayers = 6;
     std::vector<ECS::Entity> _vignetteEntities;
     float _vignetteAlpha{0.0F};
     static constexpr float kVignetteFadeSpeed = 300.0F;
     static constexpr float kVignetteMaxAlpha = 180.0F;
-    sf::Vector2u _lastVignetteSize{0, 0};
+    ::rtype::display::Vector2i _lastVignetteSize{0, 0};
+
+    static constexpr float kShootSendInterval = 0.05F;
+
+    ::rtype::display::Clock _shootInputClock;
 
     void setupDamageVignette();
     void refreshDamageVignetteLayout();
@@ -137,9 +141,21 @@ class RtypeGameScene : public AGameScene {
     void setHealthBarVisible(bool visible);
     void updateDamageVignette(float deltaTime);
     void updateHealthBar(int current, int max);
+    void updatePingDisplay();
     void triggerDamageFlash(int damageAmount);
     void resetHudColors();
     void spawnDamagePopup(int damage);
+
+    void setupDisconnectCallback();
+    void showDisconnectModal(network::DisconnectReason reason);
+    void cleanupDisconnectModal();
+    std::string getDisconnectMessage(network::DisconnectReason reason) const;
+    std::optional<ECS::Entity> _disconnectOverlayEntity;
+    std::optional<ECS::Entity> _disconnectPanelEntity;
+    std::optional<ECS::Entity> _disconnectTitleEntity;
+    std::optional<ECS::Entity> _disconnectMessageEntity;
+    std::optional<ECS::Entity> _disconnectButtonEntity;
+    bool _isDisconnected{false};
 };
 }  // namespace rtype::games::rtype::client
 

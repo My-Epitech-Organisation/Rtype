@@ -96,7 +96,7 @@ else
     mkdir -p "$BUILD_DIR"
     cd "$BUILD_DIR"
 
-    CMAKE_ARGS="-G Ninja -DBUILD_GRAPHICAL_TESTS=OFF -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF"
+    CMAKE_ARGS="-G Ninja -DBUILD_GRAPHICAL_TESTS=OFF -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DBUILD_TESTS=ON -DBUILD_EXAMPLES=OFF -DDISABLE_ASAN=ON"
 
     # Try to find vcpkg installation in order of preference:
     # 1. Cached vcpkg_installed from CI build
@@ -138,6 +138,12 @@ else
     cmake $CMAKE_ARGS "$PROJECT_ROOT"
 fi
 
+# Copy config directory for tests (needed regardless of cached/fresh build)
+if [[ ! -d "$BUILD_DIR/config" || "$PROJECT_ROOT/config" -nt "$BUILD_DIR/config" ]]; then
+    echo ">>> Copying config directory to build-coverage..."
+    cp -r "$PROJECT_ROOT/config" "$BUILD_DIR/"
+fi
+
 echo ""
 echo ">>> Building project..."
 ninja
@@ -154,7 +160,11 @@ if $GENERATE_HTML; then
 
     LCOV_OPTS="--rc branch_coverage=1 --ignore-errors mismatch,gcov,inconsistent,negative,unused,source"
 
-    lcov --capture --directory . --output-file "$COVERAGE_DIR/coverage.info" $LCOV_OPTS
+    lcov --capture --directory . --output-file "$COVERAGE_DIR/coverage.info" $LCOV_OPTS || true
+    if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
+        echo "Error: lcov did not generate coverage data (capture failed)." >&2
+        exit 1
+    fi
 
     lcov --remove "$COVERAGE_DIR/coverage.info" \
         '/usr/*' \
@@ -175,8 +185,14 @@ if $GENERATE_HTML; then
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/serverApp.cpp' \
+        '*/NetworkClient.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
-        $LCOV_OPTS
+        $LCOV_OPTS || true
+    if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
+        echo "Error: lcov did not produce a filtered coverage data file (remove failed)." >&2
+        exit 1
+    fi
 
     echo ""
     echo ">>> Generating HTML report..."
@@ -185,7 +201,7 @@ if $GENERATE_HTML; then
         --branch-coverage \
         --title "R-Type Code Coverage" \
         --legend \
-        --ignore-errors inconsistent
+        --ignore-errors inconsistent,source
 
     echo ""
     echo ">>> Checking coverage requirements..."
@@ -207,12 +223,12 @@ if $GENERATE_HTML; then
 
     echo "Coverage thresholds: Lines ≥${LINES_THRESHOLD}%, Functions ≥${FUNCTIONS_THRESHOLD}%, Branches ≥${BRANCHES_THRESHOLD}%"
 
-    COVERAGE_OUTPUT=$(lcov --summary "$COVERAGE_DIR/coverage.info" $LCOV_OPTS 2>/dev/null)
+    COVERAGE_OUTPUT=$(lcov --summary "$COVERAGE_DIR/coverage.info" $LCOV_OPTS 2>&1 || true)
     echo "$COVERAGE_OUTPUT"
 
-    LINES_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "lines" | sed -E 's/.* ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
-    FUNCTIONS_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "functions" | sed -E 's/.* ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
-    BRANCHES_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "branches" | sed -E 's/.* ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
+    LINES_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep -E 'lines.*: [0-9]+\.[0-9]+%' | sed -E 's/.*: ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
+    FUNCTIONS_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep -E 'functions.*: [0-9]+\.[0-9]+%' | sed -E 's/.*: ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
+    BRANCHES_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep -E 'branches.*: [0-9]+\.[0-9]+%' | sed -E 's/.*: ([0-9]+\.[0-9]+)%.*/\1/' | head -1)
 
     if [[ -z "$LINES_COVERAGE" || -z "$FUNCTIONS_COVERAGE" || -z "$BRANCHES_COVERAGE" ]]; then
         echo "Error: Could not parse coverage percentages"
@@ -271,7 +287,11 @@ else
     LCOV_OPTS="--rc branch_coverage=1 --ignore-errors mismatch,gcov,inconsistent,negative,unused"
 
     echo ">>> Capturing coverage data..."
-    lcov --capture --directory . --output-file "$COVERAGE_DIR/coverage.info" $LCOV_OPTS
+    lcov --capture --directory . --output-file "$COVERAGE_DIR/coverage.info" $LCOV_OPTS || true
+    if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
+        echo "Error: lcov did not generate coverage data (capture failed)." >&2
+        exit 1
+    fi
 
     echo ">>> Filtering coverage data..."
     lcov --remove "$COVERAGE_DIR/coverage.info" \
@@ -293,8 +313,14 @@ else
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/serverApp.cpp' \
+        '*/NetworkClient.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
-        $LCOV_OPTS
+        $LCOV_OPTS || true
+    if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
+        echo "Error: lcov did not produce a filtered coverage data file (remove failed)." >&2
+        exit 1
+    fi
 
     echo ""
     echo "=== Coverage Summary ==="

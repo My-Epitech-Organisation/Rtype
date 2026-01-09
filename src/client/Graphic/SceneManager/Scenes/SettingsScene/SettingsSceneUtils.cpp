@@ -7,209 +7,212 @@
 
 #include "SettingsSceneUtils.hpp"
 
-std::string SettingsSceneUtils::keyToString(sf::Keyboard::Key key) {
+#include "rtype/display/DisplayTypes.hpp"
+#include "rtype/display/IDisplay.hpp"
+
+std::string SettingsSceneUtils::keyToString(rtype::display::Key key) {
     switch (key) {
-        case sf::Keyboard::Key::A:
+        case rtype::display::Key::A:
             return "A";
-        case sf::Keyboard::Key::B:
+        case rtype::display::Key::B:
             return "B";
-        case sf::Keyboard::Key::C:
+        case rtype::display::Key::C:
             return "C";
-        case sf::Keyboard::Key::D:
+        case rtype::display::Key::D:
             return "D";
-        case sf::Keyboard::Key::E:
+        case rtype::display::Key::E:
             return "E";
-        case sf::Keyboard::Key::F:
+        case rtype::display::Key::F:
             return "F";
-        case sf::Keyboard::Key::G:
+        case rtype::display::Key::G:
             return "G";
-        case sf::Keyboard::Key::H:
+        case rtype::display::Key::H:
             return "H";
-        case sf::Keyboard::Key::I:
+        case rtype::display::Key::I:
             return "I";
-        case sf::Keyboard::Key::J:
+        case rtype::display::Key::J:
             return "J";
-        case sf::Keyboard::Key::K:
+        case rtype::display::Key::K:
             return "K";
-        case sf::Keyboard::Key::L:
+        case rtype::display::Key::L:
             return "L";
-        case sf::Keyboard::Key::M:
+        case rtype::display::Key::M:
             return "M";
-        case sf::Keyboard::Key::N:
+        case rtype::display::Key::N:
             return "N";
-        case sf::Keyboard::Key::O:
+        case rtype::display::Key::O:
             return "O";
-        case sf::Keyboard::Key::P:
+        case rtype::display::Key::P:
             return "P";
-        case sf::Keyboard::Key::Q:
+        case rtype::display::Key::Q:
             return "Q";
-        case sf::Keyboard::Key::R:
+        case rtype::display::Key::R:
             return "R";
-        case sf::Keyboard::Key::S:
+        case rtype::display::Key::S:
             return "S";
-        case sf::Keyboard::Key::T:
+        case rtype::display::Key::T:
             return "T";
-        case sf::Keyboard::Key::U:
+        case rtype::display::Key::U:
             return "U";
-        case sf::Keyboard::Key::V:
+        case rtype::display::Key::V:
             return "V";
-        case sf::Keyboard::Key::W:
+        case rtype::display::Key::W:
             return "W";
-        case sf::Keyboard::Key::X:
+        case rtype::display::Key::X:
             return "X";
-        case sf::Keyboard::Key::Y:
+        case rtype::display::Key::Y:
             return "Y";
-        case sf::Keyboard::Key::Z:
+        case rtype::display::Key::Z:
             return "Z";
-        case sf::Keyboard::Key::Num0:
+        case rtype::display::Key::Num0:
             return "0";
-        case sf::Keyboard::Key::Num1:
+        case rtype::display::Key::Num1:
             return "1";
-        case sf::Keyboard::Key::Num2:
+        case rtype::display::Key::Num2:
             return "2";
-        case sf::Keyboard::Key::Num3:
+        case rtype::display::Key::Num3:
             return "3";
-        case sf::Keyboard::Key::Num4:
+        case rtype::display::Key::Num4:
             return "4";
-        case sf::Keyboard::Key::Num5:
+        case rtype::display::Key::Num5:
             return "5";
-        case sf::Keyboard::Key::Num6:
+        case rtype::display::Key::Num6:
             return "6";
-        case sf::Keyboard::Key::Num7:
+        case rtype::display::Key::Num7:
             return "7";
-        case sf::Keyboard::Key::Num8:
+        case rtype::display::Key::Num8:
             return "8";
-        case sf::Keyboard::Key::Num9:
+        case rtype::display::Key::Num9:
             return "9";
-        case sf::Keyboard::Key::Escape:
+        case rtype::display::Key::Escape:
             return "Escape";
-        case sf::Keyboard::Key::LControl:
+        case rtype::display::Key::LControl:
             return "LControl";
-        case sf::Keyboard::Key::LShift:
+        case rtype::display::Key::LShift:
             return "LShift";
-        case sf::Keyboard::Key::LAlt:
+        case rtype::display::Key::LAlt:
             return "LAlt";
-        case sf::Keyboard::Key::LSystem:
+        case rtype::display::Key::LSystem:
             return "LSystem";
-        case sf::Keyboard::Key::RControl:
+        case rtype::display::Key::RControl:
             return "RControl";
-        case sf::Keyboard::Key::RShift:
+        case rtype::display::Key::RShift:
             return "RShift";
-        case sf::Keyboard::Key::RAlt:
+        case rtype::display::Key::RAlt:
             return "RAlt";
-        case sf::Keyboard::Key::RSystem:
+        case rtype::display::Key::RSystem:
             return "RSystem";
-        case sf::Keyboard::Key::Menu:
+        case rtype::display::Key::Menu:
             return "Menu";
-        case sf::Keyboard::Key::LBracket:
+        case rtype::display::Key::LBracket:
             return "LBracket";
-        case sf::Keyboard::Key::RBracket:
+        case rtype::display::Key::RBracket:
             return "RBracket";
-        case sf::Keyboard::Key::Semicolon:
+        case rtype::display::Key::SemiColon:
             return "Semicolon";
-        case sf::Keyboard::Key::Comma:
+        case rtype::display::Key::Comma:
             return "Comma";
-        case sf::Keyboard::Key::Period:
+        case rtype::display::Key::Period:
             return "Period";
-        case sf::Keyboard::Key::Apostrophe:
+        case rtype::display::Key::Quote:
             return "Apostrophe";
-        case sf::Keyboard::Key::Slash:
+        case rtype::display::Key::Slash:
             return "Slash";
-        case sf::Keyboard::Key::Backslash:
+        case rtype::display::Key::BackSlash:
             return "Backslash";
-        case sf::Keyboard::Key::Grave:
+        case rtype::display::Key::Tilde:
             return "Grave";
-        case sf::Keyboard::Key::Equal:
+        case rtype::display::Key::Equal:
             return "Equal";
-        case sf::Keyboard::Key::Hyphen:
+        case rtype::display::Key::Dash:
             return "Hyphen";
-        case sf::Keyboard::Key::Space:
+        case rtype::display::Key::Space:
             return "Space";
-        case sf::Keyboard::Key::Enter:
+        case rtype::display::Key::Return:
             return "Enter";
-        case sf::Keyboard::Key::Backspace:
+        case rtype::display::Key::BackSpace:
             return "Backspace";
-        case sf::Keyboard::Key::Tab:
+        case rtype::display::Key::Tab:
             return "Tab";
-        case sf::Keyboard::Key::PageUp:
+        case rtype::display::Key::PageUp:
             return "PageUp";
-        case sf::Keyboard::Key::PageDown:
+        case rtype::display::Key::PageDown:
             return "PageDown";
-        case sf::Keyboard::Key::End:
+        case rtype::display::Key::End:
             return "End";
-        case sf::Keyboard::Key::Home:
+        case rtype::display::Key::Home:
             return "Home";
-        case sf::Keyboard::Key::Insert:
+        case rtype::display::Key::Insert:
             return "Insert";
-        case sf::Keyboard::Key::Delete:
+        case rtype::display::Key::Delete:
             return "Delete";
-        case sf::Keyboard::Key::Add:
+        case rtype::display::Key::Add:
             return "Add";
-        case sf::Keyboard::Key::Subtract:
+        case rtype::display::Key::Subtract:
             return "Subtract";
-        case sf::Keyboard::Key::Multiply:
+        case rtype::display::Key::Multiply:
             return "Multiply";
-        case sf::Keyboard::Key::Divide:
+        case rtype::display::Key::Divide:
             return "Divide";
-        case sf::Keyboard::Key::Left:
+        case rtype::display::Key::Left:
             return "Left";
-        case sf::Keyboard::Key::Right:
+        case rtype::display::Key::Right:
             return "Right";
-        case sf::Keyboard::Key::Up:
+        case rtype::display::Key::Up:
             return "Up";
-        case sf::Keyboard::Key::Down:
+        case rtype::display::Key::Down:
             return "Down";
-        case sf::Keyboard::Key::Numpad0:
+        case rtype::display::Key::Numpad0:
             return "Numpad0";
-        case sf::Keyboard::Key::Numpad1:
+        case rtype::display::Key::Numpad1:
             return "Numpad1";
-        case sf::Keyboard::Key::Numpad2:
+        case rtype::display::Key::Numpad2:
             return "Numpad2";
-        case sf::Keyboard::Key::Numpad3:
+        case rtype::display::Key::Numpad3:
             return "Numpad3";
-        case sf::Keyboard::Key::Numpad4:
+        case rtype::display::Key::Numpad4:
             return "Numpad4";
-        case sf::Keyboard::Key::Numpad5:
+        case rtype::display::Key::Numpad5:
             return "Numpad5";
-        case sf::Keyboard::Key::Numpad6:
+        case rtype::display::Key::Numpad6:
             return "Numpad6";
-        case sf::Keyboard::Key::Numpad7:
+        case rtype::display::Key::Numpad7:
             return "Numpad7";
-        case sf::Keyboard::Key::Numpad8:
+        case rtype::display::Key::Numpad8:
             return "Numpad8";
-        case sf::Keyboard::Key::Numpad9:
+        case rtype::display::Key::Numpad9:
             return "Numpad9";
-        case sf::Keyboard::Key::F1:
+        case rtype::display::Key::F1:
             return "F1";
-        case sf::Keyboard::Key::F2:
+        case rtype::display::Key::F2:
             return "F2";
-        case sf::Keyboard::Key::F3:
+        case rtype::display::Key::F3:
             return "F3";
-        case sf::Keyboard::Key::F4:
+        case rtype::display::Key::F4:
             return "F4";
-        case sf::Keyboard::Key::F5:
+        case rtype::display::Key::F5:
             return "F5";
-        case sf::Keyboard::Key::F6:
+        case rtype::display::Key::F6:
             return "F6";
-        case sf::Keyboard::Key::F7:
+        case rtype::display::Key::F7:
             return "F7";
-        case sf::Keyboard::Key::F8:
+        case rtype::display::Key::F8:
             return "F8";
-        case sf::Keyboard::Key::F9:
+        case rtype::display::Key::F9:
             return "F9";
-        case sf::Keyboard::Key::F10:
+        case rtype::display::Key::F10:
             return "F10";
-        case sf::Keyboard::Key::F11:
+        case rtype::display::Key::F11:
             return "F11";
-        case sf::Keyboard::Key::F12:
+        case rtype::display::Key::F12:
             return "F12";
-        case sf::Keyboard::Key::F13:
+        case rtype::display::Key::F13:
             return "F13";
-        case sf::Keyboard::Key::F14:
+        case rtype::display::Key::F14:
             return "F14";
-        case sf::Keyboard::Key::F15:
+        case rtype::display::Key::F15:
             return "F15";
-        case sf::Keyboard::Key::Pause:
+        case rtype::display::Key::Pause:
             return "Pause";
         default:
             return "Unknown";

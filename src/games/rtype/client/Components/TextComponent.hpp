@@ -11,9 +11,7 @@
 #include <string>
 #include <string_view>
 
-#include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/Font.hpp>
-#include <SFML/Graphics/Text.hpp>
+#include "../../../../../include/rtype/display/DisplayTypes.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -21,31 +19,27 @@ namespace rtype::games::rtype::client {
  * @brief Text component for rendering text on screen.
  *
  * Used for labels, button text, titles, and any displayed text.
- * Stores both the SFML text object and the raw string content.
+ * Stores the font name and the raw string content.
  */
 struct Text {
-    sf::Font font;
-    sf::Text text;
+    std::string fontName;
     std::string textContent;
-    sf::Color color;
+    display::Color color;
     unsigned int size;
 
     /**
      * @brief Construct a new Text component.
-     * @param font Reference to the font (must outlive this component)
+     * @param fontName Name of the font in the asset manager
      * @param color Text color
      * @param size Font size in pixels (default: 30)
      * @param textContent Initial text string (default: empty)
      */
-    Text(const sf::Font& font, const sf::Color& color, unsigned int size = 30,
-         std::string_view textContent = "")
-        : font(font),
-          text(font),
-          textContent(textContent),
-          color(color),
-          size(size) {
-        text.setString(std::string(textContent));
-    }
+    Text(std::string fName, const display::Color& col, unsigned int sz = 30,
+         std::string_view content = "")
+        : fontName(std::move(fName)),
+          textContent(content),
+          color(col),
+          size(sz) {}
 
     Text(const Text& other) = default;
     Text(Text&& other) noexcept = default;

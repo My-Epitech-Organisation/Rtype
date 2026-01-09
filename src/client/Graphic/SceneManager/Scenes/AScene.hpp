@@ -11,8 +11,6 @@
 #include <memory>
 #include <vector>
 
-#include <SFML/Graphics/RenderWindow.hpp>
-
 #include "AudioLib/AudioLib.hpp"
 #include "ECS.hpp"
 #include "Graphic/AssetManager/AssetManager.hpp"
@@ -22,18 +20,18 @@ class AScene : public IScene {
    protected:
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<AssetManager> _assetsManager;
-    std::shared_ptr<sf::RenderWindow> _window;
+    std::shared_ptr<rtype::display::IDisplay> _window;
     std::shared_ptr<AudioLib> _audio;
     std::vector<ECS::Entity> _listEntity;
 
    public:
-    void pollEvents(const sf::Event& e) override = 0;
+    void pollEvents(const rtype::display::Event& e) override = 0;
     void update(float dt) override = 0;
-    void render(std::shared_ptr<sf::RenderWindow> window) override = 0;
+    void render(std::shared_ptr<rtype::display::IDisplay> window) override = 0;
 
     explicit AScene(std::shared_ptr<ECS::Registry> registry,
                     std::shared_ptr<AssetManager> assetsManager,
-                    std::shared_ptr<sf::RenderWindow> window,
+                    std::shared_ptr<rtype::display::IDisplay> window,
                     std::shared_ptr<AudioLib> audio)
         : _registry(registry),
           _assetsManager(assetsManager),

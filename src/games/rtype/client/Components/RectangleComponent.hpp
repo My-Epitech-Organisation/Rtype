@@ -10,7 +10,7 @@
 
 #include <utility>
 
-#include <SFML/Graphics/RectangleShape.hpp>
+#include "../../../../../include/rtype/display/DisplayTypes.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -22,12 +22,11 @@ namespace rtype::games::rtype::client {
  */
 struct Rectangle {
     std::pair<float, float> size;
-    sf::Color mainColor;
-    sf::Color hoveredColor;
-    sf::Color currentColor = mainColor;
+    display::Color mainColor;
+    display::Color hoveredColor;
+    display::Color currentColor;
     float outlineThickness = 0;
-    sf::Color outlineColor = sf::Color::Black;
-    sf::RectangleShape rectangle;
+    display::Color outlineColor = display::Color::Black();
 
     /**
      * @brief Construct a new Rectangle component.
@@ -35,9 +34,12 @@ struct Rectangle {
      * @param color Default fill color
      * @param hoveredColor Color when hovered
      */
-    Rectangle(const std::pair<float, float>& size, const sf::Color& color,
-              const sf::Color& hoveredColor)
-        : size(size), mainColor(color), hoveredColor(hoveredColor) {}
+    Rectangle(const std::pair<float, float>& size, const display::Color& color,
+              const display::Color& hoveredColor)
+        : size(size),
+          mainColor(color),
+          hoveredColor(hoveredColor),
+          currentColor(color) {}
 
     Rectangle(const Rectangle& other) = default;
     Rectangle(Rectangle&& other) noexcept = default;

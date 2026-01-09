@@ -20,6 +20,7 @@
 
 #include <asio.hpp>
 
+#include "compression/Compressor.hpp"
 #include "connection/Connection.hpp"
 #include "connection/ConnectionEvents.hpp"
 #include "core/Types.hpp"
@@ -36,6 +37,7 @@ namespace rtype::client {
 struct EntitySpawnEvent {
     std::uint32_t entityId;
     network::EntityType type;
+    std::uint8_t subType{0};
     float x;
     float y;
     std::uint32_t userId = 0;
@@ -53,6 +55,13 @@ struct EntityMoveEvent {
 };
 
 /**
+ * @brief Event data for batched entity movement notifications
+ */
+struct EntityMoveBatchEvent {
+    std::vector<EntityMoveEvent> entities;
+};
+
+/**
  * @brief Event data for entity health updates
  */
 struct EntityHealthEvent {
@@ -65,6 +74,24 @@ struct PowerUpEvent {
     std::uint32_t playerId;
     std::uint8_t powerUpType;
     float duration;
+};
+
+/**
+ * @brief Event data for lobby information
+ */
+struct LobbyInfo {
+    std::string code;
+    std::uint16_t port;
+    std::uint8_t playerCount;
+    std::uint8_t maxPlayers;
+    bool isActive;
+};
+
+/**
+ * @brief Event data for lobby list response
+ */
+struct LobbyListEvent {
+    std::vector<LobbyInfo> lobbies;
 };
 
 /**
@@ -127,6 +154,7 @@ static constexpr std::chrono::milliseconds kNetworkThreadSleepDuration{3};
 class NetworkClient {
    public:
     using DisconnectReason = network::DisconnectReason;
+    using CallbackId = std::size_t;
 
     /**
      * @brief Configuration for NetworkClient
@@ -142,6 +170,14 @@ class NetworkClient {
      * @param config Optional configuration
      */
     explicit NetworkClient(const Config& config = Config{});
+
+    /**
+     * @brief Testable constructor for injecting a mock socket and optionally
+     *        disabling the background network thread. Useful for unit tests.
+     */
+    NetworkClient(const Config& config,
+                  std::unique_ptr<network::IAsyncSocket> socket,
+                  bool startNetworkThread = true);
 
     /**
      * @brief Destructor - automatically disconnects if connected
@@ -190,6 +226,12 @@ class NetworkClient {
     [[nodiscard]] std::optional<std::uint32_t> userId() const noexcept;
 
     /**
+     * @brief Get the current network latency (RTT) in milliseconds
+     * @return Current latency, or 0 if no PONG received yet
+     */
+    [[nodiscard]] std::uint32_t latencyMs() const noexcept;
+
+    /**
      * @brief Send player input to server
      *
      * Input is sent unreliably (latest state matters, old inputs discarded).
@@ -202,16 +244,55 @@ class NetworkClient {
     bool sendInput(std::uint8_t inputMask);
 
     /**
+     * @brief Send a ping to the server
+     *
+     * Used for latency calculation.
+     * @return true if sent, false if not connected
+     */
+    bool ping();
+
+    /**
+     * @brief Send ready/not ready state to server
+     *
+     * Sends C_READY packet to signal lobby ready state.
+     * @param isReady true if ready, false if not ready
+     * @return true if sent, false if not connected
+     */
+    bool sendReady(bool isReady);
+
+    /**
+     * @brief Request lobby list from discovery server
+     *
+     * Sends C_REQUEST_LOBBIES to the server. Response will be delivered
+     * via onLobbyListReceived callback.
+     *
+     * Note: Should be sent to discovery server port (typically base port),
+     * not a specific lobby port.
+     *
+     * @param discoveryIp IP address of discovery server (default: 127.0.0.1)
+     * @param discoveryPort Port of discovery server (default: 4242)
+     * @return true if sent successfully
+     */
+    bool requestLobbyList(const std::string& discoveryIp = "127.0.0.1",
+                          std::uint16_t discoveryPort = 4242);
+
+    /**
      * @brief Register callback for successful connection
      * @param callback Function receiving the assigned user ID
      */
     void onConnected(std::function<void(std::uint32_t myUserId)> callback);
+    CallbackId addConnectedCallback(
+        std::function<void(std::uint32_t myUserId)> callback);
+    void removeConnectedCallback(CallbackId id);
 
     /**
      * @brief Register callback for disconnection (graceful or unexpected)
      * @param callback Function receiving the disconnect reason
      */
     void onDisconnected(std::function<void(DisconnectReason)> callback);
+    CallbackId addDisconnectedCallback(
+        std::function<void(DisconnectReason)> callback);
+    void removeDisconnectedCallback(CallbackId id);
 
     /**
      * @brief Register callback for entity spawn events
@@ -224,6 +305,12 @@ class NetworkClient {
      * @param callback Function receiving movement event data
      */
     void onEntityMove(std::function<void(EntityMoveEvent)> callback);
+
+    /**
+     * @brief Register callback for batched entity movement updates
+     * @param callback Function receiving batch event data
+     */
+    void onEntityMoveBatch(std::function<void(EntityMoveBatchEvent)> callback);
 
     /**
      * @brief Register callback for entity destruction
@@ -260,6 +347,38 @@ class NetworkClient {
     void onGameOver(std::function<void(GameOverEvent)> callback);
 
     /**
+     * @brief Register callback for game start countdown
+     * @param callback Function receiving countdown duration in seconds
+     */
+    void onGameStart(std::function<void(float countdownDuration)> callback);
+
+    /**
+     * @brief Register callback for player ready state changes
+     * @param callback Function receiving userId and ready status
+     */
+    void onPlayerReadyStateChanged(
+        std::function<void(std::uint32_t userId, bool isReady)> callback);
+
+    /**
+     * @brief Register callback for lobby list response
+     * @param callback Function receiving the list of available lobbies
+     */
+    void onLobbyListReceived(std::function<void(LobbyListEvent)> callback);
+
+    /**
+     * @brief Send the lobby join code to the server (must be used after
+     * connect)
+     * @param code 6-character lobby code
+     */
+    bool sendJoinLobby(const std::string& code);
+
+    /**
+     * @brief Register callback for join lobby response
+     * @param callback Function receiving (accepted, reason)
+     */
+    void onJoinLobbyResponse(std::function<void(bool, uint8_t)> callback);
+
+    /**
      * @brief Process network events and dispatch callbacks
      *
      * Must be called regularly (e.g., each game frame) to:
@@ -273,6 +392,15 @@ class NetworkClient {
      * Callbacks are executed on the calling thread.
      */
     void poll();
+
+    // Test helpers (use from unit tests only)
+    void test_dispatchCallbacks();
+    void test_processIncomingPacket(const network::Buffer& data,
+                                    const network::Endpoint& sender);
+    void test_queueCallback(std::function<void()> callback);
+    void test_startReceive();
+    void test_handlePong(const network::Header& header,
+                         const network::Buffer& payload);
 
    private:
     void dispatchCallbacks();
@@ -288,6 +416,8 @@ class NetworkClient {
                            const network::Buffer& payload);
     void handleEntityMove(const network::Header& header,
                           const network::Buffer& payload);
+    void handleEntityMoveBatch(const network::Header& header,
+                               const network::Buffer& payload);
     void handleEntityDestroy(const network::Header& header,
                              const network::Buffer& payload);
     void handleEntityHealth(const network::Header& header,
@@ -300,6 +430,16 @@ class NetworkClient {
                            const network::Buffer& payload);
     void handleGameOver(const network::Header& header,
                         const network::Buffer& payload);
+    void handleGameStart(const network::Header& header,
+                         const network::Buffer& payload);
+    void handlePlayerReadyState(const network::Header& header,
+                                const network::Buffer& payload);
+    void handleLobbyList(const network::Header& header,
+                         const network::Buffer& payload);
+    void handleJoinLobbyResponse(const network::Header& header,
+                                 const network::Buffer& payload);
+    void handlePong(const network::Header& header,
+                    const network::Buffer& payload);
 
     void flushOutgoing();
 
@@ -313,6 +453,8 @@ class NetworkClient {
     void sendAck(std::uint16_t ackSeqId);
 
     Config config_;
+
+    network::Compressor compressor_;
 
     network::IoContext ioContext_;
 
@@ -330,15 +472,20 @@ class NetworkClient {
     std::queue<std::function<void()>> callbackQueue_;
 
     std::vector<std::function<void(std::uint32_t)>> onConnectedCallbacks_;
-    std::function<void(DisconnectReason)> onDisconnectedCallback_;
+    std::vector<std::function<void(DisconnectReason)>> onDisconnectedCallbacks_;
     std::function<void(EntitySpawnEvent)> onEntitySpawnCallback_;
     std::function<void(EntityMoveEvent)> onEntityMoveCallback_;
-    std::function<void(std::uint32_t)> onEntityDestroyCallback_;
+    std::function<void(EntityMoveBatchEvent)> onEntityMoveBatchCallback_;
+    std::vector<std::function<void(std::uint32_t)>> onEntityDestroyCallbacks_;
     std::function<void(EntityHealthEvent)> onEntityHealthCallback_;
     std::function<void(float, float)> onPositionCorrectionCallback_;
     std::function<void(GameStateEvent)> onGameStateChangeCallback_;
     std::function<void(GameOverEvent)> onGameOverCallback_;
+    std::function<void(float)> onGameStartCallback_;
+    std::function<void(std::uint32_t, bool)> onPlayerReadyStateChangedCallback_;
     std::function<void(PowerUpEvent)> onPowerUpCallback_;
+    std::function<void(LobbyListEvent)> onLobbyListReceivedCallback_;
+    std::function<void(bool, uint8_t)> onJoinLobbyResponseCallback_;
 
     std::thread networkThread_;
     std::atomic<bool> networkThreadRunning_{false};

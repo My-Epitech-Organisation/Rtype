@@ -25,56 +25,49 @@ std::vector<ECS::Entity> RtypePauseMenu::createPauseMenu(
     std::function<void(const SceneManager::Scene&)> switchToScene) {
     std::vector<ECS::Entity> pauseEntities;
 
-    auto sectionX = (Graphic::WINDOW_WIDTH - kSizeXPauseMenu) / 2;
-    auto sectionY = (Graphic::WINDOW_HEIGHT - kSizeYPauseMenu) / 2;
+    auto sectionX = (Graphic::WINDOW_WIDTH - kSizeXPauseMenu) / 2.0f;
+    auto sectionY = (Graphic::WINDOW_HEIGHT - kSizeYPauseMenu) / 2.0f;
 
     pauseEntities = EntityFactory::createSection(
         registry, assetsManager, "",
-        sf::FloatRect(sf::Vector2f(sectionX, sectionY),
-                      sf::Vector2f(kSizeXPauseMenu, kSizeYPauseMenu)));
+        {sectionX, sectionY, static_cast<float>(kSizeXPauseMenu),
+         static_cast<float>(kSizeYPauseMenu)});
 
     auto titleEntity = EntityFactory::createStaticText(
         registry, assetsManager, kPauseMenuTitle, "main_font",
-        sf::Vector2f(
-            (sectionX + kSizeXPauseMenu / 2) -
-                ((kPauseMenuTitle.length() - 2) * (kSizeFontPauseMenu / 2)),
-            sectionY),
+        {(sectionX + kSizeXPauseMenu / 2.0f) -
+             ((kPauseMenuTitle.length() - 2) * (kSizeFontPauseMenu / 2.0f)),
+         sectionY},
         kSizeFontPauseMenu);
 
-    auto& titleText = registry->getComponent<Text>(titleEntity);
-    sf::FloatRect bounds = titleText.text.getLocalBounds();
-    float centeredX = sectionX + (kSizeXPauseMenu - bounds.size.x) / 2;
-    auto& titlePos =
-        registry->getComponent<::rtype::games::rtype::shared::Position>(
-            titleEntity);
-    titlePos.x = centeredX;
     pauseEntities.push_back(titleEntity);
 
     pauseEntities.push_back(EntityFactory::createButton(
         registry,
-        Text(assetsManager->fontManager->get("main_font"), sf::Color::White, 30,
-             "Menu"),
-        ::rtype::games::rtype::shared::Position(
-            sectionX + ((kSizeXPauseMenu / 2) - (150 / 2)),
-            sectionY + kSizeYPauseMenu - 75),
-        Rectangle({150, 55}, sf::Color::Blue, sf::Color::Red), assetsManager,
-        std::function<void()>([switchToScene]() {
+        Text("main_font", ::rtype::display::Color::White(), 30, "Menu"),
+        ::rtype::games::rtype::shared::TransformComponent(
+            sectionX + ((kSizeXPauseMenu / 2.0f) - (150.0f / 2.0f)),
+            sectionY + kSizeYPauseMenu - 75.0f),
+        Rectangle({150.0f, 55.0f}, ::rtype::display::Color::Blue(),
+                  ::rtype::display::Color::Red()),
+        assetsManager, std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::MAIN_MENU);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(
+                LOG_ERROR_CAT(
+                    ::rtype::LogCategory::UI,
                     "Error switching to Main Menu: " << std::string(e.what()));
             }
         })));
 
     pauseEntities.push_back(EntityFactory::createButton(
         registry,
-        Text(assetsManager->fontManager->get("main_font"), sf::Color::White, 30,
-             "Resume"),
-        ::rtype::games::rtype::shared::Position(
-            sectionX + ((kSizeXPauseMenu / 2) - (150 / 2)),
-            sectionY + kSizeYPauseMenu - 150),
-        Rectangle({150, 55}, sf::Color(0, 100, 200), sf::Color(0, 140, 255)),
+        Text("main_font", ::rtype::display::Color::White(), 30, "Resume"),
+        ::rtype::games::rtype::shared::TransformComponent(
+            sectionX + ((kSizeXPauseMenu / 2.0f) - (150.0f / 2.0f)),
+            sectionY + kSizeYPauseMenu - 150.0f),
+        Rectangle({150.0f, 55.0f}, ::rtype::display::Color(0, 100, 200, 255),
+                  ::rtype::display::Color(0, 140, 255, 255)),
         assetsManager, std::function<void()>([registry]() {
             RtypePauseMenu::togglePauseMenu(registry);
         })));

@@ -15,8 +15,6 @@
 
 #include <chrono>
 #include <map>
-
-#include <SFML/Window/Joystick.hpp>
 // clang-format on
 
 /**
@@ -84,7 +82,7 @@ class ControllerRumble {
      * @brief Preset: Medium pulse (for shooting)
      */
     static void shootPulse(unsigned int joystickId) {
-        triggerRumble(joystickId, 0.5f, 500);  // 0.5s pulse to signal a shot
+        triggerRumble(joystickId, 0.3f, 250);  // 0.25s pulse to signal a shot
     }
 
     /**

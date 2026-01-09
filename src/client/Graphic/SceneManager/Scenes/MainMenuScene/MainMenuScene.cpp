@@ -7,6 +7,7 @@
 
 #include "MainMenuScene.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <functional>
@@ -15,32 +16,30 @@
 #include <string>
 #include <utility>
 
-#include <SFML/Graphics/Text.hpp>
-
 #include "AllComponents.hpp"
 #include "Components/TextInputComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
+#include "Scenes/Lobby/Lobby.hpp"
 
-static constexpr float kConnectionPanelX = 1400.f;
-static constexpr float kConnectionPanelY = 300.f;
-static constexpr float kConnectionPanelWidth = 450.f;
-static constexpr float kConnectionPanelHeight = 350.f;
+static constexpr float kConnectionPanelX = 610.f;
+static constexpr float kConnectionPanelY = 350.f;
+static constexpr float kConnectionPanelWidth = 680.f;
+static constexpr float kConnectionPanelHeight = 480.f;
 static constexpr float kInputWidth = 300.f;
 static constexpr float kInputHeight = 40.f;
-static constexpr float kLabelOffsetX = 30.f;
-static constexpr float kInputOffsetX = 120.f;
+static constexpr float kInputOffsetX = 180.f;
 static constexpr std::string kIp = "127.0.0.1";
 static constexpr std::uint16_t kPort = 4242;
 
 void MainMenuScene::_createAstroneerVessel() {
     auto astroneerVessel = this->_registry->spawnEntity();
     this->_registry->emplaceComponent<rtype::games::rtype::client::Image>(
-        astroneerVessel,
-        this->_assetsManager->textureManager->get("astro_vessel"));
-    this->_registry->emplaceComponent<rtype::games::rtype::shared::Position>(
-        astroneerVessel, 1900, 1060);
+        astroneerVessel, "astro_vessel");
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+            astroneerVessel, 1900, 1060);
     this->_registry->emplaceComponent<rtype::games::rtype::client::Size>(
         astroneerVessel, 0.3, 0.3);
     this->_registry
@@ -60,14 +59,13 @@ void MainMenuScene::_createFakePlayer() {
     for (int i = 0; i < nbr_vessels; i++) {
         auto fakePlayer = this->_registry->spawnEntity();
         this->_registry->emplaceComponent<rtype::games::rtype::client::Image>(
-            fakePlayer,
-            this->_assetsManager->textureManager->get("player_vessel"));
+            fakePlayer, "player_vessel");
         this->_registry
             ->emplaceComponent<rtype::games::rtype::client::TextureRect>(
                 fakePlayer, std::pair<int, int>({0, 0}),
                 std::pair<int, int>({33, 17}));
         this->_registry
-            ->emplaceComponent<rtype::games::rtype::shared::Position>(
+            ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
                 fakePlayer, (-10 * (distrib150(gen) + 50)),
                 72 * (distrib15(gen) % 15));
         this->_registry->emplaceComponent<rtype::games::rtype::client::Size>(
@@ -85,147 +83,364 @@ void MainMenuScene::_createConnectionPanel(
     std::function<void(const SceneManager::Scene&)> switchToScene) {
     auto panelEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "",
-        sf::FloatRect(
-            sf::Vector2f(kConnectionPanelX, kConnectionPanelY),
-            sf::Vector2f(kConnectionPanelWidth, kConnectionPanelHeight)));
-    for (auto entity : panelEntities) {
-        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-            entity, 10);
-    }
-    this->_listEntity.insert(this->_listEntity.end(), panelEntities.begin(),
-                             panelEntities.end());
+        rtype::display::Rect<float>(kConnectionPanelX, kConnectionPanelY,
+                                    kConnectionPanelWidth,
+                                    kConnectionPanelHeight));
 
-    auto title = EntityFactory::createStaticText(
+    for (auto& s : panelEntities) {
+        if (this->_registry
+                ->hasComponent<rtype::games::rtype::client::Rectangle>(s))
+            this->_registry
+                ->emplaceComponent<rtype::games::rtype::client::ZIndex>(s, 10);
+    }
+    auto connectText = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Connect to Server",
         "title_font",
-        sf::Vector2f(kConnectionPanelX + 50.f, kConnectionPanelY + 20.f), 32);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        title, 11);
-    this->_listEntity.push_back(title);
-    auto ipLabel = EntityFactory::createStaticText(
+        rtype::display::Vector2<float>(kConnectionPanelX + 40.f,
+                                       kConnectionPanelY + 40.f),
+        32);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            connectText);
+    panelEntities.push_back(connectText);
+    auto ipText = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "IP:", "main_font",
-        sf::Vector2f(kConnectionPanelX + kLabelOffsetX,
-                     kConnectionPanelY + 90.f),
+        rtype::display::Vector2<float>(kConnectionPanelX + 40.f,
+                                       kConnectionPanelY + 105.f),
         24);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        ipLabel, 11);
-    this->_listEntity.push_back(ipLabel);
-    _ipInputEntity = EntityFactory::createTextInput(
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(ipText);
+    panelEntities.push_back(ipText);
+    this->_ipInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
-        sf::FloatRect(sf::Vector2f(kConnectionPanelX + kInputOffsetX,
-                                   kConnectionPanelY + 85.f),
-                      sf::Vector2f(kInputWidth, kInputHeight)),
-        "127.0.0.1", "127.0.0.1", 15, false);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        _ipInputEntity, 12);
-    this->_listEntity.push_back(_ipInputEntity);
-    auto portLabel = EntityFactory::createStaticText(
+        rtype::display::Vector2<float>(kConnectionPanelX + 120.f,
+                                       kConnectionPanelY + 85.f),
+        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "127.0.0.1",
+        "127.0.0.1", 15, false);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            this->_ipInputEntity);
+    panelEntities.push_back(this->_ipInputEntity);
+    auto portText = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Port:", "main_font",
-        sf::Vector2f(kConnectionPanelX + kLabelOffsetX,
-                     kConnectionPanelY + 150.f),
+        rtype::display::Vector2<float>(kConnectionPanelX + 40.f,
+                                       kConnectionPanelY + 165.f),
         24);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        portLabel, 11);
-    this->_listEntity.push_back(portLabel);
-    _portInputEntity = EntityFactory::createTextInput(
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            portText);
+    panelEntities.push_back(portText);
+    this->_portInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
-        sf::FloatRect(sf::Vector2f(kConnectionPanelX + kInputOffsetX,
-                                   kConnectionPanelY + 145.f),
-                      sf::Vector2f(kInputWidth, kInputHeight)),
-        "4242", "4242", 5, true);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        _portInputEntity, 12);
-    this->_listEntity.push_back(_portInputEntity);
-    _statusEntity = EntityFactory::createStaticText(
+        rtype::display::Vector2<float>(kConnectionPanelX + 120.f,
+                                       kConnectionPanelY + 145.f),
+        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "4242",
+        "4242", 5, true);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            this->_portInputEntity);
+    panelEntities.push_back(this->_portInputEntity);
+
+    auto lobbyCodeText = EntityFactory::createStaticText(
+        this->_registry, this->_assetsManager, "Lobby Code:", "main_font",
+        rtype::display::Vector2<float>(
+            kConnectionPanelX + kInputOffsetX / 2,
+            kConnectionPanelY + 210.f + kInputHeight / 2),
+        20);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            lobbyCodeText);
+    panelEntities.push_back(lobbyCodeText);
+
+    this->_lobbyCodeInputEntity = EntityFactory::createTextInput(
+        this->_registry, this->_assetsManager,
+        rtype::display::Vector2<float>(kConnectionPanelX + kInputOffsetX,
+                                       kConnectionPanelY + 210.f),
+        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "", "ABCXYZ",
+        6, false);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            this->_lobbyCodeInputEntity);
+    panelEntities.push_back(this->_lobbyCodeInputEntity);
+
+    this->_statusEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "main_font",
-        sf::Vector2f(kConnectionPanelX + kLabelOffsetX,
-                     kConnectionPanelY + 200.f),
+        rtype::display::Vector2<float>(
+            kConnectionPanelX + kInputOffsetX / 2,
+            kConnectionPanelY + 265.f + kInputHeight / 2),
         18);
-    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        _statusEntity, 11);
-    this->_listEntity.push_back(_statusEntity);
-    auto connectButton = EntityFactory::createButton(
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            this->_statusEntity);
+    panelEntities.push_back(this->_statusEntity);
+    auto connectBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 28, "Connect"),
-        rtype::games::rtype::shared::Position(kConnectionPanelX + 125.f,
-                                              kConnectionPanelY + 260.f),
-        rtype::games::rtype::client::Rectangle({200, 60}, sf::Color(0, 150, 0),
-                                               sf::Color(0, 200, 0)),
+            "main_font", rtype::display::Color::White(), 28, "Connect"),
+        rtype::games::rtype::shared::TransformComponent(
+            kConnectionPanelX + 15.f, kConnectionPanelY + 275.f),
+        rtype::games::rtype::client::Rectangle(
+            {200, 60}, rtype::display::Color(0, 150, 0, 255),
+            rtype::display::Color(0, 200, 0, 255)),
         this->_assetsManager, std::function<void()>([this, switchToScene]() {
             this->_onConnectClicked(switchToScene);
         }));
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            connectBtn);
+    panelEntities.push_back(connectBtn);
+    auto closeBtn = EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text(
+            "main_font", rtype::display::Color::White(), 26, "Close"),
+        rtype::games::rtype::shared::TransformComponent(
+            kConnectionPanelX + 235.f, kConnectionPanelY + 275.f),
+        rtype::games::rtype::client::Rectangle(
+            {200, 60}, rtype::display::Color(150, 0, 0),
+            rtype::display::Color(200, 0, 0)),
+        this->_assetsManager, std::function<void()>([this]() {
+            this->_connectPopUpVisible = false;
+        }));
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            closeBtn);
+    panelEntities.push_back(closeBtn);
+    for (auto& s : panelEntities) {
+        if (!this->_registry->hasComponent<rtype::games::rtype::client::ZIndex>(
+                s)) {
+            if (this->_registry
+                    ->hasComponent<rtype::games::rtype::client::SectionItemTag>(
+                        s)) {
+                this->_registry
+                    ->emplaceComponent<rtype::games::rtype::client::ZIndex>(s,
+                                                                            11);
+            } else {
+                this->_registry
+                    ->emplaceComponent<rtype::games::rtype::client::ZIndex>(s,
+                                                                            10);
+            }
+        } else {
+            auto& zindex =
+                this->_registry
+                    ->getComponent<rtype::games::rtype::client::ZIndex>(s);
+            if (this->_registry
+                    ->hasComponent<rtype::games::rtype::client::SectionItemTag>(
+                        s))
+                zindex.depth = 11;
+            else
+                zindex.depth = 10;
+        }
+        this->_registry
+            ->emplaceComponent<rtype::games::rtype::client::HiddenComponent>(
+                s, true);
+        this->_registry
+            ->emplaceComponent<rtype::games::rtype::client::ConnectMenuTag>(s);
+    }
+    auto popUpBg = EntityFactory::createRectangle(
+        this->_registry, rtype::display::Vector2<int>(1920, 1080),
+        rtype::display::Color(0, 0, 0, 150));
+
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        connectButton, 12);
-    this->_listEntity.push_back(connectButton);
+        popUpBg, 10);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::ConnectMenuTag>(
+            popUpBg);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::HiddenComponent>(
+            popUpBg, true);
+    panelEntities.push_back(popUpBg);
+    this->_listEntity.insert(this->_listEntity.end(), panelEntities.begin(),
+                             panelEntities.end());
 }
 
 void MainMenuScene::_onConnectClicked(
     std::function<void(const SceneManager::Scene&)> switchToScene) {
-    if (!_networkClient) {
-        _updateStatus("Error: Network not available", sf::Color::Red);
+    if (!this->_networkClient) {
+        this->_updateStatus("Error: Network not available",
+                            rtype::display::Color::Red());
         return;
     }
-    std::string ip = kIp;
-    std::uint16_t port = kPort;
 
-    if (_registry->hasComponent<rtype::games::rtype::client::TextInput>(
-            _ipInputEntity)) {
+    std::string discoveryIp = kIp;
+    std::uint16_t discoveryPort = kPort;
+
+    if (this->_registry->hasComponent<rtype::games::rtype::client::TextInput>(
+            this->_ipInputEntity)) {
         auto& ipInput =
-            _registry->getComponent<rtype::games::rtype::client::TextInput>(
-                _ipInputEntity);
+            this->_registry
+                ->getComponent<rtype::games::rtype::client::TextInput>(
+                    this->_ipInputEntity);
         if (!ipInput.content.empty()) {
-            ip = ipInput.content;
+            discoveryIp = ipInput.content;
         }
     }
 
-    if (_registry->hasComponent<rtype::games::rtype::client::TextInput>(
-            _portInputEntity)) {
+    if (this->_registry->hasComponent<rtype::games::rtype::client::TextInput>(
+            this->_portInputEntity)) {
         auto& portInput =
-            _registry->getComponent<rtype::games::rtype::client::TextInput>(
-                _portInputEntity);
+            this->_registry
+                ->getComponent<rtype::games::rtype::client::TextInput>(
+                    this->_portInputEntity);
         if (!portInput.content.empty()) {
             try {
-                port = static_cast<std::uint16_t>(std::stoi(portInput.content));
+                discoveryPort =
+                    static_cast<std::uint16_t>(std::stoi(portInput.content));
             } catch (...) {
-                _updateStatus("Invalid port number", sf::Color::Red);
+                this->_updateStatus("Invalid port number",
+                                    rtype::display::Color::Red());
                 return;
             }
         }
     }
 
-    _updateStatus("Connecting to " + ip + ":" + std::to_string(port) + "...",
-                  sf::Color::Yellow);
+    std::string lobbyCode;
+    if (this->_registry->hasComponent<rtype::games::rtype::client::TextInput>(
+            this->_lobbyCodeInputEntity)) {
+        auto& codeInput =
+            this->_registry
+                ->getComponent<rtype::games::rtype::client::TextInput>(
+                    this->_lobbyCodeInputEntity);
+        lobbyCode = codeInput.content;
+        std::transform(lobbyCode.begin(), lobbyCode.end(), lobbyCode.begin(),
+                       ::toupper);
+    }
+
+    if (!lobbyCode.empty()) {
+        if (lobbyCode.length() != 6) {
+            this->_updateStatus("Lobby code must be 6 characters",
+                                rtype::display::Color::Red());
+            return;
+        }
+        _updateStatus("Connecting to " + discoveryIp + ":" +
+                          std::to_string(discoveryPort) + "...",
+                      rtype::display::Color::Yellow());
+    } else {
+        _updateStatus("Requesting lobby list from " + discoveryIp + ":" +
+                          std::to_string(discoveryPort) + "...",
+                      rtype::display::Color::Yellow());
+    }
     std::weak_ptr<ECS::Registry> weakRegistry = _registry;
     ECS::Entity statusEntity = _statusEntity;
+    std::weak_ptr<rtype::client::NetworkClient> weakClient = _networkClient;
 
-    _networkClient->onConnected([weakRegistry, switchToScene,
-                                 statusEntity](std::uint32_t userId) {
-        auto reg = weakRegistry.lock();
-        if (!reg) return;
-
-        LOG_INFO("[Client] Connected with user ID: " << userId);
-
-        if (reg->isAlive(statusEntity) &&
-            reg->hasComponent<rtype::games::rtype::client::Text>(
-                statusEntity)) {
-            auto& text = reg->getComponent<rtype::games::rtype::client::Text>(
-                statusEntity);
-            text.textContent = "Connected! Starting game...";
-            text.text.setString("Connected! Starting game...");
-            text.text.setFillColor(sf::Color::Green);
+    if (_networkClient) {
+        for (auto id : _connectedCallbackIds) {
+            _networkClient->removeConnectedCallback(id);
         }
-
-        try {
-            switchToScene(SceneManager::IN_GAME);
-        } catch (SceneNotFound& e) {
-            LOG_ERROR(std::string("Error switching to Game: ") +
-                      std::string(e.what()));
+        _connectedCallbackIds.clear();
+        for (auto id : _disconnectedCallbackIds) {
+            _networkClient->removeDisconnectedCallback(id);
         }
-    });
+        _disconnectedCallbackIds.clear();
+    }
 
-    _networkClient->onDisconnected(
+    _networkClient->onLobbyListReceived(
+        [this, weakRegistry, switchToScene, statusEntity, weakClient,
+         discoveryIp, lobbyCode](rtype::client::LobbyListEvent event) {
+            auto reg = weakRegistry.lock();
+            auto client = weakClient.lock();
+            if (!reg || !client) return;
+
+            LOG_INFO_CAT(::rtype::LogCategory::UI,
+                         "[Client] Received lobby list with "
+                             << event.lobbies.size() << " lobbies");
+
+            if (event.lobbies.empty()) {
+                if (reg->isAlive(statusEntity) &&
+                    reg->hasComponent<rtype::games::rtype::client::Text>(
+                        statusEntity)) {
+                    auto& text =
+                        reg->getComponent<rtype::games::rtype::client::Text>(
+                            statusEntity);
+                    text.textContent = "No lobbies available";
+                    text.color = rtype::display::Color::Red();
+                }
+                return;
+            }
+
+            auto it = std::find_if(
+                event.lobbies.begin(), event.lobbies.end(),
+                [&lobbyCode](const rtype::client::LobbyInfo& lobby) {
+                    return lobby.code == lobbyCode;
+                });
+
+            if (it == event.lobbies.end()) {
+                if (reg->isAlive(statusEntity) &&
+                    reg->hasComponent<rtype::games::rtype::client::Text>(
+                        statusEntity)) {
+                    auto& text =
+                        reg->getComponent<rtype::games::rtype::client::Text>(
+                            statusEntity);
+                    text.textContent =
+                        "Lobby code '" + lobbyCode + "' not found";
+                    text.color = rtype::display::Color::Red();
+                }
+                return;
+            }
+
+            const auto& lobby = *it;
+            LOG_INFO_CAT(::rtype::LogCategory::UI,
+                         "[Client] Connecting to lobby "
+                             << lobby.code << " on port " << lobby.port << " ("
+                             << static_cast<int>(lobby.playerCount) << "/"
+                             << static_cast<int>(lobby.maxPlayers)
+                             << " players)");
+
+            if (reg->isAlive(statusEntity) &&
+                reg->hasComponent<rtype::games::rtype::client::Text>(
+                    statusEntity)) {
+                auto& text =
+                    reg->getComponent<rtype::games::rtype::client::Text>(
+                        statusEntity);
+                text.textContent = "Connecting to lobby " + lobby.code + "...";
+                text.color = rtype::display::Color::Yellow();
+            }
+
+            this->_pendingLobbyCode = lobby.code;
+            client->connect(discoveryIp, lobby.port);
+        });
+
+    auto onConnectedId = _networkClient->addConnectedCallback(
+        [this, weakRegistry, switchToScene,
+         statusEntity](std::uint32_t userId) {
+            auto reg = weakRegistry.lock();
+            if (!reg) return;
+
+            LOG_INFO_CAT(::rtype::LogCategory::UI,
+                         "[Client] Connected with user ID: " << userId);
+
+            if (!this->_pendingLobbyCode.empty()) {
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::UI,
+                    "[Client] Sending join code " << this->_pendingLobbyCode);
+                if (this->_networkClient) {
+                    this->_networkClient->sendJoinLobby(
+                        this->_pendingLobbyCode);
+                }
+                this->_pendingLobbyCode.clear();
+            }
+
+            if (reg->isAlive(statusEntity) &&
+                reg->hasComponent<rtype::games::rtype::client::Text>(
+                    statusEntity)) {
+                auto& text =
+                    reg->getComponent<rtype::games::rtype::client::Text>(
+                        statusEntity);
+                text.textContent = "Connected! Entering lobby...";
+                text.color = rtype::display::Color::Green();
+            }
+
+            try {
+                switchToScene(SceneManager::LOBBY);
+            } catch (SceneNotFound& e) {
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              std::string("Error switching to Lobby: ") +
+                                  std::string(e.what()));
+            }
+        });
+    _connectedCallbackIds.push_back(onConnectedId);
+
+    auto onDisconnectedId = _networkClient->addDisconnectedCallback(
         [weakRegistry,
          statusEntity](rtype::client::NetworkClient::DisconnectReason reason) {
             auto reg = weakRegistry.lock();
@@ -257,16 +472,20 @@ void MainMenuScene::_onConnectClicked(
                     reg->getComponent<rtype::games::rtype::client::Text>(
                         statusEntity);
                 text.textContent = reasonStr;
-                text.text.setString(reasonStr);
-                text.text.setFillColor(sf::Color::Red);
+                text.color = rtype::display::Color::Red();
             }
         });
-    if (!_networkClient->connect(ip, port)) {
-        _updateStatus("Failed to start connection", sf::Color::Red);
+    _disconnectedCallbackIds.push_back(onDisconnectedId);
+
+    if (!_networkClient->requestLobbyList(discoveryIp, discoveryPort)) {
+        this->_connectPopUpVisible = true;
+        _updateStatus("Failed to start connection",
+                      rtype::display::Color::Red());
     }
 }
 
-void MainMenuScene::_updateStatus(const std::string& message, sf::Color color) {
+void MainMenuScene::_updateStatus(const std::string& message,
+                                  rtype::display::Color color) {
     if (!_registry) return;
     if (!_registry->isAlive(_statusEntity)) return;
     if (!_registry->hasComponent<rtype::games::rtype::client::Text>(
@@ -277,30 +496,40 @@ void MainMenuScene::_updateStatus(const std::string& message, sf::Color color) {
     auto& text = _registry->getComponent<rtype::games::rtype::client::Text>(
         _statusEntity);
     text.textContent = message;
-    text.text.setString(message);
-    text.text.setFillColor(color);
+    text.color = color;
 }
 
 void MainMenuScene::update(float dt) {
     if (_networkClient && !_networkClient->isConnected()) {
         _networkClient->poll();
     }
+    if (this->_connectPopUpVisible) {
+        auto view =
+            _registry->view<rtype::games::rtype::client::ConnectMenuTag,
+                            rtype::games::rtype::client::HiddenComponent>();
+        view.each([](auto, auto&, auto& hidden) { hidden.isHidden = false; });
+    } else {
+        auto view =
+            _registry->view<rtype::games::rtype::client::ConnectMenuTag,
+                            rtype::games::rtype::client::HiddenComponent>();
+
+        view.each([](auto, auto&, auto& hidden) { hidden.isHidden = true; });
+    }
+    this->_registry
+        ->view<rtype::games::rtype::client::UserEvent,
+               rtype::games::rtype::client::ButtonMenuTag>()
+        .each(
+            [this](auto, rtype::games::rtype::client::UserEvent& event, auto) {
+                if (this->_connectPopUpVisible)
+                    event.isDisabled = true;
+                else
+                    event.isDisabled = false;
+            });
 }
 
-void MainMenuScene::render(std::shared_ptr<sf::RenderWindow> window) {
-    auto view = _registry->view<rtype::games::rtype::client::TextInput,
-                                rtype::games::rtype::shared::Position,
-                                rtype::games::rtype::client::TextInputTag>();
+void MainMenuScene::render(std::shared_ptr<rtype::display::IDisplay> window) {}
 
-    view.each([window, this](auto entity, auto& input, auto& pos, auto) {
-        input.background.setPosition({pos.x, pos.y});
-        input.text.setPosition({pos.x + 10.f, pos.y + 5.f});
-        window->draw(input.background);
-        window->draw(input.text);
-    });
-}
-
-void MainMenuScene::pollEvents(const sf::Event& e) {
+void MainMenuScene::pollEvents(const rtype::display::Event& e) {
     if (_textInputSystem) {
         _textInputSystem->handleEvent(*_registry, e);
     }
@@ -309,7 +538,7 @@ void MainMenuScene::pollEvents(const sf::Event& e) {
 MainMenuScene::MainMenuScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> assetsManager,
-    std::shared_ptr<sf::RenderWindow> window,
+    std::shared_ptr<rtype::display::IDisplay> window,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,
     std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem,
@@ -325,66 +554,105 @@ MainMenuScene::MainMenuScene(
     this->_createAstroneerVessel();
     this->_createFakePlayer();
     this->_createConnectionPanel(switchToScene);
-    this->_listEntity.push_back(EntityFactory::createButton(
+    auto playBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 36, "Play"),
-        rtype::games::rtype::shared::Position(100, 350),
-        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
-                                               sf::Color::Red),
+            "main_font", rtype::display::Color::White(), 36, "Play"),
+        rtype::games::rtype::shared::TransformComponent(100, 350),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
+        this->_assetsManager,
+        std::function<void()>([this]() { this->_connectPopUpVisible = true; }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        playBtn, 1);
+    this->_listEntity.push_back(playBtn);
+    auto LevelConfiguratorBtn = EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text("main_font",
+                                          rtype::display::Color::White(), 36,
+                                          "Level Configurator"),
+        rtype::games::rtype::shared::TransformComponent(100, 470),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([switchToScene]() {
             try {
-                switchToScene(SceneManager::IN_GAME);
+                switchToScene(SceneManager::LEVEL_CREATOR);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Game Menu: ") +
-                          std::string(e.what()));
+                LOG_ERROR_CAT(
+                    ::rtype::LogCategory::UI,
+                    std::string("Error switching to Level Configurator: ") +
+                        std::string(e.what()));
             }
-        })));
-    this->_listEntity.push_back(EntityFactory::createButton(
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        LevelConfiguratorBtn, 1);
+    this->_listEntity.push_back(LevelConfiguratorBtn);
+    auto howToPlayBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 36, "How to Play"),
-        rtype::games::rtype::shared::Position(100, 470),
-        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
-                                               sf::Color::Red),
+            "main_font", rtype::display::Color::White(), 36, "How to Play"),
+        rtype::games::rtype::shared::TransformComponent(100, 590),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::HOW_TO_PLAY);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to How To Play: ") +
-                          std::string(e.what()));
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              std::string("Error switching to How To Play: ") +
+                                  std::string(e.what()));
             }
-        })));
-    this->_listEntity.push_back(EntityFactory::createButton(
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        howToPlayBtn, 1);
+    this->_listEntity.push_back(howToPlayBtn);
+    auto settingsBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 36, "Settings"),
-        rtype::games::rtype::shared::Position(100, 590),
-        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
-                                               sf::Color::Red),
+            "main_font", rtype::display::Color::White(), 36, "Settings"),
+        rtype::games::rtype::shared::TransformComponent(100, 710),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([switchToScene]() {
             try {
                 switchToScene(SceneManager::SETTINGS_MENU);
             } catch (SceneNotFound& e) {
-                LOG_ERROR(std::string("Error switching to Settings Menu: ") +
-                          std::string(e.what()));
+                LOG_ERROR_CAT(
+                    ::rtype::LogCategory::UI,
+                    std::string("Error switching to Settings Menu: ") +
+                        std::string(e.what()));
             }
-        })));
-    this->_listEntity.push_back(EntityFactory::createButton(
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        settingsBtn, 1);
+    this->_listEntity.push_back(settingsBtn);
+    auto quitBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 36, "Quit"),
-        rtype::games::rtype::shared::Position(100, 710),
-        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color::Blue,
-                                               sf::Color::Red),
+            "main_font", rtype::display::Color::White(), 36, "Quit"),
+        rtype::games::rtype::shared::TransformComponent(100, 830),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
         this->_assetsManager,
-        std::function<void()>([this]() { this->_window->close(); })
-
-            ));
+        std::function<void()>([window = this->_window]() { window->close(); }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        quitBtn, 1);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::ButtonMenuTag>(quitBtn);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::ButtonMenuTag>(playBtn);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::ButtonMenuTag>(
+            howToPlayBtn);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::ButtonMenuTag>(
+            settingsBtn);
+    this->_listEntity.push_back(quitBtn);
     this->_assetsManager->audioManager->load(
         "main_menu_music",
         this->_assetsManager->configGameAssets.assets.music.mainMenu);
@@ -392,11 +660,55 @@ MainMenuScene::MainMenuScene(
     this->_audio->loadMusic(bgMusic);
     this->_audio->setLoop(true);
     this->_audio->play();
+    auto menuOnConnectedId = this->_networkClient->addConnectedCallback(
+        [this, switchToScene](std::uint32_t userId) {
+            LOG_INFO("[Client] Connected with user ID: " +
+                     std::to_string(userId));
+            this->_updateStatus("Connected! Starting game...",
+                                rtype::display::Color::Green());
+            try {
+                switchToScene(SceneManager::LOBBY);
+                this->_connectPopUpVisible = false;
+            } catch (SceneNotFound& e) {
+                LOG_ERROR(std::string("Error switching to Game: ") +
+                          std::string(e.what()));
+            }
+        });
+    _connectedCallbackIds.push_back(menuOnConnectedId);
+
+    auto menuOnDisconnectedId = this->_networkClient->addDisconnectedCallback(
+        [this](rtype::client::NetworkClient::DisconnectReason reason) {
+            std::string reasonStr;
+            this->_connectPopUpVisible = true;
+            switch (reason) {
+                case rtype::network::DisconnectReason::Timeout:
+                    reasonStr = "Connection timed out";
+                    break;
+                case rtype::network::DisconnectReason::MaxRetriesExceeded:
+                    reasonStr = "Server unreachable";
+                    break;
+                case rtype::network::DisconnectReason::ProtocolError:
+                    reasonStr = "Protocol error";
+                    break;
+                case rtype::network::DisconnectReason::RemoteRequest:
+                    reasonStr = "Server closed connection";
+                    break;
+                default:
+                    reasonStr = "Disconnected";
+                    break;
+            }
+            _updateStatus(reasonStr, rtype::display::Color::Red());
+        });
+    _disconnectedCallbackIds.push_back(menuOnDisconnectedId);
 }
 
 MainMenuScene::~MainMenuScene() {
     if (_networkClient) {
-        _networkClient->onConnected([](std::uint32_t) {});
-        _networkClient->onDisconnected([](rtype::network::DisconnectReason) {});
+        for (auto id : _connectedCallbackIds) {
+            _networkClient->removeConnectedCallback(id);
+        }
+        for (auto id : _disconnectedCallbackIds) {
+            _networkClient->removeDisconnectedCallback(id);
+        }
     }
 }

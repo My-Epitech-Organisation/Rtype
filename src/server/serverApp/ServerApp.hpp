@@ -10,9 +10,11 @@
 
 #include <atomic>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include <rtype/common.hpp>
@@ -28,12 +30,16 @@
 #include "server/serverApp/game/gameStateManager/GameStateManager.hpp"
 #include "server/serverApp/packetProcessor/PacketProcessor.hpp"
 #include "server/serverApp/player/playerInputHandler/PlayerInputHandler.hpp"
+#include "server/shared/AdminServer.hpp"
+#include "server/shared/BanManager.hpp"
 #include "server/shared/Client.hpp"
 #include "server/shared/IEntitySpawner.hpp"
 #include "server/shared/IGameConfig.hpp"
 #include "server/shared/ServerMetrics.hpp"
 
 namespace rtype::server {
+
+class LobbyManager;
 
 using rtype::ClientId;
 using rtype::Endpoint;
@@ -61,14 +67,15 @@ class ServerApp {
         uint16_t port, size_t maxPlayers, uint32_t tickRate,
         std::shared_ptr<std::atomic<bool>> shutdownFlag,
         uint32_t clientTimeoutSeconds = DEFAULT_CLIENT_TIMEOUT_SECONDS,
-        bool verbose = false);
+        bool verbose = false, std::shared_ptr<BanManager> banManager = nullptr);
 
     /**
      * @brief Construct with game configuration
      */
     explicit ServerApp(std::unique_ptr<IGameConfig> gameConfig,
                        std::shared_ptr<std::atomic<bool>> shutdownFlag,
-                       bool verbose = false);
+                       bool verbose = false,
+                       std::shared_ptr<BanManager> banManager = nullptr);
 
     ~ServerApp();
 
@@ -95,6 +102,14 @@ class ServerApp {
     [[nodiscard]] size_t getConnectedClientCount() const noexcept;
     [[nodiscard]] std::vector<ClientId> getConnectedClientIds() const;
     [[nodiscard]] std::optional<Client> getClientInfo(ClientId clientId) const;
+    /**
+     * @brief Get the network endpoint for a connected client (authoritative via
+     * NetworkServer)
+     * @param clientId The client/user ID assigned by NetworkServer
+     * @return Optional endpoint with address and port if found
+     */
+    [[nodiscard]] std::optional<rtype::Endpoint> getClientEndpoint(
+        ClientId clientId) const;
 
     [[nodiscard]] const ServerMetrics& getMetrics() const noexcept {
         return *_metrics;
@@ -111,6 +126,12 @@ class ServerApp {
     [[nodiscard]] bool isPlaying() const noexcept {
         return _stateManager->isPlaying();
     }
+    [[nodiscard]] bool isCountdownActive() const noexcept {
+        return _stateManager->isCountdownActive();
+    }
+    [[nodiscard]] float getCountdownRemaining() const noexcept {
+        return _stateManager->getCountdownRemaining();
+    }
     [[nodiscard]] size_t getReadyPlayerCount() const noexcept {
         return _stateManager->getReadyPlayerCount();
     }
@@ -124,9 +145,65 @@ class ServerApp {
         return _gameConfig != nullptr && _gameConfig->isInitialized();
     }
 
+    /**
+     * @brief Get ban manager for admin operations
+     */
+    [[nodiscard]] BanManager& getBanManager() noexcept { return *_banManager; }
+    [[nodiscard]] const BanManager& getBanManager() const noexcept {
+        return *_banManager;
+    }
+
+    /**
+     * @brief Kick a client by user ID
+     * @return true if disconnected, false otherwise
+     */
+    bool kickClient(ClientId clientId) {
+        if (_networkServer) {
+            return _networkServer->disconnectClient(clientId);
+        }
+        return false;
+    }
+
+    /**
+     * @brief Set LobbyManager reference for admin panel integration
+     * @param lobbyManager Pointer to LobbyManager instance
+     */
+    void setLobbyManager(LobbyManager* lobbyManager);
+
     void playerReady(std::uint32_t userId) {
         _stateManager->playerReady(userId);
     }
+
+    // Test helpers to manipulate game state for integration tests
+    void playerNotReady(std::uint32_t userId) {
+        _stateManager->playerNotReady(userId);
+    }
+
+    void forceStart() { _stateManager->forceStart(); }
+
+    /**
+     * @brief Test hook: register a callback to be invoked when ServerApp
+     * broadcasts a game start (used in tests to capture broadcast events).
+     */
+    void setOnGameStartBroadcastCallback(std::function<void(float)> cb) {
+        _onGameStartBroadcastCallback = std::move(cb);
+    }
+
+    /**
+     * @brief Set the expected lobby code for join validation
+     */
+    void setLobbyCode(const std::string& code);
+
+    /**
+     * @brief Test hook: set default countdown duration used by GameStateManager
+     * (useful to make tests deterministic)
+     */
+    void setDefaultCountdown(float seconds) {
+        if (_stateManager) {
+            _stateManager->setDefaultCountdown(seconds);
+        }
+    }
+
     [[nodiscard]] bool reloadConfiguration();
 
     void registerUserIdMapping(const Endpoint& endpoint,
@@ -169,8 +246,11 @@ class ServerApp {
     std::atomic<bool> _hasShutdown{false};
 
     std::shared_ptr<ServerMetrics> _metrics;
+    std::shared_ptr<BanManager> _banManager;
+    LobbyManager* _lobbyManager{nullptr};
     ClientManager _clientManager;
     std::shared_ptr<IGameConfig> _gameConfig;
+    std::unique_ptr<AdminServer> _adminServer;
 
     std::shared_ptr<GameStateManager> _stateManager;
     PacketProcessor _packetProcessor;
@@ -187,6 +267,15 @@ class ServerApp {
     std::shared_ptr<NetworkServer> _networkServer;
     std::shared_ptr<ServerNetworkSystem> _networkSystem;
     std::shared_ptr<ECS::Registry> _registry;
+
+    // Server loop (owned by run method, used for tick overrun tracking)
+    ServerLoop* _serverLoop{nullptr};
+
+    uint32_t _metricSnapshotCounter{0};
+    static constexpr uint32_t METRICS_SNAPSHOT_INTERVAL = 60;  // in seconds
+
+    // Test hooks
+    std::function<void(float)> _onGameStartBroadcastCallback;
 
     std::uint32_t _score{0};
     static constexpr std::uint32_t ENEMY_DESTRUCTION_SCORE = 100;

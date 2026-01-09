@@ -16,7 +16,7 @@
 #include "../../src/server/serverApp/game/gameStateManager/GameStateManager.hpp"
 #include "../../src/server/serverApp/player/playerInputHandler/PlayerInputHandler.hpp"
 #include "games/rtype/shared/Components/CooldownComponent.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 
 using namespace rtype::server;
@@ -226,7 +226,7 @@ TEST_F(PlayerInputHandlerTest, ProcessMovement_AllDirections) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
     ECS::Entity entity = registry_->spawnEntity();
@@ -256,7 +256,7 @@ TEST_F(PlayerInputHandlerTest, ProcessMovement_DiagonalMovement) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
     ECS::Entity entity = registry_->spawnEntity();
@@ -277,7 +277,7 @@ TEST_F(PlayerInputHandlerTest, ProcessMovement_OppositeDirectionsCancel) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
     ECS::Entity entity = registry_->spawnEntity();
@@ -302,7 +302,7 @@ TEST_F(PlayerInputHandlerTest, ProcessMovement_NoVelocityComponent) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
 
     ECS::Entity entity = registry_->spawnEntity();
     registry_->emplaceComponent<Position>(entity, 100.0f, 100.0f);
@@ -319,7 +319,7 @@ TEST_F(PlayerInputHandlerTest, ProcessMovement_NoInput) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
     ECS::Entity entity = registry_->spawnEntity();
@@ -357,7 +357,7 @@ TEST_F(PlayerInputHandlerTest, ProcessShoot_NoShootCooldownComponent) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
     ECS::Entity entity = registry_->spawnEntity();
@@ -372,7 +372,7 @@ TEST_F(PlayerInputHandlerTest, ProcessShoot_CooldownNotReady) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
     using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
 
@@ -391,7 +391,7 @@ TEST_F(PlayerInputHandlerTest, ProcessShoot_NoShootCallback) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
     using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
 
@@ -421,7 +421,7 @@ TEST_F(PlayerInputHandlerTest, ProcessShoot_WithShootCallback) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
     using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
 
@@ -450,7 +450,7 @@ TEST_F(PlayerInputHandlerTest, ProcessShoot_CallbackReturnsZero) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
     using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
 
@@ -477,7 +477,7 @@ TEST_F(PlayerInputHandlerTest, ProcessShoot_EntityNotRegistered) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
     using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
 
@@ -499,7 +499,7 @@ TEST_F(PlayerInputHandlerTest, SetPlayerSpeed) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
     ECS::Entity entity = registry_->spawnEntity();
@@ -523,7 +523,7 @@ TEST_F(PlayerInputHandlerTest, VerboseMode_LogsInput) {
 
     stateManager_->forceStart();
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
     ECS::Entity entity = registry_->spawnEntity();
@@ -543,7 +543,7 @@ TEST_F(PlayerInputHandlerTest, VerboseMode_LogsInput) {
 TEST_F(PlayerInputHandlerTest, HandleInput_NullStateManager) {
     PlayerInputHandler handler(registry_, networkSystem_, nullptr);
 
-    using Position = rtype::games::rtype::shared::Position;
+    using Position = rtype::games::rtype::shared::TransformComponent;
     using Velocity = rtype::games::rtype::shared::VelocityComponent;
 
     ECS::Entity entity = registry_->spawnEntity();

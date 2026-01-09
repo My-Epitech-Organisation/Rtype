@@ -20,11 +20,12 @@ namespace rtype::network {
  * @brief Reason for connection termination
  */
 enum class DisconnectReason : std::uint8_t {
-    LocalRequest,
-    RemoteRequest,
-    Timeout,
-    MaxRetriesExceeded,
-    ProtocolError
+    Timeout = 0,
+    MaxRetriesExceeded = 1,
+    ProtocolError = 2,
+    RemoteRequest = 3,
+    LocalRequest = 4,
+    Banned = 5
 };
 
 [[nodiscard]] constexpr std::string_view toString(
@@ -40,6 +41,8 @@ enum class DisconnectReason : std::uint8_t {
             return "MaxRetriesExceeded";
         case DisconnectReason::ProtocolError:
             return "ProtocolError";
+        case DisconnectReason::Banned:
+            return "Banned";
     }
     return "Unknown";
 }

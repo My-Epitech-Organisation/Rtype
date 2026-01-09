@@ -23,7 +23,7 @@ float AudioLib::getMusicVolume() const { return this->_volumeMusic; }
 void AudioLib::setSFXVolume(const float& volume) {
     this->_volumeSFX = volume;
     for (auto& sound : this->_sounds) {
-        sound.setVolume(this->_volumeSFX);
+        sound->setVolume(this->_volumeSFX);
     }
 }
 
@@ -40,16 +40,21 @@ void AudioLib::play() const {
     this->_currentMusic->play();
 }
 
-void AudioLib::playSFX(const sf::SoundBuffer& sfx) {
-    this->_sounds.remove_if([](const sf::Sound& s) {
-        return s.getStatus() == sf::SoundSource::Status::Stopped;
-    });
-    this->_sounds.emplace_back(sfx);
-    this->_sounds.back().setVolume(this->_volumeSFX);
-    this->_sounds.back().play();
+void AudioLib::playSFX(std::shared_ptr<rtype::display::ISoundBuffer> sfx) {
+    this->_sounds.remove_if(
+        [](const std::shared_ptr<::rtype::display::ISound>& s) {
+            return s->getStatus() == rtype::display::ISound::Status::Stopped;
+        });
+
+    auto sound = _display->createSound(sfx);
+    if (sound) {
+        sound->setVolume(this->_volumeSFX);
+        sound->play();
+        this->_sounds.push_back(sound);
+    }
 }
 
-void AudioLib::loadMusic(std::shared_ptr<sf::Music> music) {
+void AudioLib::loadMusic(std::shared_ptr<::rtype::display::IMusic> music) {
     if (this->_currentMusic) this->_currentMusic->stop();
     this->_currentMusic = music;
     this->_currentMusic->setVolume(this->_volumeMusic);

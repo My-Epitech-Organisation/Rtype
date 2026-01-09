@@ -25,6 +25,9 @@ namespace rtype::games::rtype::server {
  *
  * Uses the QuadTree for broad-phase collision detection (O(n log n))
  * and AABB overlap checks for narrow-phase collision validation.
+ *
+ * Uses CommandBuffer pour différer les modifications d'entités durant
+ * l'itération.
  */
 class CollisionSystem : public ::rtype::engine::ASystem {
    public:
@@ -45,19 +48,35 @@ class CollisionSystem : public ::rtype::engine::ASystem {
     /**
      * @brief Handle collision between a projectile and a target entity
      * @param registry ECS registry
+     * @param cmdBuffer Command buffer pour différer les modifications
      * @param projectile The projectile entity
      * @param target The target entity (enemy or player)
      * @param isTargetPlayer True if target is a player, false if enemy
      */
     void handleProjectileCollision(ECS::Registry& registry,
+                                   ECS::CommandBuffer& cmdBuffer,
                                    ECS::Entity projectile, ECS::Entity target,
                                    bool isTargetPlayer);
 
-    void handlePickupCollision(ECS::Registry& registry, ECS::Entity player,
-                               ECS::Entity pickup);
+    /**
+     * @brief Handle collision between an enemy and a player
+     * @param registry ECS registry
+     * @param cmdBuffer Command buffer
+     * @param enemy The enemy entity
+     * @param player The player entity
+     */
+    void handleEnemyPlayerCollision(ECS::Registry& registry,
+                                    ECS::CommandBuffer& cmdBuffer,
+                                    ECS::Entity enemy, ECS::Entity player);
 
-    void handleObstacleCollision(ECS::Registry& registry, ECS::Entity obstacle,
-                                 ECS::Entity other, bool otherIsPlayer);
+    void handlePickupCollision(ECS::Registry& registry,
+                               ECS::CommandBuffer& cmdBuffer,
+                               ECS::Entity player, ECS::Entity pickup);
+
+    void handleObstacleCollision(ECS::Registry& registry,
+                                 ECS::CommandBuffer& cmdBuffer,
+                                 ECS::Entity obstacle, ECS::Entity other,
+                                 bool otherIsPlayer);
 
     EventEmitter _emitEvent;
     std::unique_ptr<shared::QuadTreeSystem> _quadTreeSystem;

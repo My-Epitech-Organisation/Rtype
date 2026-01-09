@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <string>
 
-#include "Components/AIComponent.hpp"
+#include "../../../Components/AIComponent.hpp"
 
 namespace rtype::games::rtype::shared {
 
@@ -36,6 +36,12 @@ struct EnemyConfig {
     bool canShoot = false;
     float fireRate = 1.0F;
     std::string projectileType;
+
+    // Visual
+    uint8_t colorR = 255;
+    uint8_t colorG = 255;
+    uint8_t colorB = 255;
+    uint8_t colorA = 255;
 
     /**
      * @brief Validate the enemy configuration

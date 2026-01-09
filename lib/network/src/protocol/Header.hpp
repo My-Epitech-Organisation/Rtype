@@ -13,20 +13,15 @@
 #include <vector>
 
 #include "OpCode.hpp"
+#include "core/Types.hpp"
 
 namespace rtype::network {
-
-/// Dynamic buffer for network data
-using Buffer = std::vector<std::uint8_t>;
 
 /// Magic byte for packet validation (RFC Section 4.1)
 inline constexpr std::uint8_t kMagicByte = 0xA1;
 
 /// Header size in bytes (RFC Section 4.1)
 inline constexpr std::size_t kHeaderSize = 16;
-
-/// Maximum packet size to avoid IP fragmentation (RFC Section 3)
-inline constexpr std::size_t kMaxPacketSize = 1400;
 
 /// Maximum payload size (packet size minus header)
 inline constexpr std::size_t kMaxPayloadSize = kMaxPacketSize - kHeaderSize;
@@ -55,6 +50,9 @@ inline constexpr std::uint8_t kReliable = 0x01;
 
 /// Ack ID field is valid (acknowledging a previous packet)
 inline constexpr std::uint8_t kIsAck = 0x02;
+
+/// Payload is LZ4-compressed (RFC RTGP v1.4.0)
+inline constexpr std::uint8_t kCompressed = 0x04;
 }  // namespace Flags
 
 #pragma pack(push, 1)
@@ -141,6 +139,10 @@ struct Header {
         return (flags & Flags::kIsAck) != 0;
     }
 
+    [[nodiscard]] constexpr bool isCompressed() const noexcept {
+        return (flags & Flags::kCompressed) != 0;
+    }
+
     constexpr void setReliable(bool value = true) noexcept {
         if (value) {
             flags |= Flags::kReliable;
@@ -152,6 +154,14 @@ struct Header {
     constexpr void setAck(std::uint16_t ackSeqId) noexcept {
         flags |= Flags::kIsAck;
         ackId = ackSeqId;
+    }
+
+    constexpr void setCompressed(bool value = true) noexcept {
+        if (value) {
+            flags |= Flags::kCompressed;
+        } else {
+            flags &= ~Flags::kCompressed;
+        }
     }
 
     [[nodiscard]] constexpr bool hasValidMagic() const noexcept {

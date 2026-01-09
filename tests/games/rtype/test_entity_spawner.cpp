@@ -15,9 +15,8 @@
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
 #include "games/rtype/shared/Components/PlayerIdComponent.hpp"
-#include "games/rtype/shared/Components/PositionComponent.hpp"
-#include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
+#include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
 #include "games/rtype/shared/Components/WeaponComponent.hpp"
 #include "server/network/ServerNetworkSystem.hpp"
@@ -88,7 +87,7 @@ TEST_F(RTypeEntitySpawnerTest, SpawnPlayerHasRequiredComponents) {
     ASSERT_TRUE(result.success);
 
     // Check all required components are present
-    EXPECT_TRUE(registry->hasComponent<Position>(result.entity));
+    EXPECT_TRUE(registry->hasComponent<TransformComponent>(result.entity));
     EXPECT_TRUE(registry->hasComponent<TransformComponent>(result.entity));
     EXPECT_TRUE(registry->hasComponent<VelocityComponent>(result.entity));
     EXPECT_TRUE(registry->hasComponent<ShootCooldownComponent>(result.entity));
@@ -108,7 +107,7 @@ TEST_F(RTypeEntitySpawnerTest, SpawnPlayerCorrectPosition) {
     auto result = spawner->spawnPlayer(config);
     ASSERT_TRUE(result.success);
 
-    const auto& pos = registry->getComponent<Position>(result.entity);
+    const auto& pos = registry->getComponent<TransformComponent>(result.entity);
     EXPECT_EQ(pos.x, 100.0F);  // kSpawnBaseX
     EXPECT_EQ(pos.y, 150.0F + 2.0F * 100.0F);  // kSpawnBaseY + playerIndex * kSpawnYOffset
 }
@@ -399,12 +398,16 @@ TEST_F(RTypeEntitySpawnerTest, UpdatePlayerVelocityWithoutComponent) {
 
 TEST_F(RTypeEntitySpawnerTest, UpdateAllPlayersMovement) {
     // Spawn multiple players
+    std::vector<ECS::Entity> spawnedEntities;
     for (int i = 0; i < 3; ++i) {
         PlayerSpawnConfig config{};
         config.userId = 6100 + i;
         config.playerIndex = i;
         auto result = spawner->spawnPlayer(config);
-        (void)result;  // Suppress unused warning
+        ASSERT_TRUE(result.success);
+        spawnedEntities.push_back(result.entity);
+        // Give each player a non-zero velocity so updateAllPlayersMovement processes them
+        spawner->updatePlayerVelocity(result.entity, 100.0F * (i + 1), 50.0F * (i + 1));
     }
 
     int callbackCount = 0;
@@ -412,7 +415,7 @@ TEST_F(RTypeEntitySpawnerTest, UpdateAllPlayersMovement) {
         ++callbackCount;
     });
 
-    EXPECT_EQ(callbackCount, 3);  // Called for each player
+    EXPECT_EQ(callbackCount, 3);  // Called for each player with non-zero velocity
 }
 
 // ============================================================================

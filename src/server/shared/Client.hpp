@@ -31,6 +31,10 @@ struct Client {
     std::chrono::steady_clock::time_point
         lastActivityTime;  ///< Last time we received data from this client
     ClientState state{ClientState::Connected};  ///< Current connection state
+    bool isReady{false};  ///< Whether client is ready to start game
+    std::chrono::steady_clock::time_point
+        joinedLobbyTime;     ///< When client joined the lobby
+    uint32_t lastPingMs{0};  ///< Last measured ping in milliseconds
 };
 
 }  // namespace rtype::server

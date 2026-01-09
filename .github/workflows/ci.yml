@@ -306,6 +306,7 @@ jobs:
       - name: Run Coverage Analysis (Linux only)
         if: matrix.os == 'ubuntu-latest'
         run: |
+          rm -rf build-coverage coverage || true
           chmod +x scripts/coverage.sh
           ./scripts/coverage.sh --html
 
@@ -314,7 +315,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: coverage/html/
+          path: |
+            coverage/html/
+            coverage/coverage.info
           if-no-files-found: warn
 
       - name: Test Summary
@@ -328,6 +331,21 @@ jobs:
             echo "**Coverage thresholds:** Lines ≥80%, Functions ≥80%, Branches ≥55%" >> $GITHUB_STEP_SUMMARY
             if [ -d coverage/html ]; then
               echo "**HTML Report:** [View Coverage Report](coverage/html/index.html)" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ -f coverage/coverage.info ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Coverage Summary (lcov)**" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              lcov --summary coverage/coverage.info | sed -n '1,200p' >> $GITHUB_STEP_SUMMARY || true
+              echo '```' >> $GITHUB_STEP_SUMMARY
+
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Top missed files (by missed lines)**" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              awk '/^SF:/{f=substr($0,4)} /^DA:/{split($0,a,","); hits[f]++; tot[f]++} END{for(f in tot) if (tot[f]-hits[f]>0) print tot[f]-hits[f],tot[f],f}' coverage/coverage.info | sort -rn | head -n 20 >> $GITHUB_STEP_SUMMARY || true
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            else
+              echo "coverage/coverage.info not found in workspace" >> $GITHUB_STEP_SUMMARY
             fi
           fi
           if [ -f build/Testing/Temporary/LastTest.log ]; then
@@ -394,7 +412,7 @@ jobs:
             -DUSE_SFML=ON
 
       - name: Build
-        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server
+        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml
 
       - name: Prepare Windows dist (exe + DLLs only)
         if: matrix.os == 'windows-latest'
@@ -407,6 +425,12 @@ jobs:
             exit 1
           fi
           cp -v build/src/client/*.exe build/dist/client/
+          echo "Staging Display lib"
+          if ! ls build/lib/display/**/*.dll >/dev/null 2>&1; then
+            echo "Error: No display lib found"
+            exit 1
+          fi
+          cp -v build/lib/display/**/*.dll build/dist/client/
           if ! ls build/vcpkg_installed/x64-windows/bin/*.dll >/dev/null 2>&1; then
             echo "Error: No DLLs found for client"
             exit 1
@@ -442,12 +466,20 @@ jobs:
           path: build/dist/server/
           if-no-files-found: warn
 
+      - name: Prepare Linux Client Distribution
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          mkdir -p build/dist/client
+          cp build/src/client/r-type_client build/dist/client/
+          cp -r build/lib/display/**/*.so build/dist/client/ 2>/dev/null || true
+
       - name: Upload Client Artifact (Linux)
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           name: r-type_client-${{ matrix.os }}
-          path: build/src/client/r-type_client
+          path: build/dist/client/
           if-no-files-found: warn
 
       - name: Upload Server Artifact (Linux)

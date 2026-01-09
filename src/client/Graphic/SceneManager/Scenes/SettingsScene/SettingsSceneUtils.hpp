@@ -9,14 +9,13 @@
 #define SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENEUTILS_HPP_
 #include <string>
 
-#include <SFML/Window/Keyboard.hpp>
-
 #include "GameAction.hpp"
+#include "rtype/display/IDisplay.hpp"
 
 class SettingsSceneUtils {
    public:
     static std::string actionToString(GameAction action);
-    static std::string keyToString(sf::Keyboard::Key key);
+    static std::string keyToString(::rtype::display::Key key);
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_SCENEMANAGER_SCENES_SETTINGSSCENE_SETTINGSSCENEUTILS_HPP_

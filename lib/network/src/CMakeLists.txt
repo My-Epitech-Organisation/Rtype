@@ -9,6 +9,9 @@ add_library(network STATIC
     connection/ConnectionStateMachine.cpp
     connection/Connection.cpp
 
+    # Compression layer (LZ4)
+    compression/Compressor.cpp
+
     UdpSocket.cpp
     Packet.cpp
     Serializer.cpp
@@ -21,7 +24,10 @@ add_library(network STATIC
 # - protocol/Validator.hpp
 
 # Find Asio (standalone, non-Boost)
-find_package(asio CONFIG REQUIRED)
+rtype_find_asio()
+
+# Find LZ4 for compression (vcpkg preferred, CPM fallback)
+rtype_find_lz4()
 
 target_include_directories(network PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -29,10 +35,11 @@ target_include_directories(network PUBLIC
 
 target_compile_features(network PUBLIC cxx_std_20)
 
-# Network depends on engine and Asio
+# Network depends on engine, Asio, and LZ4
 target_link_libraries(network PUBLIC
     engine
     asio::asio
+    lz4::lz4
 )
 
 # Windows-specific: link Winsock2 for byte order functions (htons, htonl, etc.)

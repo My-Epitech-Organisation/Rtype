@@ -34,23 +34,35 @@ inline constexpr unsigned int WINDOW_HEIGHT = 1080;
 // ==========================================================================
 
 /// @brief Background layer scroll factor (slowest)
-inline constexpr float PARALLAX_BACKGROUND = 0.2f;
+inline constexpr float PARALLAX_BACKGROUND = -0.10f;
 
 /// @brief Planet layer 1 scroll factor (fastest parallax layer)
-inline constexpr float PARALLAX_PLANET_1 = 0.7f;
+inline constexpr float PARALLAX_PLANET_1 = 0.1f;
+
+/// @brief Big Asteroids plan layer 1 scroll factor (fastest parallax layer)
+inline constexpr float PARALLAX_BIG_ASTEROIDS = 0.6f;
+
+/// @brief Small Asteroids plan layer 1 scroll factor (fastest parallax layer)
+inline constexpr float PARALLAX_SMALL_ASTEROIDS = -0.52f;
+
+/// @brief Asteroids fst plan layer 1 scroll factor (fastest parallax layer)
+inline constexpr float PARALLAX_ASTEROIDS_FST_PLAN = 0.55f;
+
+/// @brief Asteroids snd plan layer 1 scroll factor (fastest parallax layer)
+inline constexpr float PARALLAX_ASTEROIDS_SND_PLAN = -0.35f;
 
 /// @brief Planet layer 2 scroll factor (medium)
-inline constexpr float PARALLAX_PLANET_2 = 0.4f;
+inline constexpr float PARALLAX_PLANET_2 = 0.07f;
 
 /// @brief Planet layer 3 scroll factor (same as background)
-inline constexpr float PARALLAX_PLANET_3 = 0.2f;
+inline constexpr float PARALLAX_PLANET_3 = 0.04f;
 
 // ==========================================================================
 // Scrolling Configuration
 // ==========================================================================
 
 /// @brief Background auto-scroll speed in pixels per second
-inline constexpr float SCROLL_SPEED = 50.0f;
+inline constexpr float SCROLL_SPEED = 200.0f;
 
 // ==========================================================================
 // Projectile Configuration
@@ -72,10 +84,28 @@ inline constexpr float PROJECTILE_SPAWN_OFFSET_X = 80.0f;
 // ==========================================================================
 
 /// @brief Z-index for far background layer
-inline constexpr int ZINDEX_BACKGROUND = -2;
+inline constexpr int ZINDEX_BACKGROUND = -11;
+
+/// @brief Z-index for far sun layer
+inline constexpr int ZINDEX_SUN = -10;
+
+/// @brief Z-index for first planet asteroids layer
+inline constexpr int ZINDEX_SND_PLAN_ASTEROIDS = -8;
 
 /// @brief Z-index for parallax planet layers
-inline constexpr int ZINDEX_PLANETS = -1;
+inline constexpr int ZINDEX_PLANETS = -9;
+
+/// @brief Z-index for app title
+inline constexpr int ZINDEX_APP_TITLE = -1;
+
+/// @brief Z-index for Big asteroids layers
+inline constexpr int ZINDEX_BIG_ASTEROIDS = -5;
+
+/// @brief Z-index for Big and small asteroids layers
+inline constexpr int ZINDEX_SMALL_ASTEROIDS = -6;
+
+/// @brief Z-index for first planet asteroids layer
+inline constexpr int ZINDEX_FST_PLAN_ASTEROIDS = -4;
 
 /// @brief Z-index for game entities (players, enemies, etc.)
 inline constexpr int ZINDEX_ENTITIES = 0;
@@ -121,6 +151,44 @@ inline constexpr float FAKE_PLAYER_SCALE = 2.2f;
 
 /// @brief Maximum number of player sprites (colors) available
 inline constexpr unsigned int MAX_PLAYER_SPRITES = 4;
+
+// ==========================================================================
+// Obstacle Configuration
+// ==========================================================================
+
+/// @brief Obstacle nbr of sprites (variety)
+inline constexpr unsigned int NBR_MAX_OBSTACLES = 11;
+
+// ==========================================================================
+// Game Over Scene UI Configuration
+// ==========================================================================
+
+/// @brief Game Over center X offset from window center
+inline constexpr float GAME_OVER_CENTER_OFFSET = 70.f;
+
+/// @brief Game Over title X offset from center
+inline constexpr float GAME_OVER_TITLE_X_OFFSET = 260.f;
+
+/// @brief Game Over title Y position
+inline constexpr float GAME_OVER_TITLE_Y = 180.f;
+
+/// @brief Game Over score X offset from center
+inline constexpr float GAME_OVER_SCORE_X_OFFSET = 140.f;
+
+/// @brief Game Over score Y position
+inline constexpr float GAME_OVER_SCORE_Y = 320.f;
+
+/// @brief Game Over button X offset from center
+inline constexpr float GAME_OVER_BUTTON_X_OFFSET = 20.f;
+
+/// @brief Game Over button Y position
+inline constexpr float GAME_OVER_BUTTON_Y = 650.f;
+
+/// @brief Game Over button width
+inline constexpr float GAME_OVER_BUTTON_WIDTH = 300.f;
+
+/// @brief Game Over button height
+inline constexpr float GAME_OVER_BUTTON_HEIGHT = 70.f;
 
 }  // namespace GraphicsConfig
 

@@ -6,10 +6,6 @@ add_library(rtype-graphic-game-over-scene
 
 target_link_libraries(rtype-graphic-game-over-scene
     PUBLIC
-    SFML::Graphics
-    SFML::Window
-    SFML::Audio
-    SFML::System
     engine
     network
     rtype-graphic-audio

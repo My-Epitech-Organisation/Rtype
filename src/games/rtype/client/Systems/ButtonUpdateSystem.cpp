@@ -18,31 +18,51 @@
 
 namespace rtype::games::rtype::client {
 
-ButtonUpdateSystem::ButtonUpdateSystem(std::shared_ptr<sf::RenderWindow> window)
+ButtonUpdateSystem::ButtonUpdateSystem(
+    std::shared_ptr<::rtype::display::IDisplay> display)
     : ::rtype::engine::ASystem("ButtonUpdateSystem"),
-      _window(std::move(window)) {}
+      _display(std::move(display)) {}
 
 void ButtonUpdateSystem::update(ECS::Registry& registry, float /*dt*/) {
+    std::vector<std::function<void()>> callbacksToRun;
+
     registry.view<Button<>, UserEvent>().each(
-        [](ECS::Entity /*entity*/, auto& buttonAct, auto& actionType) {
+        [&callbacksToRun](ECS::Entity /*entity*/, auto& buttonAct,
+                          auto& actionType) {
             if (!actionType.idle && actionType.isReleased &&
-                actionType.isHovered) {
-                LOG_DEBUG(
-                    "[ButtonUpdateSystem] Button clicked, executing callback");
-                try {
-                    buttonAct.callback();
-                } catch (SceneNotFound& e) {
-                    ::rtype::Logger::instance().error(
-                        std::string("Error executing button callback: ") +
-                        std::string(e.what()));
-                }
+
+                actionType.isHovered && !actionType.isDisabled) {
+                LOG_DEBUG_CAT(
+                    ::rtype::LogCategory::UI,
+                    "[ButtonUpdateSystem] Button click detected, queueing "
+                    "callback");
+                callbacksToRun.push_back(buttonAct.callback);
             }
         });
 
+    for (auto& callback : callbacksToRun) {
+        LOG_DEBUG("[ButtonUpdateSystem] Executing button callback");
+        try {
+            callback();
+        } catch (const SceneNotFound& e) {
+            ::rtype::Logger::instance().error(
+                std::string("Error executing button callback: ") +
+                std::string(e.what()));
+        } catch (const std::exception& e) {
+            ::rtype::Logger::instance().error(
+                std::string("Exception in button callback: ") +
+                std::string(e.what()));
+        } catch (...) {
+            ::rtype::Logger::instance().error(
+                "Unknown error in button callback");
+        }
+    }
+
     registry.view<Rectangle, UserEvent, ButtonTag>().each(
         [](auto /*entity*/, auto& rect, auto& actionType, auto /*tag*/) {
-            rect.currentColor =
-                actionType.isHovered ? rect.hoveredColor : rect.mainColor;
+            rect.currentColor = actionType.isHovered && !actionType.isDisabled
+                                    ? rect.hoveredColor
+                                    : rect.mainColor;
         });
 }
 
