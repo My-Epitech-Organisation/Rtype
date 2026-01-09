@@ -412,10 +412,12 @@ void RtypeEntityFactory::setupMissileEntity(
     reg.emplaceComponent<GameTag>(entity);
     if (reg.hasComponent<shared::VelocityComponent>(entity)) {
         const auto& vel = reg.getComponent<shared::VelocityComponent>(entity);
-        LOG_DEBUG("[RtypeEntityFactory] Projectile velocity: vx=" << vel.vx << " vy=" << vel.vy);
+        LOG_DEBUG("[RtypeEntityFactory] Projectile velocity: vx="
+                  << vel.vx << " vy=" << vel.vy);
         if (vel.vx < 0.0f) {
             reg.emplaceComponent<Rotation>(entity, 180.0f);
-            LOG_DEBUG("[RtypeEntityFactory] Added 180° rotation to enemy projectile");
+            LOG_DEBUG(
+                "[RtypeEntityFactory] Added 180° rotation to enemy projectile");
         }
     }
     auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
