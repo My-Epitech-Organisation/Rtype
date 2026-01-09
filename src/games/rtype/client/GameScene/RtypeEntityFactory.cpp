@@ -435,36 +435,31 @@ void RtypeEntityFactory::setupPickupEntity(
              << " G=" << static_cast<int>(config.colorG)
              << " B=" << static_cast<int>(config.colorB));
 
-    // Use texture if available, otherwise fallback to Rectangle
     if (assetsManager && assetsManager->textureManager) {
-        // Try to get texture by config ID (e.g., "force_pod")
         try {
-            auto& texture = assetsManager->textureManager->get(configId);
-            reg.emplaceComponent<Image>(entity, texture);
-            auto texSize = texture.getSize();
+            auto texture = assetsManager->textureManager->get(configId);
+            reg.emplaceComponent<Image>(entity, configId);
+            auto texSize = texture->getSize();
 
-            // Special handling for force_pod spritesheet (205x18 with 11 frames
-            // of 18x18)
             if (configId == "force_pod") {
                 constexpr int frameWidth = 18;
                 constexpr int frameHeight = 18;
-                constexpr int frameIndex = 0;  // Use first frame
+                constexpr int frameIndex = 0;
 
                 reg.emplaceComponent<TextureRect>(
                     entity, std::pair<int, int>{frameIndex * frameWidth, 0},
                     std::pair<int, int>{frameWidth, frameHeight});
-                reg.emplaceComponent<Size>(entity, 2.0f,
-                                           2.0f);  // Scale up 2x for visibility
+                reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
 
                 LOG_INFO(
                     "[RtypeEntityFactory] Using force_pod spritesheet frame 0 ("
                     << frameWidth << "x" << frameHeight << ")");
 
                 reg.emplaceComponent<BoxingComponent>(
-                    entity,
-                    sf::FloatRect({0, 0},
-                                  {static_cast<float>(frameWidth) * 2.0f,
-                                   static_cast<float>(frameHeight) * 2.0f}));
+                    entity, ::rtype::display::Vector2f{0.0f, 0.0f},
+                    ::rtype::display::Vector2f{
+                        static_cast<float>(frameWidth) * 2.0f,
+                        static_cast<float>(frameHeight) * 2.0f});
             } else {
                 reg.emplaceComponent<Size>(entity, 1.0f, 1.0f);
                 LOG_INFO("[RtypeEntityFactory] Using texture for powerup: "
@@ -472,18 +467,19 @@ void RtypeEntityFactory::setupPickupEntity(
                          << texSize.y);
 
                 reg.emplaceComponent<BoxingComponent>(
-                    entity,
-                    sf::FloatRect({0, 0}, {static_cast<float>(texSize.x),
-                                           static_cast<float>(texSize.y)}));
+                    entity, ::rtype::display::Vector2f{0.0f, 0.0f},
+                    ::rtype::display::Vector2f{static_cast<float>(texSize.x),
+                                               static_cast<float>(texSize.y)});
             }
 
             reg.emplaceComponent<ColorTint>(entity, config.colorR,
                                             config.colorG, config.colorB,
                                             config.colorA);
 
-            reg.getComponent<BoxingComponent>(entity).outlineColor = color;
+            reg.getComponent<BoxingComponent>(entity).outlineColor =
+                ::rtype::display::Color{color.r, color.g, color.b, 255};
             reg.getComponent<BoxingComponent>(entity).fillColor =
-                sf::Color(color.r, color.g, color.b, 45);
+                ::rtype::display::Color{color.r, color.g, color.b, 45};
 
             reg.emplaceComponent<
                 ::rtype::games::rtype::shared::BoundingBoxComponent>(
@@ -491,34 +487,40 @@ void RtypeEntityFactory::setupPickupEntity(
         } catch (const std::exception& e) {
             LOG_WARNING("[RtypeEntityFactory] Texture not found for: "
                         << configId << " - using Rectangle fallback");
-            // Fallback to Rectangle if texture not found
-            reg.emplaceComponent<Rectangle>(
-                entity, std::pair<float, float>{24.f, 24.f}, color, color);
+            ::rtype::display::Color rtypeColor{color.r, color.g, color.b, 255};
+            reg.emplaceComponent<Rectangle>(entity,
+                                            std::pair<float, float>{24.f, 24.f},
+                                            rtypeColor, rtypeColor);
             reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
-            reg.getComponent<Rectangle>(entity).outlineColor = sf::Color::White;
+            reg.getComponent<Rectangle>(entity).outlineColor =
+                ::rtype::display::Color::White();
             reg.emplaceComponent<BoxingComponent>(
-                entity, sf::FloatRect({0, 0}, {24.f, 24.f}));
-            reg.getComponent<BoxingComponent>(entity).outlineColor = color;
+                entity, ::rtype::display::Vector2f{0.0f, 0.0f},
+                ::rtype::display::Vector2f{24.f, 24.f});
+            reg.getComponent<BoxingComponent>(entity).outlineColor = rtypeColor;
             reg.getComponent<BoxingComponent>(entity).fillColor =
-                sf::Color(color.r, color.g, color.b, 45);
+                ::rtype::display::Color{color.r, color.g, color.b, 45};
 
             reg.emplaceComponent<
                 ::rtype::games::rtype::shared::BoundingBoxComponent>(
                 entity, 24.0f, 24.0f);
         }
     } else {
-        // Fallback to Rectangle if no assetsManager
         LOG_WARNING(
             "[RtypeEntityFactory] No assetsManager - using Rectangle fallback");
-        reg.emplaceComponent<Rectangle>(
-            entity, std::pair<float, float>{24.f, 24.f}, color, color);
+        ::rtype::display::Color rtypeColor{color.r, color.g, color.b, 255};
+        reg.emplaceComponent<Rectangle>(entity,
+                                        std::pair<float, float>{24.f, 24.f},
+                                        rtypeColor, rtypeColor);
         reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
-        reg.getComponent<Rectangle>(entity).outlineColor = sf::Color::White;
+        reg.getComponent<Rectangle>(entity).outlineColor =
+            ::rtype::display::Color::White();
         reg.emplaceComponent<BoxingComponent>(
-            entity, sf::FloatRect({0, 0}, {24.f, 24.f}));
-        reg.getComponent<BoxingComponent>(entity).outlineColor = color;
+            entity, ::rtype::display::Vector2f{0.0f, 0.0f},
+            ::rtype::display::Vector2f{24.f, 24.f});
+        reg.getComponent<BoxingComponent>(entity).outlineColor = rtypeColor;
         reg.getComponent<BoxingComponent>(entity).fillColor =
-            sf::Color(color.r, color.g, color.b, 45);
+            ::rtype::display::Color{color.r, color.g, color.b, 45};
 
         reg.emplaceComponent<
             ::rtype::games::rtype::shared::BoundingBoxComponent>(entity, 24.0f,
@@ -560,8 +562,8 @@ void RtypeEntityFactory::setupForcePodEntity(
     constexpr int frameHeight = 18;
     constexpr int frameCount = 12;
 
-    auto& forcePodTexture = assetsManager->textureManager->get("force_pod");
-    reg.emplaceComponent<Image>(entity, forcePodTexture);
+    auto forcePodTexture = assetsManager->textureManager->get("force_pod");
+    reg.emplaceComponent<Image>(entity, "force_pod");
     reg.emplaceComponent<TextureRect>(
         entity, std::pair<int, int>({0, 0}),
         std::pair<int, int>({frameWidth, frameHeight}));
@@ -571,11 +573,12 @@ void RtypeEntityFactory::setupForcePodEntity(
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, 32.0f, 32.0f);
     reg.emplaceComponent<BoxingComponent>(
-        entity, sf::FloatRect({0, 0}, {32.0f, 32.0f}));
+        entity, ::rtype::display::Vector2f{0.0f, 0.0f},
+        ::rtype::display::Vector2f{32.0f, 32.0f});
     reg.getComponent<BoxingComponent>(entity).outlineColor =
-        sf::Color(100, 200, 255);
+        ::rtype::display::Color{100, 200, 255, 255};
     reg.getComponent<BoxingComponent>(entity).fillColor =
-        sf::Color(100, 200, 255, 40);
+        ::rtype::display::Color{100, 200, 255, 40};
 
     reg.emplaceComponent<ForcePodVisual>(entity);
     reg.emplaceComponent<ZIndex>(entity, 1);
