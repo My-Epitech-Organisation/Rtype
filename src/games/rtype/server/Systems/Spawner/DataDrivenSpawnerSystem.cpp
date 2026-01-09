@@ -466,17 +466,20 @@ void DataDrivenSpawnerSystem::spawnPowerUpFromConfig(
 
     const auto& powerupConfig = powerupConfigOpt.value().get();
 
-    float spawnX = request.hasFixedX() ? *request.x : _config.screenWidth + 30.0F;
+    float spawnX =
+        request.hasFixedX() ? *request.x : _config.screenWidth + 30.0F;
     float spawnY = request.hasFixedY() ? *request.y : _spawnYDist(_rng);
 
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
-                 "[DataDrivenSpawner] Spawning powerup '" << request.powerUpId
-                     << "' at (" << spawnX << ", " << spawnY << ")");
+                 "[DataDrivenSpawner] Spawning powerup '"
+                     << request.powerUpId << "' at (" << spawnX << ", "
+                     << spawnY << ")");
 
     ECS::Entity pickup = registry.spawnEntity();
 
     registry.emplaceComponent<TransformComponent>(pickup, spawnX, spawnY, 0.0F);
-    registry.emplaceComponent<VelocityComponent>(pickup, -_config.powerUpSpeed, 0.0F);
+    registry.emplaceComponent<VelocityComponent>(pickup, -_config.powerUpSpeed,
+                                                 0.0F);
     registry.emplaceComponent<BoundingBoxComponent>(
         pickup, powerupConfig.hitboxWidth, powerupConfig.hitboxHeight);
 

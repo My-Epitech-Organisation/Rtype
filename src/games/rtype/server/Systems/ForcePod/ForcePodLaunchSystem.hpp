@@ -22,21 +22,24 @@ namespace rtype::games::rtype::server {
 
 class ForcePodLaunchSystem : public ::rtype::engine::ASystem {
    public:
-    using ForcePodInputCallback = std::function<void(std::uint32_t playerNetworkId, bool launch)>;
+    using ForcePodInputCallback =
+        std::function<void(std::uint32_t playerNetworkId, bool launch)>;
 
     ForcePodLaunchSystem();
 
     void update(ECS::Registry& registry, float deltaTime) override;
 
-    void handleForcePodInput(ECS::Registry& registry, std::uint32_t playerNetworkId);
+    void handleForcePodInput(ECS::Registry& registry,
+                             std::uint32_t playerNetworkId);
 
-    void setForcePodForPlayer(std::uint32_t playerNetworkId, ECS::Entity forcePod);
+    void setForcePodForPlayer(std::uint32_t playerNetworkId,
+                              ECS::Entity forcePod);
 
     void removeForcePodForPlayer(std::uint32_t playerNetworkId);
 
    private:
     void launchForcePod(ECS::Registry& registry, ECS::Entity forcePod,
-                       const shared::TransformComponent& playerTransform);
+                        const shared::TransformComponent& playerTransform);
 
     void recallForcePod(ECS::Registry& registry, ECS::Entity forcePod);
 

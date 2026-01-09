@@ -165,7 +165,7 @@ bool GameEngine::initialize() {
     _forcePodLaunchSystem = std::make_unique<ForcePodLaunchSystem>();
     _forcePodShootingSystem = std::make_unique<ForcePodShootingSystem>(
         _projectileSpawnerSystem.get());
-    
+
     // Connect Force Pod systems
     _forcePodAttachmentSystem->setLaunchSystem(_forcePodLaunchSystem.get());
 

@@ -6,6 +6,7 @@
 */
 
 #include "ForcePodAttachmentSystem.hpp"
+
 #include "ForcePodLaunchSystem.hpp"
 
 namespace rtype::games::rtype::server {
@@ -26,16 +27,17 @@ void ForcePodAttachmentSystem::update(ECS::Registry& registry,
 }
 
 void ForcePodAttachmentSystem::updateAttachedPods(ECS::Registry& registry) {
-    auto podView =
-        registry.view<ForcePodTag, ForcePodComponent, TransformComponent, NetworkIdComponent>();
+    auto podView = registry.view<ForcePodTag, ForcePodComponent,
+                                 TransformComponent, NetworkIdComponent>();
 
     podView.each([&registry, this](ECS::Entity podEntity, const ForcePodTag&,
-                             const ForcePodComponent& forcePod,
-                             TransformComponent& podTransform,
-                             const NetworkIdComponent& podNetId) {
+                                   const ForcePodComponent& forcePod,
+                                   TransformComponent& podTransform,
+                                   const NetworkIdComponent& podNetId) {
         // Register pod with launch system if not already done
         if (_launchSystem && forcePod.ownerNetworkId != 0) {
-            _launchSystem->setForcePodForPlayer(forcePod.ownerNetworkId, podEntity);
+            _launchSystem->setForcePodForPlayer(forcePod.ownerNetworkId,
+                                                podEntity);
         }
 
         if (forcePod.state != ForcePodState::Attached) {

@@ -29,7 +29,7 @@ void ForcePodLaunchSystem::update(ECS::Registry& registry, float deltaTime) {
 }
 
 void ForcePodLaunchSystem::handleForcePodInput(ECS::Registry& registry,
-                                                std::uint32_t playerNetworkId) {
+                                               std::uint32_t playerNetworkId) {
     auto it = _playerForcePods.find(playerNetworkId);
     if (it == _playerForcePods.end()) {
         return;
@@ -43,12 +43,13 @@ void ForcePodLaunchSystem::handleForcePodInput(ECS::Registry& registry,
 
     auto& forcePodComp = registry.getComponent<ForcePodComponent>(forcePod);
 
-    auto playerView = registry.view<NetworkIdComponent, TransformComponent, PlayerTag>();
+    auto playerView =
+        registry.view<NetworkIdComponent, TransformComponent, PlayerTag>();
     TransformComponent playerTransform{};
     bool playerFound = false;
 
     playerView.each([&](ECS::Entity, const NetworkIdComponent& netId,
-                       const TransformComponent& transform, const PlayerTag&) {
+                        const TransformComponent& transform, const PlayerTag&) {
         if (netId.networkId == playerNetworkId) {
             playerTransform = transform;
             playerFound = true;
@@ -71,18 +72,20 @@ void ForcePodLaunchSystem::setForcePodForPlayer(std::uint32_t playerNetworkId,
     _playerForcePods[playerNetworkId] = forcePod;
 }
 
-void ForcePodLaunchSystem::removeForcePodForPlayer(std::uint32_t playerNetworkId) {
+void ForcePodLaunchSystem::removeForcePodForPlayer(
+    std::uint32_t playerNetworkId) {
     _playerForcePods.erase(playerNetworkId);
 }
 
-void ForcePodLaunchSystem::launchForcePod(ECS::Registry& registry,
-                                          ECS::Entity forcePod,
-                                          const TransformComponent& playerTransform) {
+void ForcePodLaunchSystem::launchForcePod(
+    ECS::Registry& registry, ECS::Entity forcePod,
+    const TransformComponent& playerTransform) {
     auto& forcePodComp = registry.getComponent<ForcePodComponent>(forcePod);
     forcePodComp.state = ForcePodState::Detached;
 
     if (!registry.hasComponent<VelocityComponent>(forcePod)) {
-        registry.emplaceComponent<VelocityComponent>(forcePod, kLaunchSpeed, 0.0F);
+        registry.emplaceComponent<VelocityComponent>(forcePod, kLaunchSpeed,
+                                                     0.0F);
     } else {
         auto& vel = registry.getComponent<VelocityComponent>(forcePod);
         vel.vx = kLaunchSpeed;
@@ -97,8 +100,9 @@ void ForcePodLaunchSystem::recallForcePod(ECS::Registry& registry,
 }
 
 void ForcePodLaunchSystem::updateDetachedPhysics(ECS::Registry& registry,
-                                                  float deltaTime) {
-    auto view = registry.view<ForcePodComponent, VelocityComponent, ForcePodTag>();
+                                                 float deltaTime) {
+    auto view =
+        registry.view<ForcePodComponent, VelocityComponent, ForcePodTag>();
 
     view.each([this, deltaTime](ECS::Entity, ForcePodComponent& forcePod,
                                 VelocityComponent& vel, const ForcePodTag&) {
@@ -121,24 +125,26 @@ void ForcePodLaunchSystem::updateDetachedPhysics(ECS::Registry& registry,
 }
 
 void ForcePodLaunchSystem::updateReturningPods(ECS::Registry& registry,
-                                                float deltaTime) {
+                                               float deltaTime) {
     auto podView = registry.view<ForcePodComponent, TransformComponent,
                                  VelocityComponent, ForcePodTag>();
 
     podView.each([this, &registry, deltaTime](
-                    ECS::Entity, ForcePodComponent& forcePod,
-                    TransformComponent& podTransform, VelocityComponent& vel,
-                    const ForcePodTag&) {
+                     ECS::Entity, ForcePodComponent& forcePod,
+                     TransformComponent& podTransform, VelocityComponent& vel,
+                     const ForcePodTag&) {
         if (forcePod.state != ForcePodState::Returning) {
             return;
         }
 
-        auto playerView = registry.view<NetworkIdComponent, TransformComponent, PlayerTag>();
+        auto playerView =
+            registry.view<NetworkIdComponent, TransformComponent, PlayerTag>();
         bool playerFound = false;
         TransformComponent playerTransform{};
 
         playerView.each([&](ECS::Entity, const NetworkIdComponent& netId,
-                           const TransformComponent& transform, const PlayerTag&) {
+                            const TransformComponent& transform,
+                            const PlayerTag&) {
             if (netId.networkId == forcePod.ownerNetworkId) {
                 playerTransform = transform;
                 playerFound = true;
@@ -167,7 +173,8 @@ void ForcePodLaunchSystem::updateReturningPods(ECS::Registry& registry,
 }
 
 void ForcePodLaunchSystem::checkReattachment(ECS::Registry& registry) {
-    auto podView = registry.view<ForcePodComponent, TransformComponent, ForcePodTag>();
+    auto podView =
+        registry.view<ForcePodComponent, TransformComponent, ForcePodTag>();
 
     podView.each([this, &registry](ECS::Entity forcePodEntity,
                                    ForcePodComponent& forcePod,
@@ -177,13 +184,14 @@ void ForcePodLaunchSystem::checkReattachment(ECS::Registry& registry) {
             return;
         }
 
-        auto playerView = registry.view<NetworkIdComponent, TransformComponent, PlayerTag>();
+        auto playerView =
+            registry.view<NetworkIdComponent, TransformComponent, PlayerTag>();
         bool reattached = false;
         bool autoRecall = false;
 
         playerView.each([&](ECS::Entity, const NetworkIdComponent& netId,
-                           const TransformComponent& playerTransform,
-                           const PlayerTag&) {
+                            const TransformComponent& playerTransform,
+                            const PlayerTag&) {
             if (netId.networkId != forcePod.ownerNetworkId) {
                 return;
             }
@@ -192,15 +200,18 @@ void ForcePodLaunchSystem::checkReattachment(ECS::Registry& registry) {
             float dy = playerTransform.y - podTransform.y;
             float distance = std::sqrt(dx * dx + dy * dy);
 
-            if (distance <= kReattachDistance && forcePod.state == ForcePodState::Returning) {
+            if (distance <= kReattachDistance &&
+                forcePod.state == ForcePodState::Returning) {
                 forcePod.state = ForcePodState::Attached;
                 if (registry.hasComponent<VelocityComponent>(forcePodEntity)) {
-                    auto& vel = registry.getComponent<VelocityComponent>(forcePodEntity);
+                    auto& vel = registry.getComponent<VelocityComponent>(
+                        forcePodEntity);
                     vel.vx = 0.0F;
                     vel.vy = 0.0F;
                 }
                 reattached = true;
-            } else if (distance >= kMaxDetachDistance && forcePod.state == ForcePodState::Detached) {
+            } else if (distance >= kMaxDetachDistance &&
+                       forcePod.state == ForcePodState::Detached) {
                 autoRecall = true;
             }
         });

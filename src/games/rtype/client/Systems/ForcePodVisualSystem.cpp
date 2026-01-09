@@ -20,16 +20,16 @@ ForcePodVisualSystem::ForcePodVisualSystem()
 void ForcePodVisualSystem::update(ECS::Registry& registry, float deltaTime) {
     auto view = registry.view<shared::ForcePodComponent, ForcePodVisual, Image,
                               shared::TransformComponent>();
-    
+
     view.each([this, &registry, deltaTime](
                   ECS::Entity entity, shared::ForcePodComponent& pod,
                   ForcePodVisual& visual, Image& image,
                   shared::TransformComponent& transform) {
         updateGlowEffect(registry, pod, visual, image, deltaTime);
-        
+
         if (pod.state == shared::ForcePodState::Detached) {
             visual.showTrail = true;
-            
+
             static float trailTimer = 0.0F;
             trailTimer += deltaTime;
             if (trailTimer >= 0.05F) {
@@ -45,20 +45,20 @@ void ForcePodVisualSystem::update(ECS::Registry& registry, float deltaTime) {
 void ForcePodVisualSystem::updateGlowEffect(
     ECS::Registry& registry, const shared::ForcePodComponent& pod,
     ForcePodVisual& visual, Image& image, float deltaTime) {
-    
     if (pod.state == shared::ForcePodState::Attached) {
         visual.glowIntensity += deltaTime * 2.0F;
         if (visual.glowIntensity > 1.0F) {
             visual.glowIntensity = 0.0F;
         }
-        
-        float brightness = 200 + static_cast<int>(55.0F * std::sin(visual.glowIntensity * 3.14159F * 2.0F));
+
+        float brightness =
+            200 + static_cast<int>(
+                      55.0F * std::sin(visual.glowIntensity * 3.14159F * 2.0F));
         visual.tintColor = sf::Color(
             static_cast<std::uint8_t>(std::min(255.0F, brightness * 0.4F)),
             static_cast<std::uint8_t>(std::min(255.0F, brightness * 0.8F)),
-            static_cast<std::uint8_t>(std::min(255.0F, brightness)),
-            255);
-        
+            static_cast<std::uint8_t>(std::min(255.0F, brightness)), 255);
+
         image.sprite.setColor(visual.tintColor);
     } else if (pod.state == shared::ForcePodState::Detached) {
         visual.tintColor = sf::Color(255, 255, 255, 255);
@@ -70,9 +70,9 @@ void ForcePodVisualSystem::updateGlowEffect(
 }
 
 void ForcePodVisualSystem::createTrailParticle(ECS::Registry& registry, float x,
-                                              float y) {
+                                               float y) {
     VisualCueFactory::createFlash(registry, {x, y},
-                                 sf::Color(100, 200, 255, 180), 20.f, 0.2f, 8);
+                                  sf::Color(100, 200, 255, 180), 20.f, 0.2f, 8);
 }
 
 }  // namespace rtype::games::rtype::client

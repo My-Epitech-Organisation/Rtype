@@ -37,7 +37,8 @@ using ShootCallback =
  * @brief Callback for Force Pod launch/recall
  * @param playerNetworkId Player's network ID
  */
-using ForcePodLaunchCallback = std::function<void(std::uint32_t playerNetworkId)>;
+using ForcePodLaunchCallback =
+    std::function<void(std::uint32_t playerNetworkId)>;
 
 /**
  * @brief Handles player input processing

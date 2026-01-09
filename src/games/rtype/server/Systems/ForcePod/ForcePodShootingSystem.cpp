@@ -25,7 +25,7 @@ ForcePodShootingSystem::ForcePodShootingSystem(
 
 void ForcePodShootingSystem::update(ECS::Registry& registry, float deltaTime) {
     auto podView = registry.view<ForcePodTag, ForcePodComponent,
-                                  TransformComponent, NetworkIdComponent>();
+                                 TransformComponent, NetworkIdComponent>();
 
     podView.each([&](ECS::Entity podEntity, const ForcePodTag&,
                      const ForcePodComponent& forcePod,
@@ -39,10 +39,11 @@ void ForcePodShootingSystem::update(ECS::Registry& registry, float deltaTime) {
         // Add or update cooldown component
         if (!registry.hasComponent<ShootCooldownComponent>(podEntity)) {
             registry.emplaceComponent<ShootCooldownComponent>(podEntity,
-                                                             SHOOT_COOLDOWN);
+                                                              SHOOT_COOLDOWN);
         }
 
-        auto& cooldown = registry.getComponent<ShootCooldownComponent>(podEntity);
+        auto& cooldown =
+            registry.getComponent<ShootCooldownComponent>(podEntity);
         cooldown.update(deltaTime);
 
         if (cooldown.canShoot()) {

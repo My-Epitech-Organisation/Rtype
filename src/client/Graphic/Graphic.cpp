@@ -362,8 +362,10 @@ void Graphic::_initializeCommonAssets() {
     manager->soundManager->load("bydos_spawn", config.assets.sfx.enemySpawn);
     manager->soundManager->load("bydos_death", config.assets.sfx.enemyDeath);
     manager->soundManager->load("laser_sfx", config.assets.sfx.laser);
-    manager->soundManager->load("forcepod_launch", config.assets.sfx.forcePodLaunch);
-    manager->soundManager->load("forcepod_return", config.assets.sfx.forcePodReturn);
+    manager->soundManager->load("forcepod_launch",
+                                config.assets.sfx.forcePodLaunch);
+    manager->soundManager->load("forcepod_return",
+                                config.assets.sfx.forcePodReturn);
 
     manager->textureManager->get("bg_menu").setRepeated(true);
     manager->textureManager->get("bg_planet_1").setRepeated(true);

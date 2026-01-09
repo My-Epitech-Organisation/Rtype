@@ -27,10 +27,10 @@ class ForcePodVisualSystem : public ::rtype::engine::ASystem {
 
    private:
     void updateGlowEffect(ECS::Registry& registry,
-                         const shared::ForcePodComponent& pod,
-                         ForcePodVisual& visual, Image& image,
-                         float deltaTime);
-    
+                          const shared::ForcePodComponent& pod,
+                          ForcePodVisual& visual, Image& image,
+                          float deltaTime);
+
     void createTrailParticle(ECS::Registry& registry, float x, float y);
 };
 

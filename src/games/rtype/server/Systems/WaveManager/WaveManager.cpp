@@ -221,7 +221,8 @@ void WaveManager::advanceToNextWave() {
 
 void WaveManager::prepareCurrentWave() {
     _pendingSpawns.clear();
-    // Don't clear _pendingPowerUps - let powerups from previous waves continue their countdown
+    // Don't clear _pendingPowerUps - let powerups from previous waves continue
+    // their countdown
 
     if (!_levelConfig) {
         return;
@@ -291,13 +292,14 @@ std::vector<PowerUpSpawnRequest> WaveManager::getPowerUpSpawns(
         pending.remainingDelay -= deltaTime;
 
         LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                      "[WaveManager] PowerUp '" << pending.entry.powerUpId
+                      "[WaveManager] PowerUp '"
+                          << pending.entry.powerUpId
                           << "' delay: " << pending.remainingDelay);
 
         if (pending.remainingDelay <= 0.0F) {
             LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                          "[WaveManager] PowerUp '" << pending.entry.powerUpId
-                             << "' ready to spawn!");
+                                                   << "' ready to spawn!");
             PowerUpSpawnRequest request;
             request.powerUpId = pending.entry.powerUpId;
             request.x = pending.entry.x;

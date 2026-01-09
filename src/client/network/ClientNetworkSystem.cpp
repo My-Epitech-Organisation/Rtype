@@ -417,9 +417,10 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
 
 void ClientNetworkSystem::handlePowerUpEvent(const PowerUpEvent& event) {
     LOG_INFO("[ClientNetworkSystem] *** RECEIVED POWERUP EVENT ***: playerId="
-             << event.playerId << " type=" << static_cast<int>(event.powerUpType)
+             << event.playerId
+             << " type=" << static_cast<int>(event.powerUpType)
              << " duration=" << event.duration);
-    
+
     auto it = networkIdToEntity_.find(event.playerId);
     if (it == networkIdToEntity_.end()) {
         LOG_WARNING("[ClientNetworkSystem] PowerUp event for unknown player: "
@@ -457,8 +458,8 @@ void ClientNetworkSystem::handlePowerUpEvent(const PowerUpEvent& event) {
     active.hasOriginalCooldown = false;
 
     LOG_INFO("[ClientNetworkSystem] ActivePowerUpComponent set: type="
-             << static_cast<int>(active.type) << " remainingTime="
-             << active.remainingTime);
+             << static_cast<int>(active.type)
+             << " remainingTime=" << active.remainingTime);
 
     if (registry_
             ->hasComponent<rtype::games::rtype::shared::TransformComponent>(

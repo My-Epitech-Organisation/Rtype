@@ -303,23 +303,26 @@ bool ServerApp::initialize() {
             }
             return _entitySpawner->handlePlayerShoot(*entityOpt, networkId);
         });
-    
+
     _inputHandler->setForcePodLaunchCallback(
         [this](std::uint32_t playerNetworkId) {
             if (!_gameEngine) {
                 return;
             }
             // Cast to concrete GameEngine type to access Force Pod systems
-            auto* rtypeEngine = dynamic_cast<rtype::games::rtype::server::GameEngine*>(_gameEngine.get());
+            auto* rtypeEngine =
+                dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                    _gameEngine.get());
             if (!rtypeEngine) {
                 return;
             }
             auto* launchSystem = rtypeEngine->getForcePodLaunchSystem();
             if (launchSystem) {
-                launchSystem->handleForcePodInput(rtypeEngine->getRegistry(), playerNetworkId);
+                launchSystem->handleForcePodInput(rtypeEngine->getRegistry(),
+                                                  playerNetworkId);
             }
         });
-    
+
     _networkSystem->setInputHandler([this](std::uint32_t userId,
                                            std::uint8_t inputMask,
                                            std::optional<ECS::Entity> entity) {

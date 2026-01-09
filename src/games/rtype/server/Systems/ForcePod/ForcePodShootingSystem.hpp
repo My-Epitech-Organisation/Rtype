@@ -32,8 +32,7 @@ class ForcePodShootingSystem : public ::rtype::engine::ASystem {
      * @brief Construct a new Force Pod Shooting System
      * @param projectileSpawner Pointer to projectile spawner system
      */
-    explicit ForcePodShootingSystem(
-        ProjectileSpawnerSystem* projectileSpawner);
+    explicit ForcePodShootingSystem(ProjectileSpawnerSystem* projectileSpawner);
 
     /**
      * @brief Update Force Pod shooting logic

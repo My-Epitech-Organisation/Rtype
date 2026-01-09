@@ -120,7 +120,7 @@ RtypeEntityFactory::createNetworkEntityFactory(
 
             case ::rtype::network::EntityType::Pickup:
                 setupPickupEntity(reg, assetsManager, entity, event.entityId,
-                                 event.subType);
+                                  event.subType);
                 break;
 
             case ::rtype::network::EntityType::Obstacle:
@@ -379,22 +379,24 @@ void RtypeEntityFactory::setupPickupEntity(
             auto& texture = assetsManager->textureManager->get(configId);
             reg.emplaceComponent<Image>(entity, texture);
             auto texSize = texture.getSize();
-            
-            // Special handling for force_pod spritesheet (205x18 with 11 frames of 18x18)
+
+            // Special handling for force_pod spritesheet (205x18 with 11 frames
+            // of 18x18)
             if (configId == "force_pod") {
                 constexpr int frameWidth = 18;
                 constexpr int frameHeight = 18;
                 constexpr int frameIndex = 0;  // Use first frame
-                
+
                 reg.emplaceComponent<TextureRect>(
-                    entity, 
-                    std::pair<int, int>{frameIndex * frameWidth, 0},
+                    entity, std::pair<int, int>{frameIndex * frameWidth, 0},
                     std::pair<int, int>{frameWidth, frameHeight});
-                reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);  // Scale up 2x for visibility
-                
-                LOG_INFO("[RtypeEntityFactory] Using force_pod spritesheet frame 0 (" 
-                         << frameWidth << "x" << frameHeight << ")");
-                
+                reg.emplaceComponent<Size>(entity, 2.0f,
+                                           2.0f);  // Scale up 2x for visibility
+
+                LOG_INFO(
+                    "[RtypeEntityFactory] Using force_pod spritesheet frame 0 ("
+                    << frameWidth << "x" << frameHeight << ")");
+
                 reg.emplaceComponent<BoxingComponent>(
                     entity,
                     sf::FloatRect({0, 0},
@@ -405,12 +407,11 @@ void RtypeEntityFactory::setupPickupEntity(
                 LOG_INFO("[RtypeEntityFactory] Using texture for powerup: "
                          << configId << " size=" << texSize.x << "x"
                          << texSize.y);
-                
+
                 reg.emplaceComponent<BoxingComponent>(
                     entity,
-                    sf::FloatRect({0, 0},
-                                  {static_cast<float>(texSize.x),
-                                   static_cast<float>(texSize.y)}));
+                    sf::FloatRect({0, 0}, {static_cast<float>(texSize.x),
+                                           static_cast<float>(texSize.y)}));
             }
 
             reg.emplaceComponent<ColorTint>(entity, config.colorR,
@@ -421,8 +422,8 @@ void RtypeEntityFactory::setupPickupEntity(
             reg.getComponent<BoxingComponent>(entity).fillColor =
                 sf::Color(color.r, color.g, color.b, 45);
 
-            reg.emplaceComponent<::rtype::games::rtype::shared::
-                                     BoundingBoxComponent>(
+            reg.emplaceComponent<
+                ::rtype::games::rtype::shared::BoundingBoxComponent>(
                 entity, config.hitboxWidth, config.hitboxHeight);
         } catch (const std::exception& e) {
             LOG_WARNING("[RtypeEntityFactory] Texture not found for: "
@@ -438,9 +439,9 @@ void RtypeEntityFactory::setupPickupEntity(
             reg.getComponent<BoxingComponent>(entity).fillColor =
                 sf::Color(color.r, color.g, color.b, 45);
 
-            reg.emplaceComponent<::rtype::games::rtype::shared::
-                                     BoundingBoxComponent>(entity, 24.0f,
-                                                           24.0f);
+            reg.emplaceComponent<
+                ::rtype::games::rtype::shared::BoundingBoxComponent>(
+                entity, 24.0f, 24.0f);
         }
     } else {
         // Fallback to Rectangle if no assetsManager
@@ -456,8 +457,9 @@ void RtypeEntityFactory::setupPickupEntity(
         reg.getComponent<BoxingComponent>(entity).fillColor =
             sf::Color(color.r, color.g, color.b, 45);
 
-        reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-            entity, 24.0f, 24.0f);
+        reg.emplaceComponent<
+            ::rtype::games::rtype::shared::BoundingBoxComponent>(entity, 24.0f,
+                                                                 24.0f);
     }
 
     reg.emplaceComponent<ZIndex>(entity, 0);
@@ -498,25 +500,29 @@ void RtypeEntityFactory::setupForcePodEntity(
 
     auto& forcePodTexture = assetsManager->textureManager->get("force_pod");
     reg.emplaceComponent<Image>(entity, forcePodTexture);
-    reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
-                                      std::pair<int, int>({frameWidth, frameHeight}));
+    reg.emplaceComponent<TextureRect>(
+        entity, std::pair<int, int>({0, 0}),
+        std::pair<int, int>({frameWidth, frameHeight}));
     reg.emplaceComponent<Animation>(entity, frameCount, 0.08f, false);
     reg.emplaceComponent<Size>(entity, 2.0, 2.0);
-    
+
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, 32.0f, 32.0f);
     reg.emplaceComponent<BoxingComponent>(
         entity, sf::FloatRect({0, 0}, {32.0f, 32.0f}));
-    reg.getComponent<BoxingComponent>(entity).outlineColor = sf::Color(100, 200, 255);
-    reg.getComponent<BoxingComponent>(entity).fillColor = sf::Color(100, 200, 255, 40);
-    
+    reg.getComponent<BoxingComponent>(entity).outlineColor =
+        sf::Color(100, 200, 255);
+    reg.getComponent<BoxingComponent>(entity).fillColor =
+        sf::Color(100, 200, 255, 40);
+
     reg.emplaceComponent<ForcePodVisual>(entity);
     reg.emplaceComponent<ZIndex>(entity, 1);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<shared::ForcePodTag>(entity);
-    
-    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
-                  "[RtypeEntityFactory] Force Pod entity created with animation");
+
+    LOG_DEBUG_CAT(
+        ::rtype::LogCategory::ECS,
+        "[RtypeEntityFactory] Force Pod entity created with animation");
 }
 
 }  // namespace rtype::games::rtype::client

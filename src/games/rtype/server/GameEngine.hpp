@@ -17,10 +17,10 @@
 
 #include "../shared/Config/PrefabLoader.hpp"
 #include "../shared/Systems/Systems.hpp"
-#include "Systems/Spawner/DataDrivenSpawnerSystem.hpp"
 #include "Systems/ForcePod/ForcePodAttachmentSystem.hpp"
 #include "Systems/ForcePod/ForcePodLaunchSystem.hpp"
 #include "Systems/ForcePod/ForcePodShootingSystem.hpp"
+#include "Systems/Spawner/DataDrivenSpawnerSystem.hpp"
 #include "Systems/Systems.hpp"
 
 namespace rtype::games::rtype::server {
