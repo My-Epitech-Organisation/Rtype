@@ -35,10 +35,11 @@ bool EventSystem::_isPointInRect(::rtype::display::Vector2i pixelPos,
                                  const Rectangle& rect,
                                  ::rtype::display::Vector2f position) const {
     if (!_display) return false;
-    return (pixelPos.x >= position.x &&
-            pixelPos.x <= position.x + rect.size.first &&
-            pixelPos.y >= position.y &&
-            pixelPos.y <= position.y + rect.size.second);
+    auto worldPos = _display->mapPixelToCoords(pixelPos);
+    return (worldPos.x >= position.x &&
+            worldPos.x <= position.x + rect.size.first &&
+            worldPos.y >= position.y &&
+            worldPos.y <= position.y + rect.size.second);
 }
 
 void EventSystem::update(ECS::Registry& registry, float /*dt*/) {

@@ -183,6 +183,13 @@ namespace rtype::display {
         virtual void resetView() = 0;
 
         /**
+         * @brief Maps pixel coordinates to world coordinates based on the current view.
+         * @param pixelPos Pixel position in the window
+         * @return World coordinates
+         */
+        [[nodiscard]] virtual Vector2<float> mapPixelToCoords(const Vector2<int>& pixelPos) const = 0;
+
+        /**
          * @brief Returns the current window size in pixels.
          * @return Window size
          */

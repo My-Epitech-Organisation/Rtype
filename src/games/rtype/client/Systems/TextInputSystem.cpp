@@ -24,8 +24,9 @@ bool TextInputSystem::handleEvent(ECS::Registry& registry,
                                   const ::rtype::display::Event& event) {
     if (event.type == ::rtype::display::EventType::MouseButtonPressed) {
         if (event.mouseButton.button == ::rtype::display::MouseButton::Left) {
-            handleClick(registry, static_cast<float>(event.mouseButton.x),
-                        static_cast<float>(event.mouseButton.y));
+            auto worldPos = _display->mapPixelToCoords(
+                {event.mouseButton.x, event.mouseButton.y});
+            handleClick(registry, worldPos.x, worldPos.y);
             return true;
         }
     }

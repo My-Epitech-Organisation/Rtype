@@ -50,6 +50,7 @@ namespace rtype::display {
         [[nodiscard]] Vector2<float> getViewCenter() const override;
         [[nodiscard]] Vector2<float> getViewSize() const override;
         void resetView() override;
+        [[nodiscard]] Vector2<float> mapPixelToCoords(const Vector2<int>& pixelPos) const override;
 
         [[nodiscard]] Vector2<int> getWindowSize() const override;
 

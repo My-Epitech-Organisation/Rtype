@@ -219,6 +219,14 @@ void SFMLDisplay::resetView() {
     }
 }
 
+Vector2f SFMLDisplay::mapPixelToCoords(const Vector2i& pixelPos) const {
+    if (_window) {
+        sf::Vector2f coords = _window->mapPixelToCoords({pixelPos.x, pixelPos.y}, _view);
+        return {coords.x, coords.y};
+    }
+    return {static_cast<float>(pixelPos.x), static_cast<float>(pixelPos.y)};
+}
+
 Vector2i SFMLDisplay::getWindowSize() const {
     if (_window) {
         sf::Vector2u size = _window->getSize();
