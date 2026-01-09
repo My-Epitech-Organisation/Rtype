@@ -25,8 +25,8 @@ struct WaveConfig {
     struct SpawnEntry {
         std::string enemyId;
         std::optional<float>
-            x;  ///< X position (nullopt = random on right edge)
-        std::optional<float> y;  ///< Y position (nullopt = random)
+            x;
+        std::optional<float> y;
         float delay = 0.0F;
         int32_t count = 1;
 
@@ -34,10 +34,21 @@ struct WaveConfig {
         [[nodiscard]] bool hasFixedY() const noexcept { return y.has_value(); }
     };
 
+    struct PowerUpEntry {
+        std::string powerUpId;
+        std::optional<float> x;
+        std::optional<float> y;
+        float delay = 0.0F;
+
+        [[nodiscard]] bool hasFixedX() const noexcept { return x.has_value(); }
+        [[nodiscard]] bool hasFixedY() const noexcept { return y.has_value(); }
+    };
+
     std::vector<SpawnEntry> spawns;
+    std::vector<PowerUpEntry> powerups;
 
     [[nodiscard]] bool isValid() const noexcept {
-        return waveNumber > 0 && !spawns.empty();
+        return waveNumber > 0 && (!spawns.empty() || !powerups.empty());
     }
 };
 

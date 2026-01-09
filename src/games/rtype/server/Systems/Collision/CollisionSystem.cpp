@@ -103,10 +103,14 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         bool bHasHealth = registry.hasComponent<HealthComponent>(entityB);
 
         if (aIsPickup && bIsPlayer) {
+            LOG_INFO("[CollisionSystem] Pickup-Player collision detected: pickup="
+                     << entityA.id << " player=" << entityB.id);
             handlePickupCollision(registry, cmdBuffer, entityB, entityA);
             continue;
         }
         if (bIsPickup && aIsPlayer) {
+            LOG_INFO("[CollisionSystem] Player-Pickup collision detected: player="
+                     << entityA.id << " pickup=" << entityB.id);
             handlePickupCollision(registry, cmdBuffer, entityA, entityB);
             continue;
         }
@@ -251,16 +255,27 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                                             ECS::CommandBuffer& cmdBuffer,
                                             ECS::Entity player,
                                             ECS::Entity pickup) {
+    LOG_INFO("[CollisionSystem] handlePickupCollision called: player="
+             << player.id << " pickup=" << pickup.id);
+    
     if (registry.hasComponent<DestroyTag>(pickup) ||
         registry.hasComponent<DestroyTag>(player)) {
+        LOG_INFO("[CollisionSystem] Entity already has DestroyTag, skipping");
         return;
     }
 
     if (!registry.hasComponent<PowerUpComponent>(pickup)) {
+        LOG_WARNING("[CollisionSystem] Pickup entity " << pickup.id
+                    << " missing PowerUpComponent!");
         return;
     }
 
     const auto& powerUp = registry.getComponent<PowerUpComponent>(pickup);
+
+    LOG_INFO("[CollisionSystem] PowerUp type="
+             << static_cast<int>(powerUp.type)
+             << " duration=" << powerUp.duration
+             << " magnitude=" << powerUp.magnitude);
 
     if (powerUp.type == shared::PowerUpType::None) {
         LOG_DEBUG_CAT(
@@ -335,15 +350,20 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
             }
             break;
         case shared::PowerUpType::ForcePod:
+            LOG_INFO("[CollisionSystem] Spawning Force Pod for player=" << player.id);
             if (!registry.hasComponent<shared::ForcePodTag>(player) &&
                 registry.hasComponent<NetworkIdComponent>(player)) {
                 const auto& playerNetId =
                     registry.getComponent<NetworkIdComponent>(player);
                 
+                LOG_INFO("[CollisionSystem] Creating Force Pod entity with parentNetId="
+                         << playerNetId.networkId);
+                
                 ECS::Entity forcePod = registry.spawnEntity();
                 registry.emplaceComponent<shared::ForcePodComponent>(
-                    forcePod, shared::ForcePodState::Attached, 40.0F, 0.0F,
+                    forcePod, shared::ForcePodState::Attached, 40.0F, -30.0F,
                     playerNetId.networkId);
+                registry.emplaceComponent<shared::PlayerTag>(forcePod);
                 registry.emplaceComponent<shared::ForcePodTag>(forcePod);
                 registry.emplaceComponent<TransformComponent>(forcePod, 0.0F,
                                                              0.0F, 0.0F);
@@ -355,6 +375,9 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                     registry.emplaceComponent<NetworkIdComponent>(forcePod,
                                                                  forcePodNetId);
                     
+                    LOG_INFO("[CollisionSystem] Emitting ForcePod spawn event: networkId="
+                             << forcePodNetId);
+                    
                     engine::GameEvent evt{};
                     evt.type = engine::GameEventType::EntitySpawned;
                     evt.entityNetworkId = forcePodNetId;
@@ -363,6 +386,8 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                     evt.y = 0.0F;
                     _emitEvent(evt);
                 }
+            } else {
+                LOG_INFO("[CollisionSystem] Player already has ForcePod or missing NetworkIdComponent");
             }
             break;
         case shared::PowerUpType::None:
@@ -379,6 +404,10 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
         evt.subType = static_cast<uint8_t>(powerUp.type);
         evt.duration = powerUp.duration;
         _emitEvent(evt);
+        
+        LOG_INFO("[CollisionSystem] Emitted PowerUpApplied event: playerId="
+                 << netId.networkId << " type=" << static_cast<int>(powerUp.type)
+                 << " duration=" << powerUp.duration);
     }
 
     cmdBuffer.emplaceComponentDeferred<DestroyTag>(pickup, DestroyTag{});
