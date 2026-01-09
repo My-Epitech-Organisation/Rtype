@@ -59,6 +59,11 @@ std::uint8_t RtypeInputHandler::getInputMask(
         if (keyShoot.has_value() && pressedKeys_.contains(*keyShoot)) {
             inputMask |= ::rtype::network::InputMask::kShoot;
         }
+
+        auto keyForcePod = keybinds->getKeyBinding(GameAction::FORCE_POD);
+        if (keyForcePod.has_value() && pressedKeys_.contains(*keyForcePod)) {
+            inputMask |= ::rtype::network::InputMask::kForcePod;
+        }
     } else {
         std::optional<unsigned int> jid;
         for (unsigned int i = 0; i < sf::Joystick::Count; ++i) {
