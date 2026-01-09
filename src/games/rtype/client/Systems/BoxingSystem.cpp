@@ -36,7 +36,8 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
     registry
         .view<::rtype::games::rtype::shared::TransformComponent,
               ::rtype::games::rtype::shared::BoundingBoxComponent>()
-        .each([this, &registry](auto entity, const auto& transform, const auto& bbox) {
+        .each([this, &registry](auto entity, const auto& transform,
+                                const auto& bbox) {
             ::rtype::display::Vector2f position;
             position.x = transform.x - bbox.width / 2.0f;
             position.y = transform.y - bbox.height / 2.0f;
