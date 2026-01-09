@@ -36,8 +36,8 @@ void ChaserRotationSystem::update(ECS::Registry& registry, float dt) {
             const TransformComponent& transform) {
             if (!foundPlayer) {
                 targetPlayer = entity;
-                targetX = transform.x + 33.0f;
-                targetY = transform.y + 34.0f;
+                targetX = transform.x;
+                targetY = transform.y;
                 foundPlayer = true;
             }
         });
