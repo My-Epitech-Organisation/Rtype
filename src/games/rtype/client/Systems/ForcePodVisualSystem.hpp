@@ -13,8 +13,8 @@
 
 #include "../../shared/Components/ForcePodComponent.hpp"
 #include "../../shared/Components/Tags.hpp"
+#include "../Components/ColorTintComponent.hpp"
 #include "../Components/ForcePodVisualComponent.hpp"
-#include "../Components/ImageComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -28,7 +28,7 @@ class ForcePodVisualSystem : public ::rtype::engine::ASystem {
    private:
     void updateGlowEffect(ECS::Registry& registry,
                           const shared::ForcePodComponent& pod,
-                          ForcePodVisual& visual, Image& image,
+                          ForcePodVisual& visual, ColorTint& colorTint,
                           float deltaTime);
 
     void createTrailParticle(ECS::Registry& registry, float x, float y);
