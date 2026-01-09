@@ -9,6 +9,7 @@
 #include "CollisionSystem.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -353,19 +354,52 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
         case shared::PowerUpType::ForcePod:
             LOG_INFO("[CollisionSystem] Spawning Force Pod for player="
                      << player.id);
-            if (!registry.hasComponent<shared::ForcePodTag>(player) &&
-                registry.hasComponent<NetworkIdComponent>(player)) {
+            if (registry.hasComponent<NetworkIdComponent>(player)) {
                 const auto& playerNetId =
                     registry.getComponent<NetworkIdComponent>(player);
+                int existingPodCount = 0;
+                auto view = registry.view<shared::ForcePodTag, shared::ForcePodComponent>();
+                view.each([&existingPodCount, &playerNetId](
+                    ECS::Entity /*entity*/, 
+                    const shared::ForcePodTag&,
+                    const shared::ForcePodComponent& podComp) {
+                    if (podComp.ownerNetworkId == playerNetId.networkId) {
+                        existingPodCount++;
+                    }
+                });
+
+                const float distance = 60.0F;
+                const std::vector<std::pair<float, float>> positions = {
+                    {0.0F, -distance},
+                    {0.0F, distance},
+                    {distance, 0.0F},
+                    {-distance, 0.0F},
+                    {distance * 0.7F, -distance * 0.7F},
+                    {distance * 0.7F, distance * 0.7F},
+                    {-distance * 0.7F, -distance * 0.7F},
+                    {-distance * 0.7F, distance * 0.7F}
+                };
+
+                float offsetX = 0.0F;
+                float offsetY = 0.0F;
+                if (existingPodCount < static_cast<int>(positions.size())) {
+                    offsetX = positions[existingPodCount].first;
+                    offsetY = positions[existingPodCount].second;
+                } else {
+                    const float angle = 2.0F * 3.14159265359F * existingPodCount / 8.0F;
+                    offsetX = distance * std::cos(angle);
+                    offsetY = distance * std::sin(angle);
+                }
 
                 LOG_INFO(
                     "[CollisionSystem] Creating Force Pod entity with "
-                    "parentNetId="
-                    << playerNetId.networkId);
+                    "parentNetId=" << playerNetId.networkId
+                    << " at position " << existingPodCount << " (offset: "
+                    << offsetX << ", " << offsetY << ")");
 
                 ECS::Entity forcePod = registry.spawnEntity();
                 registry.emplaceComponent<shared::ForcePodComponent>(
-                    forcePod, shared::ForcePodState::Attached, 40.0F, -30.0F,
+                    forcePod, shared::ForcePodState::Attached, offsetX, offsetY,
                     playerNetId.networkId);
                 registry.emplaceComponent<shared::PlayerTag>(forcePod);
                 registry.emplaceComponent<shared::ForcePodTag>(forcePod);
@@ -375,7 +409,7 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                                                                 32.0F);
 
                 if (_emitEvent) {
-                    uint32_t forcePodNetId = playerNetId.networkId + 10000;
+                    uint32_t forcePodNetId = playerNetId.networkId + 10000 + existingPodCount;
                     registry.emplaceComponent<NetworkIdComponent>(
                         forcePod, forcePodNetId);
 
@@ -394,8 +428,7 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                 }
             } else {
                 LOG_INFO(
-                    "[CollisionSystem] Player already has ForcePod or missing "
-                    "NetworkIdComponent");
+                    "[CollisionSystem] Player missing NetworkIdComponent");
             }
             break;
         case shared::PowerUpType::None:
