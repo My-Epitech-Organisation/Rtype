@@ -55,7 +55,8 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
     if (registry.hasComponent<Rotation>(entity)) {
         const auto& rot = registry.getComponent<Rotation>(entity);
         rotation = rot.angle;
-        LOG_DEBUG("[RenderSystem] Entity " << entity.id << " has rotation=" << rotation << "°");
+        LOG_DEBUG("[RenderSystem] Entity "
+                  << entity.id << " has rotation=" << rotation << "°");
     }
 
     display::Vector2f position = {static_cast<float>(pos.x),

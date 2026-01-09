@@ -9,7 +9,6 @@
 
 #include <cmath>
 
-#include "Logger/Macros.hpp"
 #include "../../shared/Components/EnemyTypeComponent.hpp"
 #include "../../shared/Components/PlayerIdComponent.hpp"
 #include "../../shared/Components/TransformComponent.hpp"
@@ -18,6 +17,7 @@
 #include "../Components/ImageComponent.hpp"
 #include "../Components/RotationComponent.hpp"
 #include "../Components/TextureRectComponent.hpp"
+#include "Logger/Macros.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -32,7 +32,8 @@ void ChaserRotationSystem::update(ECS::Registry& registry, float dt) {
     float targetY = 0.0f;
 
     registry.view<shared::PlayerIdComponent, TransformComponent>().each(
-        [&](auto entity, const shared::PlayerIdComponent&, const TransformComponent& transform) {
+        [&](auto entity, const shared::PlayerIdComponent&,
+            const TransformComponent& transform) {
             if (!foundPlayer) {
                 targetPlayer = entity;
                 targetX = transform.x + 33.0f;
@@ -47,9 +48,12 @@ void ChaserRotationSystem::update(ECS::Registry& registry, float dt) {
 
     constexpr float EXPLOSION_DISTANCE = 150.0f;
     int chaserCount = 0;
-    registry.view<EnemyTypeComponent, TransformComponent, Rotation, Animation, ChaserExplosion>().each(
-        [&](auto entity, const EnemyTypeComponent& enemyType,
-            const TransformComponent& transform, Rotation& rotation, Animation& anim, ChaserExplosion& explosion) {
+    registry
+        .view<EnemyTypeComponent, TransformComponent, Rotation, Animation,
+              ChaserExplosion>()
+        .each([&](auto entity, const EnemyTypeComponent& enemyType,
+                  const TransformComponent& transform, Rotation& rotation,
+                  Animation& anim, ChaserExplosion& explosion) {
             if (enemyType.variant != EnemyVariant::Chaser) {
                 return;
             }
@@ -57,17 +61,21 @@ void ChaserRotationSystem::update(ECS::Registry& registry, float dt) {
             float dx = targetX - transform.x;
             float dy = targetY - transform.y;
             float distance = std::sqrt(dx * dx + dy * dy);
-            
+
             // Check if chaser should start exploding
             if (distance <= EXPLOSION_DISTANCE && !explosion.isExploding) {
-                // Mark as exploding and trigger animation to frame 2 (start of explosion)
+                // Mark as exploding and trigger animation to frame 2 (start of
+                // explosion)
                 explosion.isExploding = true;
                 explosion.explosionTimer = 0.0f;
-                anim.currentFrame = 2;  // Jump to frame 2 (first explosion frame)
+                anim.currentFrame =
+                    2;  // Jump to frame 2 (first explosion frame)
                 anim.elapsedTime = 0.0f;
-                LOG_DEBUG("[ChaserRotation] Chaser " << entity.id << " starting explosion at distance " << distance);
+                LOG_DEBUG("[ChaserRotation] Chaser "
+                          << entity.id << " starting explosion at distance "
+                          << distance);
             }
-            
+
             float angleRad = std::atan2(dy, dx);
             float angleDeg = angleRad * 180.0f / 3.14159265f;
             rotation.angle = angleDeg;

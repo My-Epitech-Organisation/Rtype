@@ -7,10 +7,10 @@
 
 #include "ChaserExplosionSystem.hpp"
 
-#include "Logger/Macros.hpp"
 #include "../../shared/Components/EnemyTypeComponent.hpp"
 #include "../Components/AnnimationComponent.hpp"
 #include "../Components/ChaserExplosionComponent.hpp"
+#include "Logger/Macros.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -26,9 +26,10 @@ void ChaserExplosionSystem::update(ECS::Registry& registry, float dt) {
             if (enemyType.variant != EnemyVariant::Chaser) {
                 return;
             }
-            
+
             if (!explosion.isExploding) {
-                // Keep chaser on frame 1 (normal sprite) until explosion triggers
+                // Keep chaser on frame 1 (normal sprite) until explosion
+                // triggers
                 anim.currentFrame = 1;
                 anim.elapsedTime = 0.0f;
             } else {

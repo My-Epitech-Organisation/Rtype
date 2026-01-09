@@ -16,7 +16,7 @@ namespace rtype::games::rtype::client {
 struct ChaserExplosion {
     bool isExploding;
     float explosionTimer;
-    
+
     explicit ChaserExplosion(bool exploding = false, float timer = 0.0f)
         : isExploding(exploding), explosionTimer(timer) {}
 };

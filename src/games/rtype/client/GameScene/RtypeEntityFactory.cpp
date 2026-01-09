@@ -288,11 +288,13 @@ void RtypeEntityFactory::setupBydosEntity(
                                               std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({113, 369}));
             // 6 frames total: frame 1 = normal, frames 2-6 = explosion sequence
-            // oneTime=true so it doesn't loop, but we manually control when it starts
+            // oneTime=true so it doesn't loop, but we manually control when it
+            // starts
             reg.emplaceComponent<Animation>(entity, 6, 0.12f, true);
             reg.emplaceComponent<Size>(entity, 0.6f, 0.6f);
             reg.emplaceComponent<Rotation>(entity, 0.0f);
-            reg.emplaceComponent<ChaserExplosion>(entity, false, 0.0f);  // Not exploding at start
+            reg.emplaceComponent<ChaserExplosion>(
+                entity, false, 0.0f);  // Not exploding at start
             break;
         case shared::EnemyVariant::Wave:
             LOG_INFO_CAT(::rtype::LogCategory::ECS,

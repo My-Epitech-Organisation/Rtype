@@ -43,7 +43,7 @@
 namespace rtype::games::rtype::client {
 class ChaserRotationSystem;
 class ChaserExplosionSystem;
-}
+}  // namespace rtype::games::rtype::client
 
 /**
  * @brief Main graphics class managing the game window and rendering pipeline.

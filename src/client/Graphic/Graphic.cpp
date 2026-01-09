@@ -162,8 +162,8 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::client::AnimationSystem>();
     this->_chaserRotationSystem =
         std::make_unique<::rtype::games::rtype::client::ChaserRotationSystem>();
-    this->_chaserExplosionSystem =
-        std::make_unique<::rtype::games::rtype::client::ChaserExplosionSystem>();
+    this->_chaserExplosionSystem = std::make_unique<
+        ::rtype::games::rtype::client::ChaserExplosionSystem>();
     this->_playerPowerUpVisualSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_powerUpCollectionSystem = std::make_unique<
