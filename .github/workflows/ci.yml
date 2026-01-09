@@ -466,14 +466,20 @@ jobs:
           path: build/dist/server/
           if-no-files-found: warn
 
+      - name: Prepare Linux Client Distribution
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          mkdir -p build/dist/client
+          cp build/src/client/r-type_client build/dist/client/
+          cp -r build/lib/display/**/*.so build/dist/client/ 2>/dev/null || true
+
       - name: Upload Client Artifact (Linux)
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           name: r-type_client-${{ matrix.os }}
-          path: |
-            build/src/client/r-type_client
-            build/lib/display/**/*.so
+          path: build/dist/client/
           if-no-files-found: warn
 
       - name: Upload Server Artifact (Linux)
