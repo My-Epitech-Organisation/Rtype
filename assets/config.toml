@@ -20,7 +20,7 @@ ForcePodReturn = "audio/laserSound.mp3"
 [Textures]
 Player = "img/playerTexture.gif"
 EnemyNormal = "img/bdosTextureNormal.gif"
-EnemyChaser = "img/bdosTextureChaser.gif"
+EnemyChaser = "img/chaser.png"
 EnemyHeavy = "img/bdosTextureHeavy.gif"
 EnemyPatrol = "img/bdosTexturePatrol.gif"
 EnemyShooter = "img/bdosTextureShooter.gif"
