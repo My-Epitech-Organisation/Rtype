@@ -17,6 +17,7 @@ enum class GameAction : std::uint8_t {
     MOVE_RIGHT,
     SHOOT,
     CHANGE_AMMO,
+    FORCE_POD,
     PAUSE,
     NONE
 };
