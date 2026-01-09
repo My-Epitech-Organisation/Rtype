@@ -18,25 +18,14 @@ number = 1
 spawn_delay = 0.8
 
 [[wave.spawn]]
-enemy = "basic"
-delay = 0.0
-count = 1
-
-[[wave.spawn]]
-enemy = "heavy"
-delay = 0.0
-count = 1
-
-[[wave.spawn]]
 enemy = "chaser"
 delay = 0.0
 count = 1
 
 [[wave.spawn]]
-enemy = "patrol"
-delay = 1.0
-count = 6
-
+enemy = "basic"
+delay = 0.0
+count = 1
 
 [[wave.powerup]]
 id = "force_pod"

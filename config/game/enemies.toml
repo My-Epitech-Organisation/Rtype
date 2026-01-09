@@ -96,8 +96,8 @@ color = [100, 255, 100, 255]  # Green
 behavior = "chase"
 speed = 250.0
 
-hitbox_width = 50.0
-hitbox_height = 60.0
+hitbox_width = 68.0
+hitbox_height = 68.0
 
 can_shoot = false
 
