@@ -62,14 +62,11 @@ void ChaserRotationSystem::update(ECS::Registry& registry, float dt) {
             float dy = targetY - transform.y;
             float distance = std::sqrt(dx * dx + dy * dy);
 
-            // Check if chaser should start exploding
             if (distance <= EXPLOSION_DISTANCE && !explosion.isExploding) {
-                // Mark as exploding and trigger animation to frame 2 (start of
-                // explosion)
                 explosion.isExploding = true;
                 explosion.explosionTimer = 0.0f;
                 anim.currentFrame =
-                    2;  // Jump to frame 2 (first explosion frame)
+                    2;
                 anim.elapsedTime = 0.0f;
                 LOG_DEBUG("[ChaserRotation] Chaser "
                           << entity.id << " starting explosion at distance "
