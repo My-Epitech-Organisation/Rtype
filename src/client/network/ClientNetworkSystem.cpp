@@ -416,19 +416,28 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
 }
 
 void ClientNetworkSystem::handlePowerUpEvent(const PowerUpEvent& event) {
+    LOG_INFO("[ClientNetworkSystem] *** RECEIVED POWERUP EVENT ***: playerId="
+             << event.playerId << " type=" << static_cast<int>(event.powerUpType)
+             << " duration=" << event.duration);
+    
     auto it = networkIdToEntity_.find(event.playerId);
     if (it == networkIdToEntity_.end()) {
+        LOG_WARNING("[ClientNetworkSystem] PowerUp event for unknown player: "
+                    << event.playerId);
         return;
     }
 
     ECS::Entity entity = it->second;
     if (!registry_->isAlive(entity)) {
+        LOG_WARNING("[ClientNetworkSystem] PowerUp event for dead entity");
         return;
     }
 
     const auto powerUpType =
         static_cast<rtype::games::rtype::shared::PowerUpType>(
             event.powerUpType);
+
+    LOG_INFO("[ClientNetworkSystem] Applying powerup to entity " << entity.id);
 
     auto& active =
         registry_->hasComponent<
@@ -446,6 +455,10 @@ void ClientNetworkSystem::handlePowerUpEvent(const PowerUpEvent& event) {
     active.shieldActive =
         powerUpType == rtype::games::rtype::shared::PowerUpType::Shield;
     active.hasOriginalCooldown = false;
+
+    LOG_INFO("[ClientNetworkSystem] ActivePowerUpComponent set: type="
+             << static_cast<int>(active.type) << " remainingTime="
+             << active.remainingTime);
 
     if (registry_
             ->hasComponent<rtype::games::rtype::shared::TransformComponent>(
