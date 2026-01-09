@@ -403,13 +403,21 @@ void RtypeEntityFactory::setupMissileEntity(
     reg.emplaceComponent<BoxingComponent>(
         entity, ::rtype::display::Vector2f{0, 0},
         ::rtype::display::Vector2f{hitboxWidth, hitboxHeight});
-    reg.emplaceComponent<Animation>(entity, 4, 0.5, true);
+    reg.emplaceComponent<Animation>(entity, 4, 0.1, false);
     reg.getComponent<BoxingComponent>(entity).outlineColor = {0, 220, 180, 255};
     reg.getComponent<BoxingComponent>(entity).fillColor = {0, 220, 180, 35};
     reg.emplaceComponent<ZIndex>(entity, 1);
     reg.emplaceComponent<shared::LifetimeComponent>(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
     reg.emplaceComponent<GameTag>(entity);
+    if (reg.hasComponent<shared::VelocityComponent>(entity)) {
+        const auto& vel = reg.getComponent<shared::VelocityComponent>(entity);
+        LOG_DEBUG("[RtypeEntityFactory] Projectile velocity: vx=" << vel.vx << " vy=" << vel.vy);
+        if (vel.vx < 0.0f) {
+            reg.emplaceComponent<Rotation>(entity, 180.0f);
+            LOG_DEBUG("[RtypeEntityFactory] Added 180° rotation to enemy projectile");
+        }
+    }
     auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
     lib->playSFX(assetsManager->soundManager->get("laser_sfx"));
 
