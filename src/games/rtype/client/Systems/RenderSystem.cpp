@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "../AllComponents.hpp"
+#include "../Components/RotationComponent.hpp"
 #include "../shared/Components/Tags.hpp"
 #include "ECS.hpp"
 #include "Logger/Macros.hpp"
@@ -50,11 +51,18 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
         rect = texture.rect;
     }
 
+    float rotation = -999.0f;
+    if (registry.hasComponent<Rotation>(entity)) {
+        const auto& rot = registry.getComponent<Rotation>(entity);
+        rotation = rot.angle;
+        LOG_DEBUG("[RenderSystem] Entity " << entity.id << " has rotation=" << rotation << "°");
+    }
+
     display::Vector2f position = {static_cast<float>(pos.x),
                                   static_cast<float>(pos.y)};
 
     this->_display->drawSprite(img.textureName, position, rect, scale,
-                               img.color);
+                               img.color, rotation);
 }
 
 void RenderSystem::_renderRectangles(ECS::Registry& registry,
