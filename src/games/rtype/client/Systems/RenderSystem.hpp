@@ -16,7 +16,7 @@
 #include "ASystem.hpp"
 #include "ECS.hpp"
 
-constexpr int kOffsetTextInput = 20;
+constexpr int kTextInputHorizontalPadding = 20;
 
 namespace rtype::games::rtype::client {
 

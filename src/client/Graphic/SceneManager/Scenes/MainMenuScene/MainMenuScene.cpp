@@ -527,9 +527,7 @@ void MainMenuScene::update(float dt) {
             });
 }
 
-void MainMenuScene::render(std::shared_ptr<rtype::display::IDisplay> window) {
-    // TextInput rendering is handled by RenderSystem
-}
+void MainMenuScene::render(std::shared_ptr<rtype::display::IDisplay> window) {}
 
 void MainMenuScene::pollEvents(const rtype::display::Event& e) {
     if (_textInputSystem) {
@@ -569,11 +567,33 @@ MainMenuScene::MainMenuScene(
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         playBtn, 1);
     this->_listEntity.push_back(playBtn);
+    auto LevelConfiguratorBtn = EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text("main_font",
+                                          rtype::display::Color::White(), 36,
+                                          "Level Configurator"),
+        rtype::games::rtype::shared::TransformComponent(100, 470),
+        rtype::games::rtype::client::Rectangle({400, 75},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
+        this->_assetsManager, std::function<void()>([switchToScene]() {
+            try {
+                switchToScene(SceneManager::LEVEL_CREATOR);
+            } catch (SceneNotFound& e) {
+                LOG_ERROR_CAT(
+                    ::rtype::LogCategory::UI,
+                    std::string("Error switching to Level Configurator: ") +
+                        std::string(e.what()));
+            }
+        }));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        LevelConfiguratorBtn, 1);
+    this->_listEntity.push_back(LevelConfiguratorBtn);
     auto howToPlayBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             "main_font", rtype::display::Color::White(), 36, "How to Play"),
-        rtype::games::rtype::shared::TransformComponent(100, 470),
+        rtype::games::rtype::shared::TransformComponent(100, 590),
         rtype::games::rtype::client::Rectangle({400, 75},
                                                rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
@@ -593,7 +613,7 @@ MainMenuScene::MainMenuScene(
         this->_registry,
         rtype::games::rtype::client::Text(
             "main_font", rtype::display::Color::White(), 36, "Settings"),
-        rtype::games::rtype::shared::TransformComponent(100, 590),
+        rtype::games::rtype::shared::TransformComponent(100, 710),
         rtype::games::rtype::client::Rectangle({400, 75},
                                                rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
@@ -614,7 +634,7 @@ MainMenuScene::MainMenuScene(
         this->_registry,
         rtype::games::rtype::client::Text(
             "main_font", rtype::display::Color::White(), 36, "Quit"),
-        rtype::games::rtype::shared::TransformComponent(100, 710),
+        rtype::games::rtype::shared::TransformComponent(100, 830),
         rtype::games::rtype::client::Rectangle({400, 75},
                                                rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
