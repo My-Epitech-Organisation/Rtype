@@ -141,16 +141,30 @@ bool SFMLDisplay::isFullscreen() const {
     return this->_windowIsFullscreen;
 }
 
-void SFMLDisplay::drawSprite(const std::string& textureName, const Vector2f& position, const IntRect& rect, const Vector2f& scale, const Color& color) {
+void SFMLDisplay::drawSprite(const std::string& textureName, const Vector2f& position, const IntRect& rect, const Vector2f& scale, const Color& color, float rotation) {
     if (!this->_renderTarget || _textures.find(textureName) == _textures.end()) return;
 
     sf::Sprite sprite(_textures[textureName]->getSFMLTexture());
     if (rect.width > 0 && rect.height > 0) {
         sprite.setTextureRect(sf::IntRect({rect.left, rect.top}, {rect.width, rect.height}));
     }
-    sprite.setPosition({position.x, position.y});
+    bool hasRotationComponent = (rotation != -999.0f);
+    sf::Vector2f adjustedPosition = {position.x, position.y};
+    if (hasRotationComponent) {
+        sf::FloatRect bounds = sprite.getLocalBounds();
+        sprite.setOrigin({bounds.size.x / 2.0f, bounds.size.y / 2.0f});
+        adjustedPosition.x += (bounds.size.x * scale.x) / 2.0f;
+        adjustedPosition.y += (bounds.size.y * scale.y) / 2.0f;
+    }
+
+    sprite.setPosition(adjustedPosition);
     sprite.setScale({scale.x, scale.y});
     sprite.setColor(sf::Color(color.r, color.g, color.b, color.a));
+
+    if (hasRotationComponent) {
+        sprite.setRotation(sf::degrees(rotation));
+    }
+
     this->_renderTarget->draw(sprite);
 }
 
@@ -161,7 +175,7 @@ void SFMLDisplay::drawText(const std::string& text, const std::string& fontName,
     sfText.setString(text);
     sfText.setCharacterSize(size);
     sfText.setFillColor(sf::Color(color.r, color.g, color.b, color.a));
-    
+
     sf::FloatRect bounds = sfText.getLocalBounds();
     sfText.setOrigin({bounds.position.x, bounds.position.y});
     sfText.setPosition({position.x, position.y});
