@@ -40,6 +40,10 @@
 #include "SceneManager/SceneManager.hpp"
 #include "Systems/AnimationSystem.hpp"
 
+namespace rtype::games::rtype::client {
+class ChaserRotationSystem;
+}
+
 /**
  * @brief Main graphics class managing the game window and rendering pipeline.
  *
@@ -134,6 +138,8 @@ class Graphic {
         _playerAnimationSystem;
     std::unique_ptr<::rtype::games::rtype::client::AnimationSystem>
         _animationSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ChaserRotationSystem>
+        _chaserRotationSystem;
     std::unique_ptr<::rtype::games::rtype::client::PlayerPowerUpVisualSystem>
         _playerPowerUpVisualSystem;
     std::unique_ptr<::rtype::games::rtype::client::PowerUpCollectionSystem>

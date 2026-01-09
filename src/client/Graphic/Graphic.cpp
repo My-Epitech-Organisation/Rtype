@@ -18,6 +18,7 @@
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "Systems/AnimationSystem.hpp"
+#include "Systems/ChaserRotationSystem.hpp"
 #include "games/rtype/client/AllComponents.hpp"
 #include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"
 #include "games/rtype/client/GameScene/RtypeInputHandler.hpp"
@@ -92,6 +93,7 @@ void Graphic::_update() {
         this->_systemScheduler->runSystem("color_tint");
         this->_systemScheduler->runSystem("player_animation");
         this->_systemScheduler->runSystem("animation");
+        this->_systemScheduler->runSystem("chaser_rotation");
         this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
     }
@@ -156,6 +158,8 @@ void Graphic::_initializeSystems() {
         ::rtype::games::rtype::client::PlayerAnimationSystem>();
     this->_animationSystem =
         std::make_unique<::rtype::games::rtype::client::AnimationSystem>();
+    this->_chaserRotationSystem =
+        std::make_unique<::rtype::games::rtype::client::ChaserRotationSystem>();
     this->_playerPowerUpVisualSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_powerUpCollectionSystem = std::make_unique<
@@ -218,6 +222,14 @@ void Graphic::_initializeSystems() {
                                       },
                                       {"reset_triggers"});
 
+    this->_systemScheduler->addSystem("chaser_rotation",
+                                      [this](ECS::Registry& reg) {
+                                          LOG_DEBUG("[Graphic] chaser_rotation lambda called");
+                                          _chaserRotationSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {});
+
     this->_systemScheduler->addSystem("powerup_visuals",
                                       [this](ECS::Registry& reg) {
                                           _playerPowerUpVisualSystem->update(
@@ -275,7 +287,7 @@ void Graphic::_initializeSystems() {
     this->_systemScheduler->addSystem(
         "render",
         [this](ECS::Registry& reg) { this->_renderSystem->update(reg, 0.f); },
-        {"client_destroy"});
+        {"client_destroy", "chaser_rotation"});
 
     this->_systemScheduler->addSystem(
         "boxing",
@@ -469,6 +481,7 @@ Graphic::~Graphic() {
     _powerUpCollectionSystem.reset();
     _playerPowerUpVisualSystem.reset();
     _animationSystem.reset();
+    _chaserRotationSystem.reset();
     _playerAnimationSystem.reset();
     _colorTintSystem.reset();
     if (_registry) {
