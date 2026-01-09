@@ -177,6 +177,20 @@ class GameStateManager {
     }
 
     /**
+     * @brief Set the default countdown duration used when auto-starting
+     */
+    void setDefaultCountdown(float seconds) noexcept {
+        _defaultCountdown = seconds;
+    }
+
+    /**
+     * @brief Get the default countdown duration
+     */
+    [[nodiscard]] float getDefaultCountdown() const noexcept {
+        return _defaultCountdown;
+    }
+
+    /**
      * @brief Set callback for when a player's ready state changes
      */
     void setOnPlayerReadyStateChanged(
@@ -253,7 +267,8 @@ class GameStateManager {
     bool _countdownActive{false};
     float _countdownRemaining{0.0f};
 
-    float _defaultCountdown{3.0f};
+    static constexpr float DEFAULT_COUNTDOWN = 3.0f;
+    float _defaultCountdown{DEFAULT_COUNTDOWN};
     std::function<void(float)> _onCountdownStartedCallback;
     std::function<void()> _onCountdownCancelledCallback;
 };

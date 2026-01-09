@@ -151,7 +151,16 @@ void GameStateManager::checkAutoStart() {
 
     LOG_INFO("[GameStateManager] Auto-start conditions met: ready="
              << _readyPlayers.size() << " connected=" << _connectedPlayerCount
-             << " minRequired=" << _minPlayersToStart);
+             << " minRequired=" << _minPlayersToStart
+             << " defaultCountdown=" << _defaultCountdown);
+
+    if (_defaultCountdown <= 0.0f) {
+        LOG_INFO(
+            "[GameStateManager] Default countdown is zero - transitioning to "
+            "Playing immediately");
+        transitionTo(GameState::Playing);
+        return;
+    }
 
     if (!_countdownActive) {
         _countdownActive = true;

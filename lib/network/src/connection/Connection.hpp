@@ -14,6 +14,7 @@
 #include <queue>
 #include <vector>
 
+#include "compression/Compressor.hpp"
 #include "ConnectionEvents.hpp"
 #include "ConnectionState.hpp"
 #include "ConnectionStateMachine.hpp"
@@ -51,8 +52,8 @@ class Connection {
     struct Config {
         ConnectionStateMachine::Config stateConfig;
         ReliableChannel::Config reliabilityConfig;
-
-        Config() = default;
+        Compressor::Config compressionConfig;
+        bool enableCompression = true;
     };
 
     /**
@@ -63,7 +64,8 @@ class Connection {
         bool isReliable;
     };
 
-    explicit Connection(const Config& config = Config{});
+    Connection();
+    explicit Connection(const Config& config);
 
     ~Connection() = default;
 
@@ -144,6 +146,10 @@ class Connection {
         return reliableChannel_;
     }
 
+    [[nodiscard]] const Compressor& compressor() const noexcept {
+        return compressor_;
+    }
+
     /**
      * @brief Build an ACK packet for a specific sequence ID
      * @param ackSeqId The specific sequence ID to acknowledge
@@ -215,6 +221,7 @@ class Connection {
     Config config_;
     ConnectionStateMachine stateMachine_;
     ReliableChannel reliableChannel_;
+    Compressor compressor_;
     std::queue<OutgoingPacket> outgoingQueue_;
     std::uint16_t sequenceId_{0};
     std::optional<Endpoint> serverEndpoint_;

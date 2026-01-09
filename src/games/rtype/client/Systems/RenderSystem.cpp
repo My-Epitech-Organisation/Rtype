@@ -13,6 +13,7 @@
 #include "../AllComponents.hpp"
 #include "../shared/Components/Tags.hpp"
 #include "ECS.hpp"
+#include "Logger/Macros.hpp"
 
 namespace rc = ::rtype::games::rtype::client;
 namespace rs = ::rtype::games::rtype::shared;

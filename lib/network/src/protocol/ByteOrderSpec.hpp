@@ -101,6 +101,9 @@ template <>
 struct is_rfc_type<PingPayload> : std::true_type {};
 template <>
 struct is_rfc_type<PongPayload> : std::true_type {};
+
+template <>
+struct is_rfc_type<EntityMoveBatchHeader> : std::true_type {};
 template <>
 struct is_rfc_type<LobbyReadyPayload> : std::true_type {};
 template <>
@@ -373,10 +376,33 @@ fromNetwork(const T& data) noexcept {
     return p;
 }
 
+[[nodiscard]] inline EntityMoveBatchHeader toNetwork(
+    const EntityMoveBatchHeader& p) noexcept {
+    return p;  // Single byte, no conversion needed
+}
+[[nodiscard]] inline EntityMoveBatchHeader fromNetwork(
+    const EntityMoveBatchHeader& p) noexcept {
+    return p;  // Single byte, no conversion needed
+}
+
 [[nodiscard]] inline LobbyReadyPayload toNetwork(const LobbyReadyPayload& p) noexcept {
     return p;
 }
 [[nodiscard]] inline LobbyReadyPayload fromNetwork(const LobbyReadyPayload& p) noexcept {
+    return p;
+}
+
+[[nodiscard]] inline JoinLobbyPayload toNetwork(const JoinLobbyPayload& p) noexcept {
+    return p;
+}
+[[nodiscard]] inline JoinLobbyPayload fromNetwork(const JoinLobbyPayload& p) noexcept {
+    return p;
+}
+
+[[nodiscard]] inline JoinLobbyResponsePayload toNetwork(const JoinLobbyResponsePayload& p) noexcept {
+    return p;
+}
+[[nodiscard]] inline JoinLobbyResponsePayload fromNetwork(const JoinLobbyResponsePayload& p) noexcept {
     return p;
 }
 
@@ -385,6 +411,7 @@ fromNetwork(const T& data) noexcept {
     result.countdownDuration = ByteOrder::toNetwork(p.countdownDuration);
     return result;
 }
+
 [[nodiscard]] inline GameStartPayload fromNetwork(const GameStartPayload& p) noexcept {
     GameStartPayload result;
     result.countdownDuration = ByteOrder::fromNetwork(p.countdownDuration);
@@ -398,6 +425,7 @@ fromNetwork(const T& data) noexcept {
     result.isReady = p.isReady;
     return result;
 }
+
 [[nodiscard]] inline PlayerReadyStatePayload fromNetwork(
     const PlayerReadyStatePayload& p) noexcept {
     PlayerReadyStatePayload result;

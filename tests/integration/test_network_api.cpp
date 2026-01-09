@@ -257,6 +257,45 @@ TEST_F(NetworkApiTest, ClientSendInputWhileDisconnected) {
     EXPECT_FALSE(client_->sendInput(network::InputMask::kUp));
 }
 
+TEST_F(NetworkApiTest, ClientMustJoinLobbyBeforeInput) {
+    server_->setExpectedLobbyCode("ABCDEF");
+
+    std::atomic<bool> clientConnected{false};
+    std::atomic<bool> inputReceived{false};
+
+    server_->onClientInput([&](std::uint32_t userId, std::uint8_t input) {
+        (void)userId; (void)input;
+        inputReceived = true;
+    });
+
+    client_->onConnected([&](std::uint32_t userId) { (void)userId; clientConnected = true; });
+
+    EXPECT_TRUE(server_->start(TEST_PORT));
+    EXPECT_TRUE(client_->connect("127.0.0.1", TEST_PORT));
+
+    // Wait for connection
+    ASSERT_TRUE(waitFor(clientConnected, 1s));
+
+    // Send input before join -> should be ignored
+    EXPECT_TRUE(client_->sendInput(network::InputMask::kUp));
+    pollBoth(100ms);
+    EXPECT_FALSE(inputReceived.load());
+
+    // Send join with wrong code -> still ignored
+    EXPECT_TRUE(client_->sendJoinLobby("WRONG1"));
+    pollBoth(100ms);
+    EXPECT_FALSE(inputReceived.load());
+
+    // Send correct join
+    EXPECT_TRUE(client_->sendJoinLobby("ABCDEF"));
+    // Wait for join to be processed and then send input
+    pollBoth(200ms);
+    EXPECT_TRUE(client_->sendInput(network::InputMask::kUp));
+
+    // Wait for input to be received
+    ASSERT_TRUE(waitFor(inputReceived, 1s));
+}
+
 // ============================================================================
 // Entity Broadcast Tests
 // ============================================================================

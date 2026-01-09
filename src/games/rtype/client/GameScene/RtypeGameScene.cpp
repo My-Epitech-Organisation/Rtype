@@ -77,6 +77,9 @@ RtypeGameScene::RtypeGameScene(
 RtypeGameScene::~RtypeGameScene() {
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[RtypeGameScene] Destructor called");
+
+    _isDisconnected = true;
+
     clearDamageVignette();
     _vignetteEntities.clear();
     _vignetteAlpha = 0.0F;
@@ -735,6 +738,9 @@ void RtypeGameScene::setupDisconnectCallback() {
 }
 
 void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
+    if (_isDisconnected) {
+        return;
+    }
     _isDisconnected = true;
     std::string reasonMessage = getDisconnectMessage(reason);
     LOG_INFO("[RtypeGameScene] Disconnected from server, reason="
@@ -854,6 +860,8 @@ std::string RtypeGameScene::getDisconnectMessage(
             return "Server closed the connection.\nYou may have been kicked.";
         case network::DisconnectReason::LocalRequest:
             return "Disconnected from server.";
+        case network::DisconnectReason::Banned:
+            return "You have been banned from this server.";
         default:
             return "Connection lost for unknown reason.";
     }

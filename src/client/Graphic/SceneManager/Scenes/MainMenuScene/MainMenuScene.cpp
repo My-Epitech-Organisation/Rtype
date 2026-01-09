@@ -7,6 +7,7 @@
 
 #include "MainMenuScene.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <functional>
@@ -22,13 +23,13 @@
 #include "SceneManager/SceneException.hpp"
 #include "Scenes/Lobby/Lobby.hpp"
 
-static constexpr float kConnectionPanelX = 750.f;
+static constexpr float kConnectionPanelX = 610.f;
 static constexpr float kConnectionPanelY = 350.f;
-static constexpr float kConnectionPanelWidth = 450.f;
-static constexpr float kConnectionPanelHeight = 350.f;
+static constexpr float kConnectionPanelWidth = 680.f;
+static constexpr float kConnectionPanelHeight = 480.f;
 static constexpr float kInputWidth = 300.f;
 static constexpr float kInputHeight = 40.f;
-static constexpr float kInputOffsetX = 120.f;
+static constexpr float kInputOffsetX = 180.f;
 static constexpr std::string kIp = "127.0.0.1";
 static constexpr std::uint16_t kPort = 4242;
 
@@ -139,11 +140,34 @@ void MainMenuScene::_createConnectionPanel(
         ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
             this->_portInputEntity);
     panelEntities.push_back(this->_portInputEntity);
+
+    auto lobbyCodeText = EntityFactory::createStaticText(
+        this->_registry, this->_assetsManager, "Lobby Code:", "main_font",
+        rtype::display::Vector2<float>(
+            kConnectionPanelX + kInputOffsetX / 2,
+            kConnectionPanelY + 210.f + kInputHeight / 2),
+        20);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            lobbyCodeText);
+    panelEntities.push_back(lobbyCodeText);
+
+    this->_lobbyCodeInputEntity = EntityFactory::createTextInput(
+        this->_registry, this->_assetsManager,
+        rtype::display::Vector2<float>(kConnectionPanelX + kInputOffsetX,
+                                       kConnectionPanelY + 210.f),
+        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "", "ABCXYZ",
+        6, false);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+            this->_lobbyCodeInputEntity);
+    panelEntities.push_back(this->_lobbyCodeInputEntity);
+
     this->_statusEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "main_font",
         rtype::display::Vector2<float>(
             kConnectionPanelX + kInputOffsetX / 2,
-            kConnectionPanelY + 200.f + kInputHeight / 2),
+            kConnectionPanelY + 265.f + kInputHeight / 2),
         18);
     this->_registry
         ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
@@ -236,8 +260,9 @@ void MainMenuScene::_onConnectClicked(
                             rtype::display::Color::Red());
         return;
     }
-    std::string ip = kIp;
-    std::uint16_t port = kPort;
+
+    std::string discoveryIp = kIp;
+    std::uint16_t discoveryPort = kPort;
 
     if (this->_registry->hasComponent<rtype::games::rtype::client::TextInput>(
             this->_ipInputEntity)) {
@@ -246,7 +271,7 @@ void MainMenuScene::_onConnectClicked(
                 ->getComponent<rtype::games::rtype::client::TextInput>(
                     this->_ipInputEntity);
         if (!ipInput.content.empty()) {
-            ip = ipInput.content;
+            discoveryIp = ipInput.content;
         }
     }
 
@@ -258,7 +283,8 @@ void MainMenuScene::_onConnectClicked(
                     this->_portInputEntity);
         if (!portInput.content.empty()) {
             try {
-                port = static_cast<std::uint16_t>(std::stoi(portInput.content));
+                discoveryPort =
+                    static_cast<std::uint16_t>(std::stoi(portInput.content));
             } catch (...) {
                 this->_updateStatus("Invalid port number",
                                     rtype::display::Color::Red());
@@ -267,10 +293,35 @@ void MainMenuScene::_onConnectClicked(
         }
     }
 
-    _updateStatus("Connecting to " + ip + ":" + std::to_string(port) + "...",
-                  rtype::display::Color{255, 255, 0, 255});
+    std::string lobbyCode;
+    if (this->_registry->hasComponent<rtype::games::rtype::client::TextInput>(
+            this->_lobbyCodeInputEntity)) {
+        auto& codeInput =
+            this->_registry
+                ->getComponent<rtype::games::rtype::client::TextInput>(
+                    this->_lobbyCodeInputEntity);
+        lobbyCode = codeInput.content;
+        std::transform(lobbyCode.begin(), lobbyCode.end(), lobbyCode.begin(),
+                       ::toupper);
+    }
+
+    if (!lobbyCode.empty()) {
+        if (lobbyCode.length() != 6) {
+            this->_updateStatus("Lobby code must be 6 characters",
+                                rtype::display::Color::Red());
+            return;
+        }
+        _updateStatus("Connecting to " + discoveryIp + ":" +
+                          std::to_string(discoveryPort) + "...",
+                      rtype::display::Color::Yellow());
+    } else {
+        _updateStatus("Requesting lobby list from " + discoveryIp + ":" +
+                          std::to_string(discoveryPort) + "...",
+                      rtype::display::Color::Yellow());
+    }
     std::weak_ptr<ECS::Registry> weakRegistry = _registry;
     ECS::Entity statusEntity = _statusEntity;
+    std::weak_ptr<rtype::client::NetworkClient> weakClient = _networkClient;
 
     if (_networkClient) {
         for (auto id : _connectedCallbackIds) {
@@ -283,13 +334,57 @@ void MainMenuScene::_onConnectClicked(
         _disconnectedCallbackIds.clear();
     }
 
-    auto onConnectedId = _networkClient->addConnectedCallback(
-        [weakRegistry, switchToScene, statusEntity](std::uint32_t userId) {
+    _networkClient->onLobbyListReceived(
+        [this, weakRegistry, switchToScene, statusEntity, weakClient,
+         discoveryIp, lobbyCode](rtype::client::LobbyListEvent event) {
             auto reg = weakRegistry.lock();
-            if (!reg) return;
+            auto client = weakClient.lock();
+            if (!reg || !client) return;
 
             LOG_INFO_CAT(::rtype::LogCategory::UI,
-                         "[Client] Connected with user ID: " << userId);
+                         "[Client] Received lobby list with "
+                             << event.lobbies.size() << " lobbies");
+
+            if (event.lobbies.empty()) {
+                if (reg->isAlive(statusEntity) &&
+                    reg->hasComponent<rtype::games::rtype::client::Text>(
+                        statusEntity)) {
+                    auto& text =
+                        reg->getComponent<rtype::games::rtype::client::Text>(
+                            statusEntity);
+                    text.textContent = "No lobbies available";
+                    text.color = rtype::display::Color::Red();
+                }
+                return;
+            }
+
+            auto it = std::find_if(
+                event.lobbies.begin(), event.lobbies.end(),
+                [&lobbyCode](const rtype::client::LobbyInfo& lobby) {
+                    return lobby.code == lobbyCode;
+                });
+
+            if (it == event.lobbies.end()) {
+                if (reg->isAlive(statusEntity) &&
+                    reg->hasComponent<rtype::games::rtype::client::Text>(
+                        statusEntity)) {
+                    auto& text =
+                        reg->getComponent<rtype::games::rtype::client::Text>(
+                            statusEntity);
+                    text.textContent =
+                        "Lobby code '" + lobbyCode + "' not found";
+                    text.color = rtype::display::Color::Red();
+                }
+                return;
+            }
+
+            const auto& lobby = *it;
+            LOG_INFO_CAT(::rtype::LogCategory::UI,
+                         "[Client] Connecting to lobby "
+                             << lobby.code << " on port " << lobby.port << " ("
+                             << static_cast<int>(lobby.playerCount) << "/"
+                             << static_cast<int>(lobby.maxPlayers)
+                             << " players)");
 
             if (reg->isAlive(statusEntity) &&
                 reg->hasComponent<rtype::games::rtype::client::Text>(
@@ -297,7 +392,40 @@ void MainMenuScene::_onConnectClicked(
                 auto& text =
                     reg->getComponent<rtype::games::rtype::client::Text>(
                         statusEntity);
-                text.textContent = "Connected! Entering lobby...";
+                text.textContent = "Connecting to lobby " + lobby.code + "...";
+                text.color = rtype::display::Color::Yellow();
+            }
+
+            this->_pendingLobbyCode = lobby.code;
+            client->connect(discoveryIp, lobby.port);
+        });
+
+    auto onConnectedId = _networkClient->addConnectedCallback(
+        [this, weakRegistry, switchToScene,
+         statusEntity](std::uint32_t userId) {
+            auto reg = weakRegistry.lock();
+            if (!reg) return;
+
+            LOG_INFO_CAT(::rtype::LogCategory::UI,
+                         "[Client] Connected with user ID: " << userId);
+
+            if (!this->_pendingLobbyCode.empty()) {
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::UI,
+                    "[Client] Sending join code " << this->_pendingLobbyCode);
+                if (this->_networkClient) {
+                    this->_networkClient->sendJoinLobby(
+                        this->_pendingLobbyCode);
+                }
+                this->_pendingLobbyCode.clear();
+            }
+
+            if (reg->isAlive(statusEntity) &&
+                reg->hasComponent<rtype::games::rtype::client::Text>(
+                    statusEntity)) {
+                auto& text =
+                    reg->getComponent<rtype::games::rtype::client::Text>(
+                        statusEntity);
                 text.textContent = "Connected! Entering lobby...";
                 text.color = rtype::display::Color::Green();
             }
@@ -344,12 +472,12 @@ void MainMenuScene::_onConnectClicked(
                     reg->getComponent<rtype::games::rtype::client::Text>(
                         statusEntity);
                 text.textContent = reasonStr;
-                text.textContent = reasonStr;
                 text.color = rtype::display::Color::Red();
             }
         });
     _disconnectedCallbackIds.push_back(onDisconnectedId);
-    if (!_networkClient->connect(ip, port)) {
+
+    if (!_networkClient->requestLobbyList(discoveryIp, discoveryPort)) {
         this->_connectPopUpVisible = true;
         _updateStatus("Failed to start connection",
                       rtype::display::Color::Red());
@@ -367,7 +495,6 @@ void MainMenuScene::_updateStatus(const std::string& message,
 
     auto& text = _registry->getComponent<rtype::games::rtype::client::Text>(
         _statusEntity);
-    text.textContent = message;
     text.textContent = message;
     text.color = color;
 }

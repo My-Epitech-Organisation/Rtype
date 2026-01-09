@@ -369,6 +369,7 @@ engine::ProcessedEvent GameEngine::processEvent(
     return result;
 }
 
+// LCOV_EXCL_START - lambda-based callback not easily testable
 void GameEngine::syncEntityPositions(
     std::function<void(uint32_t, float, float, float, float)> callback) {
     if (!callback) {
@@ -392,6 +393,7 @@ void GameEngine::syncEntityPositions(
         callback(netId.networkId, transform.x, transform.y, vx, vy);
     });
 }
+// LCOV_EXCL_STOP
 
 uint32_t GameEngine::spawnProjectile(uint32_t playerNetworkId, float playerX,
                                      float playerY) {

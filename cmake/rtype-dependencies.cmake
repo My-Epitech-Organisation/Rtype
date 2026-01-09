@@ -53,6 +53,7 @@ endif()
 #   - PNG::PNG (libpng)
 #   - BZip2::BZip2 (bzip2)
 #   - unofficial::brotli::brotlidec, unofficial::brotli::brotlicommon (brotli)
+#   - lz4::lz4 (lz4)
 #
 # This works consistently across vcpkg, CPM, and system packages, allowing
 # downstream CMakeLists (e.g., src/client) to use TARGET checks without *_FOUND guards.
@@ -337,5 +338,70 @@ function(rtype_find_brotli)
     endif()
     if(TARGET brotlienc-static AND NOT TARGET unofficial::brotli::brotlienc)
         add_library(unofficial::brotli::brotlienc ALIAS brotlienc-static)
+    endif()
+endfunction()
+
+function(rtype_find_lz4)
+    if(NOT RTYPE_FORCE_CPM)
+        find_package(lz4 CONFIG QUIET)
+        if(lz4_FOUND)
+            return()
+        endif()
+    endif()
+
+    CPMAddPackage(
+        NAME lz4
+        VERSION 1.10.0
+        GITHUB_REPOSITORY lz4/lz4
+        GIT_TAG v1.10.0
+        SOURCE_SUBDIR build/cmake
+        OPTIONS
+            "LZ4_BUILD_CLI=OFF"
+            "LZ4_BUILD_LEGACY_LZ4C=OFF"
+            "BUILD_SHARED_LIBS=OFF"
+            "BUILD_STATIC_LIBS=ON"
+    )
+
+    # Create alias target for consistent usage across vcpkg/CPM
+    if(TARGET lz4_static AND NOT TARGET lz4::lz4)
+        add_library(lz4::lz4 ALIAS lz4_static)
+    elseif(TARGET LZ4::lz4_static AND NOT TARGET lz4::lz4)
+        add_library(lz4::lz4 ALIAS LZ4::lz4_static)
+    endif()
+endfunction()
+
+# Add cpp-httplib for admin server
+function(rtype_find_httplib)
+    if(TARGET httplib::httplib)
+        message(STATUS "[deps] cpp-httplib already configured")
+        return()
+    endif()
+
+    # Try vcpkg first
+    find_package(httplib CONFIG QUIET)
+    if(httplib_FOUND AND TARGET httplib::httplib)
+        message(STATUS "[deps] Using cpp-httplib from vcpkg")
+        return()
+    endif()
+
+    # Fallback to CPM
+    message(STATUS "[deps] cpp-httplib not found in vcpkg, using CPM")
+
+    # Security: pin to an immutable commit SHA instead of relying solely on a mutable
+    # tag. The tag v0.28.0 points to commit adf58bf474fac638160592d6c3f67da4ebc7df20
+    # (recorded here to make the intent explicit). This prevents transparent
+    # upgrades if the upstream tag is force-updated or compromised.
+    CPMAddPackage(
+        NAME httplib
+        GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
+        GIT_TAG adf58bf474fac638160592d6c3f67da4ebc7df20
+        VERSION 0.28.0
+        OPTIONS
+            "HTTPLIB_REQUIRE_OPENSSL OFF"
+            "HTTPLIB_REQUIRE_ZLIB OFF"
+            "HTTPLIB_REQUIRE_BROTLI ON"
+    )
+    if(httplib_ADDED)
+        add_library(httplib::httplib ALIAS httplib)
     endif()
 endfunction()

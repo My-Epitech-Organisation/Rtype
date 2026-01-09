@@ -122,6 +122,43 @@ struct GameOverPayload {
 };
 
 /**
+ * @brief Payload for C_REQUEST_LOBBIES (0x0B)
+ * @note Empty payload - request has no data
+ */
+struct RequestLobbiesPayload {};
+
+/**
+ * @brief Single lobby information entry
+ *
+ * Used within S_LOBBY_LIST response
+ */
+struct LobbyInfo {
+    std::array<char, 6> code;
+    std::uint16_t port;
+    std::uint8_t playerCount;
+    std::uint8_t maxPlayers;
+    std::uint8_t isActive;
+};
+
+/**
+ * @brief Header for S_LOBBY_LIST (0x0C)
+ *
+ * Variable-length payload: count + array of LobbyInfo entries.
+ * The full payload size is: 1 + (count * 11) bytes.
+ */
+struct LobbyListHeader {
+    std::uint8_t count;
+};
+
+/**
+ * @brief Maximum lobbies in a single S_LOBBY_LIST response
+ *
+ * Limited by payload size: (kMaxPayloadSize - 1) / sizeof(LobbyInfo)
+ * = (1384 - 1) / 11 = 125 lobbies (well above our max of 16)
+ */
+inline constexpr std::size_t kMaxLobbiesInResponse = 125;
+
+/**
  * @brief Payload for S_ENTITY_SPAWN (0x10)
  *
  * Server instructs clients to create a new game entity.
@@ -151,6 +188,43 @@ struct EntityMovePayload {
     float velX;
     float velY;
 };
+
+/**
+ * @brief Header for S_ENTITY_MOVE_BATCH (0x15)
+ *
+ * Variable-length payload: count + array of EntityMovePayload entries.
+ * The full payload size is: 1 + (count * 20) bytes.
+ */
+struct EntityMoveBatchHeader {
+    std::uint8_t count;  ///< Number of entity updates in this batch (1-69)
+};
+
+/**
+ * @brief Payload for C_JOIN_LOBBY (0x0D)
+ *
+ * Client sends lobby code to authenticate and join
+ */
+struct JoinLobbyPayload {
+    std::array<char, 6> code;
+};
+
+/**
+ * @brief Payload for S_JOIN_LOBBY_RESPONSE (0x0E)
+ *
+ * Server responds to join request with success/failure
+ */
+struct JoinLobbyResponsePayload {
+    std::uint8_t accepted;      ///< 1 = accepted, 0 = rejected
+    std::uint8_t reason;        ///< Reason code (0 = success, 1 = invalid code, 2 = lobby full)
+};
+
+/**
+ * @brief Maximum entities per batch packet
+ *
+ * Limited by payload size: (kMaxPayloadSize - 1) / sizeof(EntityMovePayload)
+ * = (1384 - 1) / 20 = 69 entities
+ */
+inline constexpr std::size_t kMaxEntitiesPerBatch = 69;
 
 /**
  * @brief Payload for S_ENTITY_DESTROY (0x12)
@@ -286,6 +360,8 @@ static_assert(sizeof(EntitySpawnPayload) == 14,
               "EntitySpawnPayload must be 14 bytes (4+1+1+4+4)");
 static_assert(sizeof(EntityMovePayload) == 20,
               "EntityMovePayload must be 20 bytes (4+4+4+4+4)");
+static_assert(sizeof(EntityMoveBatchHeader) == 1,
+              "EntityMoveBatchHeader must be 1 byte");
 static_assert(sizeof(EntityDestroyPayload) == 4,
               "EntityDestroyPayload must be 4 bytes");
 static_assert(sizeof(EntityHealthPayload) == 12,
@@ -299,12 +375,21 @@ static_assert(sizeof(GameStartPayload) == 4,
               "GameStartPayload must be 4 bytes (float)");
 static_assert(sizeof(PlayerReadyStatePayload) == 5,
               "PlayerReadyStatePayload must be 5 bytes (4+1)");
+static_assert(sizeof(LobbyInfo) == 11,
+              "LobbyInfo must be 11 bytes (6+2+1+1+1)");
+static_assert(sizeof(LobbyListHeader) == 1,
+              "LobbyListHeader must be 1 byte");
+static_assert(sizeof(JoinLobbyPayload) == 6,
+              "JoinLobbyPayload must be 6 bytes (char[6])");
+static_assert(sizeof(JoinLobbyResponsePayload) == 2,
+              "JoinLobbyResponsePayload must be 2 bytes (uint8_t+uint8_t)");
 
 static_assert(std::is_trivially_copyable_v<AcceptPayload>);
 static_assert(std::is_trivially_copyable_v<UpdateStatePayload>);
 static_assert(std::is_trivially_copyable_v<GameOverPayload>);
 static_assert(std::is_trivially_copyable_v<EntitySpawnPayload>);
 static_assert(std::is_trivially_copyable_v<EntityMovePayload>);
+static_assert(std::is_trivially_copyable_v<EntityMoveBatchHeader>);
 static_assert(std::is_trivially_copyable_v<EntityDestroyPayload>);
 static_assert(std::is_trivially_copyable_v<EntityHealthPayload>);
 static_assert(std::is_trivially_copyable_v<PowerUpEventPayload>);
@@ -319,6 +404,7 @@ static_assert(std::is_standard_layout_v<UpdateStatePayload>);
 static_assert(std::is_standard_layout_v<GameOverPayload>);
 static_assert(std::is_standard_layout_v<EntitySpawnPayload>);
 static_assert(std::is_standard_layout_v<EntityMovePayload>);
+static_assert(std::is_standard_layout_v<EntityMoveBatchHeader>);
 static_assert(std::is_standard_layout_v<EntityDestroyPayload>);
 static_assert(std::is_standard_layout_v<EntityHealthPayload>);
 static_assert(std::is_standard_layout_v<PowerUpEventPayload>);
@@ -339,6 +425,7 @@ static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
     switch (opcode) {
         case OpCode::C_CONNECT:
         case OpCode::C_GET_USERS:
+        case OpCode::C_REQUEST_LOBBIES:
         case OpCode::PING:
         case OpCode::PONG:
         case OpCode::ACK:
@@ -358,11 +445,19 @@ static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
             return sizeof(GameStartPayload);
         case OpCode::S_PLAYER_READY_STATE:
             return sizeof(PlayerReadyStatePayload);
+        case OpCode::S_LOBBY_LIST:
+            return 0;  // Variable-length payload
+        case OpCode::C_JOIN_LOBBY:
+            return sizeof(JoinLobbyPayload);
+        case OpCode::S_JOIN_LOBBY_RESPONSE:
+            return sizeof(JoinLobbyResponsePayload);
 
         case OpCode::S_ENTITY_SPAWN:
             return sizeof(EntitySpawnPayload);
         case OpCode::S_ENTITY_MOVE:
             return sizeof(EntityMovePayload);
+        case OpCode::S_ENTITY_MOVE_BATCH:
+            return 0;  // Variable-length payload
         case OpCode::S_ENTITY_DESTROY:
             return sizeof(EntityDestroyPayload);
         case OpCode::S_ENTITY_HEALTH:
@@ -384,7 +479,9 @@ static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
  * @brief Check if an OpCode has a variable-length payload
  */
 [[nodiscard]] constexpr bool hasVariablePayload(OpCode opcode) noexcept {
-    return opcode == OpCode::R_GET_USERS;
+    return opcode == OpCode::R_GET_USERS ||
+           opcode == OpCode::S_ENTITY_MOVE_BATCH ||
+           opcode == OpCode::S_LOBBY_LIST;
 }
 
 }  // namespace rtype::network

@@ -151,6 +151,27 @@ else()
     gtest_discover_tests(test_collision)
 endif()
 
+# Extra collision tests (covers pickups and obstacles)
+add_executable(test_collision_extra test_collision_extra.cpp)
+
+target_link_libraries(test_collision_extra PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_collision_extra PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_collision_extra WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_collision_extra)
+endif()
+
 # Collision branches tests
 add_executable(test_collision_branches test_collision_branches.cpp)
 
@@ -335,6 +356,8 @@ else()
 endif()
 
 # RTypeEntitySpawner tests
+# These tests were previously disabled due to complex NetworkServer mocking requirements.
+# The tests provide an in-test mock (MockServerNetworkSystem) so enabling the target is safe.
 add_executable(test_entity_spawner test_entity_spawner.cpp)
 
 target_link_libraries(test_entity_spawner PRIVATE
@@ -376,4 +399,22 @@ if(WIN32 OR MSVC)
     gtest_discover_tests(test_powerup_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_powerup_system)
+endif()
+# FileOperations tests (from shared/config/save_manager subdirectory)
+add_executable(test_file_operations shared/config/save_manager/test_file_operations.cpp)
+
+target_link_libraries(test_file_operations PRIVATE
+    GTest::gtest_main
+    rtype_game_config
+)
+
+target_include_directories(test_file_operations PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_file_operations WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_file_operations)
 endif()

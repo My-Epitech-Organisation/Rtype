@@ -18,7 +18,8 @@
 #include <rtype/common.hpp>
 
 #include "Client.hpp"
-#include "ServerMetrics.hpp"
+#include "server/shared/BanManager.hpp"
+#include "server/shared/ServerMetrics.hpp"
 
 namespace rtype::server {
 
@@ -59,10 +60,12 @@ class ClientManager {
      * @brief Construct a new ClientManager
      * @param maxPlayers Maximum number of concurrent players
      * @param metrics Shared pointer to server metrics for updating counters
+     * @param banManager Optional shared pointer to ban manager
      * @param verbose Enable verbose debug output (default: false)
      */
     explicit ClientManager(size_t maxPlayers,
                            std::shared_ptr<ServerMetrics> metrics,
+                           std::shared_ptr<BanManager> banManager = nullptr,
                            bool verbose = false);
 
     ~ClientManager() = default;
@@ -232,8 +235,9 @@ class ClientManager {
 
     size_t _maxPlayers;  ///< Maximum concurrent players
     std::weak_ptr<ServerMetrics>
-        _metrics;   ///< Weak reference to server metrics
-    bool _verbose;  ///< Enable verbose debug output
+        _metrics;  ///< Weak reference to server metrics
+    std::weak_ptr<BanManager> _banManager;  ///< Weak reference to ban manager
+    bool _verbose;                          ///< Enable verbose debug output
 
     std::unordered_map<ClientId, Client> _clients;
     std::unordered_map<Endpoint, ClientId> _endpointToClient;

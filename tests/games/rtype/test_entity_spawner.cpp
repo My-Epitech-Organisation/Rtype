@@ -88,6 +88,7 @@ TEST_F(RTypeEntitySpawnerTest, SpawnPlayerHasRequiredComponents) {
 
     // Check all required components are present
     EXPECT_TRUE(registry->hasComponent<TransformComponent>(result.entity));
+    EXPECT_TRUE(registry->hasComponent<TransformComponent>(result.entity));
     EXPECT_TRUE(registry->hasComponent<VelocityComponent>(result.entity));
     EXPECT_TRUE(registry->hasComponent<ShootCooldownComponent>(result.entity));
     EXPECT_TRUE(registry->hasComponent<WeaponComponent>(result.entity));
@@ -397,24 +398,16 @@ TEST_F(RTypeEntitySpawnerTest, UpdatePlayerVelocityWithoutComponent) {
 
 TEST_F(RTypeEntitySpawnerTest, UpdateAllPlayersMovement) {
     // Spawn multiple players
-    std::vector<ECS::Entity> entities;
+    std::vector<ECS::Entity> spawnedEntities;
     for (int i = 0; i < 3; ++i) {
         PlayerSpawnConfig config{};
         config.userId = 6100 + i;
         config.playerIndex = i;
         auto result = spawner->spawnPlayer(config);
-        if (result.success) {
-            entities.push_back(result.entity);
-        }
-    }
-
-    // Ensure all spawned players have a non-zero velocity so the callback is invoked
-    for (auto ent : entities) {
-        if (registry->hasComponent<VelocityComponent>(ent)) {
-            auto& vel = registry->getComponent<VelocityComponent>(ent);
-            vel.vx = 10.0F;
-            vel.vy = 0.0F;
-        }
+        ASSERT_TRUE(result.success);
+        spawnedEntities.push_back(result.entity);
+        // Give each player a non-zero velocity so updateAllPlayersMovement processes them
+        spawner->updatePlayerVelocity(result.entity, 100.0F * (i + 1), 50.0F * (i + 1));
     }
 
     int callbackCount = 0;
@@ -422,7 +415,7 @@ TEST_F(RTypeEntitySpawnerTest, UpdateAllPlayersMovement) {
         ++callbackCount;
     });
 
-    EXPECT_EQ(callbackCount, 3);  // Called for each player
+    EXPECT_EQ(callbackCount, 3);  // Called for each player with non-zero velocity
 }
 
 // ============================================================================

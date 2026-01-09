@@ -8,6 +8,7 @@
 #include "ServerNetworkSystem.hpp"
 
 #include <memory>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -179,14 +180,30 @@ void ServerNetworkSystem::broadcastPowerUp(std::uint32_t playerNetworkId,
 }
 
 void ServerNetworkSystem::broadcastEntityUpdates() {
+    std::vector<std::tuple<std::uint32_t, float, float, float, float>>
+        dirtyEntities;
+
     for (auto& [networkId, info] : networkedEntities_) {
         if (info.dirty) {
-            if (server_) {
-                server_->moveEntity(networkId, info.lastX, info.lastY,
-                                    info.lastVx, info.lastVy);
-            }
+            dirtyEntities.emplace_back(networkId, info.lastX, info.lastY,
+                                       info.lastVx, info.lastVy);
             info.dirty = false;
         }
+    }
+
+    if (dirtyEntities.empty()) {
+        return;
+    }
+
+    constexpr std::size_t maxPerBatch = network::kMaxEntitiesPerBatch;
+
+    for (std::size_t offset = 0; offset < dirtyEntities.size();
+         offset += maxPerBatch) {
+        auto end = std::min(offset + maxPerBatch, dirtyEntities.size());
+        std::vector<std::tuple<std::uint32_t, float, float, float, float>>
+            batch(dirtyEntities.begin() + static_cast<std::ptrdiff_t>(offset),
+                  dirtyEntities.begin() + static_cast<std::ptrdiff_t>(end));
+        server_->moveEntitiesBatch(batch);
     }
 }
 

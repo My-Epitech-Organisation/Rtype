@@ -17,6 +17,7 @@ target_link_libraries(test_client_manager PRIVATE
     GTest::gtest_main
     common
     rtype_toml_parser
+    rtype_server_core
 )
 
 set(SERVER_APP_TEST_SRCS test_server_app.cpp)
@@ -68,6 +69,7 @@ target_link_libraries(test_server_app PRIVATE
 
 # ServerApp GameConfig integration tests
 add_executable(test_server_app_gameconfig test_server_app_gameconfig.cpp
+    test_server_app_reload_configuration.cpp
     ${CMAKE_SOURCE_DIR}/src/server/serverApp/ServerApp.cpp
     ${CMAKE_SOURCE_DIR}/src/server/clientManager/ClientManager.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
@@ -106,7 +108,6 @@ target_link_libraries(test_server_app_gameconfig PRIVATE
 
 # ServerNetworkSystem unit tests
 add_executable(test_server_network_system test_ServerNetworkSystem.cpp
-    test_entity_spawner_factory_branches.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
 )
@@ -134,6 +135,8 @@ target_link_libraries(test_server_network_system PRIVATE
 # Unit tests for ServerApp
 add_executable(test_server_app_unit
     ${CMAKE_CURRENT_SOURCE_DIR}/test_server_app_unit.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_server_app_initialize.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_server_app_initialize_additional.cpp
     ${CMAKE_SOURCE_DIR}/src/server/serverApp/ServerApp.cpp
     ${CMAKE_SOURCE_DIR}/src/server/clientManager/ClientManager.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
@@ -236,6 +239,7 @@ target_link_libraries(test_player_input_handler PRIVATE
     network
     ecs
     rtype_game_shared
+    rtype_server_core
 )
 
 # PlayerSpawner unit tests
@@ -263,6 +267,7 @@ target_link_libraries(test_player_spawner PRIVATE
     network
     ecs
     rtype_game_shared
+    rtype_server_core
 )
 
 # GameEventProcessor unit tests
@@ -270,6 +275,54 @@ add_executable(test_game_event_processor test_game_event_processor.cpp
     ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameEvent/GameEventProcessor.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/ServerNetworkSystem.cpp
     ${CMAKE_SOURCE_DIR}/src/server/network/NetworkServer.cpp
+)
+
+# BanManager unit tests
+add_executable(test_ban_manager test_ban_manager.cpp)
+
+target_include_directories(test_ban_manager PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server/shared
+)
+
+target_link_libraries(test_ban_manager PRIVATE
+    GTest::gtest_main
+    common
+    rtype_server_core
+)
+
+# ServerMetrics unit tests
+add_executable(test_server_metrics test_server_metrics.cpp)
+
+target_include_directories(test_server_metrics PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server/shared
+)
+
+target_link_libraries(test_server_metrics PRIVATE
+    GTest::gtest_main
+    common
+)
+
+# LobbyManager unit tests
+add_executable(test_lobby_manager test_lobby_manager.cpp)
+
+target_include_directories(test_lobby_manager PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/shared
+)
+
+target_link_libraries(test_lobby_manager PRIVATE
+    GTest::gtest_main
+    common
+    rtype_server_core
+    network
+    rtype_server_network
+    engine
+    ecs
+    rtype_game_shared
+    rtype_game_server
 )
 
 target_include_directories(test_game_event_processor PRIVATE
@@ -291,6 +344,7 @@ target_link_libraries(test_game_event_processor PRIVATE
     ecs
     engine
     rtype_game_shared
+    rtype_server_core
 )
 
 # PacketProcessor unit tests
@@ -315,9 +369,59 @@ target_link_libraries(test_packet_processor PRIVATE
     network
 )
 
+# Lobby discovery tests
+add_executable(test_lobby_discovery test_lobby_discovery.cpp)
+
+target_include_directories(test_lobby_discovery PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/lobby
+    ${CMAKE_SOURCE_DIR}/src/common
+)
+
+target_compile_features(test_lobby_discovery PRIVATE cxx_std_20)
+
+target_link_libraries(test_lobby_discovery PRIVATE
+    GTest::gtest_main
+    common
+    rtype_toml_parser
+    network
+    engine
+    rtype_game_server
+    rtype_game_shared
+    rtype_server_core
+    rtype_server_network
+    ecs
+)
+
 # GameStateManager unit tests
-add_executable(test_game_state_manager test_game_state_manager.cpp
+add_executable(test_game_state_manager test_game_state_manager.cpp test_game_state_manager_countdown.cpp
     ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameStateManager/GameStateManager.cpp
+)
+
+# AdminServer tests
+add_executable(test_admin_server test_admin_server.cpp test_admin_server_branches.cpp test_admin_server_more_branches.cpp test_admin_server_auth_metrics.cpp test_admin_server_metrics_players.cpp test_admin_server_connected_client.cpp test_admin_server_lobby_api.cpp test_admin_server_malformed_json.cpp)
+
+
+target_include_directories(test_admin_server PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/shared
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_admin_server PRIVATE cxx_std_20)
+
+target_link_libraries(test_admin_server PRIVATE
+    GTest::gtest_main
+    common
+    rtype_server_core
+    rtype_server_network
+    network
+    engine
+    rtype_game_server
+    rtype_game_shared
+    ecs
 )
 
 target_include_directories(test_game_state_manager PRIVATE
@@ -428,6 +532,10 @@ if(WIN32)
     gtest_discover_tests(test_game_event_processor WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_packet_processor WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_game_state_manager WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_ban_manager WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_lobby_manager WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_lobby_discovery WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_admin_server WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_entity_spawner_factory WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_wave_manager WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_datadriven_spawner WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -444,6 +552,10 @@ else()
     gtest_discover_tests(test_game_event_processor)
     gtest_discover_tests(test_packet_processor)
     gtest_discover_tests(test_game_state_manager)
+    gtest_discover_tests(test_ban_manager)
+    gtest_discover_tests(test_lobby_manager)
+    gtest_discover_tests(test_lobby_discovery)
+    gtest_discover_tests(test_admin_server)
     gtest_discover_tests(test_entity_spawner_factory)
     gtest_discover_tests(test_wave_manager)
     gtest_discover_tests(test_datadriven_spawner)
