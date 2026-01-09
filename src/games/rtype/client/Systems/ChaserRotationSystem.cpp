@@ -65,8 +65,7 @@ void ChaserRotationSystem::update(ECS::Registry& registry, float dt) {
             if (distance <= EXPLOSION_DISTANCE && !explosion.isExploding) {
                 explosion.isExploding = true;
                 explosion.explosionTimer = 0.0f;
-                anim.currentFrame =
-                    2;
+                anim.currentFrame = 2;
                 anim.elapsedTime = 0.0f;
                 LOG_DEBUG("[ChaserRotation] Chaser "
                           << entity.id << " starting explosion at distance "
