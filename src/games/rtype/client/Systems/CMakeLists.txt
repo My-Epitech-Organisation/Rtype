@@ -25,6 +25,8 @@ add_library(rtype_game_client_systems STATIC
     AnimationSystem.hpp
     ChaserRotationSystem.cpp
     ChaserRotationSystem.hpp
+    ChaserExplosionSystem.cpp
+    ChaserExplosionSystem.hpp
     ClientDestroySystem.cpp
     ClientDestroySystem.hpp
     ShaderRenderSystem.cpp
