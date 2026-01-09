@@ -119,7 +119,8 @@ RtypeEntityFactory::createNetworkEntityFactory(
                 break;
 
             case ::rtype::network::EntityType::Pickup:
-                setupPickupEntity(reg, entity, event.entityId, event.subType);
+                setupPickupEntity(reg, assetsManager, entity, event.entityId,
+                                 event.subType);
                 break;
 
             case ::rtype::network::EntityType::Obstacle:
@@ -343,53 +344,126 @@ void RtypeEntityFactory::setupMissileEntity(
     }
 }
 
-void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
-                                           ECS::Entity entity,
-                                           std::uint32_t networkId,
-                                           uint8_t subType) {
-    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
-                  "[RtypeEntityFactory] Adding Pickup components");
+void RtypeEntityFactory::setupPickupEntity(
+    ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
+    ECS::Entity entity, std::uint32_t networkId, uint8_t subType) {
+    LOG_INFO("[RtypeEntityFactory] *** CREATING PICKUP ENTITY *** networkId="
+             << networkId << " subType=" << static_cast<int>(subType));
+
     auto variant = static_cast<shared::PowerUpVariant>(subType);
     std::string configId =
         shared::PowerUpTypeComponent::variantToString(variant);
-    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
-                  "[RtypeEntityFactory] Pickup subType="
-                      << static_cast<int>(subType) << " variant=" << configId);
+    LOG_INFO("[RtypeEntityFactory] Pickup variant=" << configId);
 
     auto& configRegistry = shared::EntityConfigRegistry::getInstance();
     auto powerUpConfig = configRegistry.getPowerUp(configId);
 
-    sf::Color color = sf::Color::White;
-    if (powerUpConfig.has_value()) {
-        const auto& config = powerUpConfig->get();
-        color = sf::Color(config.colorR, config.colorG, config.colorB,
-                          config.colorA);
-        LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
-                      "[RtypeEntityFactory] Adding ColorTint: R="
-                          << static_cast<int>(config.colorR)
-                          << " G=" << static_cast<int>(config.colorG)
-                          << " B=" << static_cast<int>(config.colorB)
-                          << " A=" << static_cast<int>(config.colorA));
-        reg.emplaceComponent<ColorTint>(entity, config.colorR, config.colorG,
-                                        config.colorB, config.colorA);
-    } else {
+    if (!powerUpConfig.has_value()) {
         LOG_WARNING(
             "[RtypeEntityFactory] No config found for power-up: " << configId);
+        return;
     }
 
-    reg.emplaceComponent<Rectangle>(entity, std::pair<float, float>{24.f, 24.f},
-                                    color, color);
-    reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
-    reg.getComponent<Rectangle>(entity).outlineColor = sf::Color::White;
-    reg.emplaceComponent<BoxingComponent>(entity,
-                                          sf::FloatRect({0, 0}, {24.f, 24.f}));
-    reg.getComponent<BoxingComponent>(entity).outlineColor = color;
-    reg.getComponent<BoxingComponent>(entity).fillColor =
-        sf::Color(color.r, color.g, color.b, 45);
+    const auto& config = powerUpConfig->get();
+    sf::Color color =
+        sf::Color(config.colorR, config.colorG, config.colorB, config.colorA);
+    LOG_INFO("[RtypeEntityFactory] Pickup color: R="
+             << static_cast<int>(config.colorR)
+             << " G=" << static_cast<int>(config.colorG)
+             << " B=" << static_cast<int>(config.colorB));
+
+    // Use texture if available, otherwise fallback to Rectangle
+    if (assetsManager && assetsManager->textureManager) {
+        // Try to get texture by config ID (e.g., "force_pod")
+        try {
+            auto& texture = assetsManager->textureManager->get(configId);
+            reg.emplaceComponent<Image>(entity, texture);
+            auto texSize = texture.getSize();
+            
+            // Special handling for force_pod spritesheet (205x18 with 11 frames of 18x18)
+            if (configId == "force_pod") {
+                constexpr int frameWidth = 18;
+                constexpr int frameHeight = 18;
+                constexpr int frameIndex = 0;  // Use first frame
+                
+                reg.emplaceComponent<TextureRect>(
+                    entity, 
+                    std::pair<int, int>{frameIndex * frameWidth, 0},
+                    std::pair<int, int>{frameWidth, frameHeight});
+                reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);  // Scale up 2x for visibility
+                
+                LOG_INFO("[RtypeEntityFactory] Using force_pod spritesheet frame 0 (" 
+                         << frameWidth << "x" << frameHeight << ")");
+                
+                reg.emplaceComponent<BoxingComponent>(
+                    entity,
+                    sf::FloatRect({0, 0},
+                                  {static_cast<float>(frameWidth) * 2.0f,
+                                   static_cast<float>(frameHeight) * 2.0f}));
+            } else {
+                reg.emplaceComponent<Size>(entity, 1.0f, 1.0f);
+                LOG_INFO("[RtypeEntityFactory] Using texture for powerup: "
+                         << configId << " size=" << texSize.x << "x"
+                         << texSize.y);
+                
+                reg.emplaceComponent<BoxingComponent>(
+                    entity,
+                    sf::FloatRect({0, 0},
+                                  {static_cast<float>(texSize.x),
+                                   static_cast<float>(texSize.y)}));
+            }
+
+            reg.emplaceComponent<ColorTint>(entity, config.colorR,
+                                            config.colorG, config.colorB,
+                                            config.colorA);
+
+            reg.getComponent<BoxingComponent>(entity).outlineColor = color;
+            reg.getComponent<BoxingComponent>(entity).fillColor =
+                sf::Color(color.r, color.g, color.b, 45);
+
+            reg.emplaceComponent<::rtype::games::rtype::shared::
+                                     BoundingBoxComponent>(
+                entity, config.hitboxWidth, config.hitboxHeight);
+        } catch (const std::exception& e) {
+            LOG_WARNING("[RtypeEntityFactory] Texture not found for: "
+                        << configId << " - using Rectangle fallback");
+            // Fallback to Rectangle if texture not found
+            reg.emplaceComponent<Rectangle>(
+                entity, std::pair<float, float>{24.f, 24.f}, color, color);
+            reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
+            reg.getComponent<Rectangle>(entity).outlineColor = sf::Color::White;
+            reg.emplaceComponent<BoxingComponent>(
+                entity, sf::FloatRect({0, 0}, {24.f, 24.f}));
+            reg.getComponent<BoxingComponent>(entity).outlineColor = color;
+            reg.getComponent<BoxingComponent>(entity).fillColor =
+                sf::Color(color.r, color.g, color.b, 45);
+
+            reg.emplaceComponent<::rtype::games::rtype::shared::
+                                     BoundingBoxComponent>(entity, 24.0f,
+                                                           24.0f);
+        }
+    } else {
+        // Fallback to Rectangle if no assetsManager
+        LOG_WARNING(
+            "[RtypeEntityFactory] No assetsManager - using Rectangle fallback");
+        reg.emplaceComponent<Rectangle>(
+            entity, std::pair<float, float>{24.f, 24.f}, color, color);
+        reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
+        reg.getComponent<Rectangle>(entity).outlineColor = sf::Color::White;
+        reg.emplaceComponent<BoxingComponent>(
+            entity, sf::FloatRect({0, 0}, {24.f, 24.f}));
+        reg.getComponent<BoxingComponent>(entity).outlineColor = color;
+        reg.getComponent<BoxingComponent>(entity).fillColor =
+            sf::Color(color.r, color.g, color.b, 45);
+
+        reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+            entity, 24.0f, 24.0f);
+    }
+
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
-    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, 24.0f, 24.0f);
+
+    LOG_INFO("[RtypeEntityFactory] Pickup entity setup complete");
 }
 
 void RtypeEntityFactory::setupObstacleEntity(
