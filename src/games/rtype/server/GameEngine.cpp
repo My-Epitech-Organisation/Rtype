@@ -87,6 +87,8 @@ bool GameEngine::initialize() {
     ddConfig.fallbackMinInterval = GameConfig::MIN_SPAWN_INTERVAL;
     ddConfig.fallbackMaxInterval = GameConfig::MAX_SPAWN_INTERVAL;
     ddConfig.fallbackEnemiesPerWave = 10;
+    ddConfig.powerUpMinInterval = 9999.0F;
+    ddConfig.powerUpMaxInterval = 9999.0F;
     _dataDrivenSpawnerSystem =
         std::make_unique<DataDrivenSpawnerSystem>(eventEmitter, ddConfig);
 
@@ -159,6 +161,13 @@ bool GameEngine::initialize() {
     };
     _destroySystem =
         std::make_unique<DestroySystem>(eventEmitter, entityDecrementer);
+    _forcePodAttachmentSystem = std::make_unique<ForcePodAttachmentSystem>();
+    _forcePodLaunchSystem = std::make_unique<ForcePodLaunchSystem>();
+    _forcePodShootingSystem = std::make_unique<ForcePodShootingSystem>(
+        _projectileSpawnerSystem.get());
+    
+    // Connect Force Pod systems
+    _forcePodAttachmentSystem->setLaunchSystem(_forcePodLaunchSystem.get());
 
     _systemScheduler->addSystem("Spawner", [this](ECS::Registry& reg) {
         if (_useDataDrivenSpawner && _dataDrivenSpawnerSystem) {
@@ -193,6 +202,24 @@ bool GameEngine::initialize() {
     _systemScheduler->addSystem("PowerUp", [this](ECS::Registry& reg) {
         _powerUpSystem->update(reg, _lastDeltaTime);
     });
+    _systemScheduler->addSystem("ForcePodAttachment",
+                                [this](ECS::Registry& reg) {
+                                    _forcePodAttachmentSystem->update(
+                                        reg, _lastDeltaTime);
+                                },
+                                {"Movement"});
+    _systemScheduler->addSystem("ForcePodLaunch",
+                                [this](ECS::Registry& reg) {
+                                    _forcePodLaunchSystem->update(
+                                        reg, _lastDeltaTime);
+                                },
+                                {"ForcePodAttachment"});
+    _systemScheduler->addSystem("ForcePodShooting",
+                                [this](ECS::Registry& reg) {
+                                    _forcePodShootingSystem->update(
+                                        reg, _lastDeltaTime);
+                                },
+                                {"ForcePodLaunch"});
     _systemScheduler->addSystem("Collision",
                                 [this](ECS::Registry& reg) {
                                     _collisionSystem->update(reg,
@@ -345,6 +372,7 @@ engine::ProcessedEvent GameEngine::processEvent(
                 case ::rtype::network::EntityType::Missile:
                 case ::rtype::network::EntityType::Pickup:
                 case ::rtype::network::EntityType::Obstacle:
+                case ::rtype::network::EntityType::ForcePod:
                     result.networkEntityType = event.entityType;
                     break;
                 default:
