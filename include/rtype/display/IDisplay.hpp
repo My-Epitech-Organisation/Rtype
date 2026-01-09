@@ -119,7 +119,7 @@ namespace rtype::display {
          * @param scale Scale applied to the sprite
          * @param color Modulation color (tint)
          */
-        virtual void drawSprite(const std::string& textureName, const Vector2<float>& position, const Rect<int>& rect, const Vector2<float>& scale, const Color& color) = 0;
+        virtual void drawSprite(const std::string& textureName, const Vector2<float>& position, const Rect<int>& rect, const Vector2<float>& scale, const Color& color, float rotation = 0.0f) = 0;
 
         /**
          * @brief Draws text to the screen.
