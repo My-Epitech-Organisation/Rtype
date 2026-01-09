@@ -153,8 +153,6 @@ void SFMLDisplay::drawSprite(const std::string& textureName, const Vector2f& pos
     if (hasRotationComponent) {
         sf::FloatRect bounds = sprite.getLocalBounds();
         sprite.setOrigin({bounds.size.x / 2.0f, bounds.size.y / 2.0f});
-        adjustedPosition.x += (bounds.size.x * scale.x) / 2.0f;
-        adjustedPosition.y += (bounds.size.y * scale.y) / 2.0f;
     }
 
     sprite.setPosition(adjustedPosition);
