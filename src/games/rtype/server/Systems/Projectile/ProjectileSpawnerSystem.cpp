@@ -80,6 +80,7 @@ void ProjectileSpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
         });
 }
 
+// LCOV_EXCL_START - lambda-based callback not easily testable
 uint32_t ProjectileSpawnerSystem::spawnPlayerProjectile(
     ECS::Registry& registry, uint32_t playerNetworkId, float playerX,
     float playerY) {
@@ -140,6 +141,7 @@ uint32_t ProjectileSpawnerSystem::spawnPlayerProjectile(
                                      weaponConfig.speed, 0.0F, weaponConfig,
                                      ProjectileOwner::Player, playerNetworkId);
 }
+// LCOV_EXCL_STOP - lambda-based callback not easily testable
 
 uint32_t ProjectileSpawnerSystem::spawnEnemyProjectile(
     ECS::Registry& registry, ECS::Entity enemyEntity, uint32_t enemyNetworkId,

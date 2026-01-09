@@ -13,11 +13,9 @@
 #include <memory>
 #include <vector>
 
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Window/Event.hpp>
-
 #include "ECS.hpp"
 #include "Graphic/AssetManager/AssetManager.hpp"
+#include "rtype/display/IDisplay.hpp"
 
 /**
  * @brief Interface for game-specific scene logic
@@ -49,16 +47,16 @@ class IGameScene {
     /**
      * @brief Render game-specific elements
      *
-     * @param window The render window
+     * @param display The display interface
      */
-    virtual void render(std::shared_ptr<sf::RenderWindow> window) = 0;
+    virtual void render(rtype::display::IDisplay& display) = 0;
 
     /**
      * @brief Handle game-specific events
      *
-     * @param event The SFML event
+     * @param event The display event
      */
-    virtual void pollEvents(const sf::Event& event) = 0;
+    virtual void pollEvents(const rtype::display::Event& event) = 0;
 
     /**
      * @brief Get current input mask based on game controls

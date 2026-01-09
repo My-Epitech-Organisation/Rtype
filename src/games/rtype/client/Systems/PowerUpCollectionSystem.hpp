@@ -15,6 +15,7 @@
 #include <SFML/Graphics/Font.hpp>
 
 #include "../../shared/Components/PowerUpComponent.hpp"
+#include "rtype/display/IDisplay.hpp"
 #include "rtype/engine.hpp"
 
 namespace rtype::games::rtype::client {
@@ -25,13 +26,13 @@ namespace rtype::games::rtype::client {
  */
 class PowerUpCollectionSystem : public ::rtype::engine::ASystem {
    public:
-    explicit PowerUpCollectionSystem(std::shared_ptr<sf::Font> font);
+    explicit PowerUpCollectionSystem(const std::string& font);
     ~PowerUpCollectionSystem() override = default;
 
     void update(ECS::Registry& registry, float dt) override;
 
    private:
-    std::shared_ptr<sf::Font> _font;
+    const std::string& _font;
 
     struct PowerUpState {
         ::rtype::games::rtype::shared::PowerUpType type;
@@ -41,7 +42,7 @@ class PowerUpCollectionSystem : public ::rtype::engine::ASystem {
 
     std::string getPowerUpDisplayName(
         ::rtype::games::rtype::shared::PowerUpType type) const;
-    sf::Color getPowerUpColor(
+    ::rtype::display::Color getPowerUpColor(
         ::rtype::games::rtype::shared::PowerUpType type) const;
 };
 

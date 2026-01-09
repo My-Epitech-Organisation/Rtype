@@ -14,11 +14,12 @@
 #include <string>
 #include <unordered_map>
 
-#include <SFML/Graphics/Font.hpp>
+#include "rtype/display/IDisplay.hpp"
 
 class FontManager {
    private:
-    std::unordered_map<std::string, std::shared_ptr<sf::Font>> _assets;
+    std::unordered_map<std::string, std::shared_ptr<::rtype::display::IFont>>
+        _assets;
 
    public:
     FontManager(const FontManager&) = delete;
@@ -26,7 +27,7 @@ class FontManager {
 
     void load(const std::string& id, const std::string& filePath);
 
-    std::shared_ptr<sf::Font> get(const std::string& id);
+    std::shared_ptr<::rtype::display::IFont> get(const std::string& id);
 
     /**
      * @brief Check if a font is loaded
@@ -53,7 +54,11 @@ class FontManager {
      */
     std::size_t size() const;
 
-    FontManager() = default;
+    explicit FontManager(::rtype::display::IDisplay* display)
+        : _display(display) {}
+
+   private:
+    ::rtype::display::IDisplay* _display;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_FONTMANAGER_HPP_

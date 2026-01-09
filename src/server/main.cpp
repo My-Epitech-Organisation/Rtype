@@ -21,6 +21,8 @@
 #include "games/rtype/server/GameEngine.hpp"
 #include "games/rtype/server/RTypeEntitySpawner.hpp"
 #include "games/rtype/server/RTypeGameConfig.hpp"
+#include "lobby/LobbyManager.hpp"
+#include "shared/NetworkUtils.hpp"
 
 /**
  * @brief Signal handler for graceful shutdown and config reload
@@ -134,6 +136,24 @@ static std::shared_ptr<rtype::ArgParser> configureParser(
                     config->tickRate = v.value();
                     config->tickRateOverride = true;
                     return rtype::ParseResult::Success;
+                })
+        .option("-i", "--instances", "n",
+                "Number of lobby instances (1-16, default: 1)",
+                [config](std::string_view val) {
+                    auto v =
+                        rtype::parseNumber<uint32_t>(val, "instances", 1, 16);
+                    if (!v.has_value()) return rtype::ParseResult::Error;
+                    config->instanceCount = v.value();
+                    return rtype::ParseResult::Success;
+                })
+        .option("", "--lobby-timeout", "seconds",
+                "Empty lobby timeout in seconds (default: 300)",
+                [config](std::string_view val) {
+                    auto v = rtype::parseNumber<uint32_t>(val, "lobby-timeout",
+                                                          10, 3600);
+                    if (!v.has_value()) return rtype::ParseResult::Error;
+                    config->lobbyTimeout = v.value();
+                    return rtype::ParseResult::Success;
                 });
     return parser;
 }
@@ -155,6 +175,8 @@ static void printBanner(const ServerConfig& config) {
                            config.maxPlayersOverride ? " (override)" : "")
             << std::format("  Tick Rate:   {} Hz{}\n", config.tickRate,
                            config.tickRateOverride ? " (override)" : "")
+            << std::format("  Instances:   {}\n", config.instanceCount)
+            << std::format("  Lobby Timeout: {} seconds\n", config.lobbyTimeout)
             << std::format("  Verbose:     {}\n", config.verbose ? "yes" : "no")
             << "==================================");
 }
@@ -169,28 +191,75 @@ static void printBanner(const ServerConfig& config) {
 static int runServer(const ServerConfig& config,
                      std::shared_ptr<std::atomic<bool>> shutdownFlag,
                      std::shared_ptr<std::atomic<bool>> reloadConfigFlag) {
-    auto gameConfig = rtype::games::rtype::server::createRTypeGameConfig();
-
-    if (!gameConfig->initialize(config.configPath)) {
-        LOG_ERROR_CAT(rtype::LogCategory::Main,
-                      "[Main] Failed to initialize game configuration: "
-                          << gameConfig->getLastError());
-        return 1;
-    }
-
-    rtype::server::ServerApp server(std::move(gameConfig), shutdownFlag,
-                                    config.verbose);
-
     // TODO(Clem): Implement hot reload in main loop when reloadConfigFlag
     (void)reloadConfigFlag;
 
-    if (!server.run()) {
+    if (config.instanceCount == 0) {
+        LOG_WARNING_CAT(rtype::LogCategory::Main,
+                        "[Main] No lobby instances configured; exiting.");
+        return 0;
+    }
+
+    if (!rtype::server::isUdpPortAvailable(
+            static_cast<uint16_t>(config.port))) {
         LOG_ERROR_CAT(rtype::LogCategory::Main,
-                      "[Main] Server failed to start.");
+                      "[Main] Requested base port "
+                          << config.port << " is unavailable; exiting.");
         return 1;
     }
 
-    LOG_INFO_CAT(rtype::LogCategory::Main, "[Main] Server terminated.");
+    for (std::uint32_t i = 0; i < config.instanceCount; ++i) {
+        std::uint16_t p = static_cast<std::uint16_t>(config.port + 1 + i);
+        if (!rtype::server::isUdpPortAvailable(p)) {
+            LOG_ERROR_CAT(rtype::LogCategory::Main,
+                          "[Main] Required lobby port "
+                              << p << " is unavailable; exiting.");
+            return 1;
+        }
+    }
+
+    if (config.instanceCount >= 1) {
+        LOG_INFO_CAT(rtype::LogCategory::Main,
+                     "[Main] Starting lobby manager with "
+                         << config.instanceCount << " instance(s)");
+
+        rtype::server::LobbyManager::Config managerConfig;
+        managerConfig.basePort = config.port;
+        managerConfig.instanceCount = config.instanceCount;
+        managerConfig.maxPlayers = config.maxPlayers;
+        managerConfig.tickRate = config.tickRate;
+        managerConfig.configPath = config.configPath;
+        managerConfig.emptyTimeout = std::chrono::seconds(config.lobbyTimeout);
+        managerConfig.maxInstances = 16;
+
+        try {
+            rtype::server::LobbyManager manager(managerConfig);
+
+            if (!manager.start()) {
+                LOG_ERROR_CAT(rtype::LogCategory::Main,
+                              "[Main] Failed to start lobby manager");
+                return 1;
+            }
+
+            while (!shutdownFlag->load() && manager.isRunning()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            LOG_INFO_CAT(
+                rtype::LogCategory::Main,
+                "[Main] Shutdown signal received, stopping lobbies...");
+
+            manager.stop();
+
+            LOG_INFO_CAT(rtype::LogCategory::Main,
+                         "[Main] Lobby manager terminated.");
+            return 0;
+        } catch (const std::exception& e) {
+            LOG_ERROR_CAT(rtype::LogCategory::Main,
+                          "[Main] Lobby manager error: " << e.what());
+            return 1;
+        }
+    }
     return 0;
 }
 

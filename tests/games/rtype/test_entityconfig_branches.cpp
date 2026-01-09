@@ -131,4 +131,138 @@ TEST(EntityConfigBranches, LoadFromDirectoryHandlesMissing) {
     EXPECT_FALSE(reg.loadFromDirectory("/this/path/does/not/exist_xyz"));
 }
 
+TEST(EntityConfigBranches, BehaviorStringVariants) {
+    EntityConfigRegistry& reg = EntityConfigRegistry::getInstance();
+    reg.clear();
+
+    const std::string toml = R"(enemy = [
+  { id = "e_move", behavior = "move_left" },
+  { id = "e_Move", behavior = "MoveLeft" },
+  { id = "e_sine", behavior = "sine_wave" },
+  { id = "e_Sine", behavior = "SineWave" },
+  { id = "e_chase", behavior = "chase" },
+  { id = "e_Chase", behavior = "Chase" },
+  { id = "e_patrol", behavior = "patrol" },
+  { id = "e_Patrol", behavior = "Patrol" },
+  { id = "e_stationary", behavior = "stationary" },
+  { id = "e_Stationary", behavior = "Stationary" },
+  { id = "e_zigzag", behavior = "zigzag" },
+  { id = "e_Zigzag", behavior = "ZigZag" },
+  { id = "e_dive", behavior = "divebomb" },
+  { id = "e_Dive", behavior = "DiveBomb" }
+])";
+
+    auto file = makeTempFile("enemies_var.toml", toml);
+    EXPECT_TRUE(reg.loadEnemies(file.string()));
+
+    auto check = [&](const std::string& id, AIBehavior expected) {
+        auto opt = reg.getEnemy(id);
+        ASSERT_TRUE(opt.has_value());
+        EXPECT_EQ(opt->get().behavior, expected);
+    };
+
+    check("e_move", AIBehavior::MoveLeft);
+    check("e_Move", AIBehavior::MoveLeft);
+    check("e_sine", AIBehavior::SineWave);
+    check("e_Sine", AIBehavior::SineWave);
+    check("e_chase", AIBehavior::Chase);
+    check("e_Chase", AIBehavior::Chase);
+    check("e_patrol", AIBehavior::Patrol);
+    check("e_Patrol", AIBehavior::Patrol);
+    check("e_stationary", AIBehavior::Stationary);
+    check("e_Stationary", AIBehavior::Stationary);
+    check("e_zigzag", AIBehavior::ZigZag);
+    check("e_Zigzag", AIBehavior::ZigZag);
+    check("e_dive", AIBehavior::DiveBomb);
+    check("e_Dive", AIBehavior::DiveBomb);
+}
+
+TEST(EntityConfigBranches, PowerUpEffectVariants) {
+    EntityConfigRegistry& reg = EntityConfigRegistry::getInstance();
+    reg.clear();
+
+    const std::string toml = R"(powerup = [
+  { id = "p_health", effect = "health" },
+  { id = "p_Health", effect = "Health" },
+  { id = "p_speed", effect = "speed_boost" },
+  { id = "p_Speed", effect = "SpeedBoost" },
+  { id = "p_weapon", effect = "weapon_upgrade" },
+  { id = "p_shield", effect = "shield" },
+  { id = "p_boost1", effect = "extra_life" },
+  { id = "p_boost2", effect = "HealthBoost" },
+  { id = "p_boost3", effect = "health_boost" }
+])";
+
+    auto file = makeTempFile("powerups_var.toml", toml);
+    EXPECT_TRUE(reg.loadPowerUps(file.string()));
+
+    auto check = [&](const std::string& id, PowerUpConfig::EffectType expected) {
+        auto opt = reg.getPowerUp(id);
+        ASSERT_TRUE(opt.has_value());
+        EXPECT_EQ(opt->get().effect, expected);
+    };
+
+    check("p_health", PowerUpConfig::EffectType::Health);
+    check("p_Health", PowerUpConfig::EffectType::Health);
+    check("p_speed", PowerUpConfig::EffectType::SpeedBoost);
+    check("p_Speed", PowerUpConfig::EffectType::SpeedBoost);
+    check("p_weapon", PowerUpConfig::EffectType::WeaponUpgrade);
+    check("p_shield", PowerUpConfig::EffectType::Shield);
+    check("p_boost1", PowerUpConfig::EffectType::HealthBoost);
+    check("p_boost2", PowerUpConfig::EffectType::HealthBoost);
+    check("p_boost3", PowerUpConfig::EffectType::HealthBoost);
+}
+
+TEST(EntityConfigBranches, LoadEnemiesMalformedReturnsFalse) {
+    EntityConfigRegistry& reg = EntityConfigRegistry::getInstance();
+    reg.clear();
+
+    // Intentionally malformed TOML (unterminated array)
+    const std::string bad = "enemy = [ { id = \"bad\", name = \"bad\"";
+    auto file = makeTempFile("enemies_malformed.toml", bad);
+    EXPECT_FALSE(reg.loadEnemies(file.string()));
+}
+
+TEST(EntityConfigBranches, LoadPowerUpsMalformedReturnsFalse) {
+    EntityConfigRegistry& reg = EntityConfigRegistry::getInstance();
+    reg.clear();
+
+    const std::string bad = "powerup = [ { id = \"bad\", effect = \"health\""; // unterminated
+    auto file = makeTempFile("powerups_malformed.toml", bad);
+    EXPECT_FALSE(reg.loadPowerUps(file.string()));
+}
+
+TEST(EntityConfigBranches, LoadLevelInvalidReturnsFalse) {
+    EntityConfigRegistry& reg = EntityConfigRegistry::getInstance();
+    reg.clear();
+
+    // Level with no waves (invalid)
+    const std::string toml = R"([level]
+id = ""
+name = "NoWaves"
+background = "bg.png"
+)";
+    auto file = makeTempFile("level_invalid.toml", toml);
+    EXPECT_FALSE(reg.loadLevel(file.string()));
+}
+
+TEST(EntityConfigBranches, UnknownBehaviorAndEffectFallbacks) {
+    EntityConfigRegistry& reg = EntityConfigRegistry::getInstance();
+    reg.clear();
+
+    const std::string toml_e = R"(enemy = [ { id = "e_unk", behavior = "unknown_behavior" } ])";
+    auto filee = makeTempFile("enemies_unknown.toml", toml_e);
+    EXPECT_TRUE(reg.loadEnemies(filee.string()));
+    auto eopt = reg.getEnemy("e_unk");
+    ASSERT_TRUE(eopt.has_value());
+    EXPECT_EQ(eopt->get().behavior, AIBehavior::MoveLeft); // fallback
+
+    const std::string toml_p = R"(powerup = [ { id = "p_unk", effect = "unknown_effect" } ])";
+    auto filep = makeTempFile("powerups_unknown.toml", toml_p);
+    EXPECT_TRUE(reg.loadPowerUps(filep.string()));
+    auto popt = reg.getPowerUp("p_unk");
+    ASSERT_TRUE(popt.has_value());
+    EXPECT_EQ(popt->get().effect, PowerUpConfig::EffectType::Health); // fallback
+}
+
 // End of file

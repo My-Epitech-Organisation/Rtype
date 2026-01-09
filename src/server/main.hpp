@@ -56,6 +56,9 @@ struct ServerConfig {
     bool portOverride = false;
     bool maxPlayersOverride = false;
     bool tickRateOverride = false;
+
+    uint32_t instanceCount = 1;
+    uint32_t lobbyTimeout = 300;
 };
 
 #endif  // SRC_SERVER_MAIN_HPP_

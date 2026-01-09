@@ -53,6 +53,18 @@ enum class OpCode : std::uint8_t {
     /// Server broadcasts player ready state change (RELIABLE)
     S_PLAYER_READY_STATE = 0x0A,
 
+    /// Client requests list of available lobbies (RELIABLE)
+    C_REQUEST_LOBBIES = 0x0B,
+
+    /// Server responds with lobby list (RELIABLE)
+    S_LOBBY_LIST = 0x0C,
+
+    /// Client sends lobby code to join specific lobby (RELIABLE)
+    C_JOIN_LOBBY = 0x0D,
+
+    /// Server accepts or rejects lobby join (RELIABLE)
+    S_JOIN_LOBBY_RESPONSE = 0x0E,
+
     /// Server spawns new entity (RELIABLE)
     S_ENTITY_SPAWN = 0x10,
 
@@ -67,6 +79,9 @@ enum class OpCode : std::uint8_t {
 
     /// Server notifies a power-up pickup (RELIABLE)
     S_POWERUP_EVENT = 0x14,
+
+    /// Server broadcasts batched entity position/velocity updates (UNRELIABLE)
+    S_ENTITY_MOVE_BATCH = 0x15,
 
     /// Client sends input state (UNRELIABLE)
     C_INPUT = 0x20,
@@ -117,6 +132,10 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::C_READY:
         case OpCode::S_GAME_START:
         case OpCode::S_PLAYER_READY_STATE:
+        case OpCode::C_REQUEST_LOBBIES:
+        case OpCode::S_LOBBY_LIST:
+        case OpCode::C_JOIN_LOBBY:
+        case OpCode::S_JOIN_LOBBY_RESPONSE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
@@ -124,6 +143,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return true;
 
         case OpCode::S_ENTITY_MOVE:
+        case OpCode::S_ENTITY_MOVE_BATCH:
         case OpCode::C_INPUT:
         case OpCode::S_UPDATE_POS:
         case OpCode::PING:
@@ -144,6 +164,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::C_CONNECT:
         case OpCode::C_GET_USERS:
         case OpCode::C_READY:
+        case OpCode::C_REQUEST_LOBBIES:
+        case OpCode::C_JOIN_LOBBY:
         case OpCode::C_INPUT:
         case OpCode::PING:
             return true;
@@ -169,8 +191,11 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_GAME_OVER:
         case OpCode::S_GAME_START:
         case OpCode::S_PLAYER_READY_STATE:
+        case OpCode::S_LOBBY_LIST:
+        case OpCode::S_JOIN_LOBBY_RESPONSE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
+        case OpCode::S_ENTITY_MOVE_BATCH:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
         case OpCode::S_POWERUP_EVENT:
@@ -203,8 +228,13 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::C_READY:
         case OpCode::S_GAME_START:
         case OpCode::S_PLAYER_READY_STATE:
+        case OpCode::C_REQUEST_LOBBIES:
+        case OpCode::S_LOBBY_LIST:
+        case OpCode::C_JOIN_LOBBY:
+        case OpCode::S_JOIN_LOBBY_RESPONSE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
+        case OpCode::S_ENTITY_MOVE_BATCH:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
         case OpCode::S_POWERUP_EVENT:
@@ -268,10 +298,20 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "S_GAME_START";
         case OpCode::S_PLAYER_READY_STATE:
             return "S_PLAYER_READY_STATE";
+        case OpCode::C_REQUEST_LOBBIES:
+            return "C_REQUEST_LOBBIES";
+        case OpCode::S_LOBBY_LIST:
+            return "S_LOBBY_LIST";
+        case OpCode::C_JOIN_LOBBY:
+            return "C_JOIN_LOBBY";
+        case OpCode::S_JOIN_LOBBY_RESPONSE:
+            return "S_JOIN_LOBBY_RESPONSE";
         case OpCode::S_ENTITY_SPAWN:
             return "S_ENTITY_SPAWN";
         case OpCode::S_ENTITY_MOVE:
             return "S_ENTITY_MOVE";
+        case OpCode::S_ENTITY_MOVE_BATCH:
+            return "S_ENTITY_MOVE_BATCH";
         case OpCode::S_ENTITY_DESTROY:
             return "S_ENTITY_DESTROY";
         case OpCode::S_ENTITY_HEALTH:

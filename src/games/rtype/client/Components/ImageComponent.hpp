@@ -8,30 +8,26 @@
 #ifndef SRC_GAMES_RTYPE_CLIENT_COMPONENTS_IMAGECOMPONENT_HPP_
 #define SRC_GAMES_RTYPE_CLIENT_COMPONENTS_IMAGECOMPONENT_HPP_
 
+#include <string>
 #include <utility>
 
-#include <SFML/Graphics.hpp>
+#include "../../../../../include/rtype/display/DisplayTypes.hpp"
 
 namespace rtype::games::rtype::client {
 
 /**
- * @brief Image component storing a sprite with a reference to a texture.
- *
- * The texture is NOT copied - it stores a reference to the original texture
- * managed by TextureManager. This avoids expensive texture copies.
- *
- * @warning The texture must outlive the Image component.
+ * @brief Image component storing a texture name and rendering properties.
  */
 struct Image {
-    sf::Sprite sprite;
+    std::string textureName;
+    ::rtype::display::Color color = ::rtype::display::Color::White();
 
     /**
-     * @brief Construct an Image component with a texture reference.
-     * @param texture Reference to a texture (must outlive this component)
+     * @brief Construct an Image component with a texture name.
+     * @param name Name of the texture in the asset manager
      */
-    explicit Image(const sf::Texture& texture) : sprite(texture) {}
+    explicit Image(std::string name) : textureName(std::move(name)) {}
 
-    // Default copy/move - sprite handles texture reference correctly
     Image(const Image& other) = default;
     Image(Image&& other) noexcept = default;
     Image& operator=(const Image& other) = default;

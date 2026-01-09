@@ -18,8 +18,8 @@
 
 namespace rtype::games::rtype::client {
 
-BoxingSystem::BoxingSystem(std::shared_ptr<sf::RenderTarget> target)
-    : ::rtype::engine::ASystem("BoxingSystem"), _target(std::move(target)) {}
+BoxingSystem::BoxingSystem(std::shared_ptr<::rtype::display::IDisplay> display)
+    : ::rtype::engine::ASystem("BoxingSystem"), _display(std::move(display)) {}
 
 void BoxingSystem::update(ECS::Registry& registry, float dt) {
     if (registry.hasSingleton<AccessibilitySettings>()) {
@@ -35,14 +35,14 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
         .view<::rtype::games::rtype::shared::TransformComponent,
               ::rtype::games::rtype::shared::BoundingBoxComponent>()
         .each([this](auto /*entt*/, const auto& pos, const auto& bbox) {
-            sf::RectangleShape hitbox;
-            hitbox.setSize({bbox.width, bbox.height});
-            hitbox.setOrigin({bbox.width / 2.0F, bbox.height / 2.0F});
-            hitbox.setPosition({pos.x, pos.y});
-            hitbox.setFillColor(sf::Color(255, 0, 0, 30));
-            hitbox.setOutlineColor(sf::Color(255, 0, 0, 180));
-            hitbox.setOutlineThickness(2.0F);
-            this->_target->draw(hitbox);
+            ::rtype::display::Vector2f position = {pos.x - bbox.width / 2.0f,
+                                                   pos.y - bbox.height / 2.0f};
+            ::rtype::display::Vector2f size = {bbox.width, bbox.height};
+            ::rtype::display::Color fillColor = {255, 0, 0, 30};
+            ::rtype::display::Color outlineColor = {255, 0, 0, 180};
+
+            this->_display->drawRectangle(position, size, fillColor,
+                                          outlineColor, 2.0f);
         });
 
     registry
@@ -51,16 +51,9 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
         .each([this](ECS::Entity _,
                      const ::rtype::games::rtype::client::Image& img,
                      ::rtype::games::rtype::client::BoxingComponent& box) {
-            sf::FloatRect bounds = img.sprite.getGlobalBounds();
-
-            box.box.setSize({bounds.size.x, bounds.size.y});
-            box.box.setPosition({bounds.position.x, bounds.position.y});
-
-            box.box.setFillColor(box.fillColor);
-            box.box.setOutlineColor(box.outlineColor);
-            box.box.setOutlineThickness(box.outlineThickness);
-
-            this->_target->draw(box.box);
+            this->_display->drawRectangle(box.position, box.size, box.fillColor,
+                                          box.outlineColor,
+                                          box.outlineThickness);
         });
 }
 }  // namespace rtype::games::rtype::client

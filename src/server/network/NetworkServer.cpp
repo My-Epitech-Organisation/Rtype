@@ -20,11 +20,13 @@
 #include "Serializer.hpp"
 #include "protocol/ByteOrderSpec.hpp"
 #include "protocol/Validator.hpp"
+#include "server/shared/ServerMetrics.hpp"
 
 namespace rtype::server {
 
 NetworkServer::NetworkServer(const Config& config)
     : config_(config),
+      compressor_(config.compressionConfig),
       ioContext_(),
       socket_(network::createAsyncSocket(ioContext_.get())),
       receiveBuffer_(
@@ -115,6 +117,30 @@ void NetworkServer::moveEntity(std::uint32_t id, float x, float y, float vx,
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
     broadcastToAll(network::OpCode::S_ENTITY_MOVE, serialized);
+}
+
+void NetworkServer::moveEntitiesBatch(
+    const std::vector<std::tuple<std::uint32_t, float, float, float, float>>&
+        entities) {
+    if (entities.empty()) {
+        return;
+    }
+
+    auto count = static_cast<std::uint8_t>(
+        std::min(entities.size(), network::kMaxEntitiesPerBatch));
+
+    network::Buffer payload;
+    payload.reserve(1 + count * sizeof(network::EntityMovePayload));
+    payload.push_back(count);
+
+    for (std::size_t i = 0; i < count; ++i) {
+        const auto& [id, x, y, vx, vy] = entities[i];
+        network::EntityMovePayload entry{id, x, y, vx, vy};
+        auto serialized = network::Serializer::serializeForNetwork(entry);
+        payload.insert(payload.end(), serialized.begin(), serialized.end());
+    }
+
+    broadcastToAll(network::OpCode::S_ENTITY_MOVE_BATCH, payload);
 }
 
 void NetworkServer::destroyEntity(std::uint32_t id) {
@@ -431,6 +457,57 @@ std::size_t NetworkServer::clientCount() const noexcept {
     return clients_.size();
 }
 
+std::optional<network::Endpoint> NetworkServer::getClientEndpoint(
+    std::uint32_t userId) const {
+    std::lock_guard<std::mutex> lock(clientsMutex_);
+    auto keyIt = userIdToKey_.find(userId);
+    if (keyIt == userIdToKey_.end()) {
+        return std::nullopt;
+    }
+    auto clientIt = clients_.find(keyIt->second);
+    if (clientIt == clients_.end()) {
+        return std::nullopt;
+    }
+    return clientIt->second->endpoint;
+}
+
+bool NetworkServer::disconnectClient(std::uint32_t userId,
+                                     network::DisconnectReason reason) {
+    std::shared_ptr<ClientConnection> client;
+    {
+        std::lock_guard<std::mutex> lock(clientsMutex_);
+        auto keyIt = userIdToKey_.find(userId);
+        if (keyIt == userIdToKey_.end()) {
+            return false;
+        }
+        auto clientIt = clients_.find(keyIt->second);
+        if (clientIt == clients_.end()) {
+            return false;
+        }
+        client = clientIt->second;
+    }
+
+    network::DisconnectPayload payload;
+    payload.reason = static_cast<std::uint8_t>(reason);
+    auto serialized = network::Serializer::serialize(payload);
+
+    auto disconnectPacket = buildPacket(network::OpCode::DISCONNECT, serialized,
+                                        network::kServerUserId, 0, 0, false);
+
+    socket_->asyncSendTo(
+        disconnectPacket, client->endpoint,
+        [](network::Result<std::size_t> result) { (void)result; });
+
+    queueCallback([this, userId, reason]() {
+        if (onClientDisconnectedCallback_) {
+            onClientDisconnectedCallback_(userId, reason);
+        }
+    });
+
+    removeClient(userId);
+    return true;
+}
+
 void NetworkServer::dispatchCallbacks() {
     std::queue<std::function<void()>> toDispatch;
 
@@ -485,6 +562,12 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
     auto sizeResult = network::Validator::validatePacketSize(data.size());
     if (!sizeResult) {
         return;
+    }
+
+    if (_metrics) {
+        _metrics->packetsReceived.fetch_add(1, std::memory_order_relaxed);
+        _metrics->bytesReceived.fetch_add(data.size(),
+                                          std::memory_order_relaxed);
     }
 
     network::Header header;
@@ -546,7 +629,18 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
     network::Buffer payload;
     if (header.payloadSize > 0 &&
         data.size() >= network::kHeaderSize + header.payloadSize) {
-        payload.assign(data.begin() + network::kHeaderSize, data.end());
+        network::Buffer rawPayload(data.begin() + network::kHeaderSize,
+                                   data.end());
+
+        if (header.flags & network::Flags::kCompressed) {
+            auto decompressResult = compressor_.decompress(rawPayload);
+            if (!decompressResult) {
+                return;
+            }
+            payload = std::move(decompressResult.value());
+        } else {
+            payload = std::move(rawPayload);
+        }
     }
 
     switch (opcode) {
@@ -568,6 +662,10 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
 
         case network::OpCode::PING:
             handlePing(header, sender);
+            break;
+
+        case network::OpCode::C_JOIN_LOBBY:
+            handleJoinLobby(header, payload, sender);
             break;
 
         case network::OpCode::C_READY:
@@ -603,6 +701,24 @@ void NetworkServer::handleConnect(const network::Header& header,
 
         sendToClient(it->second, network::OpCode::S_ACCEPT, serialized);
         return;
+    }
+
+    if (auto bm = banManager_.lock()) {
+        rtype::Endpoint ep{sender.address, sender.port};
+        if (bm->isEndpointBanned(ep)) {
+            network::DisconnectPayload payload;
+            payload.reason =
+                static_cast<std::uint8_t>(network::DisconnectReason::Banned);
+            auto serialized = network::Serializer::serialize(payload);
+
+            auto packet =
+                buildPacket(network::OpCode::DISCONNECT, serialized,
+                            network::kServerUserId, 0, header.seqId, false);
+            socket_->asyncSendTo(
+                packet, sender,
+                [](network::Result<std::size_t> result) { (void)result; });
+            return;
+        }
     }
 
     std::uint32_t newUserId = nextUserId();
@@ -691,9 +807,15 @@ void NetworkServer::handleInput(const network::Header& header,
         std::uint8_t inputMask = deserialized.inputMask;
 
         auto client = findClientByUserId(userId);
-        if (client) {
-            client->lastActivity = std::chrono::steady_clock::now();
+        if (!client) {
+            return;
         }
+
+        if (!config_.expectedLobbyCode.empty() && !client->joined) {
+            return;
+        }
+
+        client->lastActivity = std::chrono::steady_clock::now();
 
         queueCallback([this, userId, inputMask]() {
             if (onClientInputCallback_) {
@@ -710,6 +832,14 @@ void NetworkServer::handleGetUsers(const network::Header& header,
     (void)sender;
 
     std::uint32_t userId = header.userId;
+
+    auto client = findClientByUserId(userId);
+    if (!client) {
+        return;
+    }
+    if (!config_.expectedLobbyCode.empty() && !client->joined) {
+        return;
+    }
 
     queueCallback([this, userId]() {
         if (onGetUsersRequestCallback_) {
@@ -746,6 +876,9 @@ void NetworkServer::handleReady(const network::Header& header,
     if (!client) {
         return;
     }
+    if (!config_.expectedLobbyCode.empty() && !client->joined) {
+        return;
+    }
 
     if (payload.size() < sizeof(network::LobbyReadyPayload)) {
         return;
@@ -766,6 +899,52 @@ void NetworkServer::handleReady(const network::Header& header,
             onClientReadyCallback_(userId, isReady);
         });
     }
+}
+
+void NetworkServer::handleJoinLobby(const network::Header& header,
+                                    const network::Buffer& payload,
+                                    const network::Endpoint& sender) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::JoinLobbyPayload)) {
+        return;
+    }
+
+    network::JoinLobbyPayload joinPayload;
+    std::memcpy(&joinPayload, payload.data(), sizeof(joinPayload));
+
+    std::string code(joinPayload.code.data(), joinPayload.code.size());
+
+    auto client = findClient(sender);
+
+    network::JoinLobbyResponsePayload resp{};
+
+    if (!client) {
+        resp.accepted = 0;
+        resp.reason = 1;
+        auto ser = network::Serializer::serializeForNetwork(resp);
+        auto tempClient = std::make_shared<ClientConnection>(
+            sender, 0, config_.reliabilityConfig);
+        sendToClient(tempClient, network::OpCode::S_JOIN_LOBBY_RESPONSE, ser);
+        return;
+    }
+
+    if (config_.expectedLobbyCode.empty() ||
+        config_.expectedLobbyCode == code) {
+        client->joined = true;
+        resp.accepted = 1;
+        resp.reason = 0;
+        LOG_INFO("[NetworkServer] Client userId="
+                 << client->userId << " joined lobby successfully");
+    } else {
+        resp.accepted = 0;
+        resp.reason = 1;
+        LOG_INFO("[NetworkServer] Client userId="
+                 << client->userId << " provided invalid lobby code: " << code);
+    }
+
+    auto ser = network::Serializer::serializeForNetwork(resp);
+    sendToClient(client, network::OpCode::S_JOIN_LOBBY_RESPONSE, ser);
 }
 
 std::string NetworkServer::makeConnectionKey(
@@ -868,11 +1047,23 @@ network::Buffer NetworkServer::buildPacket(network::OpCode opcode,
                                            std::uint32_t userId,
                                            std::uint16_t seqId,
                                            std::uint16_t ackId, bool reliable) {
+    network::Buffer finalPayload = payload;
+    bool isCompressed = false;
+
+    if (config_.enableCompression &&
+        compressor_.shouldCompress(payload.size())) {
+        auto compressionResult = compressor_.compress(payload);
+        if (compressionResult.wasCompressed) {
+            finalPayload = std::move(compressionResult.data);
+            isCompressed = true;
+        }
+    }
+
     network::Header header;
     header.magic = network::kMagicByte;
     header.opcode = static_cast<std::uint8_t>(opcode);
     header.payloadSize = network::ByteOrderSpec::toNetwork(
-        static_cast<std::uint16_t>(payload.size()));
+        static_cast<std::uint16_t>(finalPayload.size()));
     header.userId = network::ByteOrderSpec::toNetwork(userId);
     header.seqId = network::ByteOrderSpec::toNetwork(seqId);
     header.ackId = network::ByteOrderSpec::toNetwork(ackId);
@@ -883,11 +1074,15 @@ network::Buffer NetworkServer::buildPacket(network::OpCode opcode,
         header.flags |= network::Flags::kReliable;
     }
 
-    network::Buffer packet(network::kHeaderSize + payload.size());
+    if (isCompressed) {
+        header.flags |= network::Flags::kCompressed;
+    }
+
+    network::Buffer packet(network::kHeaderSize + finalPayload.size());
     std::memcpy(packet.data(), &header, network::kHeaderSize);
-    if (!payload.empty()) {
-        std::memcpy(packet.data() + network::kHeaderSize, payload.data(),
-                    payload.size());
+    if (!finalPayload.empty()) {
+        std::memcpy(packet.data() + network::kHeaderSize, finalPayload.data(),
+                    finalPayload.size());
     }
 
     return packet;
@@ -909,6 +1104,12 @@ void NetworkServer::sendToClient(
 
     if (reliable) {
         (void)client->reliableChannel.trackOutgoing(seqId, packet);
+    }
+
+    // Track metrics
+    if (_metrics) {
+        _metrics->packetsSent.fetch_add(1, std::memory_order_relaxed);
+        _metrics->bytesSent.fetch_add(packet.size(), std::memory_order_relaxed);
     }
 
     socket_->asyncSendTo(

@@ -119,7 +119,12 @@ struct TexturesConfig {
     BackgroundTextureConfig backgroundTexture;
     WallTextureConfig wallTexture;
     std::string Player;
-    std::string Enemy;
+    std::string EnemyNormal;
+    std::string EnemyChaser;
+    std::string EnemyShooter;
+    std::string EnemyHeavy;
+    std::string EnemyPatrol;
+    std::string EnemyWave;
     std::string astroVessel;
     std::string missileLaser;
     std::string forcePod;
@@ -176,6 +181,11 @@ struct ServerConfig {
     uint32_t maxPlayers = 8;
     uint32_t tickrate = 60;
     std::string mapName = "default";
+
+    uint16_t adminPort = 8080;
+    bool adminEnabled = true;
+    bool adminLocalhostOnly = true;
+    std::string adminToken = "";
 
     bool operator==(const ServerConfig&) const = default;
 };

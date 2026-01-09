@@ -22,7 +22,7 @@ namespace rtype::games::rtype::client {
 
 constexpr float kPowerUpRenewalThreshold = 0.5f;
 
-PowerUpCollectionSystem::PowerUpCollectionSystem(std::shared_ptr<sf::Font> font)
+PowerUpCollectionSystem::PowerUpCollectionSystem(const std::string& font)
     : ::rtype::engine::ASystem("PowerUpCollectionSystem"), _font(font) {
     LOG_INFO("[PowerUpCollectionSystem] Initialized");
 }
@@ -70,7 +70,7 @@ void PowerUpCollectionSystem::update(ECS::Registry& registry, float /*dt*/) {
 
         if (isNewCollection) {
             std::string displayName = getPowerUpDisplayName(activePowerUp.type);
-            sf::Color color = getPowerUpColor(activePowerUp.type);
+            ::rtype::display::Color color = getPowerUpColor(activePowerUp.type);
 
             LOG_DEBUG(
                 "[PowerUpCollectionSystem] Player "
@@ -78,7 +78,9 @@ void PowerUpCollectionSystem::update(ECS::Registry& registry, float /*dt*/) {
                 << " (remainingTime=" << activePowerUp.remainingTime << ")");
 
             VisualCueFactory::createPowerUpPopup(
-                registry, sf::Vector2f(transform.x + 20.f, transform.y),
+                registry,
+                ::rtype::display::Vector2<float>(transform.x + 20.f,
+                                                 transform.y),
                 displayName, _font, color);
         }
         _lastPowerUpState[playerId.playerId] = {activePowerUp.type,
@@ -107,20 +109,21 @@ std::string PowerUpCollectionSystem::getPowerUpDisplayName(
     }
 }
 
-sf::Color PowerUpCollectionSystem::getPowerUpColor(rs::PowerUpType type) const {
+::rtype::display::Color PowerUpCollectionSystem::getPowerUpColor(
+    rs::PowerUpType type) const {
     switch (type) {
         case rs::PowerUpType::SpeedBoost:
-            return sf::Color(255, 255, 0);  // Yellow
+            return ::rtype::display::Color(255, 255, 0);  // Yellow
         case rs::PowerUpType::Shield:
-            return sf::Color(100, 200, 255);  // Blue
+            return ::rtype::display::Color(100, 200, 255);  // Blue
         case rs::PowerUpType::RapidFire:
-            return sf::Color(0, 255, 255);  // Cyan
+            return ::rtype::display::Color(0, 255, 255);  // Cyan
         case rs::PowerUpType::DoubleDamage:
-            return sf::Color(255, 128, 0);  // Orange
+            return ::rtype::display::Color(255, 128, 0);  // Orange
         case rs::PowerUpType::HealthBoost:
-            return sf::Color(0, 255, 0);  // Green
+            return ::rtype::display::Color(0, 255, 0);  // Green
         default:
-            return sf::Color::White;
+            return ::rtype::display::Color::White();
     }
 }
 

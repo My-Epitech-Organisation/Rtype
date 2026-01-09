@@ -12,8 +12,6 @@
 #include <memory>
 #include <vector>
 
-#include <SFML/Window/Event.hpp>
-
 #include "AudioLib/AudioLib.hpp"
 #include "SceneManager/SceneManager.hpp"
 #include "SceneManager/Scenes/AScene.hpp"
@@ -23,13 +21,13 @@ class GameOverScene : public AScene {
     GameOverScene(
         std::shared_ptr<ECS::Registry> registry,
         std::shared_ptr<AssetManager> assetsManager,
-        std::shared_ptr<sf::RenderWindow> window,
+        std::shared_ptr<rtype::display::IDisplay> window,
         std::shared_ptr<AudioLib> audio,
         std::function<void(const SceneManager::Scene&)> switchToScene);
 
-    void pollEvents(const sf::Event& e) override;
+    void pollEvents(const rtype::display::Event& e) override;
     void update(float dt) override;
-    void render(std::shared_ptr<sf::RenderWindow> window) override;
+    void render(std::shared_ptr<rtype::display::IDisplay> window) override;
 
    private:
     std::function<void(const SceneManager::Scene&)> _switchToScene;

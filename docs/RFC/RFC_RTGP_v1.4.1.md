@@ -2,7 +2,7 @@
 
 | Metadata | Details |
 | :---- | :---- |
-| **Version** | 1.3.1 (Lobby Ready & Game Start System) |
+| **Version** | 1.4.1 (Entity Move Batching + Lobby System) |
 | **Status** | Draft / Experimental |
 | **Date** | 2026-01-05 |
 | **Authors** | R-Type Project Team |
@@ -105,7 +105,7 @@ Every RTGP packet consists of a fixed **16-byte Header** followed by a variable-
 
 ### **4.3. Reliability Mechanism (Flags)**
 
-The `Flags` field is used to manage the reliability layer (RUDP).
+The `Flags` field is used to manage the reliability layer (RUDP) and compression.
 
 **Flag Bitmask Values:**
 
@@ -114,6 +114,8 @@ The `Flags` field is used to manage the reliability layer (RUDP).
   dedicated ACK or piggybacking).
 * **0x02 - IS\_ACK:** The `Ack ID` field in this header is valid and
   acknowledges a previously received packet.
+* **0x04 - COMPRESSED:** The payload is compressed using LZ4 frame format.
+  The receiver **MUST** decompress the payload before processing.
 
 **Behavior:**
 
@@ -123,6 +125,30 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 3. **Retransmission:** If a packet marked `RELIABLE` is not acknowledged
    within a specific timeout (e.g., 200ms), the sender MUST retransmit
    it.
+
+### **4.4. Compression**
+
+RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
+
+**Compression Behavior:**
+
+1. **Threshold:** Payloads smaller than 64 bytes **SHOULD NOT** be compressed
+   (overhead exceeds benefit).
+2. **Format:** LZ4 frame format is used, which includes decompressed size
+   metadata for safe buffer allocation.
+3. **Header Field:** `Packet Size` (payloadSize) contains the **COMPRESSED**
+   size, not the original size.
+4. **Flag:** When payload is compressed, the COMPRESSED flag (0x04) **MUST**
+   be set.
+5. **Backward Compatibility:** Receivers **MUST** support both compressed and
+   uncompressed packets. If COMPRESSED flag is not set, payload is
+   processed as-is.
+
+**Decompression Requirements:**
+
+1. Receivers **MUST** check the COMPRESSED flag before processing payload.
+2. If decompression fails, the packet **MUST** be dropped and **MAY** be logged.
+3. Decompressed size **MUST NOT** exceed `kMaxPayloadSize` (1384 bytes).
 
 ## **5. Protocol Operations (OpCodes)**
 
@@ -262,6 +288,27 @@ The `Flags` field is used to manage the reliability layer (RUDP).
   * Power-Up Type (uint8) - The type of power-up collected (implementation-specific enumeration)
   * Duration (float) - Duration in seconds for temporary power-ups (0.0 for permanent)
 
+#### **0x15 - S\_ENTITY\_MOVE\_BATCH**
+
+* **Sender:** Server
+* **Reliability:** **UNRELIABLE** (Flag 0x00)
+* **Description:** Batched position/velocity updates for multiple entities. More bandwidth-efficient than individual S\_ENTITY\_MOVE packets, especially when combined with LZ4 compression. Each tick, all dirty entity updates are grouped into a single packet.
+* **Payload:**
+  * Count (uint8): Number of entities in the batch (1-69)
+  * Entries (EntityMovePayload[]): Array of entity updates, each containing:
+    * Entity ID (uint32)
+    * PosX (float)
+    * PosY (float)
+    * VelX (float)
+    * VelY (float)
+
+**Notes:**
+
+* Maximum 69 entities per batch due to MTU constraints: (1384 - 1) / 20 = 69
+* If more than 69 entities need updating, multiple batch packets are sent
+* LZ4 compression is automatically applied when batch size exceeds 64 bytes (4+ entities)
+* Estimated bandwidth savings: 50-60% compared to individual S\_ENTITY\_MOVE packets
+
 ### **5.3. Input & Reconciliation**
 
 #### **0x20 - C\_INPUT**
@@ -331,6 +378,7 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 | S_PLAYER_READY_STATE | 5 | uint32 + uint8 |
 | S_ENTITY_SPAWN | 13 | uint32 + uint8 + float + float |
 | S_ENTITY_MOVE | 20 | uint32 + 4 * float |
+| S_ENTITY_MOVE_BATCH | Variable | 1 + (count * 20), max 1381 bytes |
 | S_ENTITY_DESTROY | 4 | uint32 |
 | S_ENTITY_HEALTH | 12 | uint32 + int32 + int32 |
 | S_POWERUP_EVENT | 9 | uint32 + uint8 + float |
@@ -341,13 +389,15 @@ The `Flags` field is used to manage the reliability layer (RUDP).
 
 ## **8. Changes from Previous Versions**
 
-### **Version 1.3.1 (2026-01-05)**
+### **Version 1.4.1 (2026-01-05)**
 
+* **Added OpCode 0x15 - S_ENTITY_MOVE_BATCH:** Batched entity position/velocity updates for bandwidth optimization
+* **Optimization:** Entity updates are now grouped into a single packet per tick, enabling LZ4 compression
+* **Estimated bandwidth savings:** 50-60% for entity movement traffic
 * **Added OpCode 0x08 - C_READY:** Client lobby ready/unready signal
 * **Added OpCode 0x09 - S_GAME_START:** Server-initiated game start with countdown
-* **Added Section 5.1:** Extended session management documentation for lobby ready workflow
-* **Updated Section 7:** Added C_READY, S_GAME_START, and S_PLAYER_READY_STATE to payload size reference table
-* **Lobby Workflow:** Clients send C_READY when toggling ready state. Server broadcasts S_GAME_START when all players ready, triggering synchronized countdown on all clients.
+* **Added OpCode 0x0A - S_PLAYER_READY_STATE:** Broadcast player ready state changes
+* **Lobby Workflow:** Clients send C_READY when toggling ready state. Server broadcasts S_GAME_START when all players ready
 
 ### **Version 1.3.0 (2025-12-15)**
 

@@ -281,3 +281,78 @@ if(WIN32 OR MSVC)
 else()
     gtest_discover_tests(test_binaryserializer_branches)
 endif()
+# TomlParser tests (from config subdirectory)
+add_executable(test_toml_parser config/test_toml_parser.cpp)
+
+target_link_libraries(test_toml_parser PRIVATE
+    GTest::gtest_main
+    rtype_game_config
+)
+
+target_include_directories(test_toml_parser PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_toml_parser WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_toml_parser)
+endif()
+
+# LogCategory tests (from logger subdirectory)
+add_executable(test_log_category logger/test_log_category.cpp)
+
+target_link_libraries(test_log_category PRIVATE
+    GTest::gtest_main
+    common
+)
+
+target_include_directories(test_log_category PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_log_category WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_log_category)
+endif()
+
+# Timestamp tests (from logger subdirectory)
+add_executable(test_timestamp logger/test_timestamp.cpp)
+
+target_link_libraries(test_timestamp PRIVATE
+    GTest::gtest_main
+    common
+)
+
+target_include_directories(test_timestamp PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_timestamp WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_timestamp)
+endif()
+
+# Types tests (from types subdirectory)
+add_executable(test_types types/test_types.cpp)
+
+target_link_libraries(test_types PRIVATE
+    GTest::gtest_main
+    common
+)
+
+target_include_directories(test_types PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_types WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_types)
+endif()

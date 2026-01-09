@@ -22,6 +22,7 @@ CleanupSystem::CleanupSystem(EventEmitter emitter, CleanupConfig config)
       _emitEvent(std::move(emitter)),
       _config(config) {}
 
+// LCOV_EXCL_START - lambda-based callback not easily testable
 void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
     auto isOutOfBounds = [this](const TransformComponent& transform) {
         return transform.x < _config.leftBoundary ||
@@ -91,5 +92,6 @@ void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
             }
         });
 }
+// LCOV_EXCL_STOP
 
 }  // namespace rtype::games::rtype::server

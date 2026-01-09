@@ -8,11 +8,13 @@
 #ifndef SRC_CLIENT_GRAPHIC_GRAPHIC_HPP_
 #define SRC_CLIENT_GRAPHIC_GRAPHIC_HPP_
 
+#include <chrono>
 #include <memory>
 
-#include <SFML/Graphics.hpp>
 #include <rtype/ecs.hpp>
 
+#include "../../../include/rtype/display/IDisplay.hpp"
+#include "../../../lib/common/src/DLLoader/DLLoader.hpp"
 #include "../../games/rtype/client/GraphicsConstants.hpp"
 #include "../../games/rtype/client/Systems/BoxingSystem.hpp"
 #include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
@@ -27,7 +29,6 @@
 #include "../../games/rtype/client/Systems/RenderSystem.hpp"
 #include "../../games/rtype/client/Systems/ResetTriggersSystem.hpp"
 #include "../../games/rtype/client/Systems/ShaderRenderSystem.hpp"
-#include "../../games/rtype/client/Systems/SpritePositionSystem.hpp"
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
 #include "../network/ClientNetworkSystem.hpp"
@@ -78,6 +79,20 @@ class Graphic {
         ::rtype::games::rtype::client::GraphicsConfig::PROJECTILE_SPEED_LASER;
 
     // ========================================================================
+    // DLL and Display (Must be destroyed last, so declared first)
+    // ========================================================================
+
+    /// @brief DLL loader for the display module
+    std::unique_ptr<rtype::common::DLLoader<rtype::display::IDisplay>>
+        _displayLoader;
+
+    /// @brief Display interface loaded from DLL
+    std::shared_ptr<rtype::display::IDisplay> _display;
+
+    /// @brief Name of the Display lib loaded from DLL
+    std::string _displayName;
+
+    // ========================================================================
     // Shared resources (owned by Graphic, shared with subsystems)
     // ========================================================================
 
@@ -96,20 +111,8 @@ class Graphic {
     /// @brief Keyboard action mappings shared with SceneManager
     std::shared_ptr<KeyboardActions> _keybinds;
 
-    /// @brief SFML window shared with rendering systems and SceneManager
-    std::shared_ptr<sf::RenderWindow> _window;
-
     /// @brief Audio lib shared with SceneManager
     std::shared_ptr<AudioLib> _audioLib;
-
-    /// @brief Render texture for post-processing
-    std::shared_ptr<sf::RenderTexture> _sceneTexture;
-
-    /// @brief Optional colorblind shader
-    std::shared_ptr<sf::Shader> _colorShader;
-
-    /// @brief Camera view shared with ParallaxScrolling system
-    std::shared_ptr<sf::View> _view;
 
     // ========================================================================
     // Owned resources (unique ownership)
@@ -125,8 +128,6 @@ class Graphic {
     // ECS Systems (unique ownership, registered with scheduler)
     // ========================================================================
 
-    std::unique_ptr<::rtype::games::rtype::client::SpritePositionSystem>
-        _spritePositionSystem;
     std::unique_ptr<::rtype::games::rtype::client::ColorTintSystem>
         _colorTintSystem;
     std::unique_ptr<::rtype::games::rtype::client::PlayerAnimationSystem>
@@ -162,7 +163,7 @@ class Graphic {
     // ========================================================================
 
     /// @brief Main clock for delta time calculation
-    sf::Clock _mainClock;
+    std::chrono::steady_clock::time_point _lastFrameTime;
 
     /// @brief Current frame delta time (seconds)
     float _currentDeltaTime = 0.0f;
@@ -187,7 +188,7 @@ class Graphic {
     void _update();
 
     /// @brief Clear window, run render systems, display
-    void _display();
+    void _render();
 
     /// @brief Initialize and register all systems with the scheduler
     void _initializeSystems();
@@ -229,7 +230,7 @@ class Graphic {
     Graphic(std::shared_ptr<ECS::Registry> registry,
             std::shared_ptr<rtype::client::NetworkClient> networkClient,
             std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem);
-    ~Graphic() = default;
+    ~Graphic();
 
     Graphic(const Graphic&) = delete;
     Graphic& operator=(const Graphic&) = delete;

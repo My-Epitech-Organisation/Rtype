@@ -263,4 +263,29 @@
         return std::cref(static_cast<const SparseSet<T>&>(*iter->second));
     }
 
+    inline void Registry::clear() {
+        removeEntitiesIf([](Entity) { return true; });
+        cleanupTombstones();
+
+        _signalDispatcher.clearAllCallbacks();
+
+        {
+            std::unique_lock lock(_entityMutex); // Reusing entity mutex for convenience
+            _singletons.clear();
+        }
+
+        {
+            std::unique_lock lock(_componentPoolMutex);
+            _componentPools.clear();
+        }
+        
+        {
+            std::unique_lock lock(_entityMutex);
+            _generations.clear();
+            _freeIndices.clear();
+            _tombstones.clear();
+            _entityComponents.clear();
+        }
+    }
+
 #endif // ECS_CORE_REGISTRY_COMPONENT_INL

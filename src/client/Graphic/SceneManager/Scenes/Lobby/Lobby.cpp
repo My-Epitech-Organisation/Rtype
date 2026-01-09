@@ -121,9 +121,19 @@ void Lobby::update(float dt) {
                           auto playerEntt, auto id, auto& Zindex) {
                     if (playerId != id.playerId) return;
 
+                    constexpr float spritePixelSize = 17.0f;
+                    constexpr float spriteScale = 4.0f;
+                    constexpr float scaledSpriteSize =
+                        spritePixelSize * spriteScale;
+                    constexpr float halfSize = scaledSpriteSize;
+
+                    float posX = myCenterX - halfSize;
+                    float posY = kBoxCenterY - halfSize;
+
                     LOG_INFO("[Lobby] Positioning player "
-                             << playerId << " sprite at x=" << myCenterX
-                             << " y=" << kBoxCenterY);
+                             << playerId << " sprite at x=" << posX
+                             << " y=" << posY << " (centered at " << myCenterX
+                             << ", " << kBoxCenterY << ")");
 
                     if (this->_registry->hasComponent<
                             rtype::games::rtype::shared::TransformComponent>(
@@ -131,13 +141,27 @@ void Lobby::update(float dt) {
                         auto& pos = this->_registry->getComponent<
                             rtype::games::rtype::shared::TransformComponent>(
                             playerEntt);
-                        pos.x = myCenterX;
-                        pos.y = kBoxCenterY;
+                        pos.x = posX;
+                        pos.y = posY;
                     } else {
                         this->_registry->emplaceComponent<
                             rtype::games::rtype::shared::TransformComponent>(
-                            playerEntt, myCenterX, kBoxCenterY);
+                            playerEntt, posX, posY);
                     }
+
+                    bool hadGameTag = this->_registry->hasComponent<
+                        rtype::games::rtype::client::GameTag>(playerEntt);
+                    if (hadGameTag) {
+                        this->_registry->removeComponent<
+                            rtype::games::rtype::client::GameTag>(playerEntt);
+                    }
+                    if (!this->_registry->hasComponent<
+                            rtype::games::rtype::client::LobbyTag>(
+                            playerEntt)) {
+                        this->_registry->emplaceComponent<
+                            rtype::games::rtype::client::LobbyTag>(playerEntt);
+                    }
+
                     Zindex.depth = 4;
                     positioned = true;
                 });
@@ -165,10 +189,8 @@ void Lobby::update(float dt) {
                 int displayTime = static_cast<int>(std::ceil(_countdownTimer));
                 text.textContent =
                     "Game starting in: " + std::to_string(displayTime);
-                text.text.setString(text.textContent);
             } else {
                 text.textContent = "GO!";
-                text.text.setString(text.textContent);
             }
         }
 
@@ -183,9 +205,9 @@ void Lobby::update(float dt) {
     }
 }
 
-void Lobby::render(std::shared_ptr<sf::RenderWindow> window) {}
+void Lobby::render(std::shared_ptr<rtype::display::IDisplay> window) {}
 
-void Lobby::pollEvents(const sf::Event& e) {}
+void Lobby::pollEvents(const rtype::display::Event& e) {}
 
 void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
     LOG_INFO("[Lobby] Creating player info menu for userId: "
@@ -198,7 +220,9 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
 
     auto playerSection = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "",
-        sf::FloatRect({sectionX, kBoxTopY}, {kBoxWidth, kBoxHeight}), 1);
+        ::rtype::display::Rect<float>(sectionX, kBoxTopY, kBoxWidth,
+                                      kBoxHeight),
+        1);
     this->_listUser.insert({userId, playerSection});
     this->_listEntity.insert(this->_listEntity.end(), playerSection.begin(),
                              playerSection.end());
@@ -208,7 +232,7 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
     auto playerLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager,
         "Player " + std::to_string(userId), "main_font",
-        sf::Vector2f(myCenterX - 60, kBoxTopY + 20), 36);
+        ::rtype::display::Vector2<float>(myCenterX - 60, kBoxTopY + 20), 36);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         playerLabel, 3);
     if (this->_registry->hasComponent<rtype::games::rtype::client::Text>(
@@ -216,7 +240,7 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
         auto& text =
             this->_registry->getComponent<rtype::games::rtype::client::Text>(
                 playerLabel);
-        text.color = sf::Color::Yellow;
+        text.color = ::rtype::display::Color::Yellow();
     }
     this->_listUser[userId].push_back(playerLabel);
     this->_listEntity.push_back(playerLabel);
@@ -224,7 +248,7 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
 
     auto readyIndicator = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "WAITING...", "main_font",
-        sf::Vector2f(myCenterX - 80, kBoxTopY + 70), 28);
+        ::rtype::display::Vector2<float>(myCenterX - 80, kBoxTopY + 70), 28);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         readyIndicator, 3);
     if (this->_registry->hasComponent<rtype::games::rtype::client::Text>(
@@ -232,7 +256,7 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
         auto& text =
             this->_registry->getComponent<rtype::games::rtype::client::Text>(
                 readyIndicator);
-        text.color = sf::Color::Yellow;
+        text.color = ::rtype::display::Color::Yellow();
     }
     _playerReadyIndicators[userId] = readyIndicator;
     this->_listUser[userId].push_back(readyIndicator);
@@ -243,11 +267,11 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
     auto backBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 36, "Disconnect"),
+            "main_font", ::rtype::display::Color::White(), 36, "Disconnect"),
         rtype::games::rtype::shared::TransformComponent(100, 900),
-        rtype::games::rtype::client::Rectangle({400, 75}, sf::Color(200, 0, 0),
-                                               sf::Color::Red),
+        rtype::games::rtype::client::Rectangle(
+            {400, 75}, ::rtype::display::Color(200, 0, 0),
+            ::rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([this]() {
             try {
                 LOG_INFO(
@@ -302,13 +326,14 @@ void Lobby::_removePlayerInfoMenu(uint32_t userId) {
 void Lobby::_initInfoMenu() {
     auto section = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "",
-        sf::FloatRect({kBaseX, kBaseY}, {kBaseW, kBaseH}));
+        ::rtype::display::Rect<float>(kBaseX, kBaseY, kBaseW, kBaseH));
     this->_listEntity.insert(this->_listEntity.end(), section.begin(),
                              section.end());
     auto title = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Game Info", "main_font",
-        sf::Vector2f(static_cast<float>(kBaseX + kBaseW / 2 - 100),
-                     static_cast<float>(kBaseY + 20)),
+        ::rtype::display::Vector2<float>(
+            static_cast<float>(kBaseX + kBaseW / 2 - 100),
+            static_cast<float>(kBaseY + 20)),
         48);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         title, 1);
@@ -317,14 +342,13 @@ void Lobby::_initInfoMenu() {
     _readyButtonEntity = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            this->_assetsManager->fontManager->get("main_font"),
-            sf::Color::White, 32, "Ready"),
+            "main_font", ::rtype::display::Color::White(), 32, "Ready"),
         rtype::games::rtype::shared::TransformComponent(
             static_cast<float>(kBaseX + kBaseW - 280),
             static_cast<float>(kBaseY + kBaseH - 70)),
-        rtype::games::rtype::client::Rectangle(std::pair<int, int>(250, 50),
-                                               sf::Color(70, 130, 180),
-                                               sf::Color(0, 150, 0)),
+        rtype::games::rtype::client::Rectangle(
+            std::pair<int, int>(250, 50), ::rtype::display::Color(70, 130, 180),
+            ::rtype::display::Color(0, 150, 0)),
         this->_assetsManager, std::function<void()>([this]() {
             _isReady = !_isReady;
 
@@ -334,7 +358,6 @@ void Lobby::_initInfoMenu() {
                     _registry->getComponent<rtype::games::rtype::client::Text>(
                         _readyButtonEntity);
                 text.textContent = _isReady ? "Not Ready" : "Ready";
-                text.text.setString(text.textContent);
             }
             if (_registry->hasComponent<rtype::games::rtype::client::Rectangle>(
                     _readyButtonEntity)) {
@@ -342,10 +365,10 @@ void Lobby::_initInfoMenu() {
                     _registry
                         ->getComponent<rtype::games::rtype::client::Rectangle>(
                             _readyButtonEntity);
-                rect.mainColor =
-                    _isReady ? sf::Color(0, 150, 0) : sf::Color(70, 130, 180);
+                rect.mainColor = _isReady
+                                     ? ::rtype::display::Color(0, 150, 0)
+                                     : ::rtype::display::Color(70, 130, 180);
                 rect.currentColor = rect.mainColor;
-                rect.rectangle.setFillColor(rect.currentColor);
             }
 
             if (_networkSystem) {
@@ -372,7 +395,6 @@ void Lobby::_initInfoMenu() {
                             ->getComponent<rtype::games::rtype::client::Text>(
                                 _countdownTextEntity);
                     text.textContent = "";
-                    text.text.setString(text.textContent);
                 }
                 LOG_INFO("[Lobby] Countdown cancelled by player");
             }
@@ -384,14 +406,15 @@ void Lobby::_initInfoMenu() {
 
     _countdownTextEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "main_font",
-        sf::Vector2f(static_cast<float>(kBaseX + kBaseW / 2 - 150),
-                     static_cast<float>(kBaseY + kBaseH / 2)),
+        ::rtype::display::Vector2<float>(
+            static_cast<float>(kBaseX + kBaseW / 2 - 150),
+            static_cast<float>(kBaseY + kBaseH / 2)),
         64);
     if (_registry->hasComponent<rtype::games::rtype::client::Text>(
             _countdownTextEntity)) {
         auto& text = _registry->getComponent<rtype::games::rtype::client::Text>(
             _countdownTextEntity);
-        text.color = sf::Color::Yellow;
+        text.color = ::rtype::display::Color::Yellow();
     }
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         _countdownTextEntity, 10);
@@ -400,7 +423,7 @@ void Lobby::_initInfoMenu() {
 
 Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
              std::shared_ptr<AssetManager> assetManager,
-             std::shared_ptr<sf::RenderWindow> window,
+             std::shared_ptr<::rtype::display::IDisplay> window,
              std::function<void(const SceneManager::Scene&)> switchToScene,
              std::shared_ptr<rtype::client::NetworkClient> networkClient,
              std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem,
@@ -425,40 +448,140 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
     this->_networkClient->onEntityMove(([](rtype::client::EntityMoveEvent) {}));
 
     this->_networkClient->onGameStart([this](float countdownDuration) {
-        LOG_INFO("[Lobby] Server triggered game start with countdown: "
-                 << countdownDuration << "s");
-        if (countdownDuration > 0.0f) {
-            _countdownActive = true;
-            _countdownTimer = countdownDuration;
-        } else {
-            _countdownActive = false;
-            _countdownTimer = 0.0f;
-            if (_registry->hasComponent<rtype::games::rtype::client::Text>(
-                    _countdownTextEntity)) {
-                auto& text =
-                    _registry->getComponent<rtype::games::rtype::client::Text>(
-                        _countdownTextEntity);
-                text.textContent = "";
-                text.text.setString(text.textContent);
+        try {
+            if (!_initialized || !this->_registry) {
+                return;
             }
-            LOG_INFO("[Lobby] Countdown cancelled by server");
+
+            LOG_INFO("[Lobby] Server triggered game start with countdown: "
+                     << countdownDuration << "s");
+            if (countdownDuration > 0.0f) {
+                _countdownActive = true;
+                _countdownTimer = countdownDuration;
+            } else {
+                _countdownActive = false;
+                _countdownTimer = 0.0f;
+                if (_registry->hasComponent<rtype::games::rtype::client::Text>(
+                        _countdownTextEntity)) {
+                    auto& text =
+                        _registry
+                            ->getComponent<rtype::games::rtype::client::Text>(
+                                _countdownTextEntity);
+                    text.textContent = "";
+                }
+                LOG_INFO("[Lobby] Countdown cancelled by server");
+            }
+        } catch (const std::exception& e) {
+            LOG_ERROR("[Lobby] Exception in onGameStart: " << e.what());
+        } catch (...) {
+            LOG_ERROR("[Lobby] Unknown exception in onGameStart");
         }
     });
 
-    this->_networkClient->onPlayerReadyStateChanged(
-        [this](std::uint32_t userId, bool isReady) {
+    this->_networkClient->onGameStateChange(
+        [this](rtype::client::GameStateEvent event) {
+            try {
+                if (!_initialized || !this->_registry) {
+                    return;
+                }
+
+                LOG_INFO("[Lobby] Received game state change: "
+                         << static_cast<int>(event.state));
+
+                if (event.state == rtype::network::GameState::Running) {
+                    LOG_INFO(
+                        "[Lobby] Server indicates game is now Running - "
+                        "switching to game scene");
+                    _countdownActive = false;
+                    this->_switchToScene(SceneManager::Scene::IN_GAME);
+                }
+            } catch (const std::exception& e) {
+                LOG_ERROR(
+                    "[Lobby] Exception in onGameStateChange: " << e.what());
+            } catch (...) {
+                LOG_ERROR("[Lobby] Unknown exception in onGameStateChange");
+            }
+        });
+
+    this->_networkClient->onJoinLobbyResponse([this](bool accepted,
+                                                     uint8_t reason) {
+        try {
+            if (!_initialized || !this->_registry) {
+                return;
+            }
+
+            if (!accepted) {
+                LOG_ERROR("[Lobby] Join lobby rejected by server, reason="
+                          << static_cast<int>(reason));
+                this->_networkClient->disconnect();
+                return;
+            }
+
+            LOG_INFO("[Lobby] Join lobby accepted by server");
+        } catch (const std::exception& e) {
+            LOG_ERROR("[Lobby] Exception in onJoinLobbyResponse: " << e.what());
+        } catch (...) {
+            LOG_ERROR("[Lobby] Unknown exception in onJoinLobbyResponse");
+        }
+    });
+
+    this->_networkClient->onPlayerReadyStateChanged([this](std::uint32_t userId,
+                                                           bool isReady) {
+        try {
+            if (!_initialized) {
+                return;
+            }
+
+            if (!this->_registry) {
+                return;
+            }
+
             LOG_INFO("[Lobby] Server notified: Player "
                      << userId
                      << " ready state: " << (isReady ? "READY" : "NOT READY"));
-            _updatePlayerReadyIndicator(userId, isReady);
-        });
 
-    this->_networkClient->onEntityDestroy([this](std::uint32_t entityId) {
-        this->onEntityDestroyEvent(entityId);
+            if (_disconnectedPlayers.count(userId) > 0) {
+                LOG_INFO("[Lobby] Ignoring ready state for disconnected player "
+                         << userId);
+                return;
+            }
+
+            if (_listUser.find(userId) == _listUser.end()) {
+                LOG_DEBUG("[Lobby] Received ready state for player "
+                          << userId
+                          << " but player menu not created yet - waiting...");
+                return;
+            }
+
+            _updatePlayerReadyIndicator(userId, isReady);
+        } catch (const std::exception& e) {
+            LOG_ERROR(
+                "[Lobby] Exception in onPlayerReadyStateChanged: " << e.what());
+        } catch (...) {
+            LOG_ERROR("[Lobby] Unknown exception in onPlayerReadyStateChanged");
+        }
     });
 
-    this->_networkClient->onDisconnected(
-        [this](rtype::client::NetworkClient::DisconnectReason reason) {
+    this->_networkClient->onEntityDestroy([this](std::uint32_t entityId) {
+        try {
+            if (!_initialized || !this->_registry) {
+                return;
+            }
+            this->onEntityDestroyEvent(entityId);
+        } catch (const std::exception& e) {
+            LOG_ERROR("[Lobby] Exception in onEntityDestroy: " << e.what());
+        } catch (...) {
+            LOG_ERROR("[Lobby] Unknown exception in onEntityDestroy");
+        }
+    });
+
+    this->_networkClient->onDisconnected([this](rtype::client::NetworkClient::
+                                                    DisconnectReason reason) {
+        try {
+            if (!_initialized || !this->_registry) {
+                return;
+            }
+
             LOG_INFO("[Lobby] Client disconnected from server, reason="
                      << static_cast<int>(reason));
 
@@ -489,6 +612,7 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
             _countdownTimer = 3.0f;
 
             _isConnected = false;
+            _initialized = false;
             try {
                 this->_switchToScene(SceneManager::Scene::MAIN_MENU);
             } catch (SceneNotFound& e) {
@@ -498,7 +622,12 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
             LOG_INFO(
                 "[Lobby] Lobby cleaned up after disconnect, switching to main "
                 "menu");
-        });
+        } catch (const std::exception& e) {
+            LOG_ERROR("[Lobby] Exception in onDisconnected: " << e.what());
+        } catch (...) {
+            LOG_ERROR("[Lobby] Unknown exception in onDisconnected");
+        }
+    });
 
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "Lobby"));
@@ -517,45 +646,55 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
             this->_createPlayerInfoMenu(playerId, this->_nbrUser);
         });
 
-    /*
-    ** TODO(Samuel): Create a new player info menu when a new user connects use
-    *the network client onNewConnected callback and handle disconnected player
-    **  this->_networkClient->onNewConnected(([this](uint32_t id) {
-    **     this->_nbrUser++;
-    **     this->_createPlayerInfoMenu(id, this->_nbrUser);
-    **  }));
-    **  this->_networkClient->onPlayerDisconnected(([this](uint32_t id) {
-    **     this->_nbrUser--;
-    **     this->_removePlayerInfoMenu(id);
-    **  }));
-    */
+    _initialized = true;
+    LOG_INFO("[Lobby] Initialization complete");
 }
 
 void Lobby::_updatePlayerReadyIndicator(uint32_t userId, bool isReady) {
+    if (!_registry) {
+        LOG_WARNING(
+            "[Lobby] _updatePlayerReadyIndicator called but registry is null!");
+        return;
+    }
+
+    if (_disconnectedPlayers.count(userId) > 0) {
+        return;
+    }
+
+    if (_listUser.find(userId) == _listUser.end()) {
+        return;
+    }
+
+    if (_playerReadyIndicators.find(userId) == _playerReadyIndicators.end()) {
+        LOG_WARNING("[Lobby] No ready indicator for player " << userId);
+        return;
+    }
+
     if (isReady) {
         _playerReadyStates.insert(userId);
     } else {
         _playerReadyStates.erase(userId);
     }
 
-    if (_playerReadyIndicators.find(userId) != _playerReadyIndicators.end()) {
-        auto indicatorEntity = _playerReadyIndicators[userId];
-        if (_registry && _registry->isAlive(indicatorEntity)) {
-            if (_registry->hasComponent<rtype::games::rtype::client::Text>(
-                    indicatorEntity)) {
-                auto& text =
-                    _registry->getComponent<rtype::games::rtype::client::Text>(
-                        indicatorEntity);
-                if (isReady) {
-                    text.textContent = "READY";
-                    text.color = sf::Color::Green;
-                } else {
-                    text.textContent = "WAITING...";
-                    text.color = sf::Color::Yellow;
-                }
-                text.text.setString(text.textContent);
-                text.text.setFillColor(text.color);
-            }
+    auto indicatorEntity = _playerReadyIndicators[userId];
+
+    if (!_registry->isAlive(indicatorEntity)) {
+        LOG_WARNING("[Lobby] Ready indicator entity is not alive for player "
+                    << userId);
+        _playerReadyIndicators.erase(userId);
+        return;
+    }
+
+    if (_registry->hasComponent<rtype::games::rtype::client::Text>(
+            indicatorEntity)) {
+        auto& text = _registry->getComponent<rtype::games::rtype::client::Text>(
+            indicatorEntity);
+        if (isReady) {
+            text.textContent = "READY";
+            text.color = ::rtype::display::Color::Green();
+        } else {
+            text.textContent = "WAITING...";
+            text.color = ::rtype::display::Color::Yellow();
         }
     }
 }
@@ -581,17 +720,34 @@ void Lobby::onEntityDestroyEvent(std::uint32_t entityId) {
 Lobby::~Lobby() {
     LOG_INFO("[Lobby] Destroying Lobby scene...");
 
+    _initialized = false;
+
     if (this->_registry) {
         LOG_INFO("[Lobby] Resetting player positions for game scene...");
         this->_registry
             ->view<rtype::games::rtype::shared::PlayerIdComponent,
                    rtype::games::rtype::shared::TransformComponent>()
-            .each([](auto playerEntt, auto& id, auto& pos) {
+            .each([this](auto playerEntt, auto& id, auto& pos) {
                 pos.x = 100.0f;
                 pos.y = 150.0f + ((id.playerId - 1) * 100.0f);
                 LOG_INFO("[Lobby] Reset player "
                          << id.playerId << " position to (" << pos.x << ", "
                          << pos.y << ")");
+
+                if (!this->_registry
+                         ->hasComponent<rtype::games::rtype::client::GameTag>(
+                             playerEntt)) {
+                    this->_registry->emplaceComponent<
+                        rtype::games::rtype::client::GameTag>(playerEntt);
+                    LOG_DEBUG("[Lobby] Re-added GameTag to player "
+                              << id.playerId << " for in-game scene rendering");
+                }
+                if (this->_registry
+                        ->hasComponent<rtype::games::rtype::client::LobbyTag>(
+                            playerEntt)) {
+                    this->_registry->removeComponent<
+                        rtype::games::rtype::client::LobbyTag>(playerEntt);
+                }
             });
     }
 

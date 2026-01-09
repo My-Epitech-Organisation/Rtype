@@ -19,8 +19,4 @@ set_target_properties(rtype_game_client_components PROPERTIES LINKER_LANGUAGE CX
 
 target_link_libraries(rtype_game_client_components
     PUBLIC
-    SFML::Graphics
-    SFML::Window
-    SFML::Audio
-    SFML::System
 )
