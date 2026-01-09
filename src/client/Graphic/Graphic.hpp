@@ -42,6 +42,7 @@
 
 namespace rtype::games::rtype::client {
 class ChaserRotationSystem;
+class ChaserExplosionSystem;
 }
 
 /**
@@ -140,6 +141,8 @@ class Graphic {
         _animationSystem;
     std::unique_ptr<::rtype::games::rtype::client::ChaserRotationSystem>
         _chaserRotationSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ChaserExplosionSystem>
+        _chaserExplosionSystem;
     std::unique_ptr<::rtype::games::rtype::client::PlayerPowerUpVisualSystem>
         _playerPowerUpVisualSystem;
     std::unique_ptr<::rtype::games::rtype::client::PowerUpCollectionSystem>

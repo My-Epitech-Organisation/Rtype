@@ -18,6 +18,7 @@
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "Systems/AnimationSystem.hpp"
+#include "Systems/ChaserExplosionSystem.hpp"
 #include "Systems/ChaserRotationSystem.hpp"
 #include "games/rtype/client/AllComponents.hpp"
 #include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"
@@ -92,8 +93,9 @@ void Graphic::_update() {
     if (!isPaused) {
         this->_systemScheduler->runSystem("color_tint");
         this->_systemScheduler->runSystem("player_animation");
-        this->_systemScheduler->runSystem("animation");
         this->_systemScheduler->runSystem("chaser_rotation");
+        this->_systemScheduler->runSystem("chaser_explosion");
+        this->_systemScheduler->runSystem("animation");
         this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
     }
@@ -160,6 +162,8 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::client::AnimationSystem>();
     this->_chaserRotationSystem =
         std::make_unique<::rtype::games::rtype::client::ChaserRotationSystem>();
+    this->_chaserExplosionSystem =
+        std::make_unique<::rtype::games::rtype::client::ChaserExplosionSystem>();
     this->_playerPowerUpVisualSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_powerUpCollectionSystem = std::make_unique<
@@ -224,8 +228,14 @@ void Graphic::_initializeSystems() {
 
     this->_systemScheduler->addSystem("chaser_rotation",
                                       [this](ECS::Registry& reg) {
-                                          LOG_DEBUG("[Graphic] chaser_rotation lambda called");
                                           _chaserRotationSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {});
+
+    this->_systemScheduler->addSystem("chaser_explosion",
+                                      [this](ECS::Registry& reg) {
+                                          _chaserExplosionSystem->update(
                                               reg, _currentDeltaTime);
                                       },
                                       {});
