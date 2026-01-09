@@ -49,6 +49,7 @@ inline constexpr std::uint8_t kDown = 0x02;
 inline constexpr std::uint8_t kLeft = 0x04;
 inline constexpr std::uint8_t kRight = 0x08;
 inline constexpr std::uint8_t kShoot = 0x10;
+inline constexpr std::uint8_t kForcePod = 0x20;  // Launch/Recall Force Pod
 }  // namespace InputMask
 
 #pragma pack(push, 1)
