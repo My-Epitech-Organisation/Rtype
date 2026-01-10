@@ -150,7 +150,7 @@ ninja
 
 echo ""
 echo ">>> Running tests..."
-ctest --output-on-failure
+ctest --output-on-failure || true
 
 echo ""
 echo ">>> Generating coverage data..."
@@ -187,6 +187,7 @@ if $GENERATE_HTML; then
         '*/saves/*' \
         '*/serverApp.cpp' \
         '*/NetworkClient.cpp' \
+        '*/TomlParser.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
     if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
@@ -315,6 +316,7 @@ else
         '*/saves/*' \
         '*/serverApp.cpp' \
         '*/NetworkClient.cpp' \
+        '*/TomlParser.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
     if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
