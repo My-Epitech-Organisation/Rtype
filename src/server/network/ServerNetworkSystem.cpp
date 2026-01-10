@@ -7,17 +7,60 @@
 
 #include "ServerNetworkSystem.hpp"
 
+#include <cmath>
 #include <memory>
 #include <tuple>
 #include <utility>
 #include <vector>
 
 #include "Logger/Macros.hpp"
+#include "games/rtype/server/GameEngine.hpp"
 #include "games/rtype/shared/Components.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
 
 namespace rtype::server {
+
+static constexpr float VIEWPORT_WIDTH =
+    rtype::games::rtype::server::GameConfig::SCREEN_WIDTH;
+static constexpr float VIEWPORT_HEIGHT =
+    rtype::games::rtype::server::GameConfig::SCREEN_HEIGHT;
+static constexpr float VIEWPORT_MARGIN = 100.0F;
+
+// ============================================================================
+// NORMAL BANDWIDTH MODE - Full update rates for good connections
+// ============================================================================
+namespace NormalMode {
+static constexpr std::uint32_t PLAYER_UPDATE_INTERVAL = 1;
+static constexpr std::uint32_t ENEMY_UPDATE_INTERVAL = 4;
+static constexpr std::uint32_t PROJECTILE_UPDATE_INTERVAL = 2;
+static constexpr float PLAYER_POSITION_DELTA = 20.0F;
+static constexpr float PLAYER_VELOCITY_DELTA = 50.0F;
+static constexpr float ENEMY_POSITION_DELTA = 30.0F;
+static constexpr float ENEMY_VELOCITY_DELTA = 60.0F;
+static constexpr float PROJECTILE_POSITION_DELTA = 40.0F;
+static constexpr float PROJECTILE_VELOCITY_DELTA = 80.0F;
+}  // namespace NormalMode
+
+// ============================================================================
+// LOW BANDWIDTH MODE - Reduced rates for constrained connections (~5 KB/s)
+// ============================================================================
+namespace LowBandwidthMode {
+static constexpr std::uint32_t PLAYER_UPDATE_INTERVAL = 3;
+static constexpr std::uint32_t ENEMY_UPDATE_INTERVAL = 120;
+static constexpr std::uint32_t PROJECTILE_UPDATE_INTERVAL = 240;
+static constexpr float PLAYER_POSITION_DELTA = 40.0F;
+static constexpr float PLAYER_VELOCITY_DELTA = 80.0F;
+static constexpr float ENEMY_POSITION_DELTA = 120.0F;
+static constexpr float ENEMY_VELOCITY_DELTA = 200.0F;
+static constexpr float PROJECTILE_POSITION_DELTA = 150.0F;
+static constexpr float PROJECTILE_VELOCITY_DELTA = 250.0F;
+}  // namespace LowBandwidthMode
+
+static bool isEntityVisible(float x, float y) {
+    return x >= -VIEWPORT_MARGIN && x <= VIEWPORT_WIDTH + VIEWPORT_MARGIN &&
+           y >= -VIEWPORT_MARGIN && y <= VIEWPORT_HEIGHT + VIEWPORT_MARGIN;
+}
 
 ServerNetworkSystem::ServerNetworkSystem(
     std::shared_ptr<ECS::Registry> registry,
@@ -39,6 +82,33 @@ ServerNetworkSystem::ServerNetworkSystem(
 
         server_->onGetUsersRequest(
             [this](std::uint32_t userId) { handleGetUsersRequest(userId); });
+
+        server_->onBandwidthModeChanged([this](std::uint32_t userId,
+                                               bool lowBandwidth) {
+            if (lowBandwidth) {
+                auto count = ++lowBandwidthClientCount_;
+                lowBandwidthModeActive_.store(true, std::memory_order_release);
+                LOG_INFO("[ServerNetworkSystem] Low bandwidth mode ENABLED "
+                         << "(client " << userId << ", " << count
+                         << " clients requesting)");
+            } else {
+                auto count = lowBandwidthClientCount_.load();
+                if (count > 0) {
+                    count = --lowBandwidthClientCount_;
+                }
+                if (count == 0) {
+                    lowBandwidthModeActive_.store(false,
+                                                  std::memory_order_release);
+                    LOG_INFO(
+                        "[ServerNetworkSystem] Low bandwidth mode DISABLED "
+                        << "(no clients requesting)");
+                } else {
+                    LOG_INFO("[ServerNetworkSystem] Client "
+                             << userId << " disabled low bandwidth, but "
+                             << count << " clients still requesting");
+                }
+            }
+        });
     }
 }
 
@@ -183,12 +253,81 @@ void ServerNetworkSystem::broadcastEntityUpdates() {
     std::vector<std::tuple<std::uint32_t, float, float, float, float>>
         dirtyEntities;
 
+    bool lowBandwidth = lowBandwidthModeActive_.load(std::memory_order_acquire);
+
+    std::uint32_t playerInterval, enemyInterval, projectileInterval;
+    float playerPosDelta, playerVelDelta;
+    float enemyPosDelta, enemyVelDelta;
+    float projectilePosDelta, projectileVelDelta;
+
+    if (lowBandwidth) {
+        playerInterval = LowBandwidthMode::PLAYER_UPDATE_INTERVAL;
+        enemyInterval = LowBandwidthMode::ENEMY_UPDATE_INTERVAL;
+        projectileInterval = LowBandwidthMode::PROJECTILE_UPDATE_INTERVAL;
+        playerPosDelta = LowBandwidthMode::PLAYER_POSITION_DELTA;
+        playerVelDelta = LowBandwidthMode::PLAYER_VELOCITY_DELTA;
+        enemyPosDelta = LowBandwidthMode::ENEMY_POSITION_DELTA;
+        enemyVelDelta = LowBandwidthMode::ENEMY_VELOCITY_DELTA;
+        projectilePosDelta = LowBandwidthMode::PROJECTILE_POSITION_DELTA;
+        projectileVelDelta = LowBandwidthMode::PROJECTILE_VELOCITY_DELTA;
+    } else {
+        playerInterval = NormalMode::PLAYER_UPDATE_INTERVAL;
+        enemyInterval = NormalMode::ENEMY_UPDATE_INTERVAL;
+        projectileInterval = NormalMode::PROJECTILE_UPDATE_INTERVAL;
+        playerPosDelta = NormalMode::PLAYER_POSITION_DELTA;
+        playerVelDelta = NormalMode::PLAYER_VELOCITY_DELTA;
+        enemyPosDelta = NormalMode::ENEMY_POSITION_DELTA;
+        enemyVelDelta = NormalMode::ENEMY_VELOCITY_DELTA;
+        projectilePosDelta = NormalMode::PROJECTILE_POSITION_DELTA;
+        projectileVelDelta = NormalMode::PROJECTILE_VELOCITY_DELTA;
+    }
+
     for (auto& [networkId, info] : networkedEntities_) {
-        if (info.dirty) {
+        info.ticksSinceLastSend++;
+
+        if (!info.dirty) {
+            continue;
+        }
+
+        if (!isEntityVisible(info.lastX, info.lastY)) {
+            info.dirty = false;
+            continue;
+        }
+
+        float posDelta = std::abs(info.lastX - info.lastSentX) +
+                         std::abs(info.lastY - info.lastSentY);
+        float velDelta = std::abs(info.lastVx - info.lastSentVx) +
+                         std::abs(info.lastVy - info.lastSentVy);
+
+        std::uint32_t updateInterval = playerInterval;
+        float posThreshold = playerPosDelta;
+        float velThreshold = playerVelDelta;
+        if (info.type == EntityType::Bydos ||
+            info.type == EntityType::Obstacle) {
+            updateInterval = enemyInterval;
+            posThreshold = enemyPosDelta;
+            velThreshold = enemyVelDelta;
+        } else if (info.type == EntityType::Missile) {
+            updateInterval = projectileInterval;
+            posThreshold = projectilePosDelta;
+            velThreshold = projectileVelDelta;
+        }
+
+        bool shouldSend = (info.ticksSinceLastSend >= updateInterval) ||
+                          (posDelta > posThreshold) ||
+                          (velDelta > velThreshold);
+
+        if (shouldSend) {
             dirtyEntities.emplace_back(networkId, info.lastX, info.lastY,
                                        info.lastVx, info.lastVy);
-            info.dirty = false;
+            info.lastSentX = info.lastX;
+            info.lastSentY = info.lastY;
+            info.lastSentVx = info.lastVx;
+            info.lastSentVy = info.lastVy;
+            info.ticksSinceLastSend = 0;
         }
+
+        info.dirty = false;
     }
 
     if (dirtyEntities.empty()) {
