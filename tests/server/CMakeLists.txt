@@ -348,7 +348,7 @@ target_link_libraries(test_game_event_processor PRIVATE
 )
 
 # PacketProcessor unit tests
-add_executable(test_packet_processor test_packet_processor.cpp
+add_executable(test_packet_processor test_packet_processor.cpp test_packet_processor_branches.cpp
     ${CMAKE_SOURCE_DIR}/src/server/serverApp/packetProcessor/PacketProcessor.cpp
 )
 

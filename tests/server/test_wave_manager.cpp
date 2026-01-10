@@ -915,5 +915,15 @@ count = 1
     // Should still progress to next wave
 }
 
+TEST_F(WaveManagerTest, GettersWithoutLoadedLevel) {
+    WaveManager manager;
+    // Test all getters when no level is loaded
+    EXPECT_FALSE(manager.isLevelLoaded());
+    EXPECT_EQ(manager.getTotalWaves(), 0);
+    EXPECT_EQ(manager.getLevelId(), "");
+    EXPECT_EQ(manager.getLevelName(), "");
+    EXPECT_FALSE(manager.getBossId().has_value());
+}
+
 }  // namespace
 }  // namespace rtype::games::rtype::server
