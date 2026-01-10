@@ -243,13 +243,19 @@ TEST(NetworkClientHandlersTest, EntityMoveBatchMultipleInvokesBatchCallback) {
         EXPECT_EQ(ev.entities.size(), 2u);
     });
 
-    // Build batch with 2 entries
+    // Build batch with 2 entries (header + compact entries)
     Buffer payload;
+    // Count
     payload.push_back(2);
-    EntityMovePayload e1{ByteOrderSpec::toNetwork(1u), 1.0f, 2.0f, 0.1f, 0.2f};
-    EntityMovePayload e2{ByteOrderSpec::toNetwork(2u), 3.0f, 4.0f, 0.3f, 0.4f};
-    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&e1), reinterpret_cast<uint8_t*>(&e1) + sizeof(e1));
-    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&e2), reinterpret_cast<uint8_t*>(&e2) + sizeof(e2));
+    // Shared serverTick (network order)
+    std::uint32_t serverTick = ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(1u));
+    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&serverTick), reinterpret_cast<uint8_t*>(&serverTick) + sizeof(serverTick));
+
+    // Two compact entries (EntityMoveBatchEntry)
+    EntityMoveBatchEntry be1{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(1u)), static_cast<std::int16_t>(100), static_cast<std::int16_t>(200), static_cast<std::int16_t>(10), static_cast<std::int16_t>(20)};
+    EntityMoveBatchEntry be2{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(2u)), static_cast<std::int16_t>(300), static_cast<std::int16_t>(400), static_cast<std::int16_t>(30), static_cast<std::int16_t>(40)};
+    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&be1), reinterpret_cast<uint8_t*>(&be1) + sizeof(be1));
+    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&be2), reinterpret_cast<uint8_t*>(&be2) + sizeof(be2));
 
     Header hdr{};
     hdr.magic = kMagicByte;
