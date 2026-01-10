@@ -26,8 +26,8 @@ void LevelCreatorScene::createSection(
     section.id = id;
     section.bounds = bounds;
 
-    auto sectionEnts =
-        EntityFactory::createSection(_registry, _assetsManager, title, bounds, 0);
+    auto sectionEnts = EntityFactory::createSection(_registry, _assetsManager,
+                                                    title, bounds, 0);
     _uiEntities.insert(_uiEntities.end(), sectionEnts.begin(),
                        sectionEnts.end());
     _sections.push_back(section);
@@ -147,8 +147,8 @@ LevelCreatorScene::LevelCreatorScene(
             rtype::display::Color(0, 135, 0, 255)),
         this->_assetsManager,
         std::function<void()>([this]() { this->addWave(); }));
-    this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnAdd, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        btnAdd, 1);
     addElementToSection("settings", btnAdd, currentY);
 
     auto btnPrev = EntityFactory::createButton(
@@ -162,8 +162,8 @@ LevelCreatorScene::LevelCreatorScene(
         this->_assetsManager, std::function<void()>([this]() {
             if (_currentWaveIndex > 0) switchWave(_currentWaveIndex - 1);
         }));
-    this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnPrev, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        btnPrev, 1);
     addElementToSection("settings", btnPrev, currentY);
 
     auto btnNext = EntityFactory::createButton(
@@ -178,8 +178,8 @@ LevelCreatorScene::LevelCreatorScene(
             if (_currentWaveIndex < static_cast<int>(_waves.size()) - 1)
                 switchWave(_currentWaveIndex + 1);
         }));
-    this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnNext, 1);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        btnNext, 1);
     addElementToSection("settings", btnNext, currentY);
 
     _listEntity.push_back(EntityFactory::createButton(
@@ -464,13 +464,14 @@ void LevelCreatorScene::refreshWaveUI() {
     float contentY = 100.f;
 
     auto addToWave = [&](ECS::Entity e, float y) {
-        if (this->_registry->hasComponent<rtype::games::rtype::client::ZIndex>(e))
-            this->_registry->getComponent<rtype::games::rtype::client::ZIndex>(
-                e)
+        if (this->_registry->hasComponent<rtype::games::rtype::client::ZIndex>(
+                e))
+            this->_registry
+                ->getComponent<rtype::games::rtype::client::ZIndex>(e)
                 .depth = 1;
         else
-            this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-                e, 1);
+            this->_registry
+                ->emplaceComponent<rtype::games::rtype::client::ZIndex>(e, 1);
         addElementToSection("wave_config", e, y);
     };
 

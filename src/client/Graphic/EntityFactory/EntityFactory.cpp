@@ -150,7 +150,8 @@ std::vector<ECS::Entity> EntityFactory::createSection(
         rect.outlineThickness = cfg::UI_OUTLINE_THICKNESS;
         rect.outlineColor = ::rtype::display::Color::White();
     }
-    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(bg, ZindexRect);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(bg,
+                                                                    ZindexRect);
 
     if (title.empty()) return {bg};
 

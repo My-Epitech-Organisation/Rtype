@@ -1165,17 +1165,19 @@ void NetworkServer::handleChat(const network::Header& header,
     }
 
     try {
-        auto msg = network::Serializer::deserializeFromNetwork<
-            network::ChatPayload>(payload);
+        auto msg =
+            network::Serializer::deserializeFromNetwork<network::ChatPayload>(
+                payload);
 
         std::string messageText(msg.message, strnlen(msg.message, 256));
 
         // Enforce max length if needed or validation
-        
-        queueCallback([this, userId = client->userId, message = std::move(messageText)]() {
-             if (onClientChatCallback_) {
-                 onClientChatCallback_(userId, message);
-             }
+
+        queueCallback([this, userId = client->userId,
+                       message = std::move(messageText)]() {
+            if (onClientChatCallback_) {
+                onClientChatCallback_(userId, message);
+            }
         });
     } catch (...) {
         // Invalid payload

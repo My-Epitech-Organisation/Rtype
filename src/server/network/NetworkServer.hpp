@@ -393,7 +393,7 @@ class NetworkServer {
      */
     void onClientReady(
         std::function<void(std::uint32_t userId, bool isReady)> callback);
-    
+
     /**
      * @brief Register callback for client chat messages
      */
@@ -546,7 +546,8 @@ class NetworkServer {
     std::function<void(std::uint32_t, std::uint8_t)> onClientInputCallback_;
     std::function<void(std::uint32_t)> onGetUsersRequestCallback_;
     std::function<void(std::uint32_t, bool)> onClientReadyCallback_;
-    std::function<void(std::uint32_t, const std::string&)> onClientChatCallback_;
+    std::function<void(std::uint32_t, const std::string&)>
+        onClientChatCallback_;
 
     mutable std::mutex clientsMutex_;
 

@@ -353,7 +353,8 @@ class NetworkClient {
      */
     void onGameStateChange(std::function<void(GameStateEvent)> callback);
     void onGameOver(std::function<void(GameOverEvent)> callback);
-    void onChatReceived(std::function<void(std::uint32_t, std::string)> callback);
+    void onChatReceived(
+        std::function<void(std::uint32_t, std::string)> callback);
 
     /**
      * @brief Register callback for game start countdown
