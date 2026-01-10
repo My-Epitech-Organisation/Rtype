@@ -258,3 +258,15 @@ TEST_F(GameEngineFactoryTest, GameEngineRegistrar_RegistersGame) {
     EXPECT_TRUE(GameEngineFactory::isRegistered("test_game"));
 }
 
+TEST_F(GameEngineFactoryTest, GameEngineRegistrar_WithoutSetAsDefault) {
+    std::string prevDefault = GameEngineFactory::getDefaultGame();
+    {
+        // Register game without setAsDefault=true
+        GameEngineRegistrar<AnotherMockGameEngine> registrar("another_game", false);
+    }
+
+    EXPECT_TRUE(GameEngineFactory::isRegistered("another_game"));
+    // Default should not change
+    EXPECT_EQ(GameEngineFactory::getDefaultGame(), prevDefault);
+}
+
