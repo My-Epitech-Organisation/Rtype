@@ -70,9 +70,10 @@ SettingsScene::SettingsScene(
 
 void SettingsScene::_initKeybindSection() {
     std::vector<GameAction> actions = {
-        GameAction::MOVE_UP,    GameAction::MOVE_DOWN, GameAction::MOVE_LEFT,
-        GameAction::MOVE_RIGHT, GameAction::SHOOT,     GameAction::CHANGE_AMMO,
-        GameAction::PAUSE};
+        GameAction::MOVE_UP,   GameAction::MOVE_DOWN,
+        GameAction::MOVE_LEFT, GameAction::MOVE_RIGHT,
+        GameAction::SHOOT,     GameAction::CHANGE_AMMO,
+        GameAction::PAUSE,     GameAction::TOGGLE_LOW_BANDWIDTH};
 
     float sectionX = 50;
     float sectionY = 225;
@@ -153,9 +154,10 @@ void SettingsScene::_refreshKeybindSection() {
     InputMode mode = this->_keybinds->getInputMode();
 
     std::vector<GameAction> actions = {
-        GameAction::MOVE_UP,    GameAction::MOVE_DOWN, GameAction::MOVE_LEFT,
-        GameAction::MOVE_RIGHT, GameAction::SHOOT,     GameAction::CHANGE_AMMO,
-        GameAction::PAUSE};
+        GameAction::MOVE_UP,   GameAction::MOVE_DOWN,
+        GameAction::MOVE_LEFT, GameAction::MOVE_RIGHT,
+        GameAction::SHOOT,     GameAction::CHANGE_AMMO,
+        GameAction::PAUSE,     GameAction::TOGGLE_LOW_BANDWIDTH};
 
     for (auto action : actions) {
         if (this->_actionButtons.find(action) == this->_actionButtons.end())
