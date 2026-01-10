@@ -9,6 +9,7 @@
 
 #include <thread>
 #include <chrono>
+#include <unordered_map>
 
 #include "../../../src/games/rtype/shared/Components.hpp"
 #include "../../../src/games/rtype/server/GameEngine.hpp"
@@ -236,14 +237,14 @@ TEST_F(GameEngineTest, MovementSystemUpdatesPosition) {
         GTEST_SKIP() << "No enemies spawned, skipping movement test";
     }
 
-    // Get initial positions
+    // Get initial positions mapped by entity id
     auto& registry = engine->getRegistry();
-    std::vector<float> initialXPositions;
+    std::unordered_map<int, float> initialPositions;
     auto view = registry.view<TransformComponent, EnemyTag>();
-    view.each([&initialXPositions](ECS::Entity /*entity*/,
+    view.each([&initialPositions](ECS::Entity entity,
                                    const TransformComponent& transform,
                                    const EnemyTag& /*tag*/) {
-        initialXPositions.push_back(transform.x);
+        initialPositions.emplace(static_cast<int>(entity), transform.x);
     });
 
     // Run more updates
@@ -251,27 +252,18 @@ TEST_F(GameEngineTest, MovementSystemUpdatesPosition) {
         engine->update(1.0f / 60.0f);
     }
 
-    // Check positions have changed (moved left)
-    std::vector<float> newXPositions;
-    view.each([&newXPositions](ECS::Entity /*entity*/,
-                               const TransformComponent& transform,
-                               const EnemyTag& /*tag*/) {
-        newXPositions.push_back(transform.x);
-    });
-
-    // Verify enemies moved left (some may have been destroyed, so we check existing ones)
-    for (size_t i = 0; i < std::min(initialXPositions.size(), newXPositions.size()); ++i) {
-        // New enemies may have spawned, but existing ones should have moved left
-        bool anyMoved = false;
-        for (const auto& newX : newXPositions) {
-            if (newX < GameConfig::SCREEN_WIDTH) {
-                anyMoved = true;
-                break;
+    // Check that at least one tracked entity moved left compared to its initial position
+    bool anyMovedLeft = false;
+    view.each([&](ECS::Entity entity, const TransformComponent& transform, const EnemyTag&) {
+        auto it = initialPositions.find(static_cast<int>(entity));
+        if (it != initialPositions.end()) {
+            if (transform.x + 1e-4f < it->second) {
+                anyMovedLeft = true;
             }
         }
-        EXPECT_TRUE(anyMoved);
-        break;
-    }
+    });
+
+    EXPECT_TRUE(anyMovedLeft) << "Expected at least one enemy to move left after updates";
 }
 
 // =============================================================================

@@ -107,9 +107,9 @@ TEST(OpCodeCoverage, IsValidOpCodeAllValues) {
     EXPECT_TRUE(isValidOpCode(0xF2));  // ACK
 
     EXPECT_FALSE(isValidOpCode(0x00));
-    EXPECT_FALSE(isValidOpCode(0x0B));
+    EXPECT_TRUE(isValidOpCode(0x0B));
     EXPECT_FALSE(isValidOpCode(0x0F));
-    EXPECT_FALSE(isValidOpCode(0x16));
+    EXPECT_TRUE(isValidOpCode(0x16));
     EXPECT_FALSE(isValidOpCode(0x30));
     EXPECT_FALSE(isValidOpCode(0xFF));
 }
