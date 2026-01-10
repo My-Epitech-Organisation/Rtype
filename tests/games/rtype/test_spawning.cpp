@@ -239,12 +239,12 @@ TEST_F(GameEngineTest, MovementSystemUpdatesPosition) {
 
     // Get initial positions mapped by entity id
     auto& registry = engine->getRegistry();
-    std::unordered_map<int, float> initialPositions;
+    std::unordered_map<ECS::Entity, float> initialPositions;
     auto view = registry.view<TransformComponent, EnemyTag>();
     view.each([&initialPositions](ECS::Entity entity,
                                    const TransformComponent& transform,
                                    const EnemyTag& /*tag*/) {
-        initialPositions.emplace(static_cast<int>(entity), transform.x);
+        initialPositions.emplace(entity, transform.x);
     });
 
     // Run more updates
@@ -255,7 +255,7 @@ TEST_F(GameEngineTest, MovementSystemUpdatesPosition) {
     // Check that at least one tracked entity moved left compared to its initial position
     bool anyMovedLeft = false;
     view.each([&](ECS::Entity entity, const TransformComponent& transform, const EnemyTag&) {
-        auto it = initialPositions.find(static_cast<int>(entity));
+        auto it = initialPositions.find(entity);
         if (it != initialPositions.end()) {
             if (transform.x + 1e-4f < it->second) {
                 anyMovedLeft = true;
