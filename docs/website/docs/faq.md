@@ -361,7 +361,7 @@ Entity Component System - a design pattern that separates data (Components) from
 
 ### What network protocol does R-Type use?
 
-RTGP (R-Type Game Protocol) v1.2.0 over UDP. See [RFC Document](./protocol/RFC_RTGP_v1.2.0.md).
+RTGP (R-Type Game Protocol) v1.4.2 over UDP. See [RFC Document](./protocol/RFC_RTGP_v1.4.2.md).
 
 ### Can I use R-Type code in my project?
 
