@@ -9,7 +9,6 @@
 
 #include <thread>
 #include <chrono>
-#include <unordered_map>
 
 #include "../../../src/games/rtype/shared/Components.hpp"
 #include "../../../src/games/rtype/server/GameEngine.hpp"
@@ -228,42 +227,32 @@ TEST_F(GameEngineTest, AISystemSetsVelocityForMoveLeftBehavior) {
 TEST_F(GameEngineTest, MovementSystemUpdatesPosition) {
     engine->initialize();
 
-    // Force spawn by running updates
-    for (int i = 0; i < 240; ++i) {
-        engine->update(1.0f / 60.0f);
-    }
+    // Manually create an entity with known components for deterministic testing
+    auto& reg = engine->getRegistry();
+    auto entity = reg.spawnEntity();
 
-    if (engine->getEntityCount() == 0) {
-        GTEST_SKIP() << "No enemies spawned, skipping movement test";
-    }
+    // Set up transform at a known starting position
+    auto& transform = reg.emplaceComponent<TransformComponent>(entity);
+    transform.x = 500.0f;
+    transform.y = 300.0f;
 
-    // Get initial positions mapped by entity id
-    auto& registry = engine->getRegistry();
-    std::unordered_map<ECS::Entity, float> initialPositions;
-    auto view = registry.view<TransformComponent, EnemyTag>();
-    view.each([&initialPositions](ECS::Entity entity,
-                                   const TransformComponent& transform,
-                                   const EnemyTag& /*tag*/) {
-        initialPositions.emplace(entity, transform.x);
-    });
+    // Set up velocity moving left
+    auto& velocity = reg.emplaceComponent<VelocityComponent>(entity);
+    velocity.vx = -100.0f;  // Moving left at 100 units/sec
+    velocity.vy = 0.0f;
 
-    // Run more updates
+    float initialX = 500.0f;
+
+    // Run updates for 1 second (60 frames at 60 FPS)
     for (int i = 0; i < 60; ++i) {
         engine->update(1.0f / 60.0f);
     }
 
-    // Check that at least one tracked entity moved left compared to its initial position
-    bool anyMovedLeft = false;
-    view.each([&](ECS::Entity entity, const TransformComponent& transform, const EnemyTag&) {
-        auto it = initialPositions.find(entity);
-        if (it != initialPositions.end()) {
-            if (transform.x + 1e-4f < it->second) {
-                anyMovedLeft = true;
-            }
-        }
-    });
-
-    EXPECT_TRUE(anyMovedLeft) << "Expected at least one enemy to move left after updates";
+    // Check that the entity moved left
+    auto& finalTransform = reg.getComponent<TransformComponent>(entity);
+    EXPECT_LT(finalTransform.x, initialX) << "Entity should have moved left (x decreased)";
+    // With velocity of -100 units/sec for 1 second, should be around x=400
+    EXPECT_NEAR(finalTransform.x, 400.0f, 10.0f) << "Entity should be around x=400 after 1 second";
 }
 
 // =============================================================================
