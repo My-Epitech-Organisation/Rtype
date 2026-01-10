@@ -438,6 +438,10 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
     _isConnected =
         (this->_networkClient && this->_networkClient->isConnected());
 
+    if (this->_networkSystem) {
+        this->_networkSystem->registerCallbacks();
+    }
+
     if (this->_networkSystem && this->_assetsManager) {
         this->_networkSystem->setEntityFactory(
             rtype::games::rtype::client::RtypeEntityFactory::
@@ -721,6 +725,18 @@ Lobby::~Lobby() {
     LOG_INFO("[Lobby] Destroying Lobby scene...");
 
     _initialized = false;
+
+    if (this->_networkClient) {
+        this->_networkClient->clearPendingCallbacks();
+        this->_networkClient->clearDisconnectedCallbacks();
+        this->_networkClient->onGameStart(nullptr);
+        this->_networkClient->onGameStateChange(nullptr);
+        this->_networkClient->onPlayerReadyStateChanged(nullptr);
+        this->_networkClient->onEntityMove(nullptr);
+        this->_networkClient->onEntityMoveBatch(nullptr);
+        this->_networkClient->onEntitySpawn(nullptr);
+        this->_networkClient->onEntityDestroy(nullptr);
+    }
 
     if (this->_registry) {
         LOG_INFO("[Lobby] Resetting player positions for game scene...");
