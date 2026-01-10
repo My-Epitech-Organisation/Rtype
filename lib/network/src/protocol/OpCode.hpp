@@ -83,6 +83,12 @@ enum class OpCode : std::uint8_t {
     /// Server broadcasts batched entity position/velocity updates (UNRELIABLE)
     S_ENTITY_MOVE_BATCH = 0x15,
 
+    /// Client requests bandwidth mode (low/normal) (RELIABLE)
+    C_SET_BANDWIDTH_MODE = 0x16,
+
+    /// Server broadcasts bandwidth mode change to all clients (RELIABLE)
+    S_BANDWIDTH_MODE_CHANGED = 0x17,
+
     /// Client sends input state (UNRELIABLE)
     C_INPUT = 0x20,
 
@@ -140,6 +146,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
         case OpCode::S_POWERUP_EVENT:
+        case OpCode::C_SET_BANDWIDTH_MODE:
+        case OpCode::S_BANDWIDTH_MODE_CHANGED:
             return true;
 
         case OpCode::S_ENTITY_MOVE:
@@ -166,6 +174,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::C_READY:
         case OpCode::C_REQUEST_LOBBIES:
         case OpCode::C_JOIN_LOBBY:
+        case OpCode::C_SET_BANDWIDTH_MODE:
         case OpCode::C_INPUT:
         case OpCode::PING:
             return true;
@@ -200,6 +209,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_ENTITY_HEALTH:
         case OpCode::S_POWERUP_EVENT:
         case OpCode::S_UPDATE_POS:
+        case OpCode::S_BANDWIDTH_MODE_CHANGED:
         case OpCode::PONG:
             return true;
 
@@ -240,6 +250,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_POWERUP_EVENT:
         case OpCode::C_INPUT:
         case OpCode::S_UPDATE_POS:
+        case OpCode::C_SET_BANDWIDTH_MODE:
+        case OpCode::S_BANDWIDTH_MODE_CHANGED:
         case OpCode::PING:
         case OpCode::PONG:
         case OpCode::ACK:
@@ -312,6 +324,10 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "S_ENTITY_MOVE";
         case OpCode::S_ENTITY_MOVE_BATCH:
             return "S_ENTITY_MOVE_BATCH";
+        case OpCode::C_SET_BANDWIDTH_MODE:
+            return "C_SET_BANDWIDTH_MODE";
+        case OpCode::S_BANDWIDTH_MODE_CHANGED:
+            return "S_BANDWIDTH_MODE_CHANGED";
         case OpCode::S_ENTITY_DESTROY:
             return "S_ENTITY_DESTROY";
         case OpCode::S_ENTITY_HEALTH:
