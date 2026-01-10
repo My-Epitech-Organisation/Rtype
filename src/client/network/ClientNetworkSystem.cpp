@@ -7,6 +7,9 @@
 
 #include "ClientNetworkSystem.hpp"
 
+#include <algorithm>
+#include <chrono>
+#include <cmath>
 #include <memory>
 #include <utility>
 
@@ -30,6 +33,42 @@ namespace rtype::client {
 
 using Transform = rtype::games::rtype::shared::TransformComponent;
 using Velocity = rtype::games::rtype::shared::VelocityComponent;
+using Clock = std::chrono::steady_clock;
+
+namespace {
+
+double nowSeconds() {
+    return std::chrono::duration_cast<std::chrono::duration<double>>(
+               Clock::now().time_since_epoch())
+        .count();
+}
+
+void updateProjectileVisuals(ECS::Registry& registry, ECS::Entity entity) {
+    if (!registry.hasComponent<Velocity>(entity) ||
+        !registry.hasComponent<games::rtype::shared::ProjectileTag>(entity) ||
+        !registry.hasComponent<games::rtype::client::Image>(entity)) {
+        return;
+    }
+
+    const auto& vel = registry.getComponent<Velocity>(entity);
+    auto& img = registry.getComponent<games::rtype::client::Image>(entity);
+    const bool isEnemyShot = vel.vx < 0.0F;
+    img.color = (isEnemyShot ? rtype::display::Color(255, 80, 80, 255)
+                             : rtype::display::Color(80, 255, 240, 255));
+
+    if (registry.hasComponent<games::rtype::client::BoxingComponent>(entity)) {
+        auto& box =
+            registry.getComponent<games::rtype::client::BoxingComponent>(
+                entity);
+        box.outlineColor = isEnemyShot
+                               ? rtype::display::Color(255, 80, 80, 255)
+                               : rtype::display::Color(0, 220, 180, 255);
+        box.fillColor = isEnemyShot ? rtype::display::Color(255, 80, 80, 40)
+                                    : rtype::display::Color(0, 220, 180, 35);
+    }
+}
+
+}  // namespace
 
 ClientNetworkSystem::ClientNetworkSystem(
     std::shared_ptr<ECS::Registry> registry,
@@ -244,6 +283,23 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
         return;
     }
 
+    const bool isLocalPlayer =
+        localPlayerEntity_.has_value() && *localPlayerEntity_ == entity;
+
+    if (isLocalPlayer) {
+        if (registry_->hasComponent<Transform>(entity)) {
+            auto& pos = registry_->getComponent<Transform>(entity);
+            pos.x = event.x;
+            pos.y = event.y;
+        }
+        if (registry_->hasComponent<Velocity>(entity)) {
+            auto& vel = registry_->getComponent<Velocity>(entity);
+            vel.vx = event.vx;
+            vel.vy = event.vy;
+        }
+        return;
+    }
+
     if (registry_->hasComponent<Transform>(entity)) {
         auto& pos = registry_->getComponent<Transform>(entity);
         pos.x = event.x;
@@ -254,32 +310,9 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
         auto& vel = registry_->getComponent<Velocity>(entity);
         vel.vx = event.vx;
         vel.vy = event.vy;
-
-        if (registry_->hasComponent<games::rtype::shared::ProjectileTag>(
-                entity) &&
-            registry_->hasComponent<games::rtype::client::Image>(entity)) {
-            auto& img =
-                registry_->getComponent<games::rtype::client::Image>(entity);
-            const bool isEnemyShot = vel.vx < 0.0F;
-            img.color =
-                (isEnemyShot ? rtype::display::Color(255, 80, 80, 255)
-                             : rtype::display::Color(80, 255, 240, 255));
-
-            if (registry_->hasComponent<games::rtype::client::BoxingComponent>(
-                    entity)) {
-                auto& box =
-                    registry_
-                        ->getComponent<games::rtype::client::BoxingComponent>(
-                            entity);
-                box.outlineColor =
-                    isEnemyShot ? rtype::display::Color(255, 80, 80, 255)
-                                : rtype::display::Color(0, 220, 180, 255);
-                box.fillColor = isEnemyShot
-                                    ? rtype::display::Color(255, 80, 80, 40)
-                                    : rtype::display::Color(0, 220, 180, 35);
-            }
-        }
     }
+
+    updateProjectileVisuals(*registry_, entity);
 }
 
 void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
