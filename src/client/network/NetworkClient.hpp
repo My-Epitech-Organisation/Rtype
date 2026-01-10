@@ -48,6 +48,7 @@ struct EntitySpawnEvent {
  */
 struct EntityMoveEvent {
     std::uint32_t entityId;
+    std::uint32_t serverTick;
     float x;
     float y;
     float vx;
@@ -261,6 +262,16 @@ class NetworkClient {
     bool sendReady(bool isReady);
 
     /**
+     * @brief Request low bandwidth mode from server
+     *
+     * Sends C_SET_BANDWIDTH_MODE packet. When enabled, server will send
+     * entity updates at reduced rates to save bandwidth.
+     * @param enable true for low bandwidth mode, false for normal
+     * @return true if sent, false if not connected
+     */
+    bool setLowBandwidthMode(bool enable);
+
+    /**
      * @brief Request lobby list from discovery server
      *
      * Sends C_REQUEST_LOBBIES to the server. Response will be delivered
@@ -293,6 +304,11 @@ class NetworkClient {
     CallbackId addDisconnectedCallback(
         std::function<void(DisconnectReason)> callback);
     void removeDisconnectedCallback(CallbackId id);
+
+    /**
+     * @brief Clear all disconnect callbacks (call from scene destructors)
+     */
+    void clearDisconnectedCallbacks();
 
     /**
      * @brief Register callback for entity spawn events
@@ -360,6 +376,16 @@ class NetworkClient {
         std::function<void(std::uint32_t userId, bool isReady)> callback);
 
     /**
+     * @brief Register callback for bandwidth mode changes broadcast by server
+     * @param callback Function receiving userId, lowBandwidthEnabled, and
+     * activeCount
+     */
+    void onBandwidthModeChanged(
+        std::function<void(std::uint32_t userId, bool lowBandwidth,
+                           std::uint8_t activeCount)>
+            callback);
+
+    /**
      * @brief Register callback for lobby list response
      * @param callback Function receiving the list of available lobbies
      */
@@ -392,6 +418,12 @@ class NetworkClient {
      * Callbacks are executed on the calling thread.
      */
     void poll();
+
+    /**
+     * @brief Clear all pending callbacks in the queue
+     * @note Call before scene destruction to prevent stale callbacks
+     */
+    void clearPendingCallbacks();
 
     // Test helpers (use from unit tests only)
     void test_dispatchCallbacks();
@@ -434,6 +466,8 @@ class NetworkClient {
                          const network::Buffer& payload);
     void handlePlayerReadyState(const network::Header& header,
                                 const network::Buffer& payload);
+    void handleBandwidthModeChanged(const network::Header& header,
+                                    const network::Buffer& payload);
     void handleLobbyList(const network::Header& header,
                          const network::Buffer& payload);
     void handleJoinLobbyResponse(const network::Header& header,
@@ -486,6 +520,8 @@ class NetworkClient {
     std::function<void(PowerUpEvent)> onPowerUpCallback_;
     std::function<void(LobbyListEvent)> onLobbyListReceivedCallback_;
     std::function<void(bool, uint8_t)> onJoinLobbyResponseCallback_;
+    std::function<void(std::uint32_t, bool, std::uint8_t)>
+        onBandwidthModeChangedCallback_;
 
     std::thread networkThread_;
     std::atomic<bool> networkThreadRunning_{false};
