@@ -12,6 +12,7 @@
 #include <utility>
 #include "protocol/ByteOrderSpec.hpp"
 #include "Serializer.hpp"
+#include "Logger/Logger.hpp"
 
 namespace rtype::network {
 
@@ -155,6 +156,8 @@ void Connection::update() {
 
     auto retransmits = reliableChannel_.getPacketsToRetransmit();
     for (auto& pkt : retransmits) {
+        LOG_INFO("[Connection] Retransmitting reliable packet seqId="
+                 << pkt.seqId << " retry=" << pkt.retryCount);
         OutgoingPacket outgoing;
         outgoing.data = std::move(pkt.data);
         outgoing.isReliable = true;
