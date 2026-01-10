@@ -9,6 +9,7 @@
 #include "ReliableChannel.hpp"
 
 #include <vector>
+#include "Logger/Logger.hpp"
 
 namespace rtype::network {
 
@@ -107,6 +108,8 @@ Result<void> ReliableChannel::cleanup() {
         if (packet.isAcked) {
             toRemove.push_back(seqId);
         } else if (packet.retryCount >= config_.maxRetries) {
+            LOG_WARNING("[ReliableChannel] Max retries exceeded for seqId="
+                        << seqId << " retryCount=" << packet.retryCount);
             return Err(NetworkError::RetryLimitExceeded);
         }
     }
