@@ -12,6 +12,8 @@
 #include <string>
 #include <utility>
 
+#include "Graphic.hpp"
+#include "GraphicsConstants.hpp"
 #include "Components/HiddenComponent.hpp"
 #include "Components/PlayerIdComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
@@ -421,6 +423,111 @@ void Lobby::_initInfoMenu() {
     this->_listEntity.push_back(_countdownTextEntity);
 }
 
+
+void Lobby::_initChat() {
+    // Btn open popup Text
+
+    auto btnOpenChat = EntityFactory::createButton(
+        _registry,
+        rtype::games::rtype::client::Text(
+            "main_font", rtype::display::Color::White(), 30, "Chat"),
+        rtype::games::rtype::shared::TransformComponent(100.f, Graphic::WINDOW_HEIGHT - 150.f),
+        rtype::games::rtype::client::Rectangle({100, 50},
+                                               rtype::display::Color(70, 130, 180),
+                                               rtype::display::Color(0, 150, 0)),
+        this->_assetsManager, std::function<void()>([this]() {
+            for (auto s : this->_messageEntities) {
+                if (_registry->hasComponent<rtype::games::rtype::client::HiddenComponent>(s))
+                    _registry->getComponent<rtype::games::rtype::client::HiddenComponent>(s).isHidden = false;
+            }
+        })
+    );
+    this->_registry->emplaceComponent<rtype::games::rtype::client::CenteredBtnTag>(btnOpenChat);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        btnOpenChat, 5);
+    this->_listEntity.push_back(btnOpenChat);
+
+    // Chat popup effect
+    auto popupEffect = EntityFactory::createRectangle(this->_registry,
+        ::rtype::display::Vector2i(static_cast<int>(Graphic::WINDOW_WIDTH),
+                                   static_cast<int>(Graphic::WINDOW_HEIGHT)),
+        ::rtype::display::Color(0, 0, 0, 150),
+        ::rtype::display::Vector2f(0.f, 0.f));
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        popupEffect, 10);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::HiddenComponent>(popupEffect, false);
+    _messageEntities.push_back(popupEffect);
+
+    auto chatSection = EntityFactory::createSection(_registry, nullptr, "Chat",
+        ::rtype::display::Rect<float>(Graphic::WINDOW_WIDTH / 2 - kMessageSectionW / 2,
+                                      Graphic::WINDOW_HEIGHT / 2 - kMessageSectionH / 2,
+                                      kMessageSectionW, kMessageSectionH),
+                                      11);
+    for (auto s : chatSection) {
+        this->_registry->emplaceComponent<rtype::games::rtype::client::HiddenComponent>(s, false);
+    }
+    _messageEntities.insert(_messageEntities.end(), chatSection.begin(), chatSection.end());
+
+
+    std::function<void(ECS::Entity entity)> addElementToSection = [&](ECS::Entity entity) {
+        if (_registry->hasComponent<rtype::games::rtype::shared::TransformComponent>(entity)) {
+            auto& pos = _registry->getComponent<rtype::games::rtype::shared::TransformComponent>(entity);
+            pos.x += Graphic::WINDOW_WIDTH / 2 - kMessageSectionW / 2;
+            pos.y += Graphic::WINDOW_HEIGHT / 2 - kMessageSectionH / 2;
+        }
+        _messageEntities.push_back(entity);
+    };
+
+    // Chat messages display area
+    auto chatMessagesDisplay = EntityFactory::createTextInput(
+        _registry, nullptr,
+        ::rtype::display::Vector2<float>(20.f, kMessageSectionH - 65.f),
+        ::rtype::display::Vector2<float>(kMessageSectionW - 120.f, 50.f),
+        "Type your message here", "", 0, false);
+    _registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        chatMessagesDisplay, 12);
+    _registry->emplaceComponent<rtype::games::rtype::client::HiddenComponent>(chatMessagesDisplay, false);
+    addElementToSection(chatMessagesDisplay);
+
+    auto btnSend = EntityFactory::createButton(
+        _registry,
+        rtype::games::rtype::client::Text(
+            "main_font", rtype::display::Color::White(), 36, ">"),
+        rtype::games::rtype::shared::TransformComponent(kMessageSectionW - 10.f - 80 / 2, kMessageSectionH - 40),
+        rtype::games::rtype::client::Rectangle({80, 50},
+                                               rtype::display::Color::Blue(),
+                                               rtype::display::Color::Red()),
+        this->_assetsManager, std::function<void()>([this]() {
+            // Handle send button click
+        })
+    );
+    this->_registry->emplaceComponent<rtype::games::rtype::client::CenteredBtnTag>(btnSend);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::HiddenComponent>(btnSend, false);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        btnSend, 11);
+    addElementToSection(btnSend);
+    auto btnClose = EntityFactory::createButton(
+        _registry,
+        rtype::games::rtype::client::Text(
+            "main_font", rtype::display::Color::White(), 30, "X"),
+        rtype::games::rtype::shared::TransformComponent(kMessageSectionW - 10.f - 80 / 2, 40),
+        rtype::games::rtype::client::Rectangle({55, 40},
+                                               rtype::display::Color::Red(),
+                                               rtype::display::Color(255, 100, 100, 255)),
+        this->_assetsManager, std::function<void()>([this]() {
+            for (auto s : this->_messageEntities) {
+                if (_registry->hasComponent<rtype::games::rtype::client::HiddenComponent>(s))
+                    _registry->getComponent<rtype::games::rtype::client::HiddenComponent>(s).isHidden = true;
+            }
+        })
+    );
+    this->_registry->emplaceComponent<rtype::games::rtype::client::CenteredBtnTag>(btnClose);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::HiddenComponent>(btnClose, false);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        btnClose, 11);
+    addElementToSection(btnClose);
+}
+
 Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
              std::shared_ptr<AssetManager> assetManager,
              std::shared_ptr<::rtype::display::IDisplay> window,
@@ -632,6 +739,7 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "Lobby"));
     this->_initInfoMenu();
+    this->_initChat();
 
     LOG_INFO("[Lobby] Checking for existing player entities...");
     this->_registry->view<rtype::games::rtype::shared::PlayerIdComponent>()

@@ -15,6 +15,9 @@
 #include "../AScene.hpp"
 #include "SceneManager.hpp"
 
+constexpr float kMessageSectionW = 700.0f;
+constexpr float kMessageSectionH = 500.0f;
+
 class Lobby : public AScene {
    private:
     bool _isConnected = false;
@@ -32,6 +35,7 @@ class Lobby : public AScene {
     std::unordered_set<uint32_t> _playerReadyStates;
     std::unordered_set<uint32_t> _disconnectedPlayers;
     std::vector<uint32_t> _pendingPlayerRemovals;
+    std::vector<ECS::Entity> _messageEntities;
     std::shared_ptr<rtype::client::NetworkClient> _networkClient;
     std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
     std::function<void(const SceneManager::Scene&)> _switchToScene;
@@ -39,6 +43,8 @@ class Lobby : public AScene {
     bool _hasDisconnectedCallback = false;
 
     void _initInfoMenu();
+
+    void _initChat();
 
     void _createPlayerInfoMenu(uint32_t id, int index = 0);
 
