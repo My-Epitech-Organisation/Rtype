@@ -155,3 +155,22 @@ TEST_F(LifetimeSystemTest, UpdateParallelPath_ManyEntities) {
         registry.killEntity(e);
     }
 }
+
+TEST_F(LifetimeSystemTest, UpdateWithNegativeDeltaTimeDoesNothing) {
+    registry.emplaceComponent<LifetimeComponent>(entity, 5.0f);
+
+    lifetimeSystem.update(registry, -1.0f);
+
+    // Lifetime should remain unchanged with negative deltaTime
+    auto& lifetime = registry.getComponent<LifetimeComponent>(entity);
+    EXPECT_FLOAT_EQ(lifetime.remainingTime, 5.0f);
+}
+
+TEST_F(LifetimeSystemTest, UpdateWithZeroDeltaTimeDecreasesNone) {
+    registry.emplaceComponent<LifetimeComponent>(entity, 5.0f);
+
+    lifetimeSystem.update(registry, 0.0f);
+
+    auto& lifetime = registry.getComponent<LifetimeComponent>(entity);
+    EXPECT_FLOAT_EQ(lifetime.remainingTime, 5.0f);
+}
