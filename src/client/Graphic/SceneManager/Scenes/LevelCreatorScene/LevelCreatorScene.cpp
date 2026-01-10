@@ -16,6 +16,7 @@
 #include "Components/RectangleComponent.hpp"
 #include "Components/TextComponent.hpp"
 #include "Components/TextInputComponent.hpp"
+#include "Components/ZIndexComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
 
 void LevelCreatorScene::createSection(
@@ -26,10 +27,9 @@ void LevelCreatorScene::createSection(
     section.bounds = bounds;
 
     auto sectionEnts =
-        EntityFactory::createSection(_registry, _assetsManager, title, bounds);
+        EntityFactory::createSection(_registry, _assetsManager, title, bounds, 0);
     _uiEntities.insert(_uiEntities.end(), sectionEnts.begin(),
                        sectionEnts.end());
-
     _sections.push_back(section);
 }
 
@@ -143,10 +143,12 @@ LevelCreatorScene::LevelCreatorScene(
             "main_font", rtype::display::Color::White(), 20, "Add Wave"),
         rtype::games::rtype::shared::TransformComponent(startX + 40, 0),
         rtype::games::rtype::client::Rectangle(
-            {120, 40}, rtype::display::Color(0, 100, 0, 255),
-            rtype::display::Color(0, 150, 0, 255)),
+            {120, 40}, rtype::display::Color(0, 180, 0, 255),
+            rtype::display::Color(0, 135, 0, 255)),
         this->_assetsManager,
         std::function<void()>([this]() { this->addWave(); }));
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnAdd, 1);
     addElementToSection("settings", btnAdd, currentY);
 
     auto btnPrev = EntityFactory::createButton(
@@ -160,6 +162,8 @@ LevelCreatorScene::LevelCreatorScene(
         this->_assetsManager, std::function<void()>([this]() {
             if (_currentWaveIndex > 0) switchWave(_currentWaveIndex - 1);
         }));
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnPrev, 1);
     addElementToSection("settings", btnPrev, currentY);
 
     auto btnNext = EntityFactory::createButton(
@@ -174,6 +178,8 @@ LevelCreatorScene::LevelCreatorScene(
             if (_currentWaveIndex < static_cast<int>(_waves.size()) - 1)
                 switchWave(_currentWaveIndex + 1);
         }));
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::ZIndex>(btnNext, 1);
     addElementToSection("settings", btnNext, currentY);
 
     _listEntity.push_back(EntityFactory::createButton(
@@ -443,7 +449,7 @@ void LevelCreatorScene::refreshWaveUI() {
     auto sectionEnts = EntityFactory::createSection(
         _registry, _assetsManager,
         "Wave " + std::to_string(wave.number) + " Configuration",
-        {startX, startY, sectionW, sectionH});
+        {startX, startY, sectionW, sectionH}, 0);
     _uiEntities.insert(_uiEntities.end(), sectionEnts.begin(),
                        sectionEnts.end());
     _waveUiEntities = sectionEnts;
@@ -458,6 +464,13 @@ void LevelCreatorScene::refreshWaveUI() {
     float contentY = 100.f;
 
     auto addToWave = [&](ECS::Entity e, float y) {
+        if (this->_registry->hasComponent<rtype::games::rtype::client::ZIndex>(e))
+            this->_registry->getComponent<rtype::games::rtype::client::ZIndex>(
+                e)
+                .depth = 1;
+        else
+            this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+                e, 1);
         addElementToSection("wave_config", e, y);
     };
 
@@ -484,8 +497,8 @@ void LevelCreatorScene::refreshWaveUI() {
             "main_font", rtype::display::Color::White(), 20, "+ Add Enemy"),
         rtype::games::rtype::shared::TransformComponent(contentX + 150, 0),
         rtype::games::rtype::client::Rectangle(
-            {140, 35}, rtype::display::Color(0, 100, 0, 255),
-            rtype::display::Color(0, 150, 0, 255)),
+            {140, 35}, rtype::display::Color(0, 180, 0, 255),
+            rtype::display::Color(0, 135, 0, 255)),
         this->_assetsManager, std::function<void()>([this, waveIdx]() {
             if (waveIdx < static_cast<int>(this->_waves.size())) {
                 this->_waves[waveIdx].spawns.push_back(Spawn{});
@@ -561,8 +574,8 @@ void LevelCreatorScene::refreshWaveUI() {
             "main_font", rtype::display::Color::White(), 20, "+ Add Powerup"),
         rtype::games::rtype::shared::TransformComponent(contentX + 160, 0),
         rtype::games::rtype::client::Rectangle(
-            {160, 35}, rtype::display::Color(0, 100, 0, 255),
-            rtype::display::Color(0, 150, 0, 255)),
+            {160, 35}, rtype::display::Color(0, 180, 0, 255),
+            rtype::display::Color(0, 135, 0, 255)),
         this->_assetsManager, std::function<void()>([this, waveIdx]() {
             if (waveIdx < static_cast<int>(this->_waves.size())) {
                 this->_waves[waveIdx].powerups.push_back(Powerup{});
