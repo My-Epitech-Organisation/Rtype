@@ -9,6 +9,7 @@
 #define SRC_SERVER_NETWORK_NETWORKSERVER_HPP_
 
 #include <atomic>
+#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -45,6 +46,8 @@ struct NetworkServerConfig {
     network::ReliableChannel::Config reliabilityConfig{};
     network::Compressor::Config compressionConfig{};
     bool enableCompression = true;
+
+    bool enablePacketStats = false;
 
     std::string expectedLobbyCode{};
 };
@@ -430,6 +433,27 @@ class NetworkServer {
                           network::DisconnectReason reason =
                               network::DisconnectReason::RemoteRequest);
 
+    /**
+     * @brief Check if a client is in low bandwidth mode
+     * @param userId Client's user ID
+     * @return true if client requested low bandwidth mode
+     */
+    [[nodiscard]] bool isLowBandwidthMode(std::uint32_t userId) const;
+
+    /**
+     * @brief Set bandwidth mode for a client
+     * @param userId Client's user ID
+     * @param lowBandwidth true for low bandwidth mode
+     */
+    void setClientBandwidthMode(std::uint32_t userId, bool lowBandwidth);
+
+    /**
+     * @brief Callback for client bandwidth mode changes
+     */
+    using BandwidthModeCallback =
+        std::function<void(std::uint32_t userId, bool lowBandwidth)>;
+    void onBandwidthModeChanged(BandwidthModeCallback callback);
+
    private:
     /**
      * @brief Client connection state
@@ -441,6 +465,7 @@ class NetworkServer {
         std::chrono::steady_clock::time_point lastActivity;
         std::uint16_t nextSeqId{0};
         bool joined{false};
+        bool lowBandwidthMode{false};
 
         explicit ClientConnection(const network::Endpoint& ep, std::uint32_t id,
                                   const network::ReliableChannel::Config& cfg)
@@ -477,6 +502,9 @@ class NetworkServer {
     void handleJoinLobby(const network::Header& header,
                          const network::Buffer& payload,
                          const network::Endpoint& sender);
+    void handleBandwidthMode(const network::Header& header,
+                             const network::Buffer& payload,
+                             const network::Endpoint& sender);
 
     [[nodiscard]] std::string makeConnectionKey(
         const network::Endpoint& ep) const;
@@ -486,6 +514,20 @@ class NetworkServer {
         std::uint32_t userId);
     void removeClient(std::uint32_t userId);
     void checkTimeouts();
+
+    static constexpr float kPosQuantScale = 16.0f;
+    static constexpr float kVelQuantScale = 16.0f;
+
+    static std::int16_t quantize(float value, float scale) noexcept {
+        float scaled = value * scale;
+        if (scaled > 32767.0f) return 32767;
+        if (scaled < -32768.0f) return -32768;
+        return static_cast<std::int16_t>(std::lrint(scaled));
+    }
+
+    [[nodiscard]] std::uint32_t nextServerTick() noexcept {
+        return ++serverTickCounter_;
+    }
 
     [[nodiscard]] network::Buffer buildPacket(network::OpCode opcode,
                                               const network::Buffer& payload,
@@ -517,6 +559,8 @@ class NetworkServer {
 
     std::uint32_t nextUserIdCounter_{1};
 
+    std::atomic<std::uint32_t> serverTickCounter_{0};
+
     std::shared_ptr<network::Buffer> receiveBuffer_;
     std::shared_ptr<network::Endpoint> receiveSender_;
     std::atomic<bool> receiveInProgress_{false};
@@ -530,6 +574,7 @@ class NetworkServer {
     std::function<void(std::uint32_t, std::uint8_t)> onClientInputCallback_;
     std::function<void(std::uint32_t)> onGetUsersRequestCallback_;
     std::function<void(std::uint32_t, bool)> onClientReadyCallback_;
+    BandwidthModeCallback onBandwidthModeChangedCallback_;
 
     mutable std::mutex clientsMutex_;
 
@@ -537,8 +582,26 @@ class NetworkServer {
 
     std::weak_ptr<BanManager> banManager_;
 
+    struct PacketStats {
+        std::uint64_t count{0};
+        std::uint64_t totalBytes{0};
+
+        double getAvgSize() const {
+            return count > 0 ? static_cast<double>(totalBytes) / count : 0.0;
+        }
+    };
+
+    std::unordered_map<std::uint8_t, PacketStats>
+        sentPackets_;  // opcode -> stats
+    std::unordered_map<std::uint8_t, PacketStats> receivedPackets_;
+    mutable std::mutex statsMutex_;
+
    public:
     void setBanManager(std::shared_ptr<BanManager> bm) { banManager_ = bm; }
+
+    void printPacketStatistics() const;
+    void recordPacketSent(std::uint8_t opcode, std::size_t bytes);
+    void recordPacketReceived(std::uint8_t opcode, std::size_t bytes);
 };
 
 }  // namespace rtype::server
