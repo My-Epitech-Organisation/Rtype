@@ -244,6 +244,14 @@ class NetworkClient {
     bool sendInput(std::uint8_t inputMask);
 
     /**
+     * @brief Send a chat message to the lobby
+     *
+     * @param message Text message to broadcast
+     * @return true if sent, false if msg too long or not connected
+     */
+    bool sendChat(const std::string& message);
+
+    /**
      * @brief Send a ping to the server
      *
      * Used for latency calculation.
@@ -345,6 +353,7 @@ class NetworkClient {
      */
     void onGameStateChange(std::function<void(GameStateEvent)> callback);
     void onGameOver(std::function<void(GameOverEvent)> callback);
+    void onChatReceived(std::function<void(std::uint32_t, std::string)> callback);
 
     /**
      * @brief Register callback for game start countdown
@@ -438,6 +447,8 @@ class NetworkClient {
                          const network::Buffer& payload);
     void handleJoinLobbyResponse(const network::Header& header,
                                  const network::Buffer& payload);
+    void handleChat(const network::Header& header,
+                    const network::Buffer& payload);
     void handlePong(const network::Header& header,
                     const network::Buffer& payload);
 
@@ -481,6 +492,7 @@ class NetworkClient {
     std::function<void(float, float)> onPositionCorrectionCallback_;
     std::function<void(GameStateEvent)> onGameStateChangeCallback_;
     std::function<void(GameOverEvent)> onGameOverCallback_;
+    std::function<void(std::uint32_t, std::string)> onChatReceivedCallback_;
     std::function<void(float)> onGameStartCallback_;
     std::function<void(std::uint32_t, bool)> onPlayerReadyStateChangedCallback_;
     std::function<void(PowerUpEvent)> onPowerUpCallback_;

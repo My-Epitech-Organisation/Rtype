@@ -236,6 +236,13 @@ class NetworkServer {
                           float duration);
 
     /**
+     * @brief Broadcast a chat message to all clients
+     * @param senderId The sender's user ID (0 for system)
+     * @param message  The text message content
+     */
+    void broadcastChat(std::uint32_t senderId, const std::string& message);
+
+    /**
      * @brief Update game state on all clients
      *
      * Sent reliably - guaranteed delivery.
@@ -386,6 +393,12 @@ class NetworkServer {
      */
     void onClientReady(
         std::function<void(std::uint32_t userId, bool isReady)> callback);
+    
+    /**
+     * @brief Register callback for client chat messages
+     */
+    void onClientChat(
+        std::function<void(std::uint32_t, const std::string&)> callback);
 
     /**
      * @brief Process incoming packets and dispatch callbacks
@@ -473,6 +486,9 @@ class NetworkServer {
     void handleReady(const network::Header& header,
                      const network::Buffer& payload,
                      const network::Endpoint& sender);
+    void handleChat(const network::Header& header,
+                    const network::Buffer& payload,
+                    const network::Endpoint& sender);
 
     void handleJoinLobby(const network::Header& header,
                          const network::Buffer& payload,
@@ -530,6 +546,7 @@ class NetworkServer {
     std::function<void(std::uint32_t, std::uint8_t)> onClientInputCallback_;
     std::function<void(std::uint32_t)> onGetUsersRequestCallback_;
     std::function<void(std::uint32_t, bool)> onClientReadyCallback_;
+    std::function<void(std::uint32_t, const std::string&)> onClientChatCallback_;
 
     mutable std::mutex clientsMutex_;
 
