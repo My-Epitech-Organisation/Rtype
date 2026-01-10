@@ -285,6 +285,7 @@ TEST(DisconnectReasonCoverage, ToStringAllReasons) {
     EXPECT_EQ(toString(DisconnectReason::Timeout), "Timeout");
     EXPECT_EQ(toString(DisconnectReason::MaxRetriesExceeded), "MaxRetriesExceeded");
     EXPECT_EQ(toString(DisconnectReason::ProtocolError), "ProtocolError");
+    EXPECT_EQ(toString(DisconnectReason::Banned), "Banned");
 }
 
 // =============================================================================

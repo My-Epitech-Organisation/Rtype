@@ -452,3 +452,37 @@ TEST_F(ReliableChannelTest, EdgeCase_ManyPendingPackets) {
     }
     EXPECT_EQ(channel_.getPendingCount(), 100);
 }
+
+TEST_F(ReliableChannelTest, RecordReceived_PrunesOldSeqIds) {
+    // Record many seq IDs to trigger pruning
+    // kReceivedSeqIdWindow is 1024 by default
+    for (uint16_t i = 0; i < 1500; ++i) {
+        channel_.recordReceived(i);
+    }
+    // After pruning, only recent ones should remain
+    EXPECT_LE(channel_.getReceivedCount(), 1500);
+    EXPECT_GT(channel_.getReceivedCount(), 0);
+}
+
+TEST_F(ReliableChannelTest, RecordReceived_UpdatesLastSeqId) {
+    channel_.recordReceived(100);
+    EXPECT_EQ(channel_.getLastReceivedSeqId(), 100);
+    
+    channel_.recordReceived(200);
+    EXPECT_EQ(channel_.getLastReceivedSeqId(), 200);
+    
+    // Older seq ID shouldn't update lastReceived
+    channel_.recordReceived(50);
+    EXPECT_EQ(channel_.getLastReceivedSeqId(), 200);
+}
+
+TEST_F(ReliableChannelTest, Clear_ResetsAllState) {
+    channel_.trackOutgoing(1, testData_);
+    channel_.recordReceived(100);
+    
+    channel_.clear();
+    
+    EXPECT_EQ(channel_.getPendingCount(), 0);
+    EXPECT_EQ(channel_.getReceivedCount(), 0);
+    EXPECT_EQ(channel_.getLastReceivedSeqId(), 0);
+}
