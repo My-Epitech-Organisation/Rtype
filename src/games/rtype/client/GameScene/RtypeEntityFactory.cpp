@@ -364,6 +364,7 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.getComponent<BoxingComponent>(entity).fillColor = {255, 120, 0, 40};
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<shared::HealthComponent>(entity, health, health);
+    reg.emplaceComponent<shared::EnemyTag>(entity);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<EnemySoundComponent>(
         entity, assetsManager->soundManager->get("bydos_spawn"),
