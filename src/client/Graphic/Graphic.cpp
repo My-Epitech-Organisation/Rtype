@@ -451,7 +451,24 @@ Graphic::Graphic(
     _lastFrameTime = std::chrono::steady_clock::now();
 
     // Initialize developer console (accessible from all scenes via F1)
-    _devConsole = std::make_unique<rtype::client::DevConsole>(this->_display);
+    _devConsole = std::make_unique<rtype::client::DevConsole>(this->_display,
+                                                              _networkClient);
+
+    // Register admin response callback for console feedback
+    if (_networkClient) {
+        _networkClient->onAdminResponse(
+            [this](std::uint8_t cmdType, bool success, bool newState,
+                   const std::string& msg) {
+                if (_devConsole) {
+                    if (success) {
+                        _devConsole->print(msg);
+                    } else {
+                        _devConsole->printError(msg);
+                    }
+                }
+            });
+    }
+
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[Graphic] Developer console initialized (toggle with F1)");
 }
