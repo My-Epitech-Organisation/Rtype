@@ -381,3 +381,63 @@ TEST(NetworkClientHandlersTest, AcceptThenReliablePacketSendsAck) {
     std::memcpy(&outHdr, raw->lastSend_.data(), kHeaderSize);
     EXPECT_EQ(static_cast<OpCode>(outHdr.opcode), OpCode::ACK);
 }
+
+TEST(NetworkClientHandlersTest, EntityDestroyCallbackRemovedBeforeDispatch) {
+    auto sock = std::make_unique<FakeSocket>();
+    NetworkClient::Config cfg{};
+    NetworkClient client(cfg, std::move(sock), false);
+
+    std::atomic<int> invokeCount{0};
+
+    struct Scene {
+        NetworkClient& client;
+        NetworkClient::CallbackId cbId;
+        int marker = 42;
+        Scene(NetworkClient& c, std::atomic<int>& counter) : client(c) {
+            cbId = client.addEntityDestroyCallback([this, &counter](std::uint32_t /*id*/) {
+                // read a member to emulate real scene behavior (would be UB if
+                // called after destruction)
+                if (this->marker == 42) {
+                    counter.fetch_add(1, std::memory_order_relaxed);
+                }
+            });
+        }
+        ~Scene() {
+            client.removeEntityDestroyCallback(cbId);
+        }
+    };
+
+    {
+        auto scene = std::make_unique<Scene>(client, invokeCount);
+
+        // Build entity destroy payload
+        EntityDestroyPayload payload{};
+        payload.entityId = 9001u;
+        Buffer serialized(sizeof(EntityDestroyPayload));
+        std::uint32_t idNet = ByteOrderSpec::toNetwork(payload.entityId);
+        std::memcpy(serialized.data(), &idNet, sizeof(idNet));
+
+        Header hdr{};
+        hdr.magic = kMagicByte;
+        hdr.opcode = static_cast<std::uint8_t>(OpCode::S_ENTITY_DESTROY);
+        hdr.payloadSize = ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(serialized.size()));
+        hdr.userId = 0;
+        hdr.seqId = 0;
+        hdr.ackId = 0;
+        hdr.flags = 0;
+
+        Buffer pkt = buildPacketBuffer(hdr, serialized);
+        Endpoint sender{"127.0.0.1", 4242};
+
+        // Queue the destroy callback (it will be dispatched later)
+        client.test_processIncomingPacket(pkt, sender);
+
+        // Destroy the scene before dispatch of queued callbacks
+        scene.reset();
+
+        // Now dispatch queued callbacks - removed callback should not be invoked
+        client.test_dispatchCallbacks();
+    }
+
+    EXPECT_EQ(invokeCount.load(std::memory_order_relaxed), 0);
+}
