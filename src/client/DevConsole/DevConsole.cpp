@@ -63,7 +63,6 @@ DevConsole::DevConsole(std::shared_ptr<rtype::display::IDisplay> display,
     cvars_["cl_show_hitboxes"] = "0";
     cvars_["net_graph"] = "0";
     cvars_["god_mode"] = "0";
-    cvars_["noclip_mode"] = "0";
 
     print("Developer Console initialized. Press F1 to toggle. Type 'help' for commands.");
 }
@@ -581,15 +580,6 @@ void DevConsole::registerDefaultCommands() {
             return sent ? "God mode request sent..."
                         : "Failed to send request";
         });
-
-    // Noclip toggle
-    registerCommand("noclip", "Toggle noclip mode (no collision)",
-                    [this](const std::vector<std::string>&) -> std::string {
-                        std::string current = getCvar("noclip_mode");
-                        std::string newVal = (current == "1") ? "0" : "1";
-                        setCvar("noclip_mode", newVal);
-                        return newVal == "1" ? "Noclip ON" : "Noclip OFF";
-                    });
 
     // Echo command
     registerCommand(
