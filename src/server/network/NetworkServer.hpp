@@ -8,6 +8,7 @@
 #ifndef SRC_SERVER_NETWORK_NETWORKSERVER_HPP_
 #define SRC_SERVER_NETWORK_NETWORKSERVER_HPP_
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstdint>
@@ -20,7 +21,6 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
 
 #include <asio.hpp>
 
@@ -521,7 +521,7 @@ class NetworkServer {
 
     static std::int16_t quantize(float value, float scale) noexcept {
         float scaled = value * scale;
-        long rounded = std::lrint(scaled);
+        std::int64_t rounded = std::llround(scaled);
         if (rounded > std::numeric_limits<std::int16_t>::max()) {
             return std::numeric_limits<std::int16_t>::max();
         }
