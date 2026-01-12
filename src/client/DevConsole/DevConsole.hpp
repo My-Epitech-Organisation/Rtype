@@ -17,6 +17,13 @@
 
 #include "rtype/display/IDisplay.hpp"
 
+// Forward declarations
+class AudioLib;
+
+namespace ECS {
+class Registry;
+}
+
 namespace rtype::client {
 
 // Forward declaration
@@ -45,10 +52,16 @@ class DevConsole {
      * @brief Construct a new DevConsole.
      * @param display The display interface for rendering
      * @param networkClient Optional network client for server commands
+     * @param registry Optional ECS registry for entity count
+     * @param audioLib Optional audio library for mute command
+     * @param deltaTimePtr Pointer to deltaTime for FPS calculation
      */
     explicit DevConsole(
         std::shared_ptr<rtype::display::IDisplay> display,
-        std::shared_ptr<NetworkClient> networkClient = nullptr);
+        std::shared_ptr<NetworkClient> networkClient = nullptr,
+        std::shared_ptr<ECS::Registry> registry = nullptr,
+        std::shared_ptr<AudioLib> audioLib = nullptr,
+        float* deltaTimePtr = nullptr);
 
     ~DevConsole() = default;
     DevConsole(const DevConsole&) = delete;
@@ -157,6 +170,7 @@ class DevConsole {
     void renderBackground();
     void renderOutput();
     void renderInputLine();
+    void renderOverlays();
 
     bool handleKeyPressed(const rtype::display::Event& event);
     bool handleTextEntered(std::uint32_t unicode);
@@ -185,6 +199,15 @@ class DevConsole {
 
     // Console variables
     std::map<std::string, std::string> cvars_;
+
+    // Dependencies for overlay commands
+    std::shared_ptr<ECS::Registry> registry_;
+    std::shared_ptr<AudioLib> audioLib_;
+    float* deltaTimePtr_{nullptr};
+
+    // Saved volumes for mute/unmute
+    float savedMusicVolume_{50.0f};
+    float savedSFXVolume_{25.0f};
 };
 
 }  // namespace rtype::client
