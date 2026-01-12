@@ -185,6 +185,7 @@ if $GENERATE_HTML; then
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/src/server/shared/AdminServer.*' \
         '*/serverApp.cpp' \
         '*/NetworkClient.cpp' \
         '*/TomlParser.cpp' \
@@ -314,6 +315,7 @@ else
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/src/server/shared/AdminServer.*' \
         '*/serverApp.cpp' \
         '*/NetworkClient.cpp' \
         '*/TomlParser.cpp' \
