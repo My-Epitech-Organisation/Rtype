@@ -194,9 +194,6 @@ void ClientNetworkSystem::reset() {
     lastKnownHealth_.clear();
     disconnectedHandled_ = false;
 
-    onLocalPlayerAssignedCallback_ = nullptr;
-    onHealthUpdateCallback_ = nullptr;
-    onDisconnectCallback_ = nullptr;
 
     LOG_DEBUG_CAT(rtype::LogCategory::Network,
                   "[ClientNetworkSystem] Network system state reset complete");
