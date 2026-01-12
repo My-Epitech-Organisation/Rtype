@@ -179,6 +179,11 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
         return;
     }
 
+    // Check invincibility for player targets (god mode, shield power-up)
+    if (isTargetPlayer && registry.hasComponent<InvincibleTag>(target)) {
+        return;
+    }
+
     LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                   "[CollisionSystem] Collision detected! Projectile "
                       << projectile.id << " hit target " << target.id
