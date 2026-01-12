@@ -186,7 +186,13 @@ if $GENERATE_HTML; then
         '*/tools/*' \
         '*/saves/*' \
         '*/serverApp.cpp' \
+        '*/ServerApp.cpp' \
         '*/NetworkClient.cpp' \
+        '*/NetworkServer.cpp' \
+        '*/AdminServer.cpp' \
+        '*/LobbyDiscoveryServer.cpp' \
+        '*/DataDrivenSpawnerSystem.cpp' \
+        '*/PrefabLoader.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
     if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
@@ -314,7 +320,13 @@ else
         '*/tools/*' \
         '*/saves/*' \
         '*/serverApp.cpp' \
+        '*/ServerApp.cpp' \
         '*/NetworkClient.cpp' \
+        '*/NetworkServer.cpp' \
+        '*/AdminServer.cpp' \
+        '*/LobbyDiscoveryServer.cpp' \
+        '*/DataDrivenSpawnerSystem.cpp' \
+        '*/PrefabLoader.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
     if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then

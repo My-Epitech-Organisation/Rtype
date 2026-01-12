@@ -21,3 +21,26 @@ if(WIN32 OR MSVC)
 else()
     gtest_discover_tests(test_branch_coverage_additional)
 endif()
+
+# New additional targeted branch coverage tests
+add_executable(test_additional_branch_coverage test_additional_branch_coverage.cpp)
+
+target_link_libraries(test_additional_branch_coverage PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    common
+    GTest::gtest_main
+)
+
+target_include_directories(test_additional_branch_coverage PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_additional_branch_coverage WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_additional_branch_coverage)
+endif()
+
