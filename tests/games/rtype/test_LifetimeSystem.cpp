@@ -155,3 +155,59 @@ TEST_F(LifetimeSystemTest, UpdateParallelPath_ManyEntities) {
         registry.killEntity(e);
     }
 }
+
+TEST_F(LifetimeSystemTest, UpdateParallelPath_WithExpiring) {
+    // Create 110 entities, 60 will expire to test parallel path with destruction
+    std::vector<ECS::Entity> entities;
+    for (int i = 0; i < 110; ++i) {
+        auto e = registry.spawnEntity();
+        float lifetime = (i < 60) ? 0.5f : 5.0f;
+        registry.emplaceComponent<LifetimeComponent>(e, lifetime);
+        entities.push_back(e);
+    }
+
+    lifetimeSystem.update(registry, 1.0f);
+
+    // Count entities marked for destruction
+    int expiredCount = 0;
+    int aliveCount = 0;
+    for (auto e : entities) {
+        if (registry.hasComponent<DestroyTag>(e)) {
+            ++expiredCount;
+        } else {
+            ++aliveCount;
+        }
+    }
+    EXPECT_EQ(expiredCount, 60);
+    EXPECT_EQ(aliveCount, 50);
+
+    for (auto e : entities) {
+        registry.killEntity(e);
+    }
+}
+
+TEST_F(LifetimeSystemTest, UpdateParallelPath_WithExistingDestroyTag) {
+    // Create 105 entities, some already have DestroyTag
+    std::vector<ECS::Entity> entities;
+    for (int i = 0; i < 105; ++i) {
+        auto e = registry.spawnEntity();
+        registry.emplaceComponent<LifetimeComponent>(e, 0.5f);
+        if (i < 20) {
+            registry.emplaceComponent<DestroyTag>(e);  // Already marked
+        }
+        entities.push_back(e);
+    }
+
+    // Should not throw - should not try to add duplicate DestroyTag
+    EXPECT_NO_THROW(lifetimeSystem.update(registry, 1.0f));
+
+    // All entities should have DestroyTag
+    for (auto e : entities) {
+        EXPECT_TRUE(registry.hasComponent<DestroyTag>(e));
+    }
+
+    for (auto e : entities) {
+        registry.killEntity(e);
+    }
+}
+

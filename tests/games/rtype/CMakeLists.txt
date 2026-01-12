@@ -442,3 +442,85 @@ if(WIN32 OR MSVC)
 else()
     gtest_discover_tests(test_file_operations)
 endif()
+
+# ForcePodLaunchSystem tests
+add_executable(test_forcepod_launch_system test_forcepod_launch_system.cpp)
+
+target_link_libraries(test_forcepod_launch_system PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_forcepod_launch_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_forcepod_launch_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_forcepod_launch_system)
+endif()
+
+# ForcePodShootingSystem tests
+add_executable(test_forcepod_shooting_system test_forcepod_shooting_system.cpp)
+
+target_link_libraries(test_forcepod_shooting_system PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_forcepod_shooting_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_forcepod_shooting_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_forcepod_shooting_system)
+endif()
+
+# PowerUpTypeComponent tests
+add_executable(test_powerup_type_component test_powerup_type_component.cpp)
+
+target_link_libraries(test_powerup_type_component PRIVATE
+    rtype_game_shared
+    GTest::gtest_main
+)
+
+target_include_directories(test_powerup_type_component PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_powerup_type_component WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_powerup_type_component)
+endif()
+
+# PrefabLoader tests
+add_executable(test_prefab_loader test_prefab_loader.cpp)
+
+target_link_libraries(test_prefab_loader PRIVATE
+    rtype_game_shared
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_prefab_loader PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib/ecs/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_prefab_loader WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_prefab_loader)
+endif()
