@@ -401,6 +401,21 @@ Key SFMLDisplay::_translateKey(sf::Keyboard::Key key) {
         case sf::Keyboard::Key::Right: return Key::Right;
         case sf::Keyboard::Key::Up: return Key::Up;
         case sf::Keyboard::Key::Down: return Key::Down;
+        case sf::Keyboard::Key::F1: return Key::F1;
+        case sf::Keyboard::Key::F2: return Key::F2;
+        case sf::Keyboard::Key::F3: return Key::F3;
+        case sf::Keyboard::Key::F4: return Key::F4;
+        case sf::Keyboard::Key::F5: return Key::F5;
+        case sf::Keyboard::Key::F6: return Key::F6;
+        case sf::Keyboard::Key::F7: return Key::F7;
+        case sf::Keyboard::Key::F8: return Key::F8;
+        case sf::Keyboard::Key::F9: return Key::F9;
+        case sf::Keyboard::Key::F10: return Key::F10;
+        case sf::Keyboard::Key::F11: return Key::F11;
+        case sf::Keyboard::Key::F12: return Key::F12;
+        case sf::Keyboard::Key::F13: return Key::F13;
+        case sf::Keyboard::Key::F14: return Key::F14;
+        case sf::Keyboard::Key::F15: return Key::F15;
         default: return Key::Unknown;
     }
 }
