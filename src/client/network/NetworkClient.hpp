@@ -331,8 +331,8 @@ class NetworkClient {
     /**
      * @brief Register callback for entity destruction (convenience wrapper)
      * @param callback Function receiving the destroyed entity ID
-     * @note Prefer using addEntityDestroyCallback/removeEntityDestroyCallback to
-     * manage lifetime explicitly.
+     * @note Prefer using addEntityDestroyCallback/removeEntityDestroyCallback
+     * to manage lifetime explicitly.
      */
     void onEntityDestroy(std::function<void(std::uint32_t entityId)> callback);
 
