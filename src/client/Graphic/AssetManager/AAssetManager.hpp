@@ -8,6 +8,7 @@
 #ifndef SRC_CLIENT_GRAPHIC_ASSETMANAGER_AASSETMANAGER_HPP_
 #define SRC_CLIENT_GRAPHIC_ASSETMANAGER_AASSETMANAGER_HPP_
 
+#include <unordered_map>
 #include <utility>
 
 #include "IAssetManager.hpp"

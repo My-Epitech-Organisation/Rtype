@@ -20,11 +20,9 @@
 
 class TextureManager : public AAssetManager<::rtype::display::ITexture> {
    public:
-    TextureManager(rtype::display::IDisplay* display,
-                   std::string typeName = "Texture")
-        : AAssetManager<::rtype::display::ITexture>(display,
-                                                    std::move(typeName)) {}
-    TextureManager(const TextureManager&);
+    explicit TextureManager(rtype::display::IDisplay* display)
+        : AAssetManager<::rtype::display::ITexture>(display, "Texture") {}
+    TextureManager(const TextureManager&) = delete;
     TextureManager& operator=(const TextureManager&) = delete;
 
     void load(const std::string& id, const std::string& filePath) override;
