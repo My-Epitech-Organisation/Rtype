@@ -566,18 +566,19 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
         }
     });
 
-    _entityDestroyCallbackId = this->_networkClient->addEntityDestroyCallback([this](std::uint32_t entityId) {
-        try {
-            if (!_initialized || !this->_registry) {
-                return;
+    _entityDestroyCallbackId = this->_networkClient->addEntityDestroyCallback(
+        [this](std::uint32_t entityId) {
+            try {
+                if (!_initialized || !this->_registry) {
+                    return;
+                }
+                this->onEntityDestroyEvent(entityId);
+            } catch (const std::exception& e) {
+                LOG_ERROR("[Lobby] Exception in onEntityDestroy: " << e.what());
+            } catch (...) {
+                LOG_ERROR("[Lobby] Unknown exception in onEntityDestroy");
             }
-            this->onEntityDestroyEvent(entityId);
-        } catch (const std::exception& e) {
-            LOG_ERROR("[Lobby] Exception in onEntityDestroy: " << e.what());
-        } catch (...) {
-            LOG_ERROR("[Lobby] Unknown exception in onEntityDestroy");
-        }
-    });
+        });
     _hasEntityDestroyCallback = true;
 
     this->_networkClient->onDisconnected([this](rtype::client::NetworkClient::
@@ -736,7 +737,8 @@ Lobby::~Lobby() {
         this->_networkClient->onEntityMove(nullptr);
         this->_networkClient->onEntityMoveBatch(nullptr);
         if (_hasEntityDestroyCallback) {
-            this->_networkClient->removeEntityDestroyCallback(_entityDestroyCallbackId);
+            this->_networkClient->removeEntityDestroyCallback(
+                _entityDestroyCallbackId);
             _hasEntityDestroyCallback = false;
         }
     }
