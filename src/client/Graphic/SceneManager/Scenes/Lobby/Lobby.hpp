@@ -18,6 +18,8 @@
 
 constexpr float kMessageSectionW = 700.0f;
 constexpr float kMessageSectionH = 500.0f;
+constexpr int kMessageMaxCharacters = 75;
+constexpr int kMessagesMaxDisplay = 10;
 
 class Lobby : public AScene {
    private:

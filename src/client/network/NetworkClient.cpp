@@ -291,7 +291,9 @@ bool NetworkClient::sendChat(const std::string& message) {
 
     network::ChatPayload payload;
     std::memset(&payload, 0, sizeof(payload));
-    std::strncpy(payload.message, message.c_str(), 256);
+    std::memset(&payload.message, 0, sizeof(payload.message));
+    std::strncpy(payload.message, message.c_str(), 255);
+    payload.message[255] = '\0';
     // userId is ignored by server for C_CHAT
 
     auto serialized = network::Serializer::serializeForNetwork(payload);

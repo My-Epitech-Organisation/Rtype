@@ -24,7 +24,7 @@
 #include "Scenes/Lobby/Lobby.hpp"
 
 static constexpr float kConnectionPanelX = 1920.f / 2;
-static constexpr float kConnectionPanelY = 1080 / 2;
+static constexpr float kConnectionPanelY = 1080.f / 2;
 static constexpr float kConnectionPanelInputStartInputY = 110.f;
 static constexpr float kConnectionPanelInputOffsetY = 65.f;
 static constexpr float kConnectionPanelWidth = 680.f;

@@ -581,15 +581,15 @@ void Lobby::_addChatMessage(uint32_t userId, const std::string& message) {
     } else {
         formattedMsg = "[Player " + std::to_string(userId) + "]: " + message;
     }
-    if (formattedMsg.length() > 75) {
+    if (formattedMsg.length() > kMessageMaxCharacters) {
         LOG_WARNING("[Lobby] Chat message from user "
                     << userId << " is too long and was truncated.");
-        formattedMsg = formattedMsg.substr(0, 75) + "...";
+        formattedMsg = formattedMsg.substr(0, kMessageMaxCharacters) + "...";
     }
     _chatHistory.push_back(formattedMsg);
 
     // Keep only last 10 messages
-    if (_chatHistory.size() > 10) {
+    if (_chatHistory.size() > kMessagesMaxDisplay) {
         _chatHistory.erase(_chatHistory.begin());
     }
 
@@ -599,7 +599,6 @@ void Lobby::_addChatMessage(uint32_t userId, const std::string& message) {
     }
     _chatHistoryEntities.clear();
 
-    // Re-render chat history
     float startY = Graphic::WINDOW_HEIGHT / 2 - kMessageSectionH / 2 + 80;
     float startX = Graphic::WINDOW_WIDTH / 2 - kMessageSectionW / 2 + 35;
 
@@ -612,10 +611,8 @@ void Lobby::_addChatMessage(uint32_t userId, const std::string& message) {
             textEnt, 12);
         _registry
             ->emplaceComponent<rtype::games::rtype::client::HiddenComponent>(
-                textEnt, true);  // Initialize as visible, logic below will hide
-                                 // if chat closed
+                textEnt, true);
 
-        // Check if chat is currently open to set visibility
         bool isChatHidden = true;
         if (!_messageEntities.empty()) {
             if (_registry->hasComponent<

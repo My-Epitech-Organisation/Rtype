@@ -1193,7 +1193,8 @@ void NetworkServer::broadcastChat(std::uint32_t senderId,
     network::ChatPayload payload;
     payload.userId = network::ByteOrderSpec::toNetwork(senderId);
     std::memset(payload.message, 0, 256);
-    std::strncpy(payload.message, message.c_str(), 256);
+    std::strncpy(payload.message, message.c_str(), sizeof(payload.message) - 1);
+    payload.message[sizeof(payload.message) - 1] = '\0';
 
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
