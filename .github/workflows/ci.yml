@@ -496,6 +496,15 @@ jobs:
           echo "### 🔨 Build Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
           echo "✅ Built using cached dependencies" >> $GITHUB_STEP_SUMMARY
 
+  call-release:
+    needs: [build, test]
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') && github.event_name == 'push'
+    uses: ./.github/workflows/release.yml
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets: inherit
+
   mirror:
     name: "🪞 Push to Epitech Mirror"
     runs-on: ubuntu-latest
