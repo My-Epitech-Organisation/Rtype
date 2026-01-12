@@ -393,7 +393,7 @@ class NetworkClient {
      *
      * Admin commands are only accepted when running on localhost.
      *
-     * @param commandType AdminCommandType (GodMode, Noclip, etc.)
+     * @param commandType AdminCommandType (GodMode, etc.)
      * @param param 0=off, 1=on, 2=toggle
      * @return true if sent, false if not connected
      */
