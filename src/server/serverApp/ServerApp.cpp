@@ -825,11 +825,6 @@ void ServerApp::handleAdminCommand(std::uint32_t userId,
                                               newState ? 1 : 0, msg);
             break;
         }
-        case network::AdminCommandType::Noclip:
-            // Noclip not implemented yet
-            _networkServer->sendAdminResponse(userId, commandType, false, 0,
-                                              "Noclip not implemented");
-            break;
         default:
             _networkServer->sendAdminResponse(userId, commandType, false, 0,
                                               "Unknown command type");
