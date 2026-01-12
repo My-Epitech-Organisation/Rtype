@@ -49,7 +49,7 @@ install_package() {
     local pkg_apt="$1"
     local pkg_dnf="$2"
     local pm=$(detect_package_manager)
-    
+
     case $pm in
         apt)
             sudo apt-get update && sudo apt-get install -y "$pkg_apt"
@@ -150,7 +150,7 @@ ninja
 
 echo ""
 echo ">>> Running tests..."
-ctest --output-on-failure || true
+ctest --output-on-failure
 
 echo ""
 echo ">>> Generating coverage data..."
