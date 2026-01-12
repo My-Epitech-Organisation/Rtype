@@ -34,6 +34,11 @@ void Graphic::_pollEvents() {
             this->_display->close();
         }
 
+        // DevConsole intercepts events first (F1 toggle, input when visible)
+        if (_devConsole && _devConsole->handleEvent(event)) {
+            continue;  // Event consumed by console
+        }
+
         this->_eventSystem->setEvent(event);
         this->_eventSystem->update(*this->_registry, 0.f);
         this->_sceneManager->pollEvents(event);
@@ -98,6 +103,11 @@ void Graphic::_update() {
 
     this->_systemScheduler->runSystem("lifetime");
     this->_sceneManager->update(this->_currentDeltaTime);
+
+    // Update dev console
+    if (_devConsole) {
+        _devConsole->update(this->_currentDeltaTime);
+    }
 }
 
 void Graphic::_render() {
@@ -115,6 +125,12 @@ void Graphic::_render() {
     this->_systemScheduler->runSystem("shader_render");
 
     this->_sceneManager->draw();
+
+    // Render dev console overlay (always on top)
+    if (_devConsole) {
+        _devConsole->render();
+    }
+
     this->_display->display();
 }
 
@@ -433,6 +449,11 @@ Graphic::Graphic(
         _networkClient, _networkSystem, this->_audioLib);
     _initializeSystems();
     _lastFrameTime = std::chrono::steady_clock::now();
+
+    // Initialize developer console (accessible from all scenes via F1)
+    _devConsole = std::make_unique<rtype::client::DevConsole>(this->_display);
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[Graphic] Developer console initialized (toggle with F1)");
 }
 
 Graphic::~Graphic() {
