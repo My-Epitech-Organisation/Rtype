@@ -289,6 +289,35 @@ bool NetworkClient::sendInput(std::uint8_t inputMask) {
     return true;
 }
 
+bool NetworkClient::sendChat(const std::string& message) {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    if (message.size() >= 256) {
+        return false;
+    }
+
+    network::ChatPayload payload;
+    std::memset(&payload, 0, sizeof(payload));
+    std::memset(&payload.message, 0, sizeof(payload.message));
+    std::strncpy(payload.message, message.c_str(), 255);
+    payload.message[255] = '\0';
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    auto result = connection_.buildPacket(network::OpCode::C_CHAT, serialized);
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    return true;
+}
+
 bool NetworkClient::ping() {
     if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
         return false;
@@ -532,6 +561,11 @@ void NetworkClient::onGameOver(std::function<void(GameOverEvent)> callback) {
     onGameOverCallback_ = std::move(callback);
 }
 
+void NetworkClient::onChatReceived(
+    std::function<void(std::uint32_t, std::string)> callback) {
+    onChatReceivedCallback_ = std::move(callback);
+}
+
 void NetworkClient::onGameStart(std::function<void(float)> callback) {
     onGameStartCallback_ = std::move(callback);
 }
@@ -747,6 +781,10 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
 
         case network::OpCode::S_LOBBY_LIST:
             handleLobbyList(header, payload);
+            break;
+
+        case network::OpCode::S_CHAT:
+            handleChat(header, payload);
             break;
 
         case network::OpCode::PONG:
@@ -1191,6 +1229,32 @@ void NetworkClient::handleJoinLobbyResponse(const network::Header& header,
         });
     } catch (...) {
         // Invalid payload, ignore
+    }
+}
+
+void NetworkClient::handleChat(const network::Header& header,
+                               const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::ChatPayload)) {
+        return;
+    }
+
+    try {
+        auto msg =
+            network::Serializer::deserializeFromNetwork<network::ChatPayload>(
+                payload);
+
+        std::string messageText(msg.message, strnlen(msg.message, 256));
+
+        queueCallback(
+            [this, userId = msg.userId, message = std::move(messageText)]() {
+                if (onChatReceivedCallback_) {
+                    onChatReceivedCallback_(userId, message);
+                }
+            });
+    } catch (...) {
+        // Invalid payload
     }
 }
 

@@ -689,6 +689,10 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
             handleInput(header, payload, sender);
             break;
 
+        case network::OpCode::C_CHAT:
+            handleChat(header, payload, sender);
+            break;
+
         case network::OpCode::C_GET_USERS:
             handleGetUsers(header, sender);
             break;
@@ -1305,4 +1309,58 @@ void NetworkServer::printPacketStatistics() const {
 
     LOG_INFO("=== END STATISTICS ===");
 }
+
+void NetworkServer::onClientChat(
+    std::function<void(std::uint32_t, const std::string&)> callback) {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
+    onClientChatCallback_ = std::move(callback);
+}
+
+void NetworkServer::handleChat(const network::Header& header,
+                               const network::Buffer& payload,
+                               const network::Endpoint& sender) {
+    if (payload.size() < sizeof(network::ChatPayload)) {
+        return;
+    }
+
+    auto client = findClient(sender);
+    if (!client || !client->joined) {
+        return;
+    }
+
+    try {
+        auto msg =
+            network::Serializer::deserializeFromNetwork<network::ChatPayload>(
+                payload);
+
+        std::string messageText(msg.message, strnlen(msg.message, 256));
+
+        queueCallback([this, userId = client->userId,
+                       message = std::move(messageText)]() {
+            if (onClientChatCallback_) {
+                onClientChatCallback_(userId, message);
+            }
+        });
+    } catch (...) {
+        // Invalid payload
+    }
+}
+
+void NetworkServer::broadcastChat(std::uint32_t senderId,
+                                  const std::string& message) {
+    if (message.size() >= 256) {
+        LOG_WARNING("Broadcast chat message too long, truncated");
+    }
+
+    network::ChatPayload payload;
+    payload.userId = network::ByteOrderSpec::toNetwork(senderId);
+    std::memset(payload.message, 0, 256);
+    std::strncpy(payload.message, message.c_str(), sizeof(payload.message) - 1);
+    payload.message[sizeof(payload.message) - 1] = '\0';
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    broadcastToAll(network::OpCode::S_CHAT, serialized);
+}
+
 }  // namespace rtype::server

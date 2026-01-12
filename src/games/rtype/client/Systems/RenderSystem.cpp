@@ -70,7 +70,13 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry,
 
     display::Vector2f position = {static_cast<float>(pos.x),
                                   static_cast<float>(pos.y)};
+
     display::Vector2f size = {rectData.size.first, rectData.size.second};
+
+    if (registry.hasComponent<CenteredRectangleTag>(entity)) {
+        position.x -= size.x / 2.0f;
+        position.y -= size.y / 2.0f;
+    }
 
     this->_display->drawRectangle(position, size, rectData.currentColor,
                                   rectData.outlineColor,
@@ -187,6 +193,11 @@ void RenderSystem::_renderButtons(ECS::Registry& registry, ECS::Entity entity) {
     display::Vector2f position = {static_cast<float>(pos.x),
                                   static_cast<float>(pos.y)};
     display::Vector2f size = {rectData.size.first, rectData.size.second};
+
+    if (registry.hasComponent<CenteredBtnTag>(entity)) {
+        position.x -= size.x / 2.0f;
+        position.y -= size.y / 2.0f;
+    }
 
     this->_display->drawRectangle(position, size, rectData.currentColor,
                                   rectData.outlineColor,

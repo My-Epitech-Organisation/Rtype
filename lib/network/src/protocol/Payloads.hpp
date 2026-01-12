@@ -374,6 +374,14 @@ struct BandwidthModeChangedPayload {
     std::uint8_t activeCount;  ///< Number of clients with low bandwidth enabled
 };
 
+/**
+ * @brief Payload for C_CHAT and S_CHAT (0x30/0x31)
+ */
+struct ChatPayload {
+    std::uint32_t userId; // 0 for system messages or sender id
+    char message[256];
+};
+
 #pragma pack(pop)
 
 static_assert(sizeof(ConnectPayload) == 1,
@@ -434,6 +442,8 @@ static_assert(sizeof(JoinLobbyPayload) == 6,
               "JoinLobbyPayload must be 6 bytes (char[6])");
 static_assert(sizeof(JoinLobbyResponsePayload) == 2,
               "JoinLobbyResponsePayload must be 2 bytes (uint8_t+uint8_t)");
+static_assert(sizeof(ChatPayload) == 260,
+              "ChatPayload must be 260 bytes (4+256)");
 
 static_assert(std::is_trivially_copyable_v<AcceptPayload>);
 static_assert(std::is_trivially_copyable_v<UpdateStatePayload>);
@@ -449,6 +459,7 @@ static_assert(std::is_trivially_copyable_v<UpdatePosPayload>);
 static_assert(std::is_trivially_copyable_v<LobbyReadyPayload>);
 static_assert(std::is_trivially_copyable_v<GameStartPayload>);
 static_assert(std::is_trivially_copyable_v<PlayerReadyStatePayload>);
+static_assert(std::is_trivially_copyable_v<ChatPayload>);
 
 static_assert(std::is_standard_layout_v<AcceptPayload>);
 static_assert(std::is_standard_layout_v<UpdateStatePayload>);
@@ -464,6 +475,7 @@ static_assert(std::is_standard_layout_v<UpdatePosPayload>);
 static_assert(std::is_standard_layout_v<LobbyReadyPayload>);
 static_assert(std::is_standard_layout_v<GameStartPayload>);
 static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
+static_assert(std::is_standard_layout_v<ChatPayload>);
 
 /**
  * @brief Get the expected payload size for a given OpCode
@@ -519,6 +531,10 @@ static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
             return sizeof(EntityHealthPayload);
         case OpCode::S_POWERUP_EVENT:
             return sizeof(PowerUpEventPayload);
+
+        case OpCode::C_CHAT:
+        case OpCode::S_CHAT:
+            return sizeof(ChatPayload);
 
         case OpCode::C_INPUT:
             return sizeof(InputPayload);

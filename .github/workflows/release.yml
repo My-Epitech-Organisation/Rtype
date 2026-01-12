@@ -1,7 +1,10 @@
 name: 🚀 R-Type Release
 
 on:
-  push:
+  workflow_run:
+    workflows: ["R-Type Action"]
+    types:
+      - completed
     branches:
       - main
       - dev
@@ -20,6 +23,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: write
       pull-requests: write
@@ -34,9 +38,23 @@ jobs:
             exit 1
           fi
 
+      - name: Determine context
+        id: ctx
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_run" ]; then
+            echo "branch=${{ github.event.workflow_run.head_branch }}" >> $GITHUB_OUTPUT
+            echo "sha=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_OUTPUT
+            echo "run_id=${{ github.event.workflow_run.id }}" >> $GITHUB_OUTPUT
+          else
+            echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+            echo "run_id=" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ steps.ctx.outputs.sha }}
           fetch-depth: 0
           fetch-tags: true
 
@@ -60,7 +78,7 @@ jobs:
         id: version
         run: |
           LATEST_TAG="${{ steps.latest_release.outputs.latest_tag }}"
-          BRANCH="${{ github.ref_name }}"
+          BRANCH="${{ steps.ctx.outputs.branch }}"
           EVENT_NAME="${{ github.event_name }}"
 
           VERSION="${LATEST_TAG#v}"
@@ -101,7 +119,8 @@ jobs:
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: ci.yml
-          branch: ${{ github.ref_name }}
+          run_id: ${{ steps.ctx.outputs.run_id }}
+          branch: ${{ steps.ctx.outputs.branch }}
           name: r-type_client-ubuntu-latest
           path: ./artifacts/linux-client
 
@@ -109,7 +128,8 @@ jobs:
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: ci.yml
-          branch: ${{ github.ref_name }}
+          run_id: ${{ steps.ctx.outputs.run_id }}
+          branch: ${{ steps.ctx.outputs.branch }}
           name: r-type_client-windows-latest
           path: ./artifacts/windows-client
 
@@ -117,7 +137,8 @@ jobs:
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: ci.yml
-          branch: ${{ github.ref_name }}
+          run_id: ${{ steps.ctx.outputs.run_id }}
+          branch: ${{ steps.ctx.outputs.branch }}
           name: r-type_server-ubuntu-latest
           path: ./artifacts/linux-server
 
@@ -125,7 +146,8 @@ jobs:
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: ci.yml
-          branch: ${{ github.ref_name }}
+          run_id: ${{ steps.ctx.outputs.run_id }}
+          branch: ${{ steps.ctx.outputs.branch }}
           name: r-type_server-windows-latest
           path: ./artifacts/windows-server
 

@@ -103,6 +103,12 @@ enum class OpCode : std::uint8_t {
 
     /// Acknowledgment packet (UNRELIABLE)
     ACK = 0xF2,
+
+    /// Client sends chat message (RELIABLE)
+    C_CHAT = 0x30,
+
+    /// Server broadcasts chat message (RELIABLE)
+    S_CHAT = 0x31,
 };
 
 namespace OpCodeRange {
@@ -148,6 +154,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_POWERUP_EVENT:
         case OpCode::C_SET_BANDWIDTH_MODE:
         case OpCode::S_BANDWIDTH_MODE_CHANGED:
+        case OpCode::C_CHAT:
+        case OpCode::S_CHAT:
             return true;
 
         case OpCode::S_ENTITY_MOVE:
@@ -176,6 +184,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::C_JOIN_LOBBY:
         case OpCode::C_SET_BANDWIDTH_MODE:
         case OpCode::C_INPUT:
+        case OpCode::C_CHAT:
         case OpCode::PING:
             return true;
 
@@ -210,6 +219,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_POWERUP_EVENT:
         case OpCode::S_UPDATE_POS:
         case OpCode::S_BANDWIDTH_MODE_CHANGED:
+        case OpCode::S_CHAT:
         case OpCode::PONG:
             return true;
 
@@ -255,6 +265,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::PING:
         case OpCode::PONG:
         case OpCode::ACK:
+        case OpCode::C_CHAT:
+        case OpCode::S_CHAT:
             return true;
         default:
             return false;
@@ -336,6 +348,10 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "S_POWERUP_EVENT";
         case OpCode::C_INPUT:
             return "C_INPUT";
+        case OpCode::C_CHAT:
+            return "C_CHAT";
+        case OpCode::S_CHAT:
+            return "S_CHAT";
         case OpCode::S_UPDATE_POS:
             return "S_UPDATE_POS";
         case OpCode::PING:
