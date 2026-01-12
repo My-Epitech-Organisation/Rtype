@@ -25,10 +25,10 @@ ChaserRotationSystem::ChaserRotationSystem()
     : ::rtype::engine::ASystem("ChaserRotationSystem") {}
 
 void ChaserRotationSystem::update(ECS::Registry& registry, float dt) {
-    using ::rtype::games::rtype::shared::PlayerIdComponent;
-    using ::rtype::games::rtype::shared::TransformComponent;
     using ::rtype::games::rtype::shared::EnemyTypeComponent;
     using ::rtype::games::rtype::shared::EnemyVariant;
+    using ::rtype::games::rtype::shared::PlayerIdComponent;
+    using ::rtype::games::rtype::shared::TransformComponent;
     ECS::Entity targetPlayer;
     bool foundPlayer = false;
     float targetX = 0.0f;
