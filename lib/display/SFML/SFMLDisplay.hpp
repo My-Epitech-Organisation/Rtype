@@ -74,7 +74,7 @@ namespace rtype::display {
         void endRenderToTexture() override;
         void drawRenderTexture(const std::string& textureName, const std::string& shaderName) override;
 
-        // ClipBoard
+        // Clipboard
         void setClipboardText(const std::string& text) override;
         [[nodiscard]] std::string getClipboardText() const override;
 

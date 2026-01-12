@@ -286,7 +286,7 @@ namespace rtype::display {
         virtual void endRenderToTexture() = 0;
         virtual void drawRenderTexture(const std::string& textureName, const std::string& shaderName) = 0;
 
-        // ClipBoard
+        // Clipboard
 
         /**
          * @brief Sets the system clipboard text.
