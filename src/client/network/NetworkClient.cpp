@@ -459,7 +459,24 @@ void NetworkClient::onEntityMoveBatch(
 
 void NetworkClient::onEntityDestroy(
     std::function<void(std::uint32_t entityId)> callback) {
+    // Convenience wrapper: keep existing behavior but return value is ignored
+    (void)addEntityDestroyCallback(std::move(callback));
+}
+
+NetworkClient::CallbackId NetworkClient::addEntityDestroyCallback(
+    std::function<void(std::uint32_t entityId)> callback) {
     onEntityDestroyCallbacks_.push_back(std::move(callback));
+    return onEntityDestroyCallbacks_.size() - 1;
+}
+
+void NetworkClient::removeEntityDestroyCallback(CallbackId id) {
+    if (id < onEntityDestroyCallbacks_.size()) {
+        onEntityDestroyCallbacks_[id] = nullptr;
+    }
+}
+
+void NetworkClient::clearEntityDestroyCallbacks() {
+    onEntityDestroyCallbacks_.clear();
 }
 
 void NetworkClient::onEntityHealth(

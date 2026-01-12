@@ -329,10 +329,30 @@ class NetworkClient {
     void onEntityMoveBatch(std::function<void(EntityMoveBatchEvent)> callback);
 
     /**
-     * @brief Register callback for entity destruction
+     * @brief Register callback for entity destruction (convenience wrapper)
      * @param callback Function receiving the destroyed entity ID
+     * @note Prefer using addEntityDestroyCallback/removeEntityDestroyCallback to
+     * manage lifetime explicitly.
      */
     void onEntityDestroy(std::function<void(std::uint32_t entityId)> callback);
+
+    /**
+     * @brief Add entity destroy callback and return identifier for removal
+     * @param callback Function receiving the destroyed entity ID
+     */
+    CallbackId addEntityDestroyCallback(
+        std::function<void(std::uint32_t entityId)> callback);
+
+    /**
+     * @brief Remove previously added entity destroy callback
+     * @param id Identifier returned by addEntityDestroyCallback
+     */
+    void removeEntityDestroyCallback(CallbackId id);
+
+    /**
+     * @brief Clear all entity-destroy callbacks
+     */
+    void clearEntityDestroyCallbacks();
 
     /**
      * @brief Register callback for entity health updates
