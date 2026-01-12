@@ -10,6 +10,7 @@ set(ECS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/signal/SignalDispatcher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/system/SystemScheduler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/serialization/Serialization.cpp
+        ../background/ABackground.hpp
 )
 
 add_library(ecs STATIC ${ECS_SOURCES})

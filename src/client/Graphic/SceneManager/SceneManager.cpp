@@ -20,6 +20,7 @@
 #include "Scenes/Lobby/Lobby.hpp"
 #include "Scenes/MainMenuScene/MainMenuScene.hpp"
 #include "Scenes/SettingsScene/SettingsScene.hpp"
+#include "lib/background/IBackground.hpp"
 
 void SceneManager::_applySceneChange() {
     if (this->_nextScene.has_value()) {
@@ -67,6 +68,73 @@ void SceneManager::setCurrentScene(const Scene scene) {
     this->_nextScene = scene;
 }
 
+void SceneManager::registerBackgroundPlugin(
+    const std::string& name, std::shared_ptr<IBackground> background) {
+    this->_libBackgrounds[name] = background;
+}
+
+void SceneManager::initializeScenes() {
+    this->_sceneList.emplace(MAIN_MENU, [this]() {
+        return std::make_unique<MainMenuScene>(
+            this->_registry, this->_assetManager, this->_display,
+            this->_setBackground, this->_switchToScene, this->_networkClient,
+            this->_networkSystem, this->_audio);
+    });
+    this->_sceneList.emplace(SETTINGS_MENU, [this]() {
+        return std::make_unique<SettingsScene>(
+            this->_registry, this->_assetManager, this->_display,
+            this->_keybinds, this->_audio, this->_setBackground,
+            this->_switchToScene);
+    });
+    this->_sceneList.emplace(LEVEL_CREATOR, [this]() {
+        return std::make_unique<LevelCreatorScene>(
+            this->_registry, this->_assetManager, this->_display,
+            this->_keybinds, this->_audio, this->_libBackgrounds,
+            this->_setBackground, this->_switchToScene);
+    });
+    this->_sceneList.emplace(HOW_TO_PLAY, [this]() {
+        return std::make_unique<HowToPlayScene>(
+            this->_registry, this->_assetManager, this->_display,
+            this->_keybinds, this->_audio, this->_setBackground,
+            this->_switchToScene);
+    });
+    this->_sceneList.emplace(LOBBY, [this]() {
+        return std::make_unique<Lobby>(
+            this->_registry, this->_assetManager, this->_display,
+            this->_setBackground, this->_switchToScene, this->_networkClient,
+            this->_networkSystem, this->_audio);
+    });
+    this->_sceneList.emplace(GAME_OVER, [this]() {
+        return std::make_unique<GameOverScene>(
+            this->_registry, this->_assetManager, this->_display, this->_audio,
+            this->_setBackground, this->_switchToScene);
+    });
+    this->_sceneList.emplace(IN_GAME, [this]() {
+        if (this->_networkSystem) {
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::UI,
+                "[SceneManager] Setting up entity factory before scene "
+                "creation");
+            this->_networkSystem->setEntityFactory(
+                rtype::games::rtype::client::RtypeEntityFactory::
+                    createNetworkEntityFactory(this->_registry,
+                                               this->_assetManager));
+        }
+        auto rtypeGameScene =
+            std::make_unique<rtype::games::rtype::client::RtypeGameScene>(
+                this->_registry, this->_assetManager, this->_display,
+                this->_keybinds, this->_switchToScene, this->_networkClient,
+                this->_networkSystem, this->_audio);
+        return std::make_unique<GameScene>(
+            this->_registry, this->_assetManager, this->_display,
+            this->_keybinds, this->_setBackground, this->_switchToScene,
+            std::move(rtypeGameScene), this->_networkClient,
+            this->_networkSystem, this->_audio);
+    });
+    this->setCurrentScene(MAIN_MENU);
+    this->_applySceneChange();
+}
+
 void SceneManager::pollEvents(const rtype::display::Event& e) {
     this->_applySceneChange();
 
@@ -111,55 +179,26 @@ SceneManager::SceneManager(
     this->_switchToScene = [this](const Scene& scene) {
         this->setCurrentScene(scene);
     };
-    this->_sceneList.emplace(MAIN_MENU, [ecs, texture, this]() {
-        return std::make_unique<MainMenuScene>(
-            ecs, texture, this->_display, this->_switchToScene,
-            this->_networkClient, this->_networkSystem, this->_audio);
-    });
-    this->_sceneList.emplace(SETTINGS_MENU, [ecs, texture, this]() {
-        return std::make_unique<SettingsScene>(ecs, texture, this->_display,
-                                               this->_keybinds, this->_audio,
-                                               this->_switchToScene);
-    });
-    this->_sceneList.emplace(LEVEL_CREATOR, [ecs, texture, this]() {
-        return std::make_unique<LevelCreatorScene>(
-            ecs, texture, this->_display, this->_keybinds, this->_audio,
-            this->_switchToScene);
-    });
-    this->_sceneList.emplace(HOW_TO_PLAY, [ecs, texture, this]() {
-        return std::make_unique<HowToPlayScene>(ecs, texture, this->_display,
-                                                this->_keybinds, this->_audio,
-                                                this->_switchToScene);
-    });
-    this->_sceneList.emplace(LOBBY, [ecs, texture, this]() {
-        return std::make_unique<Lobby>(
-            ecs, texture, this->_display, this->_switchToScene,
-            this->_networkClient, this->_networkSystem, this->_audio);
-    });
-    this->_sceneList.emplace(GAME_OVER, [ecs, texture, this]() {
-        return std::make_unique<GameOverScene>(
-            ecs, texture, this->_display, this->_audio, this->_switchToScene);
-    });
-    this->_sceneList.emplace(IN_GAME, [ecs, texture, this]() {
-        if (this->_networkSystem) {
-            LOG_DEBUG_CAT(
+
+    this->_setBackground = [this](const std::string& name) {
+        if (!this->_libBackgrounds.contains(name)) {
+            LOG_ERROR_CAT(
                 ::rtype::LogCategory::UI,
-                "[SceneManager] Setting up entity factory before scene "
-                "creation");
-            this->_networkSystem->setEntityFactory(
-                rtype::games::rtype::client::RtypeEntityFactory::
-                    createNetworkEntityFactory(ecs, texture));
+                "[SceneManager] Background plugin not found: " << name);
+            return;
         }
-        auto rtypeGameScene =
-            std::make_unique<rtype::games::rtype::client::RtypeGameScene>(
-                ecs, texture, this->_display, this->_keybinds,
-                this->_switchToScene, this->_networkClient,
-                this->_networkSystem, this->_audio);
-        return std::make_unique<GameScene>(
-            ecs, texture, this->_display, this->_keybinds, this->_switchToScene,
-            std::move(rtypeGameScene), this->_networkClient,
-            this->_networkSystem, this->_audio);
-    });
-    this->setCurrentScene(MAIN_MENU);
-    this->_applySceneChange();
+        if (this->loadedBackground == name) {
+            LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                          "[SceneManager] Background already loaded: " << name);
+            return;
+        }
+        if (this->loadedBackground != "" &&
+            this->_libBackgrounds.contains(this->loadedBackground))
+            this->_libBackgrounds[this->loadedBackground]
+                ->unloadEntitiesBackground();
+        this->_libBackgrounds[name]->createEntitiesBackground();
+        this->loadedBackground = name;
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[SceneManager] Background set to: " << name);
+    };
 }

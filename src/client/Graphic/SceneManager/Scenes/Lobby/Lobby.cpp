@@ -638,6 +638,7 @@ void Lobby::_addChatMessage(uint32_t userId, const std::string& message) {
 Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
              std::shared_ptr<AssetManager> assetManager,
              std::shared_ptr<::rtype::display::IDisplay> window,
+             std::function<void(const std::string&)> setBackground,
              std::function<void(const SceneManager::Scene&)> switchToScene,
              std::shared_ptr<rtype::client::NetworkClient> networkClient,
              std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem,
@@ -857,7 +858,7 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
         });
 
     this->_listEntity = (EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "Lobby"));
+        this->_registry, this->_assetsManager, "Lobby", nullptr));
     this->_initInfoMenu();
     this->_initChat();
 

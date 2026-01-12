@@ -38,6 +38,7 @@
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
 #include "Systems/AnimationSystem.hpp"
+#include "lib/background/IBackground.hpp"
 
 /**
  * @brief Main graphics class managing the game window and rendering pipeline.
@@ -84,6 +85,9 @@ class Graphic {
     /// @brief DLL loader for the display module
     std::unique_ptr<rtype::common::DLLoader<rtype::display::IDisplay>>
         _displayLoader;
+
+    std::vector<std::unique_ptr<rtype::common::DLLoader<IBackground>>>
+        _backgroundLoaders;
 
     /// @brief Display interface loaded from DLL
     std::shared_ptr<rtype::display::IDisplay> _display;
@@ -189,6 +193,9 @@ class Graphic {
 
     /// @brief Initialize and register all systems with the scheduler
     void _initializeSystems();
+
+    /// @brief Load all backgrounds plugins (Lobby, AsteroidsSpace ...)
+    void _loadBackgrounds();
 
     /// @brief Initialize all common assets (textures, sound, fonts)
     void _initializeCommonAssets();

@@ -31,6 +31,7 @@ class HowToPlayScene : public AScene {
         std::shared_ptr<::rtype::display::IDisplay> window,
         std::shared_ptr<KeyboardActions> keybinds,
         std::shared_ptr<AudioLib> audio,
+        std::function<void(const std::string&)> setBackground,
         std::function<void(const SceneManager::Scene&)> switchToScene);
 
     void pollEvents(const rtype::display::Event& e) override;

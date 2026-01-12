@@ -107,12 +107,21 @@ class LevelCreatorScene : public AScene {
      * background, etc.).
      * @{
      */
+
+    std::map<std::string, std::shared_ptr<IBackground>> _libBackgrounds;
+    std::map<std::string, std::shared_ptr<IBackground>>::iterator
+        _bgIteratorFst;
+    std::map<std::string, std::shared_ptr<IBackground>>::iterator
+        _bgIteratorCurrent;
+
+    /** @brief Name of the plugin for the background selection button. */
+    std::string _bgPluginName;
+    /** @brief Entity id for the background selection button. */
+    ECS::Entity _levelBackgroundBtn;
     /** @brief Entity id for the level name input field. */
     ECS::Entity _levelNameInput;
     /** @brief Entity id for the level identifier input field. */
     ECS::Entity _levelIdInput;
-    /** @brief Entity id for the background selection/input field. */
-    ECS::Entity _bgInputInput;
     /** @brief Entity id for the scroll speed input field. */
     ECS::Entity _scrollSpeedInput;
     /** @brief Entity id for the boss identifier input field. */
@@ -282,6 +291,8 @@ class LevelCreatorScene : public AScene {
         std::shared_ptr<::rtype::display::IDisplay> window,
         std::shared_ptr<KeyboardActions> keybinds,
         std::shared_ptr<AudioLib> audio,
+        std::map<std::string, std::shared_ptr<IBackground>> libBackgrounds,
+        std::function<void(const std::string&)> setBackground,
         std::function<void(const SceneManager::Scene&)> switchToScene);
 
     /**

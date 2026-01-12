@@ -104,8 +104,8 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
                   "[RtypeGameScene] Initialize called");
     std::vector<ECS::Entity> entities;
 
-    auto bgEntities = EntityFactory::createBackground(this->_registry,
-                                                      this->_assetsManager, "");
+    auto bgEntities = EntityFactory::createBackground(
+        this->_registry, this->_assetsManager, "", nullptr);
     entities.insert(entities.end(), bgEntities.begin(), bgEntities.end());
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[RtypeGameScene] Background created with "

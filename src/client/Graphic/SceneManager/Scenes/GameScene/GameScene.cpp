@@ -41,6 +41,7 @@ GameScene::GameScene(
     std::shared_ptr<AssetManager> textureManager,
     std::shared_ptr<rtype::display::IDisplay> window,
     std::shared_ptr<KeyboardActions> keybinds,
+    std::function<void(const std::string&)> setBackground,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::unique_ptr<IGameScene> gameScene,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,

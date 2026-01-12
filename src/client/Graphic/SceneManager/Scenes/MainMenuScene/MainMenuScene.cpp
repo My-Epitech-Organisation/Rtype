@@ -562,6 +562,7 @@ MainMenuScene::MainMenuScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> assetsManager,
     std::shared_ptr<rtype::display::IDisplay> window,
+    std::function<void(const std::string&)> setBackground,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,
     std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem,
@@ -573,7 +574,8 @@ MainMenuScene::MainMenuScene(
           std::make_shared<rtype::games::rtype::client::TextInputSystem>(
               window)) {
     this->_listEntity = (EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "R-TYPE"));
+        this->_registry, this->_assetsManager, "R-TYPE", nullptr));
+    setBackground("LOBBY");
     this->_createAstroneerVessel();
     this->_createFakePlayer();
     this->_createConnectionPanel(switchToScene);

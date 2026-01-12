@@ -58,15 +58,23 @@ LevelCreatorScene::LevelCreatorScene(
     std::shared_ptr<AssetManager> assetsManager,
     std::shared_ptr<rtype::display::IDisplay> window,
     std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
+    std::map<std::string, std::shared_ptr<IBackground>> libBackgrounds,
+    std::function<void(const std::string&)> setBackground,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(std::move(ecs), std::move(assetsManager), window,
              std::move(audio)),
       _textInputSystem(
           std::make_shared<rtype::games::rtype::client::TextInputSystem>(
               window)),
-      _switchToScene(std::move(switchToScene)) {
+      _switchToScene(std::move(switchToScene)),
+      _libBackgrounds(std::move(libBackgrounds)) {
     this->_listEntity = (EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "Level Creator"));
+        this->_registry, this->_assetsManager, "Level Creator", nullptr));
+
+    this->_bgIteratorFst = _libBackgrounds.begin();
+    this->_bgIteratorCurrent = _libBackgrounds.begin();
+
+    this->_bgPluginName = this->_bgIteratorCurrent->first;
 
     float startX = kLevelSectionPosLeft;
     float startY = kLevelSectionPosTop;
@@ -107,10 +115,33 @@ LevelCreatorScene::LevelCreatorScene(
                             _registry, _assetsManager,
                             "Background:", "main_font", {labelX, 0}, 24.f),
                         currentY);
-    _bgInputInput = EntityFactory::createTextInput(
-        _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "Path",
-        "assets/backgrounds/space_station.png", 100, false);
-    addElementToSection("settings", _bgInputInput, currentY);
+    _levelBackgroundBtn = EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text("main_font",
+                                          rtype::display::Color::White(), 20,
+                                          this->_bgPluginName),
+        rtype::games::rtype::shared::TransformComponent(inputX, 0),
+        rtype::games::rtype::client::Rectangle(
+            {120, 40}, rtype::display::Color(0, 180, 0, 255),
+            rtype::display::Color(0, 135, 0, 255)),
+        this->_assetsManager, std::function<void()>([this]() {
+            if (this->_libBackgrounds.empty()) return;
+            ++this->_bgIteratorCurrent;
+            if (this->_bgIteratorCurrent == this->_libBackgrounds.end()) {
+                this->_bgIteratorCurrent = this->_libBackgrounds.begin();
+            }
+            this->_bgPluginName = this->_bgIteratorCurrent->first;
+
+            if (this->_registry
+                    ->hasComponent<rtype::games::rtype::client::Text>(
+                        this->_levelBackgroundBtn)) {
+                this->_registry
+                    ->getComponent<rtype::games::rtype::client::Text>(
+                        this->_levelBackgroundBtn)
+                    .textContent = this->_bgPluginName;
+            }
+        }));
+    addElementToSection("settings", _levelBackgroundBtn, currentY);
 
     currentY += gapY;
     addElementToSection("settings",
@@ -324,8 +355,7 @@ void LevelCreatorScene::saveToToml() {
     file << "[level]" << std::endl;
     file << "id = \"" << getInputValue(_levelIdInput) << "\"" << std::endl;
     file << "name = \"" << getInputValue(_levelNameInput) << "\"" << std::endl;
-    file << "background = \"" << getInputValue(_bgInputInput) << "\""
-         << std::endl;
+    file << "background = \"" << this->_bgPluginName << "\"" << std::endl;
     file << "scroll_speed = "
          << (getInputValue(_scrollSpeedInput).empty()
                  ? "0.0"
