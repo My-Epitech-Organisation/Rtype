@@ -195,6 +195,12 @@ class ServerApp {
     void setLobbyCode(const std::string& code);
 
     /**
+     * @brief Broadcast a system message (chat) to all connected clients
+     * @param message The message content
+     */
+    void broadcastMessage(const std::string& message);
+
+    /**
      * @brief Test hook: set default countdown duration used by GameStateManager
      * (useful to make tests deterministic)
      */

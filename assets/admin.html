@@ -319,6 +319,9 @@
             <li class="nav-item">
                 <a class="nav-link" href="#bans" role="tab" data-bs-toggle="tab">Bans</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#broadcast" role="tab" data-bs-toggle="tab">Broadcast</a>
+            </li>
             <li class="nav-item ms-auto">
                 <button class="btn btn-sm btn-warning" @click="resetMetrics">Reset Metrics</button>
             </li>
@@ -436,6 +439,31 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Broadcast Tab -->
+            <div id="broadcast" class="tab-pane fade">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Broadcast Message</h5>
+                    </div>
+                    <div class="card-body">
+                         <div class="row">
+                             <div class="col-md-3">
+                                 <select v-model="targetLobby" class="form-select">
+                                     <option value="all">All Lobbies</option>
+                                     <option v-for="l in lobbies" :value="l.code" :key="l.code">Lobby {{ l.code }}</option>
+                                 </select>
+                             </div>
+                             <div class="col-md-7">
+                                 <input type="text" class="form-control" v-model="broadcastMessage" placeholder="Enter message (max 75 chars)" maxlength="75">
+                             </div>
+                             <div class="col-md-2">
+                                 <button class="btn btn-primary w-100" @click="sendBroadcast">Send</button>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -506,6 +534,8 @@ createApp({
             lobbies: [],
             players: [],
             bans: [],
+            broadcastMessage: '',
+            targetLobby: 'all',
             newLobby: {
                 difficulty: 'Normal',
                 isPublic: true
@@ -661,6 +691,28 @@ createApp({
                 }
             } catch (e) {
                 alert('Failed to unban: ' + e.message);
+            }
+        },
+        async sendBroadcast() {
+            if (!this.broadcastMessage) return;
+            try {
+                const res = await fetch('/api/message/send', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        message: this.broadcastMessage,
+                        target: this.targetLobby
+                    })
+                });
+                if (res.ok) {
+                    alert('Message sent!');
+                    this.broadcastMessage = '';
+                } else {
+                    const err = await res.text();
+                    alert('Failed to send message: ' + err);
+                }
+            } catch (e) {
+                alert('Failed to send message: ' + e.message);
             }
         },
         formatTime(seconds) {
