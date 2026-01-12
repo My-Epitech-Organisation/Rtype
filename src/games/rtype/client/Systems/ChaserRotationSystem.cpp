@@ -25,14 +25,17 @@ ChaserRotationSystem::ChaserRotationSystem()
     : ::rtype::engine::ASystem("ChaserRotationSystem") {}
 
 void ChaserRotationSystem::update(ECS::Registry& registry, float dt) {
-    using namespace ::rtype::games::rtype::shared;
+    using ::rtype::games::rtype::shared::PlayerIdComponent;
+    using ::rtype::games::rtype::shared::TransformComponent;
+    using ::rtype::games::rtype::shared::EnemyTypeComponent;
+    using ::rtype::games::rtype::shared::EnemyVariant;
     ECS::Entity targetPlayer;
     bool foundPlayer = false;
     float targetX = 0.0f;
     float targetY = 0.0f;
 
-    registry.view<shared::PlayerIdComponent, TransformComponent>().each(
-        [&](auto entity, const shared::PlayerIdComponent&,
+    registry.view<PlayerIdComponent, TransformComponent>().each(
+        [&](auto entity, const PlayerIdComponent&,
             const TransformComponent& transform) {
             if (!foundPlayer) {
                 targetPlayer = entity;

@@ -18,7 +18,8 @@ ChaserExplosionSystem::ChaserExplosionSystem()
     : ::rtype::engine::ASystem("ChaserExplosionSystem") {}
 
 void ChaserExplosionSystem::update(ECS::Registry& registry, float dt) {
-    using namespace ::rtype::games::rtype::shared;
+    using ::rtype::games::rtype::shared::EnemyTypeComponent;
+    using ::rtype::games::rtype::shared::EnemyVariant;
 
     registry.view<EnemyTypeComponent, ChaserExplosion, Animation>().each(
         [&](auto entity, const EnemyTypeComponent& enemyType,
