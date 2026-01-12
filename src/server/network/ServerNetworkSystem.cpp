@@ -39,6 +39,11 @@ ServerNetworkSystem::ServerNetworkSystem(
 
         server_->onGetUsersRequest(
             [this](std::uint32_t userId) { handleGetUsersRequest(userId); });
+
+        server_->onClientChat(
+            [this](std::uint32_t userId, const std::string& msg) {
+                handleClientChat(userId, msg);
+            });
     }
 }
 
@@ -470,6 +475,15 @@ void ServerNetworkSystem::handleGetUsersRequest(std::uint32_t userId) {
     } else {
         LOG_DEBUG(
             "[ServerNetworkSystem] No server available to send user list");
+    }
+}
+
+void ServerNetworkSystem::handleClientChat(std::uint32_t userId,
+                                           const std::string& message) {
+    if (server_) {
+        LOG_INFO("[ServerNetworkSystem] Chat from " + std::to_string(userId) +
+                 ": " + message);
+        server_->broadcastChat(userId, message);
     }
 }
 
