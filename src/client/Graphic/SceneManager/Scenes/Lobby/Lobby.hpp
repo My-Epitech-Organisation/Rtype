@@ -38,6 +38,9 @@ class Lobby : public AScene {
     rtype::client::NetworkClient::CallbackId _disconnectedCallbackId = 0;
     bool _hasDisconnectedCallback = false;
 
+    rtype::client::NetworkClient::CallbackId _entityDestroyCallbackId = 0;
+    bool _hasEntityDestroyCallback = false;
+
     void _initInfoMenu();
 
     void _createPlayerInfoMenu(uint32_t id, int index = 0);

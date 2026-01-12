@@ -566,7 +566,7 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
         }
     });
 
-    this->_networkClient->onEntityDestroy([this](std::uint32_t entityId) {
+    _entityDestroyCallbackId = this->_networkClient->addEntityDestroyCallback([this](std::uint32_t entityId) {
         try {
             if (!_initialized || !this->_registry) {
                 return;
@@ -578,6 +578,7 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
             LOG_ERROR("[Lobby] Unknown exception in onEntityDestroy");
         }
     });
+    _hasEntityDestroyCallback = true;
 
     this->_networkClient->onDisconnected([this](rtype::client::NetworkClient::
                                                     DisconnectReason reason) {
@@ -734,8 +735,10 @@ Lobby::~Lobby() {
         this->_networkClient->onPlayerReadyStateChanged(nullptr);
         this->_networkClient->onEntityMove(nullptr);
         this->_networkClient->onEntityMoveBatch(nullptr);
-        this->_networkClient->onEntitySpawn(nullptr);
-        this->_networkClient->onEntityDestroy(nullptr);
+        if (_hasEntityDestroyCallback) {
+            this->_networkClient->removeEntityDestroyCallback(_entityDestroyCallbackId);
+            _hasEntityDestroyCallback = false;
+        }
     }
 
     if (this->_registry) {
