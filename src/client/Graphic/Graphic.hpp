@@ -30,6 +30,7 @@
 #include "../../games/rtype/client/Systems/ShaderRenderSystem.hpp"
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
+#include "../DevConsole/DevConsole.hpp"
 #include "../network/ClientNetworkSystem.hpp"
 #include "../network/NetworkClient.hpp"
 #include "Accessibility.hpp"
@@ -122,6 +123,9 @@ class Graphic {
 
     /// @brief System scheduler for ordered system execution
     std::unique_ptr<ECS::SystemScheduler> _systemScheduler;
+
+    /// @brief Developer console (F1 to toggle, accessible from all scenes)
+    std::unique_ptr<rtype::client::DevConsole> _devConsole;
 
     // ========================================================================
     // ECS Systems (unique ownership, registered with scheduler)
