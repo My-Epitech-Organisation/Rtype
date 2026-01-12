@@ -421,8 +421,28 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
         games::rtype::client::VisualCueFactory::createFlash(
             *registry_, {pos.x, pos.y}, rtype::display::Color(255, 80, 80, 255),
             70.f, 0.25f, 12);
-    }
+        bool isLocalPlayer =
+            localUserId_.has_value() && event.entityId == *localUserId_;
+        bool hasEnemyTag =
+            registry_->hasComponent<rtype::games::rtype::shared::EnemyTag>(
+                entity);
 
+        LOG_INFO("[ClientNetworkSystem] Health change: entityId="
+                 << event.entityId << " isLocalPlayer=" << isLocalPlayer
+                 << " hasEnemyTag=" << hasEnemyTag
+                 << " previousHealth=" << previousHealth.value()
+                 << " currentHealth=" << event.current);
+
+        if (!isLocalPlayer && hasEnemyTag) {
+            int32_t damageAmount = previousHealth.value() - event.current;
+            LOG_INFO("[ClientNetworkSystem] Creating damage popup for enemy "
+                     << event.entityId << " damage=" << damageAmount
+                     << " at position (" << pos.x << ", " << pos.y << ")");
+            games::rtype::client::VisualCueFactory::createDamagePopup(
+                *registry_, {pos.x, pos.y}, damageAmount, "title_font",
+                rtype::display::Color(255, 200, 0, 255));
+        }
+    }
     lastKnownHealth_[event.entityId] = {event.current, event.max};
 
     if (onHealthUpdateCallback_ && localUserId_.has_value() &&
