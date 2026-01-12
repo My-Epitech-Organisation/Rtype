@@ -113,7 +113,8 @@ void AdminServer::generateCredentials() {
 
     auto pick = [](const char* s) -> char {
         size_t len = std::strlen(s);
-        static thread_local std::mt19937 rng(std::random_device{}());
+        static thread_local std::random_device rd;
+        static thread_local std::mt19937 rng(rd());
         std::uniform_int_distribution<size_t> dist(0, len - 1);
         return s[dist(rng)];
     };
@@ -127,9 +128,12 @@ void AdminServer::generateCredentials() {
         out.push_back(pick(special));
 
         static const char allChars[] =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_+=";
-        std::uniform_int_distribution<size_t> dist(0, std::strlen(allChars) - 1);
-        static thread_local std::mt19937 rng(std::random_device{}());
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$"
+            "%^&*()-_+=";
+        std::uniform_int_distribution<size_t> dist(0,
+                                                   std::strlen(allChars) - 1);
+        static thread_local std::random_device rd;
+        static thread_local std::mt19937 rng(rd());
         while (out.size() < length) {
             out.push_back(allChars[dist(rng)]);
         }
@@ -149,10 +153,9 @@ void AdminServer::generateCredentials() {
     }
 
     LOG_INFO_CAT(::rtype::LogCategory::Network,
-                 "[AdminServer] Generated admin credentials: user='" << _adminUser << "' pass='" << _adminPass << "'");
+                 "[AdminServer] Generated admin credentials: user='"
+                     << _adminUser << "' pass='" << _adminPass << "'");
 }
-
-
 
 void AdminServer::runServer() noexcept {
     if (_httpServer) {
@@ -184,14 +187,18 @@ static std::string file_base64Decode(const std::string& input) {
     unsigned char char_array_4[4], char_array_3[3];
 
     while (in_len-- && (input[in_] != '=') && is_base64(input[in_])) {
-        char_array_4[i++] = input[in_]; in_++;
-        if (i ==4) {
-            for (i = 0; i <4; i++)
-                char_array_4[i] = static_cast<unsigned char>(base64_chars.find(char_array_4[i]));
+        char_array_4[i++] = input[in_];
+        in_++;
+        if (i == 4) {
+            for (i = 0; i < 4; i++)
+                char_array_4[i] = static_cast<unsigned char>(
+                    base64_chars.find(char_array_4[i]));
 
-            char_array_3[0] = ( char_array_4[0] << 2       ) + ((char_array_4[1] & 0x30) >> 4);
-            char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
-            char_array_3[2] = ((char_array_4[2] & 0x3) << 6) +   char_array_4[3];
+            char_array_3[0] =
+                (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+            char_array_3[1] = ((char_array_4[1] & 0xf) << 4) +
+                              ((char_array_4[2] & 0x3c) >> 2);
+            char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
 
             for (i = 0; (i < 3); i++) ret += char_array_3[i];
             i = 0;
@@ -200,11 +207,15 @@ static std::string file_base64Decode(const std::string& input) {
 
     if (i) {
         int j;
-        for (j = i; j <4; j++) char_array_4[j] = 0;
-        for (j = 0; j <4; j++) char_array_4[j] = static_cast<unsigned char>(base64_chars.find(char_array_4[j]));
-        char_array_3[0] = ( char_array_4[0] << 2       ) + ((char_array_4[1] & 0x30) >> 4);
-        char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
-        char_array_3[2] = ((char_array_4[2] & 0x3) << 6) +   char_array_4[3];
+        for (j = i; j < 4; j++) char_array_4[j] = 0;
+        for (j = 0; j < 4; j++)
+            char_array_4[j] =
+                static_cast<unsigned char>(base64_chars.find(char_array_4[j]));
+        char_array_3[0] =
+            (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+        char_array_3[1] =
+            ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+        char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
 
         for (j = 0; (j < i - 1); j++) ret += char_array_3[j];
     }
@@ -243,14 +254,11 @@ static std::string file_urlDecode(const std::string& s) {
     return out;
 }
 
-
-bool authenticateRequest(const AdminServer::Config& config,
-                         const Request& req,
+bool authenticateRequest(const AdminServer::Config& config, const Request& req,
                          const std::string& adminUser,
                          const std::string& adminPass) {
     const auto& remote_addr = req.remote_addr;
-    bool localhost = remote_addr.empty() ||
-                     remote_addr == "localhost" ||
+    bool localhost = remote_addr.empty() || remote_addr == "localhost" ||
                      remote_addr.find("127.0.0.1") != std::string::npos ||
                      remote_addr.find("::1") != std::string::npos;
 
@@ -632,7 +640,9 @@ void AdminServer::registerAdminPageRoutes(void* serverPtr) {
                 if (eq == std::string::npos) break;
                 auto key = s.substr(pos, eq - pos);
                 auto amp = s.find('&', eq + 1);
-                auto val = s.substr(eq + 1, (amp == std::string::npos) ? std::string::npos : amp - (eq + 1));
+                auto val = s.substr(eq + 1, (amp == std::string::npos)
+                                                ? std::string::npos
+                                                : amp - (eq + 1));
                 m[file_urlDecode(key)] = file_urlDecode(val);
                 if (amp == std::string::npos) break;
                 pos = amp + 1;
@@ -649,20 +659,23 @@ void AdminServer::registerAdminPageRoutes(void* serverPtr) {
             return;
         }
 
-        LOG_INFO_CAT(::rtype::LogCategory::Network,
-                     "[AdminServer] Login attempt for user='" << itU->second << "'");
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::Network,
+            "[AdminServer] Login attempt for user='" << itU->second << "'");
 
         if (itU->second == _adminUser && itP->second == _adminPass) {
             res.set_header("Set-Cookie", "admin_auth=1; HttpOnly; Path=/");
             res.status = 302;
             res.set_header("Location", "/admin");
             LOG_INFO_CAT(::rtype::LogCategory::Network,
-                         "[AdminServer] Admin login successful for user='" << itU->second << "'");
+                         "[AdminServer] Admin login successful for user='"
+                             << itU->second << "'");
             return;
         }
 
         LOG_INFO_CAT(::rtype::LogCategory::Network,
-                     "[AdminServer] Admin login failed for user='" << itU->second << "'");
+                     "[AdminServer] Admin login failed for user='"
+                         << itU->second << "'");
         res.status = 302;
         res.set_header("Location", "/admin/login?error=1");
     });

@@ -134,7 +134,6 @@ inline std::string urlDecodeForAdminTests(const std::string& s) {
     return out;
 }
 
-
 }  // namespace rtype::server
 
 #endif  // SRC_SERVER_SHARED_ADMINSERVER_HPP_
