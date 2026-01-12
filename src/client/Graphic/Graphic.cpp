@@ -372,6 +372,23 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.missileLaser);
     manager->textureManager->load("force_pod", config.assets.textures.forcePod);
 
+    // Load power-up textures
+    manager->textureManager->load("health_small",
+                                  config.assets.textures.healthSmall);
+    manager->textureManager->load("health_large",
+                                  config.assets.textures.healthLarge);
+    manager->textureManager->load("speed_boost",
+                                  config.assets.textures.speedBoost);
+    manager->textureManager->load("weapon_upgrade",
+                                  config.assets.textures.weaponUpgrade);
+    manager->textureManager->load("shield", config.assets.textures.shield);
+    manager->textureManager->load("rapid_fire",
+                                  config.assets.textures.rapidFire);
+    manager->textureManager->load("double_damage",
+                                  config.assets.textures.damageBoost);
+    manager->textureManager->load("extra_life",
+                                  config.assets.textures.extraLife);
+
     manager->textureManager->load(
         "projectile1", config.assets.textures.wallTexture.engrenage1);
     manager->textureManager->load(

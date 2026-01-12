@@ -21,11 +21,13 @@
 #include "../../shared/Components/Tags.hpp"
 #include "../../shared/Config/EntityConfig/EntityConfig.hpp"
 #include "../../shared/Config/GameConfig/RTypeGameConfig.hpp"
+#include "../Components/AnnimationComponent.hpp"
 #include "../Components/ChaserExplosionComponent.hpp"
 #include "../Components/ColorTintComponent.hpp"
 #include "../Components/ForcePodVisualComponent.hpp"
 #include "../Components/RectangleComponent.hpp"
 #include "../Components/RotationComponent.hpp"
+#include "../Components/TextureRectComponent.hpp"
 #include "../Systems/PlayerAnimationSystem.hpp"
 #include "AllComponents.hpp"
 #include "AudioLib/AudioLib.hpp"
@@ -467,18 +469,15 @@ void RtypeEntityFactory::setupPickupEntity(
             auto texSize = texture->getSize();
 
             if (configId == "force_pod") {
-                constexpr int frameWidth = 18;
-                constexpr int frameHeight = 18;
-                constexpr int frameIndex = 0;
-
+                constexpr int frameWidth = 16;
+                constexpr int frameHeight = 16;
+                constexpr int numFrames = 4;
                 reg.emplaceComponent<TextureRect>(
-                    entity, std::pair<int, int>{frameIndex * frameWidth, 0},
+                    entity, std::pair<int, int>{0, 0},
                     std::pair<int, int>{frameWidth, frameHeight});
+                reg.emplaceComponent<Animation>(entity, numFrames, 0.15f,
+                                                false);
                 reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
-
-                LOG_INFO(
-                    "[RtypeEntityFactory] Using force_pod spritesheet frame 0 ("
-                    << frameWidth << "x" << frameHeight << ")");
 
                 reg.emplaceComponent<BoxingComponent>(
                     entity, ::rtype::display::Vector2f{0.0f, 0.0f},
@@ -486,15 +485,28 @@ void RtypeEntityFactory::setupPickupEntity(
                         static_cast<float>(frameWidth) * 2.0f,
                         static_cast<float>(frameHeight) * 2.0f});
             } else {
-                reg.emplaceComponent<Size>(entity, 1.0f, 1.0f);
-                LOG_INFO("[RtypeEntityFactory] Using texture for powerup: "
-                         << configId << " size=" << texSize.x << "x"
-                         << texSize.y);
+                constexpr int numFrames = 4;
+                const int frameWidth = texSize.x / numFrames;
+                const int frameHeight = texSize.y;
+                const float targetSize = 48.0f;
+                const float scale = targetSize / static_cast<float>(frameWidth);
+                reg.emplaceComponent<TextureRect>(
+                    entity, std::pair<int, int>{0, 0},
+                    std::pair<int, int>{frameWidth, frameHeight});
+                reg.emplaceComponent<Animation>(entity, numFrames, 0.15f,
+                                                false);
+                reg.emplaceComponent<Size>(entity, scale, scale);
+
+                LOG_INFO("[RtypeEntityFactory] Using PNG spritesheet for "
+                         << configId << ": " << numFrames << " frames, "
+                         << frameWidth << "x" << frameHeight
+                         << " each, scale=" << scale);
 
                 reg.emplaceComponent<BoxingComponent>(
                     entity, ::rtype::display::Vector2f{0.0f, 0.0f},
-                    ::rtype::display::Vector2f{static_cast<float>(texSize.x),
-                                               static_cast<float>(texSize.y)});
+                    ::rtype::display::Vector2f{
+                        static_cast<float>(frameWidth) * scale,
+                        static_cast<float>(frameHeight) * scale});
             }
 
             reg.emplaceComponent<ColorTint>(entity, config.colorR,

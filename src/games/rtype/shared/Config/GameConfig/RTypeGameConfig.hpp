@@ -129,6 +129,16 @@ struct TexturesConfig {
     std::string missileLaser;
     std::string forcePod;
 
+    // Power-ups
+    std::string healthSmall;
+    std::string healthLarge;
+    std::string speedBoost;
+    std::string weaponUpgrade;
+    std::string shield;
+    std::string rapidFire;
+    std::string damageBoost;
+    std::string extraLife;
+
     bool operator==(const TexturesConfig&) const = default;
 };
 
