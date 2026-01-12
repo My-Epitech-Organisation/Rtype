@@ -251,14 +251,22 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 
 * **Sender:** Server
 * **Reliability:** **UNRELIABLE** (Flag 0x00)
-* **Description:** Regular state update. If lost, the next update fixes
-  it.
+* **Description:** Regular state update. If lost, the next update fixes it.
+  Uses fixed-point quantization to reduce bandwidth and includes a server
+  tick to allow client-side interpolation.
 * **Payload:**
   * Entity ID (uint32)
-  * PosX (float)
-  * PosY (float)
-  * VelX (float)
-  * VelY (float)
+  * Server Tick (uint32) — Monotonic server tick for interpolation
+  * PosX (int16) — Quantized/fixed-point world X coordinate
+  * PosY (int16) — Quantized/fixed-point world Y coordinate
+  * VelX (int16) — Quantized/fixed-point X velocity
+  * VelY (int16) — Quantized/fixed-point Y velocity
+
+* **Notes:**
+  * Total payload size: **16 bytes** (4 + 4 + 2 + 2 + 2 + 2)
+  * Position and velocity components are **quantized signed 16-bit** values
+    (fixed-point). The scale (units per LSB) is implementation-defined and
+    must be consistently shared by client and server.
 
 #### **0x12 - S\_ENTITY\_DESTROY**
 
@@ -294,20 +302,22 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 * **Reliability:** **UNRELIABLE** (Flag 0x00)
 * **Description:** Batched position/velocity updates for multiple entities. More bandwidth-efficient than individual S\_ENTITY\_MOVE packets, especially when combined with LZ4 compression. Each tick, all dirty entity updates are grouped into a single packet.
 * **Payload:**
-  * Count (uint8): Number of entities in the batch (1-69)
-  * Entries (EntityMovePayload[]): Array of entity updates, each containing:
+  * Count (uint8): Number of entities in the batch (1-114)
+  * Server Tick (uint32): Shared server tick for all entries
+  * Entries (EntityMoveBatchEntry[]): Compact per-entity updates, each containing:
     * Entity ID (uint32)
-    * PosX (float)
-    * PosY (float)
-    * VelX (float)
-    * VelY (float)
+    * PosX (int16) — Quantized/fixed-point world X coordinate
+    * PosY (int16) — Quantized/fixed-point world Y coordinate
+    * VelX (int16) — Quantized/fixed-point X velocity
+    * VelY (int16) — Quantized/fixed-point Y velocity
 
 **Notes:**
 
-* Maximum 69 entities per batch due to MTU constraints: (1384 - 1) / 20 = 69
-* If more than 69 entities need updating, multiple batch packets are sent
+* Maximum entities per batch are limited by payload size: (kMaxPayloadSize - 5) / 12 = 114
+  (5 = 1 byte count + 4 byte serverTick; 12 = size of each EntityMoveBatchEntry)
+* If more than 114 entities need updating, multiple batch packets are sent
 * LZ4 compression is automatically applied when batch size exceeds 64 bytes (4+ entities)
-* Estimated bandwidth savings: 50-60% compared to individual S\_ENTITY\_MOVE packets
+* Estimated bandwidth savings: ~25% per-entity compared to non-compacted per-entity payloads (12 bytes vs 16 bytes) and larger savings when compressed
 
 ### **5.3. Input & Reconciliation**
 
@@ -377,8 +387,8 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 | S_GAME_START | 4 | float |
 | S_PLAYER_READY_STATE | 5 | uint32 + uint8 |
 | S_ENTITY_SPAWN | 13 | uint32 + uint8 + float + float |
-| S_ENTITY_MOVE | 20 | uint32 + 4 * float |
-| S_ENTITY_MOVE_BATCH | Variable | 1 + (count * 20), max 1381 bytes |
+| S_ENTITY_MOVE | 16 | uint32 + uint32 + 4 * int16 (quantized) |
+| S_ENTITY_MOVE_BATCH | Variable | 5 + (count * 12), max 1373 bytes (114 entries) |
 | S_ENTITY_DESTROY | 4 | uint32 |
 | S_ENTITY_HEALTH | 12 | uint32 + int32 + int32 |
 | S_POWERUP_EVENT | 9 | uint32 + uint8 + float |
