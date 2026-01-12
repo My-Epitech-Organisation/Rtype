@@ -231,7 +231,7 @@ TEST_F(PayloadTest, PayloadSizesMatchRFC) {
     EXPECT_EQ(sizeof(GetUsersResponseHeader), 1u);
     EXPECT_EQ(sizeof(UpdateStatePayload), 1u);
     EXPECT_EQ(sizeof(EntitySpawnPayload), 14u);
-    EXPECT_EQ(sizeof(EntityMovePayload), 20u);
+    EXPECT_EQ(sizeof(EntityMovePayload), 16u);
     EXPECT_EQ(sizeof(EntityDestroyPayload), 4u);
     EXPECT_EQ(sizeof(InputPayload), 1u);
     EXPECT_EQ(sizeof(UpdatePosPayload), 8u);
@@ -294,10 +294,10 @@ TEST_F(PayloadTest, UpdateStatePayloadState) {
 TEST_F(PayloadTest, GameOverPayloadStructure) {
     GameOverPayload gameOver;
     EXPECT_EQ(sizeof(GameOverPayload), sizeof(std::uint32_t));
-    
+
     gameOver.finalScore = 12345;
     EXPECT_EQ(gameOver.finalScore, 12345u);
-    
+
     // Test with max score
     gameOver.finalScore = 0xFFFFFFFF;
     EXPECT_EQ(gameOver.finalScore, 0xFFFFFFFFu);
@@ -305,13 +305,13 @@ TEST_F(PayloadTest, GameOverPayloadStructure) {
 
 TEST_F(PayloadTest, PowerUpEventPayloadStructure) {
     PowerUpEventPayload powerUp;
-    EXPECT_EQ(sizeof(PowerUpEventPayload), 
+    EXPECT_EQ(sizeof(PowerUpEventPayload),
               sizeof(std::uint32_t) + sizeof(std::uint8_t) + sizeof(float));
-    
+
     powerUp.playerId = 42;
     powerUp.powerUpType = 3;  // DoubleDamage
     powerUp.duration = 10.5F;
-    
+
     EXPECT_EQ(powerUp.playerId, 42u);
     EXPECT_EQ(powerUp.powerUpType, 3u);
     EXPECT_FLOAT_EQ(powerUp.duration, 10.5F);
@@ -563,19 +563,20 @@ TEST_F(ByteOrderSpecTest, EntitySpawnPayloadRoundTrip) {
 TEST_F(ByteOrderSpecTest, EntityMovePayloadRoundTrip) {
     EntityMovePayload original{};
     original.entityId = 999;
-    original.posX = -50.0f;
-    original.posY = 75.25f;
-    original.velX = 1.5f;
-    original.velY = -2.5f;
+    // Use quantized integer fields (fixed-point scale: 16)
+    original.posX = static_cast<std::int16_t>(-50.0f * 16.0f);
+    original.posY = static_cast<std::int16_t>(75.25f * 16.0f);
+    original.velX = static_cast<std::int16_t>(1.5f * 16.0f);
+    original.velY = static_cast<std::int16_t>(-2.5f * 16.0f);
 
     auto bytes = ByteOrderSpec::serializeToNetwork(original);
     auto restored = ByteOrderSpec::deserializeFromNetwork<EntityMovePayload>(bytes);
 
     EXPECT_EQ(restored.entityId, 999);
-    EXPECT_FLOAT_EQ(restored.posX, -50.0f);
-    EXPECT_FLOAT_EQ(restored.posY, 75.25f);
-    EXPECT_FLOAT_EQ(restored.velX, 1.5f);
-    EXPECT_FLOAT_EQ(restored.velY, -2.5f);
+    EXPECT_EQ(restored.posX, original.posX);
+    EXPECT_EQ(restored.posY, original.posY);
+    EXPECT_EQ(restored.velX, original.velX);
+    EXPECT_EQ(restored.velY, original.velY);
 }
 
 TEST_F(ByteOrderSpecTest, SerializerHighLevelAPI) {

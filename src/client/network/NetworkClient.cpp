@@ -24,6 +24,15 @@
 
 namespace rtype::client {
 
+namespace {
+constexpr float kPosQuantScale = 16.0f;
+constexpr float kVelQuantScale = 16.0f;
+
+inline float dequantize(std::int16_t v, float scale) {
+    return static_cast<float>(v) / scale;
+}
+}  // namespace
+
 NetworkClient::NetworkClient(const Config& config)
     : config_(config),
       ioContext_(),
@@ -348,6 +357,35 @@ bool NetworkClient::sendReady(bool isReady) {
     return true;
 }
 
+bool NetworkClient::setLowBandwidthMode(bool enable) {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    network::BandwidthModePayload payload;
+    payload.mode =
+        enable ? static_cast<std::uint8_t>(network::BandwidthMode::Low)
+               : static_cast<std::uint8_t>(network::BandwidthMode::Normal);
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    auto result = connection_.buildPacket(network::OpCode::C_SET_BANDWIDTH_MODE,
+                                          serialized);
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    LOG_INFO_CAT(rtype::LogCategory::Network,
+                 "[NetworkClient] Requested bandwidth mode: "
+                     << (enable ? "LOW" : "NORMAL"));
+
+    return true;
+}
+
 bool NetworkClient::requestLobbyList(const std::string& discoveryIp,
                                      std::uint16_t discoveryPort) {
     if (!socket_->isOpen()) {
@@ -429,6 +467,10 @@ void NetworkClient::removeDisconnectedCallback(CallbackId id) {
     }
 }
 
+void NetworkClient::clearDisconnectedCallbacks() {
+    onDisconnectedCallbacks_.clear();
+}
+
 void NetworkClient::onEntitySpawn(
     std::function<void(EntitySpawnEvent)> callback) {
     onEntitySpawnCallback_ = std::move(callback);
@@ -446,7 +488,24 @@ void NetworkClient::onEntityMoveBatch(
 
 void NetworkClient::onEntityDestroy(
     std::function<void(std::uint32_t entityId)> callback) {
+    // Convenience wrapper: keep existing behavior but return value is ignored
+    (void)addEntityDestroyCallback(std::move(callback));
+}
+
+NetworkClient::CallbackId NetworkClient::addEntityDestroyCallback(
+    std::function<void(std::uint32_t entityId)> callback) {
     onEntityDestroyCallbacks_.push_back(std::move(callback));
+    return onEntityDestroyCallbacks_.size() - 1;
+}
+
+void NetworkClient::removeEntityDestroyCallback(CallbackId id) {
+    if (id < onEntityDestroyCallbacks_.size()) {
+        onEntityDestroyCallbacks_[id] = nullptr;
+    }
+}
+
+void NetworkClient::clearEntityDestroyCallbacks() {
+    onEntityDestroyCallbacks_.clear();
 }
 
 void NetworkClient::onEntityHealth(
@@ -516,6 +575,13 @@ void NetworkClient::onPlayerReadyStateChanged(
     onPlayerReadyStateChangedCallback_ = std::move(callback);
 }
 
+void NetworkClient::onBandwidthModeChanged(
+    std::function<void(std::uint32_t userId, bool lowBandwidth,
+                       std::uint8_t activeCount)>
+        callback) {
+    onBandwidthModeChangedCallback_ = std::move(callback);
+}
+
 void NetworkClient::onLobbyListReceived(
     std::function<void(LobbyListEvent)> callback) {
     onLobbyListReceivedCallback_ = std::move(callback);
@@ -572,6 +638,12 @@ void NetworkClient::test_handlePong(const network::Header& header,
 void NetworkClient::queueCallback(std::function<void()> callback) {
     std::lock_guard<std::mutex> lock(callbackMutex_);
     callbackQueue_.push(std::move(callback));
+}
+
+void NetworkClient::clearPendingCallbacks() {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
+    std::queue<std::function<void()>> empty;
+    std::swap(callbackQueue_, empty);
 }
 
 void NetworkClient::startReceive() {
@@ -699,6 +771,10 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
             handlePlayerReadyState(header, payload);
             break;
 
+        case network::OpCode::S_BANDWIDTH_MODE_CHANGED:
+            handleBandwidthModeChanged(header, payload);
+            break;
+
         case network::OpCode::S_JOIN_LOBBY_RESPONSE:
             handleJoinLobbyResponse(header, payload);
             break;
@@ -813,10 +889,11 @@ void NetworkClient::handleEntityMove(const network::Header& header,
 
         EntityMoveEvent event;
         event.entityId = deserialized.entityId;
-        event.x = deserialized.posX;
-        event.y = deserialized.posY;
-        event.vx = deserialized.velX;
-        event.vy = deserialized.velY;
+        event.serverTick = deserialized.serverTick;
+        event.x = dequantize(deserialized.posX, kPosQuantScale);
+        event.y = dequantize(deserialized.posY, kPosQuantScale);
+        event.vx = dequantize(deserialized.velX, kVelQuantScale);
+        event.vy = dequantize(deserialized.velY, kVelQuantScale);
 
         queueCallback([this, event]() {
             if (onEntityMoveCallback_) {
@@ -832,17 +909,23 @@ void NetworkClient::handleEntityMoveBatch(const network::Header& header,
                                           const network::Buffer& payload) {
     (void)header;
 
-    if (payload.size() < 1) {
+    constexpr std::size_t headerSize = sizeof(network::EntityMoveBatchHeader);
+    if (payload.size() < headerSize) {
         return;
     }
 
-    std::uint8_t count = payload[0];
+    auto batchHeader = network::Serializer::deserializeFromNetwork<
+        network::EntityMoveBatchHeader>(std::span(payload.data(), headerSize));
+
+    std::uint8_t count = batchHeader.count;
+    std::uint32_t serverTick = batchHeader.serverTick;
+
     if (count == 0 || count > network::kMaxEntitiesPerBatch) {
         return;
     }
 
-    constexpr std::size_t entrySize = sizeof(network::EntityMovePayload);
-    if (payload.size() < 1 + count * entrySize) {
+    constexpr std::size_t entrySize = sizeof(network::EntityMoveBatchEntry);
+    if (payload.size() < headerSize + count * entrySize) {
         return;
     }
 
@@ -851,17 +934,18 @@ void NetworkClient::handleEntityMoveBatch(const network::Header& header,
         batchEvent.entities.reserve(count);
 
         for (std::uint8_t i = 0; i < count; ++i) {
-            std::size_t offset = 1 + i * entrySize;
+            std::size_t offset = headerSize + i * entrySize;
             auto entry = network::Serializer::deserializeFromNetwork<
-                network::EntityMovePayload>(
+                network::EntityMoveBatchEntry>(
                 std::span(payload.data() + offset, entrySize));
 
             EntityMoveEvent event;
             event.entityId = entry.entityId;
-            event.x = entry.posX;
-            event.y = entry.posY;
-            event.vx = entry.velX;
-            event.vy = entry.velY;
+            event.serverTick = serverTick;  // Shared from header
+            event.x = dequantize(entry.posX, kPosQuantScale);
+            event.y = dequantize(entry.posY, kPosQuantScale);
+            event.vx = dequantize(entry.velX, kVelQuantScale);
+            event.vy = dequantize(entry.velY, kVelQuantScale);
             batchEvent.entities.push_back(event);
         }
 
@@ -1096,6 +1180,36 @@ void NetworkClient::handlePlayerReadyState(const network::Header& header,
     }
 }
 
+void NetworkClient::handleBandwidthModeChanged(const network::Header& header,
+                                               const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::BandwidthModeChangedPayload)) {
+        return;
+    }
+
+    try {
+        auto deserialized = network::Serializer::deserializeFromNetwork<
+            network::BandwidthModeChangedPayload>(payload);
+
+        uint32_t userId =
+            network::ByteOrderSpec::fromNetwork(deserialized.userId);
+        bool lowBandwidth =
+            (deserialized.mode ==
+             static_cast<std::uint8_t>(network::BandwidthMode::Low));
+        std::uint8_t activeCount = deserialized.activeCount;
+
+        queueCallback([this, userId, lowBandwidth, activeCount]() {
+            if (onBandwidthModeChangedCallback_) {
+                onBandwidthModeChangedCallback_(userId, lowBandwidth,
+                                                activeCount);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
 void NetworkClient::handleJoinLobbyResponse(const network::Header& header,
                                             const network::Buffer& payload) {
     (void)header;
@@ -1229,12 +1343,20 @@ void NetworkClient::flushOutgoing() {
             network::Header hdr;
             std::memcpy(&hdr, pkt.data.data(), network::kHeaderSize);
             auto opcode = static_cast<network::OpCode>(hdr.opcode);
+            auto seq = network::ByteOrderSpec::fromNetwork(hdr.seqId);
             if (opcode == network::OpCode::PING && connection_.isConnected()) {
-                auto seq = network::ByteOrderSpec::fromNetwork(hdr.seqId);
                 auto ack = network::ByteOrderSpec::fromNetwork(hdr.ackId);
                 LOG_DEBUG("[NetworkClient] Sending PING keepalive seqId="
                           << seq << " ack=" << ack
                           << " missedPongs=" << connection_.missedPingCount());
+            }
+            if (pkt.isReliable) {
+                LOG_INFO(
+                    "[NetworkClient] flushOutgoing: reliable packet opcode=0x"
+                    << std::hex << static_cast<int>(hdr.opcode) << std::dec
+                    << " seqId=" << seq << " size=" << pkt.data.size() << " to "
+                    << serverEndpoint_->address << ":"
+                    << serverEndpoint_->port);
             }
         }
         socket_->asyncSendTo(pkt.data, *serverEndpoint_,

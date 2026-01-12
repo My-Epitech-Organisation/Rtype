@@ -32,6 +32,12 @@ TEST_F(ConnectionStateTest, StateToString) {
     EXPECT_EQ(toString(ConnectionState::Disconnecting), "Disconnecting");
 }
 
+TEST_F(ConnectionStateTest, StateToStringUnknownValue) {
+    // Test unknown value to cover the default case in toString
+    auto unknownState = static_cast<ConnectionState>(255);
+    EXPECT_EQ(toString(unknownState), "Unknown");
+}
+
 TEST_F(ConnectionStateTest, CanInitiateConnectOnlyFromDisconnected) {
     EXPECT_TRUE(canInitiateConnect(ConnectionState::Disconnected));
     EXPECT_FALSE(canInitiateConnect(ConnectionState::Connecting));
@@ -105,7 +111,8 @@ TEST_F(ConnectionStateMachineTest, InitiateConnectTransitionsToConnecting) {
 
 TEST_F(ConnectionStateMachineTest, CannotConnectWhileConnecting) {
     ConnectionStateMachine fsm(config_);
-    fsm.initiateConnect();
+    auto r1 = fsm.initiateConnect();
+    ASSERT_TRUE(r1.isOk());
 
     auto result = fsm.initiateConnect();
     EXPECT_TRUE(result.isErr());
@@ -114,7 +121,8 @@ TEST_F(ConnectionStateMachineTest, CannotConnectWhileConnecting) {
 
 TEST_F(ConnectionStateMachineTest, HandleAcceptTransitionsToConnected) {
     ConnectionStateMachine fsm(config_);
-    fsm.initiateConnect();
+    auto r = fsm.initiateConnect();
+    ASSERT_TRUE(r.isOk());
 
     const std::uint32_t userId = 12345;
     auto result = fsm.handleAccept(userId);
@@ -135,7 +143,8 @@ TEST_F(ConnectionStateMachineTest, CannotAcceptWhenDisconnected) {
 
 TEST_F(ConnectionStateMachineTest, InitiateDisconnectFromConnected) {
     ConnectionStateMachine fsm(config_);
-    fsm.initiateConnect();
+    auto r = fsm.initiateConnect();
+    ASSERT_TRUE(r.isOk());
     fsm.handleAccept(123);
 
     auto result = fsm.initiateDisconnect();
@@ -145,7 +154,8 @@ TEST_F(ConnectionStateMachineTest, InitiateDisconnectFromConnected) {
 
 TEST_F(ConnectionStateMachineTest, InitiateDisconnectFromConnecting) {
     ConnectionStateMachine fsm(config_);
-    fsm.initiateConnect();
+    auto r = fsm.initiateConnect();
+    ASSERT_TRUE(r.isOk());
 
     auto result = fsm.initiateDisconnect();
     EXPECT_TRUE(result.isOk());
@@ -162,7 +172,8 @@ TEST_F(ConnectionStateMachineTest, CannotDisconnectWhenAlreadyDisconnected) {
 
 TEST_F(ConnectionStateMachineTest, HandleDisconnectAckCompletesDisconnect) {
     ConnectionStateMachine fsm(config_);
-    fsm.initiateConnect();
+    auto r = fsm.initiateConnect();
+    ASSERT_TRUE(r.isOk());
     fsm.handleAccept(123);
     fsm.initiateDisconnect();
 
@@ -174,7 +185,8 @@ TEST_F(ConnectionStateMachineTest, HandleDisconnectAckCompletesDisconnect) {
 
 TEST_F(ConnectionStateMachineTest, HandleRemoteDisconnect) {
     ConnectionStateMachine fsm(config_);
-    fsm.initiateConnect();
+    auto r = fsm.initiateConnect();
+    ASSERT_TRUE(r.isOk());
     fsm.handleAccept(123);
 
     auto result = fsm.handleRemoteDisconnect(DisconnectReason::RemoteRequest);
@@ -185,7 +197,8 @@ TEST_F(ConnectionStateMachineTest, HandleRemoteDisconnect) {
 
 TEST_F(ConnectionStateMachineTest, ForceDisconnect) {
     ConnectionStateMachine fsm(config_);
-    fsm.initiateConnect();
+    auto r = fsm.initiateConnect();
+    ASSERT_TRUE(r.isOk());
     fsm.handleAccept(123);
 
     fsm.forceDisconnect(DisconnectReason::ProtocolError);
@@ -195,7 +208,8 @@ TEST_F(ConnectionStateMachineTest, ForceDisconnect) {
 
 TEST_F(ConnectionStateMachineTest, TimeoutInConnectingTriggersRetry) {
     ConnectionStateMachine fsm(config_);
-    fsm.initiateConnect();
+    auto r = fsm.initiateConnect();
+    ASSERT_TRUE(r.isOk());
 
     std::this_thread::sleep_for(config_.connectTimeout + 10ms);
 

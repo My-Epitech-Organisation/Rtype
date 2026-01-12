@@ -18,6 +18,7 @@ enum class GameAction : std::uint8_t {
     SHOOT,
     CHANGE_AMMO,
     PAUSE,
+    TOGGLE_LOW_BANDWIDTH,
     NONE
 };
 

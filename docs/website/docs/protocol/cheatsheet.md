@@ -68,4 +68,4 @@ For the full opcode list and payload structures, see:
 
 ---
 
-🔗 See the RFC for full details and security considerations: `docs/RFC/RFC_RTGP_v1.2.0.md`.
+🔗 See the RFC for full details and security considerations: `docs/RFC/RFC_RTGP_v1.4.2.md`.

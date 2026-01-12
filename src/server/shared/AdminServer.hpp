@@ -90,7 +90,49 @@ class AdminServer {
     void* _httpServer;  // opaque pointer to httplib::Server
     std::thread _serverThread;
     std::atomic<bool> _running{false};
+
+    std::string _adminUser;
+    std::string _adminPass;
+
+    void generateCredentials();
+
+   public:
+    // Test helpers - expose generated credentials for tests
+    std::string getAdminUserForTests() const { return _adminUser; }
+    std::string getAdminPassForTests() const { return _adminPass; }
 };
+
+// Exposed for tests: URL-decode helper used by the login form parser
+inline std::string urlDecodeForAdminTests(const std::string& s) {
+    std::string out;
+    out.reserve(s.size());
+    for (size_t i = 0; i < s.size(); ++i) {
+        char c = s[i];
+        if (c == '+') {
+            out.push_back(' ');
+        } else if (c == '%' && i + 2 < s.size()) {
+            auto fromHex = [](char ch) -> int {
+                if (ch >= '0' && ch <= '9') return ch - '0';
+                if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
+                if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
+                return -1;
+            };
+            char hi = s[i + 1];
+            char lo = s[i + 2];
+            int hiV = fromHex(hi);
+            int loV = fromHex(lo);
+            if (hiV >= 0 && loV >= 0) {
+                out.push_back(static_cast<char>((hiV << 4) | loV));
+                i += 2;
+            } else {
+                out.push_back('%');
+            }
+        } else {
+            out.push_back(c);
+        }
+    }
+    return out;
+}
 
 }  // namespace rtype::server
 
