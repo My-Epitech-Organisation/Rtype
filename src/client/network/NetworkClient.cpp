@@ -521,6 +521,43 @@ void NetworkClient::onLobbyListReceived(
     onLobbyListReceivedCallback_ = std::move(callback);
 }
 
+bool NetworkClient::sendAdminCommand(std::uint8_t commandType,
+                                     std::uint8_t param) {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    network::AdminCommandPayload payload;
+    payload.commandType = commandType;
+    payload.param = param;
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    auto result =
+        connection_.buildPacket(network::OpCode::C_ADMIN_COMMAND, serialized);
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    LOG_INFO_CAT(rtype::LogCategory::Network,
+                 "[NetworkClient] Sent admin command: type="
+                     << static_cast<int>(commandType)
+                     << " param=" << static_cast<int>(param));
+
+    return true;
+}
+
+void NetworkClient::onAdminResponse(
+    std::function<void(std::uint8_t cmdType, bool success, bool newState,
+                       const std::string& message)>
+        callback) {
+    onAdminResponseCallback_ = std::move(callback);
+}
+
 void NetworkClient::poll() {
     connection_.update();
 
@@ -713,6 +750,10 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
 
         case network::OpCode::PONG:
             handlePong(header, payload);
+            break;
+
+        case network::OpCode::S_ADMIN_RESPONSE:
+            handleAdminResponse(header, payload);
             break;
 
         case network::OpCode::DISCONNECT: {
@@ -1216,6 +1257,41 @@ void NetworkClient::handlePong(const network::Header& header,
     (void)payload;
 
     LOG_DEBUG("[NetworkClient] Received PONG from server - connection alive");
+}
+
+void NetworkClient::handleAdminResponse(const network::Header& header,
+                                        const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::AdminResponsePayload)) {
+        return;
+    }
+
+    try {
+        auto response = network::Serializer::deserializeFromNetwork<
+            network::AdminResponsePayload>(payload);
+
+        std::string message(response.message,
+                            strnlen(response.message, sizeof(response.message)));
+
+        LOG_INFO_CAT(rtype::LogCategory::Network,
+                     "[NetworkClient] Admin response: cmdType="
+                         << static_cast<int>(response.commandType)
+                         << " success=" << static_cast<int>(response.success)
+                         << " newState=" << static_cast<int>(response.newState)
+                         << " msg=" << message);
+
+        queueCallback([this, response, message]() {
+            if (onAdminResponseCallback_) {
+                onAdminResponseCallback_(response.commandType,
+                                         response.success == 1,
+                                         response.newState == 1, message);
+            }
+        });
+    } catch (...) {
+        LOG_ERROR_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Failed to parse admin response");
+    }
 }
 
 void NetworkClient::flushOutgoing() {
