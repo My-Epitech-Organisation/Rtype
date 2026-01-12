@@ -363,6 +363,13 @@ bool ServerApp::initialize() {
         }
     });
 
+    _networkServer->onAdminCommand([this](std::uint32_t userId,
+                                          std::uint8_t commandType,
+                                          std::uint8_t param,
+                                          const std::string& clientIp) {
+        handleAdminCommand(userId, commandType, param, clientIp);
+    });
+
     std::string gameId = _gameConfig && _gameConfig->isInitialized()
                              ? _gameConfig->getGameId()
                              : "rtype";
@@ -761,6 +768,73 @@ std::size_t ServerApp::countAlivePlayers() {
     });
 
     return aliveCount;
+}
+
+void ServerApp::handleAdminCommand(std::uint32_t userId,
+                                   std::uint8_t commandType, std::uint8_t param,
+                                   const std::string& clientIp) {
+    // Validate localhost - only allow admin commands from the same machine
+    bool isLocalhost = (clientIp == "127.0.0.1" || clientIp == "::1" ||
+                        clientIp.rfind("127.", 0) == 0);
+
+    if (!isLocalhost) {
+        LOG_WARNING_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[Server] Admin command rejected: " << clientIp << " is not localhost");
+        _networkServer->sendAdminResponse(
+            userId, commandType, false, 0,
+            "Admin commands only available from localhost");
+        return;
+    }
+
+    switch (static_cast<network::AdminCommandType>(commandType)) {
+        case network::AdminCommandType::GodMode: {
+            // Find player entity by network ID
+            auto entityOpt = _networkSystem->findEntityByNetworkId(userId);
+            if (!entityOpt.has_value()) {
+                _networkServer->sendAdminResponse(userId, commandType, false, 0,
+                                                  "Player entity not found");
+                return;
+            }
+
+            ECS::Entity playerEntity = entityOpt.value();
+            bool hasGodMode = _registry->hasComponent<
+                games::rtype::shared::InvincibleTag>(playerEntity);
+            bool newState;
+
+            if (param == 2) {  // Toggle
+                newState = !hasGodMode;
+            } else {
+                newState = (param == 1);
+            }
+
+            if (newState && !hasGodMode) {
+                _registry->emplaceComponent<games::rtype::shared::InvincibleTag>(
+                    playerEntity);
+                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                             "[Server] God mode ENABLED for userId=" << userId);
+            } else if (!newState && hasGodMode) {
+                _registry->removeComponent<games::rtype::shared::InvincibleTag>(
+                    playerEntity);
+                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                             "[Server] God mode DISABLED for userId=" << userId);
+            }
+
+            std::string msg = newState ? "God mode enabled" : "God mode disabled";
+            _networkServer->sendAdminResponse(userId, commandType, true,
+                                              newState ? 1 : 0, msg);
+            break;
+        }
+        case network::AdminCommandType::Noclip:
+            // Noclip not implemented yet
+            _networkServer->sendAdminResponse(userId, commandType, false, 0,
+                                              "Noclip not implemented");
+            break;
+        default:
+            _networkServer->sendAdminResponse(userId, commandType, false, 0,
+                                              "Unknown command type");
+            break;
+    }
 }
 
 void ServerApp::onGameEvent(const engine::GameEvent& event) {
