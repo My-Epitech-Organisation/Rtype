@@ -488,7 +488,7 @@ Graphic::Graphic(
     this->_audioLib = std::make_shared<AudioLib>(this->_display);
     this->_registry->setSingleton<std::shared_ptr<AudioLib>>(this->_audioLib);
     this->_registry->setSingleton<AccessibilitySettings>(
-        AccessibilitySettings{ColorBlindMode::None, 1.0f, true, false});
+        AccessibilitySettings{ColorBlindMode::None, 1.0f, false, false});
     this->_registry->setSingleton<rtype::games::rtype::client::PauseState>(
         rtype::games::rtype::client::PauseState{false});
     this->_initializeCommonAssets();
