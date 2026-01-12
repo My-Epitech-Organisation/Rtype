@@ -33,6 +33,8 @@ add_library(rtype_game_client_systems STATIC
     ShaderRenderSystem.hpp
     ForcePodVisualSystem.cpp
     ForcePodVisualSystem.hpp
+    EnemyHealthBarSystem.cpp
+    EnemyHealthBarSystem.hpp
 )
 
 target_link_libraries(rtype_game_client_systems

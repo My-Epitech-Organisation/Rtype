@@ -200,24 +200,25 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
                           << prevHealth << " -> " << health.current
                           << " (damage=" << damage << ")");
 
-        if (isTargetPlayer && _emitEvent &&
-            registry.hasComponent<NetworkIdComponent>(target)) {
+        if (_emitEvent && registry.hasComponent<NetworkIdComponent>(target)) {
             const auto& netId =
                 registry.getComponent<NetworkIdComponent>(target);
             if (netId.isValid()) {
-                LOG_DEBUG_CAT(
-                    ::rtype::LogCategory::GameEngine,
-                    "[CollisionSystem] Emitting EntityHealthChanged for player "
-                    "networkId="
-                        << netId.networkId << " health=" << health.current
-                        << "/" << health.max);
+                ::rtype::network::EntityType entityType =
+                    isTargetPlayer ? ::rtype::network::EntityType::Player
+                                   : ::rtype::network::EntityType::Bydos;
+                LOG_INFO("[CollisionSystem] Emitting EntityHealthChanged for "
+                         << (isTargetPlayer ? "player" : "enemy")
+                         << " networkId=" << netId.networkId
+                         << " health=" << health.current << "/" << health.max
+                         << " damage=" << damage);
                 engine::GameEvent event{};
                 event.type = engine::GameEventType::EntityHealthChanged;
                 event.entityNetworkId = netId.networkId;
-                event.entityType =
-                    static_cast<uint8_t>(::rtype::network::EntityType::Player);
+                event.entityType = static_cast<uint8_t>(entityType);
                 event.healthCurrent = health.current;
                 event.healthMax = health.max;
+                event.damage = damage;
                 _emitEvent(event);
             }
         }
