@@ -20,6 +20,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
 #include <asio.hpp>
 
@@ -520,13 +521,18 @@ class NetworkServer {
 
     static std::int16_t quantize(float value, float scale) noexcept {
         float scaled = value * scale;
-        if (scaled > 32767.0f) return 32767;
-        if (scaled < -32768.0f) return -32768;
-        return static_cast<std::int16_t>(std::lrint(scaled));
+        long rounded = std::lrint(scaled);
+        if (rounded > std::numeric_limits<std::int16_t>::max()) {
+            return std::numeric_limits<std::int16_t>::max();
+        }
+        if (rounded < std::numeric_limits<std::int16_t>::min()) {
+            return std::numeric_limits<std::int16_t>::min();
+        }
+        return static_cast<std::int16_t>(rounded);
     }
 
     [[nodiscard]] std::uint32_t nextServerTick() noexcept {
-        return ++serverTickCounter_;
+        return serverTickCounter_.fetch_add(1, std::memory_order_acq_rel) + 1;
     }
 
     [[nodiscard]] network::Buffer buildPacket(network::OpCode opcode,
