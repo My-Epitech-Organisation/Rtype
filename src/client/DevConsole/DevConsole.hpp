@@ -19,6 +19,9 @@
 
 namespace rtype::client {
 
+// Forward declaration
+class NetworkClient;
+
 /**
  * @brief In-game developer console for debugging and runtime configuration.
  *
@@ -41,8 +44,11 @@ class DevConsole {
     /**
      * @brief Construct a new DevConsole.
      * @param display The display interface for rendering
+     * @param networkClient Optional network client for server commands
      */
-    explicit DevConsole(std::shared_ptr<rtype::display::IDisplay> display);
+    explicit DevConsole(
+        std::shared_ptr<rtype::display::IDisplay> display,
+        std::shared_ptr<NetworkClient> networkClient = nullptr);
 
     ~DevConsole() = default;
     DevConsole(const DevConsole&) = delete;
@@ -129,6 +135,14 @@ class DevConsole {
         return cvars_;
     }
 
+    /**
+     * @brief Set the network client for server commands.
+     * @param networkClient The network client
+     */
+    void setNetworkClient(std::shared_ptr<NetworkClient> networkClient) {
+        networkClient_ = std::move(networkClient);
+    }
+
    private:
     struct OutputLine {
         std::string text;
@@ -148,6 +162,7 @@ class DevConsole {
     bool handleTextEntered(std::uint32_t unicode);
 
     std::shared_ptr<rtype::display::IDisplay> display_;
+    std::shared_ptr<NetworkClient> networkClient_;
     bool visible_{false};
 
     // Input state
