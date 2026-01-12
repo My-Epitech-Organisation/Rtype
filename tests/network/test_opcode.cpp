@@ -27,3 +27,25 @@ TEST(OpCodeTest, ValidityAndUnknown) {
     EXPECT_EQ(toString(OpCode::C_CONNECT), "C_CONNECT");
     EXPECT_EQ(toString(static_cast<OpCode>(0)), "UNKNOWN");
 }
+
+TEST(OpCodeTest, ChatOpcodes) {
+    // Validity
+    EXPECT_TRUE(isValidOpCode(static_cast<std::uint8_t>(OpCode::C_CHAT)));
+    EXPECT_TRUE(isValidOpCode(static_cast<std::uint8_t>(OpCode::S_CHAT)));
+
+    // Reliability
+    EXPECT_TRUE(isReliable(OpCode::C_CHAT));
+    EXPECT_TRUE(isReliable(OpCode::S_CHAT));
+
+    // Classification
+    EXPECT_TRUE(isClientOpCode(OpCode::C_CHAT));
+    EXPECT_FALSE(isServerOpCode(OpCode::C_CHAT));
+
+    EXPECT_TRUE(isServerOpCode(OpCode::S_CHAT));
+    EXPECT_FALSE(isClientOpCode(OpCode::S_CHAT));
+
+    // String conversion
+    EXPECT_EQ(toString(OpCode::C_CHAT), "C_CHAT");
+    EXPECT_EQ(toString(OpCode::S_CHAT), "S_CHAT");
+}
+

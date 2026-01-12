@@ -98,6 +98,8 @@ struct is_rfc_type<ConnectPayload> : std::true_type {};
 template <>
 struct is_rfc_type<DisconnectPayload> : std::true_type {};
 template <>
+struct is_rfc_type<ChatPayload> : std::true_type {};
+template <>
 struct is_rfc_type<PingPayload> : std::true_type {};
 template <>
 struct is_rfc_type<PongPayload> : std::true_type {};
@@ -431,6 +433,20 @@ fromNetwork(const T& data) noexcept {
     PlayerReadyStatePayload result;
     result.userId = ByteOrder::fromNetwork(p.userId);
     result.isReady = p.isReady;
+    return result;
+}
+
+[[nodiscard]] inline ChatPayload toNetwork(const ChatPayload& p) noexcept {
+    ChatPayload result;
+    result.userId = ByteOrder::toNetwork(p.userId);
+    std::memcpy(result.message, p.message, sizeof(result.message));
+    return result;
+}
+
+[[nodiscard]] inline ChatPayload fromNetwork(const ChatPayload& p) noexcept {
+    ChatPayload result;
+    result.userId = ByteOrder::fromNetwork(p.userId);
+    std::memcpy(result.message, p.message, sizeof(result.message));
     return result;
 }
 

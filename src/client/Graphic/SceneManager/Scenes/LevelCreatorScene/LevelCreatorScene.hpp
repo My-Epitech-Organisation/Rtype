@@ -30,7 +30,7 @@
 /** @brief Width (pixels) for a standard level UI section. */
 constexpr float kLevelSectionWidth = 700.f;
 /** @brief Height (pixels) for a standard level UI section. */
-constexpr float kLevelSectionHeight = 500.f;
+constexpr float kLevelSectionHeight = 600.f;
 /** @brief Default left X position (pixels) for level sections on screen. */
 constexpr float kLevelSectionPosLeft = 50.f;
 /** @brief Default top Y position (pixels) for level sections on screen. */

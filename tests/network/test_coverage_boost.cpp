@@ -105,12 +105,13 @@ TEST(OpCodeCoverage, IsValidOpCodeAllValues) {
     EXPECT_TRUE(isValidOpCode(0xF0));  // PING
     EXPECT_TRUE(isValidOpCode(0xF1));  // PONG
     EXPECT_TRUE(isValidOpCode(0xF2));  // ACK
+    EXPECT_TRUE(isValidOpCode(0x30));  // C_CHAT
+    EXPECT_TRUE(isValidOpCode(0x31));  // S_CHAT
 
     EXPECT_FALSE(isValidOpCode(0x00));
     EXPECT_FALSE(isValidOpCode(0x0B));
     EXPECT_FALSE(isValidOpCode(0x0F));
     EXPECT_FALSE(isValidOpCode(0x16));
-    EXPECT_FALSE(isValidOpCode(0x30));
     EXPECT_FALSE(isValidOpCode(0xFF));
 }
 

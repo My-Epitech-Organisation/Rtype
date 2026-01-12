@@ -291,6 +291,7 @@ class ServerNetworkSystem {
     void processExpiredGracePeriods();
     void finalizeDisconnection(std::uint32_t userId);
     void handleClientInput(std::uint32_t userId, std::uint8_t inputMask);
+    void handleClientChat(std::uint32_t userId, const std::string& message);
     void handleGetUsersRequest(std::uint32_t userId);
 
     struct NetworkedEntity {
