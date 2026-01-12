@@ -86,16 +86,21 @@ ServerNetworkSystem::ServerNetworkSystem(
         server_->onBandwidthModeChanged([this](std::uint32_t userId,
                                                bool lowBandwidth) {
             if (lowBandwidth) {
-                auto count = ++lowBandwidthClientCount_;
+                auto count = lowBandwidthClientCount_.fetch_add(1, std::memory_order_relaxed) + 1;
                 lowBandwidthModeActive_.store(true, std::memory_order_release);
                 LOG_INFO("[ServerNetworkSystem] Low bandwidth mode ENABLED "
                          << "(client " << userId << ", " << count
                          << " clients requesting)");
             } else {
-                auto count = lowBandwidthClientCount_.load();
-                if (count > 0) {
-                    count = --lowBandwidthClientCount_;
+                auto old = lowBandwidthClientCount_.fetch_sub(1, std::memory_order_acq_rel);
+                std::uint32_t count;
+                if (old == 0) {
+                    lowBandwidthClientCount_.fetch_add(1, std::memory_order_relaxed);
+                    count = 0;
+                } else {
+                    count = old - 1;
                 }
+
                 if (count == 0) {
                     lowBandwidthModeActive_.store(false,
                                                   std::memory_order_release);
