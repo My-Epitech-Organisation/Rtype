@@ -680,6 +680,10 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
             // ACK is handled via kIsAck flag above
             break;
 
+        case network::OpCode::C_ADMIN_COMMAND:
+            handleAdminCommand(header, payload, sender);
+            break;
+
         default:
             break;
     }
@@ -1197,6 +1201,77 @@ void NetworkServer::broadcastChat(std::uint32_t senderId,
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
     broadcastToAll(network::OpCode::S_CHAT, serialized);
+}
+
+void NetworkServer::onAdminCommand(
+    std::function<void(std::uint32_t, std::uint8_t, std::uint8_t,
+                       const std::string&)>
+        callback) {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
+    onAdminCommandCallback_ = std::move(callback);
+}
+
+void NetworkServer::handleAdminCommand(const network::Header& header,
+                                       const network::Buffer& payload,
+                                       const network::Endpoint& sender) {
+    if (payload.size() < sizeof(network::AdminCommandPayload)) {
+        return;
+    }
+
+    auto client = findClient(sender);
+    if (!client || !client->joined) {
+        return;
+    }
+
+    try {
+        auto cmd = network::Serializer::deserializeFromNetwork<
+            network::AdminCommandPayload>(payload);
+
+        std::uint32_t userId = header.userId;
+        std::string clientIp = sender.address;
+
+        LOG_INFO_CAT(::rtype::LogCategory::Network,
+                     "[NetworkServer] Admin command from userId="
+                         << userId << " ip=" << clientIp
+                         << " cmdType=" << static_cast<int>(cmd.commandType)
+                         << " param=" << static_cast<int>(cmd.param));
+
+        queueCallback([this, userId, cmd, clientIp]() {
+            if (onAdminCommandCallback_) {
+                onAdminCommandCallback_(userId, cmd.commandType, cmd.param,
+                                        clientIp);
+            }
+        });
+    } catch (...) {
+        LOG_ERROR_CAT(::rtype::LogCategory::Network,
+                      "[NetworkServer] Invalid admin command payload");
+    }
+}
+
+void NetworkServer::sendAdminResponse(std::uint32_t userId,
+                                      std::uint8_t commandType, bool success,
+                                      std::uint8_t newState,
+                                      const std::string& message) {
+    auto client = findClientByUserId(userId);
+    if (!client) {
+        return;
+    }
+
+    network::AdminResponsePayload payload{};
+    payload.commandType = commandType;
+    payload.success = success ? 1 : 0;
+    payload.newState = newState;
+    std::memset(payload.message, 0, sizeof(payload.message));
+    std::strncpy(payload.message, message.c_str(), sizeof(payload.message) - 1);
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    sendToClient(client, network::OpCode::S_ADMIN_RESPONSE, serialized);
+
+    LOG_INFO_CAT(::rtype::LogCategory::Network,
+                 "[NetworkServer] Sent admin response to userId="
+                     << userId << " success=" << success
+                     << " msg=" << message);
 }
 
 }  // namespace rtype::server
