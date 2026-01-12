@@ -13,6 +13,8 @@ on:
           - minor
           - major
 
+  workflow_call:
+
 jobs:
   release:
     runs-on: ubuntu-latest
