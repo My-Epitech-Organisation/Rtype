@@ -36,6 +36,11 @@ bool TextInputSystem::handleEvent(ECS::Registry& registry,
         return handleKeyPressed(registry, event.key.code);
     }
 
+    if (event.key.control && event.key.code == ::rtype::display::Key::V) {
+        for (auto s : this->_display->getClipboardText())
+            handleTextEntered(registry, static_cast<std::uint32_t>(s));
+        return true;
+    }
     return false;
 }
 
