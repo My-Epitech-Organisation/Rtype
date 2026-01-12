@@ -98,6 +98,7 @@ void Graphic::_update() {
         this->_systemScheduler->runSystem("animation");
         this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
+        this->_systemScheduler->runSystem("enemy_health_bars");
     }
 
     this->_systemScheduler->runSystem("lifetime");
@@ -196,6 +197,9 @@ void Graphic::_initializeSystems() {
             this->_display);
     this->_forcePodVisualSystem =
         std::make_unique<::rtype::games::rtype::client::ForcePodVisualSystem>();
+    this->_enemyHealthBarSystem =
+        std::make_unique<::rtype::games::rtype::client::EnemyHealthBarSystem>(
+            this->_registry);
 
     this->_systemScheduler =
         std::make_unique<ECS::SystemScheduler>(*this->_registry);
@@ -294,10 +298,17 @@ void Graphic::_initializeSystems() {
                                       },
                                       {"lifetime"});
 
+    this->_systemScheduler->addSystem("enemy_health_bars",
+                                      [this](ECS::Registry& reg) {
+                                          this->_enemyHealthBarSystem->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"client_destroy"});
+
     this->_systemScheduler->addSystem(
         "render",
         [this](ECS::Registry& reg) { this->_renderSystem->update(reg, 0.f); },
-        {"client_destroy", "chaser_rotation"});
+        {"enemy_health_bars", "chaser_rotation"});
 
     this->_systemScheduler->addSystem(
         "boxing",

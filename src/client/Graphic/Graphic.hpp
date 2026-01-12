@@ -20,6 +20,7 @@
 #include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
 #include "../../games/rtype/client/Systems/ClientDestroySystem.hpp"
 #include "../../games/rtype/client/Systems/ColorTintSystem.hpp"
+#include "../../games/rtype/client/Systems/EnemyHealthBarSystem.hpp"
 #include "../../games/rtype/client/Systems/EventSystem.hpp"
 #include "../../games/rtype/client/Systems/ForcePodVisualSystem.hpp"
 #include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
@@ -166,6 +167,8 @@ class Graphic {
         _shaderRenderSystem;
     std::unique_ptr<::rtype::games::rtype::client::ForcePodVisualSystem>
         _forcePodVisualSystem;
+    std::unique_ptr<::rtype::games::rtype::client::EnemyHealthBarSystem>
+        _enemyHealthBarSystem;
 
     // ========================================================================
     // Runtime state
