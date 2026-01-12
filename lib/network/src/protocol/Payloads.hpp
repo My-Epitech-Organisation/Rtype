@@ -341,9 +341,8 @@ struct ChatPayload {
  * @brief Admin command types for C_ADMIN_COMMAND (0xD0)
  */
 enum class AdminCommandType : std::uint8_t {
-    GodMode = 0x01,   ///< Toggle invincibility
-    Noclip = 0x02,    ///< Toggle collision (future)
-    // Future: Spawn = 0x03, Kill = 0x04, Teleport = 0x05...
+    GodMode = 0x01,  ///< Toggle invincibility
+    // Future: Spawn = 0x02, Kill = 0x03, Teleport = 0x04...
 };
 
 /**
