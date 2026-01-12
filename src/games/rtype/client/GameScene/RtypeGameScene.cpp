@@ -87,8 +87,6 @@ RtypeGameScene::~RtypeGameScene() {
         _networkClient->onGameOver(nullptr);
         _networkClient->onEntityMove(nullptr);
         _networkClient->onEntityMoveBatch(nullptr);
-        _networkClient->onEntitySpawn(nullptr);
-        _networkClient->onEntityDestroy(nullptr);
         _networkClient->onEntityHealth(nullptr);
         _networkClient->clearDisconnectedCallbacks();
         _networkClient->onGameStateChange(nullptr);
