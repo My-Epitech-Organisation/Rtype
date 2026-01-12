@@ -434,16 +434,46 @@ std::vector<std::string> DevConsole::parseArgs(const std::string& input) {
 }
 
 void DevConsole::print(const std::string& message) {
-    outputHistory_.push_back({getTimestamp() + message, false});
-    if (outputHistory_.size() > kMaxHistoryLines) {
-        outputHistory_.pop_front();
+    std::string timestamp = getTimestamp();
+    std::istringstream stream(message);
+    std::string line;
+    bool firstLine = true;
+
+    while (std::getline(stream, line)) {
+        if (line.empty()) {
+            continue;
+        }
+        if (firstLine) {
+            outputHistory_.push_back({timestamp + line, false});
+            firstLine = false;
+        } else {
+            outputHistory_.push_back({"           " + line, false});
+        }
+        if (outputHistory_.size() > kMaxHistoryLines) {
+            outputHistory_.pop_front();
+        }
     }
 }
 
 void DevConsole::printError(const std::string& message) {
-    outputHistory_.push_back({getTimestamp() + message, true});
-    if (outputHistory_.size() > kMaxHistoryLines) {
-        outputHistory_.pop_front();
+    std::string timestamp = getTimestamp();
+    std::istringstream stream(message);
+    std::string line;
+    bool firstLine = true;
+
+    while (std::getline(stream, line)) {
+        if (line.empty()) {
+            continue;
+        }
+        if (firstLine) {
+            outputHistory_.push_back({timestamp + line, true});
+            firstLine = false;
+        } else {
+            outputHistory_.push_back({"           " + line, true});
+        }
+        if (outputHistory_.size() > kMaxHistoryLines) {
+            outputHistory_.pop_front();
+        }
     }
 }
 
