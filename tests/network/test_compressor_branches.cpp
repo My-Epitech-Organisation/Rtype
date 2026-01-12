@@ -31,8 +31,14 @@ TEST(CompressorBranches, UncompressedPassThrough) {
     // If compressor sees data that indicates 'uncompressed' or small sizes it may return same
     std::vector<uint8_t> plain = {0x01, 0x02, 0x03, 0x04};
     auto res = c.decompress(plain);
-    // Could be success (same bytes) or failure depending on implementation; assert not-crash
-    ASSERT_TRUE(true);
+    // Behavior may vary by implementation: if decompression succeeds, expect the
+    // same bytes back; if it fails, ensure it reports an error rather than
+    // crashing or returning malformed data.
+    if (res.isOk()) {
+        EXPECT_EQ(res.value(), plain);
+    } else {
+        EXPECT_TRUE(res.isErr());
+    }
 }
 
 TEST(CompressorBranches, CompressAndDecompressRoundtrip) {
@@ -88,8 +94,10 @@ TEST(CompressorBranches, MaxExpansionRatioRespected) {
         random[i] = static_cast<uint8_t>((i * 17 + 31) % 256);
     }
     auto result = c.compress(random);
-    // Either not compressed (ratio too high) or compressed - either exercises branch
-    EXPECT_TRUE(result.wasCompressed == false || result.wasCompressed == true);
+    // With a strict maxExpansionRatio (50%), incompressible data should not be
+    // compressed. Expect the original data to be returned uncompressed.
+    EXPECT_FALSE(result.wasCompressed);
+    EXPECT_EQ(result.data, random);
 }
 
 TEST(CompressorBranches, MaxCompressedSizeReturnsValue) {
