@@ -15,23 +15,13 @@ void TextureManager::load(const std::string& id, const std::string& filePath) {
     _display->loadTexture(id, filePath);
     LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
                   "Texture loaded with ID: " << id);
-}
-
-std::shared_ptr<::rtype::display::ITexture> TextureManager::get(
-    const std::string& id) {
-    if (!_display) return nullptr;
     auto texture = _display->getTexture(id);
 
     if (!texture) {
         LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
-                      "Texture not found: " << id);
-        throw std::out_of_range("Texture not found: " + id);
+                      "Unable to open texture: " << filePath);
+        throw std::runtime_error("Error while loading texture: " + filePath);
     }
 
-    return texture;
-}
-
-bool TextureManager::isLoaded(const std::string& id) const {
-    if (!_display) return false;
-    return _display->getTexture(id) != nullptr;
+    this->_assets[id] = texture;
 }
