@@ -451,6 +451,9 @@ void ServerNetworkSystem::resetState() {
     userIdToEntity_.clear();
     pendingDisconnections_.clear();
     nextNetworkIdCounter_ = 1;
+
+    lowBandwidthClientCount_.store(0, std::memory_order_release);
+    lowBandwidthModeActive_.store(false, std::memory_order_release);
 }
 
 void ServerNetworkSystem::update() {
