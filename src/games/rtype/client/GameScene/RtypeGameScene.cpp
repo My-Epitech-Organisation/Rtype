@@ -117,7 +117,6 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
         LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                       "[RtypeGameScene] Setting up local player callback");
         setupLocalPlayerCallback();
-        setupLocalPlayerCallback();
         LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                       "[RtypeGameScene] Setting up health update callback");
         _networkSystem->onHealthUpdate(
