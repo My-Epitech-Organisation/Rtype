@@ -15,6 +15,8 @@
 #include <sstream>
 
 #include "Logger/Macros.hpp"
+#include "network/NetworkClient.hpp"
+#include "protocol/Payloads.hpp"
 
 namespace rtype::client {
 
@@ -50,8 +52,9 @@ std::string getTimestamp() {
 }
 }  // namespace
 
-DevConsole::DevConsole(std::shared_ptr<rtype::display::IDisplay> display)
-    : display_(std::move(display)) {
+DevConsole::DevConsole(std::shared_ptr<rtype::display::IDisplay> display,
+                       std::shared_ptr<NetworkClient> networkClient)
+    : display_(std::move(display)), networkClient_(std::move(networkClient)) {
     registerDefaultCommands();
 
     // Initialize default CVars
@@ -562,14 +565,22 @@ void DevConsole::registerDefaultCommands() {
                         return result;
                     });
 
-    // God mode toggle
-    registerCommand("god", "Toggle god mode (invincibility)",
-                    [this](const std::vector<std::string>&) -> std::string {
-                        std::string current = getCvar("god_mode");
-                        std::string newVal = (current == "1") ? "0" : "1";
-                        setCvar("god_mode", newVal);
-                        return newVal == "1" ? "God mode ON" : "God mode OFF";
-                    });
+    // God mode toggle (server-authoritative)
+    registerCommand(
+        "god", "Toggle god mode (invincibility) - requires localhost",
+        [this](const std::vector<std::string>&) -> std::string {
+            if (!networkClient_ || !networkClient_->isConnected()) {
+                return "Error: Not connected to server";
+            }
+
+            bool sent = networkClient_->sendAdminCommand(
+                static_cast<std::uint8_t>(network::AdminCommandType::GodMode),
+                2  // Toggle
+            );
+
+            return sent ? "God mode request sent..."
+                        : "Failed to send request";
+        });
 
     // Noclip toggle
     registerCommand("noclip", "Toggle noclip mode (no collision)",
