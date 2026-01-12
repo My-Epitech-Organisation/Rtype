@@ -14,7 +14,11 @@
 #include <iomanip>
 #include <sstream>
 
+#include <rtype/ecs.hpp>
+
+#include "Graphic/AudioLib/AudioLib.hpp"
 #include "Logger/Macros.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "network/NetworkClient.hpp"
 #include "protocol/Payloads.hpp"
 
@@ -53,14 +57,23 @@ std::string getTimestamp() {
 }  // namespace
 
 DevConsole::DevConsole(std::shared_ptr<rtype::display::IDisplay> display,
-                       std::shared_ptr<NetworkClient> networkClient)
-    : display_(std::move(display)), networkClient_(std::move(networkClient)) {
+                       std::shared_ptr<NetworkClient> networkClient,
+                       std::shared_ptr<ECS::Registry> registry,
+                       std::shared_ptr<AudioLib> audioLib,
+                       float* deltaTimePtr)
+    : display_(std::move(display)),
+      networkClient_(std::move(networkClient)),
+      registry_(std::move(registry)),
+      audioLib_(std::move(audioLib)),
+      deltaTimePtr_(deltaTimePtr) {
     registerDefaultCommands();
 
     // Initialize default CVars
     cvars_["cl_show_fps"] = "0";
-    cvars_["cl_show_ping"] = "1";
+    cvars_["cl_show_ping"] = "0";
     cvars_["cl_show_hitboxes"] = "0";
+    cvars_["cl_mute_audio"] = "0";
+    cvars_["cl_show_entities"] = "0";
     cvars_["net_graph"] = "0";
     cvars_["god_mode"] = "0";
 
@@ -214,7 +227,7 @@ void DevConsole::update(float dt) {
 }
 
 void DevConsole::render() {
-    if (!visible_ || !display_) {
+    if (!display_) {
         return;
     }
 
@@ -223,9 +236,15 @@ void DevConsole::render() {
     auto viewSize = display_->getViewSize();
     display_->resetView();
 
-    renderBackground();
-    renderOutput();
-    renderInputLine();
+    // Always render overlays (FPS, Ping, Entities) even when console is closed
+    renderOverlays();
+
+    // Only render console UI when visible
+    if (visible_) {
+        renderBackground();
+        renderOutput();
+        renderInputLine();
+    }
 
     // Restore view
     display_->setView(viewCenter, viewSize);
@@ -329,6 +348,66 @@ void DevConsole::renderInputLine() {
             {cursorX, inputY},
             {2.f, static_cast<float>(kFontSize)},
             kConsoleCursorColor, kConsoleCursorColor, 0.f);
+    }
+}
+
+void DevConsole::renderOverlays() {
+    auto windowSize = display_->getWindowSize();
+    constexpr float kOverlayFontSize = 14;
+    constexpr float kOverlayLineHeight = 18.f;
+    constexpr float kOverlayPadding = 10.f;
+    constexpr rtype::display::Color kOverlayColor{0, 255, 0, 255};
+    constexpr rtype::display::Color kOverlayBgColor{0, 0, 0, 150};
+
+    float y = kOverlayPadding;
+    float maxWidth = 0.f;
+    std::vector<std::string> lines;
+
+    // FPS
+    if (getCvar("cl_show_fps") == "1" && deltaTimePtr_ != nullptr &&
+        *deltaTimePtr_ > 0.0001f) {
+        int fps = static_cast<int>(1.0f / *deltaTimePtr_);
+        lines.push_back("FPS: " + std::to_string(fps));
+    }
+
+    // Ping
+    if (getCvar("cl_show_ping") == "1" && networkClient_ != nullptr &&
+        networkClient_->isConnected()) {
+        std::uint32_t ping = networkClient_->latencyMs();
+        lines.push_back("Ping: " + std::to_string(ping) + "ms");
+    }
+
+    // Entity count (using TransformComponent as proxy)
+    if (getCvar("cl_show_entities") == "1" && registry_ != nullptr) {
+        std::size_t count = registry_->countComponents<
+            rtype::games::rtype::shared::TransformComponent>();
+        lines.push_back("Entities: " + std::to_string(count));
+    }
+
+    // Calculate background size
+    for (const auto& line : lines) {
+        auto bounds = display_->getTextBounds(line, std::string(kFontName),
+                                              kOverlayFontSize);
+        if (bounds.x > maxWidth) {
+            maxWidth = bounds.x;
+        }
+    }
+
+    // Draw background if we have overlays
+    if (!lines.empty()) {
+        float bgHeight =
+            static_cast<float>(lines.size()) * kOverlayLineHeight + kOverlayPadding;
+        float bgWidth = maxWidth + kOverlayPadding * 2;
+        display_->drawRectangle({kOverlayPadding - 5.f, kOverlayPadding - 5.f},
+                                {bgWidth, bgHeight}, kOverlayBgColor,
+                                kOverlayBgColor, 0.f);
+    }
+
+    // Draw text
+    for (const auto& line : lines) {
+        display_->drawText(line, std::string(kFontName), {kOverlayPadding, y},
+                           kOverlayFontSize, kOverlayColor);
+        y += kOverlayLineHeight;
     }
 }
 
@@ -607,6 +686,69 @@ void DevConsole::registerDefaultCommands() {
             result += "  Network RX: [Not connected]\n";
             return result;
         });
+
+    // FPS toggle
+    registerCommand("fps", "Toggle FPS display overlay",
+                    [this](const std::vector<std::string>&) -> std::string {
+                        std::string current = getCvar("cl_show_fps");
+                        std::string newVal = (current == "1") ? "0" : "1";
+                        setCvar("cl_show_fps", newVal);
+                        return newVal == "1" ? "FPS display ON" : "FPS display OFF";
+                    });
+
+    // Ping toggle
+    registerCommand("ping", "Toggle ping/latency display overlay",
+                    [this](const std::vector<std::string>&) -> std::string {
+                        std::string current = getCvar("cl_show_ping");
+                        std::string newVal = (current == "1") ? "0" : "1";
+                        setCvar("cl_show_ping", newVal);
+                        return newVal == "1" ? "Ping display ON" : "Ping display OFF";
+                    });
+
+    // Mute toggle
+    registerCommand(
+        "mute", "Toggle audio mute (music + SFX)",
+        [this](const std::vector<std::string>&) -> std::string {
+            if (!audioLib_) {
+                return "Error: Audio not available";
+            }
+
+            std::string current = getCvar("cl_mute_audio");
+            if (current == "0") {
+                // Save current volumes and mute
+                savedMusicVolume_ = audioLib_->getMusicVolume();
+                savedSFXVolume_ = audioLib_->getSFXVolume();
+                audioLib_->setMusicVolume(0.0f);
+                audioLib_->setSFXVolume(0.0f);
+                setCvar("cl_mute_audio", "1");
+                return "Audio MUTED";
+            } else {
+                // Restore saved volumes
+                audioLib_->setMusicVolume(savedMusicVolume_);
+                audioLib_->setSFXVolume(savedSFXVolume_);
+                setCvar("cl_mute_audio", "0");
+                return "Audio UNMUTED";
+            }
+        });
+
+    // Entity count toggle
+    registerCommand("entities", "Toggle entity count display overlay",
+                    [this](const std::vector<std::string>&) -> std::string {
+                        std::string current = getCvar("cl_show_entities");
+                        std::string newVal = (current == "1") ? "0" : "1";
+                        setCvar("cl_show_entities", newVal);
+                        return newVal == "1" ? "Entity count ON"
+                                             : "Entity count OFF";
+                    });
+
+    // Hitbox toggle
+    registerCommand("hitbox", "Toggle hitbox display",
+                    [this](const std::vector<std::string>&) -> std::string {
+                        std::string current = getCvar("cl_show_hitboxes");
+                        std::string newVal = (current == "1") ? "0" : "1";
+                        setCvar("cl_show_hitboxes", newVal);
+                        return newVal == "1" ? "Hitboxes ON" : "Hitboxes OFF";
+                    });
 }
 
 }  // namespace rtype::client
