@@ -411,7 +411,6 @@ bool ServerApp::initialize() {
             if (!_gameEngine) {
                 return;
             }
-            // Cast to concrete GameEngine type to access Force Pod systems
             auto* rtypeEngine =
                 dynamic_cast<rtype::games::rtype::server::GameEngine*>(
                     _gameEngine.get());

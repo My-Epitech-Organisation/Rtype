@@ -31,12 +31,10 @@ void ForcePodShootingSystem::update(ECS::Registry& registry, float deltaTime) {
                      const ForcePodComponent& forcePod,
                      const TransformComponent& transform,
                      const NetworkIdComponent& networkId) {
-        // Only shoot when attached or detached (not when returning)
         if (forcePod.state == ForcePodState::Returning) {
             return;
         }
 
-        // Add or update cooldown component
         if (!registry.hasComponent<ShootCooldownComponent>(podEntity)) {
             registry.emplaceComponent<ShootCooldownComponent>(podEntity,
                                                               SHOOT_COOLDOWN);
@@ -47,10 +45,7 @@ void ForcePodShootingSystem::update(ECS::Registry& registry, float deltaTime) {
         cooldown.update(deltaTime);
 
         if (cooldown.canShoot()) {
-            // Reset cooldown
             cooldown.triggerCooldown();
-
-            // Spawn projectile from Force Pod position
             if (_projectileSpawner) {
                 _projectileSpawner->spawnPlayerProjectile(
                     registry, networkId.networkId, transform.x, transform.y);

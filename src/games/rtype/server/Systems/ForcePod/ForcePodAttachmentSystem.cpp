@@ -34,7 +34,6 @@ void ForcePodAttachmentSystem::updateAttachedPods(ECS::Registry& registry) {
                                    const ForcePodComponent& forcePod,
                                    TransformComponent& podTransform,
                                    const NetworkIdComponent& podNetId) {
-        // Register pod with launch system if not already done
         if (_launchSystem && forcePod.ownerNetworkId != 0) {
             _launchSystem->setForcePodForPlayer(forcePod.ownerNetworkId,
                                                 podEntity);

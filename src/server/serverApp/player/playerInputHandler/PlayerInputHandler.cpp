@@ -168,8 +168,6 @@ void PlayerInputHandler::processForcePodLaunch(std::uint32_t userId) {
     if (!_forcePodCallback) {
         return;
     }
-
-    // Map userId to networkId (userId is the network ID in this context)
     _forcePodCallback(userId);
 }
 

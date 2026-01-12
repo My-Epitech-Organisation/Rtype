@@ -29,13 +29,9 @@ void ChaserExplosionSystem::update(ECS::Registry& registry, float dt) {
             }
 
             if (!explosion.isExploding) {
-                // Keep chaser on frame 1 (normal sprite) until explosion
-                // triggers
                 anim.currentFrame = 1;
                 anim.elapsedTime = 0.0f;
             } else {
-                // During explosion, let animation play frames 2-6
-                // Once it reaches the end, freeze on final frame
                 if (anim.currentFrame >= anim.frameCount) {
                     anim.currentFrame = anim.frameCount;
                     anim.elapsedTime = 0.0f;

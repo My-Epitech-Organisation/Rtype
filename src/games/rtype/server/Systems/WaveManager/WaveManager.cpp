@@ -221,8 +221,6 @@ void WaveManager::advanceToNextWave() {
 
 void WaveManager::prepareCurrentWave() {
     _pendingSpawns.clear();
-    // Don't clear _pendingPowerUps - let powerups from previous waves continue
-    // their countdown
 
     if (!_levelConfig) {
         return;
@@ -277,9 +275,6 @@ void WaveManager::prepareCurrentWave() {
 std::vector<PowerUpSpawnRequest> WaveManager::getPowerUpSpawns(
     float deltaTime) {
     std::vector<PowerUpSpawnRequest> spawns;
-
-    // Process powerups in InProgress and WaveComplete states
-    // (powerups may still be counting down after wave enemies are done)
     if (_state != WaveState::InProgress && _state != WaveState::WaveComplete) {
         return spawns;
     }
