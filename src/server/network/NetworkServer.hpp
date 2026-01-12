@@ -401,7 +401,7 @@ class NetworkServer {
         std::function<void(std::uint32_t, const std::string&)> callback);
 
     /**
-     * @brief Register callback for admin commands (god mode, noclip, etc.)
+     * @brief Register callback for admin commands (god mode, etc.)
      * @param callback Function receiving (userId, commandType, param, clientIp)
      *
      * The clientIp parameter allows validation that commands only come from
