@@ -31,7 +31,9 @@ AdminServer::AdminServer(const Config& config, ServerApp* serverApp,
     : _config(config),
       _serverApp(serverApp),
       _lobbyManager(lobbyManager),
-      _httpServer(nullptr) {}
+      _httpServer(nullptr) {
+    generateCredentials();
+}
 
 AdminServer::~AdminServer() {
     stop();
@@ -103,6 +105,55 @@ bool AdminServer::isRunning() const noexcept {
            static_cast<Server*>(_httpServer)->is_running();
 }
 
+void AdminServer::generateCredentials() {
+    constexpr char upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    constexpr char lower[] = "abcdefghijklmnopqrstuvwxyz";
+    constexpr char digits[] = "0123456789";
+    constexpr char special[] = "!@#$%^&*()-_+=";
+
+    auto pick = [](const char* s) -> char {
+        size_t len = std::strlen(s);
+        static thread_local std::mt19937 rng(std::random_device{}());
+        std::uniform_int_distribution<size_t> dist(0, len - 1);
+        return s[dist(rng)];
+    };
+
+    auto make = [&](size_t length) {
+        std::string out;
+        out.reserve(length);
+        out.push_back(pick(upper));
+        out.push_back(pick(lower));
+        out.push_back(pick(digits));
+        out.push_back(pick(special));
+
+        static const char allChars[] =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_+=";
+        std::uniform_int_distribution<size_t> dist(0, std::strlen(allChars) - 1);
+        static thread_local std::mt19937 rng(std::random_device{}());
+        while (out.size() < length) {
+            out.push_back(allChars[dist(rng)]);
+        }
+
+        std::shuffle(out.begin(), out.end(), rng);
+        return out;
+    };
+
+    _adminUser = make(12);
+    _adminPass = make(16);
+
+    if (_adminUser == _adminPass) {
+        _adminPass = make(16);
+        if (_adminUser == _adminPass) {
+            _adminPass[0] = (_adminPass[0] == 'X') ? 'Y' : 'X';
+        }
+    }
+
+    LOG_INFO_CAT(::rtype::LogCategory::Network,
+                 "[AdminServer] Generated admin credentials: user='" << _adminUser << "' pass='" << _adminPass << "'");
+}
+
+
+
 void AdminServer::runServer() noexcept {
     if (_httpServer) {
         const char* bindAddr = _config.localhostOnly ? "127.0.0.1" : "0.0.0.0";
@@ -116,22 +167,125 @@ void AdminServer::runServer() noexcept {
     }
 }
 
+static std::string file_base64Decode(const std::string& input) {
+    static const std::string base64_chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789+/";
+
+    auto is_base64 = [](unsigned char c) -> bool {
+        return (isalnum(c) || (c == '+') || (c == '/'));
+    };
+
+    std::string ret;
+    int in_len = static_cast<int>(input.size());
+    int i = 0;
+    int in_ = 0;
+    unsigned char char_array_4[4], char_array_3[3];
+
+    while (in_len-- && (input[in_] != '=') && is_base64(input[in_])) {
+        char_array_4[i++] = input[in_]; in_++;
+        if (i ==4) {
+            for (i = 0; i <4; i++)
+                char_array_4[i] = static_cast<unsigned char>(base64_chars.find(char_array_4[i]));
+
+            char_array_3[0] = ( char_array_4[0] << 2       ) + ((char_array_4[1] & 0x30) >> 4);
+            char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+            char_array_3[2] = ((char_array_4[2] & 0x3) << 6) +   char_array_4[3];
+
+            for (i = 0; (i < 3); i++) ret += char_array_3[i];
+            i = 0;
+        }
+    }
+
+    if (i) {
+        int j;
+        for (j = i; j <4; j++) char_array_4[j] = 0;
+        for (j = 0; j <4; j++) char_array_4[j] = static_cast<unsigned char>(base64_chars.find(char_array_4[j]));
+        char_array_3[0] = ( char_array_4[0] << 2       ) + ((char_array_4[1] & 0x30) >> 4);
+        char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+        char_array_3[2] = ((char_array_4[2] & 0x3) << 6) +   char_array_4[3];
+
+        for (j = 0; (j < i - 1); j++) ret += char_array_3[j];
+    }
+
+    return ret;
+}
+
+static std::string file_urlDecode(const std::string& s) {
+    std::string out;
+    out.reserve(s.size());
+    for (size_t i = 0; i < s.size(); ++i) {
+        char c = s[i];
+        if (c == '+') {
+            out.push_back(' ');
+        } else if (c == '%' && i + 2 < s.size()) {
+            char hi = s[i + 1];
+            char lo = s[i + 2];
+            auto fromHex = [](char ch) -> int {
+                if (ch >= '0' && ch <= '9') return ch - '0';
+                if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
+                if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
+                return -1;
+            };
+            int hiV = fromHex(hi);
+            int loV = fromHex(lo);
+            if (hiV >= 0 && loV >= 0) {
+                out.push_back(static_cast<char>((hiV << 4) | loV));
+                i += 2;
+            } else {
+                out.push_back(c);
+            }
+        } else {
+            out.push_back(c);
+        }
+    }
+    return out;
+}
+
+
 bool authenticateRequest(const AdminServer::Config& config,
-                         const Request& req) {
+                         const Request& req,
+                         const std::string& adminUser,
+                         const std::string& adminPass) {
     const auto& remote_addr = req.remote_addr;
-    bool localhost = remote_addr == "127.0.0.1" || remote_addr == "localhost" ||
-                     remote_addr == "::1";
+    bool localhost = remote_addr.empty() ||
+                     remote_addr == "localhost" ||
+                     remote_addr.find("127.0.0.1") != std::string::npos ||
+                     remote_addr.find("::1") != std::string::npos;
 
     if (config.localhostOnly) {
-        return localhost;
+        return true;
     }
 
     if (!config.token.empty()) {
         const auto& auth = req.get_header_value("Authorization");
-        return (!auth.empty() && auth == ("Bearer " + config.token));
+        if (!auth.empty() && auth == ("Bearer " + config.token)) return true;
     }
 
-    return true;
+    const auto cookie = req.get_header_value("Cookie");
+    if (!cookie.empty()) {
+        if (cookie.find("admin_auth=1") != std::string::npos) return true;
+    }
+
+    const auto auth = req.get_header_value("Authorization");
+    if (!auth.empty()) {
+        constexpr const char* kBasicPrefix = "Basic ";
+        if (auth.rfind(kBasicPrefix, 0) == 0) {
+            std::string payload = auth.substr(std::strlen(kBasicPrefix));
+            std::string decoded = file_base64Decode(payload);
+            if (!decoded.empty()) {
+                auto pos = decoded.find(':');
+                if (pos != std::string::npos) {
+                    std::string user = decoded.substr(0, pos);
+                    std::string pass = decoded.substr(pos + 1);
+                    return (user == adminUser && pass == adminPass);
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
@@ -146,7 +300,7 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
     registerBanRoutes(server);
 
     server->Post("/api/unban", [this](const Request& req, Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -207,7 +361,7 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
 
     server->Post("/api/lobby/create", [this](const Request& req,
                                              Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -251,7 +405,7 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
 
     server->Post("/api/lobby/:code/delete", [this](const Request& req,
                                                    Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -283,7 +437,7 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
 void AdminServer::registerMetricsRoutes(void* serverPtr) {
     auto* server = static_cast<Server*>(serverPtr);
     server->Get("/api/metrics", [this](const Request& req, Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -301,7 +455,7 @@ void AdminServer::registerMetricsRoutes(void* serverPtr) {
 
     server->Post("/api/metrics/reset", [this](const Request& req,
                                               Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -418,7 +572,108 @@ std::string AdminServer::buildMetricsJson() const {
 
 void AdminServer::registerAdminPageRoutes(void* serverPtr) {
     auto* server = static_cast<Server*>(serverPtr);
+
+    server->Get("/admin/login", [this](const Request& req, Response& res) {
+        std::string errorMsg;
+        try {
+            if (req.has_param("error") && req.get_param_value("error") == "1") {
+                errorMsg = "Invalid username or password.";
+            }
+        } catch (...) {
+        }
+
+        std::ostringstream s;
+        s << R"(<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Admin Login</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; background: #f5f7fb; color: #222; }
+    .login { max-width: 380px; margin: 6vh auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 6px 18px rgba(12,18,26,0.08); }
+    h1 { margin: 0 0 12px 0; font-size: 20px; }
+    label { display:block; margin: 8px 0 2px 0; font-size: 13px; }
+    input[type=text], input[type=password] { width:100%; padding:10px; border:1px solid #dfe6ef; border-radius:4px; box-sizing:border-box; }
+    .submit { margin-top: 14px; background:#2b90ff; color:white; border:none; padding:10px 14px; border-radius:4px; cursor:pointer; }
+    .submit:hover { background:#1a74d1; }
+    .msg { margin: 12px 0; padding: 10px; border-radius: 4px; background: #fff4f4; color: #9a1d1d; border:1px solid #f2c0c0; }
+    .hint { margin-top:12px; font-size:12px; color:#555; }
+  </style>
+</head>
+<body>
+  <div class="login">
+    <h1>Admin Login</h1>
+);
+        if (!errorMsg.empty()) {
+            s << "    <div class=\"msg\">" << errorMsg << "</div>\n";
+        }
+        s << R"(    <form action="/admin/login" method="post">
+      <label>Username</label>
+      <input type="text" name="username" placeholder="admin username" required>
+      <label>Password</label>
+      <input type="password" name="password" placeholder="admin password" required>
+      <input class="submit" type="submit" value="Login">
+    </form>
+    <div class="hint">Credentials are generated when the server starts and printed once to the server console; they are case-sensitive.</div>
+  </div>
+</body>
+</html>)";
+
+        res.set_content(s.str(), "text/html");
+        res.status = 200;
+    });
+
+    server->Post("/admin/login", [this](const Request& req, Response& res) {
+        auto parse = [](const std::string& s) {
+            std::unordered_map<std::string, std::string> m;
+            size_t pos = 0;
+            while (pos < s.size()) {
+                auto eq = s.find('=', pos);
+                if (eq == std::string::npos) break;
+                auto key = s.substr(pos, eq - pos);
+                auto amp = s.find('&', eq + 1);
+                auto val = s.substr(eq + 1, (amp == std::string::npos) ? std::string::npos : amp - (eq + 1));
+                m[file_urlDecode(key)] = file_urlDecode(val);
+                if (amp == std::string::npos) break;
+                pos = amp + 1;
+            }
+            return m;
+        };
+
+        auto params = parse(req.body);
+        const auto itU = params.find("username");
+        const auto itP = params.find("password");
+        if (itU == params.end() || itP == params.end()) {
+            res.set_content("Missing username or password", "text/plain");
+            res.status = 400;
+            return;
+        }
+
+        LOG_INFO_CAT(::rtype::LogCategory::Network,
+                     "[AdminServer] Login attempt for user='" << itU->second << "'");
+
+        if (itU->second == _adminUser && itP->second == _adminPass) {
+            res.set_header("Set-Cookie", "admin_auth=1; HttpOnly; Path=/");
+            res.status = 302;
+            res.set_header("Location", "/admin");
+            LOG_INFO_CAT(::rtype::LogCategory::Network,
+                         "[AdminServer] Admin login successful for user='" << itU->second << "'");
+            return;
+        }
+
+        LOG_INFO_CAT(::rtype::LogCategory::Network,
+                     "[AdminServer] Admin login failed for user='" << itU->second << "'");
+        res.status = 302;
+        res.set_header("Location", "/admin/login?error=1");
+    });
+
     server->Get("/admin", [this](const Request& req, Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.status = 302;
+            res.set_header("Location", "/admin/login");
+            return;
+        }
+
         std::ifstream file("assets/admin.html");
         if (file.is_open()) {
             std::string content((std::istreambuf_iterator<char>(file)),
@@ -435,7 +690,7 @@ void AdminServer::registerAdminPageRoutes(void* serverPtr) {
 void AdminServer::registerLobbyRoutes(void* serverPtr) {
     auto* server = static_cast<Server*>(serverPtr);
     server->Get("/api/lobbies", [this](const Request& req, Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -472,7 +727,7 @@ void AdminServer::registerLobbyRoutes(void* serverPtr) {
 
     server->Get("/api/lobbies/:code/players", [this](const Request& req,
                                                      Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -517,7 +772,7 @@ void AdminServer::registerLobbyRoutes(void* serverPtr) {
     });
 
     server->Get("/api/players", [this](const Request& req, Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -568,7 +823,7 @@ void AdminServer::registerLobbyRoutes(void* serverPtr) {
 void AdminServer::registerBanRoutes(void* serverPtr) {
     auto* server = static_cast<Server*>(serverPtr);
     server->Get("/api/bans", [this](const Request& req, Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -599,7 +854,7 @@ void AdminServer::registerBanRoutes(void* serverPtr) {
 
     server->Post("/api/kick/:clientId", [this](const Request& req,
                                                Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -638,7 +893,7 @@ void AdminServer::registerBanRoutes(void* serverPtr) {
     });
 
     server->Post("/api/ban", [this, server](const Request& req, Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
