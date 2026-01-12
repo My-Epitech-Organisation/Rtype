@@ -1304,5 +1304,5 @@ void NetworkServer::printPacketStatistics() const {
                                   << (totalRecvBytes / 1024.0) << " KB)");
 
     LOG_INFO("=== END STATISTICS ===");
-}  // namespace rtype::server
+}
 }  // namespace rtype::server
