@@ -451,8 +451,9 @@ Graphic::Graphic(
     _lastFrameTime = std::chrono::steady_clock::now();
 
     // Initialize developer console (accessible from all scenes via F1)
-    _devConsole = std::make_unique<rtype::client::DevConsole>(this->_display,
-                                                              _networkClient);
+    _devConsole = std::make_unique<rtype::client::DevConsole>(
+        this->_display, _networkClient, _registry, _audioLib,
+        &_currentDeltaTime);
 
     // Register admin response callback for console feedback
     if (_networkClient) {
