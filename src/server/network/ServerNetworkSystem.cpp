@@ -92,13 +92,20 @@ ServerNetworkSystem::ServerNetworkSystem(
                          << "(client " << userId << ", " << count
                          << " clients requesting)");
             } else {
-                auto old = lowBandwidthClientCount_.fetch_sub(1, std::memory_order_acq_rel);
-                std::uint32_t count;
-                if (old == 0) {
-                    lowBandwidthClientCount_.fetch_add(1, std::memory_order_relaxed);
-                    count = 0;
-                } else {
-                    count = old - 1;
+                std::uint32_t old = lowBandwidthClientCount_.load(std::memory_order_acquire);
+                std::uint32_t count = 0;
+                for (;;) {
+                    if (old == 0) {
+                        count = 0;
+                        break;
+                    }
+                    std::uint32_t desired = old - 1;
+                    if (lowBandwidthClientCount_.compare_exchange_weak(
+                            old, desired, std::memory_order_acq_rel,
+                            std::memory_order_acquire)) {
+                        count = desired;
+                        break;
+                    }
                 }
 
                 if (count == 0) {
