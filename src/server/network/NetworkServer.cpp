@@ -1171,8 +1171,6 @@ void NetworkServer::handleChat(const network::Header& header,
 
         std::string messageText(msg.message, strnlen(msg.message, 256));
 
-        // Enforce max length if needed or validation
-
         queueCallback([this, userId = client->userId,
                        message = std::move(messageText)]() {
             if (onClientChatCallback_) {

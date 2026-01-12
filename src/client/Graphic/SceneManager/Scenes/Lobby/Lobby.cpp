@@ -588,12 +588,10 @@ void Lobby::_addChatMessage(uint32_t userId, const std::string& message) {
     }
     _chatHistory.push_back(formattedMsg);
 
-    // Keep only last 10 messages
     if (_chatHistory.size() > kMessagesMaxDisplay) {
         _chatHistory.erase(_chatHistory.begin());
     }
 
-    // Clear old entities
     for (auto ent : _chatHistoryEntities) {
         if (_registry->isAlive(ent)) _registry->killEntity(ent);
     }
