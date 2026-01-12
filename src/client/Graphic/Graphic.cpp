@@ -96,6 +96,7 @@ void Graphic::_update() {
         this->_systemScheduler->runSystem("chaser_rotation");
         this->_systemScheduler->runSystem("chaser_explosion");
         this->_systemScheduler->runSystem("animation");
+        this->_systemScheduler->runSystem("charged_projectile_animation");
         this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
         this->_systemScheduler->runSystem("enemy_health_bars");
@@ -200,6 +201,13 @@ void Graphic::_initializeSystems() {
     this->_enemyHealthBarSystem =
         std::make_unique<::rtype::games::rtype::client::EnemyHealthBarSystem>(
             this->_registry);
+    this->_chargeInputSystem =
+        std::make_unique<::rtype::games::rtype::client::ChargeInputSystem>();
+    this->_chargeVisualSystem =
+        std::make_unique<::rtype::games::rtype::client::ChargeVisualSystem>(
+            this->_display, this->_audioLib);
+    this->_chargedProjectileAnimationSystem = std::make_unique<
+        ::rtype::games::rtype::client::ChargedProjectileAnimationSystem>();
 
     this->_systemScheduler =
         std::make_unique<ECS::SystemScheduler>(*this->_registry);
@@ -264,6 +272,27 @@ void Graphic::_initializeSystems() {
                                               reg, _currentDeltaTime);
                                       },
                                       {"animation"});
+
+    this->_systemScheduler->addSystem("charge_input",
+                                      [this](ECS::Registry& reg) {
+                                          _chargeInputSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {});
+
+    this->_systemScheduler->addSystem("charge_visual",
+                                      [this](ECS::Registry& reg) {
+                                          _chargeVisualSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"charge_input"});
+
+    this->_systemScheduler->addSystem(
+        "charged_projectile_animation",
+        [this](ECS::Registry& reg) {
+            _chargedProjectileAnimationSystem->update(reg, _currentDeltaTime);
+        },
+        {"animation"});
 
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {
@@ -370,6 +399,8 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.EnemyWave);
     manager->textureManager->load("projectile_player_laser",
                                   config.assets.textures.missileLaser);
+    manager->textureManager->load("charged_shot",
+                                  config.assets.textures.chargedShot);
     manager->textureManager->load("force_pod", config.assets.textures.forcePod);
 
     // Load power-up textures
@@ -423,6 +454,9 @@ void Graphic::_initializeCommonAssets() {
                                 config.assets.sfx.forcePodLaunch);
     manager->soundManager->load("forcepod_return",
                                 config.assets.sfx.forcePodReturn);
+    manager->soundManager->load("charged_shot", config.assets.sfx.chargedShot);
+    manager->soundManager->load("charged_shot_max",
+                                config.assets.sfx.chargedShotMax);
 
     manager->textureManager->get("bg_menu")->setRepeated(true);
     manager->textureManager->get("bg_planet_1")->setRepeated(true);
@@ -505,6 +539,9 @@ Graphic::~Graphic() {
     }
     _sceneManager.reset();
     _systemScheduler.reset();
+    _chargedProjectileAnimationSystem.reset();
+    _chargeVisualSystem.reset();
+    _chargeInputSystem.reset();
     _forcePodVisualSystem.reset();
     _shaderRenderSystem.reset();
     _clientDestroySystem.reset();
