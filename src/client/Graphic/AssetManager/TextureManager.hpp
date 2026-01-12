@@ -20,8 +20,10 @@
 
 class TextureManager : public AAssetManager<::rtype::display::ITexture> {
    public:
-    TextureManager(rtype::display::IDisplay* display, std::string typeName = "Texture")
-        : AAssetManager<::rtype::display::ITexture>(display, std::move(typeName)) {}
+    TextureManager(rtype::display::IDisplay* display,
+                   std::string typeName = "Texture")
+        : AAssetManager<::rtype::display::ITexture>(display,
+                                                    std::move(typeName)) {}
     TextureManager(const TextureManager&);
     TextureManager& operator=(const TextureManager&) = delete;
 

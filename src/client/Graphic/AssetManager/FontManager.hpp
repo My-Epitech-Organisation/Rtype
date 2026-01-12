@@ -26,7 +26,6 @@ class FontManager : public AAssetManager<::rtype::display::IFont> {
 
     explicit FontManager(::rtype::display::IDisplay* display)
         : AAssetManager<::rtype::display::IFont>(display, "Font") {}
-
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_FONTMANAGER_HPP_

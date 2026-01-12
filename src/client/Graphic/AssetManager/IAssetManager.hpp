@@ -5,13 +5,12 @@
 ** IAssetManager
 */
 
-#ifndef SRC_CLIENT_GRAPHIC_IASSETMANAGER_FONTMANAGER_HPP_
-#define SRC_CLIENT_GRAPHIC_IASSETMANAGER_FONTMANAGER_HPP_
+#ifndef SRC_CLIENT_GRAPHIC_ASSETMANAGER_IASSETMANAGER_HPP_
+#define SRC_CLIENT_GRAPHIC_ASSETMANAGER_IASSETMANAGER_HPP_
 
-template<typename T>
+template <typename T>
 class IAssetManager {
-    public:
-
+   public:
     virtual void load(const std::string& id, const std::string& filePath) = 0;
 
     virtual std::shared_ptr<T> get(const std::string& id) = 0;
@@ -30,20 +29,18 @@ class IAssetManager {
      */
     virtual bool unload(const std::string& id) = 0;
 
-
     /**
      * @brief Unload all fonts
      */
     virtual void unloadAll() = 0;
 
-        /**
+    /**
      * @brief Get the number of loaded fonts
      * @return Number of fonts currently loaded
      */
     virtual std::size_t size() const = 0;
 
-
     virtual ~IAssetManager() = default;
 };
 
-#endif  // SRC_CLIENT_GRAPHIC_IASSETMANAGER_FONTMANAGER_HPP_
+#endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_IASSETMANAGER_HPP_

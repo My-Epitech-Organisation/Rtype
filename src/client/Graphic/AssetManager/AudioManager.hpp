@@ -14,8 +14,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "rtype/display/IDisplay.hpp"
 #include "AAssetManager.hpp"
+#include "rtype/display/IDisplay.hpp"
 
 class AudioManager : public AAssetManager<::rtype::display::IMusic> {
    public:
@@ -26,7 +26,6 @@ class AudioManager : public AAssetManager<::rtype::display::IMusic> {
 
     explicit AudioManager(::rtype::display::IDisplay* display)
         : AAssetManager<::rtype::display::IMusic>(display, "Audio") {}
-
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_AUDIOMANAGER_HPP_
