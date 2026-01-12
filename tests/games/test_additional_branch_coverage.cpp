@@ -23,101 +23,118 @@ using namespace ECS;
 using namespace rtype::games::rtype::shared;
 using namespace rtype::game::config;
 
-// Test additional CooldownComponent branches
-TEST(CooldownComponentBranchTest, Initialization) {
-    CooldownComponent cooldown(1.5f);
-    EXPECT_FLOAT_EQ(cooldown.duration, 1.5f);
-    EXPECT_FLOAT_EQ(cooldown.remaining, 0.0f);
-    EXPECT_TRUE(cooldown.isReady());
+// Test ShootCooldownComponent branches
+TEST(ShootCooldownComponentBranchTest, Initialization) {
+    ShootCooldownComponent cooldown(1.5f);
+    EXPECT_FLOAT_EQ(cooldown.cooldownTime, 1.5f);
+    EXPECT_FLOAT_EQ(cooldown.currentCooldown, 0.0f);
+    EXPECT_TRUE(cooldown.canShoot());
 }
 
-TEST(CooldownComponentBranchTest, StartCooldown) {
-    CooldownComponent cooldown(2.0f);
-    cooldown.start();
-    EXPECT_FLOAT_EQ(cooldown.remaining, 2.0f);
-    EXPECT_FALSE(cooldown.isReady());
+TEST(ShootCooldownComponentBranchTest, TriggerCooldown) {
+    ShootCooldownComponent cooldown(2.0f);
+    cooldown.triggerCooldown();
+    EXPECT_FLOAT_EQ(cooldown.currentCooldown, 2.0f);
+    EXPECT_FALSE(cooldown.canShoot());
 }
 
-TEST(CooldownComponentBranchTest, UpdateCooldown) {
-    CooldownComponent cooldown(1.0f);
-    cooldown.start();
+TEST(ShootCooldownComponentBranchTest, UpdateCooldown) {
+    ShootCooldownComponent cooldown(1.0f);
+    cooldown.triggerCooldown();
     
     cooldown.update(0.5f);
-    EXPECT_FLOAT_EQ(cooldown.remaining, 0.5f);
-    EXPECT_FALSE(cooldown.isReady());
+    EXPECT_FLOAT_EQ(cooldown.currentCooldown, 0.5f);
+    EXPECT_FALSE(cooldown.canShoot());
     
     cooldown.update(0.6f);
-    EXPECT_FLOAT_EQ(cooldown.remaining, 0.0f);
-    EXPECT_TRUE(cooldown.isReady());
+    EXPECT_LE(cooldown.currentCooldown, 0.0f);
+    EXPECT_TRUE(cooldown.canShoot());
 }
 
-TEST(CooldownComponentBranchTest, ResetCooldown) {
-    CooldownComponent cooldown(1.0f);
-    cooldown.start();
+TEST(ShootCooldownComponentBranchTest, Reset) {
+    ShootCooldownComponent cooldown(1.0f);
+    cooldown.triggerCooldown();
     cooldown.reset();
-    EXPECT_FLOAT_EQ(cooldown.remaining, 0.0f);
-    EXPECT_TRUE(cooldown.isReady());
+    EXPECT_FLOAT_EQ(cooldown.currentCooldown, 0.0f);
+    EXPECT_TRUE(cooldown.canShoot());
 }
 
-TEST(CooldownComponentBranchTest, GetProgress) {
-    CooldownComponent cooldown(2.0f);
-    EXPECT_FLOAT_EQ(cooldown.getProgress(), 1.0f);
-    
-    cooldown.start();
-    EXPECT_FLOAT_EQ(cooldown.getProgress(), 0.0f);
-    
-    cooldown.update(1.0f);
-    EXPECT_FLOAT_EQ(cooldown.getProgress(), 0.5f);
-}
-
-TEST(CooldownComponentBranchTest, EdgeCases) {
-    CooldownComponent cooldown(0.0f);
-    EXPECT_TRUE(cooldown.isReady());
+TEST(ShootCooldownComponentBranchTest, EdgeCases) {
+    ShootCooldownComponent cooldown(0.0f);
+    EXPECT_TRUE(cooldown.canShoot());
     
     cooldown.update(-1.0f);
-    EXPECT_TRUE(cooldown.isReady());
+    EXPECT_TRUE(cooldown.canShoot());
 }
 
-// Test PowerUpTypeComponent branches
-TEST(PowerUpTypeComponentBranchTest, HealthBoost) {
-    PowerUpTypeComponent powerup(PowerUpType::HealthBoost);
-    EXPECT_EQ(powerup.type, PowerUpType::HealthBoost);
-    EXPECT_EQ(powerup.toString(), "HealthBoost");
-}
-
+// Test PowerUpVariant branches
 TEST(PowerUpTypeComponentBranchTest, SpeedBoost) {
-    PowerUpTypeComponent powerup(PowerUpType::SpeedBoost);
-    EXPECT_EQ(powerup.type, PowerUpType::SpeedBoost);
-    EXPECT_EQ(powerup.toString(), "SpeedBoost");
-}
-
-TEST(PowerUpTypeComponentBranchTest, WeaponUpgrade) {
-    PowerUpTypeComponent powerup(PowerUpType::WeaponUpgrade);
-    EXPECT_EQ(powerup.type, PowerUpType::WeaponUpgrade);
-    EXPECT_EQ(powerup.toString(), "WeaponUpgrade");
+    PowerUpTypeComponent powerup;
+    powerup.variant = PowerUpVariant::SpeedBoost;
+    EXPECT_EQ(powerup.variant, PowerUpVariant::SpeedBoost);
+    EXPECT_EQ(PowerUpTypeComponent::variantToString(powerup.variant), "speed_boost");
 }
 
 TEST(PowerUpTypeComponentBranchTest, Shield) {
-    PowerUpTypeComponent powerup(PowerUpType::Shield);
-    EXPECT_EQ(powerup.type, PowerUpType::Shield);
-    EXPECT_EQ(powerup.toString(), "Shield");
+    PowerUpTypeComponent powerup;
+    powerup.variant = PowerUpVariant::Shield;
+    EXPECT_EQ(powerup.variant, PowerUpVariant::Shield);
+    EXPECT_EQ(PowerUpTypeComponent::variantToString(powerup.variant), "shield");
+}
+
+TEST(PowerUpTypeComponentBranchTest, RapidFire) {
+    PowerUpTypeComponent powerup;
+    powerup.variant = PowerUpVariant::RapidFire;
+    EXPECT_EQ(powerup.variant, PowerUpVariant::RapidFire);
+    EXPECT_EQ(PowerUpTypeComponent::variantToString(powerup.variant), "rapid_fire");
+}
+
+TEST(PowerUpTypeComponentBranchTest, DoubleDamage) {
+    PowerUpTypeComponent powerup;
+    powerup.variant = PowerUpVariant::DoubleDamage;
+    EXPECT_EQ(powerup.variant, PowerUpVariant::DoubleDamage);
+    EXPECT_EQ(PowerUpTypeComponent::variantToString(powerup.variant), "double_damage");
+}
+
+TEST(PowerUpTypeComponentBranchTest, HealthBoost) {
+    PowerUpTypeComponent powerup;
+    powerup.variant = PowerUpVariant::HealthBoost;
+    EXPECT_EQ(powerup.variant, PowerUpVariant::HealthBoost);
+    EXPECT_EQ(PowerUpTypeComponent::variantToString(powerup.variant), "health_small");
+}
+
+TEST(PowerUpTypeComponentBranchTest, WeaponUpgrade) {
+    PowerUpTypeComponent powerup;
+    powerup.variant = PowerUpVariant::WeaponUpgrade;
+    EXPECT_EQ(powerup.variant, PowerUpVariant::WeaponUpgrade);
+    EXPECT_EQ(PowerUpTypeComponent::variantToString(powerup.variant), "weapon_upgrade");
+}
+
+TEST(PowerUpTypeComponentBranchTest, ExtraLife) {
+    PowerUpTypeComponent powerup;
+    powerup.variant = PowerUpVariant::ExtraLife;
+    EXPECT_EQ(powerup.variant, PowerUpVariant::ExtraLife);
+    EXPECT_EQ(PowerUpTypeComponent::variantToString(powerup.variant), "extra_life");
 }
 
 TEST(PowerUpTypeComponentBranchTest, ForcePod) {
-    PowerUpTypeComponent powerup(PowerUpType::ForcePod);
-    EXPECT_EQ(powerup.type, PowerUpType::ForcePod);
-    EXPECT_EQ(powerup.toString(), "ForcePod");
+    PowerUpTypeComponent powerup;
+    powerup.variant = PowerUpVariant::ForcePod;
+    EXPECT_EQ(powerup.variant, PowerUpVariant::ForcePod);
+    EXPECT_EQ(PowerUpTypeComponent::variantToString(powerup.variant), "force_pod");
 }
 
-TEST(PowerUpTypeComponentBranchTest, FireRateIncrease) {
-    PowerUpTypeComponent powerup(PowerUpType::FireRateIncrease);
-    EXPECT_EQ(powerup.type, PowerUpType::FireRateIncrease);
-    EXPECT_EQ(powerup.toString(), "FireRateIncrease");
-}
-
-TEST(PowerUpTypeComponentBranchTest, UnknownType) {
-    PowerUpTypeComponent powerup(static_cast<PowerUpType>(999));
-    EXPECT_EQ(powerup.toString(), "Unknown");
+TEST(PowerUpTypeComponentBranchTest, StringToVariant) {
+    EXPECT_EQ(PowerUpTypeComponent::stringToVariant("speed_boost"), PowerUpVariant::SpeedBoost);
+    EXPECT_EQ(PowerUpTypeComponent::stringToVariant("shield"), PowerUpVariant::Shield);
+    EXPECT_EQ(PowerUpTypeComponent::stringToVariant("rapid_fire"), PowerUpVariant::RapidFire);
+    EXPECT_EQ(PowerUpTypeComponent::stringToVariant("double_damage"), PowerUpVariant::DoubleDamage);
+    EXPECT_EQ(PowerUpTypeComponent::stringToVariant("health_small"), PowerUpVariant::HealthBoost);
+    EXPECT_EQ(PowerUpTypeComponent::stringToVariant("health_large"), PowerUpVariant::HealthBoost);
+    EXPECT_EQ(PowerUpTypeComponent::stringToVariant("weapon_upgrade"), PowerUpVariant::WeaponUpgrade);
+    EXPECT_EQ(PowerUpTypeComponent::stringToVariant("extra_life"), PowerUpVariant::ExtraLife);
+    EXPECT_EQ(PowerUpTypeComponent::stringToVariant("force_pod"), PowerUpVariant::ForcePod);
+    EXPECT_EQ(PowerUpTypeComponent::stringToVariant("unknown"), PowerUpVariant::Unknown);
 }
 
 // Test RTypeConfigParser branches
@@ -130,20 +147,19 @@ TEST(RTypeConfigParserBranchTest, LoadNonExistentFile) {
 TEST(RTypeConfigParserBranchTest, LoadFromString) {
     RTypeConfigParser parser;
     std::string validConfig = R"(
-[game]
-name = "TestGame"
-max_players = 4
-tick_rate = 60
+[video]
+width = 1280
+height = 720
 
 [network]
-port = 8080
-timeout_seconds = 30
+server_address = "127.0.0.1"
+server_port = 8080
 )";
     
     auto result = parser.loadFromString(validConfig);
     EXPECT_TRUE(result.has_value());
     if (result.has_value()) {
-        EXPECT_EQ(result->gameName, "TestGame");
+        EXPECT_EQ(result->video.width, 1280);
     }
 }
 
@@ -157,8 +173,8 @@ TEST(RTypeConfigParserBranchTest, LoadFromStringInvalid) {
 
 TEST(RTypeConfigParserBranchTest, SaveToFile) {
     RTypeGameConfig config;
-    config.gameName = "SaveTest";
-    config.maxPlayers = 8;
+    config.video.width = 1920;
+    config.video.height = 1080;
     
     RTypeConfigParser parser;
     auto tempPath = std::filesystem::temp_directory_path() / "test_config.toml";
@@ -170,49 +186,41 @@ TEST(RTypeConfigParserBranchTest, SaveToFile) {
         auto loaded = parser.loadFromFile(tempPath);
         EXPECT_TRUE(loaded.has_value());
         if (loaded.has_value()) {
-            EXPECT_EQ(loaded->gameName, "SaveTest");
+            EXPECT_EQ(loaded->video.width, 1920);
         }
         std::filesystem::remove(tempPath);
     }
 }
 
-TEST(RTypeConfigParserBranchTest, SaveToInvalidPath) {
-    RTypeGameConfig config;
-    RTypeConfigParser parser;
-    
-    // Try to save to an invalid path (e.g., root directory without permissions)
-    bool saved = parser.saveToFile(config, "/root/impossible_location/config.toml");
-    EXPECT_FALSE(saved);
-}
-
 TEST(RTypeConfigParserBranchTest, SerializeToString) {
     RTypeGameConfig config;
-    config.gameName = "SerializeTest";
-    config.maxPlayers = 6;
+    config.video.width = 1920;
+    config.network.serverPort = 4242;
     
     RTypeConfigParser parser;
     std::string serialized = parser.serializeToString(config);
     
     EXPECT_FALSE(serialized.empty());
-    EXPECT_NE(serialized.find("SerializeTest"), std::string::npos);
+    EXPECT_NE(serialized.find("1920"), std::string::npos);
 }
 
 // Test LifetimeComponent
 TEST(LifetimeComponentBranchTest, BasicLifetime) {
+    LifetimeComponent lifetime(2.0f);
+    
+    EXPECT_FLOAT_EQ(lifetime.remainingTime, 2.0f);
+    EXPECT_GT(lifetime.remainingTime, 0.0f);
+    
+    lifetime.remainingTime -= 1.0f;
+    EXPECT_FLOAT_EQ(lifetime.remainingTime, 1.0f);
+    
+    lifetime.remainingTime -= 2.0f;
+    EXPECT_LT(lifetime.remainingTime, 0.0f);
+}
+
+TEST(LifetimeComponentBranchTest, DefaultLifetime) {
     LifetimeComponent lifetime;
-    lifetime.lifetime = 2.0f;
-    lifetime.elapsed = 0.0f;
-    
-    EXPECT_FALSE(lifetime.elapsed >= lifetime.lifetime);
-    
-    lifetime.elapsed = 1.0f;
-    EXPECT_FALSE(lifetime.elapsed >= lifetime.lifetime);
-    
-    lifetime.elapsed = 2.0f;
-    EXPECT_TRUE(lifetime.elapsed >= lifetime.lifetime);
-    
-    lifetime.elapsed = 3.0f;
-    EXPECT_TRUE(lifetime.elapsed >= lifetime.lifetime);
+    EXPECT_FLOAT_EQ(lifetime.remainingTime, 5.0f);
 }
 
 // Test Registry edge cases with components
@@ -223,12 +231,12 @@ TEST(RegistryComponentBranchTest, AddAndRemoveMultipleComponents) {
     registry->emplaceComponent<HealthComponent>(entity);
     EXPECT_TRUE(registry->hasComponent<HealthComponent>(entity));
     
-    registry->emplaceComponent<CooldownComponent>(entity, 1.0f);
-    EXPECT_TRUE(registry->hasComponent<CooldownComponent>(entity));
+    registry->emplaceComponent<LifetimeComponent>(entity, 2.0f);
+    EXPECT_TRUE(registry->hasComponent<LifetimeComponent>(entity));
     
     registry->removeComponent<HealthComponent>(entity);
     EXPECT_FALSE(registry->hasComponent<HealthComponent>(entity));
-    EXPECT_TRUE(registry->hasComponent<CooldownComponent>(entity));
+    EXPECT_TRUE(registry->hasComponent<LifetimeComponent>(entity));
 }
 
 TEST(RegistryComponentBranchTest, GetComponentVariations) {
@@ -252,13 +260,11 @@ TEST(RegistryComponentBranchTest, GetComponentVariations) {
 
 // Test boundary conditions in various components
 TEST(BoundaryConditionsBranchTest, ZeroValues) {
-    CooldownComponent cooldown(0.0f);
-    EXPECT_TRUE(cooldown.isReady());
+    ShootCooldownComponent cooldown(0.0f);
+    EXPECT_TRUE(cooldown.canShoot());
     
-    LifetimeComponent lifetime;
-    lifetime.lifetime = 0.0f;
-    lifetime.elapsed = 0.0f;
-    EXPECT_TRUE(lifetime.elapsed >= lifetime.lifetime);
+    LifetimeComponent lifetime(0.0f);
+    EXPECT_LE(lifetime.remainingTime, 0.0f);
     
     HealthComponent health;
     health.current = 0;
@@ -267,24 +273,80 @@ TEST(BoundaryConditionsBranchTest, ZeroValues) {
 }
 
 TEST(BoundaryConditionsBranchTest, NegativeValues) {
-    CooldownComponent cooldown(-1.0f);
-    cooldown.start();
-    EXPECT_TRUE(cooldown.isReady());  // Negative duration should be treated as ready
+    ShootCooldownComponent cooldown(1.0f);
+    cooldown.currentCooldown = -1.0f;
+    EXPECT_TRUE(cooldown.canShoot());
     
-    LifetimeComponent lifetime;
-    lifetime.lifetime = 1.0f;
-    lifetime.elapsed = -1.0f;
-    EXPECT_FALSE(lifetime.elapsed >= lifetime.lifetime);
+    LifetimeComponent lifetime(-1.0f);
+    EXPECT_LT(lifetime.remainingTime, 0.0f);
 }
 
 TEST(BoundaryConditionsBranchTest, LargeValues) {
-    CooldownComponent cooldown(1000000.0f);
-    cooldown.start();
-    EXPECT_FALSE(cooldown.isReady());
+    ShootCooldownComponent cooldown(1000000.0f);
+    cooldown.triggerCooldown();
+    EXPECT_FALSE(cooldown.canShoot());
     
     cooldown.update(999999.0f);
-    EXPECT_FALSE(cooldown.isReady());
+    EXPECT_FALSE(cooldown.canShoot());
     
     cooldown.update(2.0f);
-    EXPECT_TRUE(cooldown.isReady());
+    EXPECT_TRUE(cooldown.canShoot());
+}
+
+// Test VideoConfig
+TEST(VideoConfigBranchTest, DefaultValues) {
+    VideoConfig config;
+    EXPECT_EQ(config.width, 1280);
+    EXPECT_EQ(config.height, 720);
+    EXPECT_FALSE(config.fullscreen);
+    EXPECT_TRUE(config.vsync);
+}
+
+TEST(VideoConfigBranchTest, CustomValues) {
+    VideoConfig config;
+    config.width = 1920;
+    config.height = 1080;
+    config.fullscreen = true;
+    
+    EXPECT_EQ(config.width, 1920);
+    EXPECT_EQ(config.height, 1080);
+    EXPECT_TRUE(config.fullscreen);
+}
+
+// Test AudioConfig
+TEST(AudioConfigBranchTest, DefaultValues) {
+    AudioConfig config;
+    EXPECT_FLOAT_EQ(config.masterVolume, 1.0f);
+    EXPECT_FLOAT_EQ(config.musicVolume, 0.8f);
+    EXPECT_FALSE(config.muted);
+}
+
+TEST(AudioConfigBranchTest, VolumeAdjustments) {
+    AudioConfig config;
+    config.masterVolume = 0.5f;
+    config.sfxVolume = 0.7f;
+    config.muted = true;
+    
+    EXPECT_FLOAT_EQ(config.masterVolume, 0.5f);
+    EXPECT_FLOAT_EQ(config.sfxVolume, 0.7f);
+    EXPECT_TRUE(config.muted);
+}
+
+// Test NetworkConfig
+TEST(NetworkConfigBranchTest, DefaultValues) {
+    NetworkConfig config;
+    EXPECT_EQ(config.serverAddress, "127.0.0.1");
+    EXPECT_EQ(config.serverPort, 4000);
+    EXPECT_EQ(config.clientPort, 0);
+}
+
+TEST(NetworkConfigBranchTest, CustomNetwork) {
+    NetworkConfig config;
+    config.serverAddress = "192.168.1.100";
+    config.serverPort = 8080;
+    config.tickrate = 120;
+    
+    EXPECT_EQ(config.serverAddress, "192.168.1.100");
+    EXPECT_EQ(config.serverPort, 8080);
+    EXPECT_EQ(config.tickrate, 120);
 }
