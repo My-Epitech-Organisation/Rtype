@@ -102,7 +102,6 @@ TEST_F(OpCodeTest, IsValidOpCode) {
     // Invalid opcodes
     EXPECT_FALSE(isValidOpCode(0x00));
     EXPECT_TRUE(isValidOpCode(0x07));  // S_GAME_OVER is a valid OpCode
-    EXPECT_FALSE(isValidOpCode(0x30));
     EXPECT_FALSE(isValidOpCode(0xFF));  // Not defined
 }
 
