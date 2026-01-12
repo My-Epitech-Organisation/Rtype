@@ -8,6 +8,7 @@
 #ifndef SRC_CLIENT_DEVCONSOLE_DEVCONSOLE_HPP_
 #define SRC_CLIENT_DEVCONSOLE_DEVCONSOLE_HPP_
 
+#include <cstdint>
 #include <deque>
 #include <functional>
 #include <map>
@@ -47,6 +48,7 @@ class DevConsole {
     static constexpr float kInputLineHeight = 30.f;
     static constexpr float kTextPadding = 10.f;
     static constexpr float kCursorBlinkRate = 0.5f;
+    static constexpr float kOverlayUpdateInterval = 0.25f;  // 4 updates/sec
 
     /**
      * @brief Construct a new DevConsole.
@@ -208,6 +210,12 @@ class DevConsole {
     // Saved volumes for mute/unmute
     float savedMusicVolume_{50.0f};
     float savedSFXVolume_{25.0f};
+
+    // Rate limiting for overlay display (updated every kOverlayUpdateInterval)
+    float overlayUpdateTimer_{0.f};
+    int cachedFPS_{0};
+    std::uint32_t cachedPing_{0};
+    std::size_t cachedEntityCount_{0};
 };
 
 }  // namespace rtype::client

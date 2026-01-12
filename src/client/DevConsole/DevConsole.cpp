@@ -16,6 +16,7 @@
 
 #include <rtype/ecs.hpp>
 
+#include "Graphic/Accessibility.hpp"
 #include "Graphic/AudioLib/AudioLib.hpp"
 #include "Logger/Macros.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
@@ -214,6 +215,28 @@ bool DevConsole::handleTextEntered(std::uint32_t unicode) {
 }
 
 void DevConsole::update(float dt) {
+    // Rate limiting for overlay updates (always runs, even when console hidden)
+    overlayUpdateTimer_ += dt;
+    if (overlayUpdateTimer_ >= kOverlayUpdateInterval) {
+        overlayUpdateTimer_ = 0.f;
+
+        // Update cached FPS
+        if (deltaTimePtr_ != nullptr && *deltaTimePtr_ > 0.0001f) {
+            cachedFPS_ = static_cast<int>(1.0f / *deltaTimePtr_);
+        }
+
+        // Update cached Ping
+        if (networkClient_ != nullptr && networkClient_->isConnected()) {
+            cachedPing_ = networkClient_->latencyMs();
+        }
+
+        // Update cached Entity count
+        if (registry_ != nullptr) {
+            cachedEntityCount_ = registry_->countComponents<
+                rtype::games::rtype::shared::TransformComponent>();
+        }
+    }
+
     if (!visible_) {
         return;
     }
@@ -363,25 +386,20 @@ void DevConsole::renderOverlays() {
     float maxWidth = 0.f;
     std::vector<std::string> lines;
 
-    // FPS
-    if (getCvar("cl_show_fps") == "1" && deltaTimePtr_ != nullptr &&
-        *deltaTimePtr_ > 0.0001f) {
-        int fps = static_cast<int>(1.0f / *deltaTimePtr_);
-        lines.push_back("FPS: " + std::to_string(fps));
+    // FPS - use cached value (updated 4x/sec in update())
+    if (getCvar("cl_show_fps") == "1" && cachedFPS_ > 0) {
+        lines.push_back("FPS: " + std::to_string(cachedFPS_));
     }
 
-    // Ping
+    // Ping - use cached value
     if (getCvar("cl_show_ping") == "1" && networkClient_ != nullptr &&
         networkClient_->isConnected()) {
-        std::uint32_t ping = networkClient_->latencyMs();
-        lines.push_back("Ping: " + std::to_string(ping) + "ms");
+        lines.push_back("Ping: " + std::to_string(cachedPing_) + "ms");
     }
 
-    // Entity count (using TransformComponent as proxy)
+    // Entity count - use cached value
     if (getCvar("cl_show_entities") == "1" && registry_ != nullptr) {
-        std::size_t count = registry_->countComponents<
-            rtype::games::rtype::shared::TransformComponent>();
-        lines.push_back("Entities: " + std::to_string(count));
+        lines.push_back("Entities: " + std::to_string(cachedEntityCount_));
     }
 
     // Calculate background size
@@ -741,14 +759,22 @@ void DevConsole::registerDefaultCommands() {
                                              : "Entity count OFF";
                     });
 
-    // Hitbox toggle
-    registerCommand("hitbox", "Toggle hitbox display",
-                    [this](const std::vector<std::string>&) -> std::string {
-                        std::string current = getCvar("cl_show_hitboxes");
-                        std::string newVal = (current == "1") ? "0" : "1";
-                        setCvar("cl_show_hitboxes", newVal);
-                        return newVal == "1" ? "Hitboxes ON" : "Hitboxes OFF";
-                    });
+    // Hitbox toggle - must update AccessibilitySettings singleton
+    registerCommand(
+        "hitbox", "Toggle hitbox display",
+        [this](const std::vector<std::string>&) -> std::string {
+            std::string current = getCvar("cl_show_hitboxes");
+            std::string newVal = (current == "1") ? "0" : "1";
+            setCvar("cl_show_hitboxes", newVal);
+
+            // CRITICAL: Update the AccessibilitySettings singleton for BoxingSystem
+            if (registry_ && registry_->hasSingleton<AccessibilitySettings>()) {
+                auto& acc = registry_->getSingleton<AccessibilitySettings>();
+                acc.showHitboxes = (newVal == "1");
+            }
+
+            return newVal == "1" ? "Hitboxes ON" : "Hitboxes OFF";
+        });
 }
 
 }  // namespace rtype::client
