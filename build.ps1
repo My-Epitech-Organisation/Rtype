@@ -216,7 +216,7 @@ if (Test-Path $ServerExe) {
 }
 
 if (Test-Path $DisplayDLL) {
-    Copy-Item $DisplayDLL "$ProjectRoot\display.dll" -Force
+    Copy-Item -Path $DisplayDLL -Destination "$ProjectRoot\plugins\display.dll" -Force
     Write-Host "  ✓ Copied display.dll" -ForegroundColor Green
 } else {
     Write-Host "  ⚠ Warning: Display dll not found" -ForegroundColor Yellow

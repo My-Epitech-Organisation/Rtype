@@ -412,7 +412,7 @@ jobs:
             -DUSE_SFML=ON
 
       - name: Build
-        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml
+        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-lobby rtype-graphic-background-asteroidsSpace
 
       - name: Prepare Windows dist (exe + DLLs only)
         if: matrix.os == 'windows-latest'
@@ -430,7 +430,14 @@ jobs:
             echo "Error: No display lib found"
             exit 1
           fi
-          cp -v build/lib/display/**/*.dll build/dist/client/
+          cp -v build/lib/display/**/*.dll build/dist/client/plugins/
+          echo "Staging Background lib"
+          if ! ls build/lib/background/**/*.dll >/dev/null 2>&1; then
+            echo "Error: No background lib found"
+            exit 1
+          fi
+          cp -v build/lib/background/**/*.dll build/dist/client/plugins/background/
+
           if ! ls build/vcpkg_installed/x64-windows/bin/*.dll >/dev/null 2>&1; then
             echo "Error: No DLLs found for client"
             exit 1
