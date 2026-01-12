@@ -12,6 +12,8 @@ namespace rtype::games::rtype::client {
 struct StaticTextTag {};
 struct ButtonTag {};
 struct CenteredTextTag {};
+struct CenteredBtnTag {};
+struct CenteredRectangleTag {};
 struct RepeatingTag {};
 struct PlayerTag {};
 struct GameTag {};
