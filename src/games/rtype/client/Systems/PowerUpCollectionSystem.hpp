@@ -11,9 +11,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/Font.hpp>
-
 #include "../../shared/Components/PowerUpComponent.hpp"
 #include "rtype/display/IDisplay.hpp"
 #include "rtype/engine.hpp"

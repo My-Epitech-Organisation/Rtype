@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <mutex>
 
 #include "../core/Entity.hpp"
 
@@ -102,6 +103,8 @@ class SystemScheduler {
     std::unordered_map<std::string, SystemNode> _systems;
     std::vector<std::string> _executionOrder;
     bool _needsReorder = true;
+
+    mutable std::mutex _mutex;
 
     void recomputeOrder();
     void topologicalSort();

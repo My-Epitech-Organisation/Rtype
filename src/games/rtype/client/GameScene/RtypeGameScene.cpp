@@ -46,7 +46,9 @@ RtypeGameScene::RtypeGameScene(
     std::shared_ptr<AudioLib> audioLib)
     : AGameScene(std::move(registry), std::move(assetsManager), display,
                  std::move(keybinds), std::move(switchToScene),
-                 std::move(networkClient), std::move(networkSystem)) {
+                 std::move(networkClient), std::move(networkSystem)),
+      _movementSystem(
+          std::make_unique<::rtype::games::rtype::shared::MovementSystem>()) {
     if (_networkClient) {
         auto registry = _registry;
         auto switchToScene = _switchToScene;
@@ -80,6 +82,16 @@ RtypeGameScene::~RtypeGameScene() {
 
     _isDisconnected = true;
 
+    if (_networkClient) {
+        _networkClient->clearPendingCallbacks();
+        _networkClient->onGameOver(nullptr);
+        _networkClient->onEntityMove(nullptr);
+        _networkClient->onEntityMoveBatch(nullptr);
+        _networkClient->onEntityHealth(nullptr);
+        _networkClient->clearDisconnectedCallbacks();
+        _networkClient->onGameStateChange(nullptr);
+    }
+
     clearDamageVignette();
     _vignetteEntities.clear();
     _vignetteAlpha = 0.0F;
@@ -99,6 +111,7 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
                   "[RtypeGameScene] Background created with "
                       << bgEntities.size() << " entities");
     if (_networkSystem) {
+        _networkSystem->registerCallbacks();
         LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                       "[RtypeGameScene] Setting up local player callback");
         setupLocalPlayerCallback();
@@ -126,6 +139,8 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
     LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Setting up HUD");
     setupHud();
     setupDamageVignette();
+    updateBandwidthIndicator();
+    setupBandwidthModeCallback();
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[RtypeGameScene] HUD setup complete");
     auto pauseEntities = RtypePauseMenu::createPauseMenu(
@@ -172,8 +187,24 @@ void RtypeGameScene::update() {
         }
     }
 
+    if (_bandwidthNotificationTimer > 0.0F) {
+        _bandwidthNotificationTimer =
+            std::max(0.0F, _bandwidthNotificationTimer - dt);
+        if (_bandwidthNotificationTimer == 0.0F) {
+            if (_bandwidthNotificationEntity.has_value() &&
+                _registry->isAlive(*_bandwidthNotificationEntity)) {
+                _registry->killEntity(*_bandwidthNotificationEntity);
+                _bandwidthNotificationEntity.reset();
+            }
+        }
+    }
+
     if (_networkSystem) {
         _networkSystem->update();
+    }
+
+    if (_movementSystem && _registry) {
+        _movementSystem->update(*_registry, dt);
     }
 
     bool isPaused = false;
@@ -236,6 +267,13 @@ void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
     if (event.type == ::rtype::display::EventType::KeyPressed ||
         event.type == ::rtype::display::EventType::KeyReleased) {
         RtypeInputHandler::updateKeyState(event);
+    }
+    if (event.type == ::rtype::display::EventType::KeyPressed) {
+        auto toggleKey =
+            _keybinds->getKeyBinding(GameAction::TOGGLE_LOW_BANDWIDTH);
+        if (toggleKey.has_value() && event.key.code == *toggleKey) {
+            toggleLowBandwidthMode();
+        }
     }
     if (event.type == ::rtype::display::EventType::KeyReleased ||
         event.type == ::rtype::display::EventType::JoystickButtonReleased) {
@@ -864,6 +902,103 @@ std::string RtypeGameScene::getDisconnectMessage(
             return "You have been banned from this server.";
         default:
             return "Connection lost for unknown reason.";
+    }
+}
+
+void RtypeGameScene::toggleLowBandwidthMode() {
+    _lowBandwidthMode = !_lowBandwidthMode;
+    if (_networkClient) {
+        _networkClient->setLowBandwidthMode(_lowBandwidthMode);
+        LOG_INFO_CAT(::rtype::LogCategory::Network,
+                     "[RtypeGameScene] Low bandwidth mode "
+                         << (_lowBandwidthMode ? "ENABLED" : "DISABLED")
+                         << " (F9 toggled)");
+    }
+    updateBandwidthIndicator();
+}
+
+void RtypeGameScene::updateBandwidthIndicator() {
+    if (_bandwidthIndicatorEntity.has_value() &&
+        _registry->isAlive(*_bandwidthIndicatorEntity)) {
+        _registry->killEntity(*_bandwidthIndicatorEntity);
+    }
+
+    auto windowSize = _display->getWindowSize();
+    float xPos = 10.0F;
+    float yPos = static_cast<float>(windowSize.y) - 30.0F;
+
+    auto indicator = _registry->spawnEntity();
+
+    if (_lowBandwidthMode) {
+        _registry->emplaceComponent<rs::TransformComponent>(indicator, xPos,
+                                                            yPos);
+        _registry->emplaceComponent<Text>(indicator, "title_font",
+                                          ::rtype::display::Color(255, 180, 0),
+                                          20, "LOW BANDWIDTH [F9]");
+    } else {
+        _registry->emplaceComponent<rs::TransformComponent>(indicator, xPos,
+                                                            yPos + 6.0F);
+        _registry->emplaceComponent<Text>(
+            indicator, "title_font", ::rtype::display::Color(128, 128, 128), 14,
+            "F9: Low Bandwidth");
+    }
+
+    _registry->emplaceComponent<ZIndex>(indicator,
+                                        GraphicsConfig::ZINDEX_UI + 1);
+    _registry->emplaceComponent<StaticTextTag>(indicator);
+    _registry->emplaceComponent<GameTag>(indicator);
+
+    _bandwidthIndicatorEntity = indicator;
+}
+
+void RtypeGameScene::showBandwidthNotification(std::uint32_t userId,
+                                               bool enabled,
+                                               std::uint8_t activeCount) {
+    _lowBandwidthActiveCount = activeCount;
+
+    if (_localPlayerId.has_value() && userId == *_localPlayerId) {
+        return;
+    }
+
+    if (_bandwidthNotificationEntity.has_value() &&
+        _registry->isAlive(*_bandwidthNotificationEntity)) {
+        _registry->killEntity(*_bandwidthNotificationEntity);
+    }
+
+    auto windowSize = _display->getWindowSize();
+    float xPos = static_cast<float>(windowSize.x) / 2.0F - 150.0F;
+    float yPos = 60.0F;
+
+    auto notification = _registry->spawnEntity();
+    _registry->emplaceComponent<rs::TransformComponent>(notification, xPos,
+                                                        yPos);
+
+    std::string message = enabled ? "Player " + std::to_string(userId) +
+                                        " enabled low bandwidth mode"
+                                  : "Player " + std::to_string(userId) +
+                                        " disabled low bandwidth mode";
+
+    auto color = enabled ? ::rtype::display::Color(255, 200, 50)
+                         : ::rtype::display::Color(100, 200, 100);
+
+    _registry->emplaceComponent<Text>(notification, "title_font", color, 16,
+                                      message);
+    _registry->emplaceComponent<ZIndex>(notification,
+                                        GraphicsConfig::ZINDEX_UI + 2);
+    _registry->emplaceComponent<StaticTextTag>(notification);
+    _registry->emplaceComponent<GameTag>(notification);
+
+    _bandwidthNotificationEntity = notification;
+    _bandwidthNotificationTimer = 3.0F;
+}
+
+void RtypeGameScene::setupBandwidthModeCallback() {
+    if (_networkClient) {
+        _networkClient->onBandwidthModeChanged(
+            [this](std::uint32_t userId, bool lowBandwidth,
+                   std::uint8_t activeCount) {
+                showBandwidthNotification(userId, lowBandwidth, activeCount);
+            });
     }
 }
 

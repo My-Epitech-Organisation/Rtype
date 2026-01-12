@@ -18,6 +18,7 @@ namespace rtype::display {
         MouseButtonPressed,
         MouseButtonReleased,
         MouseMoved,
+        MouseWheelScrolled,
         JoystickButtonPressed,
         JoystickButtonReleased,
         JoystickMoved,

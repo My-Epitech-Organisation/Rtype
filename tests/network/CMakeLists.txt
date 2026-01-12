@@ -111,6 +111,13 @@ target_link_libraries(test_coverage_harness PRIVATE
     GTest::gtest_main
 )
 
+# Coverage boost tests - DisconnectReason, ConnectionState, Error tests
+add_executable(test_coverage_boost test_coverage_boost.cpp)
+target_link_libraries(test_coverage_boost PRIVATE
+    network
+    GTest::gtest_main
+)
+
 # New targeted branch tests
 add_executable(test_serializer_branches test_serializer_branches.cpp)
 target_link_libraries(test_serializer_branches PRIVATE
@@ -192,6 +199,14 @@ target_link_libraries(test_opcode_exhaustive PRIVATE
     GTest::gtest_main
 )
 
+# Payloads branch coverage test (iterates opcodes to touch switch labels)
+add_executable(test_payloads_branches test_payloads_branches.cpp)
+
+target_link_libraries(test_payloads_branches PRIVATE
+    network
+    GTest::gtest_main
+)
+
 add_executable(test_validator_success test_validator_success.cpp)
 target_link_libraries(test_validator_success PRIVATE
     network
@@ -220,6 +235,12 @@ target_link_libraries(test_asio_socket_misc PRIVATE
     GTest::gtest_main
 )
 
+add_executable(test_compressor_branches test_compressor_branches.cpp)
+target_link_libraries(test_compressor_branches PRIVATE
+    network
+    GTest::gtest_main
+)
+
 # Enable test discovery
 include(GoogleTest)
 if(WIN32 OR MSVC)
@@ -238,6 +259,7 @@ if(WIN32 OR MSVC)
     gtest_discover_tests(test_validator WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_byteorderspec_extra WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_coverage_harness WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_coverage_boost WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_serializer_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_byteorderspec_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_header_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -256,6 +278,7 @@ if(WIN32 OR MSVC)
     gtest_discover_tests(test_serializer_validate_extract_server_userid WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_serializer_validate_extract_extra WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_asio_error_mapping_all WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_compressor_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_protocol)
     gtest_discover_tests(test_compressor)
@@ -272,6 +295,7 @@ else()
     gtest_discover_tests(test_validator)
     gtest_discover_tests(test_byteorderspec_extra)
     gtest_discover_tests(test_coverage_harness)
+    gtest_discover_tests(test_coverage_boost)
     gtest_discover_tests(test_serializer_branches)
     gtest_discover_tests(test_byteorderspec_branches)
     gtest_discover_tests(test_header_branches)
@@ -290,5 +314,6 @@ else()
     gtest_discover_tests(test_serializer_validate_extract_server_userid)
     gtest_discover_tests(test_serializer_validate_extract_extra)
     gtest_discover_tests(test_asio_error_mapping_all)
+    gtest_discover_tests(test_compressor_branches)
 endif()
 ## test_asio_error_mapping removed due to private API access - rely on other asio tests

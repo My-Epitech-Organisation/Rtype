@@ -724,6 +724,6 @@ sudo systemctl reload nginx
 - [Deployment Guide](./deployment.md)
 - [Configuration Reference](./configuration.md)
 - [Troubleshooting](./troubleshooting.md)
-- [Network Protocol](./protocol/RFC_RTGP_v1.2.0.md)
+- [Network Protocol](./protocol/RFC_RTGP_v1.4.2.md)
 
 **Happy server administration! 🎮**

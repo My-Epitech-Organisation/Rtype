@@ -243,13 +243,19 @@ TEST(NetworkClientHandlersTest, EntityMoveBatchMultipleInvokesBatchCallback) {
         EXPECT_EQ(ev.entities.size(), 2u);
     });
 
-    // Build batch with 2 entries
+    // Build batch with 2 entries (header + compact entries)
     Buffer payload;
+    // Count
     payload.push_back(2);
-    EntityMovePayload e1{ByteOrderSpec::toNetwork(1u), 1.0f, 2.0f, 0.1f, 0.2f};
-    EntityMovePayload e2{ByteOrderSpec::toNetwork(2u), 3.0f, 4.0f, 0.3f, 0.4f};
-    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&e1), reinterpret_cast<uint8_t*>(&e1) + sizeof(e1));
-    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&e2), reinterpret_cast<uint8_t*>(&e2) + sizeof(e2));
+    // Shared serverTick (network order)
+    std::uint32_t serverTick = ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(1u));
+    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&serverTick), reinterpret_cast<uint8_t*>(&serverTick) + sizeof(serverTick));
+
+    // Two compact entries (EntityMoveBatchEntry)
+    EntityMoveBatchEntry be1{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(1u)), static_cast<std::int16_t>(100), static_cast<std::int16_t>(200), static_cast<std::int16_t>(10), static_cast<std::int16_t>(20)};
+    EntityMoveBatchEntry be2{ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(2u)), static_cast<std::int16_t>(300), static_cast<std::int16_t>(400), static_cast<std::int16_t>(30), static_cast<std::int16_t>(40)};
+    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&be1), reinterpret_cast<uint8_t*>(&be1) + sizeof(be1));
+    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&be2), reinterpret_cast<uint8_t*>(&be2) + sizeof(be2));
 
     Header hdr{};
     hdr.magic = kMagicByte;
@@ -375,3 +381,110 @@ TEST(NetworkClientHandlersTest, AcceptThenReliablePacketSendsAck) {
     std::memcpy(&outHdr, raw->lastSend_.data(), kHeaderSize);
     EXPECT_EQ(static_cast<OpCode>(outHdr.opcode), OpCode::ACK);
 }
+
+TEST(NetworkClientHandlersTest, EntityDestroyCallbackRemovedBeforeDispatch) {
+    auto sock = std::make_unique<FakeSocket>();
+    NetworkClient::Config cfg{};
+    NetworkClient client(cfg, std::move(sock), false);
+
+    std::atomic<int> invokeCount{0};
+
+    struct Scene {
+        NetworkClient& client;
+        NetworkClient::CallbackId cbId;
+        int marker = 42;
+        Scene(NetworkClient& c, std::atomic<int>& counter) : client(c) {
+            cbId = client.addEntityDestroyCallback([this, &counter](std::uint32_t /*id*/) {
+                // read a member to emulate real scene behavior (would be UB if
+                // called after destruction)
+                if (this->marker == 42) {
+                    counter.fetch_add(1, std::memory_order_relaxed);
+                }
+            });
+        }
+        ~Scene() {
+            client.removeEntityDestroyCallback(cbId);
+        }
+    };
+
+    {
+        auto scene = std::make_unique<Scene>(client, invokeCount);
+
+        // Build entity destroy payload
+        EntityDestroyPayload payload{};
+        payload.entityId = 9001u;
+        Buffer serialized(sizeof(EntityDestroyPayload));
+        std::uint32_t idNet = ByteOrderSpec::toNetwork(payload.entityId);
+        std::memcpy(serialized.data(), &idNet, sizeof(idNet));
+
+        Header hdr{};
+        hdr.magic = kMagicByte;
+        hdr.opcode = static_cast<std::uint8_t>(OpCode::S_ENTITY_DESTROY);
+        hdr.payloadSize = ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(serialized.size()));
+        hdr.userId = 0;
+        hdr.seqId = 0;
+        hdr.ackId = 0;
+        hdr.flags = 0;
+
+        Buffer pkt = buildPacketBuffer(hdr, serialized);
+        Endpoint sender{"127.0.0.1", 4242};
+
+        // Queue the destroy callback (it will be dispatched later)
+        client.test_processIncomingPacket(pkt, sender);
+
+        // Destroy the scene before dispatch of queued callbacks
+        scene.reset();
+
+        // Now dispatch queued callbacks - removed callback should not be invoked
+        client.test_dispatchCallbacks();
+    }
+
+    EXPECT_EQ(invokeCount.load(std::memory_order_relaxed), 0);
+}
+
+TEST(NetworkClientHandlersTest, OnChatReceivedTriggersCallback) {
+    auto sock = std::make_unique<FakeSocket>();
+    NetworkClient::Config cfg{};
+    NetworkClient client(cfg, std::move(sock), false);
+
+    bool called = false;
+    std::string receivedMsg;
+    std::uint32_t senderId = 0;
+
+    client.onChatReceived([&](std::uint32_t id, std::string msg) {
+        called = true;
+        senderId = id;
+        receivedMsg = msg;
+    });
+
+    // Build chat payload
+    ChatPayload payload{};
+    payload.userId = ByteOrderSpec::toNetwork(42u);
+    std::string testMsg = "Hello World";
+    std::strncpy(payload.message, testMsg.c_str(), sizeof(payload.message) - 1);
+
+    Buffer payloadBuf(sizeof(ChatPayload));
+    std::memcpy(payloadBuf.data(), &payload, sizeof(ChatPayload));
+
+    // Build header
+    Header hdr{};
+    hdr.magic = kMagicByte;
+    hdr.opcode = static_cast<std::uint8_t>(OpCode::S_CHAT);
+    hdr.payloadSize = ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(sizeof(ChatPayload)));
+    hdr.userId = 0;
+    hdr.seqId = ByteOrderSpec::toNetwork(1u);
+    hdr.ackId = 0;
+    hdr.flags = Flags::kReliable;
+
+    Buffer pkt = buildPacketBuffer(hdr, payloadBuf);
+
+    Endpoint sender{"127.0.0.1", 11111};
+    client.test_processIncomingPacket(pkt, sender);
+
+    client.test_dispatchCallbacks();
+
+    EXPECT_TRUE(called);
+    EXPECT_EQ(senderId, 42);
+    EXPECT_EQ(receivedMsg, "Hello World");
+}
+

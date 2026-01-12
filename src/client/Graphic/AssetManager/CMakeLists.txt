@@ -14,9 +14,6 @@ add_library(rtype-graphic-asset-manager
 
 target_link_libraries(rtype-graphic-asset-manager
         PUBLIC
-        SFML::Network
-        SFML::Graphics
-        SFML::Audio
         common
 )
 

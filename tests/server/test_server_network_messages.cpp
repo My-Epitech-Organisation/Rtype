@@ -94,6 +94,101 @@ TEST(NetworkServerMessages, DeliverVariousMessages) {
     server.stop();
 }
 
+TEST(NetworkServerMessages, ChatRelay) {
+    NetworkServer::Config serverConfig;
+    serverConfig.clientTimeout = std::chrono::seconds(5);
+
+    NetworkServer server(serverConfig);
+    
+    // Wire up chat relay (simulates ServerNetworkSystem logic)
+    server.onClientChat([&](std::uint32_t senderId, const std::string& msg) {
+        server.broadcastChat(senderId, msg);
+    });
+
+    ASSERT_TRUE(server.start(0));
+    const uint16_t port = server.port();
+
+    // Client 1 (Sender)
+    NetworkClient c1;
+    std::atomic<bool> c1Connected{false};
+    c1.onConnected([&](std::uint32_t){ c1Connected = true; });
+    ASSERT_TRUE(c1.connect("127.0.0.1", port));
+
+    // Client 2 (Receiver)
+    NetworkClient c2;
+    std::atomic<bool> c2Connected{false};
+    std::atomic<bool> c2Received{false};
+    std::string receivedMsg;
+    std::uint32_t receivedSender = 0;
+
+    c2.onConnected([&](std::uint32_t){ c2Connected = true; });
+    c2.onChatReceived([&](std::uint32_t sender, std::string msg) {
+        c2Received = true;
+        receivedSender = sender;
+        receivedMsg = msg;
+    });
+
+    ASSERT_TRUE(c2.connect("127.0.0.1", port));
+
+    // Wait for connections
+    auto start = std::chrono::steady_clock::now();
+    auto deadline = start + std::chrono::seconds(2);
+    while ((!c1Connected || !c2Connected) && std::chrono::steady_clock::now() < deadline) {
+        c1.poll();
+        c2.poll();
+        server.poll();
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    ASSERT_TRUE(c1Connected) << "Client 1 failed to connect";
+    ASSERT_TRUE(c2Connected) << "Client 2 failed to connect";
+    
+    // Join lobby
+    std::atomic<bool> c1Joined{false};
+    std::atomic<bool> c2Joined{false};
+
+    c1.onJoinLobbyResponse([&](bool success, uint8_t){ if(success) c1Joined = true; });
+    c2.onJoinLobbyResponse([&](bool success, uint8_t){ if(success) c2Joined = true; });
+
+    c1.sendJoinLobby("TEST01");
+    c2.sendJoinLobby("TEST01");
+
+    start = std::chrono::steady_clock::now();
+    deadline = start + std::chrono::seconds(2);
+    while ((!c1Joined || !c2Joined) && std::chrono::steady_clock::now() < deadline) {
+        c1.poll();
+        c2.poll();
+        server.poll();
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    ASSERT_TRUE(c1Joined) << "Client 1 failed to join lobby";
+    ASSERT_TRUE(c2Joined) << "Client 2 failed to join lobby";
+
+    // Send chat from C1
+    c1.sendChat("Hello C2");
+
+    // Wait for delivery
+    start = std::chrono::steady_clock::now();
+    deadline = start + std::chrono::seconds(2);
+    while (!c2Received && std::chrono::steady_clock::now() < deadline) {
+        c1.poll();
+        c2.poll();
+        server.poll();
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+
+    EXPECT_TRUE(c2Received);
+    EXPECT_EQ(receivedMsg, "Hello C2");
+    
+    // Note: Can't easily check sender ID without knowing what ID server assigned to C1.
+    // But since server.broadcastChat(senderId, msg) uses senderId from onClientChat,
+    // and onClientChat gives correct ID, it should match.
+    // We could capture C1's ID in its onConnected callback.
+    
+    c1.disconnect();
+    c2.disconnect();
+    server.stop();
+}
+
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

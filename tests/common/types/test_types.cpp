@@ -32,3 +32,21 @@ TEST(StringifyEnums, ClientStateAndDisconnectReason) {
     EXPECT_EQ(toString(static_cast<ClientState>(999)), "unknown");
     EXPECT_EQ(toString(static_cast<DisconnectReason>(999)), "unknown");
 }
+
+TEST(EndpointTest, MoveAssignmentSelfAssignment) {
+    Endpoint a{"192.168.1.1", 8080};
+    // Suppress compiler warning about self-assignment
+    Endpoint& aRef = a;
+    a = std::move(aRef);  // Self-assignment via move
+    // Object should still be valid
+    EXPECT_EQ(a.address, "192.168.1.1");
+    EXPECT_EQ(a.port, 8080);
+}
+
+TEST(EndpointTest, MoveAssignmentNormal) {
+    Endpoint a{"10.0.0.1", 1234};
+    Endpoint b{"172.16.0.1", 5678};
+    b = std::move(a);
+    EXPECT_EQ(b.address, "10.0.0.1");
+    EXPECT_EQ(b.port, 1234);
+}

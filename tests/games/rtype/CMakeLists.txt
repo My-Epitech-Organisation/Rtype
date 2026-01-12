@@ -212,6 +212,26 @@ else()
     gtest_discover_tests(test_entityconfig_branches)
 endif()
 
+# PrefabLoader tests
+add_executable(test_prefab_loader test_prefab_loader.cpp)
+
+target_link_libraries(test_prefab_loader PRIVATE
+    rtype_game_shared
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_prefab_loader PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_prefab_loader WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_prefab_loader)
+endif()
+
 # Engine base class tests (AGameEngine, ASystem)
 add_executable(test_engine test_engine.cpp)
 

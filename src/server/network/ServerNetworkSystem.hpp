@@ -291,6 +291,7 @@ class ServerNetworkSystem {
     void processExpiredGracePeriods();
     void finalizeDisconnection(std::uint32_t userId);
     void handleClientInput(std::uint32_t userId, std::uint8_t inputMask);
+    void handleClientChat(std::uint32_t userId, const std::string& message);
     void handleGetUsersRequest(std::uint32_t userId);
 
     struct NetworkedEntity {
@@ -302,6 +303,11 @@ class ServerNetworkSystem {
         float lastVx{0};
         float lastVy{0};
         bool dirty{false};
+        float lastSentX{0};
+        float lastSentY{0};
+        float lastSentVx{0};
+        float lastSentVy{0};
+        std::uint32_t ticksSinceLastSend{0};
     };
 
     std::shared_ptr<ECS::Registry> registry_;
@@ -323,6 +329,9 @@ class ServerNetworkSystem {
     };
     std::unordered_map<std::uint32_t, PendingDisconnection>
         pendingDisconnections_;
+
+    std::atomic<bool> lowBandwidthModeActive_{false};
+    std::atomic<std::uint32_t> lowBandwidthClientCount_{0};
 };
 
 }  // namespace rtype::server

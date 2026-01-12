@@ -186,9 +186,8 @@ TEST_F(PacketValidationTest, SafeDeserialize) {
  */
 TEST_F(PacketValidationTest, CompletePacketValidation) {
     // Create a valid packet
-    // EntityMovePayload is 20 bytes (uint32 + 4 floats)
-    auto header = Header::create(OpCode::S_ENTITY_MOVE, kServerUserId, 1, 20);
-    std::vector<std::uint8_t> payload(20, 0x42);
+    auto header = Header::create(OpCode::S_ENTITY_MOVE, kServerUserId, 1, static_cast<std::uint16_t>(sizeof(EntityMovePayload)));
+    std::vector<std::uint8_t> payload(sizeof(EntityMovePayload), 0x42);
     
     auto headerBytes = ByteOrderSpec::serializeToNetwork(header);
     headerBytes.insert(headerBytes.end(), payload.begin(), payload.end());

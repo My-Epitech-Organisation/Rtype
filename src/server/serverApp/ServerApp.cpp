@@ -319,6 +319,9 @@ bool ServerApp::initialize() {
     NetworkServer::Config netConfig;
     netConfig.clientTimeout =
         std::chrono::milliseconds(_clientTimeoutSeconds * 1000);
+    netConfig.reliabilityConfig.retransmitTimeout =
+        std::chrono::milliseconds(1000);
+    netConfig.reliabilityConfig.maxRetries = 15;
     _networkServer = std::make_shared<NetworkServer>(netConfig);
     _networkServer->setMetrics(_metrics);
 
