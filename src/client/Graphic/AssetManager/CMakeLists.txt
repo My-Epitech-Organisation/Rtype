@@ -1,5 +1,7 @@
 add_library(rtype-graphic-asset-manager
     STATIC
+    IAssetManager.hpp
+    AAssetManager.hpp
     TextureManager.cpp
     TextureManager.hpp
     AssetManager.hpp

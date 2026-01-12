@@ -14,27 +14,18 @@
 #include <string>
 #include <unordered_map>
 
+#include "AAssetManager.hpp"
 #include "rtype/display/IDisplay.hpp"
 
-class SoundManager {
-   private:
-    std::unordered_map<std::string,
-                       std::shared_ptr<::rtype::display::ISoundBuffer>>
-        _assets;
-
+class SoundManager : public AAssetManager<::rtype::display::ISoundBuffer> {
    public:
     SoundManager(const SoundManager&) = delete;
     SoundManager& operator=(const SoundManager&) = delete;
 
-    void load(const std::string& id, const std::string& filePath);
-
-    std::shared_ptr<::rtype::display::ISoundBuffer> get(const std::string& id);
+    void load(const std::string& id, const std::string& filePath) override;
 
     explicit SoundManager(::rtype::display::IDisplay* display)
-        : _display(display) {}
-
-   private:
-    ::rtype::display::IDisplay* _display;
+        : AAssetManager<::rtype::display::ISoundBuffer>(display, "Sound") {}
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_SOUNDMANAGER_HPP_
