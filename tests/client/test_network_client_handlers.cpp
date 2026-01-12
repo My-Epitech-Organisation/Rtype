@@ -375,3 +375,50 @@ TEST(NetworkClientHandlersTest, AcceptThenReliablePacketSendsAck) {
     std::memcpy(&outHdr, raw->lastSend_.data(), kHeaderSize);
     EXPECT_EQ(static_cast<OpCode>(outHdr.opcode), OpCode::ACK);
 }
+
+TEST(NetworkClientHandlersTest, OnChatReceivedTriggersCallback) {
+    auto sock = std::make_unique<FakeSocket>();
+    NetworkClient::Config cfg{};
+    NetworkClient client(cfg, std::move(sock), false);
+
+    bool called = false;
+    std::string receivedMsg;
+    std::uint32_t senderId = 0;
+
+    client.onChatReceived([&](std::uint32_t id, std::string msg) {
+        called = true;
+        senderId = id;
+        receivedMsg = msg;
+    });
+
+    // Build chat payload
+    ChatPayload payload{};
+    payload.userId = ByteOrderSpec::toNetwork(42u);
+    std::string testMsg = "Hello World";
+    std::strncpy(payload.message, testMsg.c_str(), sizeof(payload.message) - 1);
+
+    Buffer payloadBuf(sizeof(ChatPayload));
+    std::memcpy(payloadBuf.data(), &payload, sizeof(ChatPayload));
+
+    // Build header
+    Header hdr{};
+    hdr.magic = kMagicByte;
+    hdr.opcode = static_cast<std::uint8_t>(OpCode::S_CHAT);
+    hdr.payloadSize = ByteOrderSpec::toNetwork(static_cast<std::uint16_t>(sizeof(ChatPayload)));
+    hdr.userId = 0; 
+    hdr.seqId = ByteOrderSpec::toNetwork(1u);
+    hdr.ackId = 0;
+    hdr.flags = Flags::kReliable;
+
+    Buffer pkt = buildPacketBuffer(hdr, payloadBuf);
+
+    Endpoint sender{"127.0.0.1", 11111};
+    client.test_processIncomingPacket(pkt, sender);
+
+    client.test_dispatchCallbacks();
+
+    EXPECT_TRUE(called);
+    EXPECT_EQ(senderId, 42);
+    EXPECT_EQ(receivedMsg, "Hello World");
+}
+
