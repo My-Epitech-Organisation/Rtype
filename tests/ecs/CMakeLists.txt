@@ -18,6 +18,7 @@ set(ECS_TESTS
     core/test_agameengine
     core/test_asystem
     core/test_prefab
+    test_command_buffer
     # Storage tests
     storage/test_isparse_set
     storage/test_sparse_set

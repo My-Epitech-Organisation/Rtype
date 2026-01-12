@@ -400,6 +400,30 @@ if(WIN32 OR MSVC)
 else()
     gtest_discover_tests(test_powerup_system)
 endif()
+
+# EnemyHealthBarSystem tests
+add_executable(test_enemy_health_bar_system client/test_enemy_health_bar_system.cpp)
+
+target_link_libraries(test_enemy_health_bar_system PRIVATE
+    rtype_game_client_systems
+    rtype_game_shared
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_enemy_health_bar_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/client
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_enemy_health_bar_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_enemy_health_bar_system)
+endif()
+
 # FileOperations tests (from shared/config/save_manager subdirectory)
 add_executable(test_file_operations shared/config/save_manager/test_file_operations.cpp)
 
