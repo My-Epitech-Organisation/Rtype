@@ -28,7 +28,6 @@
 namespace rtype::client {
 
 namespace {
-// Console colors
 constexpr rtype::display::Color kConsoleBgColor{0, 0, 0, 200};
 constexpr rtype::display::Color kConsoleTextColor{0, 255, 0, 255};
 constexpr rtype::display::Color kConsoleErrorColor{255, 80, 80, 255};
@@ -76,7 +75,6 @@ DevConsole::DevConsole(std::shared_ptr<rtype::display::IDisplay> display,
       keybinds_(std::move(keybinds)) {
     registerDefaultCommands();
 
-    // Initialize default CVars
     cvars_["cl_show_fps"] = "0";
     cvars_["cl_show_ping"] = "0";
     cvars_["cl_show_hitboxes"] = "0";
@@ -103,9 +101,7 @@ void DevConsole::toggle() {
 }
 
 bool DevConsole::handleEvent(const rtype::display::Event& event) {
-    // Check for toggle key using keybinds system
     if (event.type == rtype::display::EventType::KeyPressed) {
-        // Use configurable keybind if available
         if (keybinds_) {
             auto toggleKey =
                 keybinds_->getKeyBinding(GameAction::TOGGLE_CONSOLE);
@@ -114,29 +110,24 @@ bool DevConsole::handleEvent(const rtype::display::Event& event) {
                 return true;
             }
         }
-        // Fallback: always allow Tilde as secondary toggle (AZERTY compat)
         if (event.key.code == rtype::display::Key::Tilde) {
             toggle();
             return true;
         }
     }
 
-    // If not visible, don't consume events
     if (!visible_) {
         return false;
     }
 
-    // Handle keyboard events when console is open
     if (event.type == rtype::display::EventType::KeyPressed) {
         return handleKeyPressed(event);
     }
 
-    // Handle text input
     if (event.type == rtype::display::EventType::TextEntered) {
         return handleTextEntered(event.text.unicode);
     }
 
-    // Consume all events when console is visible to prevent game input
     return true;
 }
 
@@ -214,17 +205,14 @@ bool DevConsole::handleKeyPressed(const rtype::display::Event& event) {
 }
 
 bool DevConsole::handleTextEntered(std::uint32_t unicode) {
-    // Ignore control characters and tilde
     if (unicode < 32 || unicode == 127 || unicode == '~' || unicode == '`') {
         return true;
     }
 
-    // Check max length
     if (inputBuffer_.length() >= kMaxInputLength) {
         return true;
     }
 
-    // Insert character at cursor position
     char c = static_cast<char>(unicode);
     inputBuffer_.insert(cursorPos_, 1, c);
     cursorPos_++;
@@ -233,22 +221,18 @@ bool DevConsole::handleTextEntered(std::uint32_t unicode) {
 }
 
 void DevConsole::update(float dt) {
-    // Rate limiting for overlay updates (always runs, even when console hidden)
     overlayUpdateTimer_ += dt;
     if (overlayUpdateTimer_ >= kOverlayUpdateInterval) {
         overlayUpdateTimer_ = 0.f;
 
-        // Update cached FPS
         if (deltaTimePtr_ != nullptr && *deltaTimePtr_ > 0.0001f) {
             cachedFPS_ = static_cast<int>(1.0f / *deltaTimePtr_);
         }
 
-        // Update cached Ping
         if (networkClient_ != nullptr && networkClient_->isConnected()) {
             cachedPing_ = networkClient_->latencyMs();
         }
 
-        // Update cached Entity count
         if (registry_ != nullptr) {
             cachedEntityCount_ = registry_->countComponents<
                 rtype::games::rtype::shared::TransformComponent>();
@@ -259,7 +243,6 @@ void DevConsole::update(float dt) {
         return;
     }
 
-    // Cursor blink
     cursorBlinkTimer_ += dt;
     if (cursorBlinkTimer_ >= kCursorBlinkRate) {
         cursorBlinkTimer_ = 0.f;
@@ -651,7 +634,7 @@ void DevConsole::registerDefaultCommands() {
 
             bool sent = networkClient_->sendAdminCommand(
                 static_cast<std::uint8_t>(network::AdminCommandType::GodMode),
-                2  // Toggle
+                2
             );
 
             return sent ? "God mode request sent..." : "Failed to send request";
