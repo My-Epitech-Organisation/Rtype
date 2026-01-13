@@ -1434,8 +1434,7 @@ void NetworkServer::sendAdminResponse(std::uint32_t userId,
 
     LOG_INFO_CAT(::rtype::LogCategory::Network,
                  "[NetworkServer] Sent admin response to userId="
-                     << userId << " success=" << success
-                     << " msg=" << message);
+                     << userId << " success=" << success << " msg=" << message);
 }
 
 }  // namespace rtype::server
