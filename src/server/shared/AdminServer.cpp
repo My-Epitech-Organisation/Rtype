@@ -19,6 +19,8 @@
 #include "server/lobby/Lobby.hpp"
 #include "server/lobby/LobbyManager.hpp"
 #include "server/serverApp/ServerApp.hpp"
+#include "main.hpp"
+#include <filesystem>
 using json = nlohmann::json;
 
 namespace rtype::server {
@@ -436,12 +438,38 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
             res.status = 500;
             return;
         }
+
+        bool force = false;
+        try {
+            if (req.has_param("force") && req.get_param_value("force") == "1") {
+                force = true;
+            }
+        } catch (...) {
+        }
+
+        auto lobbies = _lobbyManager->getAllLobbies();
+        if (lobbies.size() == 1 && lobbies[0] && lobbies[0]->getCode() == lobbyCode && !force) {
+            res.set_content(R"({"success":false,"error":"Cannot delete the last instance without force; this will shutdown the server"})",
+                            "application/json");
+            res.status = 409; // Conflict
+            return;
+        }
+
+        if (lobbies.size() == 1 && lobbies[0] && lobbies[0]->getCode() == lobbyCode && force) {
+            LOG_INFO_CAT(::rtype::LogCategory::Network, "[AdminServer] Forced delete of last lobby requested; initiating graceful shutdown (lobby preserved)");
+            ServerSignals::shutdown()->store(true);
+            res.set_content(R"({"success":true,"message":"Shutdown requested; last lobby preserved"})",
+                            "application/json");
+            res.status = 200;
+            return;
+        }
+
         LOG_INFO(
             std::string("[AdminServer] Lobby delete requested for code: [") +
-            lobbyCode + "]");
+            lobbyCode + "] (force=" << (force ? "1" : "0") << ")");
         bool deleted = _lobbyManager->deleteLobby(lobbyCode);
         if (deleted) {
-            res.set_content(R"({\"success\":true})", "application/json");
+            res.set_content(R"({"success":true})", "application/json");
             res.status = 200;
         } else {
             res.set_content(
@@ -483,6 +511,46 @@ void AdminServer::registerMetricsRoutes(void* serverPtr) {
         }
         res.set_content(R"({"success":true})", "application/json");
         res.status = 200;
+    });
+
+    server->Post("/api/shutdown", [this](const Request& req, Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+        ServerSignals::shutdown()->store(true);
+        res.set_content(R"({"success":true,"message":"Shutdown requested"})", "application/json");
+        res.status = 200;
+    });
+
+    server->Post("/api/clear_shutdown", [this](const Request& req, Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+        bool removed = false;
+        try {
+            std::error_code ec;
+            removed = std::filesystem::remove("saves/admin_shutdown.request", ec);
+            if (ec) {
+                res.set_content(R"({"success":false,"error":"Failed to remove sentinel"})", "application/json");
+                res.status = 500;
+                return;
+            }
+        } catch (...) {
+            res.set_content(R"({"success":false,"error":"Internal error"})", "application/json");
+            res.status = 500;
+            return;
+        }
+        if (removed) {
+            res.set_content(R"({"success":true,"message":"Shutdown sentinel cleared"})", "application/json");
+            res.status = 200;
+        } else {
+            res.set_content(R"({"success":false,"error":"Sentinel not present"})", "application/json");
+            res.status = 404;
+        }
     });
 }
 
