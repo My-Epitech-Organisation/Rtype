@@ -32,9 +32,9 @@ static constexpr float kConnectionPanelHeight = 480.f;
 static constexpr float kInputWidth = 300.f;
 static constexpr float kInputHeight = 40.f;
 static constexpr float kInputOffsetX = 220.f;
-static constexpr std::string kIp = "127.0.0.1";
+static const std::string kIp = "127.0.0.1";
 static constexpr std::uint16_t kPort = 4242;
-static constexpr std::string kCodeLobby = "ABC123";
+static const std::string kCodeLobby = "ABC123";
 
 void MainMenuScene::_createAstroneerVessel() {
     auto astroneerVessel = this->_registry->spawnEntity();
@@ -42,9 +42,9 @@ void MainMenuScene::_createAstroneerVessel() {
         astroneerVessel, "astro_vessel");
     this->_registry
         ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
-            astroneerVessel, 1900, 1060);
+            astroneerVessel, 1900.f, 1060.f);
     this->_registry->emplaceComponent<rtype::games::rtype::client::Size>(
-        astroneerVessel, 0.3, 0.3);
+        astroneerVessel, 0.3f, 0.3f);
     this->_registry
         ->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(
             astroneerVessel, -135.f, -75.f);
@@ -69,13 +69,13 @@ void MainMenuScene::_createFakePlayer() {
                 std::pair<int, int>({33, 17}));
         this->_registry
             ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
-                fakePlayer, (-10 * (distrib150(gen) + 50)),
-                72 * (distrib15(gen) % 15));
+                fakePlayer, static_cast<float>(-10 * (distrib150(gen) + 50)),
+                static_cast<float>(72 * (distrib15(gen) % 15)));
         this->_registry->emplaceComponent<rtype::games::rtype::client::Size>(
-            fakePlayer, 2.2, 2.2);
+            fakePlayer, 2.2f, 2.2f);
         this->_registry
             ->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(
-                fakePlayer, (distrib150(gen) % 150) + 75, 0.f);
+                fakePlayer, static_cast<float>((distrib150(gen) % 150) + 75), 0.f);
         this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
             fakePlayer, 0);
         this->_listEntity.push_back(fakePlayer);
