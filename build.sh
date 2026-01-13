@@ -205,7 +205,7 @@ echo "→ Step 3/4: Building project..."
 if [ "$BUILD_TESTS" = true ]; then
     cmake --build --preset "$CMAKE_PRESET" -- -j$(nproc 2>/dev/null || echo 4)
 else
-    cmake --build --preset "$CMAKE_PRESET" --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-asteroidsSpace rtype-graphic-background-lobby rtype-graphic-background-labs -- -j$(nproc 2>/dev/null || echo 4)
+    cmake --build --preset "$CMAKE_PRESET" --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-asteroidsSpace rtype-graphic-background-lobby rtype-graphic-background-labs rtype-graphic-music-chillMusic rtype-graphic-music-battleMusic -- -j$(nproc 2>/dev/null || echo 4)
 fi
 echo "✓ Build complete"
 echo ""
@@ -219,6 +219,7 @@ CLIENT_EXE="$BUILD_DIR/src/client/r-type_client"
 SERVER_EXE="$BUILD_DIR/src/server/r-type_server"
 DISPLAY_SO="$BUILD_DIR/lib/display/**/*.so"
 BACKGROUND_SO="$BUILD_DIR/lib/background/**/*.so"
+MUSIC_SO="$BUILD_DIR/lib/audio/**/*.so"
 
 if [ -f "$CLIENT_EXE" ]; then
     cp "$CLIENT_EXE" "$PROJECT_ROOT/"
@@ -251,6 +252,16 @@ if [ ${#filesBackgroundPlugins[@]} -gt 0 ]; then
     echo "  ✓ Copied ${#filesBackgroundPlugins[@]} background plugin(s)"
 else
     echo "  ⚠ Warning: No background libs found at $BACKGROUND_SO"
+fi
+
+filesMusicPlugins=($MUSIC_SO)
+
+if [ ${#filesMusicPlugins[@]} -gt 0 ]; then
+    mkdir -p "$PROJECT_ROOT/plugins/music"
+    cp "${filesMusicPlugins[@]}" "$PROJECT_ROOT/plugins/music/"
+    echo "  ✓ Copied ${#filesMusicPlugins[@]} music plugin(s)"
+else
+    echo "  ⚠ Warning: No music libs found at $MUSIC_SO"
 fi
 
 

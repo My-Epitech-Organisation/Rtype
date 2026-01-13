@@ -362,6 +362,29 @@ void Graphic::_loadBackgrounds() {
     }
 }
 
+void Graphic::_loadMusicLevels() {
+    if (!std::filesystem::exists("./plugins/music")) return;
+    for (const auto& s :
+         std::filesystem::directory_iterator("./plugins/music")) {
+        std::string path = s.path().string();
+        auto instance =
+            std::make_unique<rtype::common::DLLoader<ILevelMusic>>(path);
+        auto musicLib = instance->getInstance<std::shared_ptr<ECS::Registry>,
+                                        std::shared_ptr<AssetManager>>("createLevelMusic", std::shared_ptr<ECS::Registry>(this->_registry),
+            std::shared_ptr<AssetManager>(this->_assetsManager));
+        if (musicLib) {
+            this->_audioLevelLoaders.push_back(std::move(instance));
+            this->_sceneManager->registerMusicLevelPlugin(
+                musicLib->getLevelMusicName(), std::shared_ptr<ILevelMusic>(musicLib));
+        }
+    }
+    if (!this->_audioLib) {
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[Graphic] No valid music plugin found in ./plugins/"
+                        "music");
+    }
+}
+
 void Graphic::_initializeCommonAssets() {
     auto manager = this->_assetsManager;
     auto config = manager->configGameAssets;
@@ -546,6 +569,7 @@ Graphic::Graphic(
         _registry, this->_assetsManager, this->_display, this->_keybinds,
         _networkClient, _networkSystem, this->_audioLib);
     this->_loadBackgrounds();
+    this->_loadMusicLevels();
     this->_sceneManager->initializeScenes();
     _initializeSystems();
     _lastFrameTime = std::chrono::steady_clock::now();

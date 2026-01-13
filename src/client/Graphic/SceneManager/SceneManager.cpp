@@ -73,6 +73,11 @@ void SceneManager::registerBackgroundPlugin(
     this->_libBackgrounds[name] = background;
 }
 
+void SceneManager::registerMusicLevelPlugin(
+    const std::string& name, std::shared_ptr<ILevelMusic> levelMusic) {
+    this->_libMusicLevels[name] = levelMusic;
+}
+
 void SceneManager::initializeScenes() {
     this->_sceneList.emplace(MAIN_MENU, [this]() {
         return std::make_unique<MainMenuScene>(
@@ -89,7 +94,7 @@ void SceneManager::initializeScenes() {
     this->_sceneList.emplace(LEVEL_CREATOR, [this]() {
         return std::make_unique<LevelCreatorScene>(
             this->_registry, this->_assetManager, this->_display,
-            this->_keybinds, this->_audio, this->_libBackgrounds,
+            this->_keybinds, this->_audio, this->_libBackgrounds, this->_libMusicLevels,
             this->_setBackground, this->_switchToScene);
     });
     this->_sceneList.emplace(HOW_TO_PLAY, [this]() {

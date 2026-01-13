@@ -42,6 +42,7 @@
 #include "SceneManager/SceneManager.hpp"
 #include "Systems/AnimationSystem.hpp"
 #include "lib/background/IBackground.hpp"
+#include "lib/audio/ILevelMusic.hpp"
 
 namespace rtype::games::rtype::client {
 class ChaserRotationSystem;
@@ -96,6 +97,9 @@ class Graphic {
 
     std::vector<std::unique_ptr<rtype::common::DLLoader<IBackground>>>
         _backgroundLoaders;
+
+    std::vector<std::unique_ptr<rtype::common::DLLoader<ILevelMusic>>>
+        _audioLevelLoaders;
 
     /// @brief Display interface loaded from DLL
     std::shared_ptr<rtype::display::IDisplay> _display;
@@ -215,6 +219,9 @@ class Graphic {
 
     /// @brief Load all backgrounds plugins (Lobby, AsteroidsSpace ...)
     void _loadBackgrounds();
+
+    /// @brief Load all music plugins (ChillMusic, etc.)
+    void _loadMusicLevels();
 
     /// @brief Initialize all common assets (textures, sound, fonts)
     void _initializeCommonAssets();

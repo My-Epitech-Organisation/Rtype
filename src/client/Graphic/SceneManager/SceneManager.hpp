@@ -21,6 +21,7 @@
 #include "ECS.hpp"
 #include "Scenes/IScene.hpp"
 #include "lib/background/IBackground.hpp"
+#include "lib/audio/ILevelMusic.hpp"
 
 class SceneManager {
    public:
@@ -41,6 +42,8 @@ class SceneManager {
     std::optional<Scene> _nextScene = std::nullopt;  // Scène en attente
     Scene _currentScene = NONE;
     std::map<std::string, std::shared_ptr<IBackground>> _libBackgrounds;
+
+    std::map<std::string, std::shared_ptr<ILevelMusic>> _libMusicLevels;
 
     std::map<Scene, std::function<std::unique_ptr<IScene>()>> _sceneList;
     std::unique_ptr<IScene> _activeScene;
@@ -76,6 +79,9 @@ class SceneManager {
 
     void registerBackgroundPlugin(const std::string& name,
                                   std::shared_ptr<IBackground> background);
+
+    void registerMusicLevelPlugin(const std::string& name,
+                                std::shared_ptr<ILevelMusic> background);
 
     void initializeScenes();
 

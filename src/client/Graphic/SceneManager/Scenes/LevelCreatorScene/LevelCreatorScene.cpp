@@ -111,6 +111,7 @@ LevelCreatorScene::LevelCreatorScene(
     std::shared_ptr<rtype::display::IDisplay> window,
     std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
     std::map<std::string, std::shared_ptr<IBackground>> libBackgrounds,
+    std::map<std::string, std::shared_ptr<ILevelMusic>> libMusicLevels,
     std::function<void(const std::string&)> setBackground,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(std::move(ecs), std::move(assetsManager), window,
@@ -119,7 +120,8 @@ LevelCreatorScene::LevelCreatorScene(
           std::make_shared<rtype::games::rtype::client::TextInputSystem>(
               window)),
       _switchToScene(std::move(switchToScene)),
-      _libBackgrounds(std::move(libBackgrounds)) {
+      _libBackgrounds(std::move(libBackgrounds)),
+      _libMusicLevels(std::move(libMusicLevels)) {
     this->_getLevelsName();
     if (!this->_listNextLevel.empty()) {
         this->_nextLevelIteratorCurrent = this->_listNextLevel.begin();
@@ -128,6 +130,10 @@ LevelCreatorScene::LevelCreatorScene(
 
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "Level Creator", nullptr));
+
+    this->_musicLevelIteratorCurrent = this->_libMusicLevels.begin();
+
+    this->_musicLevelId = this->_musicLevelIteratorCurrent->first;
 
     this->_bgIteratorCurrent = _libBackgrounds.begin();
 
@@ -257,6 +263,42 @@ LevelCreatorScene::LevelCreatorScene(
         }));
 
     addElementToSection("settings", _btnNextLevel, currentY);
+    currentY += gapY;
+
+    addElementToSection("settings",
+                    EntityFactory::createStaticText(
+                        _registry, _assetsManager,
+                        "Music Level:", "main_font", {labelX, 0}, 24.f),
+                    currentY);
+
+    _btnMusicLevel = EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text("main_font",
+                                          rtype::display::Color::White(), 20,
+                                          this->_musicLevelId),
+        rtype::games::rtype::shared::TransformComponent(inputX, 0),
+        rtype::games::rtype::client::Rectangle(
+            {120, 40}, rtype::display::Color(0, 180, 0, 255),
+            rtype::display::Color(0, 135, 0, 255)),
+        this->_assetsManager, std::function<void()>([this]() {
+            if (this->_libMusicLevels.empty()) return;
+            ++this->_musicLevelIteratorCurrent;
+            if (this->_musicLevelIteratorCurrent == this->_libMusicLevels.end()) {
+                this->_musicLevelIteratorCurrent = this->_libMusicLevels.begin();
+            }
+            this->_musicLevelId = this->_musicLevelIteratorCurrent->first;
+
+            if (this->_registry
+                    ->hasComponent<rtype::games::rtype::client::Text>(
+                        this->_btnMusicLevel)) {
+                this->_registry
+                    ->getComponent<rtype::games::rtype::client::Text>(
+                        this->_btnMusicLevel)
+                    .textContent = this->_musicLevelId;
+            }
+        }));
+
+    addElementToSection("settings", _btnMusicLevel, currentY);
     currentY += 80.f;
 
     auto btnAdd = EntityFactory::createButton(
@@ -495,6 +537,7 @@ void LevelCreatorScene::saveToToml() {
     file << "id = \"" << getInputValue(_levelIdInput) << "\"" << std::endl;
     file << "name = \"" << getInputValue(_levelNameInput) << "\"" << std::endl;
     file << "background = \"" << this->_bgPluginName << "\"" << std::endl;
+    file << "level_music = \"" << this->_musicLevelId << "\"" << std::endl;
     file << "scroll_speed = "
          << (getInputValue(_scrollSpeedInput).empty()
                  ? "0.0"
