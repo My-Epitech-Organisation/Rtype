@@ -41,6 +41,7 @@ enum class EntityType : std::uint8_t {
  * @brief Input mask flags for C_INPUT payload
  *
  * Can be combined with bitwise OR for simultaneous inputs.
+ * Bits 6-7 encode charge level for charged shots.
  */
 namespace InputMask {
 inline constexpr std::uint8_t kNone = 0x00;
@@ -50,6 +51,11 @@ inline constexpr std::uint8_t kLeft = 0x04;
 inline constexpr std::uint8_t kRight = 0x08;
 inline constexpr std::uint8_t kShoot = 0x10;
 inline constexpr std::uint8_t kForcePod = 0x20;
+inline constexpr std::uint8_t kChargeShot = 0x40;
+inline constexpr std::uint8_t kChargeLevelMask = 0xC0;
+inline constexpr std::uint8_t kChargeLevel1 = 0x40;
+inline constexpr std::uint8_t kChargeLevel2 = 0x80;
+inline constexpr std::uint8_t kChargeLevel3 = 0xC0;
 }  // namespace InputMask
 
 #pragma pack(push, 1)
@@ -300,6 +306,19 @@ struct InputPayload {
     }
     [[nodiscard]] constexpr bool isShoot() const noexcept {
         return (inputMask & InputMask::kShoot) != 0;
+    }
+    [[nodiscard]] constexpr bool isChargeShot() const noexcept {
+        return (inputMask & InputMask::kChargeLevelMask) != 0;
+    }
+    /**
+     * @brief Get charge level (0 = none, 1-3 = charge levels)
+     */
+    [[nodiscard]] constexpr std::uint8_t getChargeLevel() const noexcept {
+        std::uint8_t bits = inputMask & InputMask::kChargeLevelMask;
+        if (bits == InputMask::kChargeLevel3) return 3;
+        if (bits == InputMask::kChargeLevel2) return 2;
+        if (bits == InputMask::kChargeLevel1) return 1;
+        return 0;
     }
 };
 
