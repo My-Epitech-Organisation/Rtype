@@ -42,6 +42,12 @@ class ChargeVisualSystem : public ::rtype::engine::ASystem {
      */
     void update(ECS::Registry& registry, float dt) override;
 
+    /**
+     * @brief Render charge bar UI elements
+     * @param registry ECS registry
+     */
+    void renderChargeBar(ECS::Registry& registry);
+
    private:
     /**
      * @brief Apply screen shake effect
