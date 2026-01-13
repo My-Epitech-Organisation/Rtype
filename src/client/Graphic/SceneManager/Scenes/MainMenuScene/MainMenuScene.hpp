@@ -75,6 +75,18 @@ class MainMenuScene : public AScene {
     void _updateStatus(const std::string& message,
                        ::rtype::display::Color color);
 
+    /**
+     * @brief Add an entity to the connection section
+     * @param entity Entity to add
+     */
+    void _addEntityToConnectSection(ECS::Entity entity);
+
+    /**
+     * @brief Add multiple entities to the connection section
+     * @param entity Vector of entities to add
+     */
+    void _addEntityToConnectSection(std::vector<ECS::Entity> entity);
+
    public:
     void update(float dt) override;
     void render(std::shared_ptr<::rtype::display::IDisplay> window) override;

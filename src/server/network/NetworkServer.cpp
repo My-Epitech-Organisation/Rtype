@@ -79,6 +79,10 @@ void NetworkServer::stop() {
         socket_->close();
     }
 
+    if (config_.enablePacketStats) {
+        printPacketStatistics();
+    }
+
     ioContext_.stop();
 }
 
@@ -102,17 +106,25 @@ void NetworkServer::spawnEntity(std::uint32_t id, EntityType type,
 
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
-    broadcastToAll(network::OpCode::S_ENTITY_SPAWN, serialized);
+    constexpr float SCREEN_WIDTH = 1920.0F;
+    constexpr float SCREEN_HEIGHT = 1080.0F;
+    constexpr float MARGIN = 100.0F;
+
+    if (x >= -MARGIN && x <= SCREEN_WIDTH + MARGIN && y >= -MARGIN &&
+        y <= SCREEN_HEIGHT + MARGIN) {
+        broadcastToAll(network::OpCode::S_ENTITY_SPAWN, serialized);
+    }
 }
 
 void NetworkServer::moveEntity(std::uint32_t id, float x, float y, float vx,
                                float vy) {
     network::EntityMovePayload payload;
     payload.entityId = id;
-    payload.posX = x;
-    payload.posY = y;
-    payload.velX = vx;
-    payload.velY = vy;
+    payload.serverTick = nextServerTick();
+    payload.posX = quantize(x, kPosQuantScale);
+    payload.posY = quantize(y, kPosQuantScale);
+    payload.velX = quantize(vx, kVelQuantScale);
+    payload.velY = quantize(vy, kVelQuantScale);
 
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
@@ -129,13 +141,26 @@ void NetworkServer::moveEntitiesBatch(
     auto count = static_cast<std::uint8_t>(
         std::min(entities.size(), network::kMaxEntitiesPerBatch));
 
+    auto tick = nextServerTick();
+
     network::Buffer payload;
-    payload.reserve(1 + count * sizeof(network::EntityMovePayload));
-    payload.push_back(count);
+    payload.reserve(sizeof(network::EntityMoveBatchHeader) +
+                    count * sizeof(network::EntityMoveBatchEntry));
+
+    network::EntityMoveBatchHeader header{};
+    header.count = count;
+    header.serverTick = tick;
+    auto headerBytes = network::Serializer::serializeForNetwork(header);
+    payload.insert(payload.end(), headerBytes.begin(), headerBytes.end());
 
     for (std::size_t i = 0; i < count; ++i) {
         const auto& [id, x, y, vx, vy] = entities[i];
-        network::EntityMovePayload entry{id, x, y, vx, vy};
+        network::EntityMoveBatchEntry entry{};
+        entry.entityId = id;
+        entry.posX = quantize(x, kPosQuantScale);
+        entry.posY = quantize(y, kPosQuantScale);
+        entry.velX = quantize(vx, kVelQuantScale);
+        entry.velY = quantize(vy, kVelQuantScale);
         auto serialized = network::Serializer::serializeForNetwork(entry);
         payload.insert(payload.end(), serialized.begin(), serialized.end());
     }
@@ -258,10 +283,11 @@ void NetworkServer::moveEntityToClient(std::uint32_t userId, std::uint32_t id,
 
     network::EntityMovePayload payload;
     payload.entityId = id;
-    payload.posX = x;
-    payload.posY = y;
-    payload.velX = vx;
-    payload.velY = vy;
+    payload.serverTick = nextServerTick();
+    payload.posX = quantize(x, kPosQuantScale);
+    payload.posY = quantize(y, kPosQuantScale);
+    payload.velX = quantize(vx, kVelQuantScale);
+    payload.velY = quantize(vy, kVelQuantScale);
 
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
@@ -587,9 +613,12 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
         return;
     }
 
+    recordPacketReceived(header.opcode, data.size());
+
     std::string connKey = makeConnectionKey(sender);
 
     auto opcode = static_cast<network::OpCode>(header.opcode);
+
     if (opcode != network::OpCode::C_CONNECT) {
         auto userResult =
             securityContext_.validateUserIdMapping(connKey, header.userId);
@@ -623,6 +652,10 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
         if (auto client = findClient(sender)) {
             client->reliableChannel.recordReceived(header.seqId);
             client->lastActivity = std::chrono::steady_clock::now();
+
+            network::PongPayload pong{};
+            auto serialized = network::Serializer::serializeForNetwork(pong);
+            sendToClient(client, network::OpCode::PONG, serialized);
         }
     }
 
@@ -656,6 +689,10 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
             handleInput(header, payload, sender);
             break;
 
+        case network::OpCode::C_CHAT:
+            handleChat(header, payload, sender);
+            break;
+
         case network::OpCode::C_GET_USERS:
             handleGetUsers(header, sender);
             break;
@@ -670,6 +707,10 @@ void NetworkServer::processIncomingPacket(const network::Buffer& data,
 
         case network::OpCode::C_READY:
             handleReady(header, payload, sender);
+            break;
+
+        case network::OpCode::C_SET_BANDWIDTH_MODE:
+            handleBandwidthMode(header, payload, sender);
             break;
 
         case network::OpCode::ACK:
@@ -947,6 +988,79 @@ void NetworkServer::handleJoinLobby(const network::Header& header,
     sendToClient(client, network::OpCode::S_JOIN_LOBBY_RESPONSE, ser);
 }
 
+void NetworkServer::handleBandwidthMode(const network::Header& header,
+                                        const network::Buffer& payload,
+                                        const network::Endpoint& sender) {
+    (void)header;
+
+    auto client = findClient(sender);
+    if (!client) {
+        return;
+    }
+
+    if (payload.size() < sizeof(network::BandwidthModePayload)) {
+        return;
+    }
+
+    network::BandwidthModePayload modePayload;
+    std::memcpy(&modePayload, payload.data(), sizeof(modePayload));
+
+    bool lowBandwidth = (modePayload.mode == static_cast<std::uint8_t>(
+                                                 network::BandwidthMode::Low));
+    client->lowBandwidthMode = lowBandwidth;
+
+    LOG_INFO("[NetworkServer] Client userId="
+             << client->userId
+             << " bandwidth mode: " << (lowBandwidth ? "LOW" : "NORMAL"));
+
+    std::uint8_t activeCount = 0;
+    for (const auto& [key, c] : clients_) {
+        if (c->lowBandwidthMode) {
+            activeCount++;
+        }
+    }
+
+    network::BandwidthModeChangedPayload broadcastPayload;
+    broadcastPayload.userId = network::ByteOrderSpec::toNetwork(client->userId);
+    broadcastPayload.mode = modePayload.mode;
+    broadcastPayload.activeCount = activeCount;
+
+    auto serialized =
+        network::Serializer::serializeForNetwork(broadcastPayload);
+    broadcastToAll(network::OpCode::S_BANDWIDTH_MODE_CHANGED, serialized);
+
+    if (onBandwidthModeChangedCallback_) {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        callbackQueue_.push([this, userId = client->userId, lowBandwidth]() {
+            onBandwidthModeChangedCallback_(userId, lowBandwidth);
+        });
+    }
+}
+
+bool NetworkServer::isLowBandwidthMode(std::uint32_t userId) const {
+    auto keyIt = userIdToKey_.find(userId);
+    if (keyIt == userIdToKey_.end()) {
+        return false;
+    }
+    auto clientIt = clients_.find(keyIt->second);
+    if (clientIt == clients_.end()) {
+        return false;
+    }
+    return clientIt->second->lowBandwidthMode;
+}
+
+void NetworkServer::setClientBandwidthMode(std::uint32_t userId,
+                                           bool lowBandwidth) {
+    auto client = findClientByUserId(userId);
+    if (client) {
+        client->lowBandwidthMode = lowBandwidth;
+    }
+}
+
+void NetworkServer::onBandwidthModeChanged(BandwidthModeCallback callback) {
+    onBandwidthModeChangedCallback_ = std::move(callback);
+}
+
 std::string NetworkServer::makeConnectionKey(
     const network::Endpoint& ep) const {
     std::ostringstream oss;
@@ -1106,11 +1220,12 @@ void NetworkServer::sendToClient(
         (void)client->reliableChannel.trackOutgoing(seqId, packet);
     }
 
-    // Track metrics
     if (_metrics) {
         _metrics->packetsSent.fetch_add(1, std::memory_order_relaxed);
         _metrics->bytesSent.fetch_add(packet.size(), std::memory_order_relaxed);
     }
+
+    recordPacketSent(static_cast<std::uint8_t>(opcode), packet.size());
 
     socket_->asyncSendTo(
         packet, client->endpoint,
@@ -1140,6 +1255,112 @@ std::uint32_t NetworkServer::nextUserId() {
     }
 
     return id;
+}
+
+void NetworkServer::recordPacketSent(std::uint8_t opcode, std::size_t bytes) {
+    if (!config_.enablePacketStats) return;
+    std::lock_guard<std::mutex> lock(statsMutex_);
+    sentPackets_[opcode].count++;
+    sentPackets_[opcode].totalBytes += bytes;
+}
+
+void NetworkServer::recordPacketReceived(std::uint8_t opcode,
+                                         std::size_t bytes) {
+    if (!config_.enablePacketStats) return;
+    std::lock_guard<std::mutex> lock(statsMutex_);
+    receivedPackets_[opcode].count++;
+    receivedPackets_[opcode].totalBytes += bytes;
+}
+
+void NetworkServer::printPacketStatistics() const {
+    std::lock_guard<std::mutex> lock(statsMutex_);
+
+    LOG_INFO("=== PACKET STATISTICS ===");
+
+    LOG_INFO("--- SENT PACKETS ---");
+    std::uint64_t totalSentBytes = 0;
+    std::uint64_t totalSentCount = 0;
+    for (const auto& [opcode, stats] : sentPackets_) {
+        totalSentBytes += stats.totalBytes;
+        totalSentCount += stats.count;
+        LOG_INFO("  OpCode 0x"
+                 << std::hex << static_cast<int>(opcode) << std::dec << ": "
+                 << stats.count << " packets, " << stats.totalBytes
+                 << " bytes, avg " << stats.getAvgSize() << " bytes/pkt");
+    }
+    LOG_INFO("  TOTAL SENT: " << totalSentCount << " packets, "
+                              << totalSentBytes << " bytes ("
+                              << (totalSentBytes / 1024.0) << " KB)");
+
+    LOG_INFO("--- RECEIVED PACKETS ---");
+    std::uint64_t totalRecvBytes = 0;
+    std::uint64_t totalRecvCount = 0;
+    for (const auto& [opcode, stats] : receivedPackets_) {
+        totalRecvBytes += stats.totalBytes;
+        totalRecvCount += stats.count;
+        LOG_INFO("  OpCode 0x"
+                 << std::hex << static_cast<int>(opcode) << std::dec << ": "
+                 << stats.count << " packets, " << stats.totalBytes
+                 << " bytes, avg " << stats.getAvgSize() << " bytes/pkt");
+    }
+    LOG_INFO("  TOTAL RECEIVED: " << totalRecvCount << " packets, "
+                                  << totalRecvBytes << " bytes ("
+                                  << (totalRecvBytes / 1024.0) << " KB)");
+
+    LOG_INFO("=== END STATISTICS ===");
+}
+
+void NetworkServer::onClientChat(
+    std::function<void(std::uint32_t, const std::string&)> callback) {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
+    onClientChatCallback_ = std::move(callback);
+}
+
+void NetworkServer::handleChat(const network::Header& header,
+                               const network::Buffer& payload,
+                               const network::Endpoint& sender) {
+    if (payload.size() < sizeof(network::ChatPayload)) {
+        return;
+    }
+
+    auto client = findClient(sender);
+    if (!client || !client->joined) {
+        return;
+    }
+
+    try {
+        auto msg =
+            network::Serializer::deserializeFromNetwork<network::ChatPayload>(
+                payload);
+
+        std::string messageText(msg.message, strnlen(msg.message, 256));
+
+        queueCallback([this, userId = client->userId,
+                       message = std::move(messageText)]() {
+            if (onClientChatCallback_) {
+                onClientChatCallback_(userId, message);
+            }
+        });
+    } catch (...) {
+        // Invalid payload
+    }
+}
+
+void NetworkServer::broadcastChat(std::uint32_t senderId,
+                                  const std::string& message) {
+    if (message.size() >= 256) {
+        LOG_WARNING("Broadcast chat message too long, truncated");
+    }
+
+    network::ChatPayload payload;
+    payload.userId = network::ByteOrderSpec::toNetwork(senderId);
+    std::memset(payload.message, 0, 256);
+    std::strncpy(payload.message, message.c_str(), sizeof(payload.message) - 1);
+    payload.message[sizeof(payload.message) - 1] = '\0';
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    broadcastToAll(network::OpCode::S_CHAT, serialized);
 }
 
 }  // namespace rtype::server

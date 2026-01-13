@@ -105,7 +105,13 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry,
 
     display::Vector2f position = {static_cast<float>(pos.x),
                                   static_cast<float>(pos.y)};
+
     display::Vector2f size = {rectData.size.first, rectData.size.second};
+
+    if (registry.hasComponent<CenteredRectangleTag>(entity)) {
+        position.x -= size.x / 2.0f;
+        position.y -= size.y / 2.0f;
+    }
 
     this->_display->drawRectangle(position, size, rectData.currentColor,
                                   rectData.outlineColor,
@@ -168,12 +174,33 @@ void RenderSystem::_renderTextInputs(ECS::Registry& registry,
         textToDraw = input.placeholder;
         colorToUse = display::Color(150, 150, 150, 255);
     } else {
-        textToDraw = input.content + (input.isFocused ? "_" : "");
+        if (input.viewStart <= input.content.length()) {
+            textToDraw = input.content.substr(input.viewStart);
+        }
+        if (input.isFocused) {
+            std::size_t relativePos = 0;
+            if (input.cursorPosition >= input.viewStart) {
+                relativePos = input.cursorPosition - input.viewStart;
+            }
+            if (relativePos <= textToDraw.length()) {
+                textToDraw.insert(relativePos, "|");
+            } else {
+                textToDraw += "|";
+            }
+        }
     }
+
+    float maxWidth = size.x - (2 * kTextInputHorizontalPadding);
 
     display::Vector2f textBounds = this->_display->getTextBounds(
         textToDraw, input.fontName, input.fontSize);
-    float posX = position.x + kOffsetTextInput;
+
+    while (textToDraw.length() > 0 && textBounds.x > maxWidth) {
+        textToDraw.pop_back();
+        textBounds = this->_display->getTextBounds(textToDraw, input.fontName,
+                                                   input.fontSize);
+    }
+    float posX = position.x + kTextInputHorizontalPadding;
     float posY = position.y + ((size.y / 2) - (textBounds.y / 2));
 
     this->_display->drawText(textToDraw, input.fontName, {posX, posY},
@@ -201,6 +228,11 @@ void RenderSystem::_renderButtons(ECS::Registry& registry, ECS::Entity entity) {
     display::Vector2f position = {static_cast<float>(pos.x),
                                   static_cast<float>(pos.y)};
     display::Vector2f size = {rectData.size.first, rectData.size.second};
+
+    if (registry.hasComponent<CenteredBtnTag>(entity)) {
+        position.x -= size.x / 2.0f;
+        position.y -= size.y / 2.0f;
+    }
 
     this->_display->drawRectangle(position, size, rectData.currentColor,
                                   rectData.outlineColor,

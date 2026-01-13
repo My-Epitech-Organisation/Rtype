@@ -46,3 +46,40 @@ TEST(CommandBufferTest, ClearPendingCommands) {
     // Ensure nothing was applied
     EXPECT_EQ(reg.countComponents<TestComp>(), 0u);
 }
+
+TEST(CommandBufferTest, SpawnAndDestroyInSameFlush) {
+    Registry reg;
+    CommandBuffer cb(reg);
+
+    auto placeholder = cb.spawnEntityDeferred();
+    cb.emplaceComponentDeferred<TestComp>(placeholder, 55);
+    cb.destroyEntityDeferred(placeholder);
+
+    // Both commands should be pending
+    EXPECT_EQ(cb.pendingCount(), 3u);
+
+    cb.flush();
+
+    // Created entity should have been destroyed in same flush
+    EXPECT_EQ(reg.countComponents<TestComp>(), 0u);
+}
+
+TEST(CommandBufferTest, DestroyRealEntityAfterFlush) {
+    Registry reg;
+    CommandBuffer cb(reg);
+
+    auto placeholder = cb.spawnEntityDeferred();
+    cb.emplaceComponentDeferred<TestComp>(placeholder, 77);
+    cb.flush();
+
+    // The first real entity should be index 0
+    Entity real{0u, 0u};
+    EXPECT_TRUE(reg.isAlive(real));
+
+    // Destroy the real entity
+    cb.destroyEntityDeferred(real);
+    cb.flush();
+
+    EXPECT_FALSE(reg.isAlive(real));
+}
+

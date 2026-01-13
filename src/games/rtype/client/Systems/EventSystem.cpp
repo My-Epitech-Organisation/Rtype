@@ -106,6 +106,11 @@ void EventSystem::update(ECS::Registry& registry, float /*dt*/) {
 
             ::rtype::display::Vector2f position{transform.x, transform.y};
 
+            if (registry.hasComponent<CenteredBtnTag>(entity)) {
+                position.x -= rect.size.first / 2.0f;
+                position.y -= rect.size.second / 2.0f;
+            }
+
             bool interaction = false;
             interaction |= this->_handleMouseMoved(actionType, rect, registry,
                                                    entity, position);

@@ -26,6 +26,8 @@ KeyboardActions::KeyboardActions() {
                                ::rtype::display::Key::Escape);
     this->_keyBindings.emplace(GameAction::CHANGE_AMMO,
                                ::rtype::display::Key::Tab);
+    this->_keyBindings.emplace(GameAction::TOGGLE_LOW_BANDWIDTH,
+                               ::rtype::display::Key::F9);
 
     this->_joyAxisBindings.emplace(GameAction::MOVE_UP,
                                    ::rtype::display::JoystickAxis::Y);

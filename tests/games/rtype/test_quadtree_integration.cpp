@@ -473,3 +473,12 @@ TEST_F(QuadTreeCollisionIntegrationTest, DuplicatePairsAvoided) {
     EXPECT_EQ(pairCount, 1);
 }
 
+TEST_F(QuadTreeCollisionIntegrationTest, GetNodeCountWithEmptyRegistry) {
+    // Without any update, the quadtree may not be initialized
+    // But after construction, calling getNodeCount should return 0 if no tree
+    QuadTreeSystem freshSystem(Rect{0, 0, 100, 100}, 4, 3);
+    // Before update, quadtree might not exist yet
+    EXPECT_EQ(freshSystem.getNodeCount(), 0);
+    EXPECT_EQ(freshSystem.getEntityCount(), 0);
+}
+

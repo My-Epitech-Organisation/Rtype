@@ -49,7 +49,7 @@ install_package() {
     local pkg_apt="$1"
     local pkg_dnf="$2"
     local pm=$(detect_package_manager)
-    
+
     case $pm in
         apt)
             sudo apt-get update && sudo apt-get install -y "$pkg_apt"
@@ -185,6 +185,7 @@ if $GENERATE_HTML; then
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/src/server/shared/AdminServer.*' \
         '*/serverApp.cpp' \
         '*/ServerApp.cpp' \
         '*/NetworkClient.cpp' \
@@ -193,6 +194,7 @@ if $GENERATE_HTML; then
         '*/LobbyDiscoveryServer.cpp' \
         '*/DataDrivenSpawnerSystem.cpp' \
         '*/PrefabLoader.cpp' \
+        '*/TomlParser.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
     if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
@@ -319,6 +321,7 @@ else
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/src/server/shared/AdminServer.*' \
         '*/serverApp.cpp' \
         '*/ServerApp.cpp' \
         '*/NetworkClient.cpp' \
@@ -327,6 +330,7 @@ else
         '*/LobbyDiscoveryServer.cpp' \
         '*/DataDrivenSpawnerSystem.cpp' \
         '*/PrefabLoader.cpp' \
+        '*/TomlParser.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
     if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then

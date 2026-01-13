@@ -1,5 +1,33 @@
 add_executable(test_argparser test_argparser.cpp)
 
+add_executable(test_argparser_branches test_argparser_branches.cpp)
+
+add_executable(test_numberparser_branches test_numberparser_branches.cpp)
+
+target_link_libraries(test_numberparser_branches PRIVATE
+    GTest::gtest_main
+    common
+)
+
+target_include_directories(test_numberparser_branches PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib/common/src
+    ${CMAKE_SOURCE_DIR}/lib
+)
+
+
+target_link_libraries(test_argparser_branches PRIVATE
+    GTest::gtest_main
+    common
+)
+
+target_include_directories(test_argparser_branches PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib/common/src
+    ${CMAKE_SOURCE_DIR}/lib
+)
+
+
 target_link_libraries(test_argparser PRIVATE
     GTest::gtest_main
     common
@@ -14,8 +42,12 @@ target_include_directories(test_argparser PRIVATE
 include(GoogleTest)
 if(WIN32 OR MSVC)
     gtest_discover_tests(test_argparser WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_argparser_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_numberparser_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_argparser)
+    gtest_discover_tests(test_argparser_branches)
+    gtest_discover_tests(test_numberparser_branches)
 endif()
 
 add_executable(test_logger test_logger.cpp)

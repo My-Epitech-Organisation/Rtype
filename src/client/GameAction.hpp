@@ -19,6 +19,7 @@ enum class GameAction : std::uint8_t {
     FORCE_POD,
     CHANGE_AMMO,
     PAUSE,
+    TOGGLE_LOW_BANDWIDTH,
     NONE
 };
 

@@ -37,6 +37,10 @@ struct TextInput {
     bool isFocused;
     bool isNumericOnly;
     ::rtype::display::Vector2f size;
+    // Cursor position within the content string
+    std::size_t cursorPosition{0};
+    // Index of the first visible character for horizontal scrolling
+    std::size_t viewStart{0};
     std::function<void(const std::string&)> onChanged;
     std::function<void(const std::string&)> onSubmit;
 
@@ -65,7 +69,9 @@ struct TextInput {
           maxLength(maxLength),
           isFocused(false),
           isNumericOnly(isNumericOnly),
-          size({width, height}) {}
+          size({width, height}) {
+        cursorPosition = content.length();
+    }
 
     /**
      * @brief Handle text input character
@@ -78,7 +84,8 @@ struct TextInput {
         if (isNumericOnly && !std::isdigit(character)) return false;
         if (!std::isprint(character)) return false;
 
-        content += character;
+        content.insert(cursorPosition, 1, character);
+        cursorPosition++;
         if (onChanged) onChanged(content);
         return true;
     }
@@ -87,8 +94,37 @@ struct TextInput {
      * @brief Handle backspace key
      */
     void handleBackspace() {
-        if (!isFocused || content.empty()) return;
-        content.pop_back();
+        if (!isFocused || content.empty() || cursorPosition == 0) return;
+        content.erase(cursorPosition - 1, 1);
+        cursorPosition--;
+        if (onChanged) onChanged(content);
+    }
+
+    /**
+     * @brief Move cursor left
+     */
+    void moveCursorLeft() {
+        if (cursorPosition > 0) {
+            cursorPosition--;
+        }
+    }
+
+    /**
+     * @brief Move cursor right
+     */
+    void moveCursorRight() {
+        if (cursorPosition < content.length()) {
+            cursorPosition++;
+        }
+    }
+
+    /**
+     * @brief Handle delete key
+     */
+    void handleDelete() {
+        if (!isFocused || content.empty() || cursorPosition >= content.length())
+            return;
+        content.erase(cursorPosition, 1);
         if (onChanged) onChanged(content);
     }
 

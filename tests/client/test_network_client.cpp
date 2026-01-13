@@ -320,18 +320,18 @@ TEST_F(NetworkClientTest, HandleEntityMoveBatch_ValidSingleEntity) {
         receivedEvent = event;
     });
 
-    EntityMovePayload movePayload{};
-    movePayload.entityId = 42;
-    movePayload.posX = 100.0f;
-    movePayload.posY = 200.0f;
-    movePayload.velX = 10.0f;
-    movePayload.velY = -5.0f;
-
-    auto serialized = Serializer::serializeForNetwork(movePayload);
-
+    // Build batch payload: header (count + serverTick) + compact entries
     Buffer payload;
+    // Count
     payload.push_back(1);
-    payload.insert(payload.end(), serialized.begin(), serialized.end());
+    // Shared serverTick (network order)
+    std::uint32_t serverTick = ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(0u));
+    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&serverTick), reinterpret_cast<uint8_t*>(&serverTick) + sizeof(serverTick));
+
+    // One compact entry (quantized fixed-point values)
+    EntityMoveBatchEntry beHost{static_cast<std::uint32_t>(42u), static_cast<std::int16_t>(100.0f * 16.0f), static_cast<std::int16_t>(200.0f * 16.0f), static_cast<std::int16_t>(10.0f * 16.0f), static_cast<std::int16_t>(-5.0f * 16.0f)};
+    auto be = ByteOrderSpec::toNetwork(beHost);
+    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&be), reinterpret_cast<uint8_t*>(&be) + sizeof(be));
 
     Header header =
         createHeader(OpCode::S_ENTITY_MOVE_BATCH,
@@ -361,18 +361,16 @@ TEST_F(NetworkClientTest, HandleEntityMoveBatch_MultipleEntities) {
     });
 
     Buffer payload;
+    // Count
     payload.push_back(3);
+    // Shared serverTick (network order)
+    std::uint32_t serverTick = ByteOrderSpec::toNetwork(static_cast<std::uint32_t>(0u));
+    payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&serverTick), reinterpret_cast<uint8_t*>(&serverTick) + sizeof(serverTick));
 
     for (int i = 0; i < 3; ++i) {
-        EntityMovePayload movePayload{};
-        movePayload.entityId = static_cast<std::uint32_t>(i + 1);
-        movePayload.posX = static_cast<float>(i * 100);
-        movePayload.posY = static_cast<float>(i * 50);
-        movePayload.velX = static_cast<float>(i);
-        movePayload.velY = static_cast<float>(-i);
-
-        auto serialized = Serializer::serializeForNetwork(movePayload);
-        payload.insert(payload.end(), serialized.begin(), serialized.end());
+        EntityMoveBatchEntry beHost{static_cast<std::uint32_t>(i + 1), static_cast<std::int16_t>(i * 100 * 16), static_cast<std::int16_t>(i * 50 * 16), static_cast<std::int16_t>(i * 16), static_cast<std::int16_t>(-i * 16)};
+        auto be = ByteOrderSpec::toNetwork(beHost);
+        payload.insert(payload.end(), reinterpret_cast<uint8_t*>(&be), reinterpret_cast<uint8_t*>(&be) + sizeof(be));
     }
 
     Header header =
@@ -704,10 +702,11 @@ TEST_F(NetworkClientTest, HandleEntityMove_ValidPayload) {
 
     EntityMovePayload movePayload{};
     movePayload.entityId = 99;
-    movePayload.posX = 150.0f;
-    movePayload.posY = 250.0f;
-    movePayload.velX = 5.0f;
-    movePayload.velY = -3.0f;
+    movePayload.serverTick = 0;
+    movePayload.posX = static_cast<std::int16_t>(150.0f * 16.0f);
+    movePayload.posY = static_cast<std::int16_t>(250.0f * 16.0f);
+    movePayload.velX = static_cast<std::int16_t>(5.0f * 16.0f);
+    movePayload.velY = static_cast<std::int16_t>(-3.0f * 16.0f);
 
     auto serialized = Serializer::serializeForNetwork(movePayload);
 

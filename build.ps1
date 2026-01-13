@@ -183,43 +183,140 @@ Write-Host "✓ Build complete" -ForegroundColor Green
 Write-Host ""
 
 # ========================================================================
-# Step 4: Copy executables to root
+# Step 4: Create executable directory with all dependencies
 # ========================================================================
-Write-Host "→ Step 4/4: Copying executables to repository root..." -ForegroundColor Yellow
+Write-Host "→ Step 4/4: Creating executable directory with all dependencies..." -ForegroundColor Yellow
 
+$ExecutableDir = Join-Path $ProjectRoot "executable"
+
+# Create or clean executable directory
+if (Test-Path $ExecutableDir) {
+    Write-Host "  Cleaning existing executable directory..." -ForegroundColor Gray
+    Remove-Item -Recurse -Force $ExecutableDir
+}
+New-Item -ItemType Directory -Path $ExecutableDir -Force | Out-Null
+Write-Host "  ✓ Created executable directory" -ForegroundColor Green
+
+# Find executables
 $ClientExe = Join-Path $ProjectRoot "$BuildDir\src\client\Release\r-type_client.exe"
 $ServerExe = Join-Path $ProjectRoot "$BuildDir\src\server\Release\r-type_server.exe"
-$DisplayDLL="$BuildDir\lib\display\SFML\librtype-display-sfml.dll"
-
 if (-not (Test-Path $ClientExe)) {
     $ClientExe = Join-Path $ProjectRoot "$BuildDir\src\client\r-type_client.exe"
 }
 if (-not (Test-Path $ServerExe)) {
     $ServerExe = Join-Path $ProjectRoot "$BuildDir\src\server\r-type_server.exe"
 }
-if (-not (Test-Path $DisplayDLL)) {
-    $ServerExe = Join-Path $ProjectRoot "$BuildDir\lib\display\SFML\librtype-display-sfml.dll"
-}
 
+# Copy executables
 if (Test-Path $ClientExe) {
-    Copy-Item $ClientExe $ProjectRoot -Force
+    Copy-Item $ClientExe $ExecutableDir -Force
     Write-Host "  ✓ Copied r-type_client.exe" -ForegroundColor Green
 } else {
-    Write-Host "  ⚠ Warning: Client executable not found" -ForegroundColor Yellow
+    Write-Host "  ⚠ Warning: Client executable not found at $ClientExe" -ForegroundColor Yellow
 }
 
 if (Test-Path $ServerExe) {
-    Copy-Item $ServerExe $ProjectRoot -Force
+    Copy-Item $ServerExe $ExecutableDir -Force
     Write-Host "  ✓ Copied r-type_server.exe" -ForegroundColor Green
 } else {
-    Write-Host "  ⚠ Warning: Server executable not found" -ForegroundColor Yellow
+    Write-Host "  ⚠ Warning: Server executable not found at $ServerExe" -ForegroundColor Yellow
+}
+
+# Find and copy display DLL (renamed to display.dll)
+$DisplaySrcDir = Join-Path $ProjectRoot "$BuildDir\lib\display\SFML"
+$DisplayDLL = Join-Path $DisplaySrcDir "rtype-display-sfml.dll"
+if (-not (Test-Path $DisplayDLL)) {
+    $DisplayDLL = Join-Path $DisplaySrcDir "librtype-display-sfml.dll"
 }
 
 if (Test-Path $DisplayDLL) {
-    Copy-Item $DisplayDLL "$ProjectRoot\display.dll" -Force
+    Copy-Item $DisplayDLL (Join-Path $ExecutableDir "display.dll") -Force
     Write-Host "  ✓ Copied display.dll" -ForegroundColor Green
 } else {
-    Write-Host "  ⚠ Warning: Display dll not found" -ForegroundColor Yellow
+    Write-Host "  ⚠ Warning: Display DLL not found" -ForegroundColor Yellow
+}
+
+# Copy all SFML and dependency DLLs from display folder
+if (Test-Path $DisplaySrcDir) {
+    $DLLs = Get-ChildItem -Path $DisplaySrcDir -Filter "*.dll" -File
+    foreach ($dll in $DLLs) {
+        if ($dll.Name -notmatch "rtype-display") {
+            Copy-Item $dll.FullName $ExecutableDir -Force
+        }
+    }
+    Write-Host "  ✓ Copied $(($DLLs | Where-Object { $_.Name -notmatch 'rtype-display' }).Count) SFML/dependency DLLs" -ForegroundColor Green
+}
+
+# Copy all DLLs from client build folder (lz4, SDL2, tomlplusplus, etc.)
+$ClientBuildDir = Join-Path $ProjectRoot "$BuildDir\src\client"
+if (Test-Path $ClientBuildDir) {
+    $ClientDLLs = Get-ChildItem -Path $ClientBuildDir -Filter "*.dll" -File
+    foreach ($dll in $ClientDLLs) {
+        Copy-Item $dll.FullName $ExecutableDir -Force
+    }
+    if ($ClientDLLs.Count -gt 0) {
+        Write-Host "  ✓ Copied $($ClientDLLs.Count) client dependency DLLs (lz4, SDL2, tomlplusplus, etc.)" -ForegroundColor Green
+    }
+}
+
+# Copy all DLLs from server build folder (if different from client)
+$ServerBuildDir = Join-Path $ProjectRoot "$BuildDir\src\server"
+if (Test-Path $ServerBuildDir) {
+    $ServerDLLs = Get-ChildItem -Path $ServerBuildDir -Filter "*.dll" -File
+    foreach ($dll in $ServerDLLs) {
+        if (-not (Test-Path (Join-Path $ExecutableDir $dll.Name))) {
+            Copy-Item $dll.FullName $ExecutableDir -Force
+        }
+    }
+}
+
+# Copy assets directory
+$AssetsSource = Join-Path $ProjectRoot "assets"
+$AssetsDest = Join-Path $ExecutableDir "assets"
+if (Test-Path $AssetsSource) {
+    Copy-Item $AssetsSource $AssetsDest -Recurse -Force
+    Write-Host "  ✓ Copied assets directory" -ForegroundColor Green
+} else {
+    Write-Host "  ⚠ Warning: Assets directory not found" -ForegroundColor Yellow
+}
+
+# Copy config directory
+$ConfigSource = Join-Path $ProjectRoot "config"
+$ConfigDest = Join-Path $ExecutableDir "config"
+if (Test-Path $ConfigSource) {
+    Copy-Item $ConfigSource $ConfigDest -Recurse -Force
+    Write-Host "  ✓ Copied config directory" -ForegroundColor Green
+} else {
+    Write-Host "  ⚠ Warning: Config directory not found" -ForegroundColor Yellow
+}
+
+# Create convenience batch scripts
+$ClientBatchContent = @"
+@echo off
+echo Starting R-Type Client...
+r-type_client.exe
+pause
+"@
+Set-Content -Path (Join-Path $ExecutableDir "start_client.bat") -Value $ClientBatchContent -Force
+
+$ServerBatchContent = @"
+@echo off
+echo Starting R-Type Server...
+r-type_server.exe
+pause
+"@
+Set-Content -Path (Join-Path $ExecutableDir "start_server.bat") -Value $ServerBatchContent -Force
+Write-Host "  ✓ Created launch scripts (start_client.bat, start_server.bat)" -ForegroundColor Green
+
+# Also copy executables to root for backward compatibility
+if (Test-Path $ClientExe) {
+    Copy-Item $ClientExe $ProjectRoot -Force
+}
+if (Test-Path $ServerExe) {
+    Copy-Item $ServerExe $ProjectRoot -Force
+}
+if (Test-Path $DisplayDLL) {
+    Copy-Item $DisplayDLL "$ProjectRoot\display.dll" -Force
 }
 
 Write-Host ""
@@ -230,15 +327,27 @@ Write-Host ""
 Write-Host "Dependency strategy used: $(if ($VcpkgAvailable) { 'vcpkg' } else { 'CPM' })"
 Write-Host "Build directory: $BuildDir"
 Write-Host ""
-Write-Host "Executables are now in the repository root:" -ForegroundColor White
-
-$Executables = Get-ChildItem -Path $ProjectRoot -Filter "r-type_*.exe" -ErrorAction SilentlyContinue
-if ($Executables) {
-    $Executables | ForEach-Object {
+Write-Host "Standalone executable directory created: $ExecutableDir" -ForegroundColor Green
+Write-Host "This directory contains:" -ForegroundColor White
+Write-Host "  • r-type_client.exe and r-type_server.exe" -ForegroundColor Gray
+Write-Host "  • All required DLLs (display.dll, SFML, dependencies)" -ForegroundColor Gray
+Write-Host "  • Assets and config directories" -ForegroundColor Gray
+Write-Host ""
+Write-Host "To run the game, navigate to the executable directory:" -ForegroundColor Cyan
+Write-Host "  cd executable" -ForegroundColor White
+Write-Host "  .\r-type_client.exe    # Start client" -ForegroundColor White
+Write-Host "  .\r-type_server.exe    # Start server" -ForegroundColor White
+Write-Host ""
+Write-Host "Files in executable directory:" -ForegroundColor Cyan
+$ExecutableFiles = Get-ChildItem -Path $ExecutableDir -Filter "*.exe" -ErrorAction SilentlyContinue
+if ($ExecutableFiles) {
+    $ExecutableFiles | ForEach-Object {
         Write-Host "  $($_.Name) - $([math]::Round($_.Length / 1MB, 2)) MB" -ForegroundColor White
     }
-} else {
-    Write-Host "  (No executables found)" -ForegroundColor Yellow
+}
+$DLLFiles = Get-ChildItem -Path $ExecutableDir -Filter "*.dll" -ErrorAction SilentlyContinue
+if ($DLLFiles) {
+    Write-Host "  + $($DLLFiles.Count) DLL files" -ForegroundColor Gray
 }
 
 Write-Host ""
