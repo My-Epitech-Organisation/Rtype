@@ -109,9 +109,10 @@ TEST(OpCodeCoverage, IsValidOpCodeAllValues) {
     EXPECT_TRUE(isValidOpCode(0x31));  // S_CHAT
 
     EXPECT_FALSE(isValidOpCode(0x00));
-    EXPECT_FALSE(isValidOpCode(0x0B));
+    EXPECT_TRUE(isValidOpCode(0x0B));
     EXPECT_FALSE(isValidOpCode(0x0F));
-    EXPECT_FALSE(isValidOpCode(0x16));
+    EXPECT_TRUE(isValidOpCode(0x30));
+    EXPECT_TRUE(isValidOpCode(0x16));
     EXPECT_FALSE(isValidOpCode(0xFF));
 }
 
@@ -286,6 +287,7 @@ TEST(DisconnectReasonCoverage, ToStringAllReasons) {
     EXPECT_EQ(toString(DisconnectReason::Timeout), "Timeout");
     EXPECT_EQ(toString(DisconnectReason::MaxRetriesExceeded), "MaxRetriesExceeded");
     EXPECT_EQ(toString(DisconnectReason::ProtocolError), "ProtocolError");
+    EXPECT_EQ(toString(DisconnectReason::Banned), "Banned");
 }
 
 // =============================================================================

@@ -291,6 +291,28 @@ target_link_libraries(test_ban_manager PRIVATE
     rtype_server_core
 )
 
+# Basic admin auth tests (exercise Basic auth, login -> cookie flows)
+add_executable(test_admin_auth_basic test_admin_auth_basic.cpp)
+
+target_include_directories(test_admin_auth_basic PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server/shared
+)
+
+target_compile_features(test_admin_auth_basic PRIVATE cxx_std_20)
+
+target_link_libraries(test_admin_auth_basic PRIVATE
+    GTest::gtest_main
+    common
+    rtype_server_core
+    rtype_server_network
+    network
+    engine
+    rtype_game_server
+    rtype_game_shared
+    ecs
+)
+
 # ServerMetrics unit tests
 add_executable(test_server_metrics test_server_metrics.cpp)
 
@@ -348,7 +370,7 @@ target_link_libraries(test_game_event_processor PRIVATE
 )
 
 # PacketProcessor unit tests
-add_executable(test_packet_processor test_packet_processor.cpp
+add_executable(test_packet_processor test_packet_processor.cpp test_packet_processor_branches.cpp
     ${CMAKE_SOURCE_DIR}/src/server/serverApp/packetProcessor/PacketProcessor.cpp
 )
 
@@ -397,6 +419,25 @@ target_link_libraries(test_lobby_discovery PRIVATE
 # GameStateManager unit tests
 add_executable(test_game_state_manager test_game_state_manager.cpp test_game_state_manager_countdown.cpp
     ${CMAKE_SOURCE_DIR}/src/server/serverApp/game/gameStateManager/GameStateManager.cpp
+)
+
+# Simple utility tests for admin server helpers
+add_executable(test_admin_url_decode test_admin_url_decode.cpp)
+
+target_include_directories(test_admin_url_decode PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/server/shared
+    ${CMAKE_SOURCE_DIR}/src/common
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_admin_url_decode PRIVATE cxx_std_20)
+
+target_link_libraries(test_admin_url_decode PRIVATE
+    GTest::gtest_main
+    common
+    rtype_server_core
 )
 
 # AdminServer tests

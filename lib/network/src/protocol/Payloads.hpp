@@ -180,23 +180,41 @@ struct EntitySpawnPayload {
  *
  * Regular position/velocity update for an entity.
  * Unreliable - lost packets are corrected by next update.
+ *
+ * Uses fixed-point quantization to reduce bandwidth and a server tick to
+ * allow client-side interpolation.
  */
 struct EntityMovePayload {
-    std::uint32_t entityId;
-    float posX;
-    float posY;
-    float velX;
-    float velY;
+    std::uint32_t entityId;   ///< Network entity id
+    std::uint32_t serverTick; ///< Monotonic server tick for interpolation
+    std::int16_t posX;        ///< Quantized position X (fixed-point)
+    std::int16_t posY;        ///< Quantized position Y (fixed-point)
+    std::int16_t velX;        ///< Quantized velocity X (fixed-point)
+    std::int16_t velY;        ///< Quantized velocity Y (fixed-point)
 };
 
 /**
  * @brief Header for S_ENTITY_MOVE_BATCH (0x15)
  *
- * Variable-length payload: count + array of EntityMovePayload entries.
- * The full payload size is: 1 + (count * 20) bytes.
+ * Variable-length payload: header (5 bytes) + array of EntityMoveBatchEntry.
+ * The full payload size is: 5 + (count * 12) bytes.
  */
 struct EntityMoveBatchHeader {
-    std::uint8_t count;  ///< Number of entity updates in this batch (1-69)
+    std::uint8_t count;       ///< Number of entity updates in this batch (1-115)
+    std::uint32_t serverTick; ///< Shared server tick for all entries
+};
+
+/**
+ * @brief Compact entry for batched entity moves (no serverTick - shared in header)
+ *
+ * 12 bytes per entity vs 16 bytes in EntityMovePayload = 25% savings
+ */
+struct EntityMoveBatchEntry {
+    std::uint32_t entityId;   ///< Network entity id
+    std::int16_t posX;        ///< Quantized position X (fixed-point)
+    std::int16_t posY;        ///< Quantized position Y (fixed-point)
+    std::int16_t velX;        ///< Quantized velocity X (fixed-point)
+    std::int16_t velY;        ///< Quantized velocity Y (fixed-point)
 };
 
 /**
@@ -221,10 +239,11 @@ struct JoinLobbyResponsePayload {
 /**
  * @brief Maximum entities per batch packet
  *
- * Limited by payload size: (kMaxPayloadSize - 1) / sizeof(EntityMovePayload)
- * = (1384 - 1) / 20 = 69 entities
+ * Limited by payload size: (kMaxPayloadSize - 5) / sizeof(EntityMoveBatchEntry)
+ * = (1384 - 5) / 12 = 114 entities
  */
-inline constexpr std::size_t kMaxEntitiesPerBatch = 69;
+// Payload size: 5 byte header + N * 12 bytes (EntityMoveBatchEntry)
+inline constexpr std::size_t kMaxEntitiesPerBatch = 114;
 
 /**
  * @brief Payload for S_ENTITY_DESTROY (0x12)
@@ -330,6 +349,32 @@ struct PlayerReadyStatePayload {
 };
 
 /**
+ * @brief Bandwidth mode enumeration for C_SET_BANDWIDTH_MODE
+ */
+enum class BandwidthMode : std::uint8_t {
+    Normal = 0,  ///< Full update rate (60Hz players, ~2Hz enemies)
+    Low = 1,     ///< Reduced update rate (~20Hz players, ~0.5Hz enemies)
+};
+
+/**
+ * @brief Payload for C_SET_BANDWIDTH_MODE (0x16)
+ * @note Reliable - client requests bandwidth mode preference
+ */
+struct BandwidthModePayload {
+    std::uint8_t mode;  ///< BandwidthMode value
+};
+
+/**
+ * @brief Payload for S_BANDWIDTH_MODE_CHANGED (0x17)
+ * @note Reliable - server broadcasts bandwidth mode change to all clients
+ */
+struct BandwidthModeChangedPayload {
+    std::uint32_t userId;  ///< User who changed the mode
+    std::uint8_t mode;     ///< BandwidthMode value (0=Normal, 1=Low)
+    std::uint8_t activeCount;  ///< Number of clients with low bandwidth enabled
+};
+
+/**
  * @brief Payload for C_CHAT and S_CHAT (0x30/0x31)
  */
 struct ChatPayload {
@@ -355,6 +400,10 @@ static_assert(sizeof(PongPayload) == 1,
               "returns 0 bytes");
 static_assert(sizeof(LobbyReadyPayload) == 1,
               "LobbyReadyPayload must be 1 byte (uint8_t)");
+static_assert(sizeof(BandwidthModePayload) == 1,
+              "BandwidthModePayload must be 1 byte (uint8_t)");
+static_assert(sizeof(BandwidthModeChangedPayload) == 6,
+              "BandwidthModeChangedPayload must be 6 bytes (4+1+1)");
 
 static_assert(sizeof(AcceptPayload) == 4,
               "AcceptPayload must be 4 bytes (uint32_t)");
@@ -366,10 +415,12 @@ static_assert(sizeof(GameOverPayload) == 4,
               "GameOverPayload must be 4 bytes (uint32_t)");
 static_assert(sizeof(EntitySpawnPayload) == 14,
               "EntitySpawnPayload must be 14 bytes (4+1+1+4+4)");
-static_assert(sizeof(EntityMovePayload) == 20,
-              "EntityMovePayload must be 20 bytes (4+4+4+4+4)");
-static_assert(sizeof(EntityMoveBatchHeader) == 1,
-              "EntityMoveBatchHeader must be 1 byte");
+static_assert(sizeof(EntityMovePayload) == 16,
+              "EntityMovePayload must be 16 bytes (4+4+2+2+2+2)");
+static_assert(sizeof(EntityMoveBatchHeader) == 5,
+              "EntityMoveBatchHeader must be 5 bytes (1+4)");
+static_assert(sizeof(EntityMoveBatchEntry) == 12,
+              "EntityMoveBatchEntry must be 12 bytes (4+2+2+2+2)");
 static_assert(sizeof(EntityDestroyPayload) == 4,
               "EntityDestroyPayload must be 4 bytes");
 static_assert(sizeof(EntityHealthPayload) == 12,
@@ -470,6 +521,10 @@ static_assert(std::is_standard_layout_v<ChatPayload>);
             return sizeof(EntityMovePayload);
         case OpCode::S_ENTITY_MOVE_BATCH:
             return 0;  // Variable-length payload
+        case OpCode::C_SET_BANDWIDTH_MODE:
+            return sizeof(BandwidthModePayload);
+        case OpCode::S_BANDWIDTH_MODE_CHANGED:
+            return sizeof(BandwidthModeChangedPayload);
         case OpCode::S_ENTITY_DESTROY:
             return sizeof(EntityDestroyPayload);
         case OpCode::S_ENTITY_HEALTH:

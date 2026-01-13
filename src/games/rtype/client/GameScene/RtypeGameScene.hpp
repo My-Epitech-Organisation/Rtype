@@ -18,6 +18,7 @@
 #include "../lib/display/Clock/Clock.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Graphic/SceneManager/Scenes/GameScene/AGameScene.hpp"
+#include "games/rtype/shared/Systems/Movements/MovementSystem.hpp"
 #include "rtype/display/DisplayTypes.hpp"
 
 namespace rtype::games::rtype::client {
@@ -156,6 +157,20 @@ class RtypeGameScene : public AGameScene {
     std::optional<ECS::Entity> _disconnectMessageEntity;
     std::optional<ECS::Entity> _disconnectButtonEntity;
     bool _isDisconnected{false};
+
+    std::unique_ptr<::rtype::games::rtype::shared::MovementSystem>
+        _movementSystem;
+
+    bool _lowBandwidthMode{false};
+    std::uint8_t _lowBandwidthActiveCount{0};
+    std::optional<ECS::Entity> _bandwidthIndicatorEntity;
+    std::optional<ECS::Entity> _bandwidthNotificationEntity;
+    float _bandwidthNotificationTimer{0.0F};
+    void toggleLowBandwidthMode();
+    void updateBandwidthIndicator();
+    void showBandwidthNotification(std::uint32_t userId, bool enabled,
+                                   std::uint8_t activeCount);
+    void setupBandwidthModeCallback();
 };
 }  // namespace rtype::games::rtype::client
 

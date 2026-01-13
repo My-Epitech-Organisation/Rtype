@@ -24,16 +24,3 @@ void AudioManager::load(const std::string& id, const std::string& filePath) {
     this->_assets[id] = music;
     LOG_INFO_CAT(::rtype::LogCategory::Audio, "Audio saved with ID: " + id);
 }
-
-std::shared_ptr<::rtype::display::IMusic> AudioManager::get(
-    const std::string& id) {
-    auto it = this->_assets.find(id);
-
-    if (it == this->_assets.end()) {
-        LOG_ERROR_CAT(::rtype::LogCategory::Audio,
-                      "Error music not found: " + id);
-        throw std::out_of_range("Error music not found: " + id);
-    }
-
-    return it->second;
-}

@@ -654,6 +654,10 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
     _isConnected =
         (this->_networkClient && this->_networkClient->isConnected());
 
+    if (this->_networkSystem) {
+        this->_networkSystem->registerCallbacks();
+    }
+
     if (this->_networkSystem && this->_assetsManager) {
         this->_networkSystem->setEntityFactory(
             rtype::games::rtype::client::RtypeEntityFactory::
@@ -778,18 +782,20 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
         }
     });
 
-    this->_networkClient->onEntityDestroy([this](std::uint32_t entityId) {
-        try {
-            if (!_initialized || !this->_registry) {
-                return;
+    _entityDestroyCallbackId = this->_networkClient->addEntityDestroyCallback(
+        [this](std::uint32_t entityId) {
+            try {
+                if (!_initialized || !this->_registry) {
+                    return;
+                }
+                this->onEntityDestroyEvent(entityId);
+            } catch (const std::exception& e) {
+                LOG_ERROR("[Lobby] Exception in onEntityDestroy: " << e.what());
+            } catch (...) {
+                LOG_ERROR("[Lobby] Unknown exception in onEntityDestroy");
             }
-            this->onEntityDestroyEvent(entityId);
-        } catch (const std::exception& e) {
-            LOG_ERROR("[Lobby] Exception in onEntityDestroy: " << e.what());
-        } catch (...) {
-            LOG_ERROR("[Lobby] Unknown exception in onEntityDestroy");
-        }
-    });
+        });
+    _hasEntityDestroyCallback = true;
 
     this->_networkClient->onDisconnected([this](rtype::client::NetworkClient::
                                                     DisconnectReason reason) {
@@ -943,6 +949,21 @@ Lobby::~Lobby() {
     LOG_INFO("[Lobby] Destroying Lobby scene...");
 
     _initialized = false;
+
+    if (this->_networkClient) {
+        this->_networkClient->clearPendingCallbacks();
+        this->_networkClient->clearDisconnectedCallbacks();
+        this->_networkClient->onGameStart(nullptr);
+        this->_networkClient->onGameStateChange(nullptr);
+        this->_networkClient->onPlayerReadyStateChanged(nullptr);
+        this->_networkClient->onEntityMove(nullptr);
+        this->_networkClient->onEntityMoveBatch(nullptr);
+        if (_hasEntityDestroyCallback) {
+            this->_networkClient->removeEntityDestroyCallback(
+                _entityDestroyCallbackId);
+            _hasEntityDestroyCallback = false;
+        }
+    }
 
     if (this->_registry) {
         LOG_INFO("[Lobby] Resetting player positions for game scene...");

@@ -166,7 +166,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
 |----------|-------------|
 | [📖 User Guide](docs/website/docs/getting-started.md) | Installation and gameplay instructions |
 | [🏗️ Architecture](docs/website/docs/Architecture/overview.md) | Technical design and structure |
-| [🌐 Network Protocol](docs/RFC/RFC_RTGP_v1.2.0.md) | Multiplayer protocol specification |
+| [🌐 Network Protocol](docs/RFC/RFC_RTGP_v1.4.2.md) | Multiplayer protocol specification |
 | [🔧 Configuration](config/) | Server and client settings |
 | [🐛 Troubleshooting](docs/website/docs/contributing.md#troubleshooting) | Common issues and solutions |
 
