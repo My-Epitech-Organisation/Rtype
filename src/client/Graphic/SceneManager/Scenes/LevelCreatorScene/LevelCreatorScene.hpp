@@ -113,8 +113,7 @@ class LevelCreatorScene : public AScene {
         _bgIteratorCurrent;
 
     std::vector<std::string> _listNextLevel;
-    std::vector<std::string>::iterator
-        _nextLevelIteratorCurrent;
+    std::vector<std::string>::iterator _nextLevelIteratorCurrent;
 
     /** @brief Name of the plugin for the background selection button. */
     std::string _bgPluginName;

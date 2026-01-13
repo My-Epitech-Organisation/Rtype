@@ -55,28 +55,29 @@ void LevelCreatorScene::addElementToSection(const std::string& sectionId,
     }
 }
 
-void LevelCreatorScene::_getLevelsName()
-{
+void LevelCreatorScene::_getLevelsName() {
     if (!std::filesystem::exists("./config/game/levels/")) return;
     for (const auto& s :
-        std::filesystem::directory_iterator("./config/game/levels/")) {
+         std::filesystem::directory_iterator("./config/game/levels/")) {
         std::string path = s.path().string();
-        if (!path.ends_with(".toml"))
-            continue;
+        if (!path.ends_with(".toml")) continue;
         try {
             auto config = toml::parse_file(path);
-            if (config.contains("level") && config["level"].as_table()->contains("name")) {
+            if (config.contains("level") &&
+                config["level"].as_table()->contains("name")) {
                 std::string levelName = config["level"]["name"].value_or("");
                 if (!levelName.empty()) {
                     this->_listNextLevel.push_back(levelName);
                 }
             }
         } catch (const toml::parse_error& err) {
-            std::cerr << "Error parsing TOML file " << path << ": " << err << std::endl;
+            std::cerr << "Error parsing TOML file " << path << ": " << err
+                      << std::endl;
         }
     }
     std::sort(this->_listNextLevel.begin(), this->_listNextLevel.end());
-    auto last = std::unique(this->_listNextLevel.begin(), this->_listNextLevel.end());
+    auto last =
+        std::unique(this->_listNextLevel.begin(), this->_listNextLevel.end());
     this->_listNextLevel.erase(last, this->_listNextLevel.end());
 }
 
@@ -233,8 +234,8 @@ LevelCreatorScene::LevelCreatorScene(
 
     addElementToSection("settings", _btnNextLevel, currentY);
     // _nextLevelInput = EntityFactory::createTextInput(
-    //     _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "levelX.toml", "",
-    //     50, false);
+    //     _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "levelX.toml",
+    //     "", 50, false);
     // auto staticText = EntityFactory::createStaticText(
     //     _registry, _assetsManager, "(Leave empty for end of the game)",
     //     "main_font", {inputX, 0}, 18.f);
