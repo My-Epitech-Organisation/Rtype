@@ -293,6 +293,20 @@ namespace rtype::display {
         virtual void endRenderToTexture() = 0;
         virtual void drawRenderTexture(const std::string& textureName, const std::string& shaderName) = 0;
 
+        // Clipboard
+
+        /**
+         * @brief Sets the system clipboard text.
+         * @param text Text to set in the clipboard
+         */
+        virtual void setClipboardText(const std::string& text) = 0;
+
+        /**
+         * @brief Retrieves the current text from the system clipboard.
+         * @return Clipboard text
+         */
+        [[nodiscard]] virtual std::string getClipboardText() const = 0;
+
         // Joystick
         /**
          * @brief Indicates if a joystick is connected.

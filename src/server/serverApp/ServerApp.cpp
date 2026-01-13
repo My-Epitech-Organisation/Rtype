@@ -47,6 +47,13 @@ void ServerApp::setLobbyCode(const std::string& code) {
     }
 }
 
+void ServerApp::broadcastMessage(const std::string& message) {
+    if (_networkServer) {
+        // userId 0 is reserved for system messages
+        _networkServer->broadcastChat(0, message);
+    }
+}
+
 ServerApp::ServerApp(std::unique_ptr<IGameConfig> gameConfig,
                      std::shared_ptr<std::atomic<bool>> shutdownFlag,
                      bool verbose, std::shared_ptr<BanManager> banManager)

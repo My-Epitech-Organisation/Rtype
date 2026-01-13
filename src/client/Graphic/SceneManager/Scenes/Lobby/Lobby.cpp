@@ -994,6 +994,14 @@ Lobby::~Lobby() {
             });
     }
 
+    for (auto chatHistoryEnt : _chatHistoryEntities) {
+        if (_registry && _registry->isAlive(chatHistoryEnt)) {
+            _registry->killEntity(chatHistoryEnt);
+        }
+    }
+    _chatHistoryEntities.clear();
+    _chatHistory.clear();
+
     for (auto& [userId, entities] : _listUser) {
         for (auto entity : entities) {
             if (_registry) {
