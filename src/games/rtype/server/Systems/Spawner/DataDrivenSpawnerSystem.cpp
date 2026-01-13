@@ -138,6 +138,11 @@ void DataDrivenSpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
             }
         }
 
+        auto powerupSpawns = _waveManager.getPowerUpSpawns(deltaTime);
+        for (const auto& powerupSpawn : powerupSpawns) {
+            spawnPowerUpFromConfig(registry, powerupSpawn);
+        }
+
         if (_waveManager.isAllWavesComplete()) {
             auto bossId = _waveManager.getBossId();
             if (bossId.has_value() && !_bossSpawned) {
@@ -416,6 +421,11 @@ void DataDrivenSpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
             magnitude = 50.0F;
             variant = shared::PowerUpVariant::HealthBoost;
             break;
+        case shared::PowerUpType::ForcePod:
+            duration = 0.0F;
+            magnitude = 1.0F;
+            variant = shared::PowerUpVariant::ForcePod;
+            break;
         default:
             variant = shared::PowerUpVariant::HealthBoost;
             break;
@@ -427,6 +437,7 @@ void DataDrivenSpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
     power.magnitude = magnitude;
     registry.emplaceComponent<shared::PowerUpComponent>(pickup, power);
     registry.emplaceComponent<PowerUpTypeComponent>(pickup, variant);
+    registry.emplaceComponent<shared::PickupTag>(pickup);
 
     uint32_t networkId = _nextNetworkId++;
     registry.emplaceComponent<NetworkIdComponent>(pickup, networkId);
@@ -435,6 +446,91 @@ void DataDrivenSpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
     event.type = engine::GameEventType::EntitySpawned;
     event.entityNetworkId = networkId;
     event.x = _config.screenWidth + 30.0F;
+    event.y = spawnY;
+    event.entityType = static_cast<uint8_t>(EntityType::Pickup);
+    event.subType = static_cast<uint8_t>(variant);
+    _emitEvent(event);
+}
+
+void DataDrivenSpawnerSystem::spawnPowerUpFromConfig(
+    ECS::Registry& registry, const PowerUpSpawnRequest& request) {
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    auto powerupConfigOpt = configRegistry.getPowerUp(request.powerUpId);
+
+    if (!powerupConfigOpt.has_value()) {
+        LOG_WARNING_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[DataDrivenSpawner] Unknown powerup type: " << request.powerUpId);
+        return;
+    }
+
+    const auto& powerupConfig = powerupConfigOpt.value().get();
+
+    float spawnX =
+        request.hasFixedX() ? *request.x : _config.screenWidth + 30.0F;
+    float spawnY = request.hasFixedY() ? *request.y : _spawnYDist(_rng);
+
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[DataDrivenSpawner] Spawning powerup '"
+                     << request.powerUpId << "' at (" << spawnX << ", "
+                     << spawnY << ")");
+
+    ECS::Entity pickup = registry.spawnEntity();
+
+    registry.emplaceComponent<TransformComponent>(pickup, spawnX, spawnY, 0.0F);
+    registry.emplaceComponent<VelocityComponent>(pickup, -_config.powerUpSpeed,
+                                                 0.0F);
+    registry.emplaceComponent<BoundingBoxComponent>(
+        pickup, powerupConfig.hitboxWidth, powerupConfig.hitboxHeight);
+
+    shared::PowerUpVariant variant =
+        PowerUpTypeComponent::stringToVariant(powerupConfig.id);
+
+    shared::PowerUpType type = shared::PowerUpType::HealthBoost;
+    float duration = powerupConfig.duration;
+    float magnitude = static_cast<float>(powerupConfig.value) / 100.0F;
+
+    switch (powerupConfig.effect) {
+        case shared::PowerUpConfig::EffectType::Health:
+            type = shared::PowerUpType::HealthBoost;
+            magnitude = static_cast<float>(powerupConfig.value) / 100.0F;
+            break;
+        case shared::PowerUpConfig::EffectType::SpeedBoost:
+            type = shared::PowerUpType::SpeedBoost;
+            break;
+        case shared::PowerUpConfig::EffectType::WeaponUpgrade:
+            if (powerupConfig.id == "force_pod") {
+                type = shared::PowerUpType::ForcePod;
+                duration = 0.0F;
+                magnitude = 1.0F;
+            } else {
+                type = shared::PowerUpType::RapidFire;
+            }
+            break;
+        case shared::PowerUpConfig::EffectType::Shield:
+            type = shared::PowerUpType::Shield;
+            break;
+        case shared::PowerUpConfig::EffectType::HealthBoost:
+            type = shared::PowerUpType::HealthBoost;
+            magnitude = static_cast<float>(powerupConfig.value) / 100.0F;
+            break;
+    }
+
+    shared::PowerUpComponent power{};
+    power.type = type;
+    power.duration = duration;
+    power.magnitude = magnitude;
+    registry.emplaceComponent<shared::PowerUpComponent>(pickup, power);
+    registry.emplaceComponent<PowerUpTypeComponent>(pickup, variant);
+    registry.emplaceComponent<shared::PickupTag>(pickup);
+
+    uint32_t networkId = _nextNetworkId++;
+    registry.emplaceComponent<NetworkIdComponent>(pickup, networkId);
+
+    engine::GameEvent event{};
+    event.type = engine::GameEventType::EntitySpawned;
+    event.entityNetworkId = networkId;
+    event.x = spawnX;
     event.y = spawnY;
     event.entityType = static_cast<uint8_t>(EntityType::Pickup);
     event.subType = static_cast<uint8_t>(variant);

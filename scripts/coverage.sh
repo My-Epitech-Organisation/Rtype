@@ -187,7 +187,13 @@ if $GENERATE_HTML; then
         '*/saves/*' \
         '*/src/server/shared/AdminServer.*' \
         '*/serverApp.cpp' \
+        '*/ServerApp.cpp' \
         '*/NetworkClient.cpp' \
+        '*/NetworkServer.cpp' \
+        '*/AdminServer.cpp' \
+        '*/LobbyDiscoveryServer.cpp' \
+        '*/DataDrivenSpawnerSystem.cpp' \
+        '*/PrefabLoader.cpp' \
         '*/TomlParser.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
@@ -317,7 +323,13 @@ else
         '*/saves/*' \
         '*/src/server/shared/AdminServer.*' \
         '*/serverApp.cpp' \
+        '*/ServerApp.cpp' \
         '*/NetworkClient.cpp' \
+        '*/NetworkServer.cpp' \
+        '*/AdminServer.cpp' \
+        '*/LobbyDiscoveryServer.cpp' \
+        '*/DataDrivenSpawnerSystem.cpp' \
+        '*/PrefabLoader.cpp' \
         '*/TomlParser.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true

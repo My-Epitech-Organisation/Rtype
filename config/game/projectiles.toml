@@ -15,8 +15,8 @@ damage = 25
 speed = 500.0
 lifetime = 3.0
 
-hitbox_width = 16.0
-hitbox_height = 8.0
+hitbox_width = 50.0
+hitbox_height = 50.0
 
 piercing = false
 max_hits = 1
@@ -75,8 +75,8 @@ damage = 15
 speed = 300.0
 lifetime = 5.0
 
-hitbox_width = 12.0
-hitbox_height = 12.0
+hitbox_width = 28.0
+hitbox_height = 28.0
 
 piercing = false
 max_hits = 1

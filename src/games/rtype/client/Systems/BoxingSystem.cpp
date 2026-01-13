@@ -12,6 +12,9 @@
 
 #include "../Components/BoxingComponent.hpp"
 #include "../Components/ImageComponent.hpp"
+#include "../Components/RotationComponent.hpp"
+#include "../Components/SizeComponent.hpp"
+#include "../Components/TextureRectComponent.hpp"
 #include "../shared/Components/BoundingBoxComponent.hpp"
 #include "Graphic/Accessibility.hpp"
 #include "Logger/Macros.hpp"
@@ -36,23 +39,22 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
     registry
         .view<::rtype::games::rtype::shared::TransformComponent,
               ::rtype::games::rtype::shared::BoundingBoxComponent>()
-        .each([this, &entityCount](auto /*entt*/, const auto& pos,
+        .each([this, &entityCount](auto entity, const auto& transform,
                                    const auto& bbox) {
             entityCount++;
-            ::rtype::display::Vector2f position = {pos.x - bbox.width / 2.0f,
-                                                   pos.y - bbox.height / 2.0f};
+            ::rtype::display::Vector2f position;
+            position.x = transform.x - bbox.width / 2.0f;
+            position.y = transform.y - bbox.height / 2.0f;
             ::rtype::display::Vector2f size = {bbox.width, bbox.height};
-            ::rtype::display::Color fillColor = {255, 0, 0,
-                                                 80};  // More visible
-            ::rtype::display::Color outlineColor = {255, 0, 0,
-                                                    255};  // Solid outline
+            ::rtype::display::Color fillColor = {255, 0, 0, 80};
+            ::rtype::display::Color outlineColor = {255, 0, 0, 255};
 
             this->_display->drawRectangle(position, size, fillColor,
                                           outlineColor, 2.0f);
         });
 
     static int logCounter = 0;
-    if (logCounter++ % 60 == 0) {  // Log once per second at 60fps
+    if (logCounter++ % 60 == 0) {
         LOG_INFO("[BoxingSystem] Drawing hitboxes for " << entityCount
                                                         << " entities");
     }

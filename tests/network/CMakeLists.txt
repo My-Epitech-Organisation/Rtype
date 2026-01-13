@@ -7,6 +7,22 @@ target_link_libraries(test_protocol PRIVATE
     GTest::gtest_main
 )
 
+# Compressor tests
+add_executable(test_compressor test_compressor.cpp)
+
+target_link_libraries(test_compressor PRIVATE
+    network
+    GTest::gtest_main
+)
+
+# Compressor decompression tests
+add_executable(test_compressor_decompress test_compressor_decompress.cpp)
+
+target_link_libraries(test_compressor_decompress PRIVATE
+    network
+    GTest::gtest_main
+)
+
 # Serialization tests (legacy - to be replaced by #161)
 add_executable(test_serialization test_serialization.cpp)
 
@@ -229,6 +245,8 @@ target_link_libraries(test_compressor_branches PRIVATE
 include(GoogleTest)
 if(WIN32 OR MSVC)
     gtest_discover_tests(test_protocol WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_compressor WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    gtest_discover_tests(test_compressor_decompress WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_serialization WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_error WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     gtest_discover_tests(test_asio_socket WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -263,6 +281,8 @@ if(WIN32 OR MSVC)
     gtest_discover_tests(test_compressor_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_protocol)
+    gtest_discover_tests(test_compressor)
+    gtest_discover_tests(test_compressor_decompress)
     gtest_discover_tests(test_serialization)
     gtest_discover_tests(test_error)
     gtest_discover_tests(test_asio_socket)

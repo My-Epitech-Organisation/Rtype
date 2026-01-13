@@ -12,6 +12,7 @@
 #include <span>
 #include <string>
 
+#include "games/rtype/server/GameEngine.hpp"
 #include "games/rtype/shared/Components/EntityType.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
@@ -43,6 +44,13 @@ ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
 void ServerApp::setLobbyCode(const std::string& code) {
     if (_networkServer) {
         _networkServer->setExpectedLobbyCode(code);
+    }
+}
+
+void ServerApp::broadcastMessage(const std::string& message) {
+    if (_networkServer) {
+        // userId 0 is reserved for system messages
+        _networkServer->broadcastChat(0, message);
     }
 }
 
@@ -413,6 +421,25 @@ bool ServerApp::initialize() {
             }
             return _entitySpawner->handlePlayerShoot(*entityOpt, networkId);
         });
+
+    _inputHandler->setForcePodLaunchCallback(
+        [this](std::uint32_t playerNetworkId) {
+            if (!_gameEngine) {
+                return;
+            }
+            auto* rtypeEngine =
+                dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                    _gameEngine.get());
+            if (!rtypeEngine) {
+                return;
+            }
+            auto* launchSystem = rtypeEngine->getForcePodLaunchSystem();
+            if (launchSystem) {
+                launchSystem->handleForcePodInput(rtypeEngine->getRegistry(),
+                                                  playerNetworkId);
+            }
+        });
+
     _networkSystem->setInputHandler([this](std::uint32_t userId,
                                            std::uint8_t inputMask,
                                            std::optional<ECS::Entity> entity) {

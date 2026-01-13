@@ -13,6 +13,7 @@
 #include "Collision/CollisionSystem.hpp"
 #include "Destroy/DestroySystem.hpp"
 #include "EnemyShooting/EnemyShootingSystem.hpp"
+#include "ForcePod/ForcePodAttachmentSystem.hpp"
 #include "Projectile/ProjectileSpawnerSystem.hpp"
 #include "Spawner/SpawnerSystem.hpp"
 #include "WaveManager/WaveManager.hpp"
