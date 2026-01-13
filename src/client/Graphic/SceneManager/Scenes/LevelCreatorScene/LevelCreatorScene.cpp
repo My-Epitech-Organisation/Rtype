@@ -12,6 +12,8 @@
 #include <fstream>
 #include <iostream>
 
+#include <toml++/toml.hpp>
+
 #include "Components/HiddenComponent.hpp"
 #include "Components/RectangleComponent.hpp"
 #include "Components/TextComponent.hpp"
@@ -53,6 +55,31 @@ void LevelCreatorScene::addElementToSection(const std::string& sectionId,
     }
 }
 
+void LevelCreatorScene::_getLevelsName()
+{
+    if (!std::filesystem::exists("./config/game/levels/")) return;
+    for (const auto& s :
+        std::filesystem::directory_iterator("./config/game/levels/")) {
+        std::string path = s.path().string();
+        if (!path.ends_with(".toml"))
+            continue;
+        try {
+            auto config = toml::parse_file(path);
+            if (config.contains("level") && config["level"].as_table()->contains("name")) {
+                std::string levelName = config["level"]["name"].value_or("");
+                if (!levelName.empty()) {
+                    this->_listNextLevel.push_back(levelName);
+                }
+            }
+        } catch (const toml::parse_error& err) {
+            std::cerr << "Error parsing TOML file " << path << ": " << err << std::endl;
+        }
+    }
+    std::sort(this->_listNextLevel.begin(), this->_listNextLevel.end());
+    auto last = std::unique(this->_listNextLevel.begin(), this->_listNextLevel.end());
+    this->_listNextLevel.erase(last, this->_listNextLevel.end());
+}
+
 LevelCreatorScene::LevelCreatorScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> assetsManager,
@@ -68,10 +95,15 @@ LevelCreatorScene::LevelCreatorScene(
               window)),
       _switchToScene(std::move(switchToScene)),
       _libBackgrounds(std::move(libBackgrounds)) {
+    this->_getLevelsName();
+    if (!this->_listNextLevel.empty()) {
+        this->_nextLevelIteratorCurrent = this->_listNextLevel.begin();
+        this->_nextLevelId = *this->_nextLevelIteratorCurrent;
+    }
+
     this->_listEntity = (EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "Level Creator", nullptr));
 
-    this->_bgIteratorFst = _libBackgrounds.begin();
     this->_bgIteratorCurrent = _libBackgrounds.begin();
 
     this->_bgPluginName = this->_bgIteratorCurrent->first;
@@ -171,15 +203,44 @@ LevelCreatorScene::LevelCreatorScene(
                             _registry, _assetsManager,
                             "Next Level:", "main_font", {labelX, 0}, 24.f),
                         currentY);
-    _nextLevelInput = EntityFactory::createTextInput(
-        _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "levelX.toml", "",
-        50, false);
-    auto staticText = EntityFactory::createStaticText(
-        _registry, _assetsManager, "(Leave empty for end of the game)",
-        "main_font", {inputX, 0}, 18.f);
-    addElementToSection("settings", _nextLevelInput, currentY);
-    auto tmp = currentY + 50.f;
-    addElementToSection("settings", staticText, tmp);
+
+    _btnNextLevel = EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text("main_font",
+                                          rtype::display::Color::White(), 20,
+                                          this->_nextLevelId),
+        rtype::games::rtype::shared::TransformComponent(inputX, 0),
+        rtype::games::rtype::client::Rectangle(
+            {120, 40}, rtype::display::Color(0, 180, 0, 255),
+            rtype::display::Color(0, 135, 0, 255)),
+        this->_assetsManager, std::function<void()>([this]() {
+            if (this->_listNextLevel.empty()) return;
+            ++this->_nextLevelIteratorCurrent;
+            if (this->_nextLevelIteratorCurrent == this->_listNextLevel.end()) {
+                this->_nextLevelIteratorCurrent = this->_listNextLevel.begin();
+            }
+            this->_nextLevelId = *this->_nextLevelIteratorCurrent;
+
+            if (this->_registry
+                    ->hasComponent<rtype::games::rtype::client::Text>(
+                        this->_btnNextLevel)) {
+                this->_registry
+                    ->getComponent<rtype::games::rtype::client::Text>(
+                        this->_btnNextLevel)
+                    .textContent = this->_nextLevelId;
+            }
+        }));
+
+    addElementToSection("settings", _btnNextLevel, currentY);
+    // _nextLevelInput = EntityFactory::createTextInput(
+    //     _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "levelX.toml", "",
+    //     50, false);
+    // auto staticText = EntityFactory::createStaticText(
+    //     _registry, _assetsManager, "(Leave empty for end of the game)",
+    //     "main_font", {inputX, 0}, 18.f);
+    // addElementToSection("settings", _nextLevelInput, currentY);
+    // auto tmp = currentY + 50.f;
+    // addElementToSection("settings", staticText, tmp);
     currentY += 80.f;
 
     auto btnAdd = EntityFactory::createButton(

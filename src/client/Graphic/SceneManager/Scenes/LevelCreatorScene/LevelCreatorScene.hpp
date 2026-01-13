@@ -110,14 +110,20 @@ class LevelCreatorScene : public AScene {
 
     std::map<std::string, std::shared_ptr<IBackground>> _libBackgrounds;
     std::map<std::string, std::shared_ptr<IBackground>>::iterator
-        _bgIteratorFst;
-    std::map<std::string, std::shared_ptr<IBackground>>::iterator
         _bgIteratorCurrent;
+
+    std::vector<std::string> _listNextLevel;
+    std::vector<std::string>::iterator
+        _nextLevelIteratorCurrent;
 
     /** @brief Name of the plugin for the background selection button. */
     std::string _bgPluginName;
+    /** @brief Name of the next level selection button. */
+    std::string _nextLevelId;
     /** @brief Entity id for the background selection button. */
     ECS::Entity _levelBackgroundBtn;
+    /** @brief Entity id for the next level selection button. */
+    ECS::Entity _btnNextLevel;
     /** @brief Entity id for the level name input field. */
     ECS::Entity _levelNameInput;
     /** @brief Entity id for the level identifier input field. */
@@ -208,6 +214,11 @@ class LevelCreatorScene : public AScene {
      * @param scene The target scene to switch to.
      */
     std::function<void(const SceneManager::Scene&)> _switchToScene;
+
+    /**
+     * @brief Scans level directory for .toml files to populate the levels list.
+     */
+    void _getLevelsName();
 
     /**
      * @brief Temporary status message entity.
