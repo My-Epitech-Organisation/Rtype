@@ -14,6 +14,9 @@ set(ECS_SOURCES
 
 add_library(ecs STATIC ${ECS_SOURCES})
 
+# Enable Position Independent Code (PIC) to allow linking into shared libraries
+set_property(TARGET ecs PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 target_include_directories(ecs PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/src
