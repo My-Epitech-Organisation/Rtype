@@ -48,7 +48,11 @@ std::string getTimestamp() {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
     std::tm tm_buf{};
+#if defined(_WIN32)
+    localtime_s(&tm_buf, &time);
+#else
     localtime_r(&time, &tm_buf);
+#endif
     std::ostringstream oss;
     oss << "[" << std::setfill('0') << std::setw(2) << tm_buf.tm_hour << ":"
         << std::setw(2) << tm_buf.tm_min << ":" << std::setw(2) << tm_buf.tm_sec
