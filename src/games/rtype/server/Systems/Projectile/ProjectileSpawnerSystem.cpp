@@ -237,18 +237,17 @@ uint32_t ProjectileSpawnerSystem::spawnChargedProjectile(
 
     float spawnX = playerX + _config.playerProjectileOffsetX;
     float spawnY = playerY + _config.playerProjectileOffsetY;
-    uint8_t encodedSubType = static_cast<uint8_t>(weaponConfig.projectileType) |
-                             (chargeLevel << 6);
-    return spawnProjectileWithConfig(registry, spawnX, spawnY,
-                                     weaponConfig.speed, 0.0F, weaponConfig,
-                                     ProjectileOwner::Player, playerNetworkId,
-                                     encodedSubType);
+    uint8_t encodedSubType =
+        static_cast<uint8_t>(weaponConfig.projectileType) | (chargeLevel << 6);
+    return spawnProjectileWithConfig(
+        registry, spawnX, spawnY, weaponConfig.speed, 0.0F, weaponConfig,
+        ProjectileOwner::Player, playerNetworkId, encodedSubType);
 }
 
 uint32_t ProjectileSpawnerSystem::spawnProjectileWithConfig(
     ECS::Registry& registry, float x, float y, float vx, float vy,
-    const WeaponConfig& config, ProjectileOwner owner,
-    uint32_t ownerNetworkId, uint8_t subTypeOverride) {
+    const WeaponConfig& config, ProjectileOwner owner, uint32_t ownerNetworkId,
+    uint8_t subTypeOverride) {
     ECS::Entity projectile = registry.spawnEntity();
     registry.emplaceComponent<TransformComponent>(projectile, x, y, 0.0F);
     registry.emplaceComponent<VelocityComponent>(projectile, vx, vy);
@@ -280,7 +279,9 @@ uint32_t ProjectileSpawnerSystem::spawnProjectileWithConfig(
     event.y = y;
     event.rotation = 0.0F;
     event.entityType = static_cast<uint8_t>(EntityType::Missile);
-    event.subType = (subTypeOverride != 0) ? subTypeOverride : static_cast<uint8_t>(config.projectileType);
+    event.subType = (subTypeOverride != 0)
+                        ? subTypeOverride
+                        : static_cast<uint8_t>(config.projectileType);
     _emitEvent(event);
 
     return networkId;

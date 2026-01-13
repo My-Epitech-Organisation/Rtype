@@ -238,7 +238,8 @@ void RtypeGameScene::update() {
         bool isChargedShotNow =
             (inputMask & ::rtype::network::InputMask::kChargeLevelMask) != 0;
         bool wasChargedShotLast =
-            (_lastInputMask & ::rtype::network::InputMask::kChargeLevelMask) != 0;
+            (_lastInputMask & ::rtype::network::InputMask::kChargeLevelMask) !=
+            0;
 
         if (isShootingNow) {
             if (!wasShootingLast) {
@@ -261,13 +262,15 @@ void RtypeGameScene::update() {
         if (shouldSend) {
             _networkSystem->sendInput(inputMask);
             if (_registry && _registry->hasSingleton<ChargeShotInputState>()) {
-                auto& chargeState = _registry->getSingleton<ChargeShotInputState>();
+                auto& chargeState =
+                    _registry->getSingleton<ChargeShotInputState>();
                 if (chargeState.shouldFireShot) {
                     chargeState.shouldFireShot = false;
                     chargeState.releasedChargeLevel =
                         ::rtype::games::rtype::shared::ChargeLevel::None;
                     LOG_DEBUG_CAT(::rtype::LogCategory::Input,
-                                  "[RtypeGameScene] Reset shouldFireShot flag after sending input");
+                                  "[RtypeGameScene] Reset shouldFireShot flag "
+                                  "after sending input");
                 }
             }
         }
@@ -281,7 +284,8 @@ void RtypeGameScene::render(::rtype::display::IDisplay& display) {
 
 void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
     if (event.type == ::rtype::display::EventType::KeyPressed) {
-        LOG_INFO("[RtypeGameScene] Key pressed: " << static_cast<int>(event.key.code));
+        LOG_INFO("[RtypeGameScene] Key pressed: "
+                 << static_cast<int>(event.key.code));
     }
     if (event.type == ::rtype::display::EventType::KeyPressed ||
         event.type == ::rtype::display::EventType::KeyReleased) {
@@ -314,18 +318,23 @@ void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
             _registry->getSingleton<ChargeShotInputState>().isPressed = false;
         }
     }
-    auto chargeShotBtn = _keybinds->getJoyButtonBinding(GameAction::CHARGE_SHOT);
+    auto chargeShotBtn =
+        _keybinds->getJoyButtonBinding(GameAction::CHARGE_SHOT);
     if (event.type == ::rtype::display::EventType::JoystickButtonPressed &&
-        chargeShotBtn.has_value() && event.joystickButton.button == *chargeShotBtn) {
-        LOG_INFO("[RtypeGameScene] *** CHARGE SHOT JOYSTICK BUTTON PRESSED ***");
+        chargeShotBtn.has_value() &&
+        event.joystickButton.button == *chargeShotBtn) {
+        LOG_INFO(
+            "[RtypeGameScene] *** CHARGE SHOT JOYSTICK BUTTON PRESSED ***");
         if (!_registry->hasSingleton<ChargeShotInputState>()) {
             _registry->setSingleton<ChargeShotInputState>();
         }
         _registry->getSingleton<ChargeShotInputState>().isPressed = true;
     }
     if (event.type == ::rtype::display::EventType::JoystickButtonReleased &&
-        chargeShotBtn.has_value() && event.joystickButton.button == *chargeShotBtn) {
-        LOG_INFO("[RtypeGameScene] *** CHARGE SHOT JOYSTICK BUTTON RELEASED ***");
+        chargeShotBtn.has_value() &&
+        event.joystickButton.button == *chargeShotBtn) {
+        LOG_INFO(
+            "[RtypeGameScene] *** CHARGE SHOT JOYSTICK BUTTON RELEASED ***");
         if (_registry->hasSingleton<ChargeShotInputState>()) {
             _registry->getSingleton<ChargeShotInputState>().isPressed = false;
         }
@@ -371,10 +380,11 @@ std::uint8_t RtypeGameScene::getInputMask() const {
                     mask |= ::rtype::network::InputMask::kShoot;
                     break;
             }
-            LOG_DEBUG_CAT(::rtype::LogCategory::Input,
-                          "[RtypeGameScene] Charged shot released at level "
-                              << static_cast<int>(chargeState.releasedChargeLevel)
-                              << ", mask=0x" << std::hex << static_cast<int>(mask));
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::Input,
+                "[RtypeGameScene] Charged shot released at level "
+                    << static_cast<int>(chargeState.releasedChargeLevel)
+                    << ", mask=0x" << std::hex << static_cast<int>(mask));
         }
     }
     return mask;
@@ -407,7 +417,8 @@ void RtypeGameScene::setupLocalPlayerCallback() {
                     registry->emplaceComponent<ColorTint>(entity);
                 }
                 LOG_DEBUG_CAT(::rtype::LogCategory::UI,
-                              "[RtypeGameScene] Local player entity assigned with charge visual components");
+                              "[RtypeGameScene] Local player entity assigned "
+                              "with charge visual components");
             }
             _localPlayerEntity = entity;
             _localPlayerId = userId;

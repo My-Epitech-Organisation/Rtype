@@ -13,8 +13,8 @@
 #include "../../../../client/Graphic/AssetManager/AssetManager.hpp"
 #include "../../../../client/network/ClientNetworkSystem.hpp"
 #include "Components/EnemyTypeComponent.hpp"
-#include "games/rtype/shared/Components/ProjectileComponent.hpp"
 #include "ECS.hpp"
+#include "games/rtype/shared/Components/ProjectileComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -68,12 +68,13 @@ class RtypeEntityFactory {
      * @param reg ECS registry
      * @param assetsManager Asset manager
      * @param entity Entity to configure
-     * @param encodedSubType Encoded subtype (bits 0-5: ProjectileType, bits 6-7: ChargeLevel for charged shots)
+     * @param encodedSubType Encoded subtype (bits 0-5: ProjectileType, bits
+     * 6-7: ChargeLevel for charged shots)
      */
-    static void setupMissileEntity(
-        ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
-        ECS::Entity entity,
-        uint8_t encodedSubType = 0);
+    static void setupMissileEntity(ECS::Registry& reg,
+                                   std::shared_ptr<AssetManager> assetsManager,
+                                   ECS::Entity entity,
+                                   uint8_t encodedSubType = 0);
     /**
      * @brief Create a pickup entity with all components
      *

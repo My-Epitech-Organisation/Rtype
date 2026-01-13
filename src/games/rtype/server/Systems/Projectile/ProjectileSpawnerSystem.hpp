@@ -123,7 +123,8 @@ class ProjectileSpawnerSystem : public ::rtype::engine::ASystem {
      * @param config Weapon configuration
      * @param owner Owner type (Player/Enemy)
      * @param ownerNetworkId Network ID of owner
-     * @param subTypeOverride Optional override for subType (used for charged shots with level encoding)
+     * @param subTypeOverride Optional override for subType (used for charged
+     * shots with level encoding)
      * @return Network ID of spawned projectile
      */
     uint32_t spawnProjectileWithConfig(ECS::Registry& registry, float x,

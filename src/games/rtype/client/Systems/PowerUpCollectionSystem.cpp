@@ -80,8 +80,8 @@ void PowerUpCollectionSystem::update(ECS::Registry& registry, float /*dt*/) {
                 << " (remainingTime=" << activePowerUp.remainingTime << ")");
 
             if (activePowerUp.remainingTime > 0.0f) {
-                pendingPopups.push_back({transform.x + 20.f, transform.y,
-                                         displayName, color});
+                pendingPopups.push_back(
+                    {transform.x + 20.f, transform.y, displayName, color});
             }
         }
         _lastPowerUpState[playerId.playerId] = {activePowerUp.type,
@@ -90,8 +90,7 @@ void PowerUpCollectionSystem::update(ECS::Registry& registry, float /*dt*/) {
 
     for (const auto& popup : pendingPopups) {
         VisualCueFactory::createPowerUpPopup(
-            registry,
-            ::rtype::display::Vector2<float>(popup.x, popup.y),
+            registry, ::rtype::display::Vector2<float>(popup.x, popup.y),
             popup.displayName, _font, popup.color);
     }
 }

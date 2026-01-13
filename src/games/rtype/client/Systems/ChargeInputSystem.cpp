@@ -7,10 +7,10 @@
 
 #include "ChargeInputSystem.hpp"
 
-#include "Logger/Macros.hpp"
 #include "../Components/ChargeShotVisualComponent.hpp"
 #include "../Components/TagComponent.hpp"
 #include "../GameScene/RtypeGameScene.hpp"
+#include "Logger/Macros.hpp"
 #include "games/rtype/shared/Components/CooldownComponent.hpp"
 
 namespace rtype::games::rtype::client {
@@ -32,8 +32,7 @@ void ChargeInputSystem::update(ECS::Registry& registry, float dt) {
         }
     }
 
-    auto view =
-        registry.view<shared::ChargeComponent, ControllableTag>();
+    auto view = registry.view<shared::ChargeComponent, ControllableTag>();
 
     size_t entityCount = 0;
     static bool loggedOnce = false;
@@ -43,10 +42,10 @@ void ChargeInputSystem::update(ECS::Registry& registry, float dt) {
                       "ChargeComponent + ControllableTag");
         loggedOnce = true;
     }
-    
-    view.each([this, dt, &registry, &entityCount](ECS::Entity entity,
-                                    shared::ChargeComponent& charge,
-                                    ControllableTag& /*tag*/) {
+
+    view.each([this, dt, &registry, &entityCount](
+                  ECS::Entity entity, shared::ChargeComponent& charge,
+                  ControllableTag& /*tag*/) {
         entityCount++;
         if (_shootPressed && !_wasShootPressed) {
             LOG_DEBUG_CAT(::rtype::LogCategory::Input,
@@ -61,7 +60,7 @@ void ChargeInputSystem::update(ECS::Registry& registry, float dt) {
         if (_shootPressed != _wasShootPressed) {
             LOG_INFO("[ChargeInputSystem] Button state changed: pressed="
                      << _shootPressed << " wasPressed=" << _wasShootPressed
-                     << " wasCharging=" << charge.wasCharging 
+                     << " wasCharging=" << charge.wasCharging
                      << " currentCharge=" << charge.currentCharge
                      << " level=" << static_cast<int>(charge.currentLevel));
         }
@@ -72,21 +71,21 @@ void ChargeInputSystem::update(ECS::Registry& registry, float dt) {
                      << static_cast<int>(level));
 
             if (level != shared::ChargeLevel::None) {
-                LOG_DEBUG_CAT(
-                    ::rtype::LogCategory::Input,
-                    "[ChargeInputSystem] Released charge at level "
-                        << static_cast<int>(level));
+                LOG_DEBUG_CAT(::rtype::LogCategory::Input,
+                              "[ChargeInputSystem] Released charge at level "
+                                  << static_cast<int>(level));
                 _chargedShotReleased = true;
                 _lastReleasedLevel = level;
 
                 if (registry.hasSingleton<ChargeShotInputState>()) {
-                    auto& chargeState = registry.getSingleton<ChargeShotInputState>();
+                    auto& chargeState =
+                        registry.getSingleton<ChargeShotInputState>();
                     chargeState.shouldFireShot = true;
                     chargeState.releasedChargeLevel = level;
-                    LOG_DEBUG_CAT(
-                        ::rtype::LogCategory::Input,
-                        "[ChargeInputSystem] Set shouldFireShot flag for charged shot at level "
-                            << static_cast<int>(level));
+                    LOG_DEBUG_CAT(::rtype::LogCategory::Input,
+                                  "[ChargeInputSystem] Set shouldFireShot flag "
+                                  "for charged shot at level "
+                                      << static_cast<int>(level));
                 }
 
                 if (registry.hasComponent<ChargeShotVisual>(entity)) {
@@ -117,7 +116,7 @@ void ChargeInputSystem::update(ECS::Registry& registry, float dt) {
     if (!loggedEntityCount && _shootPressed) {
         LOG_DEBUG_CAT(::rtype::LogCategory::Input,
                       "[ChargeInputSystem] Found " << entityCount
-                                                    << " controllable entities");
+                                                   << " controllable entities");
         loggedEntityCount = true;
     }
 

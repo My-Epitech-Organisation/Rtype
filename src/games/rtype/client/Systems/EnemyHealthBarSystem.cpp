@@ -32,9 +32,9 @@ void EnemyHealthBarSystem::update(ECS::Registry& registry,
 
     std::vector<ECS::Entity> enemiesToCreateBars;
 
-    enemyView.each([this, &registry, &enemiesToCreateBars](auto entity, const auto& /*enemyTag*/,
-                                     const auto& health,
-                                     const auto& /*transform*/) {
+    enemyView.each([this, &registry, &enemiesToCreateBars](
+                       auto entity, const auto& /*enemyTag*/,
+                       const auto& health, const auto& /*transform*/) {
         if (registry.hasComponent<rs::DestroyTag>(entity)) {
             removeHealthBar(entity, registry);
             return;

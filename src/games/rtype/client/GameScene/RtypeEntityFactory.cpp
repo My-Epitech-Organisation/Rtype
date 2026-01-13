@@ -387,22 +387,26 @@ void RtypeEntityFactory::setupBydosEntity(
 void RtypeEntityFactory::setupMissileEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
     ECS::Entity entity, uint8_t encodedSubType) {
-    shared::ProjectileType projectileType = static_cast<shared::ProjectileType>(encodedSubType & 0x3F);
+    shared::ProjectileType projectileType =
+        static_cast<shared::ProjectileType>(encodedSubType & 0x3F);
     uint8_t chargeLevel = (encodedSubType >> 6) & 0x03;
 
     LOG_INFO("[RtypeEntityFactory] Adding Missile components, encodedSubType=0x"
              << std::hex << static_cast<int>(encodedSubType)
-             << " projectileType=" << std::dec << static_cast<int>(projectileType)
-             << " chargeLevel=" << static_cast<int>(chargeLevel)
-             << " (ChargedShot=" << static_cast<int>(shared::ProjectileType::ChargedShot)
-             << ")");
+             << " projectileType=" << std::dec
+             << static_cast<int>(projectileType) << " chargeLevel="
+             << static_cast<int>(chargeLevel) << " (ChargedShot="
+             << static_cast<int>(shared::ProjectileType::ChargedShot) << ")");
 
     auto& configRegistry = shared::EntityConfigRegistry::getInstance();
 
     std::string configName = "basic_bullet";
     if (projectileType == shared::ProjectileType::ChargedShot) {
         configName = "charged_shot";
-        LOG_INFO("[RtypeEntityFactory] *** CREATING CHARGED SHOT PROJECTILE *** level=" << static_cast<int>(chargeLevel));
+        LOG_INFO(
+            "[RtypeEntityFactory] *** CREATING CHARGED SHOT PROJECTILE *** "
+            "level="
+            << static_cast<int>(chargeLevel));
     }
 
     auto projectileConfigOpt = configRegistry.getProjectile(configName);
@@ -452,9 +456,13 @@ void RtypeEntityFactory::setupMissileEntity(
                 break;
         }
         reg.emplaceComponent<Size>(entity, sizeMultiplier, sizeMultiplier);
-        LOG_INFO("[RtypeEntityFactory] Charged shot size multiplier: " << sizeMultiplier);
+        LOG_INFO("[RtypeEntityFactory] Charged shot size multiplier: "
+                 << sizeMultiplier);
         reg.emplaceComponent<shared::ChargedProjectileComponent>(entity, level);
-        LOG_INFO("[RtypeEntityFactory] Added ChargedProjectileComponent for animation, level=" << static_cast<int>(level));
+        LOG_INFO(
+            "[RtypeEntityFactory] Added ChargedProjectileComponent for "
+            "animation, level="
+            << static_cast<int>(level));
     } else {
         reg.emplaceComponent<Image>(entity, "projectile_player_laser");
         reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
@@ -469,10 +477,13 @@ void RtypeEntityFactory::setupMissileEntity(
         ::rtype::display::Vector2f{hitboxWidth, hitboxHeight});
     reg.emplaceComponent<Animation>(entity, 4, 0.1, false);
     if (projectileType == shared::ProjectileType::ChargedShot) {
-        reg.getComponent<BoxingComponent>(entity).outlineColor = {255, 200, 50, 255};
-        reg.getComponent<BoxingComponent>(entity).fillColor = {255, 200, 50, 80};
+        reg.getComponent<BoxingComponent>(entity).outlineColor = {255, 200, 50,
+                                                                  255};
+        reg.getComponent<BoxingComponent>(entity).fillColor = {255, 200, 50,
+                                                               80};
     } else {
-        reg.getComponent<BoxingComponent>(entity).outlineColor = {0, 220, 180, 255};
+        reg.getComponent<BoxingComponent>(entity).outlineColor = {0, 220, 180,
+                                                                  255};
         reg.getComponent<BoxingComponent>(entity).fillColor = {0, 220, 180, 35};
     }
     reg.emplaceComponent<ZIndex>(entity, 1);

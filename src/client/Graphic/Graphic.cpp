@@ -127,7 +127,8 @@ void Graphic::_render() {
 
     this->_systemScheduler->runSystem("render");
     this->_systemScheduler->runSystem("boxing");
-    if (_chargeVisualSystem && _sceneManager->getCurrentScene() == SceneManager::IN_GAME) {
+    if (_chargeVisualSystem &&
+        _sceneManager->getCurrentScene() == SceneManager::IN_GAME) {
         _chargeVisualSystem->renderChargeBar(*_registry);
     }
 
@@ -505,14 +506,17 @@ Graphic::Graphic(
     try {
         assetsConfig = parser.loadFromFile("./assets/config.toml");
     } catch (const std::exception& e) {
-        LOG_ERROR_CAT(::rtype::LogCategory::Graphics, "[Graphic] Exception loading config: " +
-            std::string(e.what()));
+        LOG_ERROR_CAT(
+            ::rtype::LogCategory::Graphics,
+            "[Graphic] Exception loading config: " + std::string(e.what()));
         throw;
     } catch (...) {
-        LOG_ERROR_CAT(::rtype::LogCategory::Graphics, "[Graphic] Unknown exception loading config");
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
+                      "[Graphic] Unknown exception loading config");
         throw;
     }
-    if (!assetsConfig.has_value()) throw std::runtime_error("Failed to load config");
+    if (!assetsConfig.has_value())
+        throw std::runtime_error("Failed to load config");
     this->_keybinds = std::make_shared<KeyboardActions>();
 
 #ifdef _WIN32

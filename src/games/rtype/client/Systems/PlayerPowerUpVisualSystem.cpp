@@ -51,7 +51,8 @@ void PlayerPowerUpVisualSystem::update(ECS::Registry& registry, float /*dt*/) {
                 tint = {255, 215, 0, 240};
             }
             if (!registry.hasComponent<ColorTint>(entity)) {
-                registry.emplaceComponent<ColorTint>(entity, tint.r, tint.g, tint.b, tint.a);
+                registry.emplaceComponent<ColorTint>(entity, tint.r, tint.g,
+                                                     tint.b, tint.a);
             } else {
                 auto& colorTint = registry.getComponent<ColorTint>(entity);
                 colorTint.r = tint.r;

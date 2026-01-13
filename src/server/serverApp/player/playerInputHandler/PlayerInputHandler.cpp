@@ -191,10 +191,11 @@ void PlayerInputHandler::processChargedShot(std::uint32_t userId,
     if (!_registry->hasComponent<Transform>(entity) ||
         !_registry->hasComponent<ShootCooldown>(entity)) {
         if (_verbose) {
-            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                          "[InputHandler] Player "
-                              << userId
-                              << " missing Position or ShootCooldown for charged shot");
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[InputHandler] Player "
+                    << userId
+                    << " missing Position or ShootCooldown for charged shot");
         }
         return;
     }
@@ -203,9 +204,10 @@ void PlayerInputHandler::processChargedShot(std::uint32_t userId,
     if (!cooldown.canShoot()) {
         if (_verbose) {
             LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                          "[InputHandler] Player " << userId
-                                                   << " cooldown not ready for charged shot: "
-                                                   << cooldown.currentCooldown);
+                          "[InputHandler] Player "
+                              << userId
+                              << " cooldown not ready for charged shot: "
+                              << cooldown.currentCooldown);
         }
         return;
     }
@@ -216,7 +218,8 @@ void PlayerInputHandler::processChargedShot(std::uint32_t userId,
             auto networkIdOpt = _networkSystem->getNetworkId(entity);
             if (networkIdOpt.has_value()) {
                 auto& pos = _registry->getComponent<Transform>(entity);
-                std::uint32_t projectileId = _shootCallback(*networkIdOpt, pos.x, pos.y);
+                std::uint32_t projectileId =
+                    _shootCallback(*networkIdOpt, pos.x, pos.y);
                 if (projectileId != 0) {
                     cooldown.triggerCooldown();
                 }
@@ -228,15 +231,16 @@ void PlayerInputHandler::processChargedShot(std::uint32_t userId,
     auto networkIdOpt = _networkSystem->getNetworkId(entity);
     if (!networkIdOpt.has_value()) {
         if (_verbose) {
-            LOG_DEBUG_CAT(
-                ::rtype::LogCategory::GameEngine,
-                "[InputHandler] Player " << userId << " has no networkId for charged shot");
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[InputHandler] Player "
+                              << userId
+                              << " has no networkId for charged shot");
         }
         return;
     }
 
     auto& pos = _registry->getComponent<Transform>(entity);
-    std::uint32_t projectileId = 
+    std::uint32_t projectileId =
         _chargedShotCallback(*networkIdOpt, pos.x, pos.y, chargeLevel);
 
     if (projectileId != 0) {
@@ -244,10 +248,10 @@ void PlayerInputHandler::processChargedShot(std::uint32_t userId,
         cooldown.triggerCooldown();
         cooldown.triggerCooldown();  // Double cooldown for charged shots
         LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                      "[InputHandler] Player " << userId 
-                                               << " fired charged projectile "
-                                               << projectileId 
-                                               << " at level " << static_cast<int>(chargeLevel));
+                      "[InputHandler] Player "
+                          << userId << " fired charged projectile "
+                          << projectileId << " at level "
+                          << static_cast<int>(chargeLevel));
     }
 }
 

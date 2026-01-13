@@ -46,9 +46,9 @@ struct ChargeShotVisual {
     bool isChargingShake = false;
     float chargeShakeIntensity = 0.0F;
 
-    static constexpr uint8_t kLevel1Color[3] = {100, 150, 255};   // Blue glow
-    static constexpr uint8_t kLevel2Color[3] = {255, 200, 100};   // Orange glow
-    static constexpr uint8_t kLevel3Color[3] = {255, 100, 100};   // Red glow
+    static constexpr uint8_t kLevel1Color[3] = {100, 150, 255};  // Blue glow
+    static constexpr uint8_t kLevel2Color[3] = {255, 200, 100};  // Orange glow
+    static constexpr uint8_t kLevel3Color[3] = {255, 100, 100};  // Red glow
 
     static constexpr float kMaxShakeIntensity = 8.0F;
     static constexpr float kShakeDuration = 0.3F;
@@ -82,7 +82,8 @@ struct ChargeShotVisual {
      * @param level Current charge level
      * @param isCharging Whether currently charging
      */
-    void updateGlow(shared::ChargeLevel level, bool isCharging = false) noexcept {
+    void updateGlow(shared::ChargeLevel level,
+                    bool isCharging = false) noexcept {
         switch (level) {
             case shared::ChargeLevel::Level1:
                 glowIntensity = 0.3F;
@@ -180,9 +181,7 @@ struct ChargeBarUI {
      * @brief Set target charge percent
      * @param percent Target percent (0.0 - 1.0)
      */
-    void setChargePercent(float percent) noexcept {
-        chargePercent = percent;
-    }
+    void setChargePercent(float percent) noexcept { chargePercent = percent; }
 
     /**
      * @brief Update smooth display value

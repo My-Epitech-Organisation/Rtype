@@ -11,10 +11,10 @@
 #include <random>
 #include <utility>
 
-#include "Logger/Macros.hpp"
 #include "../AllComponents.hpp"
 #include "../Components/ChargeShotVisualComponent.hpp"
 #include "../Components/ColorTintComponent.hpp"
+#include "Logger/Macros.hpp"
 #include "games/rtype/shared/Components/CooldownComponent.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 
@@ -82,54 +82,35 @@ void ChargeVisualSystem::renderChargeBar(ECS::Registry& registry) {
     auto chargeBarView = registry.view<shared::ChargeComponent, ChargeBarUI,
                                        shared::TransformComponent>();
 
-    chargeBarView.each(
-        [this](ECS::Entity entity, const shared::ChargeComponent& charge,
-               const ChargeBarUI& bar, const shared::TransformComponent& transform) {
-            (void)entity;
-            if (!charge.isCharging || bar.displayPercent < 0.01F) {
-                return;
-            }
+    chargeBarView.each([this](ECS::Entity entity,
+                              const shared::ChargeComponent& charge,
+                              const ChargeBarUI& bar,
+                              const shared::TransformComponent& transform) {
+        (void)entity;
+        if (!charge.isCharging || bar.displayPercent < 0.01F) {
+            return;
+        }
 
-            float barX = transform.x + bar.offsetX;
-            float barY = transform.y + bar.offsetY;
-            _display->drawRectangle(
-                {barX, barY},
-                {bar.barWidth, bar.barHeight},
-                {40, 40, 40, 200},
-                {100, 100, 100, 255},
-                2.0F
-            );
+        float barX = transform.x + bar.offsetX;
+        float barY = transform.y + bar.offsetY;
+        _display->drawRectangle({barX, barY}, {bar.barWidth, bar.barHeight},
+                                {40, 40, 40, 200}, {100, 100, 100, 255}, 2.0F);
 
-            auto [r, g, b] = bar.getBarColor();
-            float filledWidth = bar.barWidth * bar.displayPercent;
+        auto [r, g, b] = bar.getBarColor();
+        float filledWidth = bar.barWidth * bar.displayPercent;
 
-            _display->drawRectangle(
-                {barX, barY},
-                {filledWidth, bar.barHeight},
-                {r, g, b, 230},
-                {0, 0, 0, 0},
-                0.0F
-            );
+        _display->drawRectangle({barX, barY}, {filledWidth, bar.barHeight},
+                                {r, g, b, 230}, {0, 0, 0, 0}, 0.0F);
 
-            float marker1X = barX + bar.barWidth * 0.33F;
-            float marker2X = barX + bar.barWidth * 0.66F;
+        float marker1X = barX + bar.barWidth * 0.33F;
+        float marker2X = barX + bar.barWidth * 0.66F;
 
-            _display->drawRectangle(
-                {marker1X, barY},
-                {2.0F, bar.barHeight},
-                {255, 255, 255, 150},
-                {0, 0, 0, 0},
-                0.0F
-            );
+        _display->drawRectangle({marker1X, barY}, {2.0F, bar.barHeight},
+                                {255, 255, 255, 150}, {0, 0, 0, 0}, 0.0F);
 
-            _display->drawRectangle(
-                {marker2X, barY},
-                {2.0F, bar.barHeight},
-                {255, 255, 255, 150},
-                {0, 0, 0, 0},
-                0.0F
-            );
-        });
+        _display->drawRectangle({marker2X, barY}, {2.0F, bar.barHeight},
+                                {255, 255, 255, 150}, {0, 0, 0, 0}, 0.0F);
+    });
 }
 
 void ChargeVisualSystem::applyScreenShake(float intensity) {

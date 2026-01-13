@@ -118,8 +118,7 @@ GameScene::~GameScene() {
 
     std::vector<ECS::Entity> gameEntitiesToDestroy;
     this->_registry->view<rtype::games::rtype::client::GameTag>().each(
-        [&](ECS::Entity entity,
-               rtype::games::rtype::client::GameTag& /*tag*/) {
+        [&](ECS::Entity entity, rtype::games::rtype::client::GameTag& /*tag*/) {
             gameEntitiesToDestroy.push_back(entity);
         });
 
@@ -132,7 +131,7 @@ GameScene::~GameScene() {
     std::vector<ECS::Entity> pauseEntitiesToDestroy;
     this->_registry->view<rtype::games::rtype::client::PauseMenuTag>().each(
         [&](ECS::Entity entity,
-               rtype::games::rtype::client::PauseMenuTag& /*tag*/) {
+            rtype::games::rtype::client::PauseMenuTag& /*tag*/) {
             pauseEntitiesToDestroy.push_back(entity);
         });
 

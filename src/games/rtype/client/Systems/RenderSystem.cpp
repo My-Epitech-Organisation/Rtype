@@ -86,8 +86,8 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
         position.y -= (texRect.rect.height * scale.y) / 2.0f;
     }
 
-    this->_display->drawSprite(img.textureName, position, rect, scale,
-                               color, rotation);
+    this->_display->drawSprite(img.textureName, position, rect, scale, color,
+                               rotation);
 }
 
 void RenderSystem::_renderRectangles(ECS::Registry& registry,

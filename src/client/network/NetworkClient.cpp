@@ -457,9 +457,7 @@ void NetworkClient::removeConnectedCallback(CallbackId id) {
     }
 }
 
-void NetworkClient::clearConnectedCallbacks() {
-    onConnectedCallbacks_.clear();
-}
+void NetworkClient::clearConnectedCallbacks() { onConnectedCallbacks_.clear(); }
 
 void NetworkClient::onDisconnected(
     std::function<void(DisconnectReason)> callback) {

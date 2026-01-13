@@ -75,7 +75,8 @@ void MainMenuScene::_createFakePlayer() {
             fakePlayer, 2.2f, 2.2f);
         this->_registry
             ->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(
-                fakePlayer, static_cast<float>((distrib150(gen) % 150) + 75), 0.f);
+                fakePlayer, static_cast<float>((distrib150(gen) % 150) + 75),
+                0.f);
         this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
             fakePlayer, 0);
         this->_listEntity.push_back(fakePlayer);

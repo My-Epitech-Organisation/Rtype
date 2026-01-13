@@ -41,9 +41,8 @@ using ShootCallback =
  * @param chargeLevel Charge level (1-3)
  * @return Projectile network ID (0 if failed)
  */
-using ChargedShotCallback =
-    std::function<std::uint32_t(std::uint32_t networkId, float x, float y,
-                                std::uint8_t chargeLevel)>;
+using ChargedShotCallback = std::function<std::uint32_t(
+    std::uint32_t networkId, float x, float y, std::uint8_t chargeLevel)>;
 
 /**
  * @brief Callback for Force Pod launch/recall

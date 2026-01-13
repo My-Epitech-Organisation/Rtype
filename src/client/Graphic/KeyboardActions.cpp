@@ -20,7 +20,8 @@ KeyboardActions::KeyboardActions() {
     this->_keyBindings.emplace(GameAction::MOVE_LEFT,
                                ::rtype::display::Key::Left);
     this->_keyBindings.emplace(GameAction::SHOOT, ::rtype::display::Key::Space);
-    this->_keyBindings.emplace(GameAction::CHARGE_SHOT, ::rtype::display::Key::C);
+    this->_keyBindings.emplace(GameAction::CHARGE_SHOT,
+                               ::rtype::display::Key::C);
     this->_keyBindings.emplace(GameAction::FORCE_POD,
                                ::rtype::display::Key::LShift);
     this->_keyBindings.emplace(GameAction::PAUSE,

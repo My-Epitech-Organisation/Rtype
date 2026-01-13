@@ -8,8 +8,8 @@
 #include "RTypeConfigParser.hpp"
 
 #include <fstream>
-#include <sstream>
 #include <iostream>
+#include <sstream>
 
 namespace rtype::game::config {
 
@@ -284,8 +284,8 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.textures.missileLaser =
         "assets/" + _parser.getString(table, "Textures", "MissileLaser",
                                       defaults.assets.textures.missileLaser);
-    auto chargedShotValue = _parser.getString(table, "Textures", "ChargedShot",
-                                      defaults.assets.textures.chargedShot);
+    auto chargedShotValue = _parser.getString(
+        table, "Textures", "ChargedShot", defaults.assets.textures.chargedShot);
     config.assets.textures.chargedShot = "assets/" + chargedShotValue;
     config.assets.textures.forcePod =
         "assets/" + _parser.getString(table, "Textures", "ForcePod",

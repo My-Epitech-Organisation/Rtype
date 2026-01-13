@@ -96,7 +96,7 @@ struct ChargeComponent {
     float chargeRate = 0.5F;     ///< Charge rate per second
     float maxCharge = 1.0F;
     bool isCharging = false;
-    bool wasCharging = false;  ///< Track previous charging state
+    bool wasCharging = false;         ///< Track previous charging state
     float minChargeThreshold = 0.0F;  ///< Minimum charge for powered shot
     ChargeLevel currentLevel = ChargeLevel::None;  ///< Current charge level
 
