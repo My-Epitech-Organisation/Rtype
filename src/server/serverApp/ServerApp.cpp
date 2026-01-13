@@ -818,7 +818,6 @@ void ServerApp::handleAdminCommand(std::uint32_t userId,
 
     switch (static_cast<network::AdminCommandType>(commandType)) {
         case network::AdminCommandType::GodMode: {
-            // Find player entity by network ID
             auto entityOpt = _networkSystem->findEntityByNetworkId(userId);
             if (!entityOpt.has_value()) {
                 _networkServer->sendAdminResponse(userId, commandType, false, 0,

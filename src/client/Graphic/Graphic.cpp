@@ -36,9 +36,8 @@ void Graphic::_pollEvents() {
             this->_display->close();
         }
 
-        // DevConsole intercepts events first (F1 toggle, input when visible)
         if (_devConsole && _devConsole->handleEvent(event)) {
-            continue;  // Event consumed by console
+            continue;
         }
 
         this->_eventSystem->setEvent(event);
@@ -109,7 +108,6 @@ void Graphic::_update() {
     this->_systemScheduler->runSystem("lifetime");
     this->_sceneManager->update(this->_currentDeltaTime);
 
-    // Update dev console
     if (_devConsole) {
         _devConsole->update(this->_currentDeltaTime);
     }
@@ -131,7 +129,6 @@ void Graphic::_render() {
 
     this->_sceneManager->draw();
 
-    // Render dev console overlay (always on top)
     if (_devConsole) {
         _devConsole->render();
     }
@@ -514,13 +511,10 @@ Graphic::Graphic(
     _initializeSystems();
     _lastFrameTime = std::chrono::steady_clock::now();
 
-    // Initialize developer console (accessible from all scenes via configurable
-    // key)
     _devConsole = std::make_unique<rtype::client::DevConsole>(
         this->_display, _networkClient, _registry, _audioLib,
         &_currentDeltaTime, _keybinds);
 
-    // Register admin response callback for console feedback
     if (_networkClient) {
         _networkClient->onAdminResponse([this](std::uint8_t cmdType,
                                                bool success, bool newState,
