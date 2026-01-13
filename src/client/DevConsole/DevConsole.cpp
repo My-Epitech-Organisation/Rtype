@@ -258,22 +258,18 @@ void DevConsole::render() {
         return;
     }
 
-    // Save current view
     auto viewCenter = display_->getViewCenter();
     auto viewSize = display_->getViewSize();
     display_->resetView();
 
-    // Always render overlays (FPS, Ping, Entities) even when console is closed
     renderOverlays();
 
-    // Only render console UI when visible
     if (visible_) {
         renderBackground();
         renderOutput();
         renderInputLine();
     }
 
-    // Restore view
     display_->setView(viewCenter, viewSize);
 }
 
@@ -282,12 +278,10 @@ void DevConsole::renderBackground() {
     float consoleHeight =
         static_cast<float>(windowSize.y) * kConsoleHeightRatio;
 
-    // Main background
     display_->drawRectangle({0.f, 0.f},
                             {static_cast<float>(windowSize.x), consoleHeight},
                             kConsoleBgColor, kConsoleBgColor, 0.f);
 
-    // Input line background
     display_->drawRectangle(
         {0.f, consoleHeight - kInputLineHeight},
         {static_cast<float>(windowSize.x), kInputLineHeight},
@@ -300,12 +294,10 @@ void DevConsole::renderOutput() {
         static_cast<float>(windowSize.y) * kConsoleHeightRatio;
     float lineHeight = static_cast<float>(kFontSize) + 6.f;
 
-    // Output area: from top padding to just above input line
     float outputAreaTop = kTextPadding;
     float outputAreaBottom = consoleHeight - kInputLineHeight - kTextPadding;
     float outputAreaHeight = outputAreaBottom - outputAreaTop;
 
-    // Calculate how many lines we can display
     auto maxVisibleLines =
         static_cast<std::size_t>(outputAreaHeight / lineHeight);
 
@@ -313,7 +305,6 @@ void DevConsole::renderOutput() {
         return;
     }
 
-    // Collect lines to display (newest first, then reverse for display)
     std::vector<const OutputLine*> linesToDraw;
     std::size_t skipCount = scrollOffset_;
 
@@ -328,10 +319,8 @@ void DevConsole::renderOutput() {
         }
     }
 
-    // Reverse so oldest is at top, newest at bottom
     std::reverse(linesToDraw.begin(), linesToDraw.end());
 
-    // Draw from top to bottom
     float y = outputAreaTop;
     for (const auto* line : linesToDraw) {
         rtype::display::Color color =
@@ -350,20 +339,16 @@ void DevConsole::renderInputLine() {
     float inputY = consoleHeight - kInputLineHeight +
                    (kInputLineHeight - static_cast<float>(kFontSize)) / 2.f;
 
-    // Draw prompt
     display_->drawText(std::string(kPrompt), std::string(kFontName),
                        {kTextPadding, inputY}, kFontSize, kConsolePromptColor);
 
-    // Get prompt width
     auto promptBounds = display_->getTextBounds(
         std::string(kPrompt), std::string(kFontName), kFontSize);
     float textStartX = kTextPadding + promptBounds.x;
 
-    // Draw input text
     display_->drawText(inputBuffer_, std::string(kFontName),
                        {textStartX, inputY}, kFontSize, kConsoleTextColor);
 
-    // Draw cursor
     if (cursorVisible_) {
         std::string textBeforeCursor = inputBuffer_.substr(0, cursorPos_);
         auto cursorBounds = display_->getTextBounds(
@@ -388,23 +373,19 @@ void DevConsole::renderOverlays() {
     float maxWidth = 0.f;
     std::vector<std::string> lines;
 
-    // FPS - use cached value (updated 4x/sec in update())
     if (getCvar("cl_show_fps") == "1" && cachedFPS_ > 0) {
         lines.push_back("FPS: " + std::to_string(cachedFPS_));
     }
 
-    // Ping - use cached value
     if (getCvar("cl_show_ping") == "1" && networkClient_ != nullptr &&
         networkClient_->isConnected()) {
         lines.push_back("Ping: " + std::to_string(cachedPing_) + "ms");
     }
 
-    // Entity count - use cached value
     if (getCvar("cl_show_entities") == "1" && registry_ != nullptr) {
         lines.push_back("Entities: " + std::to_string(cachedEntityCount_));
     }
 
-    // Calculate background size
     for (const auto& line : lines) {
         auto bounds = display_->getTextBounds(line, std::string(kFontName),
                                               kOverlayFontSize);
@@ -413,7 +394,6 @@ void DevConsole::renderOverlays() {
         }
     }
 
-    // Draw background if we have overlays
     if (!lines.empty()) {
         float bgHeight = static_cast<float>(lines.size()) * kOverlayLineHeight +
                          kOverlayPadding;
@@ -423,7 +403,6 @@ void DevConsole::renderOverlays() {
                                 kOverlayBgColor, 0.f);
     }
 
-    // Draw text
     for (const auto& line : lines) {
         display_->drawText(line, std::string(kFontName), {kOverlayPadding, y},
                            kOverlayFontSize, kOverlayColor);
@@ -442,7 +421,6 @@ void DevConsole::execute(const std::string& commandLine) {
         return;
     }
 
-    // Add to command history
     if (commandHistory_.empty() || commandHistory_.back() != commandLine) {
         commandHistory_.push_back(commandLine);
         if (commandHistory_.size() > kMaxHistoryLines) {
@@ -450,16 +428,13 @@ void DevConsole::execute(const std::string& commandLine) {
         }
     }
 
-    // Echo command
     print(std::string(kPrompt) + commandLine);
 
-    // Parse arguments
     auto args = parseArgs(commandLine);
     if (args.empty()) {
         return;
     }
 
-    // Find and execute command
     std::string cmdName = toLower(args[0]);
     auto it = commands_.find(cmdName);
 
@@ -468,10 +443,8 @@ void DevConsole::execute(const std::string& commandLine) {
         return;
     }
 
-    // Remove command name from args
     args.erase(args.begin());
 
-    // Execute handler
     std::string result = it->second.second(args);
     if (!result.empty()) {
         print(result);
@@ -496,14 +469,12 @@ void DevConsole::navigateHistory(int direction) {
     }
 
     if (direction < 0) {
-        // Going back in history
         if (historyIndex_ < 0) {
             historyIndex_ = static_cast<int>(commandHistory_.size()) - 1;
         } else if (historyIndex_ > 0) {
             historyIndex_--;
         }
     } else {
-        // Going forward in history
         if (historyIndex_ >= 0) {
             historyIndex_++;
             if (historyIndex_ >= static_cast<int>(commandHistory_.size())) {
@@ -591,7 +562,6 @@ std::string DevConsole::getCvar(const std::string& name) const {
 }
 
 void DevConsole::registerDefaultCommands() {
-    // Help command
     registerCommand(
         "help", "Display available commands or help for a specific command",
         [this](const std::vector<std::string>& args) -> std::string {
@@ -611,7 +581,6 @@ void DevConsole::registerDefaultCommands() {
             return "Unknown command: " + args[0];
         });
 
-    // Clear command
     registerCommand("clear", "Clear the console output",
                     [this](const std::vector<std::string>&) -> std::string {
                         outputHistory_.clear();
@@ -619,7 +588,6 @@ void DevConsole::registerDefaultCommands() {
                         return "";
                     });
 
-    // Quit command
     registerCommand("quit", "Quit the game",
                     [this](const std::vector<std::string>&) -> std::string {
                         if (display_) {
@@ -628,7 +596,6 @@ void DevConsole::registerDefaultCommands() {
                         return "Goodbye!";
                     });
 
-    // Set command (CVars)
     registerCommand(
         "set", "Set a console variable (usage: set <name> <value>)",
         [this](const std::vector<std::string>& args) -> std::string {
@@ -639,7 +606,6 @@ void DevConsole::registerDefaultCommands() {
             return args[0] + " = " + args[1];
         });
 
-    // Get command (CVars)
     registerCommand(
         "get", "Get a console variable value (usage: get <name>)",
         [this](const std::vector<std::string>& args) -> std::string {
@@ -653,7 +619,6 @@ void DevConsole::registerDefaultCommands() {
             return args[0] + " = " + value;
         });
 
-    // List command (CVars)
     registerCommand("list", "List all console variables",
                     [this](const std::vector<std::string>&) -> std::string {
                         std::string result = "Console Variables:\n";
@@ -663,7 +628,6 @@ void DevConsole::registerDefaultCommands() {
                         return result;
                     });
 
-    // God mode toggle (server-authoritative)
     registerCommand(
         "god", "Toggle god mode (invincibility) - requires localhost",
         [this](const std::vector<std::string>&) -> std::string {
@@ -679,7 +643,6 @@ void DevConsole::registerDefaultCommands() {
             return sent ? "God mode request sent..." : "Failed to send request";
         });
 
-    // Echo command
     registerCommand("echo", "Print a message to the console",
                     [](const std::vector<std::string>& args) -> std::string {
                         std::string result;
@@ -692,7 +655,6 @@ void DevConsole::registerDefaultCommands() {
                         return result;
                     });
 
-    // FPS toggle
     registerCommand("fps", "Toggle FPS display overlay",
                     [this](const std::vector<std::string>&) -> std::string {
                         std::string current = getCvar("cl_show_fps");
@@ -702,7 +664,6 @@ void DevConsole::registerDefaultCommands() {
                                              : "FPS display OFF";
                     });
 
-    // Ping toggle
     registerCommand("ping", "Toggle ping/latency display overlay",
                     [this](const std::vector<std::string>&) -> std::string {
                         std::string current = getCvar("cl_show_ping");
@@ -712,7 +673,6 @@ void DevConsole::registerDefaultCommands() {
                                              : "Ping display OFF";
                     });
 
-    // Mute toggle
     registerCommand("mute", "Toggle audio mute (music + SFX)",
                     [this](const std::vector<std::string>&) -> std::string {
                         if (!audioLib_) {
@@ -721,7 +681,6 @@ void DevConsole::registerDefaultCommands() {
 
                         std::string current = getCvar("cl_mute_audio");
                         if (current == "0") {
-                            // Save current volumes and mute
                             savedMusicVolume_ = audioLib_->getMusicVolume();
                             savedSFXVolume_ = audioLib_->getSFXVolume();
                             audioLib_->setMusicVolume(0.0f);
@@ -729,7 +688,6 @@ void DevConsole::registerDefaultCommands() {
                             setCvar("cl_mute_audio", "1");
                             return "Audio MUTED";
                         } else {
-                            // Restore saved volumes
                             audioLib_->setMusicVolume(savedMusicVolume_);
                             audioLib_->setSFXVolume(savedSFXVolume_);
                             setCvar("cl_mute_audio", "0");
@@ -737,7 +695,6 @@ void DevConsole::registerDefaultCommands() {
                         }
                     });
 
-    // Entity count toggle
     registerCommand("entities", "Toggle entity count display overlay",
                     [this](const std::vector<std::string>&) -> std::string {
                         std::string current = getCvar("cl_show_entities");
@@ -747,7 +704,6 @@ void DevConsole::registerDefaultCommands() {
                                              : "Entity count OFF";
                     });
 
-    // Hitbox toggle - must update AccessibilitySettings singleton
     registerCommand(
         "hitbox", "Toggle hitbox display",
         [this](const std::vector<std::string>&) -> std::string {
@@ -755,8 +711,6 @@ void DevConsole::registerDefaultCommands() {
             std::string newVal = (current == "1") ? "0" : "1";
             setCvar("cl_show_hitboxes", newVal);
 
-            // CRITICAL: Update the AccessibilitySettings singleton for
-            // BoxingSystem
             if (!registry_) {
                 LOG_WARNING("[DevConsole] hitbox: registry_ is null!");
                 return "Error: Registry not available";
