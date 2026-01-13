@@ -543,7 +543,7 @@ bool NetworkClient::sendJoinLobby(const std::string& code) {
 }
 
 void NetworkClient::onJoinLobbyResponse(
-    std::function<void(bool, uint8_t)> callback) {
+    std::function<void(bool, uint8_t, const std::string&)> callback) {
     onJoinLobbyResponseCallback_ = std::move(callback);
 }
 
@@ -1222,9 +1222,13 @@ void NetworkClient::handleJoinLobbyResponse(const network::Header& header,
         auto resp = network::Serializer::deserializeFromNetwork<
             network::JoinLobbyResponsePayload>(payload);
 
-        queueCallback([this, resp]() {
+        std::string levelName(resp.levelName.data(),
+                              strnlen(resp.levelName.data(), 16));
+
+        queueCallback([this, resp, levelName]() {
             if (onJoinLobbyResponseCallback_) {
-                onJoinLobbyResponseCallback_(resp.accepted == 1, resp.reason);
+                onJoinLobbyResponseCallback_(resp.accepted == 1, resp.reason,
+                                             levelName);
             }
         });
     } catch (...) {
@@ -1287,7 +1291,7 @@ void NetworkClient::handleLobbyList(const network::Header& header,
         LobbyListEvent event;
         event.lobbies.reserve(lobbyCount);
 
-        constexpr std::size_t kLobbyInfoSize = 11;
+        constexpr std::size_t kLobbyInfoSize = 27;
 
         for (std::uint8_t i = 0;
              i < lobbyCount && offset + kLobbyInfoSize <= payload.size(); ++i) {
@@ -1307,6 +1311,12 @@ void NetworkClient::handleLobbyList(const network::Header& header,
             info.maxPlayers = payload[offset++];
 
             info.isActive = (payload[offset++] != 0);
+
+            info.levelName.assign(
+                reinterpret_cast<const char*>(payload.data() + offset),
+                strnlen(reinterpret_cast<const char*>(payload.data() + offset),
+                        16));
+            offset += 16;
 
             event.lobbies.push_back(std::move(info));
         }

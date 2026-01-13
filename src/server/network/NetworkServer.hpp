@@ -51,6 +51,7 @@ struct NetworkServerConfig {
     bool enablePacketStats = false;
 
     std::string expectedLobbyCode{};
+    std::string levelId{"level_1"};
 };
 
 /**
@@ -138,6 +139,18 @@ class NetworkServer {
     void setExpectedLobbyCode(const std::string& code) {
         config_.expectedLobbyCode = code;
     }
+
+    /**
+     * @brief Set the server's level ID
+     * @param levelId The level ID to broadcast
+     */
+    void setLevelId(const std::string& levelId) { config_.levelId = levelId; }
+
+    /**
+     * @brief Broadcast the current level ID to all connected clients
+     * This forces clients to update their displayed level info.
+     */
+    void broadcastLevelInfo();
 
     /**
      * @brief Set the server metrics for tracking packet statistics

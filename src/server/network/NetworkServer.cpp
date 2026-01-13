@@ -975,6 +975,9 @@ void NetworkServer::handleJoinLobby(const network::Header& header,
         client->joined = true;
         resp.accepted = 1;
         resp.reason = 0;
+        std::memset(resp.levelName.data(), 0, resp.levelName.size());
+        std::memcpy(resp.levelName.data(), config_.levelId.c_str(),
+                    std::min(config_.levelId.size(), resp.levelName.size()));
         LOG_INFO("[NetworkServer] Client userId="
                  << client->userId << " joined lobby successfully");
     } else {
@@ -986,6 +989,18 @@ void NetworkServer::handleJoinLobby(const network::Header& header,
 
     auto ser = network::Serializer::serializeForNetwork(resp);
     sendToClient(client, network::OpCode::S_JOIN_LOBBY_RESPONSE, ser);
+}
+
+void NetworkServer::broadcastLevelInfo() {
+    network::JoinLobbyResponsePayload resp{};
+    resp.accepted = 1;
+    resp.reason = 0;
+    std::memset(resp.levelName.data(), 0, resp.levelName.size());
+    std::memcpy(resp.levelName.data(), config_.levelId.c_str(),
+                std::min(config_.levelId.size(), resp.levelName.size()));
+
+    auto ser = network::Serializer::serializeForNetwork(resp);
+    broadcastToAll(network::OpCode::S_JOIN_LOBBY_RESPONSE, ser);
 }
 
 void NetworkServer::handleBandwidthMode(const network::Header& header,

@@ -152,6 +152,13 @@ class IGameEngine {
     [[nodiscard]] virtual std::string getGameId() const = 0;
 
     /**
+     * @brief Load a specific level/map from file
+     * @param filepath The path to the level configuration file
+     * @return true if loaded successfully
+     */
+    virtual bool loadLevelFromFile(const std::string& filepath) = 0;
+
+    /**
      * @brief Process a game event and return network-ready data
      *
      * This method allows each game engine to implement its own event

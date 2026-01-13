@@ -95,6 +95,17 @@ class ServerApp {
     void stop() noexcept;
 
     /**
+     * @brief Set the level/map to load on initialization
+     * @param levelId The level identifier
+     */
+    void setLevel(const std::string& levelId) { _initialLevel = levelId; }
+
+    /**
+     * @brief Change the current level (reloads if necessary)
+     */
+    bool changeLevel(const std::string& levelId);
+
+    /**
      * @brief Check if server is running
      */
     [[nodiscard]] bool isRunning() const noexcept;
@@ -279,6 +290,7 @@ class ServerApp {
 
     std::uint32_t _score{0};
     static constexpr std::uint32_t ENEMY_DESTRUCTION_SCORE = 100;
+    std::string _initialLevel;
 };
 
 }  // namespace rtype::server

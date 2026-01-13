@@ -347,6 +347,17 @@ void Lobby::_initInfoMenu() {
         title, 1);
     this->_listEntity.push_back(title);
 
+    _levelNameEntity = EntityFactory::createStaticText(
+        this->_registry, this->_assetsManager, "Level: " + _levelName,
+        "main_font",
+        ::rtype::display::Vector2<float>(
+            static_cast<float>(kBaseX + kBaseW / 2 - 100),
+            static_cast<float>(kBaseY + 70)),
+        24);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        _levelNameEntity, 1);
+    this->_listEntity.push_back(_levelNameEntity);
+
     _readyButtonEntity = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
@@ -724,27 +735,40 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
             }
         });
 
-    this->_networkClient->onJoinLobbyResponse([this](bool accepted,
-                                                     uint8_t reason) {
-        try {
-            if (!_initialized || !this->_registry) {
-                return;
-            }
+    this->_networkClient->onJoinLobbyResponse(
+        [this](bool accepted, uint8_t reason, const std::string& levelName) {
+            try {
+                if (!_initialized || !this->_registry) {
+                    return;
+                }
 
-            if (!accepted) {
-                LOG_ERROR("[Lobby] Join lobby rejected by server, reason="
-                          << static_cast<int>(reason));
-                this->_networkClient->disconnect();
-                return;
-            }
+                if (!accepted) {
+                    LOG_ERROR("[Lobby] Join lobby rejected by server, reason="
+                              << static_cast<int>(reason));
+                    this->_networkClient->disconnect();
+                    return;
+                }
 
-            LOG_INFO("[Lobby] Join lobby accepted by server");
-        } catch (const std::exception& e) {
-            LOG_ERROR("[Lobby] Exception in onJoinLobbyResponse: " << e.what());
-        } catch (...) {
-            LOG_ERROR("[Lobby] Unknown exception in onJoinLobbyResponse");
-        }
-    });
+                this->_levelName = levelName;
+                if (_registry && _registry->isAlive(_levelNameEntity) &&
+                    _registry->hasComponent<rtype::games::rtype::client::Text>(
+                        _levelNameEntity)) {
+                    auto& text =
+                        _registry
+                            ->getComponent<rtype::games::rtype::client::Text>(
+                                _levelNameEntity);
+                    text.textContent = "Level: " + _levelName;
+                }
+
+                LOG_INFO("[Lobby] Join lobby accepted by server for level: "
+                         << levelName);
+            } catch (const std::exception& e) {
+                LOG_ERROR(
+                    "[Lobby] Exception in onJoinLobbyResponse: " << e.what());
+            } catch (...) {
+                LOG_ERROR("[Lobby] Unknown exception in onJoinLobbyResponse");
+            }
+        });
 
     this->_networkClient->onPlayerReadyStateChanged([this](std::uint32_t userId,
                                                            bool isReady) {

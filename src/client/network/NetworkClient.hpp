@@ -86,6 +86,7 @@ struct LobbyInfo {
     std::uint8_t playerCount;
     std::uint8_t maxPlayers;
     bool isActive;
+    std::string levelName;
 };
 
 /**
@@ -430,9 +431,10 @@ class NetworkClient {
 
     /**
      * @brief Register callback for join lobby response
-     * @param callback Function receiving (accepted, reason)
+     * @param callback Function receiving (accepted, reason, levelName)
      */
-    void onJoinLobbyResponse(std::function<void(bool, uint8_t)> callback);
+    void onJoinLobbyResponse(
+        std::function<void(bool, uint8_t, const std::string&)> callback);
 
     /**
      * @brief Process network events and dispatch callbacks
@@ -552,7 +554,8 @@ class NetworkClient {
     std::function<void(std::uint32_t, bool)> onPlayerReadyStateChangedCallback_;
     std::function<void(PowerUpEvent)> onPowerUpCallback_;
     std::function<void(LobbyListEvent)> onLobbyListReceivedCallback_;
-    std::function<void(bool, uint8_t)> onJoinLobbyResponseCallback_;
+    std::function<void(bool, uint8_t, const std::string&)>
+        onJoinLobbyResponseCallback_;
     std::function<void(std::uint32_t, bool, std::uint8_t)>
         onBandwidthModeChangedCallback_;
 

@@ -265,6 +265,34 @@ void ServerApp::setLobbyManager(LobbyManager* lobbyManager) {
     }
 }
 
+bool ServerApp::changeLevel(const std::string& levelId) {
+    if (isPlaying()) {
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[Server] Cannot change level while game is running");
+        return false;
+    }
+
+    _initialLevel = levelId;
+
+    if (_networkServer) {
+        _networkServer->setLevelId(levelId);
+        _networkServer->broadcastLevelInfo();
+    }
+
+    if (_gameEngine) {
+        std::string levelPath = "config/game/levels/" + _initialLevel + ".toml";
+        if (!_gameEngine->loadLevelFromFile(levelPath)) {
+            LOG_ERROR_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[Server] Failed to load level '" << levelPath << "'");
+            return false;
+        }
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[Server] Level changed to: " << _initialLevel);
+    }
+    return true;
+}
+
 bool ServerApp::isRunning() const noexcept {
     return !_shutdownFlag->load(std::memory_order_acquire);
 }
@@ -312,6 +340,19 @@ bool ServerApp::initialize() {
                       "[Server] Failed to initialize game engine");
         return false;
     }
+
+    if (!_initialLevel.empty()) {
+        std::string levelPath = "config/game/levels/" + _initialLevel + ".toml";
+        if (!_gameEngine->loadLevelFromFile(levelPath)) {
+            LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                            "[Server] Failed to load level '"
+                                << levelPath << "' - using default/fallback");
+        } else {
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "[Server] Level loaded: " << _initialLevel);
+        }
+    }
+
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                  "[Server] Game engine initialized");
 

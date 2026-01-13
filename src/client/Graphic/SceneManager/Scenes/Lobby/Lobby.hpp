@@ -42,6 +42,8 @@ class Lobby : public AScene {
     std::unordered_set<uint32_t> _disconnectedPlayers;
     std::vector<uint32_t> _pendingPlayerRemovals;
     std::vector<ECS::Entity> _messageEntities;
+    std::string _levelName = "Unknown Level";
+    ECS::Entity _levelNameEntity;
     std::shared_ptr<rtype::client::NetworkClient> _networkClient;
     std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
     std::shared_ptr<rtype::games::rtype::client::TextInputSystem>
