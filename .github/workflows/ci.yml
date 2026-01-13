@@ -418,7 +418,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          mkdir -p build/dist/client build/dist/server
+          mkdir -p build/dist/client build/dist/client/plugins build/dist/client/plugins/background build/dist/client/plugins/music build/dist/server
           echo "Staging Windows client + DLLs"
           if ! ls build/src/client/*.exe >/dev/null 2>&1; then
             echo "Error: No client executable found"
@@ -477,9 +477,11 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
-          mkdir -p build/dist/client
+          mkdir -p build/dist/client build/dist/client/plugins build/dist/client/plugins/background build/dist/client/plugins/music
           cp build/src/client/r-type_client build/dist/client/
-          cp -r build/lib/display/**/*.so build/dist/client/ 2>/dev/null || true
+          cp -r build/lib/display/**/*.so build/dist/client/plugins 2>/dev/null || true
+          cp -r build/lib/background/**/*.so build/dist/client/plugins/background 2>/dev/null || true
+          cp -r build/lib/music/**/*.so build/dist/client/plugins/music 2>/dev/null || true
 
       - name: Upload Client Artifact (Linux)
         if: matrix.os == 'ubuntu-latest'
