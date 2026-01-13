@@ -422,6 +422,22 @@ bool ServerApp::initialize() {
             return _entitySpawner->handlePlayerShoot(*entityOpt, networkId);
         });
 
+    _inputHandler->setChargedShotCallback(
+        [this](std::uint32_t networkId, float x, float y,
+               std::uint8_t chargeLevel) {
+            if (!_gameEngine) {
+                return 0u;
+            }
+            auto* rtypeEngine =
+                dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                    _gameEngine.get());
+            if (!rtypeEngine) {
+                return 0u;
+            }
+            return rtypeEngine->spawnChargedProjectile(networkId, x, y,
+                                                       chargeLevel);
+        });
+
     _inputHandler->setForcePodLaunchCallback(
         [this](std::uint32_t playerNetworkId) {
             if (!_gameEngine) {
