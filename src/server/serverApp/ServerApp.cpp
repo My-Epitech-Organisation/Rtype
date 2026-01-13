@@ -628,7 +628,7 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
                         "[Server] Broadcasting initial level announce: "
                             << levelName << " background: " << background);
                     _networkServer->broadcastLevelAnnounce(levelName,
-                                                          background);
+                                                           background);
                 } else {
                     LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
                                     "[Server] No level name to broadcast");
@@ -918,7 +918,7 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
 
                 if (_networkServer) {
                     _networkServer->broadcastLevelAnnounce(levelName,
-                                                          background);
+                                                           background);
                 }
             } else {
                 LOG_INFO_CAT(::rtype::LogCategory::GameEngine,

@@ -1313,10 +1313,10 @@ void NetworkClient::handleLevelAnnounce(const network::Header& header,
         std::string background(msg.background.data(),
                                strnlen(msg.background.data(), 32));
 
-        LOG_INFO_CAT(
-            rtype::LogCategory::Network,
-            "[NetworkClient] Received S_LEVEL_ANNOUNCE: '"
-                << levelName << "' background: '" << background << "'");
+        LOG_INFO_CAT(rtype::LogCategory::Network,
+                     "[NetworkClient] Received S_LEVEL_ANNOUNCE: '"
+                         << levelName << "' background: '" << background
+                         << "'");
 
         LevelAnnounceEvent event{levelName, background};
 
