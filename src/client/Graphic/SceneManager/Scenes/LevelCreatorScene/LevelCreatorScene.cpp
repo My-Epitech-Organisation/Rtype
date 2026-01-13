@@ -93,9 +93,9 @@ LevelCreatorScene::LevelCreatorScene(
         EntityFactory::createStaticText(_registry, _assetsManager,
                                         "ID:", "main_font", {labelX, 0}, 24.f),
         currentY);
-    _levelIdInput = EntityFactory::createTextInput(
-        _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "level_1",
-        "", 50, false);
+    _levelIdInput =
+        EntityFactory::createTextInput(_registry, _assetsManager, {inputX, 0},
+                                       {inputW, 40}, "level_1", "", 50, false);
     addElementToSection("settings", _levelIdInput, currentY);
 
     currentY += gapY;
@@ -166,17 +166,17 @@ LevelCreatorScene::LevelCreatorScene(
     addElementToSection("settings", _bossInput, currentY);
 
     currentY += gapY;
-    addElementToSection(
-        "settings",
-        EntityFactory::createStaticText(
-            _registry, _assetsManager, "Next Level:", "main_font", {labelX, 0}, 24.f),
-        currentY);
-    _nextLevelInput = EntityFactory::createTextInput(_registry, _assetsManager,
-                                                {inputX, 0}, {inputW, 40},
-                                                "levelX.toml", "", 50, false);
-    auto staticText = EntityFactory::createStaticText(_registry, _assetsManager,
-                                   "(Leave empty for end of the game)",
-                                   "main_font", {inputX, 0}, 18.f);
+    addElementToSection("settings",
+                        EntityFactory::createStaticText(
+                            _registry, _assetsManager,
+                            "Next Level:", "main_font", {labelX, 0}, 24.f),
+                        currentY);
+    _nextLevelInput = EntityFactory::createTextInput(
+        _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "levelX.toml", "",
+        50, false);
+    auto staticText = EntityFactory::createStaticText(
+        _registry, _assetsManager, "(Leave empty for end of the game)",
+        "main_font", {inputX, 0}, 18.f);
     addElementToSection("settings", _nextLevelInput, currentY);
     auto tmp = currentY + 50.f;
     addElementToSection("settings", staticText, tmp);
@@ -343,7 +343,6 @@ void LevelCreatorScene::saveCurrentWaveStats() {
 
 void LevelCreatorScene::saveToToml() {
     saveCurrentWaveStats();
-    std::string filename = "level_config.toml";
     std::string lvlId = getInputValue(_levelIdInput);
     if (lvlId.empty()) {
         LOG_ERROR_CAT(rtype::LogCategory::UI,
@@ -370,7 +369,7 @@ void LevelCreatorScene::saveToToml() {
         return;
     }
 
-    if (!lvlId.empty()) filename = lvlId + ".toml";
+    auto filename = "config/game/levels/" + lvlId + ".toml";
 
     std::ofstream file(filename);
     if (!file.is_open()) {
@@ -400,7 +399,8 @@ void LevelCreatorScene::saveToToml() {
                  : getInputValue(_scrollSpeedInput))
          << std::endl;
     file << "boss = \"" << getInputValue(_bossInput) << "\"" << std::endl;
-    file << "next_level = \"" << getInputValue(_nextLevelInput) << "\"" << std::endl;
+    file << "next_level = \"" << getInputValue(_nextLevelInput) << "\""
+         << std::endl;
     file << std::endl;
 
     for (const auto& wave : _waves) {
