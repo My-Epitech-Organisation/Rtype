@@ -33,6 +33,17 @@ AdminServer::AdminServer(const Config& config, ServerApp* serverApp,
       _lobbyManager(lobbyManager),
       _httpServer(nullptr) {
     generateCredentials();
+    static std::function<std::string(size_t)> makeToken = [](size_t length) {
+        static const char alpha[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        static thread_local std::random_device rd;
+        static thread_local std::mt19937 rng(rd());
+        std::uniform_int_distribution<size_t> dist(0, std::strlen(alpha) - 1);
+        std::string out;
+        out.reserve(length);
+        for (size_t i = 0; i < length; ++i) out.push_back(alpha[dist(rng)]);
+        return out;
+    };
+    _config.sessionToken = makeToken(24);
 }
 
 AdminServer::~AdminServer() {
@@ -262,9 +273,7 @@ bool authenticateRequest(const AdminServer::Config& config, const Request& req,
                      remote_addr.find("127.0.0.1") != std::string::npos ||
                      remote_addr.find("::1") != std::string::npos;
 
-    if (config.localhostOnly) {
-        return true;
-    }
+    (void)localhost;
 
     if (!config.token.empty()) {
         const auto& auth = req.get_header_value("Authorization");
@@ -272,8 +281,9 @@ bool authenticateRequest(const AdminServer::Config& config, const Request& req,
     }
 
     const auto cookie = req.get_header_value("Cookie");
-    if (!cookie.empty()) {
-        if (cookie.find("admin_auth=1") != std::string::npos) return true;
+    if (!cookie.empty() && !config.sessionToken.empty()) {
+        std::string key = std::string("admin_auth=") + config.sessionToken;
+        if (cookie.find(key) != std::string::npos) return true;
     }
 
     const auto auth = req.get_header_value("Authorization");
@@ -611,7 +621,7 @@ void AdminServer::registerAdminPageRoutes(void* serverPtr) {
 <body>
   <div class="login">
     <h1>Admin Login</h1>
-);
+)";
         if (!errorMsg.empty()) {
             s << "    <div class=\"msg\">" << errorMsg << "</div>\n";
         }
@@ -664,7 +674,8 @@ void AdminServer::registerAdminPageRoutes(void* serverPtr) {
             "[AdminServer] Login attempt for user='" << itU->second << "'");
 
         if (itU->second == _adminUser && itP->second == _adminPass) {
-            res.set_header("Set-Cookie", "admin_auth=1; HttpOnly; Path=/");
+            std::string cookie = std::string("admin_auth=") + _config.sessionToken + "; HttpOnly; Path=/";
+            res.set_header("Set-Cookie", cookie);
             res.status = 302;
             res.set_header("Location", "/admin");
             LOG_INFO_CAT(::rtype::LogCategory::Network,
