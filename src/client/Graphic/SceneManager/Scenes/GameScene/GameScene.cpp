@@ -145,12 +145,6 @@ GameScene::~GameScene() {
             ->removeSingleton<rtype::games::rtype::client::PauseState>();
     }
 
-    if (this->_registry->hasSingleton<AccessibilitySettings>()) {
-        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
-                      "[GameScene] Removing AccessibilitySettings singleton");
-        this->_registry->removeSingleton<AccessibilitySettings>();
-    }
-
     if (this->_audio) {
         LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Pausing music");
         this->_audio->pauseMusic();
