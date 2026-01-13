@@ -29,6 +29,7 @@ struct DataDrivenSpawnerConfig {
     std::size_t maxEnemies = 100;
     float waveTransitionDelay = 2.0F;
     bool waitForClear = true;
+    float startDelay = 0.0F;
 
     // Fallback random spawning when no level is loaded
     bool enableFallbackSpawning = true;

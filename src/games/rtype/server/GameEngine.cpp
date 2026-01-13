@@ -83,6 +83,7 @@ bool GameEngine::initialize() {
     ddConfig.maxEnemies = GameConfig::MAX_ENEMIES;
     ddConfig.waveTransitionDelay = 2.0F;
     ddConfig.waitForClear = true;
+    ddConfig.startDelay = 3.0F;
     ddConfig.enableFallbackSpawning = true;
     ddConfig.fallbackMinInterval = GameConfig::MIN_SPAWN_INTERVAL;
     ddConfig.fallbackMaxInterval = GameConfig::MAX_SPAWN_INTERVAL;

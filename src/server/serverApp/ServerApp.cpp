@@ -308,17 +308,10 @@ bool ServerApp::isRunning() const noexcept {
 }
 
 size_t ServerApp::getConnectedClientCount() const noexcept {
-    if (_networkServer) {
-        return _networkServer->getClientCount();
-    }
     return _clientManager.getConnectedClientCount();
 }
 
 std::vector<ClientId> ServerApp::getConnectedClientIds() const {
-    if (_networkServer) {
-        auto users = _networkServer->getConnectedClients();
-        return std::vector<ClientId>(users.begin(), users.end());
-    }
     return _clientManager.getConnectedClientIds();
 }
 

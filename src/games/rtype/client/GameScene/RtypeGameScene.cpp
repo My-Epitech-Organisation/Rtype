@@ -91,6 +91,9 @@ RtypeGameScene::~RtypeGameScene() {
         _networkClient->clearDisconnectedCallbacks();
         _networkClient->onGameStateChange(nullptr);
     }
+    if (_bandwidthIndicatorEntity.has_value()) {
+        _registry->killEntity(*this->_bandwidthIndicatorEntity);
+    }
 
     clearDamageVignette();
     _vignetteEntities.clear();
