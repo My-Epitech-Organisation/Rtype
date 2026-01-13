@@ -431,6 +431,16 @@ uint32_t GameEngine::spawnProjectile(uint32_t playerNetworkId, float playerX,
         *_registry, playerNetworkId, playerX, playerY);
 }
 
+uint32_t GameEngine::spawnChargedProjectile(uint32_t playerNetworkId,
+                                            float playerX, float playerY,
+                                            uint8_t chargeLevel) {
+    if (!_running || !_projectileSpawnerSystem) {
+        return 0;
+    }
+    return _projectileSpawnerSystem->spawnChargedProjectile(
+        *_registry, playerNetworkId, playerX, playerY, chargeLevel);
+}
+
 void GameEngine::emitEvent(const engine::GameEvent& event) {
     EventCallback callbackCopy;
     {
