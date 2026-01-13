@@ -67,3 +67,5 @@ doxygen
 .vscode
 tools/*
 .idea
+
+executable/
