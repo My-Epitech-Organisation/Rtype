@@ -58,12 +58,11 @@ class DevConsole {
      * @param audioLib Optional audio library for mute command
      * @param deltaTimePtr Pointer to deltaTime for FPS calculation
      */
-    explicit DevConsole(
-        std::shared_ptr<rtype::display::IDisplay> display,
-        std::shared_ptr<NetworkClient> networkClient = nullptr,
-        std::shared_ptr<ECS::Registry> registry = nullptr,
-        std::shared_ptr<AudioLib> audioLib = nullptr,
-        float* deltaTimePtr = nullptr);
+    explicit DevConsole(std::shared_ptr<rtype::display::IDisplay> display,
+                        std::shared_ptr<NetworkClient> networkClient = nullptr,
+                        std::shared_ptr<ECS::Registry> registry = nullptr,
+                        std::shared_ptr<AudioLib> audioLib = nullptr,
+                        float* deltaTimePtr = nullptr);
 
     ~DevConsole() = default;
     DevConsole(const DevConsole&) = delete;
@@ -146,7 +145,8 @@ class DevConsole {
      * @brief Get all console variables.
      * @return Map of all CVars
      */
-    [[nodiscard]] const std::map<std::string, std::string>& getAllCvars() const {
+    [[nodiscard]] const std::map<std::string, std::string>& getAllCvars()
+        const {
         return cvars_;
     }
 
@@ -195,8 +195,8 @@ class DevConsole {
 
     // Commands: name -> (description, handler)
     std::map<std::string,
-             std::pair<std::string,
-                       std::function<std::string(const std::vector<std::string>&)>>>
+             std::pair<std::string, std::function<std::string(
+                                        const std::vector<std::string>&)>>>
         commands_;
 
     // Console variables
