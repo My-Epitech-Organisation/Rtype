@@ -341,6 +341,7 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
         config.id = tbl["level"]["id"].value_or("");
         config.name = tbl["level"]["name"].value_or(config.id);
         config.backgroundPath = tbl["level"]["background"].value_or("");
+        config.levelMusic = tbl["level"]["level_music"].value_or("");
         config.scrollSpeed = tbl["level"]["scroll_speed"].value_or(50.0F);
 
         if (auto boss = tbl["level"]["boss"].value<std::string>()) {

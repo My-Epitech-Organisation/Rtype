@@ -23,6 +23,7 @@ struct LevelConfig {
     std::string id;
     std::string name;
     std::string backgroundPath;
+    std::string levelMusic;
 
     float scrollSpeed = 50.0F;
     std::vector<WaveConfig> waves;

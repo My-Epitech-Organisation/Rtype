@@ -214,6 +214,15 @@ class WaveManager {
     }
 
     /**
+     * @brief Get the level music name for the level
+     * @return Level music name or empty string if not loaded
+     */
+    [[nodiscard]] const std::string& getLevelMusic() const noexcept {
+        static const std::string empty;
+        return _levelConfig ? _levelConfig->levelMusic : empty;
+    }
+
+    /**
      * @brief Get last error message
      * @return Error message from last failed operation
      */

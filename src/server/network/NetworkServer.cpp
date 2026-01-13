@@ -1008,12 +1008,15 @@ void NetworkServer::broadcastLevelInfo() {
 }
 
 void NetworkServer::broadcastLevelAnnounce(const std::string& levelName,
-                                           const std::string& background) {
+                                           const std::string& background,
+                                           const std::string& levelMusic) {
     network::LevelAnnouncePayload payload{};
     std::memcpy(payload.levelName.data(), levelName.c_str(),
                 std::min(levelName.size(), payload.levelName.size()));
     std::memcpy(payload.background.data(), background.c_str(),
                 std::min(background.size(), payload.background.size()));
+    std::memcpy(payload.levelMusic.data(), levelMusic.c_str(),
+                std::min(levelMusic.size(), payload.levelMusic.size()));
 
     auto ser = network::Serializer::serializeForNetwork(payload);
     broadcastToAll(network::OpCode::S_LEVEL_ANNOUNCE, ser);

@@ -1353,13 +1353,15 @@ void NetworkClient::handleLevelAnnounce(const network::Header& header,
                               strnlen(msg.levelName.data(), 32));
         std::string background(msg.background.data(),
                                strnlen(msg.background.data(), 32));
+        std::string levelMusic(msg.levelMusic.data(),
+                               strnlen(msg.levelMusic.data(), 32));
 
         LOG_INFO_CAT(rtype::LogCategory::Network,
                      "[NetworkClient] Received S_LEVEL_ANNOUNCE: '"
                          << levelName << "' background: '" << background
-                         << "'");
+                         << "' music: '" << levelMusic << "'");
 
-        LevelAnnounceEvent event{levelName, background};
+        LevelAnnounceEvent event{levelName, background, levelMusic};
 
         pendingLevelAnnounce_ = event;
 

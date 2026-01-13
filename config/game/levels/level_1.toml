@@ -10,6 +10,7 @@ background = "Labs"
 scroll_speed = 50.0
 boss = "boss_1"
 next_level = "level_2.toml"
+level_music = "ChillMusic"
 
 # -----------------------------------------------------------------------------
 # Wave 1 - Introduction (Basic enemies only)

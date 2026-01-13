@@ -1,19 +1,18 @@
 # =============================================================================
-# R-Type Level 1 - Space Station
+# R-Type Level Configuration
 # =============================================================================
-# First level configuration with waves and boss
 
 [level]
-id = "level_1Custom"
-name = "Space Station"
+id = "level1-custom"
+name = "MonPtit1"
 background = "Labs"
 scroll_speed = 50.0
 boss = "boss_1"
-next_level = "level_2.toml"
-level_music = "BattleMusic"
+next_level = "level2-custom.toml"
+level_music = "ChillMusic"
 
 # -----------------------------------------------------------------------------
-# Wave 1 - Introduction (Basic enemies only)
+# Wave 1
 # -----------------------------------------------------------------------------
 [[wave]]
 number = 1
@@ -23,3 +22,5 @@ spawn_delay = 0.8
 enemy = "basic"
 delay = 0.0
 count = 1
+
+

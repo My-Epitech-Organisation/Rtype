@@ -624,6 +624,7 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
             {
                 std::string levelName;
                 std::string background;
+                std::string levelMusic;
 
                 if (_gameEngine) {
                     auto* rtypeEngine =
@@ -636,10 +637,14 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
                         background = rtypeEngine->getDataDrivenSpawner()
                                          ->getWaveManager()
                                          .getBackground();
+                        levelMusic = rtypeEngine->getDataDrivenSpawner()
+                                         ->getWaveManager()
+                                         .getLevelMusic();
                         LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                                       "[Server] Level name from WaveManager: '"
                                           << levelName << "' background: '"
-                                          << background << "'");
+                                          << background << "' music: '"
+                                          << levelMusic << "'");
                     }
                 }
 
@@ -654,9 +659,11 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
                     LOG_INFO_CAT(
                         ::rtype::LogCategory::GameEngine,
                         "[Server] Broadcasting initial level announce: "
-                            << levelName << " background: " << background);
+                            << levelName << " background: " << background
+                            << " music: " << levelMusic);
                     _networkServer->broadcastLevelAnnounce(levelName,
-                                                           background);
+                                                           background,
+                                                           levelMusic);
                 } else {
                     LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
                                     "[Server] No level name to broadcast");
@@ -1020,13 +1027,17 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
                 auto background = rtypeEngine->getDataDrivenSpawner()
                                       ->getWaveManager()
                                       .getBackground();
+                auto levelMusic = rtypeEngine->getDataDrivenSpawner()
+                                      ->getWaveManager()
+                                      .getLevelMusic();
                 if (levelName.empty()) {
                     levelName = cleanId;
                 }
 
                 if (_networkServer) {
                     _networkServer->broadcastLevelAnnounce(levelName,
-                                                           background);
+                                                           background,
+                                                           levelMusic);
                 }
             } else {
                 LOG_INFO_CAT(::rtype::LogCategory::GameEngine,

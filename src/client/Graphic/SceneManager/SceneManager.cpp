@@ -129,6 +129,7 @@ void SceneManager::initializeScenes() {
             std::make_unique<rtype::games::rtype::client::RtypeGameScene>(
                 this->_registry, this->_assetManager, this->_display,
                 this->_keybinds, this->_switchToScene, this->_setBackground,
+                this->_setLevelMusic,
                 this->_networkClient, this->_networkSystem, this->_audio);
         return std::make_unique<GameScene>(
             this->_registry, this->_assetManager, this->_display,
@@ -205,5 +206,26 @@ SceneManager::SceneManager(
         this->loadedBackground = name;
         LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                       "[SceneManager] Background set to: " << name);
+    };
+
+    this->_setLevelMusic = [this](const std::string& name) {
+        if (!this->_libMusicLevels.contains(name)) {
+            LOG_ERROR_CAT(
+                ::rtype::LogCategory::UI,
+                "[SceneManager] Level music plugin not found: " << name);
+            return;
+        }
+        if (this->loadedLevelMusic == name) {
+            LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                          "[SceneManager] Level music already loaded: " << name);
+            return;
+        }
+        if (!this->loadedLevelMusic.empty() &&
+            this->_libMusicLevels.contains(this->loadedLevelMusic))
+            this->_libMusicLevels[this->loadedLevelMusic]->unloadLevelMusic();
+        this->_libMusicLevels[name]->loadLevelMusic(this->_audio);
+        this->loadedLevelMusic = name;
+        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                      "[SceneManager] Level music set to: " << name);
     };
 }

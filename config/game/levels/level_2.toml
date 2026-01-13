@@ -10,6 +10,7 @@ background = "AsteroidsSpace"
 scroll_speed = 60.0
 boss = "boss_1"
 next_level = ""
+level_music = "BattleMusic"
 
 # -----------------------------------------------------------------------------
 # Wave 1 - Introduction (Basic enemies only)

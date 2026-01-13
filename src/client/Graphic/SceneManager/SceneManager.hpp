@@ -37,6 +37,7 @@ class SceneManager {
     };
 
     std::string loadedBackground = "";
+    std::string loadedLevelMusic = "";
 
    private:
     std::optional<Scene> _nextScene = std::nullopt;  // Scène en attente
@@ -53,6 +54,8 @@ class SceneManager {
     std::function<void(const Scene&)> _switchToScene;
 
     std::function<void(const std::string&)> _setBackground;
+
+    std::function<void(const std::string&)> _setLevelMusic;
 
     std::shared_ptr<KeyboardActions> _keybinds;
 
@@ -73,6 +76,9 @@ class SceneManager {
    public:
     [[nodiscard]] std::string getLoadedBackground() const {
         return loadedBackground;
+    }
+    [[nodiscard]] std::string getLoadedLevelMusic() const {
+        return loadedLevelMusic;
     }
     [[nodiscard]] Scene getCurrentScene() const { return _currentScene; }
     void setCurrentScene(Scene scene);

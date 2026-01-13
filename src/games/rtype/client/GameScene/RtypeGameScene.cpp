@@ -42,13 +42,14 @@ RtypeGameScene::RtypeGameScene(
     std::shared_ptr<KeyboardActions> keybinds,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::function<void(const std::string&)> setBackground,
+    std::function<void(const std::string&)> setLevelMusic,
     std::shared_ptr<::rtype::client::NetworkClient> networkClient,
     std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem,
     std::shared_ptr<AudioLib> audioLib)
     : AGameScene(std::move(registry), std::move(assetsManager), display,
                  std::move(keybinds), std::move(switchToScene),
-                 std::move(setBackground), std::move(networkClient),
-                 std::move(networkSystem)),
+                 std::move(setBackground), std::move(setLevelMusic),
+                 std::move(networkClient), std::move(networkSystem)),
       _movementSystem(
           std::make_unique<::rtype::games::rtype::shared::MovementSystem>()) {
     if (_networkClient) {
@@ -1019,13 +1020,20 @@ void RtypeGameScene::setupLevelAnnounceCallback() {
                     ::rtype::LogCategory::UI,
                     "[RtypeGameScene] Level announce callback triggered: "
                         << event.levelName
-                        << " background: " << event.background);
+                        << " background: " << event.background
+                        << " music: " << event.levelMusic);
                 showLevelAnnounce(event.levelName);
                 if (_setBackground && !event.background.empty()) {
                     LOG_INFO_CAT(::rtype::LogCategory::UI,
                                  "[RtypeGameScene] Setting background to: "
                                      << event.background);
                     _setBackground(event.background);
+                }
+                if (_setLevelMusic && !event.levelMusic.empty()) {
+                    LOG_INFO_CAT(::rtype::LogCategory::UI,
+                                 "[RtypeGameScene] Setting level music to: "
+                                     << event.levelMusic);
+                    _setLevelMusic(event.levelMusic);
                 }
             });
     }
