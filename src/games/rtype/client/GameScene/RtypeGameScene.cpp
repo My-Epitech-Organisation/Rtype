@@ -251,6 +251,14 @@ void RtypeGameScene::update() {
 
         if (shouldSend) {
             _networkSystem->sendInput(inputMask);
+            if (_registry && _registry->hasSingleton<ChargeShotInputState>()) {
+                auto& chargeState = _registry->getSingleton<ChargeShotInputState>();
+                if (chargeState.shouldFireShot) {
+                    chargeState.shouldFireShot = false;
+                    LOG_DEBUG_CAT(::rtype::LogCategory::Input,
+                                  "[RtypeGameScene] Reset shouldFireShot flag after sending input");
+                }
+            }
         }
         _lastInputMask = inputMask;
     }
@@ -265,7 +273,6 @@ void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
     if (event.type == ::rtype::display::EventType::KeyPressed) {
         LOG_INFO("[RtypeGameScene] Key pressed: " << static_cast<int>(event.key.code));
     }
-    
     if (event.type == ::rtype::display::EventType::KeyPressed ||
         event.type == ::rtype::display::EventType::KeyReleased) {
         RtypeInputHandler::updateKeyState(event);
@@ -281,7 +288,6 @@ void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
         event.type == ::rtype::display::EventType::JoystickButtonReleased) {
         RtypeInputHandler::handleKeyReleasedEvent(event, _keybinds, _registry);
     }
-    // Handle charge shot input (keyboard C key, joystick button, or mouse right button)
     auto chargeShotKey = _keybinds->getKeyBinding(GameAction::CHARGE_SHOT);
     if (event.type == ::rtype::display::EventType::KeyPressed &&
         chargeShotKey.has_value() && event.key.code == *chargeShotKey) {
@@ -298,7 +304,6 @@ void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
             _registry->getSingleton<ChargeShotInputState>().isPressed = false;
         }
     }
-    // Handle charge shot joystick button
     auto chargeShotBtn = _keybinds->getJoyButtonBinding(GameAction::CHARGE_SHOT);
     if (event.type == ::rtype::display::EventType::JoystickButtonPressed &&
         chargeShotBtn.has_value() && event.joystickButton.button == *chargeShotBtn) {
@@ -333,7 +338,19 @@ void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
 }
 
 std::uint8_t RtypeGameScene::getInputMask() const {
-    return RtypeInputHandler::getInputMask(_keybinds);
+    std::uint8_t mask = RtypeInputHandler::getInputMask(_keybinds);
+    
+    // Check if a charged shot was released and should fire
+    if (_registry && _registry->hasSingleton<ChargeShotInputState>()) {
+        auto& chargeState = _registry->getSingleton<ChargeShotInputState>();
+        if (chargeState.shouldFireShot) {
+            mask |= ::rtype::network::InputMask::kShoot;
+            LOG_DEBUG_CAT(::rtype::LogCategory::Input,
+                          "[RtypeGameScene] Adding kShoot to input mask for charged shot");
+        }
+    }
+    
+    return mask;
 }
 
 void RtypeGameScene::setupEntityFactory() {

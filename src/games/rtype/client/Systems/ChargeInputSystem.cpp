@@ -69,6 +69,13 @@ void ChargeInputSystem::update(ECS::Registry& registry, float dt) {
                 _chargedShotReleased = true;
                 _lastReleasedLevel = level;
 
+                if (registry.hasSingleton<ChargeShotInputState>()) {
+                    registry.getSingleton<ChargeShotInputState>().shouldFireShot = true;
+                    LOG_DEBUG_CAT(
+                        ::rtype::LogCategory::Input,
+                        "[ChargeInputSystem] Set shouldFireShot flag for charged shot");
+                }
+
                 if (registry.hasComponent<ChargeShotVisual>(entity)) {
                     auto& visual =
                         registry.getComponent<ChargeShotVisual>(entity);

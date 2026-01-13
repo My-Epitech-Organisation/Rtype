@@ -29,6 +29,7 @@ struct ShootInputState {
  */
 struct ChargeShotInputState {
     bool isPressed = false;
+    bool shouldFireShot = false;
 };
 
 /**
