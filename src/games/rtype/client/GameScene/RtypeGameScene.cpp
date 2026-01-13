@@ -261,6 +261,11 @@ void RtypeGameScene::render(::rtype::display::IDisplay& display) {
 }
 
 void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
+    // Debug: log all key events
+    if (event.type == ::rtype::display::EventType::KeyPressed) {
+        LOG_INFO("[RtypeGameScene] Key pressed: " << static_cast<int>(event.key.code));
+    }
+    
     if (event.type == ::rtype::display::EventType::KeyPressed ||
         event.type == ::rtype::display::EventType::KeyReleased) {
         RtypeInputHandler::updateKeyState(event);
@@ -276,17 +281,53 @@ void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
         event.type == ::rtype::display::EventType::JoystickButtonReleased) {
         RtypeInputHandler::handleKeyReleasedEvent(event, _keybinds, _registry);
     }
+    // Handle charge shot input (keyboard C key, joystick button, or mouse right button)
+    auto chargeShotKey = _keybinds->getKeyBinding(GameAction::CHARGE_SHOT);
+    if (event.type == ::rtype::display::EventType::KeyPressed &&
+        chargeShotKey.has_value() && event.key.code == *chargeShotKey) {
+        LOG_INFO("[RtypeGameScene] *** CHARGE SHOT KEY PRESSED ***");
+        if (!_registry->hasSingleton<ChargeShotInputState>()) {
+            _registry->setSingleton<ChargeShotInputState>();
+        }
+        _registry->getSingleton<ChargeShotInputState>().isPressed = true;
+    }
+    if (event.type == ::rtype::display::EventType::KeyReleased &&
+        chargeShotKey.has_value() && event.key.code == *chargeShotKey) {
+        LOG_INFO("[RtypeGameScene] *** CHARGE SHOT KEY RELEASED ***");
+        if (_registry->hasSingleton<ChargeShotInputState>()) {
+            _registry->getSingleton<ChargeShotInputState>().isPressed = false;
+        }
+    }
+    // Handle charge shot joystick button
+    auto chargeShotBtn = _keybinds->getJoyButtonBinding(GameAction::CHARGE_SHOT);
+    if (event.type == ::rtype::display::EventType::JoystickButtonPressed &&
+        chargeShotBtn.has_value() && event.joystickButton.button == *chargeShotBtn) {
+        LOG_INFO("[RtypeGameScene] *** CHARGE SHOT JOYSTICK BUTTON PRESSED ***");
+        if (!_registry->hasSingleton<ChargeShotInputState>()) {
+            _registry->setSingleton<ChargeShotInputState>();
+        }
+        _registry->getSingleton<ChargeShotInputState>().isPressed = true;
+    }
+    if (event.type == ::rtype::display::EventType::JoystickButtonReleased &&
+        chargeShotBtn.has_value() && event.joystickButton.button == *chargeShotBtn) {
+        LOG_INFO("[RtypeGameScene] *** CHARGE SHOT JOYSTICK BUTTON RELEASED ***");
+        if (_registry->hasSingleton<ChargeShotInputState>()) {
+            _registry->getSingleton<ChargeShotInputState>().isPressed = false;
+        }
+    }
     if (event.type == ::rtype::display::EventType::MouseButtonPressed &&
         event.mouseButton.button == ::rtype::display::MouseButton::Right) {
-        if (!_registry->hasSingleton<ShootInputState>()) {
-            _registry->setSingleton<ShootInputState>();
+        LOG_INFO("[RtypeGameScene] *** CHARGE SHOT MOUSE RIGHT PRESSED ***");
+        if (!_registry->hasSingleton<ChargeShotInputState>()) {
+            _registry->setSingleton<ChargeShotInputState>();
         }
-        _registry->getSingleton<ShootInputState>().isPressed = true;
+        _registry->getSingleton<ChargeShotInputState>().isPressed = true;
     }
     if (event.type == ::rtype::display::EventType::MouseButtonReleased &&
         event.mouseButton.button == ::rtype::display::MouseButton::Right) {
-        if (_registry->hasSingleton<ShootInputState>()) {
-            _registry->getSingleton<ShootInputState>().isPressed = false;
+        LOG_INFO("[RtypeGameScene] *** CHARGE SHOT MOUSE RIGHT RELEASED ***");
+        if (_registry->hasSingleton<ChargeShotInputState>()) {
+            _registry->getSingleton<ChargeShotInputState>().isPressed = false;
         }
     }
 }

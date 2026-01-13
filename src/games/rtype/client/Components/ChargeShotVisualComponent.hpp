@@ -24,6 +24,14 @@ struct ShootInputState {
 };
 
 /**
+ * @struct ChargeShotInputState
+ * @brief Singleton for tracking charge shot button state
+ */
+struct ChargeShotInputState {
+    bool isPressed = false;
+};
+
+/**
  * @struct ChargeShotVisual
  * @brief Visual state component for charge shot effect on player ship
  */

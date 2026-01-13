@@ -20,6 +20,7 @@ KeyboardActions::KeyboardActions() {
     this->_keyBindings.emplace(GameAction::MOVE_LEFT,
                                ::rtype::display::Key::Left);
     this->_keyBindings.emplace(GameAction::SHOOT, ::rtype::display::Key::Space);
+    this->_keyBindings.emplace(GameAction::CHARGE_SHOT, ::rtype::display::Key::C);
     this->_keyBindings.emplace(GameAction::FORCE_POD,
                                ::rtype::display::Key::LShift);
     this->_keyBindings.emplace(GameAction::PAUSE,
@@ -38,6 +39,7 @@ KeyboardActions::KeyboardActions() {
     this->_joyAxisBindings.emplace(GameAction::MOVE_RIGHT,
                                    ::rtype::display::JoystickAxis::X);
     this->_joyButtonBindings.emplace(GameAction::SHOOT, 0);
+    this->_joyButtonBindings.emplace(GameAction::CHARGE_SHOT, 1);
     this->_joyButtonBindings.emplace(GameAction::PAUSE, 7);
     this->_joyButtonBindings.emplace(GameAction::CHANGE_AMMO, 2);
 }
