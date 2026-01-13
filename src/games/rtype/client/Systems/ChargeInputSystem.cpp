@@ -20,7 +20,6 @@ ChargeInputSystem::ChargeInputSystem() : ASystem("ChargeInputSystem") {}
 void ChargeInputSystem::update(ECS::Registry& registry, float dt) {
     _chargedShotReleased = false;
 
-    // Read charge shot button state from singleton if available
     if (registry.hasSingleton<ChargeShotInputState>()) {
         _shootPressed = registry.getSingleton<ChargeShotInputState>().isPressed;
         static bool lastLoggedState = false;
