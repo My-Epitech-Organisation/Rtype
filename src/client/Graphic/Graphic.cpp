@@ -127,6 +127,9 @@ void Graphic::_render() {
 
     this->_systemScheduler->runSystem("render");
     this->_systemScheduler->runSystem("boxing");
+    if (_chargeVisualSystem && _sceneManager->getCurrentScene() == SceneManager::IN_GAME) {
+        _chargeVisualSystem->renderChargeBar(*_registry);
+    }
 
     this->_display->endRenderToTexture();
 
