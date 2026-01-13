@@ -10,10 +10,10 @@
 #include <atomic>
 #include <csignal>
 #include <exception>
+#include <filesystem>
 #include <format>
 #include <memory>
 #include <vector>
-#include <filesystem>
 
 #include <rtype/common.hpp>
 
@@ -222,21 +222,26 @@ static int runServer(const ServerConfig& config,
     if (config.instanceCount >= 1) {
         try {
             if (std::filesystem::exists("saves/admin_shutdown.request")) {
-                LOG_INFO_CAT(rtype::LogCategory::Main,
-                             "[Main] Admin shutdown request detected on startup.");
+                LOG_INFO_CAT(
+                    rtype::LogCategory::Main,
+                    "[Main] Admin shutdown request detected on startup.");
 
                 std::error_code ec;
-                if (std::filesystem::remove("saves/admin_shutdown.request", ec)) {
-                    LOG_INFO_CAT(rtype::LogCategory::Main, "[Main] Sentinel file cleared.");
+                if (std::filesystem::remove("saves/admin_shutdown.request",
+                                            ec)) {
+                    LOG_INFO_CAT(rtype::LogCategory::Main,
+                                 "[Main] Sentinel file cleared.");
                 } else {
-                    LOG_WARNING_CAT(rtype::LogCategory::Main,
-                                    "[Main] Failed to clear sentinel: " << ec.message());
+                    LOG_WARNING_CAT(
+                        rtype::LogCategory::Main,
+                        "[Main] Failed to clear sentinel: " << ec.message());
                 }
 
                 shutdownFlag->store(true);
 
                 LOG_INFO_CAT(rtype::LogCategory::Main,
-                             "[Main] Executing graceful shutdown sequence (simulated SIGINT)...");
+                             "[Main] Executing graceful shutdown sequence "
+                             "(simulated SIGINT)...");
 
                 return 0;
             }
