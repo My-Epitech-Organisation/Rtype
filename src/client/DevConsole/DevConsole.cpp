@@ -634,8 +634,7 @@ void DevConsole::registerDefaultCommands() {
 
             bool sent = networkClient_->sendAdminCommand(
                 static_cast<std::uint8_t>(network::AdminCommandType::GodMode),
-                2
-            );
+                2);
 
             return sent ? "God mode request sent..." : "Failed to send request";
         });
