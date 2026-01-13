@@ -214,8 +214,7 @@ void WaveManager::advanceToNextWave() {
     }
 
     _state = WaveState::InProgress;
-    _waveTimer = 0.0F;  // No delay between waves, only transition delay handled
-                        // before this
+    _waveTimer = 0.0F;
     prepareCurrentWave();
 
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,

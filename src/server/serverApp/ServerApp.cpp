@@ -281,12 +281,9 @@ bool ServerApp::changeLevel(const std::string& levelId, bool force) {
         return false;
     }
 
-    // Clean up level ID (remove directory and extension if present)
     std::filesystem::path path(levelId);
     std::string cleanId = path.stem().string();
 
-    // Only update _initialLevel if this is a lobby config change/initial load.
-    // Mid-game transitions (force=true) should not overwrite the reset target.
     if (!force) {
         _initialLevel = cleanId;
     }
@@ -624,7 +621,6 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
                 _networkSystem->broadcastGameStart();
             }
 
-            // Broadcast level announcement
             {
                 std::string levelName;
                 std::string background;
@@ -833,7 +829,6 @@ void ServerApp::resetToLobby() {
         }
         _gameEngine->initialize();
 
-        // Reset to initial level (the level the lobby started with).
         if (_initialLevel.empty()) {
             _initialLevel = "level_1";
         }
@@ -1019,7 +1014,6 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
                 changeLevel(cleanId, true);
                 rtypeEngine->startLevel();
 
-                // Get the level name and background from the loaded config
                 auto levelName = rtypeEngine->getDataDrivenSpawner()
                                      ->getWaveManager()
                                      .getLevelName();
@@ -1027,7 +1021,7 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
                                       ->getWaveManager()
                                       .getBackground();
                 if (levelName.empty()) {
-                    levelName = cleanId;  // Fallback to ID if name is missing
+                    levelName = cleanId;
                 }
 
                 if (_networkServer) {

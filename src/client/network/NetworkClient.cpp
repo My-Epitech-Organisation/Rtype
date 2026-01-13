@@ -27,7 +27,7 @@ namespace rtype::client {
 namespace {
 constexpr float kPosQuantScale = 16.0f;
 constexpr float kVelQuantScale = 16.0f;
-constexpr int kLevelNameMaxSize = 35;
+constexpr int kLevelNameMaxSize = 16;
 
 inline float dequantize(std::int16_t v, float scale) {
     return static_cast<float>(v) / scale;
@@ -775,7 +775,6 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
 
     auto opcode = static_cast<network::OpCode>(header.opcode);
 
-    // Filter logging for high-frequency movement updates to reduce noise
     if (network::isReliable(opcode)) {
         LOG_DEBUG_CAT(rtype::LogCategory::Network,
                       "[NetworkClient] Received reliable packet: opcode=0x"
@@ -786,7 +785,6 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
         sendAck(header.seqId);
     } else if (opcode != network::OpCode::S_ENTITY_MOVE_BATCH &&
                opcode != network::OpCode::S_ENTITY_MOVE) {
-        // Also log unreliable packets if they aren't high-frequency
         LOG_DEBUG_CAT(rtype::LogCategory::Network,
                       "[NetworkClient] Received unreliable packet: opcode=0x"
                           << std::hex << static_cast<int>(opcode) << std::dec);
@@ -1363,7 +1361,6 @@ void NetworkClient::handleLevelAnnounce(const network::Header& header,
 
         LevelAnnounceEvent event{levelName, background};
 
-        // Store the announcement for late subscribers (scene transitions)
         pendingLevelAnnounce_ = event;
 
         queueCallback([this, event]() {
@@ -1372,7 +1369,7 @@ void NetworkClient::handleLevelAnnounce(const network::Header& header,
                     rtype::LogCategory::Network,
                     "[NetworkClient] Delivering level announce to callback");
                 onLevelAnnounceCallback_(event);
-                pendingLevelAnnounce_.reset();  // Clear once delivered
+                pendingLevelAnnounce_.reset();
             } else {
                 LOG_INFO_CAT(rtype::LogCategory::Network,
                              "[NetworkClient] No callback yet, keeping pending "

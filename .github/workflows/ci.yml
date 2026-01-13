@@ -412,7 +412,7 @@ jobs:
             -DUSE_SFML=ON
 
       - name: Build
-        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-lobby rtype-graphic-background-asteroidsSpace
+        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-lobby rtype-graphic-background-asteroidsSpace rtype-graphic-background-labs
 
       - name: Prepare Windows dist (exe + DLLs only)
         if: matrix.os == 'windows-latest'

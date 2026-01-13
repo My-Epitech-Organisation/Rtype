@@ -93,16 +93,6 @@ bool GameEngine::initialize() {
     _dataDrivenSpawnerSystem =
         std::make_unique<DataDrivenSpawnerSystem>(eventEmitter, ddConfig);
 
-    // Level loading is deferred to ServerApp via loadLevel()
-    // if (_dataDrivenSpawnerSystem->loadLevel("level_1")) {
-    //     LOG_INFO(
-    //         "[GameEngine] Level 'level_1' loaded for data-driven spawning");
-    //     _dataDrivenSpawnerSystem->startLevel();
-    // } else {
-    //     LOG_WARNING(
-    //         "[GameEngine] Could not load level_1 - using fallback spawning");
-    // }
-
     SpawnerConfig spawnerConfig{};
     spawnerConfig.minSpawnInterval = GameConfig::MIN_SPAWN_INTERVAL;
     spawnerConfig.maxSpawnInterval = GameConfig::MAX_SPAWN_INTERVAL;
