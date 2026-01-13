@@ -235,6 +235,10 @@ void RtypeGameScene::update() {
             (inputMask & ::rtype::network::InputMask::kShoot) != 0;
         bool wasShootingLast =
             (_lastInputMask & ::rtype::network::InputMask::kShoot) != 0;
+        bool isChargedShotNow =
+            (inputMask & ::rtype::network::InputMask::kChargeLevelMask) != 0;
+        bool wasChargedShotLast =
+            (_lastInputMask & ::rtype::network::InputMask::kChargeLevelMask) != 0;
 
         if (isShootingNow) {
             if (!wasShootingLast) {
@@ -248,6 +252,11 @@ void RtypeGameScene::update() {
         } else if (wasShootingLast) {
             shouldSend = true;
         }
+        if (isChargedShotNow && !wasChargedShotLast) {
+            LOG_INFO("[RtypeGameScene] *** SENDING CHARGED SHOT *** mask=0x"
+                     << std::hex << static_cast<int>(inputMask));
+            shouldSend = true;
+        }
 
         if (shouldSend) {
             _networkSystem->sendInput(inputMask);
@@ -255,6 +264,8 @@ void RtypeGameScene::update() {
                 auto& chargeState = _registry->getSingleton<ChargeShotInputState>();
                 if (chargeState.shouldFireShot) {
                     chargeState.shouldFireShot = false;
+                    chargeState.releasedChargeLevel =
+                        ::rtype::games::rtype::shared::ChargeLevel::None;
                     LOG_DEBUG_CAT(::rtype::LogCategory::Input,
                                   "[RtypeGameScene] Reset shouldFireShot flag after sending input");
                 }
@@ -269,7 +280,6 @@ void RtypeGameScene::render(::rtype::display::IDisplay& display) {
 }
 
 void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
-    // Debug: log all key events
     if (event.type == ::rtype::display::EventType::KeyPressed) {
         LOG_INFO("[RtypeGameScene] Key pressed: " << static_cast<int>(event.key.code));
     }
@@ -341,15 +351,30 @@ std::uint8_t RtypeGameScene::getInputMask() const {
     std::uint8_t mask = RtypeInputHandler::getInputMask(_keybinds);
     if (_registry && _registry->hasSingleton<ChargeShotInputState>()) {
         auto& chargeState = _registry->getSingleton<ChargeShotInputState>();
-
         if (chargeState.isPressed && !chargeState.shouldFireShot) {
             mask &= ~::rtype::network::InputMask::kShoot;
         }
-
         if (chargeState.shouldFireShot) {
-            mask |= ::rtype::network::InputMask::kShoot;
+            mask &= ~(::rtype::network::InputMask::kShoot |
+                      ::rtype::network::InputMask::kChargeLevelMask);
+            switch (chargeState.releasedChargeLevel) {
+                case ::rtype::games::rtype::shared::ChargeLevel::Level1:
+                    mask |= ::rtype::network::InputMask::kChargeLevel1;
+                    break;
+                case ::rtype::games::rtype::shared::ChargeLevel::Level2:
+                    mask |= ::rtype::network::InputMask::kChargeLevel2;
+                    break;
+                case ::rtype::games::rtype::shared::ChargeLevel::Level3:
+                    mask |= ::rtype::network::InputMask::kChargeLevel3;
+                    break;
+                default:
+                    mask |= ::rtype::network::InputMask::kShoot;
+                    break;
+            }
             LOG_DEBUG_CAT(::rtype::LogCategory::Input,
-                          "[RtypeGameScene] Adding kShoot to input mask for charged shot");
+                          "[RtypeGameScene] Charged shot released at level "
+                              << static_cast<int>(chargeState.releasedChargeLevel)
+                              << ", mask=0x" << std::hex << static_cast<int>(mask));
         }
     }
     return mask;
@@ -375,8 +400,14 @@ void RtypeGameScene::setupLocalPlayerCallback() {
                 if (!registry->hasComponent<ChargeShotVisual>(entity)) {
                     registry->emplaceComponent<ChargeShotVisual>(entity);
                 }
+                if (!registry->hasComponent<ChargeBarUI>(entity)) {
+                    registry->emplaceComponent<ChargeBarUI>(entity);
+                }
+                if (!registry->hasComponent<ColorTint>(entity)) {
+                    registry->emplaceComponent<ColorTint>(entity);
+                }
                 LOG_DEBUG_CAT(::rtype::LogCategory::UI,
-                              "[RtypeGameScene] Local player entity assigned");
+                              "[RtypeGameScene] Local player entity assigned with charge visual components");
             }
             _localPlayerEntity = entity;
             _localPlayerId = userId;
