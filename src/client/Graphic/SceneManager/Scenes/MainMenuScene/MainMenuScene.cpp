@@ -32,9 +32,9 @@ static constexpr float kConnectionPanelHeight = 480.f;
 static constexpr float kInputWidth = 300.f;
 static constexpr float kInputHeight = 40.f;
 static constexpr float kInputOffsetX = 220.f;
-static const std::string kIp = "127.0.0.1";
+static const char kIp[] = "127.0.0.1";
 static constexpr std::uint16_t kPort = 4242;
-static const std::string kCodeLobby = "ABC123";
+static const char kCodeLobby[] = "ABC123";
 
 void MainMenuScene::_createAstroneerVessel() {
     auto astroneerVessel = this->_registry->spawnEntity();

@@ -114,7 +114,9 @@ void ChargeVisualSystem::renderChargeBar(ECS::Registry& registry) {
 }
 
 void ChargeVisualSystem::applyScreenShake(float intensity) {
-    if (!_display) return;
+    if (!_display) {
+        return;
+    }
 
     if (!_isShaking) {
         _originalViewCenter = _display->getViewCenter();
