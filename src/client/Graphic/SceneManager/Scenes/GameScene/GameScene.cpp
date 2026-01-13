@@ -49,6 +49,7 @@ GameScene::GameScene(
       _networkSystem(std::move(networkSystem)),
       _gameScene(std::move(gameScene)) {
     LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Constructor started");
+
     if (_gameScene) {
         LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                       "[GameScene] Calling initialize on game scene");

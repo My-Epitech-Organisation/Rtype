@@ -6,6 +6,12 @@ add_library(rtype-graphic-game-scene
         AGameScene.hpp
 )
 
+target_include_directories(rtype-graphic-game-scene
+        PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/client
+        ${CMAKE_SOURCE_DIR}/include
+)
+
 target_link_libraries(rtype-graphic-game-scene
         PUBLIC
         engine

@@ -21,6 +21,7 @@ enum class GameAction : std::uint8_t {
     CHANGE_AMMO,
     PAUSE,
     TOGGLE_LOW_BANDWIDTH,
+    TOGGLE_CONSOLE,
     NONE
 };
 

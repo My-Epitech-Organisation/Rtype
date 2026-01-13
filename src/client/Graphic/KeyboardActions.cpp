@@ -29,6 +29,8 @@ KeyboardActions::KeyboardActions() {
                                ::rtype::display::Key::Tab);
     this->_keyBindings.emplace(GameAction::TOGGLE_LOW_BANDWIDTH,
                                ::rtype::display::Key::F9);
+    this->_keyBindings.emplace(GameAction::TOGGLE_CONSOLE,
+                               ::rtype::display::Key::F1);
 
     this->_joyAxisBindings.emplace(GameAction::MOVE_UP,
                                    ::rtype::display::JoystickAxis::Y);
