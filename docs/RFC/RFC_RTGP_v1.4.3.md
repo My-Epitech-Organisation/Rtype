@@ -2,9 +2,9 @@
 
 | Metadata | Details |
 | :---- | :---- |
-| **Version** | 1.4.1 (Entity Move Batching + Lobby System) |
+| **Version** | 1.4.3 (Chat system + Admin commands) |
 | **Status** | Draft / Experimental |
-| **Date** | 2026-01-05 |
+| **Date** | 2026-01-13 |
 | **Authors** | R-Type Project Team |
 | **Abstract** | This document specifies the binary application-layer protocol used for real-time communication between the R-Type Client and Server, including a reliability layer over UDP. |
 
@@ -251,14 +251,22 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 
 * **Sender:** Server
 * **Reliability:** **UNRELIABLE** (Flag 0x00)
-* **Description:** Regular state update. If lost, the next update fixes
-  it.
+* **Description:** Regular state update. If lost, the next update fixes it.
+  Uses fixed-point quantization to reduce bandwidth and includes a server
+  tick to allow client-side interpolation.
 * **Payload:**
   * Entity ID (uint32)
-  * PosX (float)
-  * PosY (float)
-  * VelX (float)
-  * VelY (float)
+  * Server Tick (uint32) — Monotonic server tick for interpolation
+  * PosX (int16) — Quantized/fixed-point world X coordinate
+  * PosY (int16) — Quantized/fixed-point world Y coordinate
+  * VelX (int16) — Quantized/fixed-point X velocity
+  * VelY (int16) — Quantized/fixed-point Y velocity
+
+* **Notes:**
+  * Total payload size: **16 bytes** (4 + 4 + 2 + 2 + 2 + 2)
+  * Position and velocity components are **quantized signed 16-bit** values
+    (fixed-point). The scale (units per LSB) is implementation-defined and
+    must be consistently shared by client and server.
 
 #### **0x12 - S\_ENTITY\_DESTROY**
 
@@ -294,20 +302,22 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 * **Reliability:** **UNRELIABLE** (Flag 0x00)
 * **Description:** Batched position/velocity updates for multiple entities. More bandwidth-efficient than individual S\_ENTITY\_MOVE packets, especially when combined with LZ4 compression. Each tick, all dirty entity updates are grouped into a single packet.
 * **Payload:**
-  * Count (uint8): Number of entities in the batch (1-69)
-  * Entries (EntityMovePayload[]): Array of entity updates, each containing:
+  * Count (uint8): Number of entities in the batch (1-114)
+  * Server Tick (uint32): Shared server tick for all entries
+  * Entries (EntityMoveBatchEntry[]): Compact per-entity updates, each containing:
     * Entity ID (uint32)
-    * PosX (float)
-    * PosY (float)
-    * VelX (float)
-    * VelY (float)
+    * PosX (int16) — Quantized/fixed-point world X coordinate
+    * PosY (int16) — Quantized/fixed-point world Y coordinate
+    * VelX (int16) — Quantized/fixed-point X velocity
+    * VelY (int16) — Quantized/fixed-point Y velocity
 
 **Notes:**
 
-* Maximum 69 entities per batch due to MTU constraints: (1384 - 1) / 20 = 69
-* If more than 69 entities need updating, multiple batch packets are sent
+* Maximum entities per batch are limited by payload size: (kMaxPayloadSize - 5) / 12 = 114
+  (5 = 1 byte count + 4 byte serverTick; 12 = size of each EntityMoveBatchEntry)
+* If more than 114 entities need updating, multiple batch packets are sent
 * LZ4 compression is automatically applied when batch size exceeds 64 bytes (4+ entities)
-* Estimated bandwidth savings: 50-60% compared to individual S\_ENTITY\_MOVE packets
+* Estimated bandwidth savings: ~25% per-entity compared to non-compacted per-entity payloads (12 bytes vs 16 bytes) and larger savings when compressed
 
 ### **5.3. Input & Reconciliation**
 
@@ -333,7 +343,39 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
   * Authoritative X (float)
   * Authoritative Y (float)
 
-### **5.4. System & Diagnostics**
+### **5.4. Chat System**
+
+#### **0x30 - C\_CHAT**
+
+* **Sender:** Client
+* **Reliability:** **RELIABLE** (Flag 0x01)
+* **Description:** Client sends a chat message to the server for broadcast to all players.
+* **Payload:**
+  * User ID (uint32): The sender's User ID (can be 0 for system messages)
+  * Message (char[256]): The chat message content, null-terminated
+
+**Notes:**
+
+* Maximum message length is 255 characters plus null terminator
+* Messages longer than 255 characters **MUST** be truncated by the client before sending
+* The server **SHOULD** validate the User ID matches the sender
+
+#### **0x31 - S\_CHAT**
+
+* **Sender:** Server
+* **Reliability:** **RELIABLE** (Flag 0x01)
+* **Description:** Server broadcasts a chat message to all connected clients. This can be a player message or a system notification.
+* **Payload:**
+  * User ID (uint32): The original sender's User ID (0 for system messages)
+  * Message (char[256]): The chat message content, null-terminated
+
+**Notes:**
+
+* When User ID is 0, the message **SHOULD** be displayed as a system message
+* Clients **SHOULD** display the sender's username (if known) alongside the message
+* Total payload size: **260 bytes** (4 + 256)
+
+### **5.5. System & Diagnostics**
 
 #### **0xF0 - PING**
 
@@ -349,6 +391,47 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 * **Description:** Latency measurement response. Echoes the seqId from PING via ackId.
 * **Payload:** Empty.
 
+### **5.6. Admin & Debug Commands**
+
+These opcodes are reserved for administrative and debugging purposes. Access is restricted to localhost connections only.
+
+#### **0xD0 - C\_ADMIN\_COMMAND**
+
+* **Sender:** Client
+* **Reliability:** **RELIABLE** (Flag 0x01)
+* **Description:** Client requests an administrative action. The server **MUST** validate that the request originates from localhost (127.0.0.1, ::1, or 127.x.x.x) before executing.
+* **Payload:**
+  * Command Type (uint8): The admin command to execute (see AdminCommandType enum)
+  * Parameter (uint8): Command-specific parameter (0 = off, 1 = on, 2 = toggle)
+
+**AdminCommandType Enum:**
+
+| Value | Name | Description |
+| :---- | :---- | :---- |
+| 0x01 | GodMode | Toggle player invincibility |
+
+**Notes:**
+
+* Additional command types may be added in future versions
+* Non-localhost requests **MUST** be rejected with an error response
+* Total payload size: **2 bytes** (1 + 1)
+
+#### **0xD1 - S\_ADMIN\_RESPONSE**
+
+* **Sender:** Server
+* **Reliability:** **RELIABLE** (Flag 0x01)
+* **Description:** Server responds to an admin command with success/failure status and a human-readable message.
+* **Payload:**
+  * Command Type (uint8): Echoed from the request
+  * Success (uint8): 0 = failed, 1 = success
+  * New State (uint8): The resulting state after the command (0 = off, 1 = on)
+  * Message (char[61]): Human-readable response message, null-terminated
+
+**Notes:**
+
+* The Message field provides feedback to the user (e.g., "God mode enabled", "Access denied: localhost only")
+* Total payload size: **64 bytes** (1 + 1 + 1 + 61)
+
 ## **6. Security Considerations**
 
 1. **Header Validation:** Any packet where Header[0] \!= 0xA1 **MUST**
@@ -361,6 +444,9 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 4. **Authority Check:** Clients **MUST** ignore packets claiming to be
    0xFFFFFFFF (Server) if they do not originate from the known Server
    IP endpoint.
+5. **Admin Command Restriction:** C\_ADMIN\_COMMAND packets **MUST** only
+   be processed if the sender's IP address is localhost (127.0.0.1, ::1,
+   or 127.x.x.x). Remote admin requests **MUST** be rejected.
 
 ## **7. Payload Size Reference**
 
@@ -368,7 +454,7 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 | :---- | :---- | :---- |
 | C_CONNECT | 0 | Empty |
 | S_ACCEPT | 4 | uint32 |
-| DISCONNECT | 0 | Empty |
+| DISCONNECT | 1 | uint8 (reason) |
 | C_GET_USERS | 0 | Empty |
 | R_GET_USERS | Variable | 1 + (count * 4) |
 | S_UPDATE_STATE | 1 | uint8 |
@@ -376,18 +462,39 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 | C_READY | 1 | uint8 |
 | S_GAME_START | 4 | float |
 | S_PLAYER_READY_STATE | 5 | uint32 + uint8 |
-| S_ENTITY_SPAWN | 13 | uint32 + uint8 + float + float |
-| S_ENTITY_MOVE | 20 | uint32 + 4 * float |
-| S_ENTITY_MOVE_BATCH | Variable | 1 + (count * 20), max 1381 bytes |
+| S_ENTITY_SPAWN | 14 | uint32 + uint8 + uint8 + float + float |
+| S_ENTITY_MOVE | 16 | uint32 + uint32 + 4 * int16 (quantized) |
+| S_ENTITY_MOVE_BATCH | Variable | 5 + (count * 12), max 1373 bytes (114 entries) |
 | S_ENTITY_DESTROY | 4 | uint32 |
 | S_ENTITY_HEALTH | 12 | uint32 + int32 + int32 |
 | S_POWERUP_EVENT | 9 | uint32 + uint8 + float |
 | C_INPUT | 1 | uint8 |
+| C_SET_BANDWIDTH_MODE | 1 | uint8 (0=normal,1=low) |
+| S_BANDWIDTH_MODE_CHANGED | 6 | uint32 + uint8 + uint8 (userId, mode, activeCount) |
 | S_UPDATE_POS | 8 | 2 * float |
+| C_CHAT | 260 | uint32 + char[256] |
+| S_CHAT | 260 | uint32 + char[256] |
+| C_ADMIN_COMMAND | 2 | uint8 + uint8 |
+| S_ADMIN_RESPONSE | 64 | uint8 + uint8 + uint8 + char[61] |
 | PING | 0 | Empty |
 | PONG | 0 | Empty |
 
 ## **8. Changes from Previous Versions**
+
+### **Version 1.4.3 (2026-01-13)**
+
+* **Added OpCode 0x30 - C_CHAT:** Client sends chat message to server (RELIABLE). Payload: uint32 userId, char[256] message (260 bytes total).
+* **Added OpCode 0x31 - S_CHAT:** Server broadcasts chat message to all clients (RELIABLE). Payload: uint32 userId, char[256] message (260 bytes total).
+* **Added OpCode 0xD0 - C_ADMIN_COMMAND:** Client requests admin action (RELIABLE, localhost only). Payload: uint8 commandType, uint8 param (2 bytes total).
+* **Added OpCode 0xD1 - S_ADMIN_RESPONSE:** Server responds to admin command (RELIABLE). Payload: uint8 commandType, uint8 success, uint8 newState, char[61] message (64 bytes total).
+* **AdminCommandType Enum:** GodMode (0x01) for toggling player invincibility.
+* **Security:** Admin commands are restricted to localhost connections only.
+
+### **Version 1.4.2 (2026-01-10)**
+
+* **Added OpCode 0x16 - C_SET_BANDWIDTH_MODE:** Client toggles bandwidth mode preference (RELIABLE). Payload: uint8 mode (0=normal,1=low).
+* **Added OpCode 0x17 - S_BANDWIDTH_MODE_CHANGED:** Server broadcasts which player changed their bandwidth mode and the current number of players requesting low mode (RELIABLE). Payload: uint32 userId, uint8 mode, uint8 activeCount (6 bytes total).
+* **Behavior:** Clients MAY toggle local bandwidth mode via a configurable keybind; the server maintains per-lobby low-bandwidth state and notifies all clients via S_BANDWIDTH_MODE_CHANGED.
 
 ### **Version 1.4.1 (2026-01-05)**
 
@@ -399,29 +506,5 @@ RTGP supports optional LZ4 compression for payloads to reduce bandwidth usage.
 * **Added OpCode 0x0A - S_PLAYER_READY_STATE:** Broadcast player ready state changes
 * **Lobby Workflow:** Clients send C_READY when toggling ready state. Server broadcasts S_GAME_START when all players ready
 
-### **Version 1.3.0 (2025-12-15)**
-
-* **Added OpCode 0x07 - S_GAME_OVER:** Server notification for game termination with final score
-* **Added OpCode 0x14 - S_POWERUP_EVENT:** Synchronization of power-up collection events
-* **Added OpCode 0xF0 - PING:** Latency measurement request (previously reserved)
-* **Added OpCode 0xF1 - PONG:** Latency measurement response (previously reserved)
-* **Updated Section 5.2:** Extended entity type enumeration to include Pickup (3) and Obstacle (4)
-* **Added Section 7:** Payload size reference table for quick lookup
-* **Updated Section 2.1:** Added int32 data type specification for signed integers
-
-### **Version 1.2.0 (2025-12-10)**
-
-* **Added OpCode 0x13 - S_ENTITY_HEALTH:** Health synchronization for entities
-
-### **Version 1.0.0 (Initial)**
-
-* Initial protocol specification
-
 ## **9. Future Extensions**
 
-* **Packet Fragmentation:** Not currently supported. Payloads exceeding
-  MTU must be handled at the application logic level or split into
-  multiple entities.
-* **Encryption Layer:** Consider TLS-over-UDP (DTLS) for secure communications.
-* **Voice Chat Integration:** Reserved OpCode range 0x30-0x3F for future audio streaming.
-* **Replay System:** Reserved OpCode range 0x40-0x4F for game state recording/playback.

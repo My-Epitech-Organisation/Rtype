@@ -237,6 +237,8 @@ std::string SettingsSceneUtils::actionToString(GameAction action) {
             return "Pause";
         case GameAction::TOGGLE_LOW_BANDWIDTH:
             return "Toggle Low Bandwidth";
+        case GameAction::TOGGLE_CONSOLE:
+            return "Toggle Console";
         default:
             return "Unknown";
     }

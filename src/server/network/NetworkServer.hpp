@@ -405,6 +405,30 @@ class NetworkServer {
         std::function<void(std::uint32_t, const std::string&)> callback);
 
     /**
+     * @brief Register callback for admin commands (god mode, etc.)
+     * @param callback Function receiving (userId, commandType, param, clientIp)
+     *
+     * The clientIp parameter allows validation that commands only come from
+     * localhost for security purposes.
+     */
+    void onAdminCommand(
+        std::function<void(std::uint32_t userId, std::uint8_t commandType,
+                           std::uint8_t param, const std::string& clientIp)>
+            callback);
+
+    /**
+     * @brief Send admin command response to a specific client
+     * @param userId Target client's user ID
+     * @param commandType The command type being responded to
+     * @param success Whether the command succeeded
+     * @param newState The resulting state (0 = off, 1 = on)
+     * @param message Response message (max 60 chars)
+     */
+    void sendAdminResponse(std::uint32_t userId, std::uint8_t commandType,
+                           bool success, std::uint8_t newState,
+                           const std::string& message);
+
+    /**
      * @brief Process incoming packets and dispatch callbacks
      *
      * Must be called regularly (e.g., each game frame) to:
@@ -523,6 +547,10 @@ class NetworkServer {
                              const network::Buffer& payload,
                              const network::Endpoint& sender);
 
+    void handleAdminCommand(const network::Header& header,
+                            const network::Buffer& payload,
+                            const network::Endpoint& sender);
+
     [[nodiscard]] std::string makeConnectionKey(
         const network::Endpoint& ep) const;
     [[nodiscard]] std::shared_ptr<ClientConnection> findClient(
@@ -598,6 +626,9 @@ class NetworkServer {
     std::function<void(std::uint32_t, bool)> onClientReadyCallback_;
     std::function<void(std::uint32_t, const std::string&)>
         onClientChatCallback_;
+    std::function<void(std::uint32_t, std::uint8_t, std::uint8_t,
+                       const std::string&)>
+        onAdminCommandCallback_;
     std::function<void(std::uint32_t, bool)> onBandwidthModeChangedCallback_;
 
     mutable std::mutex clientsMutex_;

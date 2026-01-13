@@ -13,6 +13,8 @@ add_library(rtype-graphic
     KeyboardActions.hpp
     ControllerRumble.cpp
     ControllerRumble.hpp
+    ${CMAKE_SOURCE_DIR}/src/client/DevConsole/DevConsole.cpp
+    ${CMAKE_SOURCE_DIR}/src/client/DevConsole/DevConsole.hpp
 )
 
 target_include_directories(rtype-graphic PRIVATE

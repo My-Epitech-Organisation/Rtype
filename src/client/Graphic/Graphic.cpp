@@ -36,6 +36,10 @@ void Graphic::_pollEvents() {
             this->_display->close();
         }
 
+        if (_devConsole && _devConsole->handleEvent(event)) {
+            continue;
+        }
+
         this->_eventSystem->setEvent(event);
         this->_eventSystem->update(*this->_registry, 0.f);
         this->_sceneManager->pollEvents(event);
@@ -103,6 +107,10 @@ void Graphic::_update() {
 
     this->_systemScheduler->runSystem("lifetime");
     this->_sceneManager->update(this->_currentDeltaTime);
+
+    if (_devConsole) {
+        _devConsole->update(this->_currentDeltaTime);
+    }
 }
 
 void Graphic::_render() {
@@ -120,6 +128,11 @@ void Graphic::_render() {
     this->_systemScheduler->runSystem("shader_render");
 
     this->_sceneManager->draw();
+
+    if (_devConsole) {
+        _devConsole->render();
+    }
+
     this->_display->display();
 }
 
@@ -497,6 +510,27 @@ Graphic::Graphic(
         _networkClient, _networkSystem, this->_audioLib);
     _initializeSystems();
     _lastFrameTime = std::chrono::steady_clock::now();
+
+    _devConsole = std::make_unique<rtype::client::DevConsole>(
+        this->_display, _networkClient, _registry, _audioLib,
+        &_currentDeltaTime, _keybinds);
+
+    if (_networkClient) {
+        _networkClient->onAdminResponse([this](std::uint8_t cmdType,
+                                               bool success, bool newState,
+                                               const std::string& msg) {
+            if (_devConsole) {
+                if (success) {
+                    _devConsole->print(msg);
+                } else {
+                    _devConsole->printError(msg);
+                }
+            }
+        });
+    }
+
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[Graphic] Developer console initialized");
 }
 
 Graphic::~Graphic() {
