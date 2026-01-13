@@ -14,8 +14,8 @@
 #include "../Components/ImageComponent.hpp"
 #include "../shared/Components/BoundingBoxComponent.hpp"
 #include "Graphic/Accessibility.hpp"
-#include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "Logger/Macros.hpp"
+#include "games/rtype/shared/Components/TransformComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -42,8 +42,10 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
             ::rtype::display::Vector2f position = {pos.x - bbox.width / 2.0f,
                                                    pos.y - bbox.height / 2.0f};
             ::rtype::display::Vector2f size = {bbox.width, bbox.height};
-            ::rtype::display::Color fillColor = {255, 0, 0, 80};    // More visible
-            ::rtype::display::Color outlineColor = {255, 0, 0, 255};  // Solid outline
+            ::rtype::display::Color fillColor = {255, 0, 0,
+                                                 80};  // More visible
+            ::rtype::display::Color outlineColor = {255, 0, 0,
+                                                    255};  // Solid outline
 
             this->_display->drawRectangle(position, size, fillColor,
                                           outlineColor, 2.0f);
