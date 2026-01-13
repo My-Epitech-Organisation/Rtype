@@ -450,7 +450,8 @@ Graphic::Graphic(
     _initializeSystems();
     _lastFrameTime = std::chrono::steady_clock::now();
 
-    // Initialize developer console (accessible from all scenes via configurable key)
+    // Initialize developer console (accessible from all scenes via configurable
+    // key)
     _devConsole = std::make_unique<rtype::client::DevConsole>(
         this->_display, _networkClient, _registry, _audioLib,
         &_currentDeltaTime, _keybinds);

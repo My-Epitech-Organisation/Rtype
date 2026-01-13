@@ -109,8 +109,7 @@ bool DevConsole::handleEvent(const rtype::display::Event& event) {
         if (keybinds_) {
             auto toggleKey =
                 keybinds_->getKeyBinding(GameAction::TOGGLE_CONSOLE);
-            if (toggleKey.has_value() &&
-                event.key.code == toggleKey.value()) {
+            if (toggleKey.has_value() && event.key.code == toggleKey.value()) {
                 toggle();
                 return true;
             }
