@@ -99,6 +99,10 @@ void Graphic::_update() {
         this->_systemScheduler->runSystem("charged_projectile_animation");
         this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
+        this->_systemScheduler->runSystem("charge_input");
+        this->_systemScheduler->runSystem("charge_visual");
+        this->_systemScheduler->runSystem("forcepod_visual");
+        this->_systemScheduler->runSystem("powerup_collection");
         this->_systemScheduler->runSystem("enemy_health_bars");
     }
 
@@ -542,6 +546,7 @@ Graphic::~Graphic() {
     _chargedProjectileAnimationSystem.reset();
     _chargeVisualSystem.reset();
     _chargeInputSystem.reset();
+    _enemyHealthBarSystem.reset();
     _forcePodVisualSystem.reset();
     _shaderRenderSystem.reset();
     _clientDestroySystem.reset();
@@ -555,8 +560,9 @@ Graphic::~Graphic() {
     _buttonUpdateSystem.reset();
     _powerUpCollectionSystem.reset();
     _playerPowerUpVisualSystem.reset();
-    _animationSystem.reset();
+    _chaserExplosionSystem.reset();
     _chaserRotationSystem.reset();
+    _animationSystem.reset();
     _playerAnimationSystem.reset();
     _colorTintSystem.reset();
     if (_registry) {

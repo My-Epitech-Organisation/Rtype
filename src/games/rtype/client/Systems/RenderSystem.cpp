@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "../AllComponents.hpp"
+#include "../Components/ColorTintComponent.hpp"
 #include "../Components/RotationComponent.hpp"
 #include "../shared/Components/BoundingBoxComponent.hpp"
 #include "../shared/Components/Tags.hpp"
@@ -39,6 +40,13 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
 
     auto& img = registry.getComponent<Image>(entity);
     const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
+
+    // Use ColorTint if present, otherwise use the image's default color
+    display::Color color = img.color;
+    if (registry.hasComponent<ColorTint>(entity)) {
+        const auto& tint = registry.getComponent<ColorTint>(entity);
+        color = display::Color(tint.r, tint.g, tint.b, tint.a);
+    }
 
     display::Vector2f scale = {1.0f, 1.0f};
     if (registry.hasComponent<Size>(entity)) {
@@ -81,7 +89,7 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
     }
 
     this->_display->drawSprite(img.textureName, position, rect, scale,
-                               img.color, rotation);
+                               color, rotation);
 }
 
 void RenderSystem::_renderRectangles(ECS::Registry& registry,

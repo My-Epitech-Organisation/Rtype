@@ -7,7 +7,14 @@
 
 #include "Registry.hpp"
 
+#include <iostream>
+
 namespace ECS {
+
+Registry::~Registry() {
+    std::cerr << "[Registry] Destructor called" << std::endl;
+    std::cerr << "[Registry] Destructor completed" << std::endl;
+}
 
 // ========================================================================
 // ENTITY LIFECYCLE
