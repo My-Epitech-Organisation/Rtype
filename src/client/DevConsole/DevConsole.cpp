@@ -60,8 +60,7 @@ std::string getTimestamp() {
 DevConsole::DevConsole(std::shared_ptr<rtype::display::IDisplay> display,
                        std::shared_ptr<NetworkClient> networkClient,
                        std::shared_ptr<ECS::Registry> registry,
-                       std::shared_ptr<AudioLib> audioLib,
-                       float* deltaTimePtr)
+                       std::shared_ptr<AudioLib> audioLib, float* deltaTimePtr)
     : display_(std::move(display)),
       networkClient_(std::move(networkClient)),
       registry_(std::move(registry)),
@@ -78,7 +77,9 @@ DevConsole::DevConsole(std::shared_ptr<rtype::display::IDisplay> display,
     cvars_["net_graph"] = "0";
     cvars_["god_mode"] = "0";
 
-    print("Developer Console initialized. Press F1 to toggle. Type 'help' for commands.");
+    print(
+        "Developer Console initialized. Press F1 to toggle. Type 'help' for "
+        "commands.");
 }
 
 void DevConsole::toggle() {
@@ -172,9 +173,8 @@ bool DevConsole::handleKeyPressed(const rtype::display::Event& event) {
             if (scrollOffset_ + 5 < outputHistory_.size()) {
                 scrollOffset_ += 5;
             } else {
-                scrollOffset_ = outputHistory_.size() > 0
-                                    ? outputHistory_.size() - 1
-                                    : 0;
+                scrollOffset_ =
+                    outputHistory_.size() > 0 ? outputHistory_.size() - 1 : 0;
             }
             return true;
 
@@ -351,9 +351,8 @@ void DevConsole::renderInputLine() {
                        {kTextPadding, inputY}, kFontSize, kConsolePromptColor);
 
     // Get prompt width
-    auto promptBounds =
-        display_->getTextBounds(std::string(kPrompt), std::string(kFontName),
-                                kFontSize);
+    auto promptBounds = display_->getTextBounds(
+        std::string(kPrompt), std::string(kFontName), kFontSize);
     float textStartX = kTextPadding + promptBounds.x;
 
     // Draw input text
@@ -367,10 +366,9 @@ void DevConsole::renderInputLine() {
             textBeforeCursor, std::string(kFontName), kFontSize);
         float cursorX = textStartX + cursorBounds.x;
 
-        display_->drawRectangle(
-            {cursorX, inputY},
-            {2.f, static_cast<float>(kFontSize)},
-            kConsoleCursorColor, kConsoleCursorColor, 0.f);
+        display_->drawRectangle({cursorX, inputY},
+                                {2.f, static_cast<float>(kFontSize)},
+                                kConsoleCursorColor, kConsoleCursorColor, 0.f);
     }
 }
 
@@ -413,8 +411,8 @@ void DevConsole::renderOverlays() {
 
     // Draw background if we have overlays
     if (!lines.empty()) {
-        float bgHeight =
-            static_cast<float>(lines.size()) * kOverlayLineHeight + kOverlayPadding;
+        float bgHeight = static_cast<float>(lines.size()) * kOverlayLineHeight +
+                         kOverlayPadding;
         float bgWidth = maxWidth + kOverlayPadding * 2;
         display_->drawRectangle({kOverlayPadding - 5.f, kOverlayPadding - 5.f},
                                 {bgWidth, bgHeight}, kOverlayBgColor,
@@ -674,23 +672,21 @@ void DevConsole::registerDefaultCommands() {
                 2  // Toggle
             );
 
-            return sent ? "God mode request sent..."
-                        : "Failed to send request";
+            return sent ? "God mode request sent..." : "Failed to send request";
         });
 
     // Echo command
-    registerCommand(
-        "echo", "Print a message to the console",
-        [](const std::vector<std::string>& args) -> std::string {
-            std::string result;
-            for (const auto& arg : args) {
-                if (!result.empty()) {
-                    result += " ";
-                }
-                result += arg;
-            }
-            return result;
-        });
+    registerCommand("echo", "Print a message to the console",
+                    [](const std::vector<std::string>& args) -> std::string {
+                        std::string result;
+                        for (const auto& arg : args) {
+                            if (!result.empty()) {
+                                result += " ";
+                            }
+                            result += arg;
+                        }
+                        return result;
+                    });
 
     // FPS toggle
     registerCommand("fps", "Toggle FPS display overlay",
@@ -698,7 +694,8 @@ void DevConsole::registerDefaultCommands() {
                         std::string current = getCvar("cl_show_fps");
                         std::string newVal = (current == "1") ? "0" : "1";
                         setCvar("cl_show_fps", newVal);
-                        return newVal == "1" ? "FPS display ON" : "FPS display OFF";
+                        return newVal == "1" ? "FPS display ON"
+                                             : "FPS display OFF";
                     });
 
     // Ping toggle
@@ -707,34 +704,34 @@ void DevConsole::registerDefaultCommands() {
                         std::string current = getCvar("cl_show_ping");
                         std::string newVal = (current == "1") ? "0" : "1";
                         setCvar("cl_show_ping", newVal);
-                        return newVal == "1" ? "Ping display ON" : "Ping display OFF";
+                        return newVal == "1" ? "Ping display ON"
+                                             : "Ping display OFF";
                     });
 
     // Mute toggle
-    registerCommand(
-        "mute", "Toggle audio mute (music + SFX)",
-        [this](const std::vector<std::string>&) -> std::string {
-            if (!audioLib_) {
-                return "Error: Audio not available";
-            }
+    registerCommand("mute", "Toggle audio mute (music + SFX)",
+                    [this](const std::vector<std::string>&) -> std::string {
+                        if (!audioLib_) {
+                            return "Error: Audio not available";
+                        }
 
-            std::string current = getCvar("cl_mute_audio");
-            if (current == "0") {
-                // Save current volumes and mute
-                savedMusicVolume_ = audioLib_->getMusicVolume();
-                savedSFXVolume_ = audioLib_->getSFXVolume();
-                audioLib_->setMusicVolume(0.0f);
-                audioLib_->setSFXVolume(0.0f);
-                setCvar("cl_mute_audio", "1");
-                return "Audio MUTED";
-            } else {
-                // Restore saved volumes
-                audioLib_->setMusicVolume(savedMusicVolume_);
-                audioLib_->setSFXVolume(savedSFXVolume_);
-                setCvar("cl_mute_audio", "0");
-                return "Audio UNMUTED";
-            }
-        });
+                        std::string current = getCvar("cl_mute_audio");
+                        if (current == "0") {
+                            // Save current volumes and mute
+                            savedMusicVolume_ = audioLib_->getMusicVolume();
+                            savedSFXVolume_ = audioLib_->getSFXVolume();
+                            audioLib_->setMusicVolume(0.0f);
+                            audioLib_->setSFXVolume(0.0f);
+                            setCvar("cl_mute_audio", "1");
+                            return "Audio MUTED";
+                        } else {
+                            // Restore saved volumes
+                            audioLib_->setMusicVolume(savedMusicVolume_);
+                            audioLib_->setSFXVolume(savedSFXVolume_);
+                            setCvar("cl_mute_audio", "0");
+                            return "Audio UNMUTED";
+                        }
+                    });
 
     // Entity count toggle
     registerCommand("entities", "Toggle entity count display overlay",
@@ -754,7 +751,8 @@ void DevConsole::registerDefaultCommands() {
             std::string newVal = (current == "1") ? "0" : "1";
             setCvar("cl_show_hitboxes", newVal);
 
-            // CRITICAL: Update the AccessibilitySettings singleton for BoxingSystem
+            // CRITICAL: Update the AccessibilitySettings singleton for
+            // BoxingSystem
             if (!registry_) {
                 LOG_WARNING("[DevConsole] hitbox: registry_ is null!");
                 return "Error: Registry not available";
@@ -769,8 +767,8 @@ void DevConsole::registerDefaultCommands() {
 
             auto& acc = registry_->getSingleton<AccessibilitySettings>();
             acc.showHitboxes = (newVal == "1");
-            LOG_DEBUG("[DevConsole] hitbox: Set showHitboxes="
-                      << acc.showHitboxes);
+            LOG_DEBUG(
+                "[DevConsole] hitbox: Set showHitboxes=" << acc.showHitboxes);
 
             return newVal == "1" ? "Hitboxes ON" : "Hitboxes OFF";
         });
