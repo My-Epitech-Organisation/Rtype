@@ -266,10 +266,10 @@ LevelCreatorScene::LevelCreatorScene(
     currentY += gapY;
 
     addElementToSection("settings",
-                    EntityFactory::createStaticText(
-                        _registry, _assetsManager,
-                        "Music Level:", "main_font", {labelX, 0}, 24.f),
-                    currentY);
+                        EntityFactory::createStaticText(
+                            _registry, _assetsManager,
+                            "Music Level:", "main_font", {labelX, 0}, 24.f),
+                        currentY);
 
     _btnMusicLevel = EntityFactory::createButton(
         this->_registry,
@@ -283,8 +283,10 @@ LevelCreatorScene::LevelCreatorScene(
         this->_assetsManager, std::function<void()>([this]() {
             if (this->_libMusicLevels.empty()) return;
             ++this->_musicLevelIteratorCurrent;
-            if (this->_musicLevelIteratorCurrent == this->_libMusicLevels.end()) {
-                this->_musicLevelIteratorCurrent = this->_libMusicLevels.begin();
+            if (this->_musicLevelIteratorCurrent ==
+                this->_libMusicLevels.end()) {
+                this->_musicLevelIteratorCurrent =
+                    this->_libMusicLevels.begin();
             }
             this->_musicLevelId = this->_musicLevelIteratorCurrent->first;
 

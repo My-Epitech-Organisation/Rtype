@@ -41,8 +41,8 @@
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
 #include "Systems/AnimationSystem.hpp"
-#include "lib/background/IBackground.hpp"
 #include "lib/audio/ILevelMusic.hpp"
+#include "lib/background/IBackground.hpp"
 
 namespace rtype::games::rtype::client {
 class ChaserRotationSystem;

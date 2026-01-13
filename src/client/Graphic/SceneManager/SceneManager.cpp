@@ -94,8 +94,8 @@ void SceneManager::initializeScenes() {
     this->_sceneList.emplace(LEVEL_CREATOR, [this]() {
         return std::make_unique<LevelCreatorScene>(
             this->_registry, this->_assetManager, this->_display,
-            this->_keybinds, this->_audio, this->_libBackgrounds, this->_libMusicLevels,
-            this->_setBackground, this->_switchToScene);
+            this->_keybinds, this->_audio, this->_libBackgrounds,
+            this->_libMusicLevels, this->_setBackground, this->_switchToScene);
     });
     this->_sceneList.emplace(HOW_TO_PLAY, [this]() {
         return std::make_unique<HowToPlayScene>(
@@ -129,8 +129,8 @@ void SceneManager::initializeScenes() {
             std::make_unique<rtype::games::rtype::client::RtypeGameScene>(
                 this->_registry, this->_assetManager, this->_display,
                 this->_keybinds, this->_switchToScene, this->_setBackground,
-                this->_setLevelMusic,
-                this->_networkClient, this->_networkSystem, this->_audio);
+                this->_setLevelMusic, this->_networkClient,
+                this->_networkSystem, this->_audio);
         return std::make_unique<GameScene>(
             this->_registry, this->_assetManager, this->_display,
             this->_keybinds, this->_setBackground, this->_switchToScene,
@@ -216,8 +216,9 @@ SceneManager::SceneManager(
             return;
         }
         if (this->loadedLevelMusic == name) {
-            LOG_DEBUG_CAT(::rtype::LogCategory::UI,
-                          "[SceneManager] Level music already loaded: " << name);
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::UI,
+                "[SceneManager] Level music already loaded: " << name);
             return;
         }
         if (!this->loadedLevelMusic.empty() &&

@@ -1019,9 +1019,8 @@ void RtypeGameScene::setupLevelAnnounceCallback() {
                 LOG_INFO_CAT(
                     ::rtype::LogCategory::UI,
                     "[RtypeGameScene] Level announce callback triggered: "
-                        << event.levelName
-                        << " background: " << event.background
-                        << " music: " << event.levelMusic);
+                        << event.levelName << " background: "
+                        << event.background << " music: " << event.levelMusic);
                 showLevelAnnounce(event.levelName);
                 if (_setBackground && !event.background.empty()) {
                     LOG_INFO_CAT(::rtype::LogCategory::UI,

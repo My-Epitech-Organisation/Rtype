@@ -370,12 +370,14 @@ void Graphic::_loadMusicLevels() {
         auto instance =
             std::make_unique<rtype::common::DLLoader<ILevelMusic>>(path);
         auto musicLib = instance->getInstance<std::shared_ptr<ECS::Registry>,
-                                        std::shared_ptr<AssetManager>>("createLevelMusic", std::shared_ptr<ECS::Registry>(this->_registry),
+                                              std::shared_ptr<AssetManager>>(
+            "createLevelMusic", std::shared_ptr<ECS::Registry>(this->_registry),
             std::shared_ptr<AssetManager>(this->_assetsManager));
         if (musicLib) {
             this->_audioLevelLoaders.push_back(std::move(instance));
             this->_sceneManager->registerMusicLevelPlugin(
-                musicLib->getLevelMusicName(), std::shared_ptr<ILevelMusic>(musicLib));
+                musicLib->getLevelMusicName(),
+                std::shared_ptr<ILevelMusic>(musicLib));
         }
     }
     if (!this->_audioLib) {

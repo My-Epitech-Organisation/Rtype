@@ -117,10 +117,12 @@ class LevelCreatorScene : public AScene {
     std::map<std::string, std::string> _listNextLevel;
     std::map<std::string, std::string>::iterator _nextLevelIteratorCurrent;
 
-    /** @brief List of music levels availables, Name of the level; Path of the level.
+    /** @brief List of music levels availables, Name of the level; Path of the
+     * level.
      */
     std::map<std::string, std::shared_ptr<ILevelMusic>> _libMusicLevels;
-    std::map<std::string, std::shared_ptr<ILevelMusic>>::iterator _musicLevelIteratorCurrent;
+    std::map<std::string, std::shared_ptr<ILevelMusic>>::iterator
+        _musicLevelIteratorCurrent;
 
     /** @brief Name of the plugin for the background selection button. */
     std::string _bgPluginName;
@@ -313,7 +315,7 @@ class LevelCreatorScene : public AScene {
         std::shared_ptr<KeyboardActions> keybinds,
         std::shared_ptr<AudioLib> audio,
         std::map<std::string, std::shared_ptr<IBackground>> libBackgrounds,
-    std::map<std::string, std::shared_ptr<ILevelMusic>> libMusicLevels,
+        std::map<std::string, std::shared_ptr<ILevelMusic>> libMusicLevels,
         std::function<void(const std::string&)> setBackground,
         std::function<void(const SceneManager::Scene&)> switchToScene);
 

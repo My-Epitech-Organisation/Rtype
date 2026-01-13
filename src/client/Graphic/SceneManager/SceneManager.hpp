@@ -20,8 +20,8 @@
 #include "AudioLib/AudioLib.hpp"
 #include "ECS.hpp"
 #include "Scenes/IScene.hpp"
-#include "lib/background/IBackground.hpp"
 #include "lib/audio/ILevelMusic.hpp"
+#include "lib/background/IBackground.hpp"
 
 class SceneManager {
    public:
@@ -87,7 +87,7 @@ class SceneManager {
                                   std::shared_ptr<IBackground> background);
 
     void registerMusicLevelPlugin(const std::string& name,
-                                std::shared_ptr<ILevelMusic> background);
+                                  std::shared_ptr<ILevelMusic> background);
 
     void initializeScenes();
 
