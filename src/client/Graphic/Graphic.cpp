@@ -450,10 +450,10 @@ Graphic::Graphic(
     _initializeSystems();
     _lastFrameTime = std::chrono::steady_clock::now();
 
-    // Initialize developer console (accessible from all scenes via F1)
+    // Initialize developer console (accessible from all scenes via configurable key)
     _devConsole = std::make_unique<rtype::client::DevConsole>(
         this->_display, _networkClient, _registry, _audioLib,
-        &_currentDeltaTime);
+        &_currentDeltaTime, _keybinds);
 
     // Register admin response callback for console feedback
     if (_networkClient) {
@@ -471,7 +471,7 @@ Graphic::Graphic(
     }
 
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
-                  "[Graphic] Developer console initialized (toggle with F1)");
+                  "[Graphic] Developer console initialized");
 }
 
 Graphic::~Graphic() {
