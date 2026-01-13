@@ -16,9 +16,6 @@
 #include "games/rtype/client/PauseState.hpp"
 
 void GameScene::update(float dt) {
-    if (_networkClient) {
-        _networkClient->poll();
-    }
     if (_gameScene) {
         _gameScene->update();
     }
@@ -62,9 +59,17 @@ GameScene::GameScene(
     }
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[GameScene] Loading game textures");
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[GameScene] Loading bdos_enemy_normal from: "
+                      << this->_assetsManager->configGameAssets.assets.textures
+                             .EnemyNormal);
     this->_assetsManager->textureManager->load(
         "bdos_enemy_normal",
         this->_assetsManager->configGameAssets.assets.textures.EnemyNormal);
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[GameScene] Loading projectile_player_laser from: "
+                      << this->_assetsManager->configGameAssets.assets.textures
+                             .missileLaser);
     this->_assetsManager->textureManager->load(
         "projectile_player_laser",
         this->_assetsManager->configGameAssets.assets.textures.missileLaser);
@@ -110,19 +115,29 @@ GameScene::~GameScene() {
         _networkClient->disconnect();
     }
 
+    std::vector<ECS::Entity> gameEntitiesToDestroy;
     this->_registry->view<rtype::games::rtype::client::GameTag>().each(
-        [this](ECS::Entity entity,
+        [&](ECS::Entity entity,
                rtype::games::rtype::client::GameTag& /*tag*/) {
-            this->_registry->killEntity(entity);
+            gameEntitiesToDestroy.push_back(entity);
         });
+
+    for (const auto& entity : gameEntitiesToDestroy) {
+        this->_registry->killEntity(entity);
+    }
 
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[GameScene] Cleaning up pause menu entities");
+    std::vector<ECS::Entity> pauseEntitiesToDestroy;
     this->_registry->view<rtype::games::rtype::client::PauseMenuTag>().each(
-        [this](ECS::Entity entity,
+        [&](ECS::Entity entity,
                rtype::games::rtype::client::PauseMenuTag& /*tag*/) {
-            this->_registry->killEntity(entity);
+            pauseEntitiesToDestroy.push_back(entity);
         });
+
+    for (const auto& entity : pauseEntitiesToDestroy) {
+        this->_registry->killEntity(entity);
+    }
 
     if (this->_registry
             ->hasSingleton<rtype::games::rtype::client::PauseState>()) {
