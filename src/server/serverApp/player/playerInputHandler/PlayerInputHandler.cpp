@@ -69,7 +69,21 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
 
     processMovement(playerEntity, inputMask);
 
-    if (inputMask & rtype::network::InputMask::kShoot) {
+    std::uint8_t chargeLevel =
+        (inputMask & rtype::network::InputMask::kChargeLevelMask);
+    if (chargeLevel != 0) {
+        std::uint8_t level = 0;
+        if (chargeLevel == rtype::network::InputMask::kChargeLevel3) {
+            level = 3;
+        } else if (chargeLevel == rtype::network::InputMask::kChargeLevel2) {
+            level = 2;
+        } else if (chargeLevel == rtype::network::InputMask::kChargeLevel1) {
+            level = 1;
+        }
+        if (level > 0) {
+            processChargedShot(userId, playerEntity, level);
+        }
+    } else if (inputMask & rtype::network::InputMask::kShoot) {
         processShoot(userId, playerEntity);
     }
 
@@ -169,6 +183,72 @@ void PlayerInputHandler::processForcePodLaunch(std::uint32_t userId) {
         return;
     }
     _forcePodCallback(userId);
+}
+
+void PlayerInputHandler::processChargedShot(std::uint32_t userId,
+                                            ECS::Entity entity,
+                                            std::uint8_t chargeLevel) {
+    if (!_registry->hasComponent<Transform>(entity) ||
+        !_registry->hasComponent<ShootCooldown>(entity)) {
+        if (_verbose) {
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[InputHandler] Player "
+                              << userId
+                              << " missing Position or ShootCooldown for charged shot");
+        }
+        return;
+    }
+
+    auto& cooldown = _registry->getComponent<ShootCooldown>(entity);
+    if (!cooldown.canShoot()) {
+        if (_verbose) {
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[InputHandler] Player " << userId
+                                                   << " cooldown not ready for charged shot: "
+                                                   << cooldown.currentCooldown);
+        }
+        return;
+    }
+
+    if (!_chargedShotCallback || !_networkSystem) {
+        // Fallback to regular shoot if no charged shot callback
+        if (_shootCallback) {
+            auto networkIdOpt = _networkSystem->getNetworkId(entity);
+            if (networkIdOpt.has_value()) {
+                auto& pos = _registry->getComponent<Transform>(entity);
+                std::uint32_t projectileId = _shootCallback(*networkIdOpt, pos.x, pos.y);
+                if (projectileId != 0) {
+                    cooldown.triggerCooldown();
+                }
+            }
+        }
+        return;
+    }
+
+    auto networkIdOpt = _networkSystem->getNetworkId(entity);
+    if (!networkIdOpt.has_value()) {
+        if (_verbose) {
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[InputHandler] Player " << userId << " has no networkId for charged shot");
+        }
+        return;
+    }
+
+    auto& pos = _registry->getComponent<Transform>(entity);
+    std::uint32_t projectileId = 
+        _chargedShotCallback(*networkIdOpt, pos.x, pos.y, chargeLevel);
+
+    if (projectileId != 0) {
+        // Longer cooldown for charged shots
+        cooldown.triggerCooldown();
+        cooldown.triggerCooldown();  // Double cooldown for charged shots
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[InputHandler] Player " << userId 
+                                               << " fired charged projectile "
+                                               << projectileId 
+                                               << " at level " << static_cast<int>(chargeLevel));
+    }
 }
 
 }  // namespace rtype::server
