@@ -16,8 +16,10 @@
 
 #include <rtype/ecs.hpp>
 
+#include "GameAction.hpp"
 #include "Graphic/Accessibility.hpp"
 #include "Graphic/AudioLib/AudioLib.hpp"
+#include "Graphic/KeyboardActions.hpp"
 #include "Logger/Macros.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "network/NetworkClient.hpp"
@@ -64,12 +66,14 @@ std::string getTimestamp() {
 DevConsole::DevConsole(std::shared_ptr<rtype::display::IDisplay> display,
                        std::shared_ptr<NetworkClient> networkClient,
                        std::shared_ptr<ECS::Registry> registry,
-                       std::shared_ptr<AudioLib> audioLib, float* deltaTimePtr)
+                       std::shared_ptr<AudioLib> audioLib, float* deltaTimePtr,
+                       std::shared_ptr<KeyboardActions> keybinds)
     : display_(std::move(display)),
       networkClient_(std::move(networkClient)),
       registry_(std::move(registry)),
       audioLib_(std::move(audioLib)),
-      deltaTimePtr_(deltaTimePtr) {
+      deltaTimePtr_(deltaTimePtr),
+      keybinds_(std::move(keybinds)) {
     registerDefaultCommands();
 
     // Initialize default CVars
@@ -99,12 +103,23 @@ void DevConsole::toggle() {
 }
 
 bool DevConsole::handleEvent(const rtype::display::Event& event) {
-    // Check for toggle key (F1 - works on all keyboards including AZERTY)
-    if (event.type == rtype::display::EventType::KeyPressed &&
-        (event.key.code == rtype::display::Key::F1 ||
-         event.key.code == rtype::display::Key::Tilde)) {
-        toggle();
-        return true;
+    // Check for toggle key using keybinds system
+    if (event.type == rtype::display::EventType::KeyPressed) {
+        // Use configurable keybind if available
+        if (keybinds_) {
+            auto toggleKey =
+                keybinds_->getKeyBinding(GameAction::TOGGLE_CONSOLE);
+            if (toggleKey.has_value() &&
+                event.key.code == toggleKey.value()) {
+                toggle();
+                return true;
+            }
+        }
+        // Fallback: always allow Tilde as secondary toggle (AZERTY compat)
+        if (event.key.code == rtype::display::Key::Tilde) {
+            toggle();
+            return true;
+        }
     }
 
     // If not visible, don't consume events
