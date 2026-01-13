@@ -768,10 +768,22 @@ void DevConsole::registerDefaultCommands() {
             setCvar("cl_show_hitboxes", newVal);
 
             // CRITICAL: Update the AccessibilitySettings singleton for BoxingSystem
-            if (registry_ && registry_->hasSingleton<AccessibilitySettings>()) {
-                auto& acc = registry_->getSingleton<AccessibilitySettings>();
-                acc.showHitboxes = (newVal == "1");
+            if (!registry_) {
+                LOG_WARNING("[DevConsole] hitbox: registry_ is null!");
+                return "Error: Registry not available";
             }
+
+            if (!registry_->hasSingleton<AccessibilitySettings>()) {
+                LOG_WARNING(
+                    "[DevConsole] hitbox: AccessibilitySettings singleton not "
+                    "found!");
+                return "Error: AccessibilitySettings not initialized";
+            }
+
+            auto& acc = registry_->getSingleton<AccessibilitySettings>();
+            acc.showHitboxes = (newVal == "1");
+            LOG_DEBUG("[DevConsole] hitbox: Set showHitboxes="
+                      << acc.showHitboxes);
 
             return newVal == "1" ? "Hitboxes ON" : "Hitboxes OFF";
         });
