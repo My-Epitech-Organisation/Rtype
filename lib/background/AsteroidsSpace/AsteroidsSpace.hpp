@@ -13,7 +13,7 @@
 class AsteroidsSpace : public ABackground {
 public:
     void createEntitiesBackground() override;
-    AsteroidsSpace(std::shared_ptr<ECS::Registry> registry) : ABackground(std::move(registry), "AsteroidsSpace") {};
+    AsteroidsSpace(std::shared_ptr<ECS::Registry> registry, std::shared_ptr<AssetManager> assetManager) : ABackground(std::move(registry), std::move(assetManager), "AsteroidsSpace") {};
 };
 
 

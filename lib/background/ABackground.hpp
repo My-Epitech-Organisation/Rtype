@@ -8,12 +8,18 @@
 #ifndef R_TYPE_ABACKGROUND_HPP
 #define R_TYPE_ABACKGROUND_HPP
 #include <utility>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "IBackground.hpp"
+#include "lib/ecs/src/ECS.hpp"
+#include "src/client/Graphic/AssetManager/AssetManager.hpp"
 
 class ABackground : public IBackground {
 protected:
     std::shared_ptr<ECS::Registry> _registry;
+    std::shared_ptr<AssetManager> _assetManager;
     std::string _backgroundName;
     std::vector<ECS::Entity> _listEntities;
 
@@ -25,7 +31,7 @@ protected:
         this->_listEntities.clear();
     };
 
-    ABackground(std::shared_ptr<ECS::Registry> registry, const std::string &backgroundName) : _registry(std::move(registry)), _backgroundName(backgroundName) {};
+    ABackground(std::shared_ptr<ECS::Registry> registry, std::shared_ptr<AssetManager> assetManager, const std::string &backgroundName) : _registry(std::move(registry)), _assetManager(std::move(assetManager)), _backgroundName(backgroundName) {};
     ~ABackground() override {
         for (auto s: this->_listEntities) {
             this->_registry->killEntity(s);

@@ -15,7 +15,7 @@
 #include "AsteroidsSpace.hpp"
 
 extern "C" {
-    RTYPE_EXPORT IBackground *createBackground(std::shared_ptr<ECS::Registry> registry) {
-        return new AsteroidsSpace(std::move(registry));
+    RTYPE_EXPORT IBackground *createBackground(std::shared_ptr<ECS::Registry> registry, std::shared_ptr<AssetManager> assetManager) {
+        return new AsteroidsSpace(std::move(registry), std::move(assetManager));
     }
 }

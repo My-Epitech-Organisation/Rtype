@@ -295,9 +295,10 @@ void Graphic::_loadBackgrounds() {
         std::string path = s.path().string();
         auto instance =
             std::make_unique<rtype::common::DLLoader<IBackground>>(path);
-        auto bg = instance->getInstance<std::shared_ptr<ECS::Registry>>(
+        auto bg = instance->getInstance<std::shared_ptr<ECS::Registry>, std::shared_ptr<AssetManager>>(
             "createBackground",
-            std::shared_ptr<ECS::Registry>(this->_registry));
+            std::shared_ptr<ECS::Registry>(this->_registry),
+            std::shared_ptr<AssetManager>(this->_assetsManager));
         if (bg) {
             this->_backgroundLoaders.push_back(std::move(instance));
             this->_sceneManager->registerBackgroundPlugin(

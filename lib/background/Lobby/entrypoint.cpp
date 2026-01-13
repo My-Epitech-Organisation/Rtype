@@ -15,7 +15,7 @@
 #include "LobbyBackground.hpp"
 
 extern "C" {
-    RTYPE_EXPORT IBackground *createBackground(std::shared_ptr<ECS::Registry> registry) {
-        return new LobbyBackground(std::move(registry));
+    RTYPE_EXPORT IBackground *createBackground(std::shared_ptr<ECS::Registry> registry, std::shared_ptr<AssetManager> assetManager) {
+        return new LobbyBackground(std::move(registry), std::move(assetManager));
     }
 }

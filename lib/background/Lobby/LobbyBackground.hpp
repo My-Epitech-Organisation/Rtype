@@ -14,7 +14,7 @@ class LobbyBackground : public ABackground {
 
 public:
     void createEntitiesBackground() override;
-    LobbyBackground(std::shared_ptr<ECS::Registry> registry) : ABackground(std::move(registry), "LOBBY") {};
+    LobbyBackground(std::shared_ptr<ECS::Registry> registry, std::shared_ptr<AssetManager> assetManager) : ABackground(std::move(registry), std::move(assetManager), "LOBBY") {};
 };
 
 

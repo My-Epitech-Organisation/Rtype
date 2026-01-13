@@ -8,7 +8,7 @@
 #ifndef R_TYPE_IBACKGROUND_HPP
 #define R_TYPE_IBACKGROUND_HPP
 #include <vector>
-#include "lib/ecs/src/ECS.hpp"
+#include <string>
 
 class IBackground {
 public:

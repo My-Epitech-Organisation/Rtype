@@ -6,6 +6,7 @@ add_library(rtype-graphic-background-asteroidsSpace SHARED
 
 target_include_directories(rtype-graphic-background-asteroidsSpace PUBLIC
         ${CMAKE_SOURCE_DIR}/src/games/
+        ${CMAKE_SOURCE_DIR}/src/games/rtype/shared/
         ${CMAKE_SOURCE_DIR}
 )
 
