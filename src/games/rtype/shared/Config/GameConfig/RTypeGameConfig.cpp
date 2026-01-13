@@ -6,6 +6,7 @@
 */
 
 #include "RTypeGameConfig.hpp"
+#include <iostream>
 
 namespace rtype::game::config {
 
@@ -181,6 +182,8 @@ void RTypeGameConfig::applyDefaults() {
         input.mouseSensitivity = defaults.input.mouseSensitivity;
 }
 
-RTypeGameConfig RTypeGameConfig::createDefault() { return RTypeGameConfig{}; }
+RTypeGameConfig RTypeGameConfig::createDefault() {
+    return RTypeGameConfig{};
+}
 
 }  // namespace rtype::game::config
