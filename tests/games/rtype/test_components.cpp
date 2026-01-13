@@ -464,9 +464,10 @@ TEST_F(ChargeComponentTest, StartChargingSetsFlag) {
 
 TEST_F(ChargeComponentTest, ReleaseReturnsChargeAndResets) {
     charge.currentCharge = 0.75F;
+    charge.currentLevel = ChargeLevel::Level2;
     charge.isCharging = true;
-    float released = charge.release();
-    EXPECT_FLOAT_EQ(released, 0.75F);
+    auto released = charge.release();
+    EXPECT_EQ(released, ChargeLevel::Level2);
     EXPECT_FLOAT_EQ(charge.currentCharge, 0.0F);
     EXPECT_FALSE(charge.isCharging);
 }
