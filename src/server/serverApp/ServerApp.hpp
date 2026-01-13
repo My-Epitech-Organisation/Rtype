@@ -247,6 +247,8 @@ class ServerApp {
     void handleClientConnected(std::uint32_t userId);
     void handleClientDisconnected(std::uint32_t userId);
     void handleStateChange(GameState oldState, GameState newState);
+    void handleAdminCommand(std::uint32_t userId, std::uint8_t commandType,
+                            std::uint8_t param, const std::string& clientIp);
 
     void resetToLobby();
 

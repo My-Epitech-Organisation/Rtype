@@ -396,6 +396,35 @@ struct ChatPayload {
     char message[256];
 };
 
+/**
+ * @brief Admin command types for C_ADMIN_COMMAND (0xD0)
+ */
+enum class AdminCommandType : std::uint8_t {
+    GodMode = 0x01,  ///< Toggle invincibility
+};
+
+/**
+ * @brief Payload for C_ADMIN_COMMAND (0xD0)
+ *
+ * Client requests admin action (validated server-side for localhost only).
+ */
+struct AdminCommandPayload {
+    std::uint8_t commandType;  ///< AdminCommandType
+    std::uint8_t param;        ///< 0 = off, 1 = on, 2 = toggle
+};
+
+/**
+ * @brief Payload for S_ADMIN_RESPONSE (0xD1)
+ *
+ * Server responds to admin command with success/failure and message.
+ */
+struct AdminResponsePayload {
+    std::uint8_t commandType;  ///< AdminCommandType echoed back
+    std::uint8_t success;      ///< 0 = failed, 1 = success
+    std::uint8_t newState;     ///< Resulting state (0 = off, 1 = on)
+    char message[61];          ///< Response message (max 60 chars + null)
+};
+
 #pragma pack(pop)
 
 static_assert(sizeof(ConnectPayload) == 1,
@@ -458,6 +487,10 @@ static_assert(sizeof(JoinLobbyResponsePayload) == 18,
               "JoinLobbyResponsePayload must be 18 bytes (uint8_t+uint8_t+char[16])");
 static_assert(sizeof(ChatPayload) == 260,
               "ChatPayload must be 260 bytes (4+256)");
+static_assert(sizeof(AdminCommandPayload) == 2,
+              "AdminCommandPayload must be 2 bytes (1+1)");
+static_assert(sizeof(AdminResponsePayload) == 64,
+              "AdminResponsePayload must be 64 bytes (1+1+1+61)");
 
 static_assert(std::is_trivially_copyable_v<AcceptPayload>);
 static_assert(std::is_trivially_copyable_v<UpdateStatePayload>);
@@ -474,6 +507,8 @@ static_assert(std::is_trivially_copyable_v<LobbyReadyPayload>);
 static_assert(std::is_trivially_copyable_v<GameStartPayload>);
 static_assert(std::is_trivially_copyable_v<PlayerReadyStatePayload>);
 static_assert(std::is_trivially_copyable_v<ChatPayload>);
+static_assert(std::is_trivially_copyable_v<AdminCommandPayload>);
+static_assert(std::is_trivially_copyable_v<AdminResponsePayload>);
 
 static_assert(std::is_standard_layout_v<AcceptPayload>);
 static_assert(std::is_standard_layout_v<UpdateStatePayload>);
@@ -490,6 +525,8 @@ static_assert(std::is_standard_layout_v<LobbyReadyPayload>);
 static_assert(std::is_standard_layout_v<GameStartPayload>);
 static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
 static_assert(std::is_standard_layout_v<ChatPayload>);
+static_assert(std::is_standard_layout_v<AdminCommandPayload>);
+static_assert(std::is_standard_layout_v<AdminResponsePayload>);
 
 /**
  * @brief Get the expected payload size for a given OpCode
@@ -558,6 +595,11 @@ static_assert(std::is_standard_layout_v<ChatPayload>);
             return sizeof(UpdatePosPayload);
         case OpCode::DISCONNECT:
             return sizeof(DisconnectPayload);
+
+        case OpCode::C_ADMIN_COMMAND:
+            return sizeof(AdminCommandPayload);
+        case OpCode::S_ADMIN_RESPONSE:
+            return sizeof(AdminResponsePayload);
     }
     return 0;
 }

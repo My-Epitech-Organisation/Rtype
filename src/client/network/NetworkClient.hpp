@@ -450,6 +450,27 @@ class NetworkClient {
         std::function<void(bool, uint8_t, const std::string&)> callback);
 
     /**
+     * @brief Send an admin command to the server
+     *
+     * Admin commands are only accepted when running on localhost.
+     *
+     * @param commandType AdminCommandType (GodMode, etc.)
+     * @param param 0=off, 1=on, 2=toggle
+     * @return true if sent, false if not connected
+     */
+    bool sendAdminCommand(std::uint8_t commandType, std::uint8_t param);
+
+    /**
+     * @brief Register callback for admin command responses
+     * @param callback Function receiving (commandType, success, newState,
+     * message)
+     */
+    void onAdminResponse(
+        std::function<void(std::uint8_t cmdType, bool success, bool newState,
+                           const std::string& message)>
+            callback);
+
+    /**
      * @brief Process network events and dispatch callbacks
      *
      * Must be called regularly (e.g., each game frame) to:
@@ -523,6 +544,8 @@ class NetworkClient {
                     const network::Buffer& payload);
     void handleLevelAnnounce(const network::Header& header,
                              const network::Buffer& payload);
+    void handleAdminResponse(const network::Header& header,
+                             const network::Buffer& payload);
 
     void flushOutgoing();
 
@@ -574,6 +597,8 @@ class NetworkClient {
         pendingLevelAnnounce_;  // Store last announcement for late subscribers
     std::function<void(bool, uint8_t, const std::string&)>
         onJoinLobbyResponseCallback_;
+    std::function<void(std::uint8_t, bool, bool, const std::string&)>
+        onAdminResponseCallback_;
     std::function<void(std::uint32_t, bool, std::uint8_t)>
         onBandwidthModeChangedCallback_;
 

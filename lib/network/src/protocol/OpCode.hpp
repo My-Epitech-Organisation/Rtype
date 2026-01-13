@@ -112,6 +112,12 @@ enum class OpCode : std::uint8_t {
 
     /// Server broadcasts chat message (RELIABLE)
     S_CHAT = 0x31,
+
+    /// Client sends admin/debug command (RELIABLE) - localhost only
+    C_ADMIN_COMMAND = 0xD0,
+
+    /// Server responds to admin command (RELIABLE)
+    S_ADMIN_RESPONSE = 0xD1,
 };
 
 namespace OpCodeRange {
@@ -160,6 +166,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_BANDWIDTH_MODE_CHANGED:
         case OpCode::C_CHAT:
         case OpCode::S_CHAT:
+        case OpCode::C_ADMIN_COMMAND:
+        case OpCode::S_ADMIN_RESPONSE:
             return true;
 
         case OpCode::S_ENTITY_MOVE:
@@ -189,6 +197,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::C_SET_BANDWIDTH_MODE:
         case OpCode::C_INPUT:
         case OpCode::C_CHAT:
+        case OpCode::C_ADMIN_COMMAND:
         case OpCode::PING:
             return true;
 
@@ -225,6 +234,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_UPDATE_POS:
         case OpCode::S_BANDWIDTH_MODE_CHANGED:
         case OpCode::S_CHAT:
+        case OpCode::S_ADMIN_RESPONSE:
         case OpCode::PONG:
             return true;
 
@@ -273,6 +283,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::ACK:
         case OpCode::C_CHAT:
         case OpCode::S_CHAT:
+        case OpCode::C_ADMIN_COMMAND:
+        case OpCode::S_ADMIN_RESPONSE:
             return true;
         default:
             return false;
@@ -368,6 +380,10 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "PONG";
         case OpCode::ACK:
             return "ACK";
+        case OpCode::C_ADMIN_COMMAND:
+            return "C_ADMIN_COMMAND";
+        case OpCode::S_ADMIN_RESPONSE:
+            return "S_ADMIN_RESPONSE";
     }
     return "UNKNOWN";
 }
