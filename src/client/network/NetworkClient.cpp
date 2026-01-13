@@ -1296,8 +1296,9 @@ void NetworkClient::handleJoinLobbyResponse(const network::Header& header,
         auto resp = network::Serializer::deserializeFromNetwork<
             network::JoinLobbyResponsePayload>(payload);
 
-        std::string levelName(resp.levelName.data(),
-                              strnlen(resp.levelName.data(), kLevelNameMaxSize));
+        std::string levelName(
+            resp.levelName.data(),
+            strnlen(resp.levelName.data(), kLevelNameMaxSize));
 
         queueCallback([this, resp, levelName]() {
             if (onJoinLobbyResponseCallback_) {
