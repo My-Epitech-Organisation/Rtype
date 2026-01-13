@@ -223,8 +223,12 @@ void RtypeEntityFactory::setupPlayerEntity(
     reg.emplaceComponent<PlayerSoundComponent>(
         entity, assetsManager->soundManager->get("player_spawn"),
         assetsManager->soundManager->get("player_death"));
-    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(assetsManager->soundManager->get("player_spawn"));
+    if (reg.hasSingleton<std::shared_ptr<AudioLib>>()) {
+        auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+        if (lib) {
+            lib->playSFX(assetsManager->soundManager->get("player_spawn"));
+        }
+    }
 }
 
 void RtypeEntityFactory::setupBydosEntity(
@@ -371,8 +375,12 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.emplaceComponent<EnemySoundComponent>(
         entity, assetsManager->soundManager->get("bydos_spawn"),
         assetsManager->soundManager->get("bydos_death"));
-    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(assetsManager->soundManager->get("bydos_spawn"));
+    if (reg.hasSingleton<std::shared_ptr<AudioLib>>()) {
+        auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+        if (lib) {
+            lib->playSFX(assetsManager->soundManager->get("bydos_spawn"));
+        }
+    }
 }
 
 void RtypeEntityFactory::setupMissileEntity(
@@ -423,8 +431,12 @@ void RtypeEntityFactory::setupMissileEntity(
                 "[RtypeEntityFactory] Added 180° rotation to enemy projectile");
         }
     }
-    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(assetsManager->soundManager->get("laser_sfx"));
+    if (reg.hasSingleton<std::shared_ptr<AudioLib>>()) {
+        auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+        if (lib) {
+            lib->playSFX(assetsManager->soundManager->get("laser_sfx"));
+        }
+    }
 
     if (reg.hasComponent<shared::TransformComponent>(entity)) {
         const auto& pos = reg.getComponent<shared::TransformComponent>(entity);
