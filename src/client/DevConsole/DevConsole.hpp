@@ -19,6 +19,7 @@
 #include "rtype/display/IDisplay.hpp"
 
 class AudioLib;
+class KeyboardActions;
 
 namespace ECS {
 class Registry;
@@ -55,12 +56,14 @@ class DevConsole {
      * @param registry Optional ECS registry for entity count
      * @param audioLib Optional audio library for mute command
      * @param deltaTimePtr Pointer to deltaTime for FPS calculation
+     * @param keybinds Optional keyboard actions for configurable toggle key
      */
     explicit DevConsole(std::shared_ptr<rtype::display::IDisplay> display,
                         std::shared_ptr<NetworkClient> networkClient = nullptr,
                         std::shared_ptr<ECS::Registry> registry = nullptr,
                         std::shared_ptr<AudioLib> audioLib = nullptr,
-                        float* deltaTimePtr = nullptr);
+                        float* deltaTimePtr = nullptr,
+                        std::shared_ptr<KeyboardActions> keybinds = nullptr);
 
     ~DevConsole() = default;
     DevConsole(const DevConsole&) = delete;
@@ -204,6 +207,7 @@ class DevConsole {
     std::shared_ptr<ECS::Registry> registry_;
     std::shared_ptr<AudioLib> audioLib_;
     float* deltaTimePtr_{nullptr};
+    std::shared_ptr<KeyboardActions> keybinds_;
 
     // Saved volumes for mute/unmute
     float savedMusicVolume_{50.0f};
