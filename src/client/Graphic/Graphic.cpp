@@ -485,8 +485,18 @@ Graphic::Graphic(
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)) {
     rtype::game::config::RTypeConfigParser parser;
-    auto assetsConfig = parser.loadFromFile("./assets/config.toml");
-    if (!assetsConfig.has_value()) throw std::exception();
+    std::optional<rtype::game::config::RTypeGameConfig> assetsConfig;
+    try {
+        assetsConfig = parser.loadFromFile("./assets/config.toml");
+    } catch (const std::exception& e) {
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics, "[Graphic] Exception loading config: " +
+            std::string(e.what()));
+        throw;
+    } catch (...) {
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics, "[Graphic] Unknown exception loading config");
+        throw;
+    }
+    if (!assetsConfig.has_value()) throw std::runtime_error("Failed to load config");
     this->_keybinds = std::make_shared<KeyboardActions>();
 
 #ifdef _WIN32
