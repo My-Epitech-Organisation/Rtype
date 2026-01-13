@@ -68,7 +68,6 @@ class DLLoader {
             );
 
             if (!entryPoint) {
-                // ... (ton code de gestion d'erreur Windows reste identique) ...
                 DWORD errorMessageID = GetLastError();
                 LPSTR messageBuffer = nullptr;
                 size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,

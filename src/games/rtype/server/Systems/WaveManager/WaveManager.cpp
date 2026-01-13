@@ -109,10 +109,8 @@ void WaveManager::start() {
     _transitionTimer = 0.0F;
     _state = WaveState::InProgress;
 
-    // Use startDelay if configured
     if (_startDelay > 0.0f) {
-        _waveTimer = -_startDelay;  // Trick: timer starts negative, so checks
-                                    // >= delay work after it crosses 0
+        _waveTimer = -_startDelay;
     }
 
     prepareCurrentWave();

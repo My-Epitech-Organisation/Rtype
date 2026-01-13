@@ -483,7 +483,7 @@ Graphic::Graphic(
             std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
                 "./plugins/display.dll");
     } catch (std::exception& e) {
-        LOG_FATAL("Error while Loading plugins/display.dll");
+        LOG_FATAL("Error while loading plugins/display.dll" << e.what());
     }
 #else
     try {
@@ -491,7 +491,7 @@ Graphic::Graphic(
             std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
                 "./plugins/display.so");
     } catch (std::exception& e) {
-        LOG_FATAL("Error while loading plugins/display.so");
+        LOG_FATAL("Error while loading plugins/display.so " << e.what());
     }
 #endif
     try {
@@ -500,7 +500,7 @@ Graphic::Graphic(
         this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT,
                              "R-Type - Epitech 2025", false);
     } catch (std::exception& e) {
-        LOG_FATAL("Error while init display lib");
+        LOG_FATAL("Error while init display lib" << e.what());
     }
 
     this->_keybinds->initialize(*this->_display);

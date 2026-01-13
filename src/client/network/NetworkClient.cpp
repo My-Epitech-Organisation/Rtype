@@ -27,6 +27,7 @@ namespace rtype::client {
 namespace {
 constexpr float kPosQuantScale = 16.0f;
 constexpr float kVelQuantScale = 16.0f;
+constexpr int kLevelNameMaxSize = 35;
 
 inline float dequantize(std::int16_t v, float scale) {
     return static_cast<float>(v) / scale;
@@ -1255,7 +1256,7 @@ void NetworkClient::handleJoinLobbyResponse(const network::Header& header,
             network::JoinLobbyResponsePayload>(payload);
 
         std::string levelName(resp.levelName.data(),
-                              strnlen(resp.levelName.data(), 16));
+                              strnlen(resp.levelName.data(), kLevelNameMaxSize));
 
         queueCallback([this, resp, levelName]() {
             if (onJoinLobbyResponseCallback_) {

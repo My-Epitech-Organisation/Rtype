@@ -192,7 +192,7 @@ SceneManager::SceneManager(
                           "[SceneManager] Background already loaded: " << name);
             return;
         }
-        if (this->loadedBackground != "" &&
+        if (!this->loadedBackground.empty() &&
             this->_libBackgrounds.contains(this->loadedBackground))
             this->_libBackgrounds[this->loadedBackground]
                 ->unloadEntitiesBackground();
