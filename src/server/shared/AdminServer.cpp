@@ -309,7 +309,7 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
 
     server->Post("/api/message/send", [this](const Request& req,
                                              Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
