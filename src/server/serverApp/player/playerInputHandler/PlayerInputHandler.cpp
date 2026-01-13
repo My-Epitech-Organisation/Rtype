@@ -213,7 +213,6 @@ void PlayerInputHandler::processChargedShot(std::uint32_t userId,
     }
 
     if (!_chargedShotCallback || !_networkSystem) {
-        // Fallback to regular shoot if no charged shot callback
         if (_shootCallback) {
             auto networkIdOpt = _networkSystem->getNetworkId(entity);
             if (networkIdOpt.has_value()) {
@@ -244,9 +243,8 @@ void PlayerInputHandler::processChargedShot(std::uint32_t userId,
         _chargedShotCallback(*networkIdOpt, pos.x, pos.y, chargeLevel);
 
     if (projectileId != 0) {
-        // Longer cooldown for charged shots
         cooldown.triggerCooldown();
-        cooldown.triggerCooldown();  // Double cooldown for charged shots
+        cooldown.triggerCooldown();
         LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                       "[InputHandler] Player "
                           << userId << " fired charged projectile "
