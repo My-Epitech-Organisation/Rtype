@@ -375,6 +375,27 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
                         }
                     }
 
+                    if (auto* powerups = (*waveTbl)["powerup"].as_array()) {
+                        for (const auto& powerupElem : *powerups) {
+                            if (auto* powerupTbl = powerupElem.as_table()) {
+                                WaveConfig::PowerUpEntry powerup;
+                                powerup.powerUpId =
+                                    (*powerupTbl)["id"].value_or("");
+                                if (auto xVal =
+                                        (*powerupTbl)["x"].value<double>()) {
+                                    powerup.x = static_cast<float>(*xVal);
+                                }
+                                if (auto yVal =
+                                        (*powerupTbl)["y"].value<double>()) {
+                                    powerup.y = static_cast<float>(*yVal);
+                                }
+                                powerup.delay =
+                                    (*powerupTbl)["delay"].value_or(0.0F);
+                                wave.powerups.push_back(powerup);
+                            }
+                        }
+                    }
+
                     if (wave.isValid()) {
                         config.waves.push_back(std::move(wave));
                     }

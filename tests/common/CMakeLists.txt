@@ -86,6 +86,13 @@ else()
     gtest_discover_tests(test_safe_queue)
 endif()
 
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_safe_queue WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_safe_queue)
+endif()
+
 # Config and SaveManager tests
 add_executable(test_config test_config.cpp)
 

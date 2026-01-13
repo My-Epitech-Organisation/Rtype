@@ -18,6 +18,8 @@
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "Systems/AnimationSystem.hpp"
+#include "Systems/ChaserExplosionSystem.hpp"
+#include "Systems/ChaserRotationSystem.hpp"
 #include "games/rtype/client/AllComponents.hpp"
 #include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"
 #include "games/rtype/client/GameScene/RtypeInputHandler.hpp"
@@ -91,9 +93,12 @@ void Graphic::_update() {
     if (!isPaused) {
         this->_systemScheduler->runSystem("color_tint");
         this->_systemScheduler->runSystem("player_animation");
+        this->_systemScheduler->runSystem("chaser_rotation");
+        this->_systemScheduler->runSystem("chaser_explosion");
         this->_systemScheduler->runSystem("animation");
         this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
+        this->_systemScheduler->runSystem("enemy_health_bars");
     }
 
     this->_systemScheduler->runSystem("lifetime");
@@ -156,6 +161,10 @@ void Graphic::_initializeSystems() {
         ::rtype::games::rtype::client::PlayerAnimationSystem>();
     this->_animationSystem =
         std::make_unique<::rtype::games::rtype::client::AnimationSystem>();
+    this->_chaserRotationSystem =
+        std::make_unique<::rtype::games::rtype::client::ChaserRotationSystem>();
+    this->_chaserExplosionSystem = std::make_unique<
+        ::rtype::games::rtype::client::ChaserExplosionSystem>();
     this->_playerPowerUpVisualSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_powerUpCollectionSystem = std::make_unique<
@@ -186,6 +195,11 @@ void Graphic::_initializeSystems() {
     this->_shaderRenderSystem =
         std::make_unique<::rtype::games::rtype::client::ShaderRenderSystem>(
             this->_display);
+    this->_forcePodVisualSystem =
+        std::make_unique<::rtype::games::rtype::client::ForcePodVisualSystem>();
+    this->_enemyHealthBarSystem =
+        std::make_unique<::rtype::games::rtype::client::EnemyHealthBarSystem>(
+            this->_registry);
 
     this->_systemScheduler =
         std::make_unique<ECS::SystemScheduler>(*this->_registry);
@@ -216,6 +230,20 @@ void Graphic::_initializeSystems() {
                                       },
                                       {"reset_triggers"});
 
+    this->_systemScheduler->addSystem("chaser_rotation",
+                                      [this](ECS::Registry& reg) {
+                                          _chaserRotationSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {});
+
+    this->_systemScheduler->addSystem("chaser_explosion",
+                                      [this](ECS::Registry& reg) {
+                                          _chaserExplosionSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {});
+
     this->_systemScheduler->addSystem("powerup_visuals",
                                       [this](ECS::Registry& reg) {
                                           _playerPowerUpVisualSystem->update(
@@ -229,6 +257,13 @@ void Graphic::_initializeSystems() {
                                               reg, _currentDeltaTime);
                                       },
                                       {"powerup_visuals"});
+
+    this->_systemScheduler->addSystem("forcepod_visual",
+                                      [this](ECS::Registry& reg) {
+                                          _forcePodVisualSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"animation"});
 
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {
@@ -263,10 +298,17 @@ void Graphic::_initializeSystems() {
                                       },
                                       {"lifetime"});
 
+    this->_systemScheduler->addSystem("enemy_health_bars",
+                                      [this](ECS::Registry& reg) {
+                                          this->_enemyHealthBarSystem->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"client_destroy"});
+
     this->_systemScheduler->addSystem(
         "render",
         [this](ECS::Registry& reg) { this->_renderSystem->update(reg, 0.f); },
-        {"client_destroy"});
+        {"enemy_health_bars", "chaser_rotation"});
 
     this->_systemScheduler->addSystem(
         "boxing",
@@ -328,6 +370,24 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.EnemyWave);
     manager->textureManager->load("projectile_player_laser",
                                   config.assets.textures.missileLaser);
+    manager->textureManager->load("force_pod", config.assets.textures.forcePod);
+
+    // Load power-up textures
+    manager->textureManager->load("health_small",
+                                  config.assets.textures.healthSmall);
+    manager->textureManager->load("health_large",
+                                  config.assets.textures.healthLarge);
+    manager->textureManager->load("speed_boost",
+                                  config.assets.textures.speedBoost);
+    manager->textureManager->load("weapon_upgrade",
+                                  config.assets.textures.weaponUpgrade);
+    manager->textureManager->load("shield", config.assets.textures.shield);
+    manager->textureManager->load("rapid_fire",
+                                  config.assets.textures.rapidFire);
+    manager->textureManager->load("double_damage",
+                                  config.assets.textures.damageBoost);
+    manager->textureManager->load("extra_life",
+                                  config.assets.textures.extraLife);
 
     manager->textureManager->load(
         "projectile1", config.assets.textures.wallTexture.engrenage1);
@@ -359,6 +419,10 @@ void Graphic::_initializeCommonAssets() {
     manager->soundManager->load("bydos_spawn", config.assets.sfx.enemySpawn);
     manager->soundManager->load("bydos_death", config.assets.sfx.enemyDeath);
     manager->soundManager->load("laser_sfx", config.assets.sfx.laser);
+    manager->soundManager->load("forcepod_launch",
+                                config.assets.sfx.forcePodLaunch);
+    manager->soundManager->load("forcepod_return",
+                                config.assets.sfx.forcePodReturn);
 
     manager->textureManager->get("bg_menu")->setRepeated(true);
     manager->textureManager->get("bg_planet_1")->setRepeated(true);
@@ -424,7 +488,7 @@ Graphic::Graphic(
     this->_audioLib = std::make_shared<AudioLib>(this->_display);
     this->_registry->setSingleton<std::shared_ptr<AudioLib>>(this->_audioLib);
     this->_registry->setSingleton<AccessibilitySettings>(
-        AccessibilitySettings{ColorBlindMode::None});
+        AccessibilitySettings{ColorBlindMode::None, 1.0f, false, false});
     this->_registry->setSingleton<rtype::games::rtype::client::PauseState>(
         rtype::games::rtype::client::PauseState{false});
     this->_initializeCommonAssets();
@@ -436,12 +500,33 @@ Graphic::Graphic(
 }
 
 Graphic::~Graphic() {
+    if (_display) {
+        _display->close();
+    }
     _sceneManager.reset();
     _systemScheduler.reset();
-    _assetsManager.reset();
-    _audioLib.reset();
-
+    _forcePodVisualSystem.reset();
+    _shaderRenderSystem.reset();
+    _clientDestroySystem.reset();
+    _lifetimeSystem.reset();
+    _projectileSystem.reset();
+    _eventSystem.reset();
+    _resetTriggersSystem.reset();
+    _boxingSystem.reset();
+    _renderSystem.reset();
+    _parallaxScrolling.reset();
+    _buttonUpdateSystem.reset();
+    _powerUpCollectionSystem.reset();
+    _playerPowerUpVisualSystem.reset();
+    _animationSystem.reset();
+    _chaserRotationSystem.reset();
+    _playerAnimationSystem.reset();
+    _colorTintSystem.reset();
     if (_registry) {
         _registry->clear();
     }
+    _assetsManager.reset();
+    _audioLib.reset();
+    _display.reset();
+    _displayLoader.reset();
 }

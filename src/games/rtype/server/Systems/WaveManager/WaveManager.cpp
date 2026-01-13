@@ -122,6 +122,7 @@ void WaveManager::reset() {
     _waveTimer = 0.0F;
     _transitionTimer = 0.0F;
     _pendingSpawns.clear();
+    _pendingPowerUps.clear();
 
     if (_levelConfig) {
         _state = WaveState::NotStarted;
@@ -248,10 +249,62 @@ void WaveManager::prepareCurrentWave() {
         _pendingSpawns.push_back(pending);
     }
 
+    for (const auto& powerupEntry : wave.powerups) {
+        auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+        if (!configRegistry.getPowerUp(powerupEntry.powerUpId).has_value()) {
+            LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                            "[WaveManager] Unknown powerup type: "
+                                << powerupEntry.powerUpId << " - skipping");
+            continue;
+        }
+
+        PendingPowerUp pending;
+        pending.entry = powerupEntry;
+        pending.remainingDelay = powerupEntry.delay;
+        pending.spawned = false;
+        _pendingPowerUps.push_back(pending);
+    }
+
     LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                   "[WaveManager] Prepared wave "
                       << (_currentWaveIndex + 1) << " with "
-                      << _pendingSpawns.size() << " spawn entries");
+                      << _pendingSpawns.size() << " spawn entries and "
+                      << _pendingPowerUps.size() << " powerups");
+}
+
+std::vector<PowerUpSpawnRequest> WaveManager::getPowerUpSpawns(
+    float deltaTime) {
+    std::vector<PowerUpSpawnRequest> spawns;
+    if (_state != WaveState::InProgress && _state != WaveState::WaveComplete) {
+        return spawns;
+    }
+
+    for (auto& pending : _pendingPowerUps) {
+        if (pending.spawned) {
+            continue;
+        }
+
+        pending.remainingDelay -= deltaTime;
+
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[WaveManager] PowerUp '"
+                          << pending.entry.powerUpId
+                          << "' delay: " << pending.remainingDelay);
+
+        if (pending.remainingDelay <= 0.0F) {
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "[WaveManager] PowerUp '" << pending.entry.powerUpId
+                                                   << "' ready to spawn!");
+            PowerUpSpawnRequest request;
+            request.powerUpId = pending.entry.powerUpId;
+            request.x = pending.entry.x;
+            request.y = pending.entry.y;
+            spawns.push_back(request);
+            pending.spawned = true;
+        }
+    }
+
+    return spawns;
 }
 
 }  // namespace rtype::games::rtype::server

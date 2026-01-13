@@ -154,6 +154,8 @@ class DataDrivenSpawnerSystem : public ::rtype::engine::ASystem {
     void spawnBoss(ECS::Registry& registry, const std::string& bossId);
     void spawnObstacle(ECS::Registry& registry);
     void spawnPowerUp(ECS::Registry& registry);
+    void spawnPowerUpFromConfig(ECS::Registry& registry,
+                                const PowerUpSpawnRequest& request);
 
     void updateFallbackSpawning(ECS::Registry& registry, float deltaTime);
     void generateNextObstacleSpawnTime();

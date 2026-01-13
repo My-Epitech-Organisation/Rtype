@@ -12,6 +12,7 @@
 #include "games/rtype/server/RTypeEntitySpawner.hpp"
 #include "games/rtype/shared/Components/BoundingBoxComponent.hpp"
 #include "games/rtype/shared/Components/CooldownComponent.hpp"
+#include "games/rtype/shared/Components/ForcePodComponent.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
 #include "games/rtype/shared/Components/PlayerIdComponent.hpp"
@@ -483,4 +484,93 @@ TEST_F(RTypeEntitySpawnerTest, GetPlayerEntityWithNullNetworkSystem) {
 
     auto entityOpt = spawnerWithNullNetwork->getPlayerEntity(1000);
     EXPECT_FALSE(entityOpt.has_value());
+}
+
+TEST_F(RTypeEntitySpawnerTest, SpawnForcePodSuccess) {
+    std::uint32_t ownerNetworkId = 1000;
+    float offsetX = 50.0F;
+    float offsetY = 20.0F;
+
+    ECS::Entity forcePodEntity = spawner->spawnForcePod(ownerNetworkId, offsetX, offsetY);
+
+    EXPECT_FALSE(forcePodEntity.isNull());
+    EXPECT_TRUE(registry->isAlive(forcePodEntity));
+}
+
+TEST_F(RTypeEntitySpawnerTest, SpawnForcePodHasRequiredComponents) {
+    std::uint32_t ownerNetworkId = 1001;
+    float offsetX = 60.0F;
+    float offsetY = -30.0F;
+
+    ECS::Entity forcePodEntity = spawner->spawnForcePod(ownerNetworkId, offsetX, offsetY);
+
+    EXPECT_TRUE(registry->hasComponent<ForcePodComponent>(forcePodEntity));
+    EXPECT_TRUE(registry->hasComponent<ForcePodTag>(forcePodEntity));
+    EXPECT_TRUE(registry->hasComponent<TransformComponent>(forcePodEntity));
+}
+
+TEST_F(RTypeEntitySpawnerTest, SpawnForcePodComponentHasCorrectState) {
+    std::uint32_t ownerNetworkId = 1002;
+    float offsetX = 40.0F;
+    float offsetY = 10.0F;
+
+    ECS::Entity forcePodEntity = spawner->spawnForcePod(ownerNetworkId, offsetX, offsetY);
+
+    const auto& forcePodComp = registry->getComponent<ForcePodComponent>(forcePodEntity);
+    
+    EXPECT_EQ(forcePodComp.state, ForcePodState::Attached);
+    EXPECT_EQ(forcePodComp.offsetX, offsetX);
+    EXPECT_EQ(forcePodComp.offsetY, offsetY);
+    EXPECT_EQ(forcePodComp.ownerNetworkId, ownerNetworkId);
+}
+
+TEST_F(RTypeEntitySpawnerTest, SpawnForcePodWithNegativeOffsets) {
+    std::uint32_t ownerNetworkId = 1003;
+    float offsetX = -50.0F;
+    float offsetY = -20.0F;
+
+    ECS::Entity forcePodEntity = spawner->spawnForcePod(ownerNetworkId, offsetX, offsetY);
+
+    EXPECT_FALSE(forcePodEntity.isNull());
+
+    const auto& forcePodComp = registry->getComponent<ForcePodComponent>(forcePodEntity);
+    EXPECT_EQ(forcePodComp.offsetX, -50.0F);
+    EXPECT_EQ(forcePodComp.offsetY, -20.0F);
+}
+
+TEST_F(RTypeEntitySpawnerTest, SpawnMultipleForcePods) {
+    std::uint32_t ownerNetworkId = 1004;
+
+    ECS::Entity forcePod1 = spawner->spawnForcePod(ownerNetworkId, 50.0F, 20.0F);
+    ECS::Entity forcePod2 = spawner->spawnForcePod(ownerNetworkId, -50.0F, -20.0F);
+
+    EXPECT_FALSE(forcePod1.isNull());
+    EXPECT_FALSE(forcePod2.isNull());
+    EXPECT_NE(forcePod1, forcePod2);
+
+    auto view = registry->view<ForcePodTag>();
+    int count = 0;
+    view.each([&count](ECS::Entity, const ForcePodTag&) { ++count; });
+    EXPECT_EQ(count, 2);
+}
+
+TEST_F(RTypeEntitySpawnerTest, SpawnForcePodWithZeroOffsets) {
+    std::uint32_t ownerNetworkId = 1005;
+
+    ECS::Entity forcePodEntity = spawner->spawnForcePod(ownerNetworkId, 0.0F, 0.0F);
+
+    EXPECT_FALSE(forcePodEntity.isNull());
+
+    const auto& forcePodComp = registry->getComponent<ForcePodComponent>(forcePodEntity);
+    EXPECT_EQ(forcePodComp.offsetX, 0.0F);
+    EXPECT_EQ(forcePodComp.offsetY, 0.0F);
+}
+
+TEST_F(RTypeEntitySpawnerTest, SpawnForcePodWithNullRegistry) {
+    auto spawnerWithNullRegistry = std::make_unique<RTypeEntitySpawner>(
+        nullptr, networkSystem, std::nullopt, std::nullopt);
+
+    ECS::Entity forcePodEntity = spawnerWithNullRegistry->spawnForcePod(1006, 50.0F, 20.0F);
+
+    EXPECT_TRUE(forcePodEntity.isNull());
 }

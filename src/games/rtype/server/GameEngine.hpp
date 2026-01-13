@@ -17,6 +17,9 @@
 
 #include "../shared/Config/PrefabLoader.hpp"
 #include "../shared/Systems/Systems.hpp"
+#include "Systems/ForcePod/ForcePodAttachmentSystem.hpp"
+#include "Systems/ForcePod/ForcePodLaunchSystem.hpp"
+#include "Systems/ForcePod/ForcePodShootingSystem.hpp"
 #include "Systems/Spawner/DataDrivenSpawnerSystem.hpp"
 #include "Systems/Systems.hpp"
 
@@ -152,6 +155,14 @@ class GameEngine : public engine::AGameEngine {
     }
 
     /**
+     * @brief Get Force Pod launch system
+     * @return Pointer to ForcePodLaunchSystem
+     */
+    ForcePodLaunchSystem* getForcePodLaunchSystem() {
+        return _forcePodLaunchSystem.get();
+    }
+
+    /**
      * @brief Get the data-driven spawner (for wave management)
      * @return Pointer to DataDrivenSpawnerSystem
      */
@@ -188,6 +199,9 @@ class GameEngine : public engine::AGameEngine {
     std::unique_ptr<CollisionSystem> _collisionSystem;
     std::unique_ptr<CleanupSystem> _cleanupSystem;
     std::unique_ptr<DestroySystem> _destroySystem;
+    std::unique_ptr<ForcePodAttachmentSystem> _forcePodAttachmentSystem;
+    std::unique_ptr<ForcePodLaunchSystem> _forcePodLaunchSystem;
+    std::unique_ptr<ForcePodShootingSystem> _forcePodShootingSystem;
 
     EventCallback _eventCallback;
     std::vector<engine::GameEvent> _pendingEvents;

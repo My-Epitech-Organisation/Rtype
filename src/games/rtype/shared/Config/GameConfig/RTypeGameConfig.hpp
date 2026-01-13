@@ -127,6 +127,17 @@ struct TexturesConfig {
     std::string EnemyWave;
     std::string astroVessel;
     std::string missileLaser;
+    std::string forcePod;
+
+    // Power-ups
+    std::string healthSmall;
+    std::string healthLarge;
+    std::string speedBoost;
+    std::string weaponUpgrade;
+    std::string shield;
+    std::string rapidFire;
+    std::string damageBoost;
+    std::string extraLife;
 
     bool operator==(const TexturesConfig&) const = default;
 };
@@ -154,6 +165,8 @@ struct SfxConfig {
     std::string enemyDeath;
     std::string playerSpawn;
     std::string playerDeath;
+    std::string forcePodLaunch;
+    std::string forcePodReturn;
 
     bool operator==(const SfxConfig&) const = default;
 };

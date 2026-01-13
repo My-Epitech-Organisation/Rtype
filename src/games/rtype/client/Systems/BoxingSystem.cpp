@@ -12,6 +12,9 @@
 
 #include "../Components/BoxingComponent.hpp"
 #include "../Components/ImageComponent.hpp"
+#include "../Components/RotationComponent.hpp"
+#include "../Components/SizeComponent.hpp"
+#include "../Components/TextureRectComponent.hpp"
 #include "../shared/Components/BoundingBoxComponent.hpp"
 #include "Graphic/Accessibility.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
@@ -30,30 +33,20 @@ void BoxingSystem::update(ECS::Registry& registry, float dt) {
     } else {
         return;
     }
-
     registry
         .view<::rtype::games::rtype::shared::TransformComponent,
               ::rtype::games::rtype::shared::BoundingBoxComponent>()
-        .each([this](auto /*entt*/, const auto& pos, const auto& bbox) {
-            ::rtype::display::Vector2f position = {pos.x - bbox.width / 2.0f,
-                                                   pos.y - bbox.height / 2.0f};
+        .each([this, &registry](auto entity, const auto& transform,
+                                const auto& bbox) {
+            ::rtype::display::Vector2f position;
+            position.x = transform.x - bbox.width / 2.0f;
+            position.y = transform.y - bbox.height / 2.0f;
             ::rtype::display::Vector2f size = {bbox.width, bbox.height};
             ::rtype::display::Color fillColor = {255, 0, 0, 30};
             ::rtype::display::Color outlineColor = {255, 0, 0, 180};
 
             this->_display->drawRectangle(position, size, fillColor,
                                           outlineColor, 2.0f);
-        });
-
-    registry
-        .view<::rtype::games::rtype::client::Image,
-              ::rtype::games::rtype::client::BoxingComponent>()
-        .each([this](ECS::Entity _,
-                     const ::rtype::games::rtype::client::Image& img,
-                     ::rtype::games::rtype::client::BoxingComponent& box) {
-            this->_display->drawRectangle(box.position, box.size, box.fillColor,
-                                          box.outlineColor,
-                                          box.outlineThickness);
         });
 }
 }  // namespace rtype::games::rtype::client
