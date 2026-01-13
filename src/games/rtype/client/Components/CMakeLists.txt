@@ -13,6 +13,7 @@ add_library(rtype_game_client_components STATIC
     HiddenComponent.hpp
     ZIndexComponent.hpp
     SizeComponent.hpp
+    ChargeShotVisualComponent.hpp
 )
 
 set_target_properties(rtype_game_client_components PROPERTIES LINKER_LANGUAGE CXX)
