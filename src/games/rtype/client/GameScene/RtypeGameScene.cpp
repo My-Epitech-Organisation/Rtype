@@ -339,17 +339,19 @@ void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
 
 std::uint8_t RtypeGameScene::getInputMask() const {
     std::uint8_t mask = RtypeInputHandler::getInputMask(_keybinds);
-    
-    // Check if a charged shot was released and should fire
     if (_registry && _registry->hasSingleton<ChargeShotInputState>()) {
         auto& chargeState = _registry->getSingleton<ChargeShotInputState>();
+
+        if (chargeState.isPressed && !chargeState.shouldFireShot) {
+            mask &= ~::rtype::network::InputMask::kShoot;
+        }
+
         if (chargeState.shouldFireShot) {
             mask |= ::rtype::network::InputMask::kShoot;
             LOG_DEBUG_CAT(::rtype::LogCategory::Input,
                           "[RtypeGameScene] Adding kShoot to input mask for charged shot");
         }
     }
-    
     return mask;
 }
 
