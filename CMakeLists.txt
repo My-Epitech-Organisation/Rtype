@@ -64,6 +64,9 @@ add_subdirectory(lib)
 # Add source directory
 add_subdirectory(src)
 
+add_subdirectory(lib/background)
+add_subdirectory(lib/audio)
+
 # Add tools (test utilities)
 # add_subdirectory(tools)
 
