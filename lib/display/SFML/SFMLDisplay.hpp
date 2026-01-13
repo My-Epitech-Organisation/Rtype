@@ -38,7 +38,7 @@ namespace rtype::display {
         [[nodiscard]] bool isFullscreen() const override;
 
         // Rendering methods
-        void drawSprite(const std::string& textureName, const Vector2<float>& position, const Rect<int>& rect, const Vector2<float>& scale, const Color& color) override;
+        void drawSprite(const std::string& textureName, const Vector2<float>& position, const Rect<int>& rect, const Vector2<float>& scale, const Color& color, float rotation = 0.0f) override;
         void drawText(const std::string& text, const std::string& fontName, const Vector2<float>& position, unsigned int size, const Color& color) override;
         void drawRectangle(const Vector2<float>& position, const Vector2<float>& size, const Color& fillColor, const Color& outlineColor, float outlineThickness) override;
 
@@ -50,6 +50,7 @@ namespace rtype::display {
         [[nodiscard]] Vector2<float> getViewCenter() const override;
         [[nodiscard]] Vector2<float> getViewSize() const override;
         void resetView() override;
+        [[nodiscard]] Vector2<float> mapPixelToCoords(const Vector2<int>& pixelPos) const override;
 
         [[nodiscard]] Vector2<int> getWindowSize() const override;
 
@@ -73,6 +74,10 @@ namespace rtype::display {
         void beginRenderToTexture(const std::string& textureName) override;
         void endRenderToTexture() override;
         void drawRenderTexture(const std::string& textureName, const std::string& shaderName) override;
+
+        // Clipboard
+        void setClipboardText(const std::string& text) override;
+        [[nodiscard]] std::string getClipboardText() const override;
 
         // Joystick
         [[nodiscard]] bool isJoystickConnected(unsigned int joystickId) const override;

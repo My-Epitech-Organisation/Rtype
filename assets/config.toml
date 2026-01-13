@@ -13,16 +13,30 @@ PlayerDeath = "audio/playerDeath.mp3"
 PlayerSpawn = "audio/playerSpawn.mp3"
 EnemyDeath = "audio/enemyDeath.mp3"
 EnemySpawn = "audio/enemySpawn.mp3"
+ForcePodLaunch = "audio/laserSound.mp3"
+ForcePodReturn = "audio/laserSound.mp3"
 
 # Textures Réferences
 [Textures]
 Player = "img/playerTexture.gif"
 EnemyNormal = "img/bdosTextureNormal.gif"
-EnemyChaser = "img/bdosTextureChaser.gif"
+EnemyChaser = "img/chaser.png"
 EnemyHeavy = "img/bdosTextureHeavy.gif"
 EnemyPatrol = "img/bdosTexturePatrol.gif"
 EnemyShooter = "img/bdosTextureShooter.gif"
 EnemyWave = "img/bdosTextureWave.gif"
+ForcePod = "img/forcepod.gif"
+
+# Power-ups
+HealthSmall = "img/health_small.png"
+HealthLarge = "img/health_large.png"
+SpeedBoost = "img/speed_boost.png"
+WeaponUpgrade = "img/weapon_upgrade.png"
+Shield = "img/shield.png"
+RapidFire = "img/rapid_fire.png"
+DamageBoost = "img/damage_boost.png"
+ExtraLife = "img/extra_life.png"
+
 # Background assets
 Background = "img/bgMainMenu.png"
 Sun = "img/sun.png"

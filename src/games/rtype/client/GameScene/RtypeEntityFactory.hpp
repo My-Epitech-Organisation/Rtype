@@ -74,12 +74,15 @@ class RtypeEntityFactory {
      * @brief Create a pickup entity with all components
      *
      * @param registry ECS registry
+     * @param assetsManager Asset manager for loading textures
      * @param entity Entity to configure
      * @param networkId Network identifier for the entity
      * @param subType Power-up variant type
      */
-    static void setupPickupEntity(ECS::Registry& registry, ECS::Entity entity,
-                                  std::uint32_t networkId, uint8_t subType);
+    static void setupPickupEntity(ECS::Registry& registry,
+                                  std::shared_ptr<AssetManager> assetsManager,
+                                  ECS::Entity entity, std::uint32_t networkId,
+                                  uint8_t subType);
     /**
      * @brief Create an obstacle entity with all components
      *
@@ -92,6 +95,17 @@ class RtypeEntityFactory {
                                     std::shared_ptr<AssetManager> assetsManager,
                                     ECS::Entity entity,
                                     std::uint32_t networkId);
+
+    /**
+     * @brief Create a Force Pod entity with all components
+     *
+     * @param registry ECS registry
+     * @param assetsManager Asset manager
+     * @param entity Entity to configure
+     */
+    static void setupForcePodEntity(ECS::Registry& registry,
+                                    std::shared_ptr<AssetManager> assetsManager,
+                                    ECS::Entity entity);
 };
 
 }  // namespace rtype::games::rtype::client

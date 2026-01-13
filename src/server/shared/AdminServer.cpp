@@ -307,6 +307,64 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
 
     registerBanRoutes(server);
 
+    server->Post("/api/message/send", [this](const Request& req,
+                                             Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+
+        std::string message;
+        std::string target = "all";
+        try {
+            auto j = json::parse(req.body);
+            if (!j.contains("message") || !j["message"].is_string()) {
+                res.set_content(
+                    R"({"success":false,"error":"Missing or invalid 'message'"})",
+                    "application/json");
+                res.status = 400;
+                return;
+            }
+            message = j["message"].get<std::string>();
+            if (j.contains("target") && j["target"].is_string()) {
+                target = j["target"].get<std::string>();
+            }
+        } catch (const json::parse_error&) {
+            res.set_content(R"({"success":false,"error":"Malformed JSON"})",
+                            "application/json");
+            res.status = 400;
+            return;
+        }
+
+        if (message.length() > 75) {
+            message = message.substr(0, 75);
+        }
+
+        if (_lobbyManager) {
+            if (target != "all" && !target.empty()) {
+                auto* lobby = _lobbyManager->findLobbyByCode(target);
+                if (lobby) {
+                    if (auto* sa = lobby->getServerApp()) {
+                        sa->broadcastMessage(message);
+                    }
+                }
+            } else {
+                auto lobbies = _lobbyManager->getAllLobbies();
+                for (auto* lobby : lobbies) {
+                    if (auto* sa = lobby->getServerApp()) {
+                        sa->broadcastMessage(message);
+                    }
+                }
+            }
+        } else if (_serverApp) {
+            _serverApp->broadcastMessage(message);
+        }
+
+        res.set_content(R"({"success":true})", "application/json");
+        res.status = 200;
+    });
+
     server->Post("/api/unban", [this](const Request& req, Response& res) {
         if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");

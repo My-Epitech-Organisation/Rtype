@@ -51,8 +51,8 @@ color = [100, 200, 255, 255]  # Light blue
 behavior = "sine_wave"
 speed = 200.0
 
-hitbox_width = 36.0
-hitbox_height = 36.0
+hitbox_width = 66.0
+hitbox_height = 68.0
 
 can_shoot = false
 
@@ -73,9 +73,8 @@ color = [255, 100, 100, 255]  # Red
 behavior = "stationary"
 speed = 0.0
 
-hitbox_width = 48.0
-hitbox_height = 48.0
-
+hitbox_width = 66.0
+hitbox_height = 68.0
 can_shoot = true
 fire_rate = 1.5
 projectile_type = "enemy_bullet"
@@ -97,8 +96,8 @@ color = [100, 255, 100, 255]  # Green
 behavior = "chase"
 speed = 250.0
 
-hitbox_width = 28.0
-hitbox_height = 28.0
+hitbox_width = 68.0
+hitbox_height = 68.0
 
 can_shoot = false
 
@@ -117,14 +116,12 @@ score_value = 175
 color = [139, 69, 19, 255]  # Brown
 
 behavior = "patrol"
-speed = 600.0
+speed = 200.0
 
-hitbox_width = 40.0
-hitbox_height = 32.0
+hitbox_width = 66.0
+hitbox_height = 68.0
 
-can_shoot = true
-fire_rate = 0.5
-projectile_type = "enemy_bullet"
+can_shoot = false
 
 # -----------------------------------------------------------------------------
 # Heavy Enemy - Slow but tanky
@@ -143,11 +140,11 @@ color = [0, 0, 0, 255]  # Black
 behavior = "move_left"
 speed = 40.0
 
-hitbox_width = 64.0
-hitbox_height = 64.0
+hitbox_width = 66.0
+hitbox_height = 68.0
 
 can_shoot = true
-fire_rate = 0.8
+fire_rate = 0.3
 projectile_type = "heavy_bullet"
 
 # -----------------------------------------------------------------------------

@@ -21,7 +21,8 @@ enum class PowerUpType : uint8_t {
     Shield,
     RapidFire,
     DoubleDamage,
-    HealthBoost
+    HealthBoost,
+    ForcePod
 };
 
 /**

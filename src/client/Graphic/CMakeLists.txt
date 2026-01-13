@@ -27,6 +27,8 @@ target_include_directories(rtype-graphic
 )
 
 target_link_libraries(rtype-graphic
+    PUBLIC
+    rtype-graphic-asset-manager
     PRIVATE
     SDL2::SDL2
 )

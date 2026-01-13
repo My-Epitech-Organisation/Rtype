@@ -35,7 +35,8 @@ enum class PowerUpType : uint8_t {
     DoubleDamage,
     RapidFire,
     ExtraLife,
-    Bomb
+    Bomb,
+    ForcePod
 };
 
 /**

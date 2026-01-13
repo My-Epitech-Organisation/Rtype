@@ -48,6 +48,13 @@ void ServerApp::setLobbyCode(const std::string& code) {
     }
 }
 
+void ServerApp::broadcastMessage(const std::string& message) {
+    if (_networkServer) {
+        // userId 0 is reserved for system messages
+        _networkServer->broadcastChat(0, message);
+    }
+}
+
 ServerApp::ServerApp(std::unique_ptr<IGameConfig> gameConfig,
                      std::shared_ptr<std::atomic<bool>> shutdownFlag,
                      bool verbose, std::shared_ptr<BanManager> banManager)
@@ -451,6 +458,25 @@ bool ServerApp::initialize() {
             }
             return _entitySpawner->handlePlayerShoot(*entityOpt, networkId);
         });
+
+    _inputHandler->setForcePodLaunchCallback(
+        [this](std::uint32_t playerNetworkId) {
+            if (!_gameEngine) {
+                return;
+            }
+            auto* rtypeEngine =
+                dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                    _gameEngine.get());
+            if (!rtypeEngine) {
+                return;
+            }
+            auto* launchSystem = rtypeEngine->getForcePodLaunchSystem();
+            if (launchSystem) {
+                launchSystem->handleForcePodInput(rtypeEngine->getRegistry(),
+                                                  playerNetworkId);
+            }
+        });
+
     _networkSystem->setInputHandler([this](std::uint32_t userId,
                                            std::uint8_t inputMask,
                                            std::optional<ECS::Entity> entity) {

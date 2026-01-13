@@ -13,14 +13,21 @@
 
 #include "../../shared/Components/BoundingBoxComponent.hpp"
 #include "../../shared/Components/EnemyTypeComponent.hpp"
+#include "../../shared/Components/ForcePodComponent.hpp"
 #include "../../shared/Components/HealthComponent.hpp"
 #include "../../shared/Components/NetworkIdComponent.hpp"
 #include "../../shared/Components/PlayerIdComponent.hpp"
 #include "../../shared/Components/PowerUpTypeComponent.hpp"
+#include "../../shared/Components/Tags.hpp"
 #include "../../shared/Config/EntityConfig/EntityConfig.hpp"
 #include "../../shared/Config/GameConfig/RTypeGameConfig.hpp"
+#include "../Components/AnnimationComponent.hpp"
+#include "../Components/ChaserExplosionComponent.hpp"
 #include "../Components/ColorTintComponent.hpp"
+#include "../Components/ForcePodVisualComponent.hpp"
 #include "../Components/RectangleComponent.hpp"
+#include "../Components/RotationComponent.hpp"
+#include "../Components/TextureRectComponent.hpp"
 #include "../Systems/PlayerAnimationSystem.hpp"
 #include "AllComponents.hpp"
 #include "AudioLib/AudioLib.hpp"
@@ -118,11 +125,16 @@ RtypeEntityFactory::createNetworkEntityFactory(
                 break;
 
             case ::rtype::network::EntityType::Pickup:
-                setupPickupEntity(reg, entity, event.entityId, event.subType);
+                setupPickupEntity(reg, assetsManager, entity, event.entityId,
+                                  event.subType);
                 break;
 
             case ::rtype::network::EntityType::Obstacle:
                 setupObstacleEntity(reg, assetsManager, entity, event.entityId);
+                break;
+
+            case ::rtype::network::EntityType::ForcePod:
+                setupForcePodEntity(reg, assetsManager, entity);
                 break;
         }
 
@@ -257,6 +269,7 @@ void RtypeEntityFactory::setupBydosEntity(
             reg.emplaceComponent<TextureRect>(entity,
                                               std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Animation>(entity, 8, 0.1f, false);
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
         case shared::EnemyVariant::Shooter:
@@ -264,8 +277,9 @@ void RtypeEntityFactory::setupBydosEntity(
                          "[RtypeEntityFactory] Setting up Shooter Bydos enemy");
             reg.emplaceComponent<Image>(entity, "bdos_enemy_shooter");
             reg.emplaceComponent<TextureRect>(entity,
-                                              std::pair<int, int>({82, 64}),
+                                              std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 32}));
+            reg.emplaceComponent<Animation>(entity, 7, 0.1f, false);
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
         case shared::EnemyVariant::Chaser:
@@ -273,17 +287,25 @@ void RtypeEntityFactory::setupBydosEntity(
                          "[RtypeEntityFactory] Setting up Chaser Bydos enemy");
             reg.emplaceComponent<Image>(entity, "bdos_enemy_chaser");
             reg.emplaceComponent<TextureRect>(entity,
-                                              std::pair<int, int>({20, 0}),
-                                              std::pair<int, int>({64, 54}));
-            reg.emplaceComponent<Size>(entity, 1.0f, 1.0f);
+                                              std::pair<int, int>({0, 0}),
+                                              std::pair<int, int>({113, 369}));
+            // 6 frames total: frame 1 = normal, frames 2-6 = explosion sequence
+            // oneTime=true so it doesn't loop, but we manually control when it
+            // starts
+            reg.emplaceComponent<Animation>(entity, 6, 0.12f, true);
+            reg.emplaceComponent<Size>(entity, 0.6f, 0.6f);
+            reg.emplaceComponent<Rotation>(entity, 0.0f);
+            reg.emplaceComponent<ChaserExplosion>(
+                entity, false, 0.0f);  // Not exploding at start
             break;
         case shared::EnemyVariant::Wave:
             LOG_INFO_CAT(::rtype::LogCategory::ECS,
                          "[RtypeEntityFactory] Setting up Wave Bydos enemy");
             reg.emplaceComponent<Image>(entity, "bdos_enemy_wave");
             reg.emplaceComponent<TextureRect>(entity,
-                                              std::pair<int, int>({132, 34}),
+                                              std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Animation>(entity, 8, 0.1f, false);
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
         case shared::EnemyVariant::Patrol:
@@ -293,6 +315,7 @@ void RtypeEntityFactory::setupBydosEntity(
             reg.emplaceComponent<TextureRect>(entity,
                                               std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 36}));
+            reg.emplaceComponent<Animation>(entity, 8, 0.1f, false);
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
         case shared::EnemyVariant::Heavy:
@@ -300,7 +323,7 @@ void RtypeEntityFactory::setupBydosEntity(
                          "[RtypeEntityFactory] Setting up Heavy Bydos enemy");
             reg.emplaceComponent<Image>(entity, "bdos_enemy_heavy");
             reg.emplaceComponent<TextureRect>(entity,
-                                              std::pair<int, int>({17, 66}),
+                                              std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 33}));
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
@@ -314,6 +337,7 @@ void RtypeEntityFactory::setupBydosEntity(
             reg.emplaceComponent<TextureRect>(entity,
                                               std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({33, 34}));
+            reg.emplaceComponent<Animation>(entity, 8, 0.1f, false);
             reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
             break;
     }
@@ -342,6 +366,7 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.getComponent<BoxingComponent>(entity).fillColor = {255, 120, 0, 40};
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<shared::HealthComponent>(entity, health, health);
+    reg.emplaceComponent<shared::EnemyTag>(entity);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<EnemySoundComponent>(
         entity, assetsManager->soundManager->get("bydos_spawn"),
@@ -381,13 +406,23 @@ void RtypeEntityFactory::setupMissileEntity(
     reg.emplaceComponent<BoxingComponent>(
         entity, ::rtype::display::Vector2f{0, 0},
         ::rtype::display::Vector2f{hitboxWidth, hitboxHeight});
-    reg.emplaceComponent<Animation>(entity, 4, 0.5, true);
+    reg.emplaceComponent<Animation>(entity, 4, 0.1, false);
     reg.getComponent<BoxingComponent>(entity).outlineColor = {0, 220, 180, 255};
     reg.getComponent<BoxingComponent>(entity).fillColor = {0, 220, 180, 35};
     reg.emplaceComponent<ZIndex>(entity, 1);
     reg.emplaceComponent<shared::LifetimeComponent>(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
     reg.emplaceComponent<GameTag>(entity);
+    if (reg.hasComponent<shared::VelocityComponent>(entity)) {
+        const auto& vel = reg.getComponent<shared::VelocityComponent>(entity);
+        LOG_DEBUG("[RtypeEntityFactory] Projectile velocity: vx="
+                  << vel.vx << " vy=" << vel.vy);
+        if (vel.vx < 0.0f) {
+            reg.emplaceComponent<Rotation>(entity, 180.0f);
+            LOG_DEBUG(
+                "[RtypeEntityFactory] Added 180° rotation to enemy projectile");
+        }
+    }
     auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
     lib->playSFX(assetsManager->soundManager->get("laser_sfx"));
 
@@ -399,55 +434,140 @@ void RtypeEntityFactory::setupMissileEntity(
     }
 }
 
-void RtypeEntityFactory::setupPickupEntity(ECS::Registry& reg,
-                                           ECS::Entity entity,
-                                           std::uint32_t networkId,
-                                           uint8_t subType) {
-    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
-                  "[RtypeEntityFactory] Adding Pickup components");
+void RtypeEntityFactory::setupPickupEntity(
+    ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
+    ECS::Entity entity, std::uint32_t networkId, uint8_t subType) {
+    LOG_INFO("[RtypeEntityFactory] *** CREATING PICKUP ENTITY *** networkId="
+             << networkId << " subType=" << static_cast<int>(subType));
+
     auto variant = static_cast<shared::PowerUpVariant>(subType);
     std::string configId =
         shared::PowerUpTypeComponent::variantToString(variant);
-    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
-                  "[RtypeEntityFactory] Pickup subType="
-                      << static_cast<int>(subType) << " variant=" << configId);
+    LOG_INFO("[RtypeEntityFactory] Pickup variant=" << configId);
 
     auto& configRegistry = shared::EntityConfigRegistry::getInstance();
     auto powerUpConfig = configRegistry.getPowerUp(configId);
 
-    ::rtype::display::Color color = ::rtype::display::Color::White();
-    if (powerUpConfig.has_value()) {
-        const auto& config = powerUpConfig->get();
-        color = ::rtype::display::Color(config.colorR, config.colorG,
-                                        config.colorB, config.colorA);
-        LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
-                      "[RtypeEntityFactory] Adding ColorTint: R="
-                          << static_cast<int>(config.colorR)
-                          << " G=" << static_cast<int>(config.colorG)
-                          << " B=" << static_cast<int>(config.colorB)
-                          << " A=" << static_cast<int>(config.colorA));
-        reg.emplaceComponent<ColorTint>(entity, config.colorR, config.colorG,
-                                        config.colorB, config.colorA);
-    } else {
+    if (!powerUpConfig.has_value()) {
         LOG_WARNING(
             "[RtypeEntityFactory] No config found for power-up: " << configId);
+        return;
     }
 
-    reg.emplaceComponent<Rectangle>(entity, std::pair<float, float>{24.f, 24.f},
-                                    color, color);
-    reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
-    reg.getComponent<Rectangle>(entity).outlineColor =
-        ::rtype::display::Color::White();
-    reg.emplaceComponent<BoxingComponent>(
-        entity, ::rtype::display::Vector2f{0, 0},
-        ::rtype::display::Vector2f{24.f, 24.f});
-    reg.getComponent<BoxingComponent>(entity).outlineColor = color;
-    reg.getComponent<BoxingComponent>(entity).fillColor = {color.r, color.g,
-                                                           color.b, 45};
+    const auto& config = powerUpConfig->get();
+    sf::Color color =
+        sf::Color(config.colorR, config.colorG, config.colorB, config.colorA);
+    LOG_INFO("[RtypeEntityFactory] Pickup color: R="
+             << static_cast<int>(config.colorR)
+             << " G=" << static_cast<int>(config.colorG)
+             << " B=" << static_cast<int>(config.colorB));
+
+    if (assetsManager && assetsManager->textureManager) {
+        try {
+            auto texture = assetsManager->textureManager->get(configId);
+            reg.emplaceComponent<Image>(entity, configId);
+            auto texSize = texture->getSize();
+
+            if (configId == "force_pod") {
+                constexpr int frameWidth = 16;
+                constexpr int frameHeight = 16;
+                constexpr int numFrames = 4;
+                reg.emplaceComponent<TextureRect>(
+                    entity, std::pair<int, int>{0, 0},
+                    std::pair<int, int>{frameWidth, frameHeight});
+                reg.emplaceComponent<Animation>(entity, numFrames, 0.15f,
+                                                false);
+                reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+
+                reg.emplaceComponent<BoxingComponent>(
+                    entity, ::rtype::display::Vector2f{0.0f, 0.0f},
+                    ::rtype::display::Vector2f{
+                        static_cast<float>(frameWidth) * 2.0f,
+                        static_cast<float>(frameHeight) * 2.0f});
+            } else {
+                constexpr int numFrames = 4;
+                const int frameWidth = texSize.x / numFrames;
+                const int frameHeight = texSize.y;
+                const float targetSize = 48.0f;
+                const float scale = targetSize / static_cast<float>(frameWidth);
+                reg.emplaceComponent<TextureRect>(
+                    entity, std::pair<int, int>{0, 0},
+                    std::pair<int, int>{frameWidth, frameHeight});
+                reg.emplaceComponent<Animation>(entity, numFrames, 0.15f,
+                                                false);
+                reg.emplaceComponent<Size>(entity, scale, scale);
+
+                LOG_INFO("[RtypeEntityFactory] Using PNG spritesheet for "
+                         << configId << ": " << numFrames << " frames, "
+                         << frameWidth << "x" << frameHeight
+                         << " each, scale=" << scale);
+
+                reg.emplaceComponent<BoxingComponent>(
+                    entity, ::rtype::display::Vector2f{0.0f, 0.0f},
+                    ::rtype::display::Vector2f{
+                        static_cast<float>(frameWidth) * scale,
+                        static_cast<float>(frameHeight) * scale});
+            }
+
+            reg.emplaceComponent<ColorTint>(entity, config.colorR,
+                                            config.colorG, config.colorB,
+                                            config.colorA);
+
+            reg.getComponent<BoxingComponent>(entity).outlineColor =
+                ::rtype::display::Color{color.r, color.g, color.b, 255};
+            reg.getComponent<BoxingComponent>(entity).fillColor =
+                ::rtype::display::Color{color.r, color.g, color.b, 45};
+
+            reg.emplaceComponent<
+                ::rtype::games::rtype::shared::BoundingBoxComponent>(
+                entity, config.hitboxWidth, config.hitboxHeight);
+        } catch (const std::exception& e) {
+            LOG_WARNING("[RtypeEntityFactory] Texture not found for: "
+                        << configId << " - using Rectangle fallback");
+            ::rtype::display::Color rtypeColor{color.r, color.g, color.b, 255};
+            reg.emplaceComponent<Rectangle>(entity,
+                                            std::pair<float, float>{24.f, 24.f},
+                                            rtypeColor, rtypeColor);
+            reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
+            reg.getComponent<Rectangle>(entity).outlineColor =
+                ::rtype::display::Color::White();
+            reg.emplaceComponent<BoxingComponent>(
+                entity, ::rtype::display::Vector2f{0.0f, 0.0f},
+                ::rtype::display::Vector2f{24.f, 24.f});
+            reg.getComponent<BoxingComponent>(entity).outlineColor = rtypeColor;
+            reg.getComponent<BoxingComponent>(entity).fillColor =
+                ::rtype::display::Color{color.r, color.g, color.b, 45};
+
+            reg.emplaceComponent<
+                ::rtype::games::rtype::shared::BoundingBoxComponent>(
+                entity, 24.0f, 24.0f);
+        }
+    } else {
+        LOG_WARNING(
+            "[RtypeEntityFactory] No assetsManager - using Rectangle fallback");
+        ::rtype::display::Color rtypeColor{color.r, color.g, color.b, 255};
+        reg.emplaceComponent<Rectangle>(entity,
+                                        std::pair<float, float>{24.f, 24.f},
+                                        rtypeColor, rtypeColor);
+        reg.getComponent<Rectangle>(entity).outlineThickness = 2.f;
+        reg.getComponent<Rectangle>(entity).outlineColor =
+            ::rtype::display::Color::White();
+        reg.emplaceComponent<BoxingComponent>(
+            entity, ::rtype::display::Vector2f{0.0f, 0.0f},
+            ::rtype::display::Vector2f{24.f, 24.f});
+        reg.getComponent<BoxingComponent>(entity).outlineColor = rtypeColor;
+        reg.getComponent<BoxingComponent>(entity).fillColor =
+            ::rtype::display::Color{color.r, color.g, color.b, 45};
+
+        reg.emplaceComponent<
+            ::rtype::games::rtype::shared::BoundingBoxComponent>(entity, 24.0f,
+                                                                 24.0f);
+    }
+
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
-    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, 24.0f, 24.0f);
+
+    LOG_INFO("[RtypeEntityFactory] Pickup entity setup complete");
 }
 
 void RtypeEntityFactory::setupObstacleEntity(
@@ -467,6 +587,44 @@ void RtypeEntityFactory::setupObstacleEntity(
     reg.emplaceComponent<Size>(entity, 0.5f, 0.5f);
     reg.emplaceComponent<ZIndex>(entity, 0);
     reg.emplaceComponent<GameTag>(entity);
+}
+
+void RtypeEntityFactory::setupForcePodEntity(
+    ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
+    ECS::Entity entity) {
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Adding Force Pod components");
+
+    constexpr int frameWidth = 17;
+    constexpr int frameHeight = 18;
+    constexpr int frameCount = 12;
+
+    auto forcePodTexture = assetsManager->textureManager->get("force_pod");
+    reg.emplaceComponent<Image>(entity, "force_pod");
+    reg.emplaceComponent<TextureRect>(
+        entity, std::pair<int, int>({0, 0}),
+        std::pair<int, int>({frameWidth, frameHeight}));
+    reg.emplaceComponent<Animation>(entity, frameCount, 0.08f, false);
+    reg.emplaceComponent<Size>(entity, 2.0, 2.0);
+
+    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+        entity, 32.0f, 32.0f);
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0.0f, 0.0f},
+        ::rtype::display::Vector2f{32.0f, 32.0f});
+    reg.getComponent<BoxingComponent>(entity).outlineColor =
+        ::rtype::display::Color{100, 200, 255, 255};
+    reg.getComponent<BoxingComponent>(entity).fillColor =
+        ::rtype::display::Color{100, 200, 255, 40};
+
+    reg.emplaceComponent<ForcePodVisual>(entity);
+    reg.emplaceComponent<ZIndex>(entity, 1);
+    reg.emplaceComponent<GameTag>(entity);
+    reg.emplaceComponent<shared::ForcePodTag>(entity);
+
+    LOG_DEBUG_CAT(
+        ::rtype::LogCategory::ECS,
+        "[RtypeEntityFactory] Force Pod entity created with animation");
 }
 
 }  // namespace rtype::games::rtype::client

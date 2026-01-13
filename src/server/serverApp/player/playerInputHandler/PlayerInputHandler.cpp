@@ -72,6 +72,10 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
     if (inputMask & rtype::network::InputMask::kShoot) {
         processShoot(userId, playerEntity);
     }
+
+    if (inputMask & rtype::network::InputMask::kForcePod) {
+        processForcePodLaunch(userId);
+    }
 }
 
 void PlayerInputHandler::processMovement(ECS::Entity entity,
@@ -158,6 +162,13 @@ void PlayerInputHandler::processShoot(std::uint32_t userId,
                       "[InputHandler] Player " << userId << " fired projectile "
                                                << projectileId);
     }
+}
+
+void PlayerInputHandler::processForcePodLaunch(std::uint32_t userId) {
+    if (!_forcePodCallback) {
+        return;
+    }
+    _forcePodCallback(userId);
 }
 
 }  // namespace rtype::server

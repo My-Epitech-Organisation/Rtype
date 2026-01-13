@@ -46,6 +46,7 @@ struct GameEvent {
     float velocityY = 0.0F;
     int32_t healthCurrent{0};
     int32_t healthMax{0};
+    int32_t damage{0};
     float duration{0.0F};
 };
 
