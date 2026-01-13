@@ -18,7 +18,6 @@
 
 #include "rtype/display/IDisplay.hpp"
 
-// Forward declarations
 class AudioLib;
 
 namespace ECS {
@@ -27,7 +26,6 @@ class Registry;
 
 namespace rtype::client {
 
-// Forward declaration
 class NetworkClient;
 
 /**
