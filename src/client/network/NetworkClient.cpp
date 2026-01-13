@@ -1385,8 +1385,9 @@ void NetworkClient::handleAdminResponse(const network::Header& header,
         auto response = network::Serializer::deserializeFromNetwork<
             network::AdminResponsePayload>(payload);
 
-        std::string message(response.message,
-                            strnlen(response.message, sizeof(response.message)));
+        std::string message(
+            response.message,
+            strnlen(response.message, sizeof(response.message)));
 
         LOG_INFO_CAT(rtype::LogCategory::Network,
                      "[NetworkClient] Admin response: cmdType="
