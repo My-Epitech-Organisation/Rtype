@@ -15,6 +15,7 @@
 namespace cfg = ::rtype::games::rtype::client::GraphicsConfig;
 
 void Labs::createEntitiesBackground() {
+    this->_assetManager->textureManager->load("bg_labs", "assets/img/laboBg.png");
     auto background = this->_registry->spawnEntity();
     this->_registry->emplaceComponent<rtype::games::rtype::client::Image>(background,
                                                                    "bg_menu");
@@ -23,7 +24,7 @@ void Labs::createEntitiesBackground() {
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         background, rtype::games::rtype::client::GraphicsConfig::ZINDEX_BACKGROUND);
     this->_registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
-        background, cfg::PARALLAX_BACKGROUND, true);
+        background, 0.35, true);
 
     auto sun = this->_registry->spawnEntity();
     this->_registry->emplaceComponent<rtype::games::rtype::client::Image>(sun,
@@ -33,5 +34,15 @@ void Labs::createEntitiesBackground() {
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         sun, cfg::ZINDEX_SUN);
 
-    this->_listEntities = {background, sun};
+    auto labo = this->_registry->spawnEntity();
+    this->_registry->emplaceComponent<rtype::games::rtype::client::Image>(labo,
+                                                                   "bg_labs");
+    this->_registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        labo, 0, 0);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+        labo, -3);
+    this->_registry->emplaceComponent<rtype::games::rtype::client::Parallax>(
+        labo, 0.75, true);
+
+    this->_listEntities = {background, sun, labo};
 }
