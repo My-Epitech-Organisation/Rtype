@@ -58,8 +58,18 @@ void ChargeInputSystem::update(ECS::Registry& registry, float dt) {
             charge.update(dt);
         }
 
+        if (_shootPressed != _wasShootPressed) {
+            LOG_INFO("[ChargeInputSystem] Button state changed: pressed="
+                     << _shootPressed << " wasPressed=" << _wasShootPressed
+                     << " wasCharging=" << charge.wasCharging 
+                     << " currentCharge=" << charge.currentCharge
+                     << " level=" << static_cast<int>(charge.currentLevel));
+        }
+
         if (!_shootPressed && _wasShootPressed && charge.wasCharging) {
             shared::ChargeLevel level = charge.release();
+            LOG_INFO("[ChargeInputSystem] *** CHARGE RELEASED *** level="
+                     << static_cast<int>(level));
 
             if (level != shared::ChargeLevel::None) {
                 LOG_DEBUG_CAT(
@@ -70,10 +80,13 @@ void ChargeInputSystem::update(ECS::Registry& registry, float dt) {
                 _lastReleasedLevel = level;
 
                 if (registry.hasSingleton<ChargeShotInputState>()) {
-                    registry.getSingleton<ChargeShotInputState>().shouldFireShot = true;
+                    auto& chargeState = registry.getSingleton<ChargeShotInputState>();
+                    chargeState.shouldFireShot = true;
+                    chargeState.releasedChargeLevel = level;
                     LOG_DEBUG_CAT(
                         ::rtype::LogCategory::Input,
-                        "[ChargeInputSystem] Set shouldFireShot flag for charged shot");
+                        "[ChargeInputSystem] Set shouldFireShot flag for charged shot at level "
+                            << static_cast<int>(level));
                 }
 
                 if (registry.hasComponent<ChargeShotVisual>(entity)) {
