@@ -890,6 +890,23 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
     }
 
     if (event.type == engine::GameEventType::GameOver) {
+        auto* rtypeEngine =
+            dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                _gameEngine.get());
+
+        if (rtypeEngine) {
+            auto nextLevel =
+                rtypeEngine->getDataDrivenSpawner()->getNextLevel();
+
+            if (nextLevel && !nextLevel->empty()) {
+                LOG_WARNING_CAT(
+                    ::rtype::LogCategory::GameEngine,
+                    "[ServerApp] Ignoring GameOver event because next level '"
+                        << *nextLevel << "' is available");
+                return;
+            }
+        }
+
         LOG_INFO_CAT(
             ::rtype::LogCategory::GameEngine,
             "[ServerApp] GameOver event received, transitioning to GameOver "
