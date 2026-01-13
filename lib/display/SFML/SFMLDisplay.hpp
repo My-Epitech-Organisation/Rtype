@@ -74,6 +74,10 @@ namespace rtype::display {
         void endRenderToTexture() override;
         void drawRenderTexture(const std::string& textureName, const std::string& shaderName) override;
 
+        // Clipboard
+        void setClipboardText(const std::string& text) override;
+        [[nodiscard]] std::string getClipboardText() const override;
+
         // Joystick
         [[nodiscard]] bool isJoystickConnected(unsigned int joystickId) const override;
         [[nodiscard]] unsigned int getJoystickCount() const override;

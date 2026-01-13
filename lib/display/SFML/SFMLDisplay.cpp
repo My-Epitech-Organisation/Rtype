@@ -355,6 +355,14 @@ void SFMLDisplay::drawRenderTexture(const std::string& textureName, const std::s
     }
 }
 
+void SFMLDisplay::setClipboardText(const std::string &text) {
+    sf::Clipboard::setString(text);
+}
+
+std::string SFMLDisplay::getClipboardText() const {
+    return sf::Clipboard::getString();
+}
+
 Key SFMLDisplay::_translateKey(sf::Keyboard::Key key) {
     if (key >= sf::Keyboard::Key::A && key <= sf::Keyboard::Key::Z)
         return static_cast<Key>(static_cast<int>(Key::A) + (static_cast<int>(key) - static_cast<int>(sf::Keyboard::Key::A)));
