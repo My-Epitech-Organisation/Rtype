@@ -831,7 +831,7 @@ void ServerApp::handleAdminCommand(std::uint32_t userId,
                     playerEntity);
             bool newState;
 
-            if (param == 2) {  // Toggle
+            if (param == 2) {
                 newState = !hasGodMode;
             } else {
                 newState = (param == 1);
