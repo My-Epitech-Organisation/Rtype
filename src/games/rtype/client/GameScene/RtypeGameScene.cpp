@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "AllComponents.hpp"
+#include "Components/ChargeShotVisualComponent.hpp"
 #include "Components/CountdownComponent.hpp"
 #include "Components/TagComponent.hpp"
 #include "Components/TextComponent.hpp"
@@ -199,10 +200,6 @@ void RtypeGameScene::update() {
         }
     }
 
-    if (_networkSystem) {
-        _networkSystem->update();
-    }
-
     if (_movementSystem && _registry) {
         _movementSystem->update(*_registry, dt);
     }
@@ -279,6 +276,19 @@ void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
         event.type == ::rtype::display::EventType::JoystickButtonReleased) {
         RtypeInputHandler::handleKeyReleasedEvent(event, _keybinds, _registry);
     }
+    if (event.type == ::rtype::display::EventType::MouseButtonPressed &&
+        event.mouseButton.button == ::rtype::display::MouseButton::Right) {
+        if (!_registry->hasSingleton<ShootInputState>()) {
+            _registry->setSingleton<ShootInputState>();
+        }
+        _registry->getSingleton<ShootInputState>().isPressed = true;
+    }
+    if (event.type == ::rtype::display::EventType::MouseButtonReleased &&
+        event.mouseButton.button == ::rtype::display::MouseButton::Right) {
+        if (_registry->hasSingleton<ShootInputState>()) {
+            _registry->getSingleton<ShootInputState>().isPressed = false;
+        }
+    }
 }
 
 std::uint8_t RtypeGameScene::getInputMask() const {
@@ -299,6 +309,12 @@ void RtypeGameScene::setupLocalPlayerCallback() {
         [this, registry](std::uint32_t userId, ECS::Entity entity) {
             if (registry->isAlive(entity)) {
                 registry->emplaceComponent<ControllableTag>(entity);
+                if (!registry->hasComponent<rs::ChargeComponent>(entity)) {
+                    registry->emplaceComponent<rs::ChargeComponent>(entity);
+                }
+                if (!registry->hasComponent<ChargeShotVisual>(entity)) {
+                    registry->emplaceComponent<ChargeShotVisual>(entity);
+                }
                 LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                               "[RtypeGameScene] Local player entity assigned");
             }
