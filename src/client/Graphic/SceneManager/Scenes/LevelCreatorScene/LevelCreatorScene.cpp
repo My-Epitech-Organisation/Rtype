@@ -57,6 +57,7 @@ void LevelCreatorScene::addElementToSection(const std::string& sectionId,
 
 void LevelCreatorScene::_getLevelsName() {
     this->_listNextLevel.clear();
+    this->_listNextLevel["GAMEOVER"] = "";
     if (std::filesystem::exists("./config/game/levels/")) {
         for (const auto& s :
              std::filesystem::directory_iterator("./config/game/levels/")) {
