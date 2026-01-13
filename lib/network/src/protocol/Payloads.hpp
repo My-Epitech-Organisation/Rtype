@@ -387,7 +387,6 @@ struct ChatPayload {
  */
 enum class AdminCommandType : std::uint8_t {
     GodMode = 0x01,  ///< Toggle invincibility
-    // Future: Spawn = 0x02, Kill = 0x03, Teleport = 0x04...
 };
 
 /**
