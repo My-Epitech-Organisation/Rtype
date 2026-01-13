@@ -235,6 +235,8 @@ std::string SettingsSceneUtils::actionToString(GameAction action) {
             return "Change Ammo";
         case GameAction::PAUSE:
             return "Pause";
+        case GameAction::TOGGLE_LOW_BANDWIDTH:
+            return "Toggle Low Bandwidth";
         default:
             return "Unknown";
     }

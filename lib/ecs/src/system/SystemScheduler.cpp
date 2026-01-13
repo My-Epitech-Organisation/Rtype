@@ -17,6 +17,7 @@ namespace ECS {
 
 void SystemScheduler::addSystem(const std::string& name, const SystemFunc& func,
                                 const std::vector<std::string>& dependencies) {
+    std::lock_guard<std::mutex> lock(_mutex);
     if (_systems.find(name) != _systems.end()) {
         throw std::runtime_error("System '" + name + "' already registered");
     }
@@ -29,21 +30,30 @@ void SystemScheduler::addSystem(const std::string& name, const SystemFunc& func,
 }
 
 void SystemScheduler::removeSystem(const std::string& name) {
+    std::lock_guard<std::mutex> lock(_mutex);
     _systems.erase(name);
     _needsReorder = true;
 }
 
 void SystemScheduler::run() {
-    if (_needsReorder) {
-        recomputeOrder();
-        _needsReorder = false;
+    std::vector<SystemFunc> toRun;
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (_needsReorder) {
+            recomputeOrder();
+            _needsReorder = false;
+        }
+
+        for (const auto& system_name : _executionOrder) {
+            auto iter = _systems.find(system_name);
+            if (iter != _systems.end() && iter->second.enabled) {
+                toRun.push_back(iter->second.func);
+            }
+        }
     }
 
-    for (const auto& system_name : _executionOrder) {
-        auto iter = _systems.find(system_name);
-        if (iter != _systems.end() && iter->second.enabled) {
-            iter->second.func(registry.get());
-        }
+    for (auto& func : toRun) {
+        func(registry.get());
     }
 }
 
@@ -58,16 +68,19 @@ void SystemScheduler::runSystem(const std::string& name) {
 }
 
 void SystemScheduler::clear() {
+    std::lock_guard<std::mutex> lock(_mutex);
     _systems.clear();
     _executionOrder.clear();
     _needsReorder = true;
 }
 
 auto SystemScheduler::getExecutionOrder() const -> std::vector<std::string> {
+    std::lock_guard<std::mutex> lock(_mutex);
     return _executionOrder;
 }
 
 void SystemScheduler::setSystemEnabled(const std::string& name, bool enabled) {
+    std::lock_guard<std::mutex> lock(_mutex);
     auto iter = _systems.find(name);
     if (iter == _systems.end()) {
         throw std::runtime_error("System '" + name + "' not found");
@@ -76,6 +89,7 @@ void SystemScheduler::setSystemEnabled(const std::string& name, bool enabled) {
 }
 
 auto SystemScheduler::isSystemEnabled(const std::string& name) const -> bool {
+    std::lock_guard<std::mutex> lock(_mutex);
     auto iter = _systems.find(name);
     if (iter == _systems.end()) {
         throw std::runtime_error("System '" + name + "' not found");

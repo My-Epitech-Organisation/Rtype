@@ -227,37 +227,44 @@ TEST_F(GameEngineTest, AISystemSetsVelocityForMoveLeftBehavior) {
 TEST_F(GameEngineTest, MovementSystemUpdatesPosition) {
     engine->initialize();
 
-    // Force spawn by running updates
-    for (int i = 0; i < 240; ++i) {
-        engine->update(1.0f / 60.0f);
-    }
+    // Manually create an entity with known components for deterministic testing
+    auto& reg = engine->getRegistry();
+    auto entity = reg.spawnEntity();
 
-    if (engine->getEntityCount() == 0) {
-        GTEST_SKIP() << "No enemies spawned, skipping movement test";
-    }
+    // Set up transform at a known starting position
+    auto& transform = reg.emplaceComponent<TransformComponent>(entity);
+    transform.x = 500.0f;
+    transform.y = 300.0f;
 
-    // Get initial positions
-    auto& registry = engine->getRegistry();
-    std::vector<float> initialXPositions;
-    auto view = registry.view<TransformComponent, EnemyTag>();
-    view.each([&initialXPositions](ECS::Entity /*entity*/,
-                                   const TransformComponent& transform,
-                                   const EnemyTag& /*tag*/) {
-        initialXPositions.push_back(transform.x);
-    });
+    // Set up velocity moving left
+    auto& velocity = reg.emplaceComponent<VelocityComponent>(entity);
+    velocity.vx = -100.0f;  // Moving left at 100 units/sec
+    velocity.vy = 0.0f;
 
-    // Run more updates
+    float initialX = 500.0f;
+    reg.emplaceComponent<EnemyTag>(entity);
+
+    // capture initial X positions
+    std::vector<float> initialXPositions{initialX};
+
+    // Run updates for 1 second (60 frames at 60 FPS)
     for (int i = 0; i < 60; ++i) {
         engine->update(1.0f / 60.0f);
     }
 
     // Check positions have changed (moved left)
+    auto view = reg.view<TransformComponent, EnemyTag>();
     std::vector<float> newXPositions;
     view.each([&newXPositions](ECS::Entity /*entity*/,
                                const TransformComponent& transform,
                                const EnemyTag& /*tag*/) {
         newXPositions.push_back(transform.x);
     });
+
+    // Verify the entity moved left compared to its initial position
+    for (size_t i = 0; i < std::min(initialXPositions.size(), newXPositions.size()); ++i) {
+        EXPECT_LT(newXPositions[i], initialXPositions[i]);
+    }
 }
 
 // =============================================================================

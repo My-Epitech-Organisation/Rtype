@@ -155,7 +155,8 @@ TEST_F(ConnectionTest, Disconnect_PacketHasCorrectOpcode) {
 
 TEST_F(ConnectionTest, ProcessPacket_TooSmall) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     Buffer smallPacket(kHeaderSize - 1, 0);
     auto result = conn.processPacket(smallPacket, testEndpoint_);
@@ -165,7 +166,8 @@ TEST_F(ConnectionTest, ProcessPacket_TooSmall) {
 
 TEST_F(ConnectionTest, ProcessPacket_InvalidMagic) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     Header header;
     header.magic = 0x00;  // Invalid magic
@@ -187,7 +189,8 @@ TEST_F(ConnectionTest, ProcessPacket_InvalidMagic) {
 
 TEST_F(ConnectionTest, ProcessPacket_MalformedPacket) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     Header header;
     header.magic = kMagicByte;
@@ -209,7 +212,8 @@ TEST_F(ConnectionTest, ProcessPacket_MalformedPacket) {
 
 TEST_F(ConnectionTest, ProcessPacket_InvalidSender) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // First, accept a connection to set server endpoint
     Header acceptHeader;
@@ -229,8 +233,8 @@ TEST_F(ConnectionTest, ProcessPacket_InvalidSender) {
     std::memcpy(acceptPacket.data(), &acceptHeader, kHeaderSize);
     std::memcpy(acceptPacket.data() + kHeaderSize, &payload, sizeof(AcceptPayload));
 
-    auto r = conn.processPacket(acceptPacket, testEndpoint_);  // Sets server endpoint
-    EXPECT_TRUE(r.isOk());
+    auto pres = conn.processPacket(acceptPacket, testEndpoint_);  // Sets server endpoint
+    ASSERT_TRUE(pres.isOk());
 
     // Now try from different sender
     Endpoint wrongEndpoint{"192.168.1.1", 5555};
@@ -241,7 +245,8 @@ TEST_F(ConnectionTest, ProcessPacket_InvalidSender) {
 
 TEST_F(ConnectionTest, ProcessPacket_AcceptSuccess) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     Header acceptHeader;
     acceptHeader.magic = kMagicByte;
@@ -269,7 +274,8 @@ TEST_F(ConnectionTest, ProcessPacket_AcceptSuccess) {
 
 TEST_F(ConnectionTest, ProcessPacket_AcceptTooSmallPayload) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     Header acceptHeader;
     acceptHeader.magic = kMagicByte;
@@ -291,7 +297,8 @@ TEST_F(ConnectionTest, ProcessPacket_AcceptTooSmallPayload) {
 
 TEST_F(ConnectionTest, ProcessPacket_DisconnectFromServer) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // First connect
     Header acceptHeader;
@@ -311,7 +318,8 @@ TEST_F(ConnectionTest, ProcessPacket_DisconnectFromServer) {
     std::memcpy(acceptPacket.data(), &acceptHeader, kHeaderSize);
     std::memcpy(acceptPacket.data() + kHeaderSize, &payload, sizeof(AcceptPayload));
 
-    conn.processPacket(acceptPacket, testEndpoint_);
+    auto pres = conn.processPacket(acceptPacket, testEndpoint_);
+    ASSERT_TRUE(pres.isOk());
     EXPECT_EQ(conn.state(), ConnectionState::Connected);
 
     // Now receive disconnect
@@ -345,8 +353,9 @@ TEST_F(ConnectionTest, Update_WhileDisconnected_NoEffect) {
 
 TEST_F(ConnectionTest, Update_ConnectionTimeout_RetriesConnect) {
     Connection conn(config_);
-    conn.connect();
-    conn.getOutgoingPackets();  // Clear initial packet
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
+    (void)conn.getOutgoingPackets();  // Clear initial packet
 
     // Wait for timeout
     std::this_thread::sleep_for(config_.stateConfig.connectTimeout + 20ms);
@@ -364,7 +373,8 @@ TEST_F(ConnectionTest, Update_MaxRetriesExceeded_Disconnects) {
     fastConfig.reliabilityConfig.retransmitTimeout = 10ms;
 
     Connection conn(fastConfig);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // Wait for multiple timeouts
     for (int i = 0; i < 5; ++i) {
@@ -389,7 +399,8 @@ TEST_F(ConnectionTest, BuildPacket_NotConnected_Fails) {
 
 TEST_F(ConnectionTest, BuildPacket_WhileConnecting_Fails) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
     Buffer payload;
     auto result = conn.buildPacket(OpCode::PING, payload);
     EXPECT_TRUE(result.isErr());
@@ -398,7 +409,8 @@ TEST_F(ConnectionTest, BuildPacket_WhileConnecting_Fails) {
 
 TEST_F(ConnectionTest, BuildPacket_WhenConnected_Success) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // Accept connection
     Header acceptHeader;
@@ -418,7 +430,8 @@ TEST_F(ConnectionTest, BuildPacket_WhenConnected_Success) {
     std::memcpy(acceptPacket.data(), &acceptHeader, kHeaderSize);
     std::memcpy(acceptPacket.data() + kHeaderSize, &payload, sizeof(AcceptPayload));
 
-    conn.processPacket(acceptPacket, testEndpoint_);
+    auto pres = conn.processPacket(acceptPacket, testEndpoint_);
+    ASSERT_TRUE(pres.isOk());
     EXPECT_TRUE(conn.isConnected());
 
     Buffer emptyPayload;
@@ -429,7 +442,8 @@ TEST_F(ConnectionTest, BuildPacket_WhenConnected_Success) {
 
 TEST_F(ConnectionTest, BuildPacket_WithPayload) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // Accept connection
     Header acceptHeader;
@@ -449,7 +463,8 @@ TEST_F(ConnectionTest, BuildPacket_WithPayload) {
     std::memcpy(acceptPacket.data(), &acceptHeader, kHeaderSize);
     std::memcpy(acceptPacket.data() + kHeaderSize, &acceptPayload, sizeof(AcceptPayload));
 
-    conn.processPacket(acceptPacket, testEndpoint_);
+    auto pres = conn.processPacket(acceptPacket, testEndpoint_);
+    ASSERT_TRUE(pres.isOk());
 
     Buffer payload = {0x01, 0x02, 0x03, 0x04};
     auto result = conn.buildPacket(OpCode::C_INPUT, payload);
@@ -469,7 +484,8 @@ TEST_F(ConnectionTest, GetOutgoingPackets_EmptyByDefault) {
 
 TEST_F(ConnectionTest, GetOutgoingPackets_ClearsQueue) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     auto packets1 = conn.getOutgoingPackets();
     EXPECT_EQ(packets1.size(), 1);
@@ -497,7 +513,8 @@ TEST_F(ConnectionTest, State_ReturnsCorrectState) {
     Connection conn(config_);
     EXPECT_EQ(conn.state(), ConnectionState::Disconnected);
 
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
     EXPECT_EQ(conn.state(), ConnectionState::Connecting);
 }
 
@@ -505,7 +522,8 @@ TEST_F(ConnectionTest, IsConnected_ReturnsCorrectValue) {
     Connection conn(config_);
     EXPECT_FALSE(conn.isConnected());
 
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
     EXPECT_FALSE(conn.isConnected());
 
     // Accept connection
@@ -526,7 +544,8 @@ TEST_F(ConnectionTest, IsConnected_ReturnsCorrectValue) {
     std::memcpy(acceptPacket.data(), &acceptHeader, kHeaderSize);
     std::memcpy(acceptPacket.data() + kHeaderSize, &payload, sizeof(AcceptPayload));
 
-    conn.processPacket(acceptPacket, testEndpoint_);
+    auto pres = conn.processPacket(acceptPacket, testEndpoint_);
+    ASSERT_TRUE(pres.isOk());
     EXPECT_TRUE(conn.isConnected());
 }
 
@@ -534,7 +553,8 @@ TEST_F(ConnectionTest, IsDisconnected_ReturnsCorrectValue) {
     Connection conn(config_);
     EXPECT_TRUE(conn.isDisconnected());
 
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
     EXPECT_FALSE(conn.isDisconnected());
 }
 
@@ -576,7 +596,8 @@ TEST_F(ConnectionTest, Callback_OnConnected_Called) {
     };
     conn.setCallbacks(std::move(callbacks));
 
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // Accept connection
     Header acceptHeader;
@@ -596,7 +617,8 @@ TEST_F(ConnectionTest, Callback_OnConnected_Called) {
     std::memcpy(acceptPacket.data(), &acceptHeader, kHeaderSize);
     std::memcpy(acceptPacket.data() + kHeaderSize, &payload, sizeof(AcceptPayload));
 
-    conn.processPacket(acceptPacket, testEndpoint_);
+    auto pres = conn.processPacket(acceptPacket, testEndpoint_);
+    ASSERT_TRUE(pres.isOk());
 
     EXPECT_TRUE(callbackCalled);
     EXPECT_EQ(receivedUserId, 42);
@@ -608,7 +630,8 @@ TEST_F(ConnectionTest, Callback_OnConnected_Called) {
 
 TEST_F(ConnectionTest, Reset_ClearsState) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // Accept connection
     Header acceptHeader;
@@ -628,7 +651,8 @@ TEST_F(ConnectionTest, Reset_ClearsState) {
     std::memcpy(acceptPacket.data(), &acceptHeader, kHeaderSize);
     std::memcpy(acceptPacket.data() + kHeaderSize, &payload, sizeof(AcceptPayload));
 
-    conn.processPacket(acceptPacket, testEndpoint_);
+    auto pres = conn.processPacket(acceptPacket, testEndpoint_);
+    ASSERT_TRUE(pres.isOk());
     EXPECT_TRUE(conn.isConnected());
     EXPECT_TRUE(conn.userId().has_value());
 
@@ -640,11 +664,13 @@ TEST_F(ConnectionTest, Reset_ClearsState) {
 
 TEST_F(ConnectionTest, Reset_ClearsOutgoingQueue) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     EXPECT_EQ(conn.getOutgoingPackets().size(), 1);
 
-    conn.connect();  // Queue another packet (will fail but queue might have something)
+    auto r2 = conn.connect();  // Queue another packet (may fail but queue might have something)
+    (void)r2;
     conn.reset();
 
     EXPECT_TRUE(conn.getOutgoingPackets().empty());
@@ -652,7 +678,8 @@ TEST_F(ConnectionTest, Reset_ClearsOutgoingQueue) {
 
 TEST_F(ConnectionTest, Reset_AllowsReconnect) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
     conn.reset();
 
     auto result = conn.connect();
@@ -672,7 +699,8 @@ TEST_F(ConnectionTest, ReliableChannel_Accessible) {
 
 TEST_F(ConnectionTest, DuplicatePacket_Rejected) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // Accept connection
     Header acceptHeader;
@@ -707,7 +735,8 @@ TEST_F(ConnectionTest, DuplicatePacket_Rejected) {
 
 TEST_F(ConnectionTest, SequenceId_Increments) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     auto packets1 = conn.getOutgoingPackets();
     ASSERT_EQ(packets1.size(), 1);
@@ -718,7 +747,8 @@ TEST_F(ConnectionTest, SequenceId_Increments) {
 
     // Force another connect attempt (reset first)
     conn.reset();
-    conn.connect();
+    auto r2 = conn.connect();
+    ASSERT_TRUE(r2.isOk());
 
     auto packets2 = conn.getOutgoingPackets();
     ASSERT_EQ(packets2.size(), 1);
@@ -737,7 +767,8 @@ TEST_F(ConnectionTest, SequenceId_Increments) {
 
 TEST_F(ConnectionTest, AckProcessing_RecordsAckFromHeader) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // Accept connection with ACK flag
     Header acceptHeader;
@@ -768,7 +799,8 @@ TEST_F(ConnectionTest, AckProcessing_RecordsAckFromHeader) {
 
 TEST_F(ConnectionTest, Keepalive_PingSentAfterInterval_NoActivity) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // Accept connection
     Header acceptHeader;
@@ -788,11 +820,12 @@ TEST_F(ConnectionTest, Keepalive_PingSentAfterInterval_NoActivity) {
     std::memcpy(acceptPacket.data(), &acceptHeader, kHeaderSize);
     std::memcpy(acceptPacket.data() + kHeaderSize, &payload, sizeof(AcceptPayload));
 
-    conn.processPacket(acceptPacket, testEndpoint_);
+    auto pres = conn.processPacket(acceptPacket, testEndpoint_);
+    ASSERT_TRUE(pres.isOk());
     EXPECT_TRUE(conn.isConnected());
 
     // Clear initial packets
-    conn.getOutgoingPackets();
+    (void)conn.getOutgoingPackets();
 
     // Simulate time passing by setting lastPacketSentTime_ to old time
     conn.setLastPacketSentTimeForTesting(Connection::Clock::now() - std::chrono::seconds(4));
@@ -818,7 +851,8 @@ TEST_F(ConnectionTest, Keepalive_PingSentAfterInterval_NoActivity) {
 
 TEST_F(ConnectionTest, Keepalive_NoPingWhenActive) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // Accept connection
     Header acceptHeader;
@@ -838,11 +872,12 @@ TEST_F(ConnectionTest, Keepalive_NoPingWhenActive) {
     std::memcpy(acceptPacket.data(), &acceptHeader, kHeaderSize);
     std::memcpy(acceptPacket.data() + kHeaderSize, &payload, sizeof(AcceptPayload));
 
-    conn.processPacket(acceptPacket, testEndpoint_);
+    auto pres = conn.processPacket(acceptPacket, testEndpoint_);
+    ASSERT_TRUE(pres.isOk());
     EXPECT_TRUE(conn.isConnected());
 
     // Clear initial packets
-    conn.getOutgoingPackets();
+    (void)conn.getOutgoingPackets();
 
     // Simulate recent activity by setting last packet sent time to now
     conn.setLastPacketSentTimeForTesting(Connection::Clock::now());
@@ -863,7 +898,8 @@ TEST_F(ConnectionTest, Keepalive_NoPingWhenActive) {
 
 TEST_F(ConnectionTest, ProcessPong_UpdatesLatencyAndResetsMissedCount) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // Accept connection
     Header acceptHeader;
@@ -883,11 +919,12 @@ TEST_F(ConnectionTest, ProcessPong_UpdatesLatencyAndResetsMissedCount) {
     std::memcpy(acceptPacket.data(), &acceptHeader, kHeaderSize);
     std::memcpy(acceptPacket.data() + kHeaderSize, &payload, sizeof(AcceptPayload));
 
-    conn.processPacket(acceptPacket, testEndpoint_);
+    auto pres = conn.processPacket(acceptPacket, testEndpoint_);
+    ASSERT_TRUE(pres.isOk());
     EXPECT_TRUE(conn.isConnected());
 
     // Clear initial packets from connection setup
-    conn.getOutgoingPackets();
+    (void)conn.getOutgoingPackets();
 
     // Build a ping packet to set up the ping tracker
     Buffer emptyPayload;
@@ -934,7 +971,8 @@ TEST_F(ConnectionTest, ProcessPong_UpdatesLatencyAndResetsMissedCount) {
 
 TEST_F(ConnectionTest, UpdatePingTracking_DisconnectsAfterMaxMissedPings) {
     Connection conn(config_);
-    conn.connect();
+    auto r = conn.connect();
+    ASSERT_TRUE(r.isOk());
 
     // Accept connection
     Header acceptHeader;
@@ -954,14 +992,15 @@ TEST_F(ConnectionTest, UpdatePingTracking_DisconnectsAfterMaxMissedPings) {
     std::memcpy(acceptPacket.data(), &acceptHeader, kHeaderSize);
     std::memcpy(acceptPacket.data() + kHeaderSize, &payload, sizeof(AcceptPayload));
 
-    conn.processPacket(acceptPacket, testEndpoint_);
+    auto pres = conn.processPacket(acceptPacket, testEndpoint_);
+    ASSERT_TRUE(pres.isOk());
     EXPECT_TRUE(conn.isConnected());
 
     // Send a ping to start the ping tracking
     Buffer emptyPayload;
     auto pingResult = conn.buildPacket(OpCode::PING, emptyPayload);
     EXPECT_TRUE(pingResult.isOk());
-    conn.getOutgoingPackets();  // Clear packets
+    (void)conn.getOutgoingPackets();  // Clear packets
 
     // Simulate time passing without pong (ping timeout)
     // We need to call updatePingTracking multiple times to exceed timeout

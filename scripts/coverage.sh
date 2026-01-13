@@ -49,7 +49,7 @@ install_package() {
     local pkg_apt="$1"
     local pkg_dnf="$2"
     local pm=$(detect_package_manager)
-    
+
     case $pm in
         apt)
             sudo apt-get update && sudo apt-get install -y "$pkg_apt"
@@ -185,8 +185,10 @@ if $GENERATE_HTML; then
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/src/server/shared/AdminServer.*' \
         '*/serverApp.cpp' \
         '*/NetworkClient.cpp' \
+        '*/TomlParser.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
     if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
@@ -313,8 +315,10 @@ else
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/src/server/shared/AdminServer.*' \
         '*/serverApp.cpp' \
         '*/NetworkClient.cpp' \
+        '*/TomlParser.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
     if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then

@@ -428,6 +428,75 @@ TEST_F(AISystemTest, UpdateWithLargeDeltaTime) {
     EXPECT_FLOAT_EQ(ai.stateTimer, 10.0F);
 }
 
+TEST_F(AISystemTest, UpdateChaseTargetsWithPlayerAndEnemy) {
+    // Create a player entity
+    auto player = registry.spawnEntity();
+    registry.emplaceComponent<PlayerTag>(player);
+    registry.emplaceComponent<TransformComponent>(player, 100.0F, 200.0F, 0.0F);
+
+    // Create an enemy with Chase behavior
+    auto enemy = registry.spawnEntity();
+    AIComponent ai;
+    ai.behavior = AIBehavior::Chase;
+    ai.speed = 100.0F;
+    ai.targetX = 0.0F;
+    ai.targetY = 0.0F;
+    registry.emplaceComponent<EnemyTag>(enemy);
+    registry.emplaceComponent<AIComponent>(enemy, ai);
+    registry.emplaceComponent<TransformComponent>(enemy, 500.0F, 300.0F, 0.0F);
+    registry.emplaceComponent<VelocityComponent>(enemy, 0.0F, 0.0F);
+
+    // Run update
+    aiSystem.update(registry, 0.016F);
+
+    // Enemy's AI targetX and targetY should be updated to track the player
+    auto& enemyAi = registry.getComponent<AIComponent>(enemy);
+    EXPECT_FLOAT_EQ(enemyAi.targetX, 100.0F);
+    EXPECT_FLOAT_EQ(enemyAi.targetY, 200.0F);
+
+    // Enemy should be moving toward the player
+    auto& velocity = registry.getComponent<VelocityComponent>(enemy);
+    EXPECT_LT(velocity.vx, 0.0F);  // Moving left toward player
+    EXPECT_LT(velocity.vy, 0.0F);  // Moving up toward player
+
+    registry.killEntity(player);
+    registry.killEntity(enemy);
+}
+
+TEST_F(AISystemTest, UpdateChaseTargetsWithMultiplePlayers) {
+    // Create two players at different positions
+    auto player1 = registry.spawnEntity();
+    registry.emplaceComponent<PlayerTag>(player1);
+    registry.emplaceComponent<TransformComponent>(player1, 100.0F, 100.0F, 0.0F);
+
+    auto player2 = registry.spawnEntity();
+    registry.emplaceComponent<PlayerTag>(player2);
+    registry.emplaceComponent<TransformComponent>(player2, 400.0F, 300.0F, 0.0F);
+
+    // Create an enemy closer to player2
+    auto enemy = registry.spawnEntity();
+    AIComponent ai;
+    ai.behavior = AIBehavior::Chase;
+    ai.speed = 100.0F;
+    ai.targetX = 0.0F;
+    ai.targetY = 0.0F;
+    registry.emplaceComponent<EnemyTag>(enemy);
+    registry.emplaceComponent<AIComponent>(enemy, ai);
+    registry.emplaceComponent<TransformComponent>(enemy, 450.0F, 350.0F, 0.0F);
+    registry.emplaceComponent<VelocityComponent>(enemy, 0.0F, 0.0F);
+
+    aiSystem.update(registry, 0.016F);
+
+    // Enemy should target player2 (closer)
+    auto& enemyAi = registry.getComponent<AIComponent>(enemy);
+    EXPECT_FLOAT_EQ(enemyAi.targetX, 400.0F);
+    EXPECT_FLOAT_EQ(enemyAi.targetY, 300.0F);
+
+    registry.killEntity(player1);
+    registry.killEntity(player2);
+    registry.killEntity(enemy);
+}
+
 // =============================================================================
 // CleanupSystem Tests
 // =============================================================================

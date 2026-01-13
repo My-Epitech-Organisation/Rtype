@@ -48,6 +48,7 @@ struct EntitySpawnEvent {
  */
 struct EntityMoveEvent {
     std::uint32_t entityId;
+    std::uint32_t serverTick;
     float x;
     float y;
     float vx;
@@ -269,6 +270,16 @@ class NetworkClient {
     bool sendReady(bool isReady);
 
     /**
+     * @brief Request low bandwidth mode from server
+     *
+     * Sends C_SET_BANDWIDTH_MODE packet. When enabled, server will send
+     * entity updates at reduced rates to save bandwidth.
+     * @param enable true for low bandwidth mode, false for normal
+     * @return true if sent, false if not connected
+     */
+    bool setLowBandwidthMode(bool enable);
+
+    /**
      * @brief Request lobby list from discovery server
      *
      * Sends C_REQUEST_LOBBIES to the server. Response will be delivered
@@ -303,6 +314,11 @@ class NetworkClient {
     void removeDisconnectedCallback(CallbackId id);
 
     /**
+     * @brief Clear all disconnect callbacks (call from scene destructors)
+     */
+    void clearDisconnectedCallbacks();
+
+    /**
      * @brief Register callback for entity spawn events
      * @param callback Function receiving spawn event data
      */
@@ -321,10 +337,30 @@ class NetworkClient {
     void onEntityMoveBatch(std::function<void(EntityMoveBatchEvent)> callback);
 
     /**
-     * @brief Register callback for entity destruction
+     * @brief Register callback for entity destruction (convenience wrapper)
      * @param callback Function receiving the destroyed entity ID
+     * @note Prefer using addEntityDestroyCallback/removeEntityDestroyCallback
+     * to manage lifetime explicitly.
      */
     void onEntityDestroy(std::function<void(std::uint32_t entityId)> callback);
+
+    /**
+     * @brief Add entity destroy callback and return identifier for removal
+     * @param callback Function receiving the destroyed entity ID
+     */
+    CallbackId addEntityDestroyCallback(
+        std::function<void(std::uint32_t entityId)> callback);
+
+    /**
+     * @brief Remove previously added entity destroy callback
+     * @param id Identifier returned by addEntityDestroyCallback
+     */
+    void removeEntityDestroyCallback(CallbackId id);
+
+    /**
+     * @brief Clear all entity-destroy callbacks
+     */
+    void clearEntityDestroyCallbacks();
 
     /**
      * @brief Register callback for entity health updates
@@ -368,6 +404,16 @@ class NetworkClient {
      */
     void onPlayerReadyStateChanged(
         std::function<void(std::uint32_t userId, bool isReady)> callback);
+
+    /**
+     * @brief Register callback for bandwidth mode changes broadcast by server
+     * @param callback Function receiving userId, lowBandwidthEnabled, and
+     * activeCount
+     */
+    void onBandwidthModeChanged(
+        std::function<void(std::uint32_t userId, bool lowBandwidth,
+                           std::uint8_t activeCount)>
+            callback);
 
     /**
      * @brief Register callback for lobby list response
@@ -423,6 +469,12 @@ class NetworkClient {
      */
     void poll();
 
+    /**
+     * @brief Clear all pending callbacks in the queue
+     * @note Call before scene destruction to prevent stale callbacks
+     */
+    void clearPendingCallbacks();
+
     // Test helpers (use from unit tests only)
     void test_dispatchCallbacks();
     void test_processIncomingPacket(const network::Buffer& data,
@@ -464,6 +516,8 @@ class NetworkClient {
                          const network::Buffer& payload);
     void handlePlayerReadyState(const network::Header& header,
                                 const network::Buffer& payload);
+    void handleBandwidthModeChanged(const network::Header& header,
+                                    const network::Buffer& payload);
     void handleLobbyList(const network::Header& header,
                          const network::Buffer& payload);
     void handleJoinLobbyResponse(const network::Header& header,
@@ -523,6 +577,8 @@ class NetworkClient {
     std::function<void(bool, uint8_t)> onJoinLobbyResponseCallback_;
     std::function<void(std::uint8_t, bool, bool, const std::string&)>
         onAdminResponseCallback_;
+    std::function<void(std::uint32_t, bool, std::uint8_t)>
+        onBandwidthModeChangedCallback_;
 
     std::thread networkThread_;
     std::atomic<bool> networkThreadRunning_{false};

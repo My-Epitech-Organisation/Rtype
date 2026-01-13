@@ -360,6 +360,8 @@ Key SFMLDisplay::_translateKey(sf::Keyboard::Key key) {
         return static_cast<Key>(static_cast<int>(Key::A) + (static_cast<int>(key) - static_cast<int>(sf::Keyboard::Key::A)));
     if (key >= sf::Keyboard::Key::Num0 && key <= sf::Keyboard::Key::Num9)
         return static_cast<Key>(static_cast<int>(Key::Num0) + (static_cast<int>(key) - static_cast<int>(sf::Keyboard::Key::Num0)));
+    if (key >= sf::Keyboard::Key::F1 && key <= sf::Keyboard::Key::F15)
+        return static_cast<Key>(static_cast<int>(Key::F1) + (static_cast<int>(key) - static_cast<int>(sf::Keyboard::Key::F1)));
 
     switch (key) {
         case sf::Keyboard::Key::Escape: return Key::Escape;
