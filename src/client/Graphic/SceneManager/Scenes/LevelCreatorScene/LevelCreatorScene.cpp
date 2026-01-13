@@ -95,7 +95,7 @@ LevelCreatorScene::LevelCreatorScene(
         currentY);
     _levelIdInput = EntityFactory::createTextInput(
         _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "level_1",
-        "level_1", 50, false);
+        "", 50, false);
     addElementToSection("settings", _levelIdInput, currentY);
 
     currentY += gapY;
@@ -163,9 +163,23 @@ LevelCreatorScene::LevelCreatorScene(
     _bossInput = EntityFactory::createTextInput(_registry, _assetsManager,
                                                 {inputX, 0}, {inputW, 40},
                                                 "boss_1", "boss_1", 50, false);
-
     addElementToSection("settings", _bossInput, currentY);
 
+    currentY += gapY;
+    addElementToSection(
+        "settings",
+        EntityFactory::createStaticText(
+            _registry, _assetsManager, "Next Level:", "main_font", {labelX, 0}, 24.f),
+        currentY);
+    _nextLevelInput = EntityFactory::createTextInput(_registry, _assetsManager,
+                                                {inputX, 0}, {inputW, 40},
+                                                "levelX.toml", "", 50, false);
+    auto staticText = EntityFactory::createStaticText(_registry, _assetsManager,
+                                   "(Leave empty for end of the game)",
+                                   "main_font", {inputX, 0}, 18.f);
+    addElementToSection("settings", _nextLevelInput, currentY);
+    auto tmp = currentY + 50.f;
+    addElementToSection("settings", staticText, tmp);
     currentY += 80.f;
 
     auto btnAdd = EntityFactory::createButton(
@@ -329,9 +343,33 @@ void LevelCreatorScene::saveCurrentWaveStats() {
 
 void LevelCreatorScene::saveToToml() {
     saveCurrentWaveStats();
-
     std::string filename = "level_config.toml";
     std::string lvlId = getInputValue(_levelIdInput);
+    if (lvlId.empty()) {
+        LOG_ERROR_CAT(rtype::LogCategory::UI,
+                      "Level ID is empty, cannot save level configuration.");
+        if (_statusMessageEntity != ECS::Entity(0) &&
+            _registry->isAlive(_statusMessageEntity)) {
+            _registry->killEntity(_statusMessageEntity);
+        }
+
+        float startX = kLevelSectionPosLeft;
+        _statusMessageEntity = EntityFactory::createStaticText(
+            _registry, _assetsManager,
+            "You must enter a level ID before saving.", "main_font",
+            {startX, 810.f}, 20.f);
+
+        try {
+            auto& textComp =
+                _registry->getComponent<rtype::games::rtype::client::Text>(
+                    _statusMessageEntity);
+            textComp.color = rtype::display::Color::Red();
+        } catch (const std::exception&) {
+        }
+        _listEntity.push_back(_statusMessageEntity);
+        return;
+    }
+
     if (!lvlId.empty()) filename = lvlId + ".toml";
 
     std::ofstream file(filename);
@@ -362,6 +400,7 @@ void LevelCreatorScene::saveToToml() {
                  : getInputValue(_scrollSpeedInput))
          << std::endl;
     file << "boss = \"" << getInputValue(_bossInput) << "\"" << std::endl;
+    file << "next_level = \"" << getInputValue(_nextLevelInput) << "\"" << std::endl;
     file << std::endl;
 
     for (const auto& wave : _waves) {
@@ -397,7 +436,7 @@ void LevelCreatorScene::saveToToml() {
     }
 
     file.close();
-    std::cout << "Level configuration saved to " << filename << std::endl;
+    LOG_INFO("Level configuration saved to " + filename + ".");
 
     if (_statusMessageEntity != ECS::Entity(0) &&
         _registry->isAlive(_statusMessageEntity)) {

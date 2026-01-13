@@ -126,6 +126,8 @@ class LevelCreatorScene : public AScene {
     ECS::Entity _scrollSpeedInput;
     /** @brief Entity id for the boss identifier input field. */
     ECS::Entity _bossInput;
+    /** @brief Entity id for the next level identifier input field. */
+    ECS::Entity _nextLevelInput;
     /** @} */
 
     /** @brief List of waves defined for the level. */
