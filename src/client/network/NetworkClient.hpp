@@ -447,7 +447,8 @@ class NetworkClient {
 
     /**
      * @brief Register callback for admin command responses
-     * @param callback Function receiving (commandType, success, newState, message)
+     * @param callback Function receiving (commandType, success, newState,
+     * message)
      */
     void onAdminResponse(
         std::function<void(std::uint8_t cmdType, bool success, bool newState,
