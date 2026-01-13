@@ -264,7 +264,7 @@ void MainMenuScene::_createConnectionPanel(
         rtype::display::Color(0, 0, 0, 150));
 
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        popUpBg, 10);
+        popUpBg, 9);
     this->_registry
         ->emplaceComponent<rtype::games::rtype::client::ConnectMenuTag>(
             popUpBg);
