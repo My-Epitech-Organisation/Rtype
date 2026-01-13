@@ -155,8 +155,10 @@ class NetworkServer {
     /**
      * @brief Broadcast a level announcement for visual display
      * @param levelName Name of the level to display
+     * @param background Name of the background plugin to load
      */
-    void broadcastLevelAnnounce(const std::string& levelName);
+    void broadcastLevelAnnounce(const std::string& levelName,
+                                const std::string& background = "");
 
     /**
      * @brief Set the server metrics for tracking packet statistics

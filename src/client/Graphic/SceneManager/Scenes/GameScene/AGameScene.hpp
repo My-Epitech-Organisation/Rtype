@@ -36,6 +36,7 @@ class AGameScene : public IGameScene {
     std::shared_ptr<rtype::display::IDisplay> _display;
     std::shared_ptr<KeyboardActions> _keybinds;
     std::function<void(const SceneManager::Scene&)> _switchToScene;
+    std::function<void(const std::string&)> _setBackground;
 
     /// @brief Network client for server communication
     std::shared_ptr<rtype::client::NetworkClient> _networkClient;
@@ -53,6 +54,7 @@ class AGameScene : public IGameScene {
         std::shared_ptr<rtype::display::IDisplay> display,
         std::shared_ptr<KeyboardActions> keybinds,
         std::function<void(const SceneManager::Scene&)> switchToScene,
+        std::function<void(const std::string&)> setBackground,
         std::shared_ptr<rtype::client::NetworkClient> networkClient,
         std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem)
         : _registry(std::move(registry)),
@@ -60,6 +62,7 @@ class AGameScene : public IGameScene {
           _display(std::move(display)),
           _keybinds(std::move(keybinds)),
           _switchToScene(std::move(switchToScene)),
+          _setBackground(std::move(setBackground)),
           _networkClient(std::move(networkClient)),
           _networkSystem(std::move(networkSystem)) {}
 

@@ -115,6 +115,7 @@ struct GameOverEvent {
  */
 struct LevelAnnounceEvent {
     std::string levelName;
+    std::string background;
 };
 
 /**

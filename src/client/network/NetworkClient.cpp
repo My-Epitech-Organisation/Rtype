@@ -1310,12 +1310,15 @@ void NetworkClient::handleLevelAnnounce(const network::Header& header,
 
         std::string levelName(msg.levelName.data(),
                               strnlen(msg.levelName.data(), 32));
+        std::string background(msg.background.data(),
+                               strnlen(msg.background.data(), 32));
 
         LOG_INFO_CAT(
             rtype::LogCategory::Network,
-            "[NetworkClient] Received S_LEVEL_ANNOUNCE: '" << levelName << "'");
+            "[NetworkClient] Received S_LEVEL_ANNOUNCE: '"
+                << levelName << "' background: '" << background << "'");
 
-        LevelAnnounceEvent event{levelName};
+        LevelAnnounceEvent event{levelName, background};
 
         // Store the announcement for late subscribers (scene transitions)
         pendingLevelAnnounce_ = event;

@@ -123,8 +123,8 @@ void SceneManager::initializeScenes() {
         auto rtypeGameScene =
             std::make_unique<rtype::games::rtype::client::RtypeGameScene>(
                 this->_registry, this->_assetManager, this->_display,
-                this->_keybinds, this->_switchToScene, this->_networkClient,
-                this->_networkSystem, this->_audio);
+                this->_keybinds, this->_switchToScene, this->_setBackground,
+                this->_networkClient, this->_networkSystem, this->_audio);
         return std::make_unique<GameScene>(
             this->_registry, this->_assetManager, this->_display,
             this->_keybinds, this->_setBackground, this->_switchToScene,

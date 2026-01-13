@@ -285,6 +285,7 @@ struct PowerUpEventPayload {
  */
 struct LevelAnnouncePayload {
     std::array<char, 32> levelName;
+    std::array<char, 32> background;
 };
 
 /**

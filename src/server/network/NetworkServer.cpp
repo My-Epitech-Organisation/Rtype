@@ -1003,10 +1003,13 @@ void NetworkServer::broadcastLevelInfo() {
     broadcastToAll(network::OpCode::S_JOIN_LOBBY_RESPONSE, ser);
 }
 
-void NetworkServer::broadcastLevelAnnounce(const std::string& levelName) {
+void NetworkServer::broadcastLevelAnnounce(const std::string& levelName,
+                                           const std::string& background) {
     network::LevelAnnouncePayload payload{};
     std::memcpy(payload.levelName.data(), levelName.c_str(),
                 std::min(levelName.size(), payload.levelName.size()));
+    std::memcpy(payload.background.data(), background.c_str(),
+                std::min(background.size(), payload.background.size()));
 
     auto ser = network::Serializer::serializeForNetwork(payload);
     broadcastToAll(network::OpCode::S_LEVEL_ANNOUNCE, ser);

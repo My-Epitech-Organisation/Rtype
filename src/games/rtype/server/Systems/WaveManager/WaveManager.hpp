@@ -193,6 +193,15 @@ class WaveManager {
     }
 
     /**
+     * @brief Get the background path/name for the level
+     * @return Background name or empty string if not loaded
+     */
+    [[nodiscard]] const std::string& getBackground() const noexcept {
+        static const std::string empty;
+        return _levelConfig ? _levelConfig->backgroundPath : empty;
+    }
+
+    /**
      * @brief Get last error message
      * @return Error message from last failed operation
      */

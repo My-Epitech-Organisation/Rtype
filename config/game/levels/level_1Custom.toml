@@ -6,7 +6,7 @@
 [level]
 id = "level_1Custom"
 name = "Space Station"
-background = "assets/backgrounds/space_station.png"
+background = "Labs"
 scroll_speed = 50.0
 boss = "boss_1"
 next_level = "level_2.toml"

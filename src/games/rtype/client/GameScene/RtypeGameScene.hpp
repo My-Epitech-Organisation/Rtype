@@ -44,6 +44,7 @@ class RtypeGameScene : public AGameScene {
         std::shared_ptr<::rtype::display::IDisplay> display,
         std::shared_ptr<KeyboardActions> keybinds,
         std::function<void(const SceneManager::Scene&)> switchToScene,
+        std::function<void(const std::string&)> setBackground,
         std::shared_ptr<::rtype::client::NetworkClient> networkClient,
         std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem,
         std::shared_ptr<AudioLib> audioLib = nullptr);

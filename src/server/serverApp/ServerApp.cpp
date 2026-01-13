@@ -595,6 +595,7 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
             // Broadcast level announcement
             {
                 std::string levelName;
+                std::string background;
 
                 if (_gameEngine) {
                     auto* rtypeEngine =
@@ -604,9 +605,13 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
                         levelName = rtypeEngine->getDataDrivenSpawner()
                                         ->getWaveManager()
                                         .getLevelName();
+                        background = rtypeEngine->getDataDrivenSpawner()
+                                         ->getWaveManager()
+                                         .getBackground();
                         LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                                       "[Server] Level name from WaveManager: '"
-                                          << levelName << "'");
+                                          << levelName << "' background: '"
+                                          << background << "'");
                     }
                 }
 
@@ -621,8 +626,9 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
                     LOG_INFO_CAT(
                         ::rtype::LogCategory::GameEngine,
                         "[Server] Broadcasting initial level announce: "
-                            << levelName);
-                    _networkServer->broadcastLevelAnnounce(levelName);
+                            << levelName << " background: " << background);
+                    _networkServer->broadcastLevelAnnounce(levelName,
+                                                          background);
                 } else {
                     LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
                                     "[Server] No level name to broadcast");
@@ -899,16 +905,20 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
                 changeLevel(cleanId, true);
                 rtypeEngine->startLevel();
 
-                // Get the level name from the loaded config
+                // Get the level name and background from the loaded config
                 auto levelName = rtypeEngine->getDataDrivenSpawner()
                                      ->getWaveManager()
                                      .getLevelName();
+                auto background = rtypeEngine->getDataDrivenSpawner()
+                                      ->getWaveManager()
+                                      .getBackground();
                 if (levelName.empty()) {
                     levelName = cleanId;  // Fallback to ID if name is missing
                 }
 
                 if (_networkServer) {
-                    _networkServer->broadcastLevelAnnounce(levelName.c_str());
+                    _networkServer->broadcastLevelAnnounce(levelName,
+                                                          background);
                 }
             } else {
                 LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
