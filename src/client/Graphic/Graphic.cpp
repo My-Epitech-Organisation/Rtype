@@ -457,17 +457,17 @@ Graphic::Graphic(
 
     // Register admin response callback for console feedback
     if (_networkClient) {
-        _networkClient->onAdminResponse(
-            [this](std::uint8_t cmdType, bool success, bool newState,
-                   const std::string& msg) {
-                if (_devConsole) {
-                    if (success) {
-                        _devConsole->print(msg);
-                    } else {
-                        _devConsole->printError(msg);
-                    }
+        _networkClient->onAdminResponse([this](std::uint8_t cmdType,
+                                               bool success, bool newState,
+                                               const std::string& msg) {
+            if (_devConsole) {
+                if (success) {
+                    _devConsole->print(msg);
+                } else {
+                    _devConsole->printError(msg);
                 }
-            });
+            }
+        });
     }
 
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
