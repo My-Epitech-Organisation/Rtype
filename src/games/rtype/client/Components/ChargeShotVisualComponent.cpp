@@ -97,7 +97,8 @@ void ChargeBarUI::update(float dt) noexcept {
     if (displayPercent > 1.0F) displayPercent = 1.0F;
 }
 
-std::tuple<uint8_t, uint8_t, uint8_t> ChargeBarUI::getBarColor() const noexcept {
+std::tuple<uint8_t, uint8_t, uint8_t> ChargeBarUI::getBarColor()
+    const noexcept {
     if (chargePercent >= 0.9F) {
         return {255, 100, 100};  // Red for max
     } else if (chargePercent >= 0.6F) {

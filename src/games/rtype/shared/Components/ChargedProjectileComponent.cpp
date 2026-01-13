@@ -19,7 +19,8 @@ bool ChargedProjectileComponent::canHitEntity(
     return hitEntities.find(entityNetworkId) == hitEntities.end();
 }
 
-bool ChargedProjectileComponent::registerHit(uint32_t entityNetworkId) noexcept {
+bool ChargedProjectileComponent::registerHit(
+    uint32_t entityNetworkId) noexcept {
     hitEntities.insert(entityNetworkId);
     currentPierceCount++;
     return currentPierceCount > maxPierceCount;
