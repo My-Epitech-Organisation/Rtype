@@ -77,6 +77,21 @@ ClientNetworkSystem::ClientNetworkSystem(
     registerCallbacks();
 }
 
+ClientNetworkSystem::~ClientNetworkSystem() {
+    if (client_) {
+        client_->clearPendingCallbacks();
+        client_->clearConnectedCallbacks();
+        client_->clearDisconnectedCallbacks();
+        client_->onEntitySpawn(nullptr);
+        client_->onEntityMove(nullptr);
+        client_->onEntityMoveBatch(nullptr);
+        client_->clearEntityDestroyCallbacks();
+        client_->onEntityHealth(nullptr);
+        client_->onPowerUpEvent(nullptr);
+        client_->onPositionCorrection(nullptr);
+    }
+}
+
 void ClientNetworkSystem::registerCallbacks() {
     client_->onConnected(
         [this](std::uint32_t userId) { handleConnected(userId); });
