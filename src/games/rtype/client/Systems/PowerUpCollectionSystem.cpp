@@ -30,6 +30,13 @@ void PowerUpCollectionSystem::update(ECS::Registry& registry, float /*dt*/) {
         registry
             .view<PlayerTag, rs::PlayerIdComponent, rs::TransformComponent>();
 
+    struct PendingPopup {
+        float x, y;
+        std::string displayName;
+        ::rtype::display::Color color;
+    };
+    std::vector<PendingPopup> pendingPopups;
+
     size_t playerCount = 0;
     playerView.each([&](auto entity, PlayerTag& /*tag*/,
                         const rs::PlayerIdComponent& playerId,
@@ -38,9 +45,6 @@ void PowerUpCollectionSystem::update(ECS::Registry& registry, float /*dt*/) {
 
         bool hasActivePowerUp =
             registry.hasComponent<rs::ActivePowerUpComponent>(entity);
-        LOG_DEBUG("[PowerUpCollectionSystem] Checking player "
-                  << playerId.playerId << " (entity=" << entity.id
-                  << ") hasActivePowerUp=" << hasActivePowerUp);
 
         if (!hasActivePowerUp) {
             _lastPowerUpState.erase(playerId.playerId);
@@ -75,18 +79,21 @@ void PowerUpCollectionSystem::update(ECS::Registry& registry, float /*dt*/) {
                 << playerId.playerId << " collected power-up: " << displayName
                 << " (remainingTime=" << activePowerUp.remainingTime << ")");
 
-            VisualCueFactory::createPowerUpPopup(
-                registry,
-                ::rtype::display::Vector2<float>(transform.x + 20.f,
-                                                 transform.y),
-                displayName, _font, color);
+            if (activePowerUp.remainingTime > 0.0f) {
+                pendingPopups.push_back({transform.x + 20.f, transform.y,
+                                         displayName, color});
+            }
         }
         _lastPowerUpState[playerId.playerId] = {activePowerUp.type,
                                                 activePowerUp.remainingTime};
     });
 
-    LOG_DEBUG("[PowerUpCollectionSystem] update() finished, checked "
-              << playerCount << " players");
+    for (const auto& popup : pendingPopups) {
+        VisualCueFactory::createPowerUpPopup(
+            registry,
+            ::rtype::display::Vector2<float>(popup.x, popup.y),
+            popup.displayName, _font, popup.color);
+    }
 }
 
 std::string PowerUpCollectionSystem::getPowerUpDisplayName(
@@ -102,6 +109,8 @@ std::string PowerUpCollectionSystem::getPowerUpDisplayName(
             return "+Double Damage";
         case rs::PowerUpType::HealthBoost:
             return "+Health";
+        case rs::PowerUpType::ForcePod:
+            return "+Force Pod";
         default:
             return "+Power-Up";
     }
@@ -120,6 +129,8 @@ std::string PowerUpCollectionSystem::getPowerUpDisplayName(
             return ::rtype::display::Color(255, 128, 0);  // Orange
         case rs::PowerUpType::HealthBoost:
             return ::rtype::display::Color(0, 255, 0);  // Green
+        case rs::PowerUpType::ForcePod:
+            return ::rtype::display::Color(255, 0, 255);  // Magenta
         default:
             return ::rtype::display::Color::White();
     }

@@ -67,8 +67,6 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
         const auto& rot = registry.getComponent<Rotation>(entity);
         rotation = rot.angle;
         hasRotation = true;
-        LOG_DEBUG("[RenderSystem] Entity "
-                  << entity.id << " has rotation=" << rotation << "°");
     } else if (registry.hasComponent<rs::ProjectileTag>(entity) &&
                registry.hasComponent<rs::VelocityComponent>(entity)) {
         const auto& vel = registry.getComponent<rs::VelocityComponent>(entity);

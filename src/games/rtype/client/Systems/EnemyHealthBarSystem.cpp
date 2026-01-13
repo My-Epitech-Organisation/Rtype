@@ -30,19 +30,9 @@ void EnemyHealthBarSystem::update(ECS::Registry& registry,
         registry
             .view<rs::EnemyTag, rs::HealthComponent, rs::TransformComponent>();
 
-    std::size_t enemyCount = 0;
-    enemyView.each([&enemyCount](auto, const auto&, const auto&, const auto&) {
-        enemyCount++;
-    });
+    std::vector<ECS::Entity> enemiesToCreateBars;
 
-    static bool loggedOnce = false;
-    if (!loggedOnce || enemyCount > 0) {
-        LOG_INFO("[EnemyHealthBarSystem] Found " << enemyCount
-                                                 << " enemies with health");
-        loggedOnce = true;
-    }
-
-    enemyView.each([this, &registry](auto entity, const auto& /*enemyTag*/,
+    enemyView.each([this, &registry, &enemiesToCreateBars](auto entity, const auto& /*enemyTag*/,
                                      const auto& health,
                                      const auto& /*transform*/) {
         if (registry.hasComponent<rs::DestroyTag>(entity)) {
@@ -50,10 +40,14 @@ void EnemyHealthBarSystem::update(ECS::Registry& registry,
             return;
         }
         if (_healthBarBgs.find(entity.id) == _healthBarBgs.end()) {
-            createHealthBar(entity, registry);
+            enemiesToCreateBars.push_back(entity);
         }
         updateHealthBar(entity, registry);
     });
+
+    for (auto entity : enemiesToCreateBars) {
+        createHealthBar(entity, registry);
+    }
 
     std::vector<std::uint32_t> toRemove;
     for (const auto& [enemyId, barEntity] : _healthBarBgs) {

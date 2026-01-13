@@ -18,29 +18,16 @@ PlayerPowerUpVisualSystem::PlayerPowerUpVisualSystem()
     : ::rtype::engine::ASystem("PlayerPowerUpVisualSystem") {}
 
 void PlayerPowerUpVisualSystem::update(ECS::Registry& registry, float /*dt*/) {
-    registry.view<Image, PlayerTag>().each(
-        [&](auto entity, Image& img, PlayerTag& /*tag*/) {
-            if (registry.hasComponent<ColorTint>(entity)) {
-                return;
-            }
-            if (registry.hasComponent<BoxingComponent>(entity)) {
-                auto& box = registry.getComponent<BoxingComponent>(entity);
-                box.outlineColor = ::rtype::display::Color::Red();
-                box.fillColor = ::rtype::display::Color(255, 255, 255, 30);
-            }
-        });
-
     registry.view<Image, PlayerTag, rs::ActivePowerUpComponent>().each(
         [&](auto entity, Image& img, PlayerTag& /*tag*/,
             const rs::ActivePowerUpComponent& active) {
-            ::rtype::display::Color tint = ::rtype::display::Color::White();
-
-            if (registry.hasComponent<ColorTint>(entity)) {
-                return;
-            }
             if (active.remainingTime <= 0.0f) {
+                if (registry.hasComponent<ColorTint>(entity)) {
+                    registry.removeComponent<ColorTint>(entity);
+                }
                 return;
             }
+            ::rtype::display::Color tint = ::rtype::display::Color::White();
             switch (active.type) {
                 case rs::PowerUpType::Shield:
                     tint = {255, 215, 0, 220};
@@ -63,7 +50,15 @@ void PlayerPowerUpVisualSystem::update(ECS::Registry& registry, float /*dt*/) {
             if (active.shieldActive) {
                 tint = {255, 215, 0, 240};
             }
-            img.color = tint;
+            if (!registry.hasComponent<ColorTint>(entity)) {
+                registry.emplaceComponent<ColorTint>(entity, tint.r, tint.g, tint.b, tint.a);
+            } else {
+                auto& colorTint = registry.getComponent<ColorTint>(entity);
+                colorTint.r = tint.r;
+                colorTint.g = tint.g;
+                colorTint.b = tint.b;
+                colorTint.a = tint.a;
+            }
             if (registry.hasComponent<BoxingComponent>(entity)) {
                 auto& box = registry.getComponent<BoxingComponent>(entity);
                 box.outlineColor = tint;

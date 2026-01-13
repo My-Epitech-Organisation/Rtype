@@ -12,6 +12,12 @@
 namespace rtype::games::rtype::shared {
 
 /**
+ * @enum ChargeLevel
+ * @brief Represents charge levels for charged attacks
+ */
+enum class ChargeLevel { None, Level1, Level2, Level3 };
+
+/**
  * @struct ShootCooldownComponent
  * @brief Component managing shooting cooldown for entities
  *
@@ -90,7 +96,21 @@ struct ChargeComponent {
     float chargeRate = 0.5F;     ///< Charge rate per second
     float maxCharge = 1.0F;
     bool isCharging = false;
+    bool wasCharging = false;  ///< Track previous charging state
     float minChargeThreshold = 0.0F;  ///< Minimum charge for powered shot
+    ChargeLevel currentLevel = ChargeLevel::None;  ///< Current charge level
+
+    static constexpr float kLevel1Threshold = 0.3F;
+    static constexpr float kLevel2Threshold = 0.6F;
+    static constexpr float kLevel3Threshold = 0.9F;
+
+    static constexpr int32_t kLevel1Damage = 20;
+    static constexpr int32_t kLevel2Damage = 40;
+    static constexpr int32_t kLevel3Damage = 80;
+
+    static constexpr int32_t kLevel1Pierce = 1;
+    static constexpr int32_t kLevel2Pierce = 2;
+    static constexpr int32_t kLevel3Pierce = 4;
 
     ChargeComponent() = default;
 
@@ -103,17 +123,22 @@ struct ChargeComponent {
     /**
      * @brief Start charging
      */
-    void startCharging() noexcept { isCharging = true; }
+    void startCharging() noexcept {
+        isCharging = true;
+        wasCharging = true;
+    }
 
     /**
-     * @brief Stop charging and return charge level
+     * @brief Stop charging and return charge level enum
      * @return Current charge level when released
      */
-    [[nodiscard]] float release() noexcept {
+    [[nodiscard]] ChargeLevel release() noexcept {
         isCharging = false;
-        float charge = currentCharge;
+        wasCharging = false;
+        ChargeLevel level = currentLevel;
         currentCharge = 0.0F;
-        return charge;
+        currentLevel = ChargeLevel::None;
+        return level;
     }
 
     /**
@@ -125,6 +150,15 @@ struct ChargeComponent {
             currentCharge += chargeRate * deltaTime;
             if (currentCharge > maxCharge) {
                 currentCharge = maxCharge;
+            }
+            if (currentCharge >= kLevel3Threshold) {
+                currentLevel = ChargeLevel::Level3;
+            } else if (currentCharge >= kLevel2Threshold) {
+                currentLevel = ChargeLevel::Level2;
+            } else if (currentCharge >= kLevel1Threshold) {
+                currentLevel = ChargeLevel::Level1;
+            } else {
+                currentLevel = ChargeLevel::None;
             }
         }
     }
@@ -143,6 +177,43 @@ struct ChargeComponent {
      */
     [[nodiscard]] float getChargePercent() const noexcept {
         return currentCharge / maxCharge;
+    }
+
+    /**
+     * @brief Get damage value for a charge level
+     * @param level The charge level
+     * @return Damage value
+     */
+    [[nodiscard]] static int32_t getDamageForLevel(ChargeLevel level) noexcept {
+        switch (level) {
+            case ChargeLevel::Level1:
+                return kLevel1Damage;
+            case ChargeLevel::Level2:
+                return kLevel2Damage;
+            case ChargeLevel::Level3:
+                return kLevel3Damage;
+            default:
+                return 0;
+        }
+    }
+
+    /**
+     * @brief Get pierce count for a charge level
+     * @param level The charge level
+     * @return Pierce count
+     */
+    [[nodiscard]] static int32_t getPierceCountForLevel(
+        ChargeLevel level) noexcept {
+        switch (level) {
+            case ChargeLevel::Level1:
+                return kLevel1Pierce;
+            case ChargeLevel::Level2:
+                return kLevel2Pierce;
+            case ChargeLevel::Level3:
+                return kLevel3Pierce;
+            default:
+                return 0;
+        }
     }
 };
 

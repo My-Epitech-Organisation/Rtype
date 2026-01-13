@@ -29,7 +29,7 @@ class PowerUpCollectionSystem : public ::rtype::engine::ASystem {
     void update(ECS::Registry& registry, float dt) override;
 
    private:
-    const std::string& _font;
+    std::string _font;
 
     struct PowerUpState {
         ::rtype::games::rtype::shared::PowerUpType type;
