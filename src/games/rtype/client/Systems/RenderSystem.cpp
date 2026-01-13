@@ -40,8 +40,6 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
 
     auto& img = registry.getComponent<Image>(entity);
     const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
-
-    // Use ColorTint if present, otherwise use the image's default color
     display::Color color = img.color;
     if (registry.hasComponent<ColorTint>(entity)) {
         const auto& tint = registry.getComponent<ColorTint>(entity);
