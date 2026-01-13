@@ -214,9 +214,7 @@ class WaveManager {
         _waveTransitionDelay = delay;
     }
 
-    void setStartDelay(float delay) noexcept {
-        _startDelay = delay;
-    }
+    void setStartDelay(float delay) noexcept { _startDelay = delay; }
 
    private:
     /**

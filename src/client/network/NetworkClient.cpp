@@ -597,9 +597,10 @@ void NetworkClient::onLevelAnnounce(
     }
 
     if (pendingLevelAnnounce_) {
-        LOG_INFO_CAT(rtype::LogCategory::Network,
-                     "[NetworkClient] Replaying pending level announce immediately: "
-                         << pendingLevelAnnounce_->levelName);
+        LOG_INFO_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] Replaying pending level announce immediately: "
+                << pendingLevelAnnounce_->levelName);
         auto event = *pendingLevelAnnounce_;
         pendingLevelAnnounce_.reset();
         onLevelAnnounceCallback_(event);
@@ -745,12 +746,12 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
                           << std::hex << static_cast<int>(header.flags)
                           << std::dec);
         sendAck(header.seqId);
-    } else if (opcode != network::OpCode::S_ENTITY_MOVE_BATCH && 
+    } else if (opcode != network::OpCode::S_ENTITY_MOVE_BATCH &&
                opcode != network::OpCode::S_ENTITY_MOVE) {
         // Also log unreliable packets if they aren't high-frequency
-        LOG_DEBUG_CAT(rtype::LogCategory::Network, 
-                      "[NetworkClient] Received unreliable packet: opcode=0x" 
-                      << std::hex << static_cast<int>(opcode) << std::dec);
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Received unreliable packet: opcode=0x"
+                          << std::hex << static_cast<int>(opcode) << std::dec);
     }
 
     switch (opcode) {
@@ -1299,7 +1300,7 @@ void NetworkClient::handleLevelAnnounce(const network::Header& header,
 
     if (payload.size() < sizeof(network::LevelAnnouncePayload)) {
         LOG_WARNING_CAT(rtype::LogCategory::Network,
-                      "[NetworkClient] LevelAnnounce payload too small");
+                        "[NetworkClient] LevelAnnounce payload too small");
         return;
     }
 
@@ -1310,28 +1311,32 @@ void NetworkClient::handleLevelAnnounce(const network::Header& header,
         std::string levelName(msg.levelName.data(),
                               strnlen(msg.levelName.data(), 32));
 
-        LOG_INFO_CAT(rtype::LogCategory::Network,
-                     "[NetworkClient] Received S_LEVEL_ANNOUNCE: '" << levelName << "'");
+        LOG_INFO_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] Received S_LEVEL_ANNOUNCE: '" << levelName << "'");
 
         LevelAnnounceEvent event{levelName};
-        
+
         // Store the announcement for late subscribers (scene transitions)
         pendingLevelAnnounce_ = event;
 
         queueCallback([this, event]() {
             if (onLevelAnnounceCallback_) {
-                LOG_INFO_CAT(rtype::LogCategory::Network,
-                             "[NetworkClient] Delivering level announce to callback");
+                LOG_INFO_CAT(
+                    rtype::LogCategory::Network,
+                    "[NetworkClient] Delivering level announce to callback");
                 onLevelAnnounceCallback_(event);
                 pendingLevelAnnounce_.reset();  // Clear once delivered
             } else {
                 LOG_INFO_CAT(rtype::LogCategory::Network,
-                             "[NetworkClient] No callback yet, keeping pending announce");
+                             "[NetworkClient] No callback yet, keeping pending "
+                             "announce");
             }
         });
     } catch (...) {
-        LOG_ERROR_CAT(rtype::LogCategory::Network,
-                      "[NetworkClient] Failed to deserialize LevelAnnouncePayload");
+        LOG_ERROR_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] Failed to deserialize LevelAnnouncePayload");
     }
 }
 

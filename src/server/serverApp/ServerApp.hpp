@@ -103,7 +103,8 @@ class ServerApp {
     /**
      * @brief Change the current level (reloads if necessary)
      * @param levelId The level identifier
-     * @param force Force level change even if game is running (for automatic transitions)
+     * @param force Force level change even if game is running (for automatic
+     * transitions)
      */
     bool changeLevel(const std::string& levelId, bool force = false);
 

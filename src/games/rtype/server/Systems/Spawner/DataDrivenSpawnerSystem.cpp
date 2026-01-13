@@ -51,7 +51,7 @@ DataDrivenSpawnerSystem::DataDrivenSpawnerSystem(EventEmitter emitter,
       _powerUpTypeDist(1, static_cast<int>(shared::PowerUpType::HealthBoost)) {
     _waveManager.setWaitForClear(config.waitForClear);
     _waveManager.setWaveTransitionDelay(config.waveTransitionDelay);
-    _waveManager.setStartDelay(3.0f); // Default 3s delay for start
+    _waveManager.setStartDelay(3.0f);  // Default 3s delay for start
 
     generateNextObstacleSpawnTime();
     generateNextPowerUpSpawnTime();

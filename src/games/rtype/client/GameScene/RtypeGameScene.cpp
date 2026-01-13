@@ -1010,18 +1010,20 @@ void RtypeGameScene::setupLevelAnnounceCallback() {
                      "[RtypeGameScene] Setting up level announce callback");
         _networkClient->onLevelAnnounce(
             [this](const ::rtype::client::LevelAnnounceEvent& event) {
-                LOG_INFO_CAT(::rtype::LogCategory::UI,
-                             "[RtypeGameScene] Level announce callback triggered: "
-                                 << event.levelName);
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::UI,
+                    "[RtypeGameScene] Level announce callback triggered: "
+                        << event.levelName);
                 showLevelAnnounce(event.levelName);
             });
     }
 }
 
 void RtypeGameScene::showLevelAnnounce(const std::string& levelName) {
-    LOG_INFO_CAT(::rtype::LogCategory::UI,
-                 "[RtypeGameScene] showLevelAnnounce called with: " << levelName);
-    
+    LOG_INFO_CAT(
+        ::rtype::LogCategory::UI,
+        "[RtypeGameScene] showLevelAnnounce called with: " << levelName);
+
     if (_levelAnnounceBgEntity.has_value() &&
         _registry->isAlive(*_levelAnnounceBgEntity)) {
         _registry->killEntity(*_levelAnnounceBgEntity);
@@ -1035,7 +1037,8 @@ void RtypeGameScene::showLevelAnnounce(const std::string& levelName) {
 
     auto bg = EntityFactory::createRectangle(
         _registry,
-        ::rtype::display::Vector2i(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y)),
+        ::rtype::display::Vector2i(static_cast<int>(windowSize.x),
+                                   static_cast<int>(windowSize.y)),
         ::rtype::display::Color(0, 0, 0, 175),
         ::rtype::display::Vector2f(0.0f, 0.0f));
 
@@ -1047,7 +1050,9 @@ void RtypeGameScene::showLevelAnnounce(const std::string& levelName) {
 
     auto txt = EntityFactory::createStaticText(
         _registry, _assetsManager, displayTxt, "title_font",
-        ::rtype::display::Vector2f(centerX, static_cast<float>(windowSize.y) / 2.0f - 20.0f), 40.f);
+        ::rtype::display::Vector2f(
+            centerX, static_cast<float>(windowSize.y) / 2.0f - 20.0f),
+        40.f);
 
     _registry->emplaceComponent<ZIndex>(bg, GraphicsConfig::ZINDEX_UI + 5);
     _registry->emplaceComponent<ZIndex>(txt, GraphicsConfig::ZINDEX_UI + 6);
@@ -1065,7 +1070,8 @@ void RtypeGameScene::updateLevelAnnounce(float dt) {
         if (_levelAnnounceTimer <= 0.0f) {
             _levelAnnounceTimer = 0.0f;
             LOG_INFO_CAT(::rtype::LogCategory::UI,
-                 "[RtypeGameScene] Level announce destroyed after timer elapsed");
+                         "[RtypeGameScene] Level announce destroyed after "
+                         "timer elapsed");
             if (_levelAnnounceBgEntity.has_value() &&
                 _registry->isAlive(*_levelAnnounceBgEntity)) {
                 _registry->killEntity(*_levelAnnounceBgEntity);

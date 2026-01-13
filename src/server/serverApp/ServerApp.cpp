@@ -602,7 +602,7 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
             // Broadcast level announcement
             {
                 std::string levelName;
-                
+
                 if (_gameEngine) {
                     auto* rtypeEngine =
                         dynamic_cast<rtype::games::rtype::server::GameEngine*>(
@@ -612,26 +612,27 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
                                         ->getWaveManager()
                                         .getLevelName();
                         LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                                     "[Server] Level name from WaveManager: '"
-                                         << levelName << "'");
+                                      "[Server] Level name from WaveManager: '"
+                                          << levelName << "'");
                     }
                 }
 
                 if (levelName.empty() && !_initialLevel.empty()) {
                     levelName = _initialLevel;
                     LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                                 "[Server] Using _initialLevel as fallback: '"
-                                     << levelName << "'");
+                                  "[Server] Using _initialLevel as fallback: '"
+                                      << levelName << "'");
                 }
 
                 if (!levelName.empty() && _networkServer) {
-                    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
-                                "[Server] Broadcasting initial level announce: "
-                                    << levelName);
+                    LOG_INFO_CAT(
+                        ::rtype::LogCategory::GameEngine,
+                        "[Server] Broadcasting initial level announce: "
+                            << levelName);
                     _networkServer->broadcastLevelAnnounce(levelName);
                 } else {
                     LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
-                                   "[Server] No level name to broadcast");
+                                    "[Server] No level name to broadcast");
                 }
             }
             break;
@@ -805,7 +806,7 @@ void ServerApp::resetToLobby() {
         if (_initialLevel.empty()) {
             _initialLevel = "level_1";
         }
-        
+
         std::string levelPath = "config/game/levels/" + _initialLevel + ".toml";
         if (!_gameEngine->loadLevelFromFile(levelPath)) {
             LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
@@ -876,8 +877,9 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
         LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                      "[ServerApp] LevelComplete event received");
 
-        auto* rtypeEngine = dynamic_cast<rtype::games::rtype::server::GameEngine*>(
-            _gameEngine.get());
+        auto* rtypeEngine =
+            dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                _gameEngine.get());
         if (rtypeEngine) {
             auto nextLevel =
                 rtypeEngine->getDataDrivenSpawner()->getNextLevel();
@@ -887,8 +889,9 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
                              "[ServerApp] Raw next_level found in config: '"
                                  << *nextLevel << "'");
             } else {
-                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
-                             "[ServerApp] No next_level found in configuration");
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::GameEngine,
+                    "[ServerApp] No next_level found in configuration");
             }
 
             if (nextLevel && !nextLevel->empty()) {
@@ -896,17 +899,19 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
                 std::filesystem::path path(nextId);
                 std::string cleanId = path.stem().string();
 
-                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
-                             "[ServerApp] Transitioning to next level: "
-                                 << cleanId);
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::GameEngine,
+                    "[ServerApp] Transitioning to next level: " << cleanId);
 
                 changeLevel(cleanId, true);
                 rtypeEngine->startLevel();
-                
+
                 // Get the level name from the loaded config
-                auto levelName = rtypeEngine->getDataDrivenSpawner()->getWaveManager().getLevelName();
+                auto levelName = rtypeEngine->getDataDrivenSpawner()
+                                     ->getWaveManager()
+                                     .getLevelName();
                 if (levelName.empty()) {
-                    levelName = cleanId; // Fallback to ID if name is missing
+                    levelName = cleanId;  // Fallback to ID if name is missing
                 }
 
                 if (_networkServer) {

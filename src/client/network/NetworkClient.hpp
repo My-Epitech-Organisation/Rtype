@@ -569,7 +569,8 @@ class NetworkClient {
     std::function<void(PowerUpEvent)> onPowerUpCallback_;
     std::function<void(LobbyListEvent)> onLobbyListReceivedCallback_;
     std::function<void(LevelAnnounceEvent)> onLevelAnnounceCallback_;
-    std::optional<LevelAnnounceEvent> pendingLevelAnnounce_;  // Store last announcement for late subscribers
+    std::optional<LevelAnnounceEvent>
+        pendingLevelAnnounce_;  // Store last announcement for late subscribers
     std::function<void(bool, uint8_t, const std::string&)>
         onJoinLobbyResponseCallback_;
     std::function<void(std::uint32_t, bool, std::uint8_t)>
