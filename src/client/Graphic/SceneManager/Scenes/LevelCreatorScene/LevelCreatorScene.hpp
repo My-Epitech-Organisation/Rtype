@@ -112,8 +112,10 @@ class LevelCreatorScene : public AScene {
     std::map<std::string, std::shared_ptr<IBackground>>::iterator
         _bgIteratorCurrent;
 
-    std::vector<std::string> _listNextLevel;
-    std::vector<std::string>::iterator _nextLevelIteratorCurrent;
+    /** @brief List of levels availables, Name of the level; Path of the level.
+     */
+    std::map<std::string, std::string> _listNextLevel;
+    std::map<std::string, std::string>::iterator _nextLevelIteratorCurrent;
 
     /** @brief Name of the plugin for the background selection button. */
     std::string _bgPluginName;
@@ -131,8 +133,6 @@ class LevelCreatorScene : public AScene {
     ECS::Entity _scrollSpeedInput;
     /** @brief Entity id for the boss identifier input field. */
     ECS::Entity _bossInput;
-    /** @brief Entity id for the next level identifier input field. */
-    ECS::Entity _nextLevelInput;
     /** @} */
 
     /** @brief List of waves defined for the level. */

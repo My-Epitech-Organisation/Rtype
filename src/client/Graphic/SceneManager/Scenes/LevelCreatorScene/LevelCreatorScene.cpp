@@ -56,29 +56,52 @@ void LevelCreatorScene::addElementToSection(const std::string& sectionId,
 }
 
 void LevelCreatorScene::_getLevelsName() {
-    if (!std::filesystem::exists("./config/game/levels/")) return;
-    for (const auto& s :
-         std::filesystem::directory_iterator("./config/game/levels/")) {
-        std::string path = s.path().string();
-        if (!path.ends_with(".toml")) continue;
-        try {
-            auto config = toml::parse_file(path);
-            if (config.contains("level") &&
-                config["level"].as_table()->contains("name")) {
-                std::string levelName = config["level"]["name"].value_or("");
-                if (!levelName.empty()) {
-                    this->_listNextLevel.push_back(levelName);
+    this->_listNextLevel.clear();
+    if (std::filesystem::exists("./config/game/levels/")) {
+        for (const auto& s :
+             std::filesystem::directory_iterator("./config/game/levels/")) {
+            std::string path = s.path().string();
+            if (!path.ends_with(".toml")) continue;
+            try {
+                auto config = toml::parse_file(path);
+                if (config.contains("level") &&
+                    config["level"].as_table()->contains("name")) {
+                    std::string levelName =
+                        config["level"]["name"].value_or("");
+                    if (!levelName.empty()) {
+                        this->_listNextLevel[levelName] = path;
+                    }
                 }
+            } catch (const toml::parse_error& err) {
+                std::cerr << "Error parsing TOML file " << path << ": " << err
+                          << std::endl;
             }
-        } catch (const toml::parse_error& err) {
-            std::cerr << "Error parsing TOML file " << path << ": " << err
-                      << std::endl;
         }
     }
-    std::sort(this->_listNextLevel.begin(), this->_listNextLevel.end());
-    auto last =
-        std::unique(this->_listNextLevel.begin(), this->_listNextLevel.end());
-    this->_listNextLevel.erase(last, this->_listNextLevel.end());
+
+    if (this->_listNextLevel.empty()) {
+        this->_nextLevelId = "";
+    } else {
+        this->_nextLevelIteratorCurrent =
+            this->_listNextLevel.find(this->_nextLevelId);
+        if (this->_nextLevelIteratorCurrent == this->_listNextLevel.end()) {
+            this->_nextLevelIteratorCurrent = this->_listNextLevel.begin();
+        }
+        this->_nextLevelId = this->_nextLevelIteratorCurrent->first;
+    }
+
+    if (this->_nextLevelId.empty() && !this->_listNextLevel.empty()) {
+        this->_nextLevelId = this->_listNextLevel.begin()->first;
+    }
+
+    if (this->_registry->isAlive(this->_btnNextLevel) &&
+        this->_registry->hasComponent<rtype::games::rtype::client::Text>(
+            this->_btnNextLevel)) {
+        this->_registry
+            ->getComponent<rtype::games::rtype::client::Text>(
+                this->_btnNextLevel)
+            .textContent = this->_nextLevelId;
+    }
 }
 
 LevelCreatorScene::LevelCreatorScene(
@@ -99,7 +122,7 @@ LevelCreatorScene::LevelCreatorScene(
     this->_getLevelsName();
     if (!this->_listNextLevel.empty()) {
         this->_nextLevelIteratorCurrent = this->_listNextLevel.begin();
-        this->_nextLevelId = *this->_nextLevelIteratorCurrent;
+        this->_nextLevelId = this->_nextLevelIteratorCurrent->first;
     }
 
     this->_listEntity = (EntityFactory::createBackground(
@@ -137,9 +160,9 @@ LevelCreatorScene::LevelCreatorScene(
         EntityFactory::createStaticText(
             _registry, _assetsManager, "Name:", "main_font", {labelX, 0}, 24.f),
         currentY);
-    _levelNameInput = EntityFactory::createTextInput(
-        _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "Map Name",
-        "Space Station", 50, false);
+    _levelNameInput =
+        EntityFactory::createTextInput(_registry, _assetsManager, {inputX, 0},
+                                       {inputW, 40}, "Map Name", "", 50, false);
     addElementToSection("settings", _levelNameInput, currentY);
 
     currentY += gapY;
@@ -220,7 +243,7 @@ LevelCreatorScene::LevelCreatorScene(
             if (this->_nextLevelIteratorCurrent == this->_listNextLevel.end()) {
                 this->_nextLevelIteratorCurrent = this->_listNextLevel.begin();
             }
-            this->_nextLevelId = *this->_nextLevelIteratorCurrent;
+            this->_nextLevelId = this->_nextLevelIteratorCurrent->first;
 
             if (this->_registry
                     ->hasComponent<rtype::games::rtype::client::Text>(
@@ -233,15 +256,6 @@ LevelCreatorScene::LevelCreatorScene(
         }));
 
     addElementToSection("settings", _btnNextLevel, currentY);
-    // _nextLevelInput = EntityFactory::createTextInput(
-    //     _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "levelX.toml",
-    //     "", 50, false);
-    // auto staticText = EntityFactory::createStaticText(
-    //     _registry, _assetsManager, "(Leave empty for end of the game)",
-    //     "main_font", {inputX, 0}, 18.f);
-    // addElementToSection("settings", _nextLevelInput, currentY);
-    // auto tmp = currentY + 50.f;
-    // addElementToSection("settings", staticText, tmp);
     currentY += 80.f;
 
     auto btnAdd = EntityFactory::createButton(
@@ -406,6 +420,7 @@ void LevelCreatorScene::saveCurrentWaveStats() {
 void LevelCreatorScene::saveToToml() {
     saveCurrentWaveStats();
     std::string lvlId = getInputValue(_levelIdInput);
+    std::string lvlName = getInputValue(_levelNameInput);
     if (lvlId.empty()) {
         LOG_ERROR_CAT(rtype::LogCategory::UI,
                       "Level ID is empty, cannot save level configuration.");
@@ -418,6 +433,30 @@ void LevelCreatorScene::saveToToml() {
         _statusMessageEntity = EntityFactory::createStaticText(
             _registry, _assetsManager,
             "You must enter a level ID before saving.", "main_font",
+            {startX, 810.f}, 20.f);
+
+        try {
+            auto& textComp =
+                _registry->getComponent<rtype::games::rtype::client::Text>(
+                    _statusMessageEntity);
+            textComp.color = rtype::display::Color::Red();
+        } catch (const std::exception&) {
+        }
+        _listEntity.push_back(_statusMessageEntity);
+        return;
+    }
+    if (lvlName.empty()) {
+        LOG_ERROR_CAT(rtype::LogCategory::UI,
+                      "Level Name is empty, cannot save level configuration.");
+        if (_statusMessageEntity != ECS::Entity(0) &&
+            _registry->isAlive(_statusMessageEntity)) {
+            _registry->killEntity(_statusMessageEntity);
+        }
+
+        float startX = kLevelSectionPosLeft;
+        _statusMessageEntity = EntityFactory::createStaticText(
+            _registry, _assetsManager,
+            "You must enter a level Name before saving.", "main_font",
             {startX, 810.f}, 20.f);
 
         try {
@@ -461,8 +500,9 @@ void LevelCreatorScene::saveToToml() {
                  : getInputValue(_scrollSpeedInput))
          << std::endl;
     file << "boss = \"" << getInputValue(_bossInput) << "\"" << std::endl;
-    file << "next_level = \"" << getInputValue(_nextLevelInput) << "\""
-         << std::endl;
+    std::filesystem::path pathObj(this->_listNextLevel[this->_nextLevelId]);
+    std::string nextLevel = pathObj.filename().string();
+    file << "next_level = \"" << nextLevel << "\"" << std::endl;
     file << std::endl;
 
     for (const auto& wave : _waves) {
@@ -519,6 +559,7 @@ void LevelCreatorScene::saveToToml() {
     } catch (const std::exception&) {
     }
     _listEntity.push_back(_statusMessageEntity);
+    this->_getLevelsName();
 }
 
 void LevelCreatorScene::addWave() {
