@@ -34,8 +34,8 @@ class NetworkClient;
  * @brief In-game developer console for debugging and runtime configuration.
  *
  * Provides a command-line interface overlay that can be toggled with the
- * tilde (~) key. Supports custom commands, console variables (CVars),
- * and displays output history.
+ * F1 key (tilde ~ is also supported as fallback). Supports custom commands,
+ * console variables (CVars), and displays output history.
  */
 class DevConsole {
    public:
