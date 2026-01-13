@@ -692,19 +692,6 @@ void DevConsole::registerDefaultCommands() {
             return result;
         });
 
-    // Stats command (placeholder - will be connected to actual metrics)
-    registerCommand(
-        "stats", "Display game statistics",
-        [this](const std::vector<std::string>&) -> std::string {
-            std::string result = "Game Statistics:\n";
-            result += "  FPS: [Not connected]\n";
-            result += "  Ping: [Not connected]\n";
-            result += "  Entities: [Not connected]\n";
-            result += "  Network TX: [Not connected]\n";
-            result += "  Network RX: [Not connected]\n";
-            return result;
-        });
-
     // FPS toggle
     registerCommand("fps", "Toggle FPS display overlay",
                     [this](const std::vector<std::string>&) -> std::string {
