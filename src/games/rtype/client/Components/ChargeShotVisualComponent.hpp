@@ -30,6 +30,7 @@ struct ShootInputState {
 struct ChargeShotInputState {
     bool isPressed = false;
     bool shouldFireShot = false;
+    shared::ChargeLevel releasedChargeLevel = shared::ChargeLevel::None;
 };
 
 /**
@@ -42,6 +43,8 @@ struct ChargeShotVisual {
     float shakeTimer = 0.0F;
     bool shouldShake = false;
     bool wasCharging = false;
+    bool isChargingShake = false;
+    float chargeShakeIntensity = 0.0F;
 
     static constexpr uint8_t kLevel1Color[3] = {100, 150, 255};   // Blue glow
     static constexpr uint8_t kLevel2Color[3] = {255, 200, 100};   // Orange glow
@@ -49,6 +52,9 @@ struct ChargeShotVisual {
 
     static constexpr float kMaxShakeIntensity = 8.0F;
     static constexpr float kShakeDuration = 0.3F;
+    static constexpr float kLevel1ShakeIntensity = 1.0F;
+    static constexpr float kLevel2ShakeIntensity = 2.5F;
+    static constexpr float kLevel3ShakeIntensity = 5.0F;
 
     ChargeShotVisual() = default;
 
@@ -72,24 +78,30 @@ struct ChargeShotVisual {
     }
 
     /**
-     * @brief Update glow intensity based on charge level
+     * @brief Update glow intensity and charge shake based on charge level
      * @param level Current charge level
+     * @param isCharging Whether currently charging
      */
-    void updateGlow(shared::ChargeLevel level) noexcept {
+    void updateGlow(shared::ChargeLevel level, bool isCharging = false) noexcept {
         switch (level) {
             case shared::ChargeLevel::Level1:
                 glowIntensity = 0.3F;
+                chargeShakeIntensity = kLevel1ShakeIntensity;
                 break;
             case shared::ChargeLevel::Level2:
                 glowIntensity = 0.6F;
+                chargeShakeIntensity = kLevel2ShakeIntensity;
                 break;
             case shared::ChargeLevel::Level3:
                 glowIntensity = 1.0F;
+                chargeShakeIntensity = kLevel3ShakeIntensity;
                 break;
             default:
                 glowIntensity = 0.0F;
+                chargeShakeIntensity = 0.0F;
                 break;
         }
+        isChargingShake = isCharging && (level != shared::ChargeLevel::None);
     }
 
     /**
@@ -107,6 +119,28 @@ struct ChargeShotVisual {
     }
 
     /**
+     * @brief Get current effective shake intensity
+     * @return Current shake intensity (release shake or charge shake)
+     */
+    [[nodiscard]] float getEffectiveShakeIntensity() const noexcept {
+        if (shouldShake) {
+            return shakeIntensity;
+        }
+        if (isChargingShake) {
+            return chargeShakeIntensity;
+        }
+        return 0.0F;
+    }
+
+    /**
+     * @brief Check if any shake should be applied
+     * @return true if shaking
+     */
+    [[nodiscard]] bool isShaking() const noexcept {
+        return shouldShake || isChargingShake;
+    }
+
+    /**
      * @brief Trigger max charge screen shake
      */
     void triggerMaxChargeShake() noexcept {
@@ -120,6 +154,8 @@ struct ChargeShotVisual {
      */
     void reset() noexcept {
         glowIntensity = 0.0F;
+        isChargingShake = false;
+        chargeShakeIntensity = 0.0F;
     }
 };
 
@@ -133,11 +169,10 @@ struct ChargeBarUI {
     float smoothingSpeed = 5.0F;
     bool isVisible = true;
 
-    // Bar dimensions
     float barWidth = 100.0F;
     float barHeight = 10.0F;
-    float offsetX = 0.0F;
-    float offsetY = -20.0F;
+    float offsetX = -50.0F;
+    float offsetY = -40.0F;
 
     ChargeBarUI() = default;
 
