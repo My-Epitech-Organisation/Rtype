@@ -185,6 +185,14 @@ class WaveManager {
     }
 
     /**
+     * @brief Get the next level ID (if any)
+     * @return Optional next level ID
+     */
+    [[nodiscard]] std::optional<std::string> getNextLevel() const noexcept {
+        return _levelConfig ? _levelConfig->nextLevel : std::nullopt;
+    }
+
+    /**
      * @brief Get last error message
      * @return Error message from last failed operation
      */
@@ -204,6 +212,10 @@ class WaveManager {
      */
     void setWaveTransitionDelay(float delay) noexcept {
         _waveTransitionDelay = delay;
+    }
+
+    void setStartDelay(float delay) noexcept {
+        _startDelay = delay;
     }
 
    private:
@@ -231,6 +243,7 @@ class WaveManager {
     float _waveTransitionDelay = 2.0F;
     bool _waitForClear = true;
     std::string _lastError;
+    float _startDelay = 0.0f;
 };
 
 }  // namespace rtype::games::rtype::server

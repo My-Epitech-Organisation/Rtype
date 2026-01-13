@@ -42,6 +42,11 @@ class GameScene : public AScene {
     /// @brief Last input mask sent to server (to avoid flooding)
     std::uint8_t _lastInputMask = 0;
 
+    // Level Announcement
+    std::vector<ECS::Entity> _announcementEntities;
+    float _announcementTimer = 0.0f;
+    static constexpr float ANNOUNCEMENT_DURATION = 3.0f;
+
    public:
     void update(float dt) override;
     void render(std::shared_ptr<rtype::display::IDisplay> window) override;

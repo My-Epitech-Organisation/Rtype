@@ -153,6 +153,12 @@ class NetworkServer {
     void broadcastLevelInfo();
 
     /**
+     * @brief Broadcast a level announcement for visual display
+     * @param levelName Name of the level to display
+     */
+    void broadcastLevelAnnounce(const std::string& levelName);
+
+    /**
      * @brief Set the server metrics for tracking packet statistics
      * @param metrics Shared pointer to ServerMetrics
      */

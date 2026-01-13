@@ -139,6 +139,20 @@ class DataDrivenSpawnerSystem : public ::rtype::engine::ASystem {
     }
 
     /**
+     * @brief Get reference to the wave manager
+     */
+    [[nodiscard]] const WaveManager& getWaveManager() const noexcept {
+        return _waveManager;
+    }
+
+    /**
+     * @brief Get the next level ID if available
+     */
+    [[nodiscard]] std::optional<std::string> getNextLevel() const noexcept {
+        return _waveManager.getNextLevel();
+    }
+
+    /**
      * @brief Set enemy count (used by GameEngine)
      */
     void setEnemyCount(std::size_t count) noexcept { _enemyCount = count; }

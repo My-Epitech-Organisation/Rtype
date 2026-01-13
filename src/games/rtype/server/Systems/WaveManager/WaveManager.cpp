@@ -108,6 +108,11 @@ void WaveManager::start() {
     _waveTimer = 0.0F;
     _transitionTimer = 0.0F;
     _state = WaveState::InProgress;
+    
+    // Use startDelay if configured
+    if (_startDelay > 0.0f) {
+        _waveTimer = -_startDelay; // Trick: timer starts negative, so checks >= delay work after it crosses 0
+    }
 
     prepareCurrentWave();
 
@@ -209,7 +214,7 @@ void WaveManager::advanceToNextWave() {
     }
 
     _state = WaveState::InProgress;
-    _waveTimer = 0.0F;
+    _waveTimer = 0.0F; // No delay between waves, only transition delay handled before this
     prepareCurrentWave();
 
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,

@@ -25,7 +25,8 @@ enum class GameEventType : uint8_t {
     EntityUpdated,
     EntityHealthChanged,
     PowerUpApplied,
-    GameOver
+    GameOver,
+    LevelComplete
 };
 
 /**

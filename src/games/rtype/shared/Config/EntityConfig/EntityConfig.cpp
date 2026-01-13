@@ -347,6 +347,21 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
             config.bossId = *boss;
         }
 
+        if (auto nextLv = tbl["level"]["next_level"].value<std::string>()) {
+            // If the next_level contains ".toml", strip it or handle it.
+            // Assuming we store just the ID or filename.
+            // The request example had "level_2.toml". The loader expects IDs usually.
+            // But loadLevelFromFile handles ".toml".
+            // Let's store it as is, and the consumer will handle it.
+            // However, level registry keys are IDs.
+            // We'll strip .toml for ID matching if needed later, but here just store string.
+            std::string n = *nextLv;
+            if (n.length() > 5 && n.substr(n.length() - 5) == ".toml") {
+                n = n.substr(0, n.length() - 5);
+            }
+            config.nextLevel = n;
+        }
+
         if (auto* waves = tbl["wave"].as_array()) {
             for (const auto& waveElem : *waves) {
                 if (auto* waveTbl = waveElem.as_table()) {

@@ -12,7 +12,10 @@
 
 #include "Accessibility.hpp"
 #include "Components/TagComponent.hpp"
+#include "EntityFactory/EntityFactory.hpp"
+#include "Graphic.hpp"
 #include "Logger/Macros.hpp"
+#include "games/rtype/client/GraphicsConstants.hpp"
 #include "games/rtype/client/PauseState.hpp"
 
 void GameScene::update(float dt) {
@@ -90,12 +93,20 @@ GameScene::GameScene(
             this->_audio->play();
         }
     }
+
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[GameScene] Constructor completed successfully");
 }
 
 GameScene::~GameScene() {
     LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Destructor called");
+
+    if (_networkClient) {
+        _networkClient->onLevelAnnounce(nullptr);
+        _networkClient->onGameStart(nullptr);
+        _networkClient->onGameOver(nullptr);
+        _networkClient->onBandwidthModeChanged(nullptr);
+    }
 
     if (_networkSystem) {
         _networkSystem->onLocalPlayerAssigned(nullptr);

@@ -279,6 +279,15 @@ struct PowerUpEventPayload {
 };
 
 /**
+ * @brief Payload for S_LEVEL_ANNOUNCE (0x18)
+ *
+ * Server announces name of new level for visual notification.
+ */
+struct LevelAnnouncePayload {
+    std::array<char, 32> levelName;
+};
+
+/**
  * @brief Payload for C_INPUT (0x20)
  *
  * Client sends current input state to server.
@@ -498,6 +507,8 @@ static_assert(std::is_standard_layout_v<ChatPayload>);
 
         case OpCode::S_ACCEPT:
             return sizeof(AcceptPayload);
+        case OpCode::S_LEVEL_ANNOUNCE:
+            return sizeof(LevelAnnouncePayload);
         case OpCode::R_GET_USERS:
             return 0;
         case OpCode::S_UPDATE_STATE:

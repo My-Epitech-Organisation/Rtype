@@ -100,6 +100,23 @@ class RtypeGameScene : public AGameScene {
     void setupHud();
 
     /**
+     * @brief Setup the level announcement callback
+     */
+    void setupLevelAnnounceCallback();
+
+    /**
+     * @brief Show the level announcement
+     * @param levelName The name of the level
+     */
+    void showLevelAnnounce(const std::string& levelName);
+
+    /**
+     * @brief Update the level announcement visual
+     * @param dt Delta time
+     */
+    void updateLevelAnnounce(float dt);
+
+    /**
      * @brief Update the lives display text with current health values
      * @param current Current lives/health
      * @param max Maximum lives/health
@@ -157,6 +174,11 @@ class RtypeGameScene : public AGameScene {
     std::optional<ECS::Entity> _disconnectMessageEntity;
     std::optional<ECS::Entity> _disconnectButtonEntity;
     bool _isDisconnected{false};
+
+    // Level Announcement
+    std::optional<ECS::Entity> _levelAnnounceTextEntity;
+    std::optional<ECS::Entity> _levelAnnounceBgEntity;
+    float _levelAnnounceTimer = 0.0f;
 
     std::unique_ptr<::rtype::games::rtype::shared::MovementSystem>
         _movementSystem;

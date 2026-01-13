@@ -111,6 +111,13 @@ struct GameOverEvent {
 };
 
 /**
+ * @brief Event data for level announcement
+ */
+struct LevelAnnounceEvent {
+    std::string levelName;
+};
+
+/**
  * @brief High-level client networking API
  *
  * Encapsulates all low-level networking details and provides a clean
@@ -423,6 +430,11 @@ class NetworkClient {
     void onLobbyListReceived(std::function<void(LobbyListEvent)> callback);
 
     /**
+     * @brief Register callback for level announcement
+     */
+    void onLevelAnnounce(std::function<void(LevelAnnounceEvent)> callback);
+
+    /**
      * @brief Send the lobby join code to the server (must be used after
      * connect)
      * @param code 6-character lobby code
@@ -508,6 +520,8 @@ class NetworkClient {
                     const network::Buffer& payload);
     void handlePong(const network::Header& header,
                     const network::Buffer& payload);
+    void handleLevelAnnounce(const network::Header& header,
+                             const network::Buffer& payload);
 
     void flushOutgoing();
 
@@ -554,6 +568,8 @@ class NetworkClient {
     std::function<void(std::uint32_t, bool)> onPlayerReadyStateChangedCallback_;
     std::function<void(PowerUpEvent)> onPowerUpCallback_;
     std::function<void(LobbyListEvent)> onLobbyListReceivedCallback_;
+    std::function<void(LevelAnnounceEvent)> onLevelAnnounceCallback_;
+    std::optional<LevelAnnounceEvent> pendingLevelAnnounce_;  // Store last announcement for late subscribers
     std::function<void(bool, uint8_t, const std::string&)>
         onJoinLobbyResponseCallback_;
     std::function<void(std::uint32_t, bool, std::uint8_t)>

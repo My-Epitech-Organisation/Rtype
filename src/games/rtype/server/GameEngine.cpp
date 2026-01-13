@@ -315,6 +315,9 @@ engine::ProcessedEvent GameEngine::processEvent(
     result.valid = false;
 
     switch (event.type) {
+        case engine::GameEventType::LevelComplete:
+            result.valid = true;
+            break;
         case engine::GameEventType::EntitySpawned: {
             ECS::Entity foundEntity{0};
             bool found = false;

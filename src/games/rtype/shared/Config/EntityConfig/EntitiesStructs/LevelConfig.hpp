@@ -30,6 +30,9 @@ struct LevelConfig {
     // Boss (optional)
     std::optional<std::string> bossId;
 
+    // Next Level (optional)
+    std::optional<std::string> nextLevel;
+
     [[nodiscard]] bool isValid() const noexcept {
         return !id.empty() && !waves.empty();
     }
