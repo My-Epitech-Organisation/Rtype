@@ -4,10 +4,13 @@
 #include "server/serverApp/ServerApp.hpp"
 #include "server/lobby/LobbyManager.hpp"
 #include "httplib.h"
+#include "RTypeEntitySpawner.hpp"
 
 using namespace rtype::server;
+using namespace rtype::games::rtype::server;
 
 TEST(AdminServerMetricsPlayers, MetricsAggregation_SumsAcrossLobbies) {
+    registerRTypeEntitySpawner();
     AdminServer::Config cfg;
     cfg.port = 9210;
     cfg.token = "testtoken";
@@ -70,6 +73,7 @@ TEST(AdminServerMetricsPlayers, MetricsAggregation_SumsAcrossLobbies) {
 }
 
 TEST(AdminServerMetricsPlayers, Players_WithOneClient_ReturnsList) {
+    registerRTypeEntitySpawner();
     AdminServer::Config cfg;
     cfg.port = 9211;
     cfg.token = "testtoken";
