@@ -81,6 +81,8 @@ target_include_directories(snake_renderer_interface INTERFACE
 # ====================
 # SDL2 Renderer Implementation
 # ====================
+# Skip SDL2 renderer and snake_game executable during coverage builds (tests don't need them)
+if(NOT ENABLE_COVERAGE)
 find_package(SDL2 CONFIG QUIET)
 if(SDL2_FOUND)
     add_library(snake_renderer_sdl2 SHARED
@@ -113,6 +115,7 @@ if(SDL2_FOUND)
 else()
     message(STATUS "SDL2 not found - skipping SDL2 renderer for Snake")
 endif()
+endif() # NOT ENABLE_COVERAGE
 
 # Create aliases for consistent naming
 add_library(RType::SnakeGame ALIAS snake_game_server)
