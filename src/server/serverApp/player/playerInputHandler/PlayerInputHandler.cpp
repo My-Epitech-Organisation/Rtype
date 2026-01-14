@@ -243,6 +243,8 @@ void PlayerInputHandler::processChargedShot(std::uint32_t userId,
         _chargedShotCallback(*networkIdOpt, pos.x, pos.y, chargeLevel);
 
     if (projectileId != 0) {
+        // Trigger cooldown twice for charged shots to balance their increased
+        // power with a longer recovery time compared to regular shots
         cooldown.triggerCooldown();
         cooldown.triggerCooldown();
         LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
