@@ -228,13 +228,16 @@ void LaserBeamSystem::performBeamCollisions(ECS::Registry& registry,
                       ECS::Entity /*beamEntity*/, const LaserBeamTag&,
                       const LaserBeamComponent& beam,
                       const TransformComponent& beamPos) {
-        if (!beam.isActive() || beam.beamLength <= 0.0F) {
+        // Only deal damage during Loop phase (after startup animation)
+        if (!beam.isDamaging() || beam.beamLength <= 0.0F) {
             return;
         }
 
-        // Calculate beam rectangle (origin to origin + length)
-        float beamLeft = beamPos.x;
-        float beamRight = beamPos.x + beam.beamLength;
+        // Calculate beam rectangle (sprite is rendered centered on beamPos)
+        // Full sprite width = beamLength * 2 (beamLength is half-width)
+        float halfWidth = beam.beamLength;
+        float beamLeft = beamPos.x - halfWidth;
+        float beamRight = beamPos.x + halfWidth;
         float beamTop = beamPos.y - beam.beamWidth / 2.0F;
         float beamBottom = beamPos.y + beam.beamWidth / 2.0F;
 

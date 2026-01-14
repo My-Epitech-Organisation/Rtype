@@ -42,10 +42,13 @@ struct LaserBeamComponent {
     float damagePerSecond{50.0F};     ///< DPS while touching enemies
 
     // Geometry
-    float beamLength{0.0F};           ///< Current beam length
+    float beamLength{0.0F};           ///< Current beam length (0 or max)
     float maxBeamLength{307.0F};      ///< Maximum beam reach (matches sprite half-width)
     float beamWidth{50.0F};           ///< Beam width for collision (matches visual)
-    float extensionSpeed{400.0F};     ///< How fast beam extends (px/s)
+
+    // Startup delay - damage only after this time (matches client Startup animation)
+    // 7 frames * 0.08s = 0.56s
+    float startupDuration{0.56F};     ///< Time before damage is active
 
     // Animation
     float pulsePhase{0.0F};           ///< For pulsation visual effect
@@ -84,9 +87,17 @@ struct LaserBeamComponent {
         if (canFire()) {
             state = LaserBeamState::Active;
             activeTime = 0.0F;
-            beamLength = 0.0F;
+            beamLength = maxBeamLength;  // Instant full reach
             pulsePhase = 0.0F;
         }
+    }
+
+    /**
+     * @brief Check if laser is in damaging phase (after startup animation)
+     * @return true if damage should be applied
+     */
+    [[nodiscard]] bool isDamaging() const noexcept {
+        return isActive() && activeTime >= startupDuration;
     }
 
     /**
@@ -110,7 +121,7 @@ struct LaserBeamComponent {
     }
 
     /**
-     * @brief Update beam state (extend length, check duration)
+     * @brief Update beam state (check duration)
      * @param deltaTime Frame delta time
      * @return true if beam should be destroyed (max duration reached)
      */
@@ -118,14 +129,6 @@ struct LaserBeamComponent {
         if (state == LaserBeamState::Active) {
             activeTime += deltaTime;
             pulsePhase += pulseSpeed * deltaTime;
-
-            // Extend beam
-            if (beamLength < maxBeamLength) {
-                beamLength += extensionSpeed * deltaTime;
-                if (beamLength > maxBeamLength) {
-                    beamLength = maxBeamLength;
-                }
-            }
 
             // Check max duration
             if (activeTime >= maxDuration) {
