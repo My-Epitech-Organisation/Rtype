@@ -182,30 +182,24 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
         table, "gameplay", "friendlyFire", defaults.gameplay.friendlyFire);
 
     // Laser weapon configuration (nested under gameplay)
-    config.gameplay.laser.damagePerSecond =
-        static_cast<float>(_parser.getValue<double>(
-            table, "gameplay.laser", "damagePerSecond",
-            defaults.gameplay.laser.damagePerSecond));
-    config.gameplay.laser.startupDelay =
-        static_cast<float>(_parser.getValue<double>(
-            table, "gameplay.laser", "startupDelay",
-            defaults.gameplay.laser.startupDelay));
-    config.gameplay.laser.maxDuration =
-        static_cast<float>(_parser.getValue<double>(
-            table, "gameplay.laser", "maxDuration",
-            defaults.gameplay.laser.maxDuration));
-    config.gameplay.laser.cooldownDuration =
-        static_cast<float>(_parser.getValue<double>(
-            table, "gameplay.laser", "cooldownDuration",
-            defaults.gameplay.laser.cooldownDuration));
-    config.gameplay.laser.hitboxWidth =
-        static_cast<float>(_parser.getValue<double>(
-            table, "gameplay.laser", "hitboxWidth",
-            defaults.gameplay.laser.hitboxWidth));
-    config.gameplay.laser.hitboxHeight =
-        static_cast<float>(_parser.getValue<double>(
-            table, "gameplay.laser", "hitboxHeight",
-            defaults.gameplay.laser.hitboxHeight));
+    config.gameplay.laser.damagePerSecond = static_cast<float>(
+        _parser.getValue<double>(table, "gameplay.laser", "damagePerSecond",
+                                 defaults.gameplay.laser.damagePerSecond));
+    config.gameplay.laser.startupDelay = static_cast<float>(
+        _parser.getValue<double>(table, "gameplay.laser", "startupDelay",
+                                 defaults.gameplay.laser.startupDelay));
+    config.gameplay.laser.maxDuration = static_cast<float>(
+        _parser.getValue<double>(table, "gameplay.laser", "maxDuration",
+                                 defaults.gameplay.laser.maxDuration));
+    config.gameplay.laser.cooldownDuration = static_cast<float>(
+        _parser.getValue<double>(table, "gameplay.laser", "cooldownDuration",
+                                 defaults.gameplay.laser.cooldownDuration));
+    config.gameplay.laser.hitboxWidth = static_cast<float>(
+        _parser.getValue<double>(table, "gameplay.laser", "hitboxWidth",
+                                 defaults.gameplay.laser.hitboxWidth));
+    config.gameplay.laser.hitboxHeight = static_cast<float>(
+        _parser.getValue<double>(table, "gameplay.laser", "hitboxHeight",
+                                 defaults.gameplay.laser.hitboxHeight));
     config.gameplay.laser.offsetX = static_cast<float>(_parser.getValue<double>(
         table, "gameplay.laser", "offsetX", defaults.gameplay.laser.offsetX));
 
