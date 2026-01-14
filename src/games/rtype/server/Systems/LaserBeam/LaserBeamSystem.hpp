@@ -113,6 +113,37 @@ class LaserBeamSystem : public ::rtype::engine::ASystem {
      */
     void rebuildPlayerCache(ECS::Registry& registry);
 
+    // Static helpers for beam state management (ECS-pure pattern)
+    // These methods modify the component data directly, keeping
+    // LaserBeamComponent as a data-only struct.
+
+    /**
+     * @brief Start firing a laser beam (state transition)
+     * @param beam The beam component to modify
+     */
+    static void startFiringBeam(shared::LaserBeamComponent& beam);
+
+    /**
+     * @brief Stop firing a laser beam (player released)
+     * @param beam The beam component to modify
+     */
+    static void stopFiringBeam(shared::LaserBeamComponent& beam);
+
+    /**
+     * @brief Force stop a laser beam (max duration reached)
+     * @param beam The beam component to modify
+     */
+    static void forceStopBeam(shared::LaserBeamComponent& beam);
+
+    /**
+     * @brief Update beam state and timers
+     * @param beam The beam component to modify
+     * @param deltaTime Frame delta time
+     * @return true if beam reached max duration and should emit destroy event
+     */
+    static bool updateBeamState(shared::LaserBeamComponent& beam,
+                                float deltaTime);
+
     EventEmitter _emitEvent;
     game::config::LaserConfig _config;
 

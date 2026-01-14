@@ -70,59 +70,9 @@ struct LaserBeamComponent {
         return state == LaserBeamState::Cooldown;
     }
 
-    /**
-     * @brief Start firing the laser beam
-     */
-    void startFiring() noexcept {
-        if (canFire()) {
-            state = LaserBeamState::Active;
-            activeTime = 0.0F;
-            pulsePhase = 0.0F;
-        }
-    }
-
-    /**
-     * @brief Stop firing the laser beam (player released button)
-     */
-    void stopFiring() noexcept {
-        if (isActive()) {
-            state = LaserBeamState::Cooldown;
-            cooldownTime = cooldownDuration;
-        }
-    }
-
-    /**
-     * @brief Force stop due to max duration reached
-     */
-    void forceStop() noexcept {
-        state = LaserBeamState::Cooldown;
-        cooldownTime = cooldownDuration;
-    }
-
-    /**
-     * @brief Update beam state (check duration)
-     * @param deltaTime Frame delta time
-     * @return true if beam should be destroyed (max duration reached)
-     */
-    bool update(float deltaTime) noexcept {
-        if (state == LaserBeamState::Active) {
-            activeTime += deltaTime;
-            pulsePhase += pulseSpeed * deltaTime;
-
-            // Check max duration
-            if (activeTime >= maxDuration) {
-                forceStop();
-                return true;
-            }
-        } else if (state == LaserBeamState::Cooldown) {
-            cooldownTime -= deltaTime;
-            if (cooldownTime <= 0.0F) {
-                cooldownTime = 0.0F;
-                state = LaserBeamState::Inactive;
-            }
-        }
-        return false;
-    }
+    // Note: State mutation methods (startFiring, stopFiring, forceStop, update)
+    // have been moved to LaserBeamSystem for ECS purity.
+    // This component is now data-only with read-only accessors.
 
     /**
      * @brief Get cooldown progress (0.0 = just started, 1.0 = ready)

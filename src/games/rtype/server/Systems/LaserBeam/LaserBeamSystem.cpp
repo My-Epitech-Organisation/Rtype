@@ -83,7 +83,7 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
         // Check if beam can be fired again
         auto& beam = registry.getComponent<LaserBeamComponent>(existingBeam);
         if (beam.canFire()) {
-            beam.startFiring();
+            startFiringBeam(beam);
             // Emit spawn event
             if (registry.hasComponent<TransformComponent>(playerEntity)) {
                 const auto& pos =
@@ -123,7 +123,7 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
     beamComp.ownerNetworkId = playerNetworkId;
     beamComp.maxDuration = _config.maxDuration;
     beamComp.cooldownDuration = _config.cooldownDuration;
-    beamComp.startFiring();
+    startFiringBeam(beamComp);
     registry.emplaceComponent<LaserBeamComponent>(beamEntity, beamComp);
 
     // Add DamageOnContactComponent for collision-based damage (DPS mode)
@@ -160,7 +160,7 @@ void LaserBeamSystem::stopLaser(ECS::Registry& registry,
                   ECS::Entity /*entity*/, const LaserBeamTag&,
                   LaserBeamComponent& beam, const NetworkIdComponent& netId) {
         if (beam.ownerNetworkId == playerNetworkId && beam.isActive()) {
-            beam.stopFiring();
+            stopFiringBeam(beam);
             emitBeamDestroy(netId.networkId);
             LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                           "[LaserBeamSystem] Stopped laser beam networkId="
@@ -179,7 +179,7 @@ void LaserBeamSystem::updateActiveBeams(ECS::Registry& registry,
                   ECS::Entity entity, const LaserBeamTag&,
                   LaserBeamComponent& beam, const NetworkIdComponent& netId) {
         bool wasActive = beam.isActive();
-        bool forceStop = beam.update(deltaTime);
+        bool forceStop = updateBeamState(beam, deltaTime);
 
         // Synchronize activeTime with DamageOnContactComponent for startup
         // delay
@@ -237,6 +237,47 @@ void LaserBeamSystem::rebuildPlayerCache(ECS::Registry& registry) {
                      const NetworkIdComponent& netId) {
         _playerCache[netId.networkId] = entity;
     });
+}
+
+// Static helpers for beam state management (ECS-pure pattern)
+
+void LaserBeamSystem::startFiringBeam(LaserBeamComponent& beam) {
+    if (beam.canFire()) {
+        beam.state = LaserBeamState::Active;
+        beam.activeTime = 0.0F;
+        beam.pulsePhase = 0.0F;
+    }
+}
+
+void LaserBeamSystem::stopFiringBeam(LaserBeamComponent& beam) {
+    if (beam.isActive()) {
+        beam.state = LaserBeamState::Cooldown;
+        beam.cooldownTime = beam.cooldownDuration;
+    }
+}
+
+void LaserBeamSystem::forceStopBeam(LaserBeamComponent& beam) {
+    beam.state = LaserBeamState::Cooldown;
+    beam.cooldownTime = beam.cooldownDuration;
+}
+
+bool LaserBeamSystem::updateBeamState(LaserBeamComponent& beam, float deltaTime) {
+    if (beam.state == LaserBeamState::Active) {
+        beam.activeTime += deltaTime;
+        beam.pulsePhase += beam.pulseSpeed * deltaTime;
+
+        if (beam.activeTime >= beam.maxDuration) {
+            forceStopBeam(beam);
+            return true;
+        }
+    } else if (beam.state == LaserBeamState::Cooldown) {
+        beam.cooldownTime -= deltaTime;
+        if (beam.cooldownTime <= 0.0F) {
+            beam.cooldownTime = 0.0F;
+            beam.state = LaserBeamState::Inactive;
+        }
+    }
+    return false;
 }
 
 void LaserBeamSystem::emitBeamSpawn(uint32_t beamNetworkId, float x, float y,
