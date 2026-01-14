@@ -13,4 +13,4 @@ class BossAnimationSystem : public ::rtype::engine::ASystem {
 
 }  // namespace rtype::games::rtype::client
 
-#endif
+#endif  // SRC_GAMES_RTYPE_CLIENT_SYSTEMS_BOSSANIMATIONSYSTEM_HPP_

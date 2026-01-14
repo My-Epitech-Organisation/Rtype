@@ -113,4 +113,4 @@ struct BossVisualComponent {
 
 }  // namespace rtype::games::rtype::client
 
-#endif
+#endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_BOSSVISUALCOMPONENT_HPP_
