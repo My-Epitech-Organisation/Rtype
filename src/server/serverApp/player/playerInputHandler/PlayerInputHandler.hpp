@@ -96,7 +96,7 @@ class PlayerInputHandler {
      * @param inputMask Input bitmask
      * @param entity Player entity (if resolved)
      */
-    void handleInput(std::uint32_t userId, std::uint8_t inputMask,
+    void handleInput(std::uint32_t userId, std::uint16_t inputMask,
                      std::optional<ECS::Entity> entity);
 
     /**
@@ -136,7 +136,7 @@ class PlayerInputHandler {
     /**
      * @brief Process movement input
      */
-    void processMovement(ECS::Entity entity, std::uint8_t inputMask);
+    void processMovement(ECS::Entity entity, std::uint16_t inputMask);
 
     /**
      * @brief Process shoot input

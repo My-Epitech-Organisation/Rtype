@@ -40,7 +40,7 @@ class GameScene : public AScene {
     std::unique_ptr<IGameScene> _gameScene;
 
     /// @brief Last input mask sent to server (to avoid flooding)
-    std::uint8_t _lastInputMask = 0;
+    std::uint16_t _lastInputMask = 0;
 
     // Level Announcement
     std::vector<ECS::Entity> _announcementEntities;

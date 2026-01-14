@@ -74,7 +74,7 @@ class ServerNetworkSystem {
      * @param entity The client's player entity (if registered)
      */
     using InputHandler =
-        std::function<void(std::uint32_t userId, std::uint8_t inputMask,
+        std::function<void(std::uint32_t userId, std::uint16_t inputMask,
                            std::optional<ECS::Entity> entity)>;
 
     /**

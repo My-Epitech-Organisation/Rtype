@@ -144,7 +144,7 @@ class ClientNetworkSystem {
      *
      * @param inputMask Combined input flags
      */
-    void sendInput(std::uint8_t inputMask);
+    void sendInput(std::uint16_t inputMask);
 
     /**
      * @brief Get the local player's entity (if connected and spawned)

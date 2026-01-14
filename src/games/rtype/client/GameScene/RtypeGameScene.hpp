@@ -84,7 +84,7 @@ class RtypeGameScene : public AGameScene {
      * @brief Get current input mask for R-Type controls
      * @return Input mask
      */
-    [[nodiscard]] std::uint8_t getInputMask() const override;
+    [[nodiscard]] std::uint16_t getInputMask() const override;
 
     /**
      * @brief Set up the entity factory for R-Type entities

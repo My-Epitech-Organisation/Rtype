@@ -46,7 +46,7 @@ class AGameScene : public IGameScene {
     std::shared_ptr<rtype::client::ClientNetworkSystem> _networkSystem;
 
     /// @brief Last input mask sent to server (to avoid flooding)
-    std::uint8_t _lastInputMask = 0;
+    std::uint16_t _lastInputMask = 0;
 
    public:
     AGameScene(

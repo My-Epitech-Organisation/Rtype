@@ -226,19 +226,19 @@ void RtypeGameScene::update() {
         return;
     }
 
-    std::uint8_t inputMask = getInputMask();
+    std::uint16_t inputMask = getInputMask();
 
     if (_networkSystem && _networkSystem->isConnected()) {
         bool shouldSend = false;
 
-        constexpr std::uint8_t kMovementMask =
+        constexpr std::uint16_t kMovementMask =
             ::rtype::network::InputMask::kUp |
             ::rtype::network::InputMask::kDown |
             ::rtype::network::InputMask::kLeft |
             ::rtype::network::InputMask::kRight;
 
-        std::uint8_t currentMovement = inputMask & kMovementMask;
-        std::uint8_t lastMovement = _lastInputMask & kMovementMask;
+        std::uint16_t currentMovement = inputMask & kMovementMask;
+        std::uint16_t lastMovement = _lastInputMask & kMovementMask;
 
         if (currentMovement != lastMovement) {
             shouldSend = true;
@@ -385,8 +385,8 @@ void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
     }
 }
 
-std::uint8_t RtypeGameScene::getInputMask() const {
-    std::uint8_t mask = RtypeInputHandler::getInputMask(_keybinds);
+std::uint16_t RtypeGameScene::getInputMask() const {
+    std::uint16_t mask = RtypeInputHandler::getInputMask(_keybinds);
     if (_registry && _registry->hasSingleton<ChargeShotInputState>()) {
         auto& chargeState = _registry->getSingleton<ChargeShotInputState>();
         if (chargeState.isPressed && !chargeState.shouldFireShot) {

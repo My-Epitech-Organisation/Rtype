@@ -532,7 +532,7 @@ bool ServerApp::initialize() {
     });
 
     _networkSystem->setInputHandler([this](std::uint32_t userId,
-                                           std::uint8_t inputMask,
+                                           std::uint16_t inputMask,
                                            std::optional<ECS::Entity> entity) {
         _inputHandler->handleInput(userId, inputMask, entity);
     });

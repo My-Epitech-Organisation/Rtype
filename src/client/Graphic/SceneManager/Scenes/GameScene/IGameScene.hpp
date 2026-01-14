@@ -63,7 +63,7 @@ class IGameScene {
      *
      * @return Input mask representing current inputs
      */
-    virtual std::uint8_t getInputMask() const = 0;
+    virtual std::uint16_t getInputMask() const = 0;
 
     /**
      * @brief Set up the entity factory for network entity creation

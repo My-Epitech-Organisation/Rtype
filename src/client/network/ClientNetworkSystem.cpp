@@ -168,7 +168,7 @@ void ClientNetworkSystem::onHealthUpdate(
 
 void ClientNetworkSystem::update() { client_->poll(); }
 
-void ClientNetworkSystem::sendInput(std::uint8_t inputMask) {
+void ClientNetworkSystem::sendInput(std::uint16_t inputMask) {
     client_->sendInput(inputMask);
 }
 

@@ -27,11 +27,11 @@ std::unordered_map<unsigned int,
 std::unordered_map<unsigned int, std::unordered_set<unsigned int>>
     RtypeInputHandler::joystickButtons_;
 
-std::uint8_t RtypeInputHandler::getInputMask(
+std::uint16_t RtypeInputHandler::getInputMask(
     std::shared_ptr<KeyboardActions> keybinds) {
     ControllerRumble::update();
 
-    std::uint8_t inputMask = ::rtype::network::InputMask::kNone;
+    std::uint16_t inputMask = ::rtype::network::InputMask::kNone;
 
     InputMode mode = keybinds->getInputMode();
 

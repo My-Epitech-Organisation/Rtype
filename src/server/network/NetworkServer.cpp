@@ -410,7 +410,7 @@ void NetworkServer::onClientDisconnected(
 }
 
 void NetworkServer::onClientInput(
-    std::function<void(std::uint32_t userId, std::uint8_t input)> callback) {
+    std::function<void(std::uint32_t userId, std::uint16_t input)> callback) {
     onClientInputCallback_ = std::move(callback);
 }
 
@@ -849,7 +849,7 @@ void NetworkServer::handleInput(const network::Header& header,
                 payload);
 
         std::uint32_t userId = header.userId;
-        std::uint8_t inputMask = deserialized.inputMask;
+        std::uint16_t inputMask = deserialized.inputMask;
 
         auto client = findClientByUserId(userId);
         if (!client) {
