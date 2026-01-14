@@ -49,8 +49,7 @@ RtypeGameScene::RtypeGameScene(
                  std::move(networkClient), std::move(networkSystem)),
       _movementSystem(
           std::make_unique<::rtype::games::rtype::shared::MovementSystem>()),
-      _laserBeamAnimationSystem(
-          std::make_unique<LaserBeamAnimationSystem>()) {
+      _laserBeamAnimationSystem(std::make_unique<LaserBeamAnimationSystem>()) {
     if (_networkClient) {
         auto registry = _registry;
         auto switchToScene = _switchToScene;
