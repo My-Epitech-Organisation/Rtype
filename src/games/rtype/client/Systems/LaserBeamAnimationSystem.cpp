@@ -19,9 +19,10 @@ LaserBeamAnimationSystem::LaserBeamAnimationSystem()
     : ::rtype::engine::ASystem("LaserBeamAnimationSystem") {}
 
 void LaserBeamAnimationSystem::update(ECS::Registry& registry, float dt) {
-    registry.view<LaserBeamAnimationComponent, TextureRect, LaserBeamTag>().each(
-        [this, &registry, dt](auto entity, LaserBeamAnimationComponent& anim,
-                               TextureRect& tex, const LaserBeamTag&) {
+    registry.view<LaserBeamAnimationComponent, TextureRect, LaserBeamTag>()
+        .each([this, &registry, dt](auto entity,
+                                    LaserBeamAnimationComponent& anim,
+                                    TextureRect& tex, const LaserBeamTag&) {
             anim.elapsedTime += dt;
 
             if (anim.elapsedTime >= anim.frameDuration) {
@@ -34,8 +35,7 @@ void LaserBeamAnimationSystem::update(ECS::Registry& registry, float dt) {
 
                 if (shouldDestroy) {
                     // Mark entity for destruction
-                    if (!registry
-                             .hasComponent<shared::DestroyTag>(entity)) {
+                    if (!registry.hasComponent<shared::DestroyTag>(entity)) {
                         registry.emplaceComponent<shared::DestroyTag>(entity);
                     }
                 }
@@ -46,15 +46,15 @@ void LaserBeamAnimationSystem::update(ECS::Registry& registry, float dt) {
 bool LaserBeamAnimationSystem::advanceFrame(LaserBeamAnimationComponent& anim) {
     switch (anim.phase) {
         case LaserAnimPhase::Startup:
-            if (anim.currentFrame <
-                LaserBeamAnimationComponent::kStartupLast) {
+            if (anim.currentFrame < LaserBeamAnimationComponent::kStartupLast) {
                 anim.currentFrame++;
             } else {
                 // Transition to Loop phase
                 anim.phase = LaserAnimPhase::Loop;
                 anim.currentFrame = LaserBeamAnimationComponent::kLoopFirst;
-                LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                              "[LaserBeamAnimation] Transition: Startup -> Loop");
+                LOG_DEBUG_CAT(
+                    ::rtype::LogCategory::GameEngine,
+                    "[LaserBeamAnimation] Transition: Startup -> Loop");
             }
             break;
 
@@ -81,8 +81,9 @@ bool LaserBeamAnimationSystem::advanceFrame(LaserBeamAnimationComponent& anim) {
             } else {
                 // Animation complete, mark for destruction
                 anim.phase = LaserAnimPhase::Destroyed;
-                LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                              "[LaserBeamAnimation] Transition: End -> Destroyed");
+                LOG_DEBUG_CAT(
+                    ::rtype::LogCategory::GameEngine,
+                    "[LaserBeamAnimation] Transition: End -> Destroyed");
                 return true;
             }
             break;
