@@ -206,13 +206,13 @@ struct ServerConfig {
  * @brief Laser weapon configuration
  */
 struct LaserConfig {
-    float damagePerSecond = 50.0F;    ///< DPS damage
-    float startupDelay = 0.56F;       ///< Delay before damage activates (seconds)
-    float maxDuration = 3.0F;         ///< Maximum fire duration (seconds)
-    float cooldownDuration = 2.0F;    ///< Cooldown after release (seconds)
-    float hitboxWidth = 614.0F;       ///< Beam hitbox width (pixels)
-    float hitboxHeight = 50.0F;       ///< Beam hitbox height (pixels)
-    float offsetX = 340.0F;           ///< Offset from player position (pixels)
+    float damagePerSecond = 50.0F;  ///< DPS damage
+    float startupDelay = 0.56F;     ///< Delay before damage activates (seconds)
+    float maxDuration = 3.0F;       ///< Maximum fire duration (seconds)
+    float cooldownDuration = 2.0F;  ///< Cooldown after release (seconds)
+    float hitboxWidth = 614.0F;     ///< Beam hitbox width (pixels)
+    float hitboxHeight = 50.0F;     ///< Beam hitbox height (pixels)
+    float offsetX = 340.0F;         ///< Offset from player position (pixels)
 
     bool operator==(const LaserConfig&) const = default;
 };
