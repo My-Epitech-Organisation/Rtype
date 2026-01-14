@@ -503,6 +503,10 @@ void DataDrivenSpawnerSystem::spawnPowerUpFromConfig(
                 type = shared::PowerUpType::ForcePod;
                 duration = 0.0F;
                 magnitude = 1.0F;
+            } else if (powerupConfig.id == "laser_upgrade") {
+                type = shared::PowerUpType::LaserUpgrade;
+                duration = 0.0F;
+                magnitude = 1.0F;
             } else {
                 type = shared::PowerUpType::RapidFire;
             }
