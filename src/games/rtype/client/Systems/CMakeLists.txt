@@ -35,6 +35,8 @@ add_library(rtype_game_client_systems STATIC
     ForcePodVisualSystem.hpp
     EnemyHealthBarSystem.cpp
     EnemyHealthBarSystem.hpp
+    LaserBeamAnimationSystem.cpp
+    LaserBeamAnimationSystem.hpp
 )
 
 target_link_libraries(rtype_game_client_systems
