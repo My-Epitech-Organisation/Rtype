@@ -312,6 +312,12 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.textures.extraLife =
         "assets/" + _parser.getString(table, "Textures", "ExtraLife",
                                       defaults.assets.textures.extraLife);
+    config.assets.textures.laserUpgrade =
+        "assets/" + _parser.getString(table, "Textures", "LaserUpgrade",
+                                      defaults.assets.textures.laserUpgrade);
+    config.assets.textures.laserBeam =
+        "assets/" + _parser.getString(table, "Textures", "LaserBeam",
+                                      defaults.assets.textures.laserBeam);
 
     // Wall - Textures
     config.assets.textures.wallTexture.engrenage1 =
