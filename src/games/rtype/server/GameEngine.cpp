@@ -223,7 +223,8 @@ bool GameEngine::initialize() {
                                 {"ForcePodLaunch"});
     _systemScheduler->addSystem("LaserBeam",
                                 [this](ECS::Registry& reg) {
-                                    _laserBeamSystem->update(reg, _lastDeltaTime);
+                                    _laserBeamSystem->update(reg,
+                                                             _lastDeltaTime);
                                 },
                                 {"Movement"});
     _systemScheduler->addSystem("Collision",
