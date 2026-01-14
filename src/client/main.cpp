@@ -6,10 +6,10 @@
 */
 
 #include <exception>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
-#include <filesystem>
 
 #include <rtype/common.hpp>
 
@@ -132,25 +132,21 @@ auto main(int argc, char** argv) -> int {
         }
 
         std::vector<std::filesystem::path> dirs = {
-            "config",
-            "config/game",
-            "config/game/levels",
-            "config/client",
-            "saves",
-            "logs"
-        };
+            "config",        "config/game", "config/game/levels",
+            "config/client", "saves",       "logs"};
         for (auto const& d : dirs) {
             std::error_code ec;
             if (std::filesystem::exists(d)) {
                 LOG_DEBUG_CAT(rtype::LogCategory::Main,
-                                "[Main] Directory exists: " << d.string());
+                              "[Main] Directory exists: " << d.string());
             } else if (std::filesystem::create_directories(d, ec)) {
                 LOG_INFO_CAT(rtype::LogCategory::Main,
-                                "[Main] Created directory: " << d.string());
+                             "[Main] Created directory: " << d.string());
             } else {
                 LOG_WARNING_CAT(rtype::LogCategory::Main,
-                                "[Main] Failed to create directory: " << d.string()
-                                << " (" << ec.message() << ")");
+                                "[Main] Failed to create directory: "
+                                    << d.string() << " (" << ec.message()
+                                    << ")");
             }
         }
 
