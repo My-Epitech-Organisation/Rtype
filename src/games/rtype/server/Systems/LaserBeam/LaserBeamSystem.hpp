@@ -74,6 +74,38 @@ class LaserBeamSystem : public ::rtype::engine::ASystem {
     [[nodiscard]] bool hasActiveLaser(ECS::Registry& registry,
                                       uint32_t playerNetworkId) const;
 
+    // Static helpers for beam state management (ECS-pure pattern)
+    // These methods modify the component data directly, keeping
+    // LaserBeamComponent as a data-only struct.
+    // Public for unit testing and potential external use.
+
+    /**
+     * @brief Start firing a laser beam (state transition)
+     * @param beam The beam component to modify
+     */
+    static void startFiringBeam(shared::LaserBeamComponent& beam);
+
+    /**
+     * @brief Stop firing a laser beam (player released)
+     * @param beam The beam component to modify
+     */
+    static void stopFiringBeam(shared::LaserBeamComponent& beam);
+
+    /**
+     * @brief Force stop a laser beam (max duration reached)
+     * @param beam The beam component to modify
+     */
+    static void forceStopBeam(shared::LaserBeamComponent& beam);
+
+    /**
+     * @brief Update beam state and timers
+     * @param beam The beam component to modify
+     * @param deltaTime Frame delta time
+     * @return true if beam reached max duration and should emit destroy event
+     */
+    static bool updateBeamState(shared::LaserBeamComponent& beam,
+                                float deltaTime);
+
    private:
     /**
      * @brief Start firing laser for a player
@@ -113,49 +145,11 @@ class LaserBeamSystem : public ::rtype::engine::ASystem {
      */
     void rebuildPlayerCache(ECS::Registry& registry);
 
-    // Static helpers for beam state management (ECS-pure pattern)
-    // These methods modify the component data directly, keeping
-    // LaserBeamComponent as a data-only struct.
-
-    /**
-     * @brief Start firing a laser beam (state transition)
-     * @param beam The beam component to modify
-     */
-    static void startFiringBeam(shared::LaserBeamComponent& beam);
-
-    /**
-     * @brief Stop firing a laser beam (player released)
-     * @param beam The beam component to modify
-     */
-    static void stopFiringBeam(shared::LaserBeamComponent& beam);
-
-    /**
-     * @brief Force stop a laser beam (max duration reached)
-     * @param beam The beam component to modify
-     */
-    static void forceStopBeam(shared::LaserBeamComponent& beam);
-
-    /**
-     * @brief Update beam state and timers
-     * @param beam The beam component to modify
-     * @param deltaTime Frame delta time
-     * @return true if beam reached max duration and should emit destroy event
-     */
-    static bool updateBeamState(shared::LaserBeamComponent& beam,
-                                float deltaTime);
-
     EventEmitter _emitEvent;
     game::config::LaserConfig _config;
 
-    /// Cache NetworkId -> Player Entity for O(1) lookup in updateBeamPositions
     std::unordered_map<uint32_t, ECS::Entity> _playerCache;
 
-    /// Starting network ID for laser beams.
-    /// Uses a high range (200000+) to avoid collisions with:
-    /// - Players: 1-999
-    /// - Enemies: 1000-99999
-    /// - Projectiles: 100000-199999
-    /// - Force Pods: 150000-199999
     static constexpr uint32_t kLaserBeamNetworkIdStart = 200000;
 
     uint32_t _nextBeamNetworkId{kLaserBeamNetworkIdStart};
