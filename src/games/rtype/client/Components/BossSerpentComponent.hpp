@@ -5,7 +5,7 @@
 ** BossSerpentComponent.hpp - Client-side boss serpent visual state
 **
 ** Sprite sheets (each 677x369, 5 frames of 135x369):
-** - serpend_head.png: Head idle/movement animation
+** - serpent_head.png: Head idle/movement animation
 ** - serpent_attack.png: Head attack animation
 ** - serpent_body.png: Body segment animation
 ** - serpent_tail.png: Tail animation
