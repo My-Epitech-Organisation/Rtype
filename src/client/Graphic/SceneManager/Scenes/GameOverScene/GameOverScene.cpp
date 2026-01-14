@@ -109,7 +109,6 @@ void GameOverScene::_buildLayout() {
             rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
         this->_listEntity.push_back(bloodBottom);
 
-        // Left blood streak
         auto bloodLeft = EntityFactory::createRectangle(
             this->_registry,
             rtype::display::Vector2<int>{
@@ -153,9 +152,9 @@ void GameOverScene::_buildLayout() {
             this->_registry->getComponent<rtype::games::rtype::client::Text>(
                 title);
         if (isVictory) {
-            textComp.color = rtype::display::Color(50, 255, 50, 255);  // Green
+            textComp.color = rtype::display::Color::Green();
         } else {
-            textComp.color = rtype::display::Color(255, 50, 50, 255);  // Red
+            textComp.color = rtype::display::Color::Red();
         }
     }
 
