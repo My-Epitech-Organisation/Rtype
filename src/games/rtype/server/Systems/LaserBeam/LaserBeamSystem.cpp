@@ -261,7 +261,8 @@ void LaserBeamSystem::forceStopBeam(LaserBeamComponent& beam) {
     beam.cooldownTime = beam.cooldownDuration;
 }
 
-bool LaserBeamSystem::updateBeamState(LaserBeamComponent& beam, float deltaTime) {
+bool LaserBeamSystem::updateBeamState(LaserBeamComponent& beam,
+                                      float deltaTime) {
     if (beam.state == LaserBeamState::Active) {
         beam.activeTime += deltaTime;
         beam.pulsePhase += beam.pulseSpeed * deltaTime;

@@ -108,16 +108,16 @@ std::vector<ConfigError> RTypeGameConfig::validate() const {
                           "Startup delay must be non-negative"});
     }
     if (gameplay.laser.maxDuration <= 0.0F) {
-        errors.push_back({"gameplay.laser", "maxDuration",
-                          "Max duration must be positive"});
+        errors.push_back(
+            {"gameplay.laser", "maxDuration", "Max duration must be positive"});
     }
     if (gameplay.laser.cooldownDuration < 0.0F) {
         errors.push_back({"gameplay.laser", "cooldownDuration",
                           "Cooldown duration must be non-negative"});
     }
     if (gameplay.laser.hitboxWidth <= 0.0F) {
-        errors.push_back({"gameplay.laser", "hitboxWidth",
-                          "Hitbox width must be positive"});
+        errors.push_back(
+            {"gameplay.laser", "hitboxWidth", "Hitbox width must be positive"});
     }
     if (gameplay.laser.hitboxHeight <= 0.0F) {
         errors.push_back({"gameplay.laser", "hitboxHeight",
@@ -199,13 +199,15 @@ void RTypeGameConfig::applyDefaults() {
 
     // Laser weapon defaults
     if (gameplay.laser.damagePerSecond <= 0.0F)
-        gameplay.laser.damagePerSecond = defaults.gameplay.laser.damagePerSecond;
+        gameplay.laser.damagePerSecond =
+            defaults.gameplay.laser.damagePerSecond;
     if (gameplay.laser.startupDelay < 0.0F)
         gameplay.laser.startupDelay = defaults.gameplay.laser.startupDelay;
     if (gameplay.laser.maxDuration <= 0.0F)
         gameplay.laser.maxDuration = defaults.gameplay.laser.maxDuration;
     if (gameplay.laser.cooldownDuration < 0.0F)
-        gameplay.laser.cooldownDuration = defaults.gameplay.laser.cooldownDuration;
+        gameplay.laser.cooldownDuration =
+            defaults.gameplay.laser.cooldownDuration;
     if (gameplay.laser.hitboxWidth <= 0.0F)
         gameplay.laser.hitboxWidth = defaults.gameplay.laser.hitboxWidth;
     if (gameplay.laser.hitboxHeight <= 0.0F)
