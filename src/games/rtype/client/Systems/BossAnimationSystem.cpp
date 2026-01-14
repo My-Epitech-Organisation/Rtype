@@ -40,28 +40,29 @@ void BossAnimationSystem::update(ECS::Registry& registry, float dt) {
     static int entityCount = 0;
     static int callCount = 0;
     callCount++;
-    
+
     if (callCount == 1 || callCount == 60 || callCount == 120) {
         LOG_INFO_CAT(::rtype::LogCategory::ECS,
-            "[BossAnimSystem] update called, callCount=" << callCount);
+                     "[BossAnimSystem] update called, callCount=" << callCount);
     }
-    
+
     registry.view<BossVisualComponent, TransformComponent, TextureRect, Image>()
         .each([&registry, dt](auto entity, BossVisualComponent& visual,
                               TransformComponent& transform,
                               TextureRect& texRect, Image& image) {
             entityCount++;
-            
+
             if (!loggedOnce) {
-                LOG_INFO_CAT(::rtype::LogCategory::ECS,
-                    "[BossAnimSystem] Entity " << entity.id 
-                    << " - texture: " << visual.moveTexture 
-                    << ", frameCount: " << visual.frameCount 
-                    << ", enableRotation: " << visual.enableRotation
-                    << ", frameW: " << visual.frameWidth 
-                    << ", frameH: " << visual.frameHeight);
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::ECS,
+                    "[BossAnimSystem] Entity "
+                        << entity.id << " - texture: " << visual.moveTexture
+                        << ", frameCount: " << visual.frameCount
+                        << ", enableRotation: " << visual.enableRotation
+                        << ", frameW: " << visual.frameWidth
+                        << ", frameH: " << visual.frameHeight);
             }
-            
+
             visual.updateAnimation(dt);
 
             if (visual.enableRotation &&
@@ -112,10 +113,12 @@ void BossAnimationSystem::update(ECS::Registry& registry, float dt) {
             texRect.rect.width = w;
             texRect.rect.height = h;
         });
-    
+
     if (!loggedOnce && entityCount > 0) {
         LOG_INFO_CAT(::rtype::LogCategory::ECS,
-            "[BossAnimSystem] Processing " << entityCount << " entities with BossVisualComponent");
+                     "[BossAnimSystem] Processing "
+                         << entityCount
+                         << " entities with BossVisualComponent");
         loggedOnce = true;
     }
     entityCount = 0;

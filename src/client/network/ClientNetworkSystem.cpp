@@ -283,9 +283,9 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
         static int notFoundCount = 0;
         if (notFoundCount < 100) {
             LOG_DEBUG_CAT(rtype::LogCategory::Network,
-                "[ClientNetworkSystem] handleEntityMove: networkId="
-                    << event.entityId << " NOT FOUND in map (size="
-                    << networkIdToEntity_.size() << ")");
+                          "[ClientNetworkSystem] handleEntityMove: networkId="
+                              << event.entityId << " NOT FOUND in map (size="
+                              << networkIdToEntity_.size() << ")");
             notFoundCount++;
         }
         return;
@@ -322,19 +322,20 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
 
     if (registry_->hasComponent<Transform>(entity)) {
         auto& pos = registry_->getComponent<Transform>(entity);
-        
+
         // Debug log for boss part position updates
         static int bossPartLogCount = 0;
         if (bossPartLogCount < 60 &&
-            registry_->hasComponent<rtype::games::rtype::shared::WeakPointTag>(entity)) {
+            registry_->hasComponent<rtype::games::rtype::shared::WeakPointTag>(
+                entity)) {
             LOG_DEBUG_CAT(rtype::LogCategory::Network,
-                "[ClientNetworkSystem] BossPart move: netId=" << event.entityId
-                    << " entity=" << entity.id
-                    << " pos (" << pos.x << "," << pos.y << ") -> ("
-                    << event.x << "," << event.y << ")");
+                          "[ClientNetworkSystem] BossPart move: netId="
+                              << event.entityId << " entity=" << entity.id
+                              << " pos (" << pos.x << "," << pos.y << ") -> ("
+                              << event.x << "," << event.y << ")");
             bossPartLogCount++;
         }
-        
+
         pos.x = event.x;
         pos.y = event.y;
     }

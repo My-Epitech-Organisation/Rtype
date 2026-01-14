@@ -295,20 +295,25 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
         "assets/" + _parser.getString(table, "Textures", "BossSerpentTail",
                                       defaults.assets.textures.BossSerpentTail);
     config.assets.textures.BossScorpionBody =
-        "assets/" + _parser.getString(table, "Textures", "BossScorpionBody",
-                                      defaults.assets.textures.BossScorpionBody);
+        "assets/" +
+        _parser.getString(table, "Textures", "BossScorpionBody",
+                          defaults.assets.textures.BossScorpionBody);
     config.assets.textures.BossScorpionClaws =
-        "assets/" + _parser.getString(table, "Textures", "BossScorpionClaws",
-                                      defaults.assets.textures.BossScorpionClaws);
+        "assets/" +
+        _parser.getString(table, "Textures", "BossScorpionClaws",
+                          defaults.assets.textures.BossScorpionClaws);
     config.assets.textures.BossScorpionTail =
-        "assets/" + _parser.getString(table, "Textures", "BossScorpionTail",
-                                      defaults.assets.textures.BossScorpionTail);
+        "assets/" +
+        _parser.getString(table, "Textures", "BossScorpionTail",
+                          defaults.assets.textures.BossScorpionTail);
     config.assets.textures.BossScorpionStinger =
-        "assets/" + _parser.getString(table, "Textures", "BossScorpionStinger",
-                                      defaults.assets.textures.BossScorpionStinger);
+        "assets/" +
+        _parser.getString(table, "Textures", "BossScorpionStinger",
+                          defaults.assets.textures.BossScorpionStinger);
     config.assets.textures.BossScorpionCannon =
-        "assets/" + _parser.getString(table, "Textures", "BossScorpionCannon",
-                                      defaults.assets.textures.BossScorpionCannon);
+        "assets/" +
+        _parser.getString(table, "Textures", "BossScorpionCannon",
+                          defaults.assets.textures.BossScorpionCannon);
     config.assets.textures.missileLaser =
         "assets/" + _parser.getString(table, "Textures", "MissileLaser",
                                       defaults.assets.textures.missileLaser);

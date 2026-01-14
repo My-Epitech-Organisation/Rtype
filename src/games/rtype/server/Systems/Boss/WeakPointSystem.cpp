@@ -45,10 +45,10 @@ void WeakPointSystem::syncWeakPointPositions(ECS::Registry& registry) {
 
     static int logCount = 0;
     int entityCount = 0;
-    
-    view.each([&registry, &entityCount](ECS::Entity entity, WeakPointComponent& weakPoint,
-                          const WeakPointTag& /*tag*/,
-                          TransformComponent& transform) {
+
+    view.each([&registry, &entityCount](
+                  ECS::Entity entity, WeakPointComponent& weakPoint,
+                  const WeakPointTag& /*tag*/, TransformComponent& transform) {
         entityCount++;
         if (weakPoint.destroyed) {
             return;
@@ -84,19 +84,24 @@ void WeakPointSystem::syncWeakPointPositions(ECS::Registry& registry) {
             transform.rotation =
                 parentTransform.rotation + weakPoint.localRotation;
         }
-        
+
         if (logCount < 60 && weakPoint.segmentIndex < 0) {
             LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                "[WeakPointSystem] Entity " << entity.id 
-                << " segIdx=" << weakPoint.segmentIndex
-                << " parent=(" << parentTransform.x << "," << parentTransform.y << ")"
-                << " offset=(" << weakPoint.localOffsetX << "," << weakPoint.localOffsetY << ")"
-                << " pos: (" << oldX << "," << oldY << ") -> (" << transform.x << "," << transform.y << ")");
+                          "[WeakPointSystem] Entity "
+                              << entity.id
+                              << " segIdx=" << weakPoint.segmentIndex
+                              << " parent=(" << parentTransform.x << ","
+                              << parentTransform.y << ")"
+                              << " offset=(" << weakPoint.localOffsetX << ","
+                              << weakPoint.localOffsetY << ")"
+                              << " pos: (" << oldX << "," << oldY << ") -> ("
+                              << transform.x << "," << transform.y << ")");
         }
     });
-    
+
     if (logCount < 60) {
-        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+        LOG_DEBUG_CAT(
+            ::rtype::LogCategory::GameEngine,
             "[WeakPointSystem] Synced " << entityCount << " weak points");
         logCount++;
     }

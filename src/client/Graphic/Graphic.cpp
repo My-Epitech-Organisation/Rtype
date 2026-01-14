@@ -187,8 +187,8 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::client::AnimationSystem>();
     this->_bossSerpentAnimationSystem = std::make_unique<
         ::rtype::games::rtype::client::BossSerpentAnimationSystem>();
-    this->_bossAnimationSystem = std::make_unique<
-        ::rtype::games::rtype::client::BossAnimationSystem>();
+    this->_bossAnimationSystem =
+        std::make_unique<::rtype::games::rtype::client::BossAnimationSystem>();
     this->_chaserRotationSystem =
         std::make_unique<::rtype::games::rtype::client::ChaserRotationSystem>();
     this->_chaserExplosionSystem = std::make_unique<

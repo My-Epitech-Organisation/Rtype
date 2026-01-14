@@ -13,12 +13,7 @@ enum class BossVisualState : uint8_t {
     DIE = 3
 };
 
-enum class BossPartType : uint8_t {
-    HEAD = 0,
-    BODY = 1,
-    TAIL = 2,
-    CUSTOM = 3
-};
+enum class BossPartType : uint8_t { HEAD = 0, BODY = 1, TAIL = 2, CUSTOM = 3 };
 
 struct BossVisualComponent {
     std::string bossTypeId;
@@ -49,7 +44,8 @@ struct BossVisualComponent {
     bool isAttacking = false;
     bool isDying = false;
 
-    int32_t spriteOffsetX = 0;  // Offset to compensate for left padding in spritesheet
+    int32_t spriteOffsetX =
+        0;  // Offset to compensate for left padding in spritesheet
 
     int32_t segmentIndex = 0;
     std::string customPartId;

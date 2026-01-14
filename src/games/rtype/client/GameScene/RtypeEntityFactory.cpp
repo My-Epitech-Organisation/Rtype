@@ -769,20 +769,28 @@ void RtypeEntityFactory::setupBossEntity(
         health = bossConfig.health;
 
         if (!animConfig.headAnimation.moveSprite.textureName.empty()) {
-            visual.moveTexture = animConfig.headAnimation.moveSprite.textureName;
-            visual.idleTexture = animConfig.headAnimation.idleSprite.textureName;
-            visual.attackTexture = animConfig.headAnimation.attackSprite.textureName;
-            visual.deathTexture = animConfig.headAnimation.deathSprite.textureName;
+            visual.moveTexture =
+                animConfig.headAnimation.moveSprite.textureName;
+            visual.idleTexture =
+                animConfig.headAnimation.idleSprite.textureName;
+            visual.attackTexture =
+                animConfig.headAnimation.attackSprite.textureName;
+            visual.deathTexture =
+                animConfig.headAnimation.deathSprite.textureName;
             visual.frameWidth = animConfig.headAnimation.moveSprite.frameWidth;
-            visual.frameHeight = animConfig.headAnimation.moveSprite.frameHeight;
+            visual.frameHeight =
+                animConfig.headAnimation.moveSprite.frameHeight;
             visual.frameCount = animConfig.headAnimation.moveSprite.frameCount;
-            visual.frameDuration = animConfig.headAnimation.moveSprite.frameDuration;
+            visual.frameDuration =
+                animConfig.headAnimation.moveSprite.frameDuration;
             visual.loop = animConfig.headAnimation.moveSprite.loop;
-            visual.spriteOffsetX = animConfig.headAnimation.moveSprite.spriteOffsetX;
+            visual.spriteOffsetX =
+                animConfig.headAnimation.moveSprite.spriteOffsetX;
             visual.scaleX = animConfig.headAnimation.scaleX;
             visual.scaleY = animConfig.headAnimation.scaleY;
             visual.enableRotation = animConfig.headAnimation.enableRotation;
-            visual.rotationSmoothing = animConfig.headAnimation.rotationSmoothing;
+            visual.rotationSmoothing =
+                animConfig.headAnimation.rotationSmoothing;
             visual.rotationOffset = animConfig.headAnimation.rotationOffset;
         } else {
             visual.moveTexture = "boss_serpent_head";
@@ -815,15 +823,11 @@ void RtypeEntityFactory::setupBossEntity(
         std::pair<int, int>({visual.frameWidth, visual.frameHeight}));
     reg.emplaceComponent<Size>(entity, visual.scaleX, visual.scaleY);
     reg.emplaceComponent<BossVisualComponent>(entity, visual);
-
-    float scaledHitboxW = visual.frameWidth * std::abs(visual.scaleX);
-    float scaledHitboxH = visual.frameHeight * std::abs(visual.scaleY);
-
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, scaledHitboxW, scaledHitboxH);
+        entity, hitboxWidth, hitboxHeight);
     reg.emplaceComponent<BoxingComponent>(
         entity, ::rtype::display::Vector2f{0.0F, 0.0F},
-        ::rtype::display::Vector2f{scaledHitboxW, scaledHitboxH});
+        ::rtype::display::Vector2f{hitboxWidth, hitboxHeight});
     reg.getComponent<BoxingComponent>(entity).outlineColor =
         ::rtype::display::Color{255, 100, 50, 200};
     reg.getComponent<BoxingComponent>(entity).fillColor =
@@ -846,16 +850,18 @@ void RtypeEntityFactory::setupBossEntity(
 void RtypeEntityFactory::setupBossPartEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> /*assetsManager*/,
     ECS::Entity entity, uint8_t segmentIndex) {
-    // Decode segmentIndex: values >= 100 are negative indices (100 + abs(index))
-    // Used for fixed-position boss parts (scorpion) vs chained segments (serpent)
+    // Decode segmentIndex: values >= 100 are negative indices (100 +
+    // abs(index)) Used for fixed-position boss parts (scorpion) vs chained
+    // segments (serpent)
     int32_t decodedSegmentIndex = static_cast<int32_t>(segmentIndex);
     if (segmentIndex >= 100) {
         decodedSegmentIndex = -(static_cast<int32_t>(segmentIndex) - 100);
     }
-    
+
     LOG_INFO_CAT(::rtype::LogCategory::ECS,
                  "[RtypeEntityFactory] Creating Boss Part entity segmentIndex="
-                     << static_cast<int>(segmentIndex) << " (decoded=" << decodedSegmentIndex << ")");
+                     << static_cast<int>(segmentIndex)
+                     << " (decoded=" << decodedSegmentIndex << ")");
 
     BossVisualComponent visual;
     visual.state = BossVisualState::MOVE;
@@ -863,7 +869,7 @@ void RtypeEntityFactory::setupBossPartEntity(
 
     auto& configRegistry = shared::EntityConfigRegistry::getInstance();
     bool foundConfig = false;
-    
+
     // Hitbox from TOML config (fallback to calculated)
     float configHitboxW = 0.0F;
     float configHitboxH = 0.0F;
@@ -894,7 +900,7 @@ void RtypeEntityFactory::setupBossPartEntity(
                     visual.enableRotation = partAnim.enableRotation;
                     visual.rotationSmoothing = partAnim.rotationSmoothing;
                     visual.rotationOffset = partAnim.rotationOffset;
-                    
+
                     // Get hitbox from config
                     configHitboxW = wpConfig.hitboxWidth;
                     configHitboxH = wpConfig.hitboxHeight;
@@ -941,8 +947,8 @@ void RtypeEntityFactory::setupBossPartEntity(
                      "[RtypeEntityFactory] Config found for segmentIndex="
                          << decodedSegmentIndex
                          << " texture=" << visual.moveTexture
-                         << " frameCount=" << visual.frameCount
-                         << " hitbox=(" << configHitboxW << "x" << configHitboxH << ")"
+                         << " frameCount=" << visual.frameCount << " hitbox=("
+                         << configHitboxW << "x" << configHitboxH << ")"
                          << " rotation=" << visual.enableRotation);
     }
 
@@ -971,18 +977,25 @@ void RtypeEntityFactory::setupBossPartEntity(
     reg.getComponent<BoxingComponent>(entity).fillColor =
         ::rtype::display::Color{200, 150, 100, 40};
 
-    reg.emplaceComponent<shared::HealthComponent>(entity, configHealth, configHealth);
+    reg.emplaceComponent<shared::HealthComponent>(entity, configHealth,
+                                                  configHealth);
     reg.emplaceComponent<ZIndex>(entity, 4);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<shared::WeakPointTag>(entity);
 
+    // Add rotation component: dynamic if enableRotation, or static if
+    // rotationOffset is set
     if (visual.enableRotation) {
-        reg.emplaceComponent<Rotation>(entity, 0.0F);
+        reg.emplaceComponent<Rotation>(entity, visual.rotationOffset);
+    } else if (std::abs(visual.rotationOffset) > 0.01F) {
+        // Static rotation only (no dynamic updates)
+        reg.emplaceComponent<Rotation>(entity, visual.rotationOffset);
     }
 
     LOG_INFO_CAT(::rtype::LogCategory::ECS,
                  "[RtypeEntityFactory] Boss segment created (segmentIndex="
-                     << decodedSegmentIndex << " hitbox=" << hitboxW << "x" << hitboxH << ")");
+                     << decodedSegmentIndex << " hitbox=" << hitboxW << "x"
+                     << hitboxH << ")");
 }
 
 }  // namespace rtype::games::rtype::client

@@ -120,8 +120,7 @@ BossAnimationConfig parseAnimationConfig(const toml::table* animTbl) {
     if (auto* moveTbl = (*animTbl)["movement"].as_table()) {
         animConfig.movement.amplitude =
             (*moveTbl)["amplitude"].value_or(150.0F);
-        animConfig.movement.frequency =
-            (*moveTbl)["frequency"].value_or(0.5F);
+        animConfig.movement.frequency = (*moveTbl)["frequency"].value_or(0.5F);
         animConfig.movement.horizontalAmplitude =
             (*moveTbl)["horizontal_amplitude"].value_or(100.0F);
         animConfig.movement.verticalAmplitude =
