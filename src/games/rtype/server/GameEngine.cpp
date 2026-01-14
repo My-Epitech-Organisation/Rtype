@@ -165,7 +165,8 @@ bool GameEngine::initialize() {
     _forcePodLaunchSystem = std::make_unique<ForcePodLaunchSystem>();
     _forcePodShootingSystem = std::make_unique<ForcePodShootingSystem>(
         _projectileSpawnerSystem.get());
-    _laserBeamSystem = std::make_unique<LaserBeamSystem>(eventEmitter);
+    _laserBeamSystem =
+        std::make_unique<LaserBeamSystem>(eventEmitter, _laserConfig);
 
     _forcePodAttachmentSystem->setLaunchSystem(_forcePodLaunchSystem.get());
 
