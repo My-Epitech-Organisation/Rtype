@@ -236,30 +236,26 @@ void ServerNetworkSystem::updateEntityPosition(std::uint32_t networkId, float x,
                                                float y, float vx, float vy) {
     auto it = networkedEntities_.find(networkId);
     if (it == networkedEntities_.end()) {
-        // Debug: entity not found
-        static int notFoundCount = 0;
-        if (notFoundCount < 50) {
+        if (debugNotFoundLogCount_ < 50) {
             LOG_DEBUG_CAT(::rtype::LogCategory::Network,
                           "[ServerNetwork] updateEntityPosition: networkId="
                               << networkId
                               << " NOT FOUND in networkedEntities_ (size="
                               << networkedEntities_.size() << ")");
-            notFoundCount++;
+            debugNotFoundLogCount_++;
         }
         return;
     }
 
-    // Debug log for BossPart position updates
-    static int bossPartUpdateCount = 0;
     if ((it->second.type == EntityType::BossPart ||
          it->second.type == EntityType::Boss) &&
-        bossPartUpdateCount < 30) {
+        debugBossPartUpdateLogCount_ < 30) {
         LOG_DEBUG_CAT(::rtype::LogCategory::Network,
                       "[ServerNetwork] BossPart/Boss update: networkId="
                           << networkId << " pos=(" << x << "," << y << ")"
                           << " oldPos=(" << it->second.lastX << ","
                           << it->second.lastY << ")");
-        bossPartUpdateCount++;
+        debugBossPartUpdateLogCount_++;
     }
 
     it->second.lastX = x;
@@ -497,6 +493,9 @@ void ServerNetworkSystem::resetState() {
 
     lowBandwidthClientCount_.store(0, std::memory_order_release);
     lowBandwidthModeActive_.store(false, std::memory_order_release);
+
+    debugNotFoundLogCount_ = 0;
+    debugBossPartUpdateLogCount_ = 0;
 }
 
 void ServerNetworkSystem::update() {
