@@ -9,6 +9,7 @@
 #include "AdminServer.hpp"
 
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 
@@ -16,6 +17,7 @@
 #include <rtype/common.hpp>
 
 #include "httplib.h"
+#include "main.hpp"
 #include "server/lobby/Lobby.hpp"
 #include "server/lobby/LobbyManager.hpp"
 #include "server/serverApp/ServerApp.hpp"
@@ -33,6 +35,18 @@ AdminServer::AdminServer(const Config& config, ServerApp* serverApp,
       _lobbyManager(lobbyManager),
       _httpServer(nullptr) {
     generateCredentials();
+    static std::function<std::string(size_t)> makeToken = [](size_t length) {
+        static const char alpha[] =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        static thread_local std::random_device rd;
+        static thread_local std::mt19937 rng(rd());
+        std::uniform_int_distribution<size_t> dist(0, std::strlen(alpha) - 1);
+        std::string out;
+        out.reserve(length);
+        for (size_t i = 0; i < length; ++i) out.push_back(alpha[dist(rng)]);
+        return out;
+    };
+    _config.sessionToken = makeToken(24);
 }
 
 AdminServer::~AdminServer() {
@@ -262,9 +276,7 @@ bool authenticateRequest(const AdminServer::Config& config, const Request& req,
                      remote_addr.find("127.0.0.1") != std::string::npos ||
                      remote_addr.find("::1") != std::string::npos;
 
-    if (config.localhostOnly) {
-        return true;
-    }
+    (void)localhost;
 
     if (!config.token.empty()) {
         const auto& auth = req.get_header_value("Authorization");
@@ -272,8 +284,9 @@ bool authenticateRequest(const AdminServer::Config& config, const Request& req,
     }
 
     const auto cookie = req.get_header_value("Cookie");
-    if (!cookie.empty()) {
-        if (cookie.find("admin_auth=1") != std::string::npos) return true;
+    if (!cookie.empty() && !config.sessionToken.empty()) {
+        std::string key = std::string("admin_auth=") + config.sessionToken;
+        if (cookie.find(key) != std::string::npos) return true;
     }
 
     const auto auth = req.get_header_value("Authorization");
@@ -536,12 +549,45 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
             res.status = 500;
             return;
         }
+
+        bool force = false;
+        try {
+            if (req.has_param("force") && req.get_param_value("force") == "1") {
+                force = true;
+            }
+        } catch (...) {
+        }
+
+        auto lobbies = _lobbyManager->getAllLobbies();
+        if (lobbies.size() == 1 && lobbies[0] &&
+            lobbies[0]->getCode() == lobbyCode && !force) {
+            res.set_content(
+                R"({"success":false,"error":"Cannot delete the last instance without force; this will shutdown the server"})",
+                "application/json");
+            res.status = 409;  // Conflict
+            return;
+        }
+
+        if (lobbies.size() == 1 && lobbies[0] &&
+            lobbies[0]->getCode() == lobbyCode && force) {
+            LOG_INFO_CAT(::rtype::LogCategory::Network,
+                         "[AdminServer] Forced delete of last lobby requested; "
+                         "initiating graceful shutdown (lobby preserved)");
+            ServerSignals::shutdown()->store(true);
+            res.set_content(
+                R"({"success":true,"message":"Shutdown requested; last lobby preserved"})",
+                "application/json");
+            res.status = 200;
+            return;
+        }
+
         LOG_INFO(
             std::string("[AdminServer] Lobby delete requested for code: [") +
-            lobbyCode + "]");
+                lobbyCode + "] (force="
+            << (force ? "1" : "0") << ")");
         bool deleted = _lobbyManager->deleteLobby(lobbyCode);
         if (deleted) {
-            res.set_content(R"({\"success\":true})", "application/json");
+            res.set_content(R"({"success":true})", "application/json");
             res.status = 200;
         } else {
             res.set_content(
@@ -583,6 +629,56 @@ void AdminServer::registerMetricsRoutes(void* serverPtr) {
         }
         res.set_content(R"({"success":true})", "application/json");
         res.status = 200;
+    });
+
+    server->Post("/api/shutdown", [this](const Request& req, Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+        ServerSignals::shutdown()->store(true);
+        res.set_content(R"({"success":true,"message":"Shutdown requested"})",
+                        "application/json");
+        res.status = 200;
+    });
+
+    server->Post("/api/clear_shutdown", [this](const Request& req,
+                                               Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+        bool removed = false;
+        try {
+            std::error_code ec;
+            removed =
+                std::filesystem::remove("saves/admin_shutdown.request", ec);
+            if (ec) {
+                res.set_content(
+                    R"({"success":false,"error":"Failed to remove sentinel"})",
+                    "application/json");
+                res.status = 500;
+                return;
+            }
+        } catch (...) {
+            res.set_content(R"({"success":false,"error":"Internal error"})",
+                            "application/json");
+            res.status = 500;
+            return;
+        }
+        if (removed) {
+            res.set_content(
+                R"({"success":true,"message":"Shutdown sentinel cleared"})",
+                "application/json");
+            res.status = 200;
+        } else {
+            res.set_content(
+                R"({"success":false,"error":"Sentinel not present"})",
+                "application/json");
+            res.status = 404;
+        }
     });
 }
 
@@ -721,7 +817,7 @@ void AdminServer::registerAdminPageRoutes(void* serverPtr) {
 <body>
   <div class="login">
     <h1>Admin Login</h1>
-);
+)";
         if (!errorMsg.empty()) {
             s << "    <div class=\"msg\">" << errorMsg << "</div>\n";
         }
@@ -774,7 +870,9 @@ void AdminServer::registerAdminPageRoutes(void* serverPtr) {
             "[AdminServer] Login attempt for user='" << itU->second << "'");
 
         if (itU->second == _adminUser && itP->second == _adminPass) {
-            res.set_header("Set-Cookie", "admin_auth=1; HttpOnly; Path=/");
+            std::string cookie = std::string("admin_auth=") +
+                                 _config.sessionToken + "; HttpOnly; Path=/";
+            res.set_header("Set-Cookie", cookie);
             res.status = 302;
             res.set_header("Location", "/admin");
             LOG_INFO_CAT(::rtype::LogCategory::Network,

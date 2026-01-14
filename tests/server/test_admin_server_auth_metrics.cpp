@@ -21,7 +21,8 @@ TEST(AdminServerAuthMetrics, Auth_Unauthorized_NoToken_Returns401) {
 
     auto res = cli.Get("/api/lobbies");
     ASSERT_NE(res, nullptr);
-    EXPECT_EQ(res->status, 200);
+    // Without credentials, even localhost requests should be unauthorized
+    EXPECT_EQ(res->status, 401);
 
     server.stop();
     EXPECT_FALSE(server.isRunning());

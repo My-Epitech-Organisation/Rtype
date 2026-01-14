@@ -169,12 +169,25 @@
             <strong>⚔️ R-Type Server Admin</strong>
         </span>
         <div class="navbar-text ms-auto">
-            <small class="text-muted">Server Status: <span class="badge" :class="serverOnline ? 'badge-online' : 'badge-offline'">{{ serverOnline ? 'ONLINE' : 'OFFLINE' }}</span></small>
+            <small class="text-muted me-3">Server Status: <span class="badge" :class="serverOnline ? 'badge-online' : 'badge-offline'">{{ serverOnline ? 'ONLINE' : 'OFFLINE' }}</span></small>
+            <button class="btn btn-sm btn-outline-light" @click="requestShutdown">Shutdown server</button>
         </div>
     </div>
 </nav>
 
 <div class="container-fluid p-4">
+        <!-- Delete confirmation modal for deleting the last lobby instance -->
+        <div v-if="showDeleteModal" class="modal-overlay" style="position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;">
+            <div class="modal-box" style="background:var(--secondary-color);padding:20px;border-radius:8px;max-width:520px;color:#fff;">
+                <h5>Delete last instance</h5>
+                <p>Deleting the last instance will stop the lobby manager and effectively shut down game services. Are you sure you want to continue?</p>
+                <div class="text-end">
+                    <button class="btn btn-secondary me-2" @click="cancelDeleteLast">Cancel</button>
+                    <button class="btn btn-danger" @click="confirmDeleteLast">Delete</button>
+                </div>
+            </div>
+        </div>
+
     <div v-if="loading" class="loading">
         <div class="spinner"></div>
         <p class="mt-3">Loading dashboard...</p>
@@ -582,7 +595,9 @@ createApp({
             changeLevelData: {
                 lobbyCode: '',
                 levelId: ''
-            }
+            },
+            pendingDeleteCode: null,
+            showDeleteModal: false
         };
     },
     methods: {
@@ -718,16 +733,60 @@ createApp({
             }
         },
         async deleteLobby(code) {
+            // If deleting the last instance, require explicit confirmation and force
+            if (this.lobbies.length === 1) {
+                // Show a modal explaining that deleting the last instance will shutdown the lobby manager
+                this.pendingDeleteCode = code;
+                this.showDeleteModal = true;
+                return;
+            }
+
             if (!confirm(`Delete lobby ${code}?`)) return;
             try {
                 const res = await fetch(`/api/lobby/${code}/delete`, {method: 'POST'});
                 if (res.ok) {
                     await this.fetchLobbies();
                 } else {
-                    alert('Failed to delete lobby');
+                    const text = await res.text();
+                    alert('Failed to delete lobby: ' + text);
                 }
             } catch (e) {
                 alert('Failed to delete lobby: ' + e.message);
+            }
+        },
+        async confirmDeleteLast() {
+            const code = this.pendingDeleteCode;
+            this.showDeleteModal = false;
+            this.pendingDeleteCode = null;
+            try {
+                const res = await fetch(`/api/lobby/${code}/delete?force=1`, {method: 'POST'});
+                if (res.ok) {
+                    await this.fetchLobbies();
+                    alert('Lobby deleted');
+                } else {
+                    const text = await res.text();
+                    alert('Failed to delete lobby: ' + text);
+                }
+            } catch (e) {
+                alert('Failed to delete lobby: ' + e.message);
+            }
+        },
+        cancelDeleteLast() {
+            this.showDeleteModal = false;
+            this.pendingDeleteCode = null;
+        },
+        async requestShutdown() {
+            if (!confirm('Request server shutdown?')) return;
+            try {
+                const res = await fetch('/api/shutdown', {method: 'POST'});
+                if (res.ok) {
+                    alert('Shutdown requested');
+                } else {
+                    const text = await res.text();
+                    alert('Failed to request shutdown: ' + text);
+                }
+            } catch (e) {
+                alert('Failed to request shutdown: ' + e.message);
             }
         },
         async kickPlayer(id) {

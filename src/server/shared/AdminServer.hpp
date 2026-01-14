@@ -38,6 +38,7 @@ class AdminServer {
         bool enabled{true};
         std::string token;
         bool localhostOnly{true};
+        std::string sessionToken;
     };
 
     /**
@@ -100,6 +101,7 @@ class AdminServer {
     // Test helpers - expose generated credentials for tests
     std::string getAdminUserForTests() const { return _adminUser; }
     std::string getAdminPassForTests() const { return _adminPass; }
+    std::string getSessionTokenForTests() const { return _config.sessionToken; }
 };
 
 // Exposed for tests: URL-decode helper used by the login form parser
