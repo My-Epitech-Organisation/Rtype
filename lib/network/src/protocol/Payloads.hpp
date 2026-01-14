@@ -34,7 +34,9 @@ enum class EntityType : std::uint8_t {
     Missile = 2,   ///< Projectile
     Pickup = 3,    ///< Collectible / power-up
     Obstacle = 4,  ///< Static or moving obstacle
-    ForcePod = 5   ///< Force Pod companion
+    ForcePod = 5,  ///< Force Pod companion
+    Boss = 6,      ///< Boss entity
+    BossPart = 7   ///< Boss weak point / body part
 };
 
 /**
