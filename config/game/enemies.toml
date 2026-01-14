@@ -138,8 +138,228 @@ can_shoot = true
 fire_rate = 0.3
 projectile_type = "heavy_bullet"
 
+# =============================================================================
+# BOSS DEFINITIONS
+# =============================================================================
+
 # -----------------------------------------------------------------------------
-# Boss - Level 1 Boss
+# Boss Serpent - Level 1 Boss (3 Phases)
+# A serpentine boss with a destructible head weak point.
+# Phase 1 (Normal): Spread fan attacks, moderate speed
+# Phase 2 (Fast): Circular shots + faster movement at 50% HP
+# Phase 3 (Desperate): Laser sweeps + minion spawns at 25% HP
+# -----------------------------------------------------------------------------
+[[enemy]]
+id = "boss_serpent"
+name = "Serpent Guardian"
+sprite_sheet = "assets/sprites/enemies/boss_serpent.png"
+
+health = 3000
+damage = 50
+score_value = 10000
+
+behavior = "patrol"
+speed = 80.0
+
+# Small hitbox - the visible parts are the weak points
+hitbox_width = 32.0
+hitbox_height = 32.0
+
+can_shoot = false
+fire_rate = 0.0
+
+is_boss = true
+boss_type = "serpent"
+level_complete_trigger = true
+phase_transition_duration = 1.5
+invulnerability_duration = 1.0
+
+[[enemy.phase]]
+health_threshold = 1.0
+name = "Normal"
+primary_pattern = "spread_fan"
+speed_multiplier = 1.0
+attack_speed_multiplier = 1.0
+damage_multiplier = 1.0
+color = [255, 255, 255]
+
+[[enemy.phase]]
+health_threshold = 0.5
+name = "Enraged"
+primary_pattern = "circular_shot"
+secondary_pattern = "spread_fan"
+speed_multiplier = 1.5
+attack_speed_multiplier = 1.3
+damage_multiplier = 1.2
+color = [255, 200, 100]
+
+[[enemy.phase]]
+health_threshold = 0.25
+name = "Desperate"
+primary_pattern = "laser_sweep"
+secondary_pattern = "minion_spawn"
+speed_multiplier = 2.0
+attack_speed_multiplier = 1.5
+damage_multiplier = 1.5
+color = [255, 100, 100]
+
+# Serpent body segments - arranged in a snake-like chain from head to tail
+# The boss hitbox is 192x128, positioned at center. Segments extend left (negative X)
+[[enemy.weak_point]]
+id = "serpent_head"
+type = "head"
+offset_x = 0.0
+offset_y = 0.0
+health = 500
+hitbox_width = 64.0
+hitbox_height = 64.0
+bonus_score = 2000
+damage_to_parent = 500
+critical = true
+
+[[enemy.weak_point]]
+id = "serpent_body_1"
+type = "core"
+offset_x = -80.0
+offset_y = 15.0
+health = 400
+hitbox_width = 52.0
+hitbox_height = 52.0
+bonus_score = 500
+damage_to_parent = 100
+
+[[enemy.weak_point]]
+id = "serpent_body_2"
+type = "core"
+offset_x = -155.0
+offset_y = -10.0
+health = 400
+hitbox_width = 48.0
+hitbox_height = 48.0
+bonus_score = 500
+damage_to_parent = 100
+
+[[enemy.weak_point]]
+id = "serpent_body_3"
+type = "core"
+offset_x = -225.0
+offset_y = 20.0
+health = 400
+hitbox_width = 44.0
+hitbox_height = 44.0
+bonus_score = 500
+damage_to_parent = 100
+
+[[enemy.weak_point]]
+id = "serpent_tail"
+type = "tail"
+offset_x = -290.0
+offset_y = 5.0
+health = 300
+hitbox_width = 40.0
+hitbox_height = 56.0
+bonus_score = 1000
+damage_to_parent = 200
+disables_attack = "tail_sweep"
+
+# -----------------------------------------------------------------------------
+# Boss Scorpion - Level 2 Boss (Multi-segment tail)
+# A scorpion boss with destructible tail segments.
+# Tail segments can be destroyed to disable laser attacks.
+# Core phase triggers when tail is destroyed.
+# -----------------------------------------------------------------------------
+[[enemy]]
+id = "boss_scorpion"
+name = "Scorpion Overlord"
+sprite_sheet = "assets/sprites/enemies/boss_scorpion.png"
+
+health = 4000
+damage = 60
+score_value = 15000
+
+behavior = "patrol"
+speed = 60.0
+
+hitbox_width = 256.0
+hitbox_height = 160.0
+
+can_shoot = false
+fire_rate = 0.0
+
+is_boss = true
+boss_type = "scorpion"
+level_complete_trigger = true
+phase_transition_duration = 2.0
+invulnerability_duration = 1.5
+
+[[enemy.phase]]
+health_threshold = 1.0
+name = "Armored"
+primary_pattern = "spread_fan"
+secondary_pattern = "tail_sweep"
+speed_multiplier = 1.0
+attack_speed_multiplier = 1.0
+damage_multiplier = 1.0
+color = [255, 255, 255]
+
+[[enemy.phase]]
+health_threshold = 0.6
+name = "Aggressive"
+primary_pattern = "laser_sweep"
+secondary_pattern = "circular_shot"
+speed_multiplier = 1.3
+attack_speed_multiplier = 1.2
+damage_multiplier = 1.3
+color = [255, 180, 50]
+
+[[enemy.phase]]
+health_threshold = 0.3
+name = "Berserk"
+primary_pattern = "minion_spawn"
+secondary_pattern = "circular_shot"
+speed_multiplier = 1.8
+attack_speed_multiplier = 1.8
+damage_multiplier = 1.5
+color = [255, 50, 50]
+
+[[enemy.weak_point]]
+id = "scorpion_tail_1"
+type = "tail"
+offset_x = -100.0
+offset_y = -30.0
+health = 400
+hitbox_width = 40.0
+hitbox_height = 40.0
+bonus_score = 1000
+damage_to_parent = 200
+disables_attack = "tail_sweep"
+
+[[enemy.weak_point]]
+id = "scorpion_tail_2"
+type = "tail"
+offset_x = -150.0
+offset_y = -50.0
+health = 400
+hitbox_width = 40.0
+hitbox_height = 40.0
+bonus_score = 1000
+damage_to_parent = 200
+
+[[enemy.weak_point]]
+id = "scorpion_cannon"
+type = "cannon"
+offset_x = -60.0
+offset_y = 40.0
+health = 600
+hitbox_width = 48.0
+hitbox_height = 48.0
+bonus_score = 1500
+damage_to_parent = 300
+disables_attack = "laser_sweep"
+critical = true
+
+# -----------------------------------------------------------------------------
+# Boss - Legacy Level 1 Boss (kept for compatibility)
 # -----------------------------------------------------------------------------
 [[enemy]]
 id = "boss_1"
@@ -149,7 +369,6 @@ sprite_sheet = "assets/sprites/enemies/boss_1.png"
 health = 2000
 damage = 50
 score_value = 5000
-
 
 behavior = "patrol"
 speed = 60.0
