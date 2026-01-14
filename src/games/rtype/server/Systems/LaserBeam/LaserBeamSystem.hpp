@@ -8,13 +8,12 @@
 #pragma once
 
 #include <functional>
-#include <unordered_set>
 
 #include <rtype/ecs.hpp>
 #include <rtype/engine.hpp>
 
 #include "../../../shared/Components/BoundingBoxComponent.hpp"
-#include "../../../shared/Components/HealthComponent.hpp"
+#include "../../../shared/Components/DamageOnContactComponent.hpp"
 #include "../../../shared/Components/LaserBeamComponent.hpp"
 #include "../../../shared/Components/NetworkIdComponent.hpp"
 #include "../../../shared/Components/Tags.hpp"
@@ -93,17 +92,6 @@ class LaserBeamSystem : public ::rtype::engine::ASystem {
     void updateBeamPositions(ECS::Registry& registry);
 
     /**
-     * @brief Perform collision detection for laser beams
-     */
-    void performBeamCollisions(ECS::Registry& registry, float deltaTime);
-
-    /**
-     * @brief Apply damage to a target entity
-     */
-    void applyDamage(ECS::Registry& registry, ECS::Entity target,
-                     float damage, uint32_t attackerNetworkId);
-
-    /**
      * @brief Emit beam spawn event
      */
     void emitBeamSpawn(uint32_t beamNetworkId, float x, float y,
@@ -116,7 +104,6 @@ class LaserBeamSystem : public ::rtype::engine::ASystem {
 
     EventEmitter _emitEvent;
     uint32_t _nextBeamNetworkId{200000};  // Start beam IDs at 200000
-    std::unordered_set<uint64_t> _damagedThisFrame;  // Track damaged entities
 };
 
 }  // namespace rtype::games::rtype::server
