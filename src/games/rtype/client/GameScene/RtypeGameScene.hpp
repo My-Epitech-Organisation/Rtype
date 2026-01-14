@@ -15,11 +15,11 @@
 #include <utility>
 #include <vector>
 
+#include "../Systems/LaserBeamAnimationSystem.hpp"
 #include "../lib/display/Clock/Clock.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Graphic/SceneManager/Scenes/GameScene/AGameScene.hpp"
 #include "games/rtype/shared/Systems/Movements/MovementSystem.hpp"
-#include "../Systems/LaserBeamAnimationSystem.hpp"
 #include "rtype/display/DisplayTypes.hpp"
 
 namespace rtype::games::rtype::client {
