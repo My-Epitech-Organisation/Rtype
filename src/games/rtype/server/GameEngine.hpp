@@ -179,6 +179,15 @@ class GameEngine : public engine::AGameEngine {
         return _laserBeamSystem.get();
     }
 
+    /**
+     * @brief Set laser weapon configuration
+     * @param config Laser configuration from TOML
+     * @note Must be called before initialize()
+     */
+    void setLaserConfig(const game::config::LaserConfig& config) {
+        _laserConfig = config;
+    }
+
    private:
     /**
      * @brief Configure les signaux ECS pour les logs et statistiques
@@ -196,6 +205,7 @@ class GameEngine : public engine::AGameEngine {
 
     bool _running = false;
     bool _useDataDrivenSpawner = true;
+    game::config::LaserConfig _laserConfig;  ///< Laser weapon settings
 
     std::unique_ptr<SpawnerSystem> _spawnerSystem;
     std::unique_ptr<DataDrivenSpawnerSystem> _dataDrivenSpawnerSystem;
