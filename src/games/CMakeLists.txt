@@ -1,2 +1,6 @@
 add_subdirectory(rtype)
-add_subdirectory(snake)
+
+# Only build snake if BUILD_SNAKE is enabled
+if(BUILD_SNAKE)
+    add_subdirectory(snake)
+endif()
