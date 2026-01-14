@@ -11,6 +11,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 
 #include <toml++/toml.hpp>
 
@@ -20,6 +22,16 @@
 #include "Components/TextInputComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
 #include "EntityFactory/EntityFactory.hpp"
+
+static std::string floatToString(float val) {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(1) << val;
+    std::string s = ss.str();
+    if (s.size() > 2 && s.substr(s.size() - 2) == ".0") {
+        s = s.substr(0, s.size() - 2);
+    }
+    return s;
+}
 
 void LevelCreatorScene::createSection(
     const std::string& id, const std::string& title,
@@ -402,7 +414,12 @@ std::string LevelCreatorScene::getInputValue(ECS::Entity entity) {
     return "";
 }
 
-void LevelCreatorScene::saveCurrentWaveStats() {
+bool LevelCreatorScene::saveCurrentWaveStats() {
+    if (_statusMessageEntity != ECS::Entity(0) &&
+        _registry->isAlive(_statusMessageEntity)) {
+        _registry->killEntity(_statusMessageEntity);
+    }
+
     if (_currentWaveIndex >= 0 &&
         _currentWaveIndex < static_cast<int>(_waves.size())) {
         auto& w = _waves[_currentWaveIndex];
@@ -412,19 +429,56 @@ void LevelCreatorScene::saveCurrentWaveStats() {
             _registry->hasComponent<rtype::games::rtype::client::TextInput>(
                 w.spawnDelayInputVal)) {
             try {
-                w.spawn_delay = std::stof(getInputValue(w.spawnDelayInputVal));
+                std::string val = getInputValue(w.spawnDelayInputVal);
+                if (val.empty()) {
+                    float startX = kLevelSectionPosLeft;
+                    _statusMessageEntity = EntityFactory::createStaticText(
+                        _registry, _assetsManager,
+                        "Wave " + std::to_string(w.number) +
+                            " spawn delay must be filled.",
+                        "main_font", {startX, 810.f}, 20.f);
+                    try {
+                        auto& textComp =
+                            _registry
+                                ->getComponent<rtype::games::rtype::client::Text>(
+                                    _statusMessageEntity);
+                        textComp.color = rtype::display::Color::Red();
+                    } catch (...) {
+                    }
+                    _listEntity.push_back(_statusMessageEntity);
+                    return false;
+                }
+                w.spawn_delay = std::stof(val);
             } catch (...) {
             }
         }
 
         for (auto& s : w.spawns) {
-            // Enemy is updated via button click, no need to read
             if (s.delayInputVal != ECS::Entity(0) &&
                 _registry->isAlive(s.delayInputVal) &&
                 _registry->hasComponent<rtype::games::rtype::client::TextInput>(
                     s.delayInputVal)) {
                 try {
-                    s.delay = std::stof(getInputValue(s.delayInputVal));
+                    std::string val = getInputValue(s.delayInputVal);
+                    if (val.empty()) {
+                        float startX = kLevelSectionPosLeft;
+                        _statusMessageEntity = EntityFactory::createStaticText(
+                            _registry, _assetsManager,
+                            "Spawn delay must be filled.", "main_font",
+                            {startX, 810.f}, 20.f);
+                        try {
+                            auto& textComp =
+                                _registry
+                                    ->getComponent<
+                                        rtype::games::rtype::client::Text>(
+                                        _statusMessageEntity);
+                            textComp.color = rtype::display::Color::Red();
+                        } catch (...) {
+                        }
+                        _listEntity.push_back(_statusMessageEntity);
+                        return false;
+                    }
+                    s.delay = std::stof(val);
                 } catch (...) {
                 }
             }
@@ -433,7 +487,26 @@ void LevelCreatorScene::saveCurrentWaveStats() {
                 _registry->hasComponent<rtype::games::rtype::client::TextInput>(
                     s.countInputVal)) {
                 try {
-                    s.count = std::stoi(getInputValue(s.countInputVal));
+                    std::string val = getInputValue(s.countInputVal);
+                    if (val.empty()) {
+                        float startX = kLevelSectionPosLeft;
+                        _statusMessageEntity = EntityFactory::createStaticText(
+                            _registry, _assetsManager,
+                            "Spawn count must be filled.", "main_font",
+                            {startX, 810.f}, 20.f);
+                        try {
+                            auto& textComp =
+                                _registry
+                                    ->getComponent<
+                                        rtype::games::rtype::client::Text>(
+                                        _statusMessageEntity);
+                            textComp.color = rtype::display::Color::Red();
+                        } catch (...) {
+                        }
+                        _listEntity.push_back(_statusMessageEntity);
+                        return false;
+                    }
+                    s.count = std::stoi(val);
                 } catch (...) {
                 }
             }
@@ -445,7 +518,26 @@ void LevelCreatorScene::saveCurrentWaveStats() {
                 _registry->hasComponent<rtype::games::rtype::client::TextInput>(
                     p.delayInputVal)) {
                 try {
-                    p.delay = std::stof(getInputValue(p.delayInputVal));
+                    std::string val = getInputValue(p.delayInputVal);
+                    if (val.empty()) {
+                        float startX = kLevelSectionPosLeft;
+                        _statusMessageEntity = EntityFactory::createStaticText(
+                            _registry, _assetsManager,
+                            "Powerup delay must be filled.", "main_font",
+                            {startX, 810.f}, 20.f);
+                        try {
+                            auto& textComp =
+                                _registry
+                                    ->getComponent<
+                                        rtype::games::rtype::client::Text>(
+                                        _statusMessageEntity);
+                            textComp.color = rtype::display::Color::Red();
+                        } catch (...) {
+                        }
+                        _listEntity.push_back(_statusMessageEntity);
+                        return false;
+                    }
+                    p.delay = std::stof(val);
                 } catch (...) {
                 }
             }
@@ -454,12 +546,32 @@ void LevelCreatorScene::saveCurrentWaveStats() {
                 _registry->hasComponent<rtype::games::rtype::client::TextInput>(
                     p.yInputVal)) {
                 try {
-                    p.y = std::stof(getInputValue(p.yInputVal));
+                    std::string val = getInputValue(p.yInputVal);
+                    if (val.empty()) {
+                        float startX = kLevelSectionPosLeft;
+                        _statusMessageEntity = EntityFactory::createStaticText(
+                            _registry, _assetsManager,
+                            "Powerup Y position must be filled.", "main_font",
+                            {startX, 810.f}, 20.f);
+                        try {
+                            auto& textComp =
+                                _registry
+                                    ->getComponent<
+                                        rtype::games::rtype::client::Text>(
+                                        _statusMessageEntity);
+                            textComp.color = rtype::display::Color::Red();
+                        } catch (...) {
+                        }
+                        _listEntity.push_back(_statusMessageEntity);
+                        return false;
+                    }
+                    p.y = std::stof(val);
                 } catch (...) {
                 }
             }
         }
     }
+    return true;
 }
 
 void LevelCreatorScene::saveToToml() {
@@ -592,16 +704,18 @@ void LevelCreatorScene::saveToToml() {
          << std::endl;
 
     file << "[level]" << std::endl;
-    file << "id = \"" << getInputValue(_levelIdInput) << "\"" << std::endl;
-    file << "name = \"" << getInputValue(_levelNameInput) << "\"" << std::endl;
+    file << "id = \"" << lvlId << "\"" << std::endl;
+    file << "name = \"" << lvlName << "\"" << std::endl;
     file << "background = \"" << this->_bgPluginName << "\"" << std::endl;
     file << "level_music = \"" << this->_musicLevelId << "\"" << std::endl;
+    std::string scrollSpeedValue = getInputValue(_scrollSpeedInput);
     file << "scroll_speed = "
-         << (getInputValue(_scrollSpeedInput).empty()
-                 ? "0.0"
-                 : getInputValue(_scrollSpeedInput))
+         << (scrollSpeedValue.empty()
+                 ? "50.0"
+                 : scrollSpeedValue)
          << std::endl;
-    file << "boss = \"" << getInputValue(_bossInput) << "\"" << std::endl;
+    std::string bossValue = getInputValue(_bossInput);
+    file << "boss = \"" << (bossValue.empty() ? "boss_1" : bossValue) << "\"" << std::endl;
     std::filesystem::path pathObj(this->_listNextLevel[this->_nextLevelId]);
     std::string nextLevel = pathObj.filename().string();
     file << "next_level = \"" << nextLevel << "\"" << std::endl;
@@ -625,16 +739,135 @@ void LevelCreatorScene::saveToToml() {
         for (const auto& spawn : wave.spawns) {
             file << "[[wave.spawn]]" << std::endl;
             file << "enemy = \"" << spawn.enemy << "\"" << std::endl;
-            file << "delay = " << spawn.delay << std::endl;
-            file << "count = " << spawn.count << std::endl;
+
+            float delay = spawn.delay;
+            if (spawn.delayInputVal != ECS::Entity(0) &&
+                _registry->isAlive(spawn.delayInputVal)) {
+                std::string val = getInputValue(spawn.delayInputVal);
+                if (val.empty()) {
+                    LOG_ERROR_CAT(rtype::LogCategory::UI, "Wave " + std::to_string(wave.number) + " spawn delay is empty.");
+                    if (_statusMessageEntity != ECS::Entity(0) &&
+                        _registry->isAlive(_statusMessageEntity)) {
+                        _registry->killEntity(_statusMessageEntity);
+                    }
+                    float startX = kLevelSectionPosLeft;
+                    _statusMessageEntity = EntityFactory::createStaticText(
+                        _registry, _assetsManager,
+                        "Wave " + std::to_string(wave.number) + " spawn delay must be filled.", "main_font",
+                        {startX, 810.f}, 20.f);
+                    try {
+                        auto& textComp = _registry->getComponent<rtype::games::rtype::client::Text>(_statusMessageEntity);
+                        textComp.color = rtype::display::Color::Red();
+                    } catch (const std::exception&) {}
+                    _listEntity.push_back(_statusMessageEntity);
+                    file.close();
+                    std::filesystem::remove(filename);
+                    return;
+                }
+                try {
+                    delay = std::stof(val);
+                } catch (...) {
+                    // if parse failure, maybe also error? or let it be 0? 
+                    // User asked to check if empty.
+                }
+            }
+            file << "delay = " << delay << std::endl;
+
+            int count = spawn.count;
+            if (spawn.countInputVal != ECS::Entity(0) &&
+                _registry->isAlive(spawn.countInputVal)) {
+                std::string val = getInputValue(spawn.countInputVal);
+                if (val.empty()) {
+                    LOG_ERROR_CAT(rtype::LogCategory::UI, "Wave " + std::to_string(wave.number) + " spawn count is empty.");
+                    if (_statusMessageEntity != ECS::Entity(0) &&
+                        _registry->isAlive(_statusMessageEntity)) {
+                        _registry->killEntity(_statusMessageEntity);
+                    }
+                    float startX = kLevelSectionPosLeft;
+                    _statusMessageEntity = EntityFactory::createStaticText(
+                        _registry, _assetsManager,
+                        "Wave " + std::to_string(wave.number) + " spawn count must be filled.", "main_font",
+                        {startX, 810.f}, 20.f);
+                    try {
+                        auto& textComp = _registry->getComponent<rtype::games::rtype::client::Text>(_statusMessageEntity);
+                        textComp.color = rtype::display::Color::Red();
+                    } catch (const std::exception&) {}
+                    _listEntity.push_back(_statusMessageEntity);
+                    file.close();
+                    std::filesystem::remove(filename);
+                    return;
+                }
+                try {
+                    count = std::stoi(val);
+                } catch (...) {}
+            }
+            file << "count = " << count << std::endl;
             file << std::endl;
         }
 
         for (const auto& powerup : wave.powerups) {
             file << "[[wave.powerup]]" << std::endl;
             file << "id = \"" << powerup.id << "\"" << std::endl;
-            file << "delay = " << powerup.delay << std::endl;
-            file << "y = " << powerup.y << std::endl;
+
+            float delay = powerup.delay;
+            if (powerup.delayInputVal != ECS::Entity(0) &&
+                _registry->isAlive(powerup.delayInputVal)) {
+                std::string val = getInputValue(powerup.delayInputVal);
+                if (val.empty()) {
+                    LOG_ERROR_CAT(rtype::LogCategory::UI, "Wave " + std::to_string(wave.number) + " powerup delay is empty.");
+                    if (_statusMessageEntity != ECS::Entity(0) &&
+                        _registry->isAlive(_statusMessageEntity)) {
+                        _registry->killEntity(_statusMessageEntity);
+                    }
+                    float startX = kLevelSectionPosLeft;
+                    _statusMessageEntity = EntityFactory::createStaticText(
+                        _registry, _assetsManager,
+                        "Wave " + std::to_string(wave.number) + " powerup delay must be filled.", "main_font",
+                        {startX, 810.f}, 20.f);
+                    try {
+                        auto& textComp = _registry->getComponent<rtype::games::rtype::client::Text>(_statusMessageEntity);
+                        textComp.color = rtype::display::Color::Red();
+                    } catch (const std::exception&) {}
+                    _listEntity.push_back(_statusMessageEntity);
+                    file.close();
+                    std::filesystem::remove(filename);
+                    return;
+                }
+                try {
+                    delay = std::stof(val);
+                } catch (...) {}
+            }
+            file << "delay = " << delay << std::endl;
+
+            float y = powerup.y;
+            if (powerup.yInputVal != ECS::Entity(0) &&
+                _registry->isAlive(powerup.yInputVal)) {
+                std::string val = getInputValue(powerup.yInputVal);
+                if (val.empty()) {
+                    LOG_ERROR_CAT(rtype::LogCategory::UI, "Wave " + std::to_string(wave.number) + " powerup Y pos is empty.");
+                    if (_statusMessageEntity != ECS::Entity(0) &&
+                        _registry->isAlive(_statusMessageEntity)) {
+                        _registry->killEntity(_statusMessageEntity);
+                    }
+                    float startX = kLevelSectionPosLeft;
+                    _statusMessageEntity = EntityFactory::createStaticText(
+                        _registry, _assetsManager,
+                        "Wave " + std::to_string(wave.number) + " powerup Y pos must be filled.", "main_font",
+                        {startX, 810.f}, 20.f);
+                    try {
+                        auto& textComp = _registry->getComponent<rtype::games::rtype::client::Text>(_statusMessageEntity);
+                        textComp.color = rtype::display::Color::Red();
+                    } catch (const std::exception&) {}
+                    _listEntity.push_back(_statusMessageEntity);
+                    file.close();
+                    std::filesystem::remove(filename);
+                    return;
+                }
+                try {
+                    y = std::stof(val);
+                } catch (...) {}
+            }
+            file << "y = " << y << std::endl;
             file << std::endl;
         }
     }
@@ -666,7 +899,7 @@ void LevelCreatorScene::saveToToml() {
 
 void LevelCreatorScene::addWave() {
     if (this->_waves.size() >= kMaxWaves) return;
-    saveCurrentWaveStats();
+    if (!saveCurrentWaveStats()) return;
     Wave newWave;
     newWave.number = this->_waves.size() + 1;
     newWave.spawn_delay = 1.0f;
@@ -678,7 +911,7 @@ void LevelCreatorScene::addWave() {
 
 void LevelCreatorScene::switchWave(int index) {
     if (index < 0 || index >= static_cast<int>(_waves.size())) return;
-    saveCurrentWaveStats();
+    if (!saveCurrentWaveStats()) return;
     _currentWaveIndex = index;
     refreshWaveUI();
 }
@@ -686,7 +919,6 @@ void LevelCreatorScene::switchWave(int index) {
 void LevelCreatorScene::refreshWaveUI() {
     for (auto it = _sections.begin(); it != _sections.end();) {
         if (it->id == "wave_config") {
-            // Kill all entities tracked in this section
             for (auto& pair : it->entities) {
                 if (_registry->isAlive(pair.first))
                     _registry->killEntity(pair.first);
@@ -756,7 +988,7 @@ void LevelCreatorScene::refreshWaveUI() {
 
     wave.spawnDelayInputVal = EntityFactory::createTextInput(
         _registry, _assetsManager, {contentX + 220, 0}, {120, 35}, "1.0",
-        std::to_string(wave.spawn_delay), 10, true);
+        floatToString(wave.spawn_delay), 10, true);
     addToWave(wave.spawnDelayInputVal, contentY);
 
     contentY += 60.f;
@@ -776,6 +1008,7 @@ void LevelCreatorScene::refreshWaveUI() {
             rtype::display::Color(0, 135, 0, 255)),
         this->_assetsManager, std::function<void()>([this, waveIdx]() {
             if (waveIdx < static_cast<int>(this->_waves.size())) {
+                if (!this->saveCurrentWaveStats()) return;
                 this->_waves[waveIdx].spawns.push_back(Spawn{});
                 this->refreshWaveUI();
             }
@@ -816,6 +1049,7 @@ void LevelCreatorScene::refreshWaveUI() {
                 if (waveIdx < static_cast<int>(this->_waves.size()) &&
                     spawnIdx <
                         static_cast<int>(this->_waves[waveIdx].spawns.size())) {
+                    if (!this->saveCurrentWaveStats()) return;
                     auto& s = this->_waves[waveIdx].spawns[spawnIdx];
                     s.enemy = cycleOption(s.enemy, ENEMY_TYPES);
                     this->refreshWaveUI();
@@ -825,7 +1059,7 @@ void LevelCreatorScene::refreshWaveUI() {
 
         spawn.delayInputVal = EntityFactory::createTextInput(
             _registry, _assetsManager, {col2, 0}, {120, 35}, "0.0",
-            std::to_string(spawn.delay), 10, true);
+            floatToString(spawn.delay), 10, true);
         addToWave(spawn.delayInputVal, contentY);
 
         spawn.countInputVal = EntityFactory::createTextInput(
@@ -853,6 +1087,7 @@ void LevelCreatorScene::refreshWaveUI() {
             rtype::display::Color(0, 135, 0, 255)),
         this->_assetsManager, std::function<void()>([this, waveIdx]() {
             if (waveIdx < static_cast<int>(this->_waves.size())) {
+                if (!this->saveCurrentWaveStats()) return;
                 this->_waves[waveIdx].powerups.push_back(Powerup{});
                 this->refreshWaveUI();
             }
@@ -889,6 +1124,7 @@ void LevelCreatorScene::refreshWaveUI() {
                 if (waveIdx < static_cast<int>(this->_waves.size()) &&
                     puIdx < static_cast<int>(
                                 this->_waves[waveIdx].powerups.size())) {
+                    if (!this->saveCurrentWaveStats()) return;
                     auto& p = this->_waves[waveIdx].powerups[puIdx];
                     p.id = cycleOption(p.id, POWERUP_TYPES);
                     this->refreshWaveUI();
@@ -897,13 +1133,13 @@ void LevelCreatorScene::refreshWaveUI() {
         addToWave(idBtn, contentY);
 
         pu.delayInputVal = EntityFactory::createTextInput(
-            _registry, _assetsManager, {col2, 0}, {120, 35}, "Dly",
-            std::to_string(pu.delay), 10, true);
+            _registry, _assetsManager, {col2, 0}, {120, 35}, "4",
+            floatToString(pu.delay), 10, true);
         addToWave(pu.delayInputVal, contentY);
 
         pu.yInputVal = EntityFactory::createTextInput(
-            _registry, _assetsManager, {col3, 0}, {120, 35}, "Y",
-            std::to_string(pu.y), 10, true);
+            _registry, _assetsManager, {col3, 0}, {120, 35}, "500",
+            floatToString(pu.y), 10, true);
         addToWave(pu.yInputVal, contentY);
 
         contentY += 45.f;
