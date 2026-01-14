@@ -9,10 +9,13 @@
 
 #include "Logger/Macros.hpp"
 
+#include "../../../shared/Components/EntityType.hpp"
+
 namespace rtype::games::rtype::server {
 
 using shared::BoundingBoxComponent;
 using shared::DamageOnContactComponent;
+using shared::EntityType;
 using shared::LaserBeamComponent;
 using shared::LaserBeamState;
 using shared::LaserBeamTag;
@@ -274,7 +277,7 @@ void LaserBeamSystem::emitBeamSpawn(uint32_t beamNetworkId, float x, float y,
     event.entityNetworkId = beamNetworkId;
     event.x = x;
     event.y = y;
-    event.entityType = EntityType::LaserBeam;
+    event.entityType = static_cast<uint8_t>(EntityType::LaserBeam);
     event.subType = 0;
     _emitEvent(event);
 }
