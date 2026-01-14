@@ -35,9 +35,9 @@ enum class EntityType : std::uint8_t {
     Pickup = 3,    ///< Collectible / power-up
     Obstacle = 4,  ///< Static or moving obstacle
     ForcePod = 5,  ///< Force Pod companion
-    LaserBeam = 7,   ///< Continuous laser beam weapon
-    Boss = 8,      ///< Boss entity
-    BossPart = 9   ///< Boss weak point / body part
+    LaserBeam = 6,   ///< Continuous laser beam weapon
+    Boss = 7,      ///< Boss entity
+    BossPart = 8   ///< Boss weak point / body part
 };
 
 /**
