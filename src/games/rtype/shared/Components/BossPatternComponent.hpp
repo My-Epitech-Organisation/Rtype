@@ -43,16 +43,7 @@ struct AttackPatternConfig {
      */
     [[nodiscard]] static AttackPatternConfig createCircularShot(
         int32_t bulletCount = 12, float bulletSpeed = 350.0F,
-        int32_t bulletDamage = 15) noexcept {
-        AttackPatternConfig config;
-        config.pattern = BossAttackPattern::CircularShot;
-        config.projectileCount = bulletCount;
-        config.projectileSpeed = bulletSpeed;
-        config.damage = bulletDamage;
-        config.duration = 0.5F;
-        config.cooldown = 2.0F;
-        return config;
-    }
+        int32_t bulletDamage = 15) noexcept;
 
     /**
      * @brief Create a SpreadFan pattern configuration
@@ -63,18 +54,7 @@ struct AttackPatternConfig {
      */
     [[nodiscard]] static AttackPatternConfig createSpreadFan(
         int32_t bulletCount = 5, float angle = 60.0F,
-        float bulletSpeed = 400.0F) noexcept {
-        AttackPatternConfig config;
-        config.pattern = BossAttackPattern::SpreadFan;
-        config.projectileCount = bulletCount;
-        config.spreadAngle = angle;
-        config.projectileSpeed = bulletSpeed;
-        config.damage = 20;
-        config.duration = 0.3F;
-        config.cooldown = 1.5F;
-        config.requiresTarget = true;
-        return config;
-    }
+        float bulletSpeed = 400.0F) noexcept;
 
     /**
      * @brief Create a LaserSweep pattern configuration
@@ -85,17 +65,7 @@ struct AttackPatternConfig {
      */
     [[nodiscard]] static AttackPatternConfig createLaserSweep(
         float sweepDuration = 3.0F, float sweepAngle = 120.0F,
-        int32_t laserDamage = 30) noexcept {
-        AttackPatternConfig config;
-        config.pattern = BossAttackPattern::LaserSweep;
-        config.duration = sweepDuration;
-        config.spreadAngle = sweepAngle;
-        config.damage = laserDamage;
-        config.cooldown = 5.0F;
-        config.telegraphDuration = 1.0F;
-        config.rotationSpeed = sweepAngle / sweepDuration;
-        return config;
-    }
+        int32_t laserDamage = 30) noexcept;
 
     /**
      * @brief Create a MinionSpawn pattern configuration
@@ -104,16 +74,7 @@ struct AttackPatternConfig {
      * @return Configured pattern
      */
     [[nodiscard]] static AttackPatternConfig createMinionSpawn(
-        const std::string& minionTypeId = "basic", int32_t count = 4) noexcept {
-        AttackPatternConfig config;
-        config.pattern = BossAttackPattern::MinionSpawn;
-        config.minionType = minionTypeId;
-        config.minionCount = count;
-        config.duration = 1.0F;
-        config.cooldown = 8.0F;
-        config.telegraphDuration = 0.8F;
-        return config;
-    }
+        const std::string& minionTypeId = "basic", int32_t count = 4) noexcept;
 
     /**
      * @brief Create a TailSweep pattern configuration
@@ -122,16 +83,7 @@ struct AttackPatternConfig {
      * @return Configured pattern
      */
     [[nodiscard]] static AttackPatternConfig createTailSweep(
-        float sweepDuration = 2.0F, int32_t sweepDamage = 40) noexcept {
-        AttackPatternConfig config;
-        config.pattern = BossAttackPattern::TailSweep;
-        config.duration = sweepDuration;
-        config.damage = sweepDamage;
-        config.cooldown = 4.0F;
-        config.spreadAngle = 180.0F;
-        config.telegraphDuration = 0.5F;
-        return config;
-    }
+        float sweepDuration = 2.0F, int32_t sweepDamage = 40) noexcept;
 };
 
 /**
@@ -198,26 +150,7 @@ struct BossPatternComponent {
     /**
      * @brief Start the next pattern in the queue
      */
-    void startNextPattern() noexcept {
-        if (patternQueue.empty()) return;
-
-        currentPattern = patternQueue.front();
-        patternQueue.pop_front();
-
-        if (cyclical) {
-            patternQueue.push_back(currentPattern);
-        }
-
-        if (currentPattern.telegraphDuration > 0.0F) {
-            state = PatternExecutionState::Telegraph;
-            stateTimer = currentPattern.telegraphDuration;
-        } else {
-            state = PatternExecutionState::Executing;
-            stateTimer = currentPattern.duration;
-        }
-        patternProgress = 0.0F;
-        projectilesFired = 0;
-    }
+    void startNextPattern() noexcept;
 
     /**
      * @brief Advance to execution state after telegraph
@@ -250,13 +183,7 @@ struct BossPatternComponent {
      * @brief Add patterns for a specific phase
      * @param patterns Vector of pattern configs to add
      */
-    void setPhasePatterns(const std::vector<AttackPatternConfig>& patterns) {
-        phasePatterns = patterns;
-        patternQueue.clear();
-        for (const auto& p : phasePatterns) {
-            patternQueue.push_back(p);
-        }
-    }
+    void setPhasePatterns(const std::vector<AttackPatternConfig>& patterns);
 
     /**
      * @brief Clear all patterns and reset state
