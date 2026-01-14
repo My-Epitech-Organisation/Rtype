@@ -7,8 +7,6 @@
 
 #include "RTypeGameConfig.hpp"
 
-#include <iostream>
-
 namespace rtype::game::config {
 
 std::vector<ConfigError> RTypeGameConfig::validate() const {
