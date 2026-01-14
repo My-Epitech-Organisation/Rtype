@@ -31,6 +31,11 @@ BossSerpentHead = "img/serpend_head.png"
 BossSerpentAttack = "img/serpent_attack.png"
 BossSerpentBody = "img/serpent_body.png"
 BossSerpentTail = "img/serpent_tail.png"
+BossScorpionBody = "img/scorpion_body.png"
+BossScorpionClaws = "img/scorpion_claws.png"
+BossScorpionTail = "img/scorpion_tail.png"
+BossScorpionStinger = "img/scorpion_stinger.png"
+BossScorpionCannon = "img/scorpion_cannon.png"
 ForcePod = "img/forcepod.gif"
 
 # Power-ups

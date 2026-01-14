@@ -8,24 +8,14 @@ id = "level_1"
 name = "Space Station"
 background = "assets/backgrounds/space_station.png"
 scroll_speed = 50.0
-boss = "boss_serpent"
+boss = "boss_scorpion"
 
 # -----------------------------------------------------------------------------
-# Wave 1 - Introduction (Basic enemies only)
+# Wave 1 - Empty wave to trigger boss immediately
 # -----------------------------------------------------------------------------
 [[wave]]
 number = 1
-spawn_delay = 0.8
-
-[[wave.spawn]]
-enemy = "chaser"
-delay = 0.0
-count = 1
-
-[[wave.spawn]]
-enemy = "basic"
-delay = 0.0
-count = 1
+spawn_delay = 0.1
 
 [[wave.powerup]]
 id = "force_pod"
