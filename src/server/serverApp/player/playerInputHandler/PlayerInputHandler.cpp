@@ -78,7 +78,7 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
     if (_registry->hasComponent<WeaponComp>(playerEntity)) {
         const auto& weapon = _registry->getComponent<WeaponComp>(playerEntity);
         hasLaserWeapon = (weapon.getCurrentWeapon().projectileType ==
-                         ProjectileType::ContinuousLaser);
+                          ProjectileType::ContinuousLaser);
     }
 
     bool isShooting = (inputMask & rtype::network::InputMask::kShoot) != 0;
@@ -210,10 +210,11 @@ void PlayerInputHandler::processWeaponSwitch(ECS::Entity entity) {
     }
 
     auto& weapon = _registry->getComponent<WeaponComp>(entity);
-    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
-                 "[InputHandler] Weapon switch requested: unlockedSlots="
-                     << static_cast<int>(weapon.unlockedSlots)
-                     << " currentSlot=" << static_cast<int>(weapon.currentSlot));
+    LOG_INFO_CAT(
+        ::rtype::LogCategory::GameEngine,
+        "[InputHandler] Weapon switch requested: unlockedSlots="
+            << static_cast<int>(weapon.unlockedSlots)
+            << " currentSlot=" << static_cast<int>(weapon.currentSlot));
     if (weapon.unlockedSlots > 1) {
         weapon.nextWeapon();
         LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
