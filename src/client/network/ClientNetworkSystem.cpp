@@ -209,6 +209,25 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
                       (localUserId_.has_value() ? std::to_string(*localUserId_)
                                                 : "none"));
 
+    // Clean up old laser beam entities with pendingDestroy before creating new
+    // one This prevents ghost hitboxes from accumulating
+    if (event.type == network::EntityType::LaserBeam) {
+        using LaserAnim = games::rtype::client::LaserBeamAnimationComponent;
+        std::vector<ECS::Entity> toDestroy;
+        registry_->view<LaserAnim>().each(
+            [&toDestroy](ECS::Entity entity, const LaserAnim& anim) {
+                if (anim.pendingDestroy) {
+                    toDestroy.push_back(entity);
+                }
+            });
+        for (auto entity : toDestroy) {
+            registry_->killEntity(entity);
+            LOG_DEBUG_CAT(
+                rtype::LogCategory::Network,
+                "[ClientNetworkSystem] Cleaned up old laser beam entity");
+        }
+    }
+
     auto existingIt = networkIdToEntity_.find(event.entityId);
     if (existingIt != networkIdToEntity_.end()) {
         if (registry_->isAlive(existingIt->second)) {
