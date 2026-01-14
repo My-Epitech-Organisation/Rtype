@@ -181,6 +181,34 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.gameplay.friendlyFire = _parser.getValue<bool>(
         table, "gameplay", "friendlyFire", defaults.gameplay.friendlyFire);
 
+    // Laser weapon configuration (nested under gameplay)
+    config.gameplay.laser.damagePerSecond =
+        static_cast<float>(_parser.getValue<double>(
+            table, "gameplay.laser", "damagePerSecond",
+            defaults.gameplay.laser.damagePerSecond));
+    config.gameplay.laser.startupDelay =
+        static_cast<float>(_parser.getValue<double>(
+            table, "gameplay.laser", "startupDelay",
+            defaults.gameplay.laser.startupDelay));
+    config.gameplay.laser.maxDuration =
+        static_cast<float>(_parser.getValue<double>(
+            table, "gameplay.laser", "maxDuration",
+            defaults.gameplay.laser.maxDuration));
+    config.gameplay.laser.cooldownDuration =
+        static_cast<float>(_parser.getValue<double>(
+            table, "gameplay.laser", "cooldownDuration",
+            defaults.gameplay.laser.cooldownDuration));
+    config.gameplay.laser.hitboxWidth =
+        static_cast<float>(_parser.getValue<double>(
+            table, "gameplay.laser", "hitboxWidth",
+            defaults.gameplay.laser.hitboxWidth));
+    config.gameplay.laser.hitboxHeight =
+        static_cast<float>(_parser.getValue<double>(
+            table, "gameplay.laser", "hitboxHeight",
+            defaults.gameplay.laser.hitboxHeight));
+    config.gameplay.laser.offsetX = static_cast<float>(_parser.getValue<double>(
+        table, "gameplay.laser", "offsetX", defaults.gameplay.laser.offsetX));
+
     // Input section
     config.input.moveUp =
         _parser.getString(table, "input", "moveUp", defaults.input.moveUp);
@@ -453,6 +481,16 @@ std::string RTypeConfigParser::serializeToToml(const RTypeGameConfig& config) {
        << "\n";
     ss << "friendlyFire = " << (config.gameplay.friendlyFire ? "true" : "false")
        << "\n\n";
+
+    ss << "[gameplay.laser]\n";
+    ss << "damagePerSecond = " << config.gameplay.laser.damagePerSecond << "\n";
+    ss << "startupDelay = " << config.gameplay.laser.startupDelay << "\n";
+    ss << "maxDuration = " << config.gameplay.laser.maxDuration << "\n";
+    ss << "cooldownDuration = " << config.gameplay.laser.cooldownDuration
+       << "\n";
+    ss << "hitboxWidth = " << config.gameplay.laser.hitboxWidth << "\n";
+    ss << "hitboxHeight = " << config.gameplay.laser.hitboxHeight << "\n";
+    ss << "offsetX = " << config.gameplay.laser.offsetX << "\n\n";
 
     ss << "[input]\n";
     ss << "moveUp = \"" << config.input.moveUp << "\"\n";
