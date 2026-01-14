@@ -406,7 +406,8 @@ class NetworkServer {
      * @param callback Function receiving (userId, inputMask)
      */
     void onClientInput(
-        std::function<void(std::uint32_t userId, std::uint16_t input)> callback);
+        std::function<void(std::uint32_t userId, std::uint16_t input)>
+            callback);
 
     /**
      * @brief Register callback for get users request

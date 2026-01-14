@@ -94,9 +94,11 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
             std::uint8_t level = 0;
             if (chargeLevel == rtype::network::InputMask::kChargeLevel3) {
                 level = 3;
-            } else if (chargeLevel == rtype::network::InputMask::kChargeLevel2) {
+            } else if (chargeLevel ==
+                       rtype::network::InputMask::kChargeLevel2) {
                 level = 2;
-            } else if (chargeLevel == rtype::network::InputMask::kChargeLevel1) {
+            } else if (chargeLevel ==
+                       rtype::network::InputMask::kChargeLevel1) {
                 level = 1;
             }
             if (level > 0) {
