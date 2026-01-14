@@ -27,7 +27,10 @@ EnemyHeavy = "img/bdosTextureHeavy.gif"
 EnemyPatrol = "img/bdosTexturePatrol.gif"
 EnemyShooter = "img/bdosTextureShooter.gif"
 EnemyWave = "img/bdosTextureWave.gif"
-BossSerpent = "img/bdosTextureChaser.gif"
+BossSerpentHead = "img/serpend_head.png"
+BossSerpentAttack = "img/serpent_attack.png"
+BossSerpentBody = "img/serpent_body.png"
+BossSerpentTail = "img/serpent_tail.png"
 ForcePod = "img/forcepod.gif"
 
 # Power-ups
