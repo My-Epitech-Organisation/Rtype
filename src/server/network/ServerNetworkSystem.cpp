@@ -419,8 +419,6 @@ void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
     info.dirty = false;
 
     networkedEntities_[networkId] = info;
-
-    // Debug log for BossPart registration
     if (type == EntityType::BossPart || type == EntityType::Boss) {
         LOG_INFO_CAT(::rtype::LogCategory::Network,
                      "[ServerNetwork] Registered "

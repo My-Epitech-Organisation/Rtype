@@ -313,9 +313,6 @@ void RtypeEntityFactory::setupBydosEntity(
             reg.emplaceComponent<TextureRect>(entity,
                                               std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({113, 369}));
-            // 6 frames total: frame 1 = normal, frames 2-6 = explosion sequence
-            // oneTime=true so it doesn't loop, but we manually control when it
-            // starts
             reg.emplaceComponent<Animation>(entity, 6, 0.12f, true);
             reg.emplaceComponent<Size>(entity, 0.6f, 0.6f);
             reg.emplaceComponent<Rotation>(entity, 0.0f);
@@ -856,9 +853,6 @@ void RtypeEntityFactory::setupBossEntity(
 void RtypeEntityFactory::setupBossPartEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> /*assetsManager*/,
     ECS::Entity entity, uint8_t segmentIndex) {
-    // Decode segmentIndex: values >= 100 are negative indices (100 +
-    // abs(index)) Used for fixed-position boss parts (scorpion) vs chained
-    // segments (serpent)
     int32_t decodedSegmentIndex = static_cast<int32_t>(segmentIndex);
     if (segmentIndex >= 100) {
         decodedSegmentIndex = -(static_cast<int32_t>(segmentIndex) - 100);
@@ -876,7 +870,6 @@ void RtypeEntityFactory::setupBossPartEntity(
     auto& configRegistry = shared::EntityConfigRegistry::getInstance();
     bool foundConfig = false;
 
-    // Hitbox from TOML config (fallback to calculated)
     float configHitboxW = 0.0F;
     float configHitboxH = 0.0F;
     int32_t configHealth = 400;
@@ -907,7 +900,6 @@ void RtypeEntityFactory::setupBossPartEntity(
                     visual.rotationSmoothing = partAnim.rotationSmoothing;
                     visual.rotationOffset = partAnim.rotationOffset;
 
-                    // Get hitbox from config
                     configHitboxW = wpConfig.hitboxWidth;
                     configHitboxH = wpConfig.hitboxHeight;
                     configHealth = wpConfig.health;
@@ -965,7 +957,6 @@ void RtypeEntityFactory::setupBossPartEntity(
     reg.emplaceComponent<Size>(entity, visual.scaleX, visual.scaleY);
     reg.emplaceComponent<BossVisualComponent>(entity, visual);
 
-    // Use hitbox from config if available, otherwise calculate from sprite
     float hitboxW = configHitboxW;
     float hitboxH = configHitboxH;
     if (hitboxW <= 0.0F || hitboxH <= 0.0F) {
@@ -989,12 +980,9 @@ void RtypeEntityFactory::setupBossPartEntity(
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<shared::WeakPointTag>(entity);
 
-    // Add rotation component: dynamic if enableRotation, or static if
-    // rotationOffset is set
     if (visual.enableRotation) {
         reg.emplaceComponent<Rotation>(entity, visual.rotationOffset);
     } else if (std::abs(visual.rotationOffset) > 0.01F) {
-        // Static rotation only (no dynamic updates)
         reg.emplaceComponent<Rotation>(entity, visual.rotationOffset);
     }
 
