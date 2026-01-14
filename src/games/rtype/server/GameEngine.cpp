@@ -412,6 +412,8 @@ engine::ProcessedEvent GameEngine::processEvent(
                 case ::rtype::network::EntityType::Pickup:
                 case ::rtype::network::EntityType::Obstacle:
                 case ::rtype::network::EntityType::ForcePod:
+                case ::rtype::network::EntityType::Boss:
+                case ::rtype::network::EntityType::BossPart:
                     result.networkEntityType = event.entityType;
                     break;
                 default:
