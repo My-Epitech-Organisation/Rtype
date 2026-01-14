@@ -8,6 +8,8 @@
 #ifndef SRC_ENGINE_ECS_CORE_ENTITY_HPP_
 #define SRC_ENGINE_ECS_CORE_ENTITY_HPP_
 
+#define NOMINMAX
+
 #include <compare>
 #include <cstdint>
 #include <functional>
