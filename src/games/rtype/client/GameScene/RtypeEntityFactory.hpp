@@ -115,10 +115,9 @@ class RtypeEntityFactory {
      * @param entity Entity to configure
      * @param ownerUserId User ID of the player who fired the laser
      */
-    static void setupLaserBeamEntity(ECS::Registry& registry,
-                                     std::shared_ptr<AssetManager> assetsManager,
-                                     ECS::Entity entity,
-                                     std::uint32_t ownerUserId);
+    static void setupLaserBeamEntity(
+        ECS::Registry& registry, std::shared_ptr<AssetManager> assetsManager,
+        ECS::Entity entity, std::uint32_t ownerUserId);
 };
 
 }  // namespace rtype::games::rtype::client
