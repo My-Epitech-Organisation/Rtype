@@ -8,7 +8,7 @@ GameOver = "audio/gongGameOver.mp3"
 [SFX]
 HoverButton = "audio/hoverButton.mp3"
 ClickButton = "audio/clickButton.mp3"
-Laser = "audio/laserSound.mp3"
+Laser = "audio/laserSfx.mp3"
 PlayerDeath = "audio/playerDeath.mp3"
 PlayerSpawn = "audio/playerSpawn.mp3"
 EnemyDeath = "audio/enemyDeath.mp3"
@@ -36,6 +36,8 @@ Shield = "img/shield.png"
 RapidFire = "img/rapid_fire.png"
 DamageBoost = "img/damage_boost.png"
 ExtraLife = "img/extra_life.png"
+LaserUpgrade = "img/laser_upgrade.png"
+LaserBeam = "img/laser_beam.png"
 
 # Background assets
 Background = "img/bgMainMenu.png"
