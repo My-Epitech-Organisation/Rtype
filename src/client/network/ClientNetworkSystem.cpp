@@ -20,6 +20,7 @@
 #include "client/Graphic/AudioLib/AudioLib.hpp"
 #include "games/rtype/client/Components/BoxingComponent.hpp"
 #include "games/rtype/client/Components/ImageComponent.hpp"
+#include "games/rtype/client/Components/LaserBeamAnimationComponent.hpp"
 #include "games/rtype/client/Components/RectangleComponent.hpp"
 #include "games/rtype/client/Components/TagComponent.hpp"
 #include "games/rtype/client/Components/ZIndexComponent.hpp"
@@ -28,7 +29,6 @@
 #include "games/rtype/shared/Components/PowerUpComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
-#include "games/rtype/client/Components/LaserBeamAnimationComponent.hpp"
 
 namespace rtype::client {
 
