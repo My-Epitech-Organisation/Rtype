@@ -18,6 +18,7 @@
 #include "../../../shared/Components/NetworkIdComponent.hpp"
 #include "../../../shared/Components/Tags.hpp"
 #include "../../../shared/Components/TransformComponent.hpp"
+#include "../../../shared/Config/GameConfig/RTypeGameConfig.hpp"
 
 namespace rtype::games::rtype::server {
 
@@ -37,8 +38,10 @@ class LaserBeamSystem : public ::rtype::engine::ASystem {
     /**
      * @brief Construct a new Laser Beam System
      * @param emitter Function to emit game events
+     * @param config Laser weapon configuration
      */
-    explicit LaserBeamSystem(EventEmitter emitter);
+    explicit LaserBeamSystem(EventEmitter emitter,
+                             const game::config::LaserConfig& config = {});
 
     /**
      * @brief Update laser beam logic
@@ -103,6 +106,7 @@ class LaserBeamSystem : public ::rtype::engine::ASystem {
     void emitBeamDestroy(uint32_t beamNetworkId);
 
     EventEmitter _emitEvent;
+    game::config::LaserConfig _config;
     uint32_t _nextBeamNetworkId{200000};  // Start beam IDs at 200000
 };
 
