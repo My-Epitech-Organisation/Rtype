@@ -65,6 +65,11 @@ std::uint8_t RtypeInputHandler::getInputMask(
         if (keyForcePod.has_value() && pressedKeys_.contains(*keyForcePod)) {
             inputMask |= ::rtype::network::InputMask::kForcePod;
         }
+
+        auto keyChangeAmmo = keybinds->getKeyBinding(GameAction::CHANGE_AMMO);
+        if (keyChangeAmmo.has_value() && pressedKeys_.contains(*keyChangeAmmo)) {
+            inputMask |= ::rtype::network::InputMask::kWeaponSwitch;
+        }
     } else {
         std::optional<unsigned int> jid;
         for (unsigned int i = 0; i < 8; ++i) {
@@ -99,6 +104,13 @@ std::uint8_t RtypeInputHandler::getInputMask(
 
             if (shootPressed) {
                 inputMask |= ::rtype::network::InputMask::kShoot;
+            }
+
+            auto changeAmmoBtn =
+                keybinds->getJoyButtonBinding(GameAction::CHANGE_AMMO);
+            if (changeAmmoBtn.has_value() &&
+                joystickButtons_[*jid].contains(*changeAmmoBtn)) {
+                inputMask |= ::rtype::network::InputMask::kWeaponSwitch;
             }
 
             static std::map<unsigned int, bool> lastShootStates;
