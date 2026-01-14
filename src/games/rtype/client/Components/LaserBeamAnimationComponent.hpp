@@ -37,11 +37,11 @@ struct LaserBeamAnimationComponent {
 
     // Frame ranges (0-indexed)
     static constexpr int kStartupFirst = 0;
-    static constexpr int kStartupLast = 6;   // 7 frames total
+    static constexpr int kStartupLast = 6;  // 7 frames total
     static constexpr int kLoopFirst = 7;
-    static constexpr int kLoopLast = 14;     // 8 frames total
+    static constexpr int kLoopLast = 14;  // 8 frames total
     static constexpr int kEndFirst = 15;
-    static constexpr int kEndLast = 17;      // 3 frames total
+    static constexpr int kEndLast = 17;  // 3 frames total
 
     // Frame dimensions (50% scaled sprite: 3072x9216 total)
     static constexpr int kFrameWidth = 3072;
