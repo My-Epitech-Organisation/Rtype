@@ -83,14 +83,7 @@ struct BossSerpentVisual {
     /**
      * @brief Get the appropriate texture name based on state and part type
      */
-    [[nodiscard]] const char* getTextureName() const {
-        if (partType == BossSerpentPartType::HEAD) {
-            return isAttacking ? TEXTURE_ATTACK : TEXTURE_HEAD;
-        } else if (partType == BossSerpentPartType::TAIL) {
-            return TEXTURE_TAIL;
-        }
-        return TEXTURE_BODY;
-    }
+    [[nodiscard]] const char* getTextureName() const;
 
     /**
      * @brief Get texture rect for current animation frame
@@ -99,32 +92,18 @@ struct BossSerpentVisual {
      * @param w Output frame width
      * @param h Output frame height
      */
-    void getTextureRect(int& x, int& y, int& w, int& h) const {
-        x = currentFrame * FRAME_WIDTH;
-        y = 0;
-        w = FRAME_WIDTH;
-        h = FRAME_HEIGHT;
-    }
+    void getTextureRect(int& x, int& y, int& w, int& h) const;
 
     /**
      * @brief Advance animation frame
      * @param deltaTime Time elapsed since last update
      */
-    void updateAnimation(float deltaTime) {
-        animationTimer += deltaTime;
-        if (animationTimer >= ANIMATION_SPEED) {
-            animationTimer -= ANIMATION_SPEED;
-            currentFrame = (currentFrame + 1) % FRAME_COUNT;
-        }
-    }
+    void updateAnimation(float deltaTime);
 
     /**
      * @brief Reset animation to first frame
      */
-    void resetAnimation() {
-        currentFrame = 0;
-        animationTimer = 0.0f;
-    }
+    void resetAnimation();
 };
 
 /**
@@ -142,32 +121,17 @@ struct BossSerpentBodyVisual {
     /**
      * @brief Get the texture name for this segment
      */
-    [[nodiscard]] const char* getTextureName() const {
-        return (partType == BossSerpentPartType::TAIL)
-                   ? BossSerpentVisual::TEXTURE_TAIL
-                   : BossSerpentVisual::TEXTURE_BODY;
-    }
+    [[nodiscard]] const char* getTextureName() const;
 
     /**
      * @brief Get texture rect for current frame
      */
-    void getTextureRect(int& x, int& y, int& w, int& h) const {
-        x = currentFrame * BossSerpentVisual::FRAME_WIDTH;
-        y = 0;
-        w = BossSerpentVisual::FRAME_WIDTH;
-        h = BossSerpentVisual::FRAME_HEIGHT;
-    }
+    void getTextureRect(int& x, int& y, int& w, int& h) const;
 
     /**
      * @brief Update animation
      */
-    void updateAnimation(float deltaTime) {
-        animationTimer += deltaTime;
-        if (animationTimer >= BossSerpentVisual::ANIMATION_SPEED) {
-            animationTimer -= BossSerpentVisual::ANIMATION_SPEED;
-            currentFrame = (currentFrame + 1) % BossSerpentVisual::FRAME_COUNT;
-        }
-    }
+    void updateAnimation(float deltaTime);
 };
 
 #endif  // SRC_GAMES_RTYPE_CLIENT_COMPONENTS_BOSSSERPENTCOMPONENT_HPP_
