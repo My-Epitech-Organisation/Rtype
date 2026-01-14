@@ -1,3 +1,6 @@
+# Include client tests subdirectory
+add_subdirectory(client)
+
 add_executable(test_spawning test_spawning.cpp)
 
 target_link_libraries(test_spawning PRIVATE
