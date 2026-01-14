@@ -108,9 +108,9 @@ struct BossComponent {
     float amplitude = 150.0F;
     float frequency = 0.5F;
 
-    static constexpr std::size_t MAX_POSITION_HISTORY = 300;
-    static constexpr float SEGMENT_SPACING = 50.0F;
-    static constexpr float MIN_RECORD_DISTANCE = 5.0F;
+    static constexpr std::size_t MAX_POSITION_HISTORY = 500;
+    static constexpr float SEGMENT_SPACING = 100.0F;
+    static constexpr float MIN_RECORD_DISTANCE = 3.0F;
     std::deque<std::pair<float, float>> positionHistory;
 
     /**
@@ -147,7 +147,7 @@ struct BossComponent {
             }
             return {baseX, baseY};
         }
-        std::size_t historyIndex = segmentIndex * 7;
+        std::size_t historyIndex = segmentIndex * 15;
         if (historyIndex < positionHistory.size()) {
             return positionHistory[historyIndex];
         }
