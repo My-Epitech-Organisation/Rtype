@@ -67,7 +67,8 @@ std::uint8_t RtypeInputHandler::getInputMask(
         }
 
         auto keyChangeAmmo = keybinds->getKeyBinding(GameAction::CHANGE_AMMO);
-        if (keyChangeAmmo.has_value() && pressedKeys_.contains(*keyChangeAmmo)) {
+        if (keyChangeAmmo.has_value() &&
+            pressedKeys_.contains(*keyChangeAmmo)) {
             inputMask |= ::rtype::network::InputMask::kWeaponSwitch;
         }
     } else {
