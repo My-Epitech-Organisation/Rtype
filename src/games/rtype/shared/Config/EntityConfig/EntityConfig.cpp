@@ -176,24 +176,24 @@ bool EntityConfigRegistry::loadEnemies(const std::string& filepath) {
                             if (auto* phaseTbl = phaseElem.as_table()) {
                                 BossPhaseConfig phase;
                                 phase.healthThreshold =
-                                    (*phaseTbl)["health_threshold"]
-                                        .value_or(1.0F);
+                                    (*phaseTbl)["health_threshold"].value_or(
+                                        1.0F);
                                 phase.name =
                                     (*phaseTbl)["name"].value_or("Phase");
                                 phase.primaryPattern =
                                     (*phaseTbl)["primary_pattern"].value_or("");
                                 phase.secondaryPattern =
-                                    (*phaseTbl)["secondary_pattern"]
-                                        .value_or("");
+                                    (*phaseTbl)["secondary_pattern"].value_or(
+                                        "");
                                 phase.speedMultiplier =
-                                    (*phaseTbl)["speed_multiplier"]
-                                        .value_or(1.0F);
+                                    (*phaseTbl)["speed_multiplier"].value_or(
+                                        1.0F);
                                 phase.attackSpeedMultiplier =
                                     (*phaseTbl)["attack_speed_multiplier"]
                                         .value_or(1.0F);
                                 phase.damageMultiplier =
-                                    (*phaseTbl)["damage_multiplier"]
-                                        .value_or(1.0F);
+                                    (*phaseTbl)["damage_multiplier"].value_or(
+                                        1.0F);
                                 if (auto* col = (*phaseTbl)["color"].as_array();
                                     col && col->size() >= 3) {
                                     phase.colorR = static_cast<uint8_t>(
@@ -211,14 +211,17 @@ bool EntityConfigRegistry::loadEnemies(const std::string& filepath) {
                         }
                     }
 
-                    if (auto* weakPoints = (*enemyTbl)["weak_point"].as_array()) {
+                    if (auto* weakPoints =
+                            (*enemyTbl)["weak_point"].as_array()) {
                         for (const auto& wpElem : *weakPoints) {
                             if (auto* wpTbl = wpElem.as_table()) {
                                 WeakPointConfig wp;
                                 wp.id = (*wpTbl)["id"].value_or("");
                                 wp.type = (*wpTbl)["type"].value_or("generic");
-                                wp.offsetX = (*wpTbl)["offset_x"].value_or(0.0F);
-                                wp.offsetY = (*wpTbl)["offset_y"].value_or(0.0F);
+                                wp.offsetX =
+                                    (*wpTbl)["offset_x"].value_or(0.0F);
+                                wp.offsetY =
+                                    (*wpTbl)["offset_y"].value_or(0.0F);
                                 wp.health = (*wpTbl)["health"].value_or(100);
                                 wp.hitboxWidth =
                                     (*wpTbl)["hitbox_width"].value_or(32.0F);
@@ -228,7 +231,8 @@ bool EntityConfigRegistry::loadEnemies(const std::string& filepath) {
                                     (*wpTbl)["bonus_score"].value_or(500);
                                 wp.damageToParent =
                                     (*wpTbl)["damage_to_parent"].value_or(0);
-                                wp.critical = (*wpTbl)["critical"].value_or(false);
+                                wp.critical =
+                                    (*wpTbl)["critical"].value_or(false);
                                 wp.disablesAttack =
                                     (*wpTbl)["disables_attack"].value_or("");
                                 config.weakPoints.push_back(std::move(wp));

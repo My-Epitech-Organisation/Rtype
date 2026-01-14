@@ -45,13 +45,11 @@ void BossPhaseSystem::update(ECS::Registry& registry, float deltaTime) {
     updatePhaseTransitions(registry, deltaTime);
     updateBossMovement(registry, deltaTime);
 
-    auto view =
-        registry.view<BossComponent, BossTag, HealthComponent>();
+    auto view = registry.view<BossComponent, BossTag, HealthComponent>();
 
-    view.each([this, &registry, deltaTime](ECS::Entity entity,
-                                           BossComponent& boss,
-                                           const BossTag& /*tag*/,
-                                           HealthComponent& health) {
+    view.each([this, &registry, deltaTime](
+                  ECS::Entity entity, BossComponent& boss,
+                  const BossTag& /*tag*/, HealthComponent& health) {
         if (boss.defeated) {
             return;
         }
@@ -105,9 +103,9 @@ void BossPhaseSystem::handlePhaseTransition(ECS::Registry& registry,
             shared::AttackPatternConfig primaryConfig;
             primaryConfig.pattern = phase->primaryPattern;
             primaryConfig.cooldown *= (1.0F / phase->attackSpeedMultiplier);
-            primaryConfig.damage = static_cast<int32_t>(
-                static_cast<float>(primaryConfig.damage) *
-                phase->damageMultiplier);
+            primaryConfig.damage =
+                static_cast<int32_t>(static_cast<float>(primaryConfig.damage) *
+                                     phase->damageMultiplier);
             patterns.patternQueue.push_back(primaryConfig);
         }
 
@@ -131,9 +129,10 @@ void BossPhaseSystem::handlePhaseTransition(ECS::Registry& registry,
             event.bossPhaseCount = static_cast<uint8_t>(boss.getPhaseCount());
             _emitEvent(event);
 
-            LOG_INFO("[BossPhaseSystem] Emitted BossPhaseChanged event for "
-                     "boss networkId=" << netId.networkId
-                     << " phase=" << newPhaseIndex);
+            LOG_INFO(
+                "[BossPhaseSystem] Emitted BossPhaseChanged event for "
+                "boss networkId="
+                << netId.networkId << " phase=" << newPhaseIndex);
         }
     }
 }

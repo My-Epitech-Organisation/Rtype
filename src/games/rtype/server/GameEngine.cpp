@@ -169,9 +169,9 @@ bool GameEngine::initialize() {
     _forcePodAttachmentSystem->setLaunchSystem(_forcePodLaunchSystem.get());
 
     _bossPhaseSystem = std::make_unique<BossPhaseSystem>(eventEmitter);
-    auto bossProjectileSpawner =
-        [this](ECS::Registry& reg, float x, float y, float vx, float vy,
-               int32_t damage, uint32_t ownerNetId) -> uint32_t {
+    auto bossProjectileSpawner = [this](ECS::Registry& reg, float x, float y,
+                                        float vx, float vy, int32_t damage,
+                                        uint32_t ownerNetId) -> uint32_t {
         if (_projectileSpawnerSystem) {
             return _projectileSpawnerSystem->spawnBossProjectile(
                 reg, x, y, vx, vy, damage, ownerNetId);
@@ -182,9 +182,8 @@ bool GameEngine::initialize() {
                                 const std::string& minionType, float x,
                                 float y) {
         if (_dataDrivenSpawnerSystem) {
-            LOG_INFO("[GameEngine] Boss spawning minion: " << minionType
-                                                           << " at (" << x
-                                                           << ", " << y << ")");
+            LOG_INFO("[GameEngine] Boss spawning minion: "
+                     << minionType << " at (" << x << ", " << y << ")");
         }
     };
     _bossAttackSystem = std::make_unique<BossAttackSystem>(
@@ -271,12 +270,12 @@ bool GameEngine::initialize() {
                                     _cleanupSystem->update(reg, _lastDeltaTime);
                                 },
                                 {"Collision", "BossPhase", "WeakPoint"});
-    _systemScheduler->addSystem(
-        "Destroy",
-        [this](ECS::Registry& reg) {
-            _destroySystem->update(reg, _lastDeltaTime);
-        },
-        {"Cleanup", "Collision", "Lifetime", "PowerUp", "BossPhase", "WeakPoint"});
+    _systemScheduler->addSystem("Destroy",
+                                [this](ECS::Registry& reg) {
+                                    _destroySystem->update(reg, _lastDeltaTime);
+                                },
+                                {"Cleanup", "Collision", "Lifetime", "PowerUp",
+                                 "BossPhase", "WeakPoint"});
 
     _running = true;
     return true;

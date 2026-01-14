@@ -245,10 +245,10 @@ uint32_t ProjectileSpawnerSystem::spawnChargedProjectile(
 }
 
 uint32_t ProjectileSpawnerSystem::spawnBossProjectile(ECS::Registry& registry,
-                                                       float x, float y,
-                                                       float vx, float vy,
-                                                       int32_t damage,
-                                                       uint32_t ownerNetworkId) {
+                                                      float x, float y,
+                                                      float vx, float vy,
+                                                      int32_t damage,
+                                                      uint32_t ownerNetworkId) {
     WeaponConfig bossConfig;
     bossConfig.projectileType = shared::ProjectileType::EnemyBullet;
     bossConfig.damage = damage;

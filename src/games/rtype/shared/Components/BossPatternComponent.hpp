@@ -104,8 +104,7 @@ struct AttackPatternConfig {
      * @return Configured pattern
      */
     [[nodiscard]] static AttackPatternConfig createMinionSpawn(
-        const std::string& minionTypeId = "basic",
-        int32_t count = 4) noexcept {
+        const std::string& minionTypeId = "basic", int32_t count = 4) noexcept {
         AttackPatternConfig config;
         config.pattern = BossAttackPattern::MinionSpawn;
         config.minionType = minionTypeId;

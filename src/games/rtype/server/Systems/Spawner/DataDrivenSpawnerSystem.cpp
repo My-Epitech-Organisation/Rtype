@@ -309,8 +309,8 @@ void DataDrivenSpawnerSystem::spawnBoss(ECS::Registry& registry,
                                                bossConfig.health);
     registry.emplaceComponent<BoundingBoxComponent>(
         boss, bossConfig.hitboxWidth, bossConfig.hitboxHeight);
-    registry.emplaceComponent<DamageOnContactComponent>(
-        boss, bossConfig.damage, true);
+    registry.emplaceComponent<DamageOnContactComponent>(boss, bossConfig.damage,
+                                                        true);
 
     if (bossConfig.canShoot) {
         float shootCooldown =
@@ -444,8 +444,7 @@ void DataDrivenSpawnerSystem::spawnBoss(ECS::Registry& registry,
     bossEvent.type = engine::GameEventType::BossPhaseChanged;
     bossEvent.entityNetworkId = networkId;
     bossEvent.bossPhase = 0;
-    bossEvent.bossPhaseCount =
-        static_cast<uint8_t>(bossConfig.phases.size());
+    bossEvent.bossPhaseCount = static_cast<uint8_t>(bossConfig.phases.size());
     _emitEvent(bossEvent);
 
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,

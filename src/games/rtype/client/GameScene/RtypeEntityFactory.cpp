@@ -11,8 +11,8 @@
 #include <random>
 #include <utility>
 
-#include "../../shared/Components/BoundingBoxComponent.hpp"
 #include "../../shared/Components/BossComponent.hpp"
+#include "../../shared/Components/BoundingBoxComponent.hpp"
 #include "../../shared/Components/ChargedProjectileComponent.hpp"
 #include "../../shared/Components/EnemyTypeComponent.hpp"
 #include "../../shared/Components/ForcePodComponent.hpp"
@@ -769,7 +769,7 @@ void RtypeEntityFactory::setupBossPartEntity(
     // WeakPointType: 0=Generic, 1=Head, 2=Tail, 3=Core
     float partWidth = 48.0F;
     float partHeight = 48.0F;
-    ::rtype::display::Color fillColor{180, 80, 180, 255};   // Purple default
+    ::rtype::display::Color fillColor{180, 80, 180, 255};  // Purple default
     ::rtype::display::Color outlineColor{220, 100, 220, 255};
 
     switch (partType) {
@@ -782,14 +782,14 @@ void RtypeEntityFactory::setupBossPartEntity(
         case 2:  // Tail - medium, purple/magenta
             partWidth = 40.0F;
             partHeight = 56.0F;
-            fillColor = {200, 50, 200, 255};     // Magenta
-            outlineColor = {255, 100, 255, 255}; // Pink outline
+            fillColor = {200, 50, 200, 255};      // Magenta
+            outlineColor = {255, 100, 255, 255};  // Pink outline
             break;
         case 3:  // Core/Body - green segments
             partWidth = 52.0F;
             partHeight = 52.0F;
-            fillColor = {50, 180, 80, 255};      // Green
-            outlineColor = {100, 255, 120, 255}; // Bright green outline
+            fillColor = {50, 180, 80, 255};       // Green
+            outlineColor = {100, 255, 120, 255};  // Bright green outline
             break;
         default:  // Generic
             partWidth = 44.0F;

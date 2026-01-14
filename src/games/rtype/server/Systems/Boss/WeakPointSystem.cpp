@@ -39,8 +39,8 @@ void WeakPointSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
 }
 
 void WeakPointSystem::syncWeakPointPositions(ECS::Registry& registry) {
-    auto view = registry.view<WeakPointComponent, WeakPointTag,
-                              TransformComponent>();
+    auto view =
+        registry.view<WeakPointComponent, WeakPointTag, TransformComponent>();
 
     view.each([&registry](ECS::Entity entity, WeakPointComponent& weakPoint,
                           const WeakPointTag& /*tag*/,
@@ -68,13 +68,12 @@ void WeakPointSystem::syncWeakPointPositions(ECS::Registry& registry) {
 }
 
 void WeakPointSystem::handleWeakPointDestruction(ECS::Registry& registry) {
-    auto view = registry.view<WeakPointComponent, WeakPointTag,
-                              HealthComponent>();
+    auto view =
+        registry.view<WeakPointComponent, WeakPointTag, HealthComponent>();
 
-    view.each([this, &registry](ECS::Entity entity,
-                                WeakPointComponent& weakPoint,
-                                const WeakPointTag& /*tag*/,
-                                HealthComponent& health) {
+    view.each([this, &registry](
+                  ECS::Entity entity, WeakPointComponent& weakPoint,
+                  const WeakPointTag& /*tag*/, HealthComponent& health) {
         if (weakPoint.destroyed) {
             return;
         }
@@ -86,8 +85,8 @@ void WeakPointSystem::handleWeakPointDestruction(ECS::Registry& registry) {
         weakPoint.destroy();
 
         LOG_INFO("[WeakPointSystem] Weak point destroyed: "
-                 << weakPoint.weakPointId << " Type="
-                 << shared::weakPointTypeToString(weakPoint.type));
+                 << weakPoint.weakPointId
+                 << " Type=" << shared::weakPointTypeToString(weakPoint.type));
 
         if (_emitEvent && registry.hasComponent<NetworkIdComponent>(entity)) {
             const auto& netId =
@@ -105,8 +104,10 @@ void WeakPointSystem::handleWeakPointDestruction(ECS::Registry& registry) {
                 destroyEvent.parentNetworkId = weakPoint.parentBossNetworkId;
                 _emitEvent(destroyEvent);
 
-                LOG_INFO("[WeakPointSystem] Emitted WeakPointDestroyed event "
-                         "and bonus score " << weakPoint.bonusScore);
+                LOG_INFO(
+                    "[WeakPointSystem] Emitted WeakPointDestroyed event "
+                    "and bonus score "
+                    << weakPoint.bonusScore);
             }
         }
 
@@ -185,13 +186,12 @@ void WeakPointSystem::disableBossPattern(ECS::Registry& registry,
             shared::stringToBossAttackPattern(wp.disabledAttackPattern);
 
         auto& queue = patterns.patternQueue;
-        queue.erase(
-            std::remove_if(
-                queue.begin(), queue.end(),
-                [patternToDisable](const shared::AttackPatternConfig& cfg) {
-                    return cfg.pattern == patternToDisable;
-                }),
-            queue.end());
+        queue.erase(std::remove_if(queue.begin(), queue.end(),
+                                   [patternToDisable](
+                                       const shared::AttackPatternConfig& cfg) {
+                                       return cfg.pattern == patternToDisable;
+                                   }),
+                    queue.end());
 
         LOG_INFO("[WeakPointSystem] Disabled boss attack pattern: "
                  << wp.disabledAttackPattern);

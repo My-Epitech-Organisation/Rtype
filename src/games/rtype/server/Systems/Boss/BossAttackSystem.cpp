@@ -41,15 +41,13 @@ BossAttackSystem::BossAttackSystem(EventEmitter emitter,
       _spawnMinion(std::move(minionSpawner)) {}
 
 void BossAttackSystem::update(ECS::Registry& registry, float deltaTime) {
-    auto view =
-        registry.view<BossComponent, BossTag, BossPatternComponent,
-                      TransformComponent>();
+    auto view = registry.view<BossComponent, BossTag, BossPatternComponent,
+                              TransformComponent>();
 
-    view.each([this, &registry, deltaTime](ECS::Entity entity,
-                                           BossComponent& boss,
-                                           const BossTag& /*tag*/,
-                                           BossPatternComponent& patterns,
-                                           const TransformComponent& transform) {
+    view.each([this, &registry, deltaTime](
+                  ECS::Entity entity, BossComponent& boss,
+                  const BossTag& /*tag*/, BossPatternComponent& patterns,
+                  const TransformComponent& transform) {
         if (boss.defeated || boss.phaseTransitionActive) {
             return;
         }
@@ -195,11 +193,10 @@ void BossAttackSystem::executeSpreadFan(ECS::Registry& registry,
     float baseAngle = std::atan2(dy, dx);
 
     float halfSpread = config.spreadAngle * 0.5F * DEG_TO_RAD;
-    float angleStep =
-        (config.projectileCount > 1)
-            ? (config.spreadAngle * DEG_TO_RAD) /
-                  static_cast<float>(config.projectileCount - 1)
-            : 0.0F;
+    float angleStep = (config.projectileCount > 1)
+                          ? (config.spreadAngle * DEG_TO_RAD) /
+                                static_cast<float>(config.projectileCount - 1)
+                          : 0.0F;
 
     for (int32_t i = 0; i < config.projectileCount; ++i) {
         float angle =
@@ -239,13 +236,11 @@ void BossAttackSystem::executeLaserSweep(ECS::Registry& registry,
         ownerNetId = registry.getComponent<NetworkIdComponent>(boss).networkId;
     }
 
-    float sweepProgress =
-        patterns.patternProgress / config.duration;
+    float sweepProgress = patterns.patternProgress / config.duration;
     float baseAngle = PI;
-    float currentAngle =
-        baseAngle + (-config.spreadAngle * 0.5F +
-         config.spreadAngle * sweepProgress) *
-        DEG_TO_RAD;
+    float currentAngle = baseAngle + (-config.spreadAngle * 0.5F +
+                                      config.spreadAngle * sweepProgress) *
+                                         DEG_TO_RAD;
 
     patterns.telegraphAngle = currentAngle;
 
@@ -287,8 +282,7 @@ void BossAttackSystem::executeMinionSpawn(ECS::Registry& registry,
     const auto& config = patterns.currentPattern;
 
     for (int32_t i = 0; i < config.minionCount; ++i) {
-        float offsetY =
-            static_cast<float>(i - config.minionCount / 2) * 50.0F;
+        float offsetY = static_cast<float>(i - config.minionCount / 2) * 50.0F;
 
         if (_spawnMinion) {
             _spawnMinion(registry, config.minionType, transform.x - 50.0F,
@@ -297,9 +291,8 @@ void BossAttackSystem::executeMinionSpawn(ECS::Registry& registry,
     }
 
     patterns.projectilesFired = config.minionCount;
-    LOG_INFO("[BossAttackSystem] Spawned " << config.minionCount
-                                           << " minions of type "
-                                           << config.minionType);
+    LOG_INFO("[BossAttackSystem] Spawned "
+             << config.minionCount << " minions of type " << config.minionType);
 }
 
 void BossAttackSystem::executeTailSweep(ECS::Registry& registry,
@@ -316,12 +309,10 @@ void BossAttackSystem::executeTailSweep(ECS::Registry& registry,
 
     const auto& config = patterns.currentPattern;
 
-    float sweepProgress =
-        patterns.patternProgress / config.duration;
+    float sweepProgress = patterns.patternProgress / config.duration;
 
     patterns.telegraphAngle =
-        (-config.spreadAngle * 0.5F +
-         config.spreadAngle * sweepProgress) *
+        (-config.spreadAngle * 0.5F + config.spreadAngle * sweepProgress) *
         DEG_TO_RAD;
 
     if (_emitEvent) {
