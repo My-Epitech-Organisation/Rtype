@@ -5,7 +5,7 @@
 [level]
 id = "level3"
 name = "MonPtit3"
-background = "Labs"
+background = "AsteroidsSpace"
 scroll_speed = 50.0
 boss = "boss_1"
 next_level = ""

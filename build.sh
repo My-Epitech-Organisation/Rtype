@@ -205,7 +205,7 @@ echo "→ Step 3/4: Building project..."
 if [ "$BUILD_TESTS" = true ]; then
     cmake --build --preset "$CMAKE_PRESET" -- -j$(nproc 2>/dev/null || echo 4)
 else
-    cmake --build --preset "$CMAKE_PRESET" --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-asteroidsSpace rtype-graphic-background-lobby rtype-graphic-background-labs rtype-graphic-music-chillMusic rtype-graphic-music-battleMusic -- -j$(nproc 2>/dev/null || echo 4)
+    cmake --build --preset "$CMAKE_PRESET" --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-asteroidsSpace rtype-graphic-background-lobby rtype-graphic-background-labs rtype-graphic-background-spatialStation  rtype-graphic-music-chillMusic rtype-graphic-music-battleMusic rtype-graphic-music-exploreMusic -- -j$(nproc 2>/dev/null || echo 4)
 fi
 echo "✓ Build complete"
 echo ""

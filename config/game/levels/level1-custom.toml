@@ -5,7 +5,7 @@
 [level]
 id = "level1-custom"
 name = "MonPtit1"
-background = "Labs"
+background = "SpatialStation"
 scroll_speed = 50.0
 boss = "boss_1"
 next_level = "level2-custom.toml"

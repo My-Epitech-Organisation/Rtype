@@ -1,2 +1,3 @@
 add_subdirectory(chillMusic)
 add_subdirectory(battleMusic)
+add_subdirectory(exploreMusic)

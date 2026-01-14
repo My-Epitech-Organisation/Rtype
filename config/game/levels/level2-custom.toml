@@ -5,11 +5,11 @@
 [level]
 id = "level2-custom"
 name = "MonPtit2"
-background = "AsteroidsSpace"
+background = "Labs"
 scroll_speed = 50.0
 boss = "boss_1"
 next_level = "level3.toml"
-level_music = "BattleMusic"
+level_music = "ExploreMusic"
 
 # -----------------------------------------------------------------------------
 # Wave 1
