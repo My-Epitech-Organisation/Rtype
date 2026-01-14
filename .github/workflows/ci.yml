@@ -412,7 +412,7 @@ jobs:
             -DUSE_SFML=ON
 
       - name: Build
-        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-asteroidsSpace rtype-graphic-background-lobby rtype-graphic-background-labs rtype-graphic-background-spatialStation  rtype-graphic-music-chillMusic rtype-graphic-music-battleMusic rtype-graphic-music-exploreMusic
+        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-asteroidsSpace rtype-graphic-background-lobby rtype-graphic-background-labs rtype-graphic-background-spatialStation  rtype-graphic-background-meteorInside rtype-graphic-music-chillMusic rtype-graphic-music-battleMusic rtype-graphic-music-exploreMusic
 
       - name: Prepare Windows dist (exe + DLLs only)
         if: matrix.os == 'windows-latest'
@@ -514,7 +514,7 @@ jobs:
 
   call-release:
     needs: [build, test]
-    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    if: always() && needs.build.result == 'success' && needs.test.result == 'success' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     uses: ./.github/workflows/release.yml
     permissions:
       contents: write
