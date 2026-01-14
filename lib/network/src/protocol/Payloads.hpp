@@ -57,7 +57,7 @@ inline constexpr std::uint16_t kChargeLevelMask = 0xC0;
 inline constexpr std::uint16_t kChargeLevel1 = 0x40;
 inline constexpr std::uint16_t kChargeLevel2 = 0x80;
 inline constexpr std::uint16_t kChargeLevel3 = 0xC0;
-inline constexpr std::uint16_t kWeaponSwitch = 0x100;  ///< Weapon switch (bit 8)
+inline constexpr std::uint16_t kWeaponSwitch = 0x100;
 }  // namespace InputMask
 
 #pragma pack(push, 1)
