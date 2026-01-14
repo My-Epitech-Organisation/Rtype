@@ -347,7 +347,7 @@ void RtypeGameScene::setupHud() {
     _healthBarFillEntity = fill;
 
     auto hpText = EntityFactory::createStaticText(
-        _registry, _assetsManager, "HP: --/--", "title_font",
+        _registry, _assetsManager, "HP: 100/100", "title_font",
         ::rtype::display::Vector2f{barPos.x + barWidth / 2.0f,
                                    barPos.y + barHeight / 2.0f},
         20.f);
