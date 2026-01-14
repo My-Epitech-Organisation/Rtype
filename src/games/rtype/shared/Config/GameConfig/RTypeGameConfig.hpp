@@ -125,7 +125,10 @@ struct TexturesConfig {
     std::string EnemyHeavy;
     std::string EnemyPatrol;
     std::string EnemyWave;
-    std::string BossSerpent;
+    std::string BossSerpentHead;
+    std::string BossSerpentAttack;
+    std::string BossSerpentBody;
+    std::string BossSerpentTail;
     std::string astroVessel;
     std::string missileLaser;
     std::string chargedShot;
