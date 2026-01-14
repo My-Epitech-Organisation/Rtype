@@ -179,7 +179,7 @@ if ($t) {
     cmake --build --preset $CMakePreset --parallel $NumProcs
 } else {
     Write-Host "  Building client and server only..." -ForegroundColor Green
-    cmake --build --preset $CMakePreset --target r-type_client r-type_server rtype-display-sfml --parallel $NumProcs
+    cmake --build --preset $CMakePreset --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-lobby rtype-graphic-background-asteroidsSpace rtype-graphic-background-labs rtype-graphic-background-spatialStation rtype-graphic-background-meteorInside rtype-graphic-background-blackHole --parallel $NumProcs
 }
 
 if ($LASTEXITCODE -ne 0) {
@@ -237,10 +237,34 @@ if (-not (Test-Path $DisplayDLL)) {
 }
 
 if (Test-Path $DisplayDLL) {
-    Copy-Item -Path $DisplayDLL -Destination (Join-Path $ExecutableDir "\plugins\display.dll") -Force
+    $PluginsDir = Join-Path $ExecutableDir "plugins"
+    New-Item -ItemType Directory -Path $PluginsDir -Force | Out-Null
+    Copy-Item -Path $DisplayDLL -Destination (Join-Path $PluginsDir "display.dll") -Force
     Write-Host "  ✓ Copied display.dll" -ForegroundColor Green
 } else {
     Write-Host "  ⚠ Warning: Display DLL not found" -ForegroundColor Yellow
+}
+
+# Copy background plugins
+$BackgroundPluginsDir = Join-Path $ExecutableDir "plugins\background"
+New-Item -ItemType Directory -Path $BackgroundPluginsDir -Force | Out-Null
+$BackgroundSrcDir = Join-Path $ProjectRoot "$BuildDir\lib\background"
+$BackgroundPluginCount = 0
+$BackgroundSubdirs = @("Lobby", "AsteroidsSpace", "Labs", "SpatialStation", "MeteorInside", "BlackHole")
+foreach ($subdir in $BackgroundSubdirs) {
+    $SubdirPath = Join-Path $BackgroundSrcDir $subdir
+    if (Test-Path $SubdirPath) {
+        $BackgroundDLLs = Get-ChildItem -Path $SubdirPath -Filter "*.dll" -File -ErrorAction SilentlyContinue
+        foreach ($dll in $BackgroundDLLs) {
+            Copy-Item $dll.FullName $BackgroundPluginsDir -Force
+            $BackgroundPluginCount++
+        }
+    }
+}
+if ($BackgroundPluginCount -gt 0) {
+    Write-Host "  ✓ Copied $BackgroundPluginCount background plugin(s)" -ForegroundColor Green
+} else {
+    Write-Host "  ⚠ Warning: No background plugins found" -ForegroundColor Yellow
 }
 
 # Copy all SFML and dependency DLLs from display folder
