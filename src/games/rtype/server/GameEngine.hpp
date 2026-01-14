@@ -20,6 +20,7 @@
 #include "Systems/ForcePod/ForcePodAttachmentSystem.hpp"
 #include "Systems/ForcePod/ForcePodLaunchSystem.hpp"
 #include "Systems/ForcePod/ForcePodShootingSystem.hpp"
+#include "Systems/LaserBeam/LaserBeamSystem.hpp"
 #include "Systems/Spawner/DataDrivenSpawnerSystem.hpp"
 #include "Systems/Systems.hpp"
 
@@ -170,6 +171,14 @@ class GameEngine : public engine::AGameEngine {
         return _dataDrivenSpawnerSystem.get();
     }
 
+    /**
+     * @brief Get the laser beam system
+     * @return Pointer to LaserBeamSystem
+     */
+    LaserBeamSystem* getLaserBeamSystem() {
+        return _laserBeamSystem.get();
+    }
+
    private:
     /**
      * @brief Configure les signaux ECS pour les logs et statistiques
@@ -202,6 +211,7 @@ class GameEngine : public engine::AGameEngine {
     std::unique_ptr<ForcePodAttachmentSystem> _forcePodAttachmentSystem;
     std::unique_ptr<ForcePodLaunchSystem> _forcePodLaunchSystem;
     std::unique_ptr<ForcePodShootingSystem> _forcePodShootingSystem;
+    std::unique_ptr<LaserBeamSystem> _laserBeamSystem;
 
     EventCallback _eventCallback;
     std::vector<engine::GameEvent> _pendingEvents;
