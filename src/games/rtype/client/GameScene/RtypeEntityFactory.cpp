@@ -15,7 +15,9 @@
 #include "../../shared/Components/EnemyTypeComponent.hpp"
 #include "../../shared/Components/ForcePodComponent.hpp"
 #include "../../shared/Components/HealthComponent.hpp"
+#include "../../shared/Components/LaserBeamComponent.hpp"
 #include "../../shared/Components/NetworkIdComponent.hpp"
+#include "../Components/LaserBeamAnimationComponent.hpp"
 #include "../../shared/Components/PlayerIdComponent.hpp"
 #include "../../shared/Components/PowerUpTypeComponent.hpp"
 #include "../../shared/Components/Tags.hpp"
@@ -135,6 +137,10 @@ RtypeEntityFactory::createNetworkEntityFactory(
 
             case ::rtype::network::EntityType::ForcePod:
                 setupForcePodEntity(reg, assetsManager, entity);
+                break;
+
+            case ::rtype::network::EntityType::LaserBeam:
+                setupLaserBeamEntity(reg, assetsManager, entity, event.userId);
                 break;
         }
 
@@ -423,8 +429,6 @@ void RtypeEntityFactory::setupMissileEntity(
                 "[RtypeEntityFactory] Added 180° rotation to enemy projectile");
         }
     }
-    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(assetsManager->soundManager->get("laser_sfx"));
 
     if (reg.hasComponent<shared::TransformComponent>(entity)) {
         const auto& pos = reg.getComponent<shared::TransformComponent>(entity);
@@ -625,6 +629,51 @@ void RtypeEntityFactory::setupForcePodEntity(
     LOG_DEBUG_CAT(
         ::rtype::LogCategory::ECS,
         "[RtypeEntityFactory] Force Pod entity created with animation");
+}
+
+void RtypeEntityFactory::setupLaserBeamEntity(
+    ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
+    ECS::Entity entity, std::uint32_t ownerUserId) {
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] Adding LaserBeam components for owner="
+                      << ownerUserId);
+
+    // Vertical spritesheet: 18 frames stacked, each 6144x1024
+    constexpr int frameWidth = LaserBeamAnimationComponent::kFrameWidth;
+    constexpr int frameHeight = LaserBeamAnimationComponent::kFrameHeight;
+    constexpr float displayScale = LaserBeamAnimationComponent::kDisplayScale;
+
+    reg.emplaceComponent<Image>(entity, "laser_beam");
+    reg.emplaceComponent<TextureRect>(
+        entity, std::pair<int, int>({0, 0}),  // First frame (top=0)
+        std::pair<int, int>({frameWidth, frameHeight}));
+
+    // Use custom multi-phase animation component (NOT standard Animation)
+    reg.emplaceComponent<LaserBeamAnimationComponent>(entity);
+
+    // Scale from 3072x512 to ~614x102 on screen (50% sprite with 0.2 scale)
+    reg.emplaceComponent<Size>(entity, displayScale, displayScale);
+
+    // Hitbox for collision detection
+    constexpr float hitboxWidth = 614.0f;
+    constexpr float hitboxHeight = 102.0f;
+    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+        entity, hitboxWidth, hitboxHeight);
+    // Note: BoxingComponent removed - laser hitbox is rendered via
+    // TransformComponent + BoundingBoxComponent in BoxingSystem (loop 1)
+
+    reg.emplaceComponent<shared::LaserBeamTag>(entity);
+    reg.emplaceComponent<ZIndex>(entity, 2);
+    reg.emplaceComponent<GameTag>(entity);
+
+    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+    if (lib && assetsManager && assetsManager->soundManager) {
+        lib->playSFX(assetsManager->soundManager->get("laser_sfx"));
+    }
+
+    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
+                  "[RtypeEntityFactory] LaserBeam entity created with "
+                  "multi-phase animation");
 }
 
 }  // namespace rtype::games::rtype::client
