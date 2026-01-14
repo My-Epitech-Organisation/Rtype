@@ -97,8 +97,6 @@ NetworkClient::NetworkClient(const Config& config)
     networkThread_ = std::thread([this]() { networkThreadLoop(); });
 }
 
-// Testable constructor: allows injecting a mock socket and optionally disabling
-// the background network thread to keep tests deterministic.
 NetworkClient::NetworkClient(const Config& config,
                              std::unique_ptr<network::IAsyncSocket> socket,
                              bool startNetworkThread)
@@ -177,7 +175,6 @@ NetworkClient::~NetworkClient() {
         socket_->cancel();
         ioContext_.poll();
     }
-
     ioContext_.stop();
     networkThreadRunning_.store(false, std::memory_order_release);
     if (networkThread_.joinable()) {
@@ -450,6 +447,8 @@ void NetworkClient::removeConnectedCallback(CallbackId id) {
         onConnectedCallbacks_[id] = nullptr;
     }
 }
+
+void NetworkClient::clearConnectedCallbacks() { onConnectedCallbacks_.clear(); }
 
 void NetworkClient::onDisconnected(
     std::function<void(DisconnectReason)> callback) {

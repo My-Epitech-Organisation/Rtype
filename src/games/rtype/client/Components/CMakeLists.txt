@@ -1,22 +1,12 @@
 add_library(rtype_game_client_components STATIC
-    OBJECT
-    ImageComponent.hpp
-    RectangleComponent.hpp
-    TextComponent.hpp
-    TextInputComponent.hpp
-    ButtonComponent.hpp
-    UserEventComponent.hpp
-    TagComponent.hpp
-    ParallaxComponent.hpp
-    TextureRectComponent.hpp
-    BoxingComponent.hpp
-    HiddenComponent.hpp
-    ZIndexComponent.hpp
-    SizeComponent.hpp
+    ChargeShotVisualComponent.cpp
 )
 
-set_target_properties(rtype_game_client_components PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(rtype_game_client_components PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+)
 
 target_link_libraries(rtype_game_client_components
     PUBLIC
+    rtype_game_shared_components
 )

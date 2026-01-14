@@ -133,6 +133,17 @@ class GameEngine : public engine::AGameEngine {
                              float playerY);
 
     /**
+     * @brief Spawn a charged projectile for a player
+     * @param playerNetworkId Network ID of the player shooting
+     * @param playerX Player X position
+     * @param playerY Player Y position
+     * @param chargeLevel Charge level (1-3)
+     * @return Network ID of the spawned projectile (0 if failed)
+     */
+    uint32_t spawnChargedProjectile(uint32_t playerNetworkId, float playerX,
+                                    float playerY, uint8_t chargeLevel);
+
+    /**
      * @brief Get the ECS registry
      * @return Reference to the ECS registry
      */

@@ -52,6 +52,7 @@ namespace ECS {
 class Registry {
    public:
     Registry() = default;
+    ~Registry();
 
     // ========================================================================
     // ENTITY MANAGEMENT

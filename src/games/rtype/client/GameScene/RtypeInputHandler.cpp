@@ -57,7 +57,12 @@ std::uint8_t RtypeInputHandler::getInputMask(
         }
 
         auto keyShoot = keybinds->getKeyBinding(GameAction::SHOOT);
-        if (keyShoot.has_value() && pressedKeys_.contains(*keyShoot)) {
+        auto keyCharge = keybinds->getKeyBinding(GameAction::CHARGE_SHOT);
+        const bool chargeConflictsWithShoot =
+            bindingsConflict(keyShoot, keyCharge);
+
+        if (keyShoot.has_value() && !chargeConflictsWithShoot &&
+            pressedKeys_.contains(*keyShoot)) {
             inputMask |= ::rtype::network::InputMask::kShoot;
         }
 
@@ -93,11 +98,17 @@ std::uint8_t RtypeInputHandler::getInputMask(
             if (x > deadZone) inputMask |= ::rtype::network::InputMask::kRight;
 
             auto shootBtn = keybinds->getJoyButtonBinding(GameAction::SHOOT);
+            auto chargeBtn =
+                keybinds->getJoyButtonBinding(GameAction::CHARGE_SHOT);
+
+            const bool chargeConflictsWithShoot =
+                bindingsConflict(shootBtn, chargeBtn);
+
             unsigned int shootBtnNum = shootBtn.has_value() ? *shootBtn : 0;
 
             bool shootPressed = joystickButtons_[*jid].contains(shootBtnNum);
 
-            if (shootPressed) {
+            if (shootPressed && !chargeConflictsWithShoot) {
                 inputMask |= ::rtype::network::InputMask::kShoot;
             }
 

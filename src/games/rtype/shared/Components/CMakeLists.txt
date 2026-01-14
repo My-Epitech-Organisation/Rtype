@@ -1,8 +1,9 @@
-# Components are header-only, no source files needed
-# This CMakeLists.txt is kept for potential future compiled components
+# Components library with source files
+add_library(rtype_game_shared_components STATIC
+    CooldownComponent.cpp
+    ChargedProjectileComponent.cpp
+)
 
-add_library(rtype_game_shared_components INTERFACE)
-
-target_include_directories(rtype_game_shared_components INTERFACE
+target_include_directories(rtype_game_shared_components PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/..
 )

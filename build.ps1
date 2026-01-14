@@ -137,10 +137,17 @@ if ($VSInstallPath) {
     $VCVarsAll = Join-Path $VSInstallPath "VC\Auxiliary\Build\vcvars64.bat"
     if (Test-Path $VCVarsAll) {
         Write-Host "  Importing MSVC environment..." -ForegroundColor Green
-        cmd /c "`"$VCVarsAll`" && set" | ForEach-Object {
-            if ($_ -match "^([^=]+)=(.*)$") {
-                [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2])
+        # Use a temp file to avoid command line length issues
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        try {
+            cmd /c "`"$VCVarsAll`" >nul 2>&1 && set > `"$tempFile`""
+            Get-Content $tempFile | ForEach-Object {
+                if ($_ -match "^([^=]+)=(.*)$") {
+                    [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2])
+                }
             }
+        } finally {
+            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
         }
     }
 }

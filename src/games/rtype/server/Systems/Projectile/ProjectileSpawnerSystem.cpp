@@ -14,6 +14,7 @@
 #include <rtype/network/Protocol.hpp>
 
 #include "../../../shared/Components.hpp"
+#include "../../../shared/Components/CooldownComponent.hpp"
 #include "../../../shared/Config/EntityConfig/EntityConfig.hpp"
 
 namespace rtype::games::rtype::server {
@@ -170,10 +171,83 @@ uint32_t ProjectileSpawnerSystem::spawnEnemyProjectile(
                                      enemyNetworkId);
 }
 
+uint32_t ProjectileSpawnerSystem::spawnChargedProjectile(
+    ECS::Registry& registry, uint32_t playerNetworkId, float playerX,
+    float playerY, uint8_t chargeLevel) {
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    auto projConfigOpt = configRegistry.getProjectile("charged_shot");
+    WeaponConfig weaponConfig;
+    if (projConfigOpt.has_value()) {
+        const auto& projConfig = projConfigOpt.value().get();
+        weaponConfig = createWeaponConfigFromProjectile(
+            projConfig, shared::ProjectileType::ChargedShot, 0.5F);
+    } else {
+        weaponConfig.projectileType = shared::ProjectileType::ChargedShot;
+        weaponConfig.speed = 600.0F;
+        weaponConfig.cooldown = 0.5F;
+        weaponConfig.lifetime = 3.0F;
+        weaponConfig.hitboxWidth = 32.0F;
+        weaponConfig.hitboxHeight = 32.0F;
+        weaponConfig.projectileCount = 1;
+        weaponConfig.spreadAngle = 0.0F;
+    }
+    switch (chargeLevel) {
+        case 1:
+            weaponConfig.damage = shared::ChargeComponent::kLevel1Damage;
+            weaponConfig.piercing = true;
+            weaponConfig.maxHits = shared::ChargeComponent::kLevel1Pierce;
+            weaponConfig.hitboxWidth = 24.0F;
+            weaponConfig.hitboxHeight = 24.0F;
+            break;
+        case 2:
+            weaponConfig.damage = shared::ChargeComponent::kLevel2Damage;
+            weaponConfig.piercing = true;
+            weaponConfig.maxHits = shared::ChargeComponent::kLevel2Pierce;
+            weaponConfig.hitboxWidth = 32.0F;
+            weaponConfig.hitboxHeight = 32.0F;
+            break;
+        case 3:
+            weaponConfig.damage = shared::ChargeComponent::kLevel3Damage;
+            weaponConfig.piercing = true;
+            weaponConfig.maxHits = shared::ChargeComponent::kLevel3Pierce;
+            weaponConfig.hitboxWidth = 48.0F;
+            weaponConfig.hitboxHeight = 48.0F;
+            break;
+        default:
+            weaponConfig.damage = shared::ChargeComponent::kLevel1Damage;
+            weaponConfig.piercing = true;
+            weaponConfig.maxHits = shared::ChargeComponent::kLevel1Pierce;
+            break;
+    }
+
+    float damageMultiplier = 1.0F;
+    auto powerView = registry.view<NetworkIdComponent, shared::PlayerTag,
+                                   shared::ActivePowerUpComponent>();
+    powerView.each([playerNetworkId, &damageMultiplier](
+                       ECS::Entity /*entity*/, const NetworkIdComponent& net,
+                       const shared::PlayerTag& /*player*/,
+                       const shared::ActivePowerUpComponent& active) {
+        if (net.networkId == playerNetworkId) {
+            damageMultiplier = active.damageMultiplier;
+        }
+    });
+
+    weaponConfig.damage = static_cast<int32_t>(
+        static_cast<float>(weaponConfig.damage) * damageMultiplier);
+
+    float spawnX = playerX + _config.playerProjectileOffsetX;
+    float spawnY = playerY + _config.playerProjectileOffsetY;
+    uint8_t encodedSubType =
+        static_cast<uint8_t>(weaponConfig.projectileType) | (chargeLevel << 6);
+    return spawnProjectileWithConfig(
+        registry, spawnX, spawnY, weaponConfig.speed, 0.0F, weaponConfig,
+        ProjectileOwner::Player, playerNetworkId, encodedSubType);
+}
+
 uint32_t ProjectileSpawnerSystem::spawnProjectileWithConfig(
     ECS::Registry& registry, float x, float y, float vx, float vy,
-    const WeaponConfig& config, ProjectileOwner owner,
-    uint32_t ownerNetworkId) {
+    const WeaponConfig& config, ProjectileOwner owner, uint32_t ownerNetworkId,
+    uint8_t subTypeOverride) {
     ECS::Entity projectile = registry.spawnEntity();
     registry.emplaceComponent<TransformComponent>(projectile, x, y, 0.0F);
     registry.emplaceComponent<VelocityComponent>(projectile, vx, vy);
@@ -205,7 +279,9 @@ uint32_t ProjectileSpawnerSystem::spawnProjectileWithConfig(
     event.y = y;
     event.rotation = 0.0F;
     event.entityType = static_cast<uint8_t>(EntityType::Missile);
-    event.subType = static_cast<uint8_t>(config.projectileType);
+    event.subType = (subTypeOverride != 0)
+                        ? subTypeOverride
+                        : static_cast<uint8_t>(config.projectileType);
     _emitEvent(event);
 
     return networkId;

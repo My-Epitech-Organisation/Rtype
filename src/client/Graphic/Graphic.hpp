@@ -18,6 +18,9 @@
 #include "../../games/rtype/client/GraphicsConstants.hpp"
 #include "../../games/rtype/client/Systems/BoxingSystem.hpp"
 #include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
+#include "../../games/rtype/client/Systems/ChargeInputSystem.hpp"
+#include "../../games/rtype/client/Systems/ChargeVisualSystem.hpp"
+#include "../../games/rtype/client/Systems/ChargedProjectileAnimationSystem.hpp"
 #include "../../games/rtype/client/Systems/ClientDestroySystem.hpp"
 #include "../../games/rtype/client/Systems/ColorTintSystem.hpp"
 #include "../../games/rtype/client/Systems/EnemyHealthBarSystem.hpp"
@@ -181,6 +184,13 @@ class Graphic {
         _forcePodVisualSystem;
     std::unique_ptr<::rtype::games::rtype::client::EnemyHealthBarSystem>
         _enemyHealthBarSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ChargeInputSystem>
+        _chargeInputSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ChargeVisualSystem>
+        _chargeVisualSystem;
+    std::unique_ptr<
+        ::rtype::games::rtype::client::ChargedProjectileAnimationSystem>
+        _chargedProjectileAnimationSystem;
 
     // ========================================================================
     // Runtime state

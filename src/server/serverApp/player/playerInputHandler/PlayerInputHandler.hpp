@@ -34,6 +34,17 @@ using ShootCallback =
     std::function<std::uint32_t(std::uint32_t networkId, float x, float y)>;
 
 /**
+ * @brief Callback for player charged shot
+ * @param networkId Player's network ID
+ * @param x X position
+ * @param y Y position
+ * @param chargeLevel Charge level (1-3)
+ * @return Projectile network ID (0 if failed)
+ */
+using ChargedShotCallback = std::function<std::uint32_t(
+    std::uint32_t networkId, float x, float y, std::uint8_t chargeLevel)>;
+
+/**
  * @brief Callback for Force Pod launch/recall
  * @param playerNetworkId Player's network ID
  */
@@ -86,6 +97,13 @@ class PlayerInputHandler {
     }
 
     /**
+     * @brief Set callback for charged shot
+     */
+    void setChargedShotCallback(ChargedShotCallback callback) {
+        _chargedShotCallback = std::move(callback);
+    }
+
+    /**
      * @brief Set callback for Force Pod launch/recall
      */
     void setForcePodLaunchCallback(ForcePodLaunchCallback callback) {
@@ -109,6 +127,13 @@ class PlayerInputHandler {
     void processShoot(std::uint32_t userId, ECS::Entity entity);
 
     /**
+     * @brief Process charged shot input
+     * @param chargeLevel Charge level (1-3)
+     */
+    void processChargedShot(std::uint32_t userId, ECS::Entity entity,
+                            std::uint8_t chargeLevel);
+
+    /**
      * @brief Process Force Pod launch/recall input
      */
     void processForcePodLaunch(std::uint32_t userId);
@@ -118,6 +143,7 @@ class PlayerInputHandler {
     std::shared_ptr<GameStateManager> _stateManager;
     std::shared_ptr<const IGameConfig> _gameConfig;
     ShootCallback _shootCallback;
+    ChargedShotCallback _chargedShotCallback;
     ForcePodLaunchCallback _forcePodCallback;
     float _playerSpeed{DEFAULT_PLAYER_SPEED};
     bool _verbose;
