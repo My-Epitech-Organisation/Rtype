@@ -27,10 +27,9 @@ LaserBeamSystem::LaserBeamSystem(EventEmitter emitter,
       _config(config) {}
 
 void LaserBeamSystem::update(ECS::Registry& registry, float deltaTime) {
-    rebuildPlayerCache(registry);  // O(P) once per frame
+    rebuildPlayerCache(registry);
     updateActiveBeams(registry, deltaTime);
     updateBeamPositions(registry);
-    // Collision detection is now handled by CollisionSystem
 }
 
 void LaserBeamSystem::handleLaserInput(ECS::Registry& registry,
@@ -51,7 +50,7 @@ bool LaserBeamSystem::hasActiveLaser(ECS::Registry& registry,
     auto view = registry.view<LaserBeamTag, LaserBeamComponent>();
     bool found = false;
 
-    view.each([&found, playerNetworkId](ECS::Entity /*entity*/,
+    view.each([&found, playerNetworkId](ECS::Entity,
                                         const LaserBeamTag&,
                                         const LaserBeamComponent& beam) {
         if (beam.ownerNetworkId == playerNetworkId && beam.isActive()) {
@@ -65,7 +64,6 @@ bool LaserBeamSystem::hasActiveLaser(ECS::Registry& registry,
 void LaserBeamSystem::startLaser(ECS::Registry& registry,
                                  ECS::Entity playerEntity,
                                  uint32_t playerNetworkId) {
-    // Check if player already has a beam (active or cooling down)
     auto existingView = registry.view<LaserBeamTag, LaserBeamComponent>();
     bool hasExisting = false;
     ECS::Entity existingBeam;
@@ -80,11 +78,9 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
     });
 
     if (hasExisting) {
-        // Check if beam can be fired again
         auto& beam = registry.getComponent<LaserBeamComponent>(existingBeam);
         if (beam.canFire()) {
             startFiringBeam(beam);
-            // Emit spawn event
             if (registry.hasComponent<TransformComponent>(playerEntity)) {
                 const auto& pos =
                     registry.getComponent<TransformComponent>(playerEntity);
@@ -102,17 +98,14 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
         return;
     }
 
-    // Get player position
     if (!registry.hasComponent<TransformComponent>(playerEntity)) {
         return;
     }
     const auto& playerPos =
         registry.getComponent<TransformComponent>(playerEntity);
 
-    // Create new beam entity
     ECS::Entity beamEntity = registry.spawnEntity();
 
-    // Add components (spawn in front of player)
     registry.emplaceComponent<TransformComponent>(
         beamEntity, playerPos.x + _config.offsetX, playerPos.y, 0.0F);
     registry.emplaceComponent<BoundingBoxComponent>(
@@ -126,7 +119,6 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
     startFiringBeam(beamComp);
     registry.emplaceComponent<LaserBeamComponent>(beamEntity, beamComp);
 
-    // Add DamageOnContactComponent for collision-based damage (DPS mode)
     shared::DamageOnContactComponent dmgComp;
     dmgComp.damagePerSecond = _config.damagePerSecond;
     dmgComp.isDPS = true;
@@ -137,11 +129,9 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
     registry.emplaceComponent<shared::DamageOnContactComponent>(beamEntity,
                                                                 dmgComp);
 
-    // Assign network ID
     uint32_t beamNetworkId = _nextBeamNetworkId++;
     registry.emplaceComponent<NetworkIdComponent>(beamEntity, beamNetworkId);
 
-    // Emit spawn event (with offset applied)
     emitBeamSpawn(beamNetworkId, playerPos.x + _config.offsetX, playerPos.y,
                   playerNetworkId);
 
@@ -181,15 +171,12 @@ void LaserBeamSystem::updateActiveBeams(ECS::Registry& registry,
         bool wasActive = beam.isActive();
         bool forceStop = updateBeamState(beam, deltaTime);
 
-        // Synchronize activeTime with DamageOnContactComponent for startup
-        // delay
         if (registry.hasComponent<shared::DamageOnContactComponent>(entity)) {
             auto& dmgComp =
                 registry.getComponent<shared::DamageOnContactComponent>(entity);
             dmgComp.activeTime = beam.activeTime;
         }
 
-        // If max duration was reached, emit destroy event
         if (wasActive && forceStop) {
             emitBeamDestroy(netId.networkId);
             LOG_DEBUG_CAT(
@@ -204,7 +191,7 @@ void LaserBeamSystem::updateBeamPositions(ECS::Registry& registry) {
     auto beamView =
         registry.view<LaserBeamTag, LaserBeamComponent, TransformComponent>();
 
-    beamView.each([this, &registry](ECS::Entity /*beamEntity*/,
+    beamView.each([this, &registry](ECS::Entity,
                                     const LaserBeamTag&,
                                     const LaserBeamComponent& beam,
                                     TransformComponent& beamPos) {
@@ -212,7 +199,6 @@ void LaserBeamSystem::updateBeamPositions(ECS::Registry& registry) {
             return;
         }
 
-        // O(1) lookup using player cache instead of O(n) iteration
         auto it = _playerCache.find(beam.ownerNetworkId);
         if (it == _playerCache.end()) {
             return;
@@ -239,7 +225,6 @@ void LaserBeamSystem::rebuildPlayerCache(ECS::Registry& registry) {
     });
 }
 
-// Static helpers for beam state management (ECS-pure pattern)
 
 void LaserBeamSystem::startFiringBeam(LaserBeamComponent& beam) {
     if (beam.canFire()) {
@@ -282,7 +267,7 @@ bool LaserBeamSystem::updateBeamState(LaserBeamComponent& beam,
 }
 
 void LaserBeamSystem::emitBeamSpawn(uint32_t beamNetworkId, float x, float y,
-                                    uint32_t /*ownerNetworkId*/) {
+                                    uint32_t ) {
     if (!_emitEvent) {
         return;
     }
@@ -292,7 +277,7 @@ void LaserBeamSystem::emitBeamSpawn(uint32_t beamNetworkId, float x, float y,
     event.entityNetworkId = beamNetworkId;
     event.x = x;
     event.y = y;
-    event.entityType = 6;  // EntityType::LaserBeam
+    event.entityType = EntityType::LaserBeam;
     event.subType = 0;
     _emitEvent(event);
 }

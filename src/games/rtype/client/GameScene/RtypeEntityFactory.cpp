@@ -638,31 +638,24 @@ void RtypeEntityFactory::setupLaserBeamEntity(
                   "[RtypeEntityFactory] Adding LaserBeam components for owner="
                       << ownerUserId);
 
-    // Vertical spritesheet: 18 frames stacked, each 6144x1024
     constexpr int frameWidth = LaserBeamAnimationComponent::kFrameWidth;
     constexpr int frameHeight = LaserBeamAnimationComponent::kFrameHeight;
     constexpr float displayScale = LaserBeamAnimationComponent::kDisplayScale;
 
     reg.emplaceComponent<Image>(entity, "laser_beam");
     reg.emplaceComponent<TextureRect>(
-        entity, std::pair<int, int>({0, 0}),  // First frame (top=0)
+        entity, std::pair<int, int>({0, 0}),
         std::pair<int, int>({frameWidth, frameHeight}));
 
     // Use custom multi-phase animation component (NOT standard Animation)
     reg.emplaceComponent<LaserBeamAnimationComponent>(entity);
 
-    // Scale from 3072x512 to ~614x102 on screen (50% sprite with 0.2 scale)
     reg.emplaceComponent<Size>(entity, displayScale, displayScale);
 
-    // Hitbox for collision detection (matches server hitbox size)
-    // Width: 614px (full laser visual width)
-    // Height: 50px (smaller than visual for precise collision)
     constexpr float hitboxWidth = 614.0F;
     constexpr float hitboxHeight = 50.0F;
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, hitboxWidth, hitboxHeight);
-    // Note: BoxingComponent removed - laser hitbox is rendered via
-    // TransformComponent + BoundingBoxComponent in BoxingSystem (loop 1)
 
     reg.emplaceComponent<shared::LaserBeamTag>(entity);
     reg.emplaceComponent<ZIndex>(entity, 2);

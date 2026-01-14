@@ -30,11 +30,9 @@ void LaserBeamAnimationSystem::update(ECS::Registry& registry, float dt) {
 
                 bool shouldDestroy = advanceFrame(anim);
 
-                // Update texture rect for vertical spritesheet
                 tex.rect.top = anim.getTextureTopOffset();
 
                 if (shouldDestroy) {
-                    // Mark entity for destruction
                     if (!registry.hasComponent<shared::DestroyTag>(entity)) {
                         registry.emplaceComponent<shared::DestroyTag>(entity);
                     }
@@ -49,7 +47,6 @@ bool LaserBeamAnimationSystem::advanceFrame(LaserBeamAnimationComponent& anim) {
             if (anim.currentFrame < LaserBeamAnimationComponent::kStartupLast) {
                 anim.currentFrame++;
             } else {
-                // Transition to Loop phase
                 anim.phase = LaserAnimPhase::Loop;
                 anim.currentFrame = LaserBeamAnimationComponent::kLoopFirst;
                 LOG_DEBUG_CAT(
@@ -60,13 +57,11 @@ bool LaserBeamAnimationSystem::advanceFrame(LaserBeamAnimationComponent& anim) {
 
         case LaserAnimPhase::Loop:
             if (anim.pendingDestroy) {
-                // Server sent destroy, transition to End phase
                 anim.phase = LaserAnimPhase::End;
                 anim.currentFrame = LaserBeamAnimationComponent::kEndFirst;
                 LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                               "[LaserBeamAnimation] Transition: Loop -> End");
             } else {
-                // Continue looping
                 anim.currentFrame++;
                 if (anim.currentFrame >
                     LaserBeamAnimationComponent::kLoopLast) {
@@ -79,7 +74,6 @@ bool LaserBeamAnimationSystem::advanceFrame(LaserBeamAnimationComponent& anim) {
             if (anim.currentFrame < LaserBeamAnimationComponent::kEndLast) {
                 anim.currentFrame++;
             } else {
-                // Animation complete, mark for destruction
                 anim.phase = LaserAnimPhase::Destroyed;
                 LOG_DEBUG_CAT(
                     ::rtype::LogCategory::GameEngine,

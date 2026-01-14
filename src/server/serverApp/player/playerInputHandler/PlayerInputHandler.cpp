@@ -73,7 +73,6 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
 
     processMovement(playerEntity, inputMask);
 
-    // Check if player has continuous laser weapon selected
     bool hasLaserWeapon = false;
     if (_registry->hasComponent<WeaponComp>(playerEntity)) {
         const auto& weapon = _registry->getComponent<WeaponComp>(playerEntity);
@@ -84,13 +83,11 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
     bool isShooting = (inputMask & rtype::network::InputMask::kShoot) != 0;
 
     if (hasLaserWeapon && _laserCallback && _networkSystem) {
-        // Handle laser weapon - call callback every frame with current state
         auto networkIdOpt = _networkSystem->getNetworkId(playerEntity);
         if (networkIdOpt.has_value()) {
             _laserCallback(playerEntity, *networkIdOpt, isShooting);
         }
     } else if (isShooting) {
-        // Normal projectile shooting
         processShoot(userId, playerEntity);
     }
 
@@ -98,7 +95,6 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
         processForcePodLaunch(userId);
     }
 
-    // Handle weapon switch (only on rising edge)
     bool weaponSwitchPressed =
         (inputMask & rtype::network::InputMask::kWeaponSwitch) != 0;
     bool wasWeaponSwitchPressed = _weaponSwitchStates[userId];

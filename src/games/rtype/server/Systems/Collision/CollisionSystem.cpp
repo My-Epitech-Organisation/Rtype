@@ -62,7 +62,6 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
     auto collisionPairs = _quadTreeSystem->queryCollisionPairs(registry);
     ECS::CommandBuffer cmdBuffer(std::ref(registry));
 
-    // Clear per-frame tracking for laser DPS deduplication
     _laserDamagedThisFrame.clear();
 
     for (const auto& pair : collisionPairs) {
@@ -136,7 +135,6 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
             continue;
         }
 
-        // Laser beam vs enemy collision (DPS damage)
         if (aIsLaser && bIsEnemy) {
             handleLaserEnemyCollision(registry, cmdBuffer, entityA, entityB,
                                       deltaTime);
@@ -617,24 +615,20 @@ void CollisionSystem::handleLaserEnemyCollision(ECS::Registry& registry,
         return;
     }
 
-    // Laser must have DamageOnContactComponent for DPS damage
     if (!registry.hasComponent<DamageOnContactComponent>(laser)) {
         return;
     }
 
     auto& dmgComp = registry.getComponent<DamageOnContactComponent>(laser);
 
-    // Check startup delay (no damage during startup animation)
     if (!dmgComp.isActive()) {
         return;
     }
 
-    // Enemy must have health
     if (!registry.hasComponent<HealthComponent>(enemy)) {
         return;
     }
 
-    // Get network IDs for deduplication
     uint32_t laserNetId = 0;
     uint32_t enemyNetId = 0;
 
@@ -645,14 +639,12 @@ void CollisionSystem::handleLaserEnemyCollision(ECS::Registry& registry,
         enemyNetId = registry.getComponent<NetworkIdComponent>(enemy).networkId;
     }
 
-    // Prevent multiple hits per frame for same laser-enemy pair
     uint64_t pairKey = (static_cast<uint64_t>(laserNetId) << 32) | enemyNetId;
     if (_laserDamagedThisFrame.count(pairKey) > 0) {
         return;
     }
     _laserDamagedThisFrame.insert(pairKey);
 
-    // Calculate and apply damage
     int32_t damage = dmgComp.calculateDamage(deltaTime);
     auto& health = registry.getComponent<HealthComponent>(enemy);
     int32_t prevHealth = health.current;
@@ -662,7 +654,6 @@ void CollisionSystem::handleLaserEnemyCollision(ECS::Registry& registry,
               << enemy.id << ": " << prevHealth << " -> " << health.current
               << " (damage=" << damage << ")");
 
-    // Emit health change event
     if (_emitEvent && registry.hasComponent<NetworkIdComponent>(enemy)) {
         const auto& netId = registry.getComponent<NetworkIdComponent>(enemy);
         if (netId.isValid()) {
@@ -678,7 +669,6 @@ void CollisionSystem::handleLaserEnemyCollision(ECS::Registry& registry,
         }
     }
 
-    // Destroy enemy if health depleted
     if (!health.isAlive()) {
         LOG_DEBUG("[CollisionSystem] Enemy " << enemy.id
                                              << " destroyed by laser");

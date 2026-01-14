@@ -209,8 +209,6 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
                       (localUserId_.has_value() ? std::to_string(*localUserId_)
                                                 : "none"));
 
-    // Clean up old laser beam entities with pendingDestroy before creating new
-    // one This prevents ghost hitboxes from accumulating
     if (event.type == network::EntityType::LaserBeam) {
         using LaserAnim = games::rtype::client::LaserBeamAnimationComponent;
         std::vector<ECS::Entity> toDestroy;
@@ -375,8 +373,6 @@ void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
     ECS::Entity entity = it->second;
 
     if (registry_->isAlive(entity)) {
-        // Special handling for laser beams: trigger end animation instead of
-        // immediate destruction
         using LaserAnim = games::rtype::client::LaserBeamAnimationComponent;
         if (registry_->hasComponent<LaserAnim>(entity)) {
             auto& anim = registry_->getComponent<LaserAnim>(entity);
@@ -386,9 +382,6 @@ void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
                     rtype::LogCategory::Network,
                     "[ClientNetworkSystem] Laser beam end animation triggered");
             }
-            // Remove from map immediately so new spawn events work correctly
-            // The entity will be destroyed after end animation by
-            // LaserBeamAnimationSystem
             this->networkIdToEntity_.erase(it);
             lastKnownHealth_.erase(entityId);
             return;
