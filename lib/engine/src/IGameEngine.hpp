@@ -32,6 +32,7 @@ enum class GameEventType : uint8_t {
     WeakPointDestroyed,
     LevelComplete,
     ScoreChanged
+    LevelComplete
 };
 
 /**
@@ -163,6 +164,13 @@ class IGameEngine {
      * @return Game identifier string (e.g., "rtype", "spaceinvaders")
      */
     [[nodiscard]] virtual std::string getGameId() const = 0;
+
+    /**
+     * @brief Load a specific level/map from file
+     * @param filepath The path to the level configuration file
+     * @return true if loaded successfully
+     */
+    virtual bool loadLevelFromFile(const std::string& filepath) = 0;
 
     /**
      * @brief Process a game event and return network-ready data

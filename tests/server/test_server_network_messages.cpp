@@ -146,8 +146,8 @@ TEST(NetworkServerMessages, ChatRelay) {
     std::atomic<bool> c1Joined{false};
     std::atomic<bool> c2Joined{false};
 
-    c1.onJoinLobbyResponse([&](bool success, uint8_t){ if(success) c1Joined = true; });
-    c2.onJoinLobbyResponse([&](bool success, uint8_t){ if(success) c2Joined = true; });
+    c1.onJoinLobbyResponse([&](bool success, uint8_t, const std::string&){ if(success) c1Joined = true; });
+    c2.onJoinLobbyResponse([&](bool success, uint8_t, const std::string&){ if(success) c2Joined = true; });
 
     c1.sendJoinLobby("TEST01");
     c2.sendJoinLobby("TEST01");

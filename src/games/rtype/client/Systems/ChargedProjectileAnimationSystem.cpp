@@ -72,13 +72,6 @@ void ChargedProjectileAnimationSystem::update(ECS::Registry& registry,
             [&chargedCount](ECS::Entity, shared::ChargedProjectileComponent&) {
                 ++chargedCount;
             });
-
-        if (chargedCount > 0) {
-            LOG_WARNING("[ChargedProjectileAnim] Found "
-                        << chargedCount
-                        << " ChargedProjectileComponent entities but they have "
-                           "NO TextureRect!");
-        }
     }
 }
 

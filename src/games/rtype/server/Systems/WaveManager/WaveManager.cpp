@@ -109,6 +109,10 @@ void WaveManager::start() {
     _transitionTimer = 0.0F;
     _state = WaveState::InProgress;
 
+    if (_startDelay > 0.0f) {
+        _waveTimer = -_startDelay;
+    }
+
     prepareCurrentWave();
 
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,

@@ -15,6 +15,9 @@ set(NETWORK_SOURCES
 
 add_library(network STATIC ${NETWORK_SOURCES})
 
+# Enable Position Independent Code (PIC) to allow linking into shared libraries
+set_property(TARGET network PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 target_include_directories(network PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/../engine/src

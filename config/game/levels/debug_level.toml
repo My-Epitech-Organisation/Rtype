@@ -6,8 +6,10 @@
 [level]
 id = "debug_level"
 name = "Debug Level"
-background = "assets/backgrounds/space_station.png"
+background = "Labs"
 scroll_speed = 50.0
+next_level = ""
+level_music = "ChillMusic"
 
 # -----------------------------------------------------------------------------
 # Wave 1 - Single enemy for testing

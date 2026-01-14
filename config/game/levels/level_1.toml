@@ -6,9 +6,11 @@
 [level]
 id = "level_1"
 name = "Space Station"
-background = "assets/backgrounds/space_station.png"
+background = "Labs"
 scroll_speed = 50.0
-boss = "boss_scorpion"
+boss = "boss_serpent"
+next_level = "level_2.toml"
+level_music = "ChillMusic"
 
 # -----------------------------------------------------------------------------
 # Wave 1 - Empty wave to trigger boss immediately

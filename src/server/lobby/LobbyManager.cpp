@@ -8,6 +8,7 @@
 #include "server/lobby/LobbyManager.hpp"
 
 #include <algorithm>
+#include <filesystem>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -16,6 +17,8 @@
 
 #include "Logger/Logger.hpp"
 #include "server/lobby/LobbyDiscoveryServer.hpp"
+
+namespace fs = std::filesystem;
 
 namespace rtype::server {
 
@@ -174,6 +177,7 @@ std::vector<LobbyManager::LobbyInfo> LobbyManager::getActiveLobbyList() const {
         info.playerCount = lobby->getPlayerCount();
         info.maxPlayers = lobby->getMaxPlayers();
         info.isActive = isActive;
+        info.levelId = lobby->getConfig().levelId;
 
         result.push_back(info);
     }
@@ -217,7 +221,23 @@ std::vector<Lobby*> LobbyManager::getAllLobbies() const {
     return result;
 }
 
-std::string LobbyManager::createLobby(bool isPrivate) {
+std::vector<std::string> LobbyManager::getAvailableLevels() const {
+    std::vector<std::string> levels;
+    const fs::path levelsDir = fs::path("config") / "game" / "levels";
+
+    if (fs::exists(levelsDir) && fs::is_directory(levelsDir)) {
+        for (const auto& entry : fs::directory_iterator(levelsDir)) {
+            if (entry.path().extension() == ".toml") {
+                levels.push_back(entry.path().stem().string());
+            }
+        }
+    }
+    std::sort(levels.begin(), levels.end());
+    return levels;
+}
+
+std::string LobbyManager::createLobby(bool isPrivate,
+                                      const std::string& levelId) {
     std::lock_guard<std::mutex> lock(lobbiesMutex_);
 
     if (lobbies_.size() >= config_.maxInstances) {
@@ -248,6 +268,7 @@ std::string LobbyManager::createLobby(bool isPrivate) {
     lobbyConfig.tickRate = config_.tickRate;
     lobbyConfig.configPath = config_.configPath;
     lobbyConfig.emptyTimeout = config_.emptyTimeout;
+    lobbyConfig.levelId = levelId;
 
     auto lobby = std::make_unique<Lobby>(code, lobbyConfig, this, banManager_);
 

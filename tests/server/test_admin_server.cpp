@@ -18,17 +18,17 @@ TEST(AdminServerTest, AuthAndBasicEndpoints) {
 
     httplib::Client cli("127.0.0.1", cfg.port);
 
-    // Localhost mode: requests from localhost should be allowed without token
+    // Localhost mode: requests from localhost should NOT be allowed without auth
     auto res = cli.Get("/api/metrics");
     ASSERT_NE(res, nullptr);
-    // No ServerApp is provided in this test, so the metrics endpoint should return 500
-    EXPECT_EQ(res->status, 500);
+    // Expect 401 unauthorized when no credentials provided
+    EXPECT_EQ(res->status, 401);
 
-    // With wrong token, still allowed due to localhost-only mode
+    // With wrong token, still unauthorized
     httplib::Headers badAuth{{"Authorization", "Bearer wrong"}};
     res = cli.Get("/api/metrics", badAuth);
     ASSERT_NE(res, nullptr);
-    EXPECT_EQ(res->status, 500);
+    EXPECT_EQ(res->status, 401);
 
     // With correct token
     httplib::Headers goodAuth{{"Authorization", "Bearer testtoken"}};

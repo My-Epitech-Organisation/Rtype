@@ -71,6 +71,7 @@ DataDrivenSpawnerSystem::DataDrivenSpawnerSystem(EventEmitter emitter,
       _powerUpTypeDist(1, static_cast<int>(shared::PowerUpType::HealthBoost)) {
     _waveManager.setWaitForClear(config.waitForClear);
     _waveManager.setWaveTransitionDelay(config.waveTransitionDelay);
+    _waveManager.setStartDelay(config.startDelay);
 
     generateNextObstacleSpawnTime();
     generateNextPowerUpSpawnTime();
@@ -181,7 +182,7 @@ void DataDrivenSpawnerSystem::update(ECS::Registry& registry, float deltaTime) {
                              "[DataDrivenSpawner] Level complete!");
                 _gameOverEmitted = true;
                 engine::GameEvent event{};
-                event.type = engine::GameEventType::GameOver;
+                event.type = engine::GameEventType::LevelComplete;
                 _emitEvent(event);
             }
         }

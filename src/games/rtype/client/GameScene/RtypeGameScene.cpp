@@ -42,11 +42,14 @@ RtypeGameScene::RtypeGameScene(
     std::shared_ptr<::rtype::display::IDisplay> display,
     std::shared_ptr<KeyboardActions> keybinds,
     std::function<void(const SceneManager::Scene&)> switchToScene,
+    std::function<void(const std::string&)> setBackground,
+    std::function<void(const std::string&)> setLevelMusic,
     std::shared_ptr<::rtype::client::NetworkClient> networkClient,
     std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem,
     std::shared_ptr<AudioLib> audioLib)
     : AGameScene(std::move(registry), std::move(assetsManager), display,
                  std::move(keybinds), std::move(switchToScene),
+                 std::move(setBackground), std::move(setLevelMusic),
                  std::move(networkClient), std::move(networkSystem)),
       _movementSystem(
           std::make_unique<::rtype::games::rtype::shared::MovementSystem>()) {
@@ -92,6 +95,9 @@ RtypeGameScene::~RtypeGameScene() {
         _networkClient->clearDisconnectedCallbacks();
         _networkClient->onGameStateChange(nullptr);
     }
+    if (_bandwidthIndicatorEntity.has_value()) {
+        _registry->killEntity(*this->_bandwidthIndicatorEntity);
+    }
 
     clearDamageVignette();
     _vignetteEntities.clear();
@@ -105,8 +111,8 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
                   "[RtypeGameScene] Initialize called");
     std::vector<ECS::Entity> entities;
 
-    auto bgEntities = EntityFactory::createBackground(this->_registry,
-                                                      this->_assetsManager, "");
+    auto bgEntities = EntityFactory::createBackground(
+        this->_registry, this->_assetsManager, "", nullptr);
     entities.insert(entities.end(), bgEntities.begin(), bgEntities.end());
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[RtypeGameScene] Background created with "
@@ -139,6 +145,7 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
         "[RtypeGameScene] _registry is " << (_registry ? "valid" : "NULL"));
     LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Setting up HUD");
     setupHud();
+    setupLevelAnnounceCallback();
     setupDamageVignette();
     updateBandwidthIndicator();
     setupBandwidthModeCallback();
@@ -173,6 +180,7 @@ void RtypeGameScene::update() {
 
     updateDamageVignette(dt);
     updatePingDisplay();
+    updateLevelAnnounce(dt);
 
     if (_isDisconnected) {
         if (_networkSystem) {
@@ -465,7 +473,7 @@ void RtypeGameScene::setupHud() {
     _healthBarFillEntity = fill;
 
     auto hpText = EntityFactory::createStaticText(
-        _registry, _assetsManager, "HP: --/--", "title_font",
+        _registry, _assetsManager, "HP: 100/100", "title_font",
         ::rtype::display::Vector2f{barPos.x + barWidth / 2.0f,
                                    barPos.y + barHeight / 2.0f},
         20.f);
@@ -1117,6 +1125,101 @@ void RtypeGameScene::setupBandwidthModeCallback() {
                    std::uint8_t activeCount) {
                 showBandwidthNotification(userId, lowBandwidth, activeCount);
             });
+    }
+}
+
+void RtypeGameScene::setupLevelAnnounceCallback() {
+    if (_networkClient) {
+        LOG_INFO_CAT(::rtype::LogCategory::UI,
+                     "[RtypeGameScene] Setting up level announce callback");
+        _networkClient->onLevelAnnounce(
+            [this](const ::rtype::client::LevelAnnounceEvent& event) {
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::UI,
+                    "[RtypeGameScene] Level announce callback triggered: "
+                        << event.levelName << " background: "
+                        << event.background << " music: " << event.levelMusic);
+                showLevelAnnounce(event.levelName);
+                if (_setBackground && !event.background.empty()) {
+                    LOG_INFO_CAT(::rtype::LogCategory::UI,
+                                 "[RtypeGameScene] Setting background to: "
+                                     << event.background);
+                    _setBackground(event.background);
+                }
+                if (_setLevelMusic && !event.levelMusic.empty()) {
+                    LOG_INFO_CAT(::rtype::LogCategory::UI,
+                                 "[RtypeGameScene] Setting level music to: "
+                                     << event.levelMusic);
+                    _setLevelMusic(event.levelMusic);
+                }
+            });
+    }
+}
+
+void RtypeGameScene::showLevelAnnounce(const std::string& levelName) {
+    LOG_INFO_CAT(
+        ::rtype::LogCategory::UI,
+        "[RtypeGameScene] showLevelAnnounce called with: " << levelName);
+
+    if (_levelAnnounceBgEntity.has_value() &&
+        _registry->isAlive(*_levelAnnounceBgEntity)) {
+        _registry->killEntity(*_levelAnnounceBgEntity);
+    }
+    if (_levelAnnounceTextEntity.has_value() &&
+        _registry->isAlive(*_levelAnnounceTextEntity)) {
+        _registry->killEntity(*_levelAnnounceTextEntity);
+    }
+
+    auto windowSize = _display->getWindowSize();
+
+    auto bg = EntityFactory::createRectangle(
+        _registry,
+        ::rtype::display::Vector2i(static_cast<int>(windowSize.x),
+                                   static_cast<int>(windowSize.y)),
+        ::rtype::display::Color(0, 0, 0, 175),
+        ::rtype::display::Vector2f(0.0f, 0.0f));
+
+    std::string displayTxt = "LEVEL: " + levelName;
+    float estimatedWidth = static_cast<float>(displayTxt.length()) * 20.0f;
+    float txtX = (static_cast<float>(windowSize.x) - estimatedWidth) / 2.0f;
+
+    float centerX = static_cast<float>(windowSize.x) / 2.0f - 150.0f;
+
+    auto txt = EntityFactory::createStaticText(
+        _registry, _assetsManager, displayTxt, "title_font",
+        ::rtype::display::Vector2f(
+            centerX, static_cast<float>(windowSize.y) / 2.0f - 20.0f),
+        40.f);
+
+    _registry->emplaceComponent<ZIndex>(bg, GraphicsConfig::ZINDEX_UI + 5);
+    _registry->emplaceComponent<ZIndex>(txt, GraphicsConfig::ZINDEX_UI + 6);
+
+    _levelAnnounceBgEntity = bg;
+    _levelAnnounceTextEntity = txt;
+    _levelAnnounceTimer = 3.0f;
+    LOG_INFO_CAT(::rtype::LogCategory::UI,
+                 "[RtypeGameScene] Level announce displayed for 3 seconds");
+}
+
+void RtypeGameScene::updateLevelAnnounce(float dt) {
+    if (_levelAnnounceTimer > 0.0f) {
+        _levelAnnounceTimer -= dt;
+        if (_levelAnnounceTimer <= 0.0f) {
+            _levelAnnounceTimer = 0.0f;
+            LOG_INFO_CAT(::rtype::LogCategory::UI,
+                         "[RtypeGameScene] Level announce destroyed after "
+                         "timer elapsed");
+            if (_levelAnnounceBgEntity.has_value() &&
+                _registry->isAlive(*_levelAnnounceBgEntity)) {
+                _registry->killEntity(*_levelAnnounceBgEntity);
+                _levelAnnounceBgEntity.reset();
+            }
+            if (_levelAnnounceTextEntity.has_value() &&
+                _registry->isAlive(*_levelAnnounceTextEntity)) {
+                _registry->killEntity(*_levelAnnounceTextEntity);
+                _levelAnnounceTextEntity.reset();
+            }
+        }
     }
 }
 

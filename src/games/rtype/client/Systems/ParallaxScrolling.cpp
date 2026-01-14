@@ -7,6 +7,8 @@
 
 #include "ParallaxScrolling.hpp"
 
+#include <cmath>
+
 #include "../Components/ImageComponent.hpp"
 #include "../Components/ParallaxComponent.hpp"
 #include "../Components/TextureRectComponent.hpp"
@@ -50,7 +52,7 @@ void ParallaxScrolling::update(ECS::Registry& registry, float dt) {
             auto& texRect = registry.getComponent<rc::TextureRect>(entity);
 
             float effectiveOffset = _totalScroll * parallax.scrollFactor;
-            int intOffset = static_cast<int>(effectiveOffset);
+            int intOffset = static_cast<int>(std::floor(effectiveOffset));
 
             transform.x = spriteX;
             transform.y = spriteY;
@@ -58,6 +60,10 @@ void ParallaxScrolling::update(ECS::Registry& registry, float dt) {
             auto texture = _display->getTexture(img.textureName);
             if (texture) {
                 display::Vector2u texSize = texture->getSize();
+                if (texSize.x > 0) {
+                    intOffset = intOffset % static_cast<int>(texSize.x);
+                    if (intOffset < 0) intOffset += static_cast<int>(texSize.x);
+                }
                 texRect.rect = {intOffset, 0, static_cast<int>(viewWidth) + 1,
                                 static_cast<int>(texSize.y)};
             }

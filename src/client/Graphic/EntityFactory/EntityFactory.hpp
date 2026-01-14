@@ -25,6 +25,7 @@
 #include "Components/ZIndexComponent.hpp"
 #include "ECS.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
+#include "lib/background/IBackground.hpp"
 
 namespace EntityFactory {
 template <typename... Args>
@@ -78,7 +79,8 @@ ECS::Entity createTextInput(std::shared_ptr<ECS::Registry> registry,
 
 std::vector<ECS::Entity> createBackground(
     std::shared_ptr<ECS::Registry> registry,
-    std::shared_ptr<AssetManager> assetManager, std::string_view PageName);
+    std::shared_ptr<AssetManager> assetManager, std::string_view PageName,
+    std::unique_ptr<IBackground> backgroundLib);
 
 ECS::Entity createLobbyPlayer(std::shared_ptr<ECS::Registry> registry,
                               std::shared_ptr<AssetManager> assetManager,

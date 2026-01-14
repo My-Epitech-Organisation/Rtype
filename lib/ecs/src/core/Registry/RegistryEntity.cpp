@@ -11,10 +11,7 @@
 
 namespace ECS {
 
-Registry::~Registry() {
-    std::cerr << "[Registry] Destructor called" << std::endl;
-    std::cerr << "[Registry] Destructor completed" << std::endl;
-}
+Registry::~Registry() {}
 
 // ========================================================================
 // ENTITY LIFECYCLE

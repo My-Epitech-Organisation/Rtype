@@ -12,6 +12,8 @@
 #include <fstream>
 #include <iostream>
 
+#include <toml++/toml.hpp>
+
 #include "Components/HiddenComponent.hpp"
 #include "Components/RectangleComponent.hpp"
 #include "Components/TextComponent.hpp"
@@ -53,20 +55,89 @@ void LevelCreatorScene::addElementToSection(const std::string& sectionId,
     }
 }
 
+void LevelCreatorScene::_getLevelsName() {
+    this->_listNextLevel.clear();
+    this->_listNextLevel["GAMEOVER"] = "";
+    if (std::filesystem::exists("./config/game/levels/")) {
+        for (const auto& s :
+             std::filesystem::directory_iterator("./config/game/levels/")) {
+            std::string path = s.path().string();
+            if (!path.ends_with(".toml")) continue;
+            try {
+                auto config = toml::parse_file(path);
+                if (config.contains("level") &&
+                    config["level"].as_table()->contains("name")) {
+                    std::string levelName =
+                        config["level"]["name"].value_or("");
+                    if (!levelName.empty()) {
+                        this->_listNextLevel[levelName] = path;
+                    }
+                }
+            } catch (const toml::parse_error& err) {
+                std::cerr << "Error parsing TOML file " << path << ": " << err
+                          << std::endl;
+            }
+        }
+    }
+
+    if (this->_listNextLevel.empty()) {
+        this->_nextLevelId = "";
+    } else {
+        this->_nextLevelIteratorCurrent =
+            this->_listNextLevel.find(this->_nextLevelId);
+        if (this->_nextLevelIteratorCurrent == this->_listNextLevel.end()) {
+            this->_nextLevelIteratorCurrent = this->_listNextLevel.begin();
+        }
+        this->_nextLevelId = this->_nextLevelIteratorCurrent->first;
+    }
+
+    if (this->_nextLevelId.empty() && !this->_listNextLevel.empty()) {
+        this->_nextLevelId = this->_listNextLevel.begin()->first;
+    }
+
+    if (this->_registry->isAlive(this->_btnNextLevel) &&
+        this->_registry->hasComponent<rtype::games::rtype::client::Text>(
+            this->_btnNextLevel)) {
+        this->_registry
+            ->getComponent<rtype::games::rtype::client::Text>(
+                this->_btnNextLevel)
+            .textContent = this->_nextLevelId;
+    }
+}
+
 LevelCreatorScene::LevelCreatorScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> assetsManager,
     std::shared_ptr<rtype::display::IDisplay> window,
     std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
+    std::map<std::string, std::shared_ptr<IBackground>> libBackgrounds,
+    std::map<std::string, std::shared_ptr<ILevelMusic>> libMusicLevels,
+    std::function<void(const std::string&)> setBackground,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(std::move(ecs), std::move(assetsManager), window,
              std::move(audio)),
       _textInputSystem(
           std::make_shared<rtype::games::rtype::client::TextInputSystem>(
               window)),
-      _switchToScene(std::move(switchToScene)) {
+      _switchToScene(std::move(switchToScene)),
+      _libBackgrounds(std::move(libBackgrounds)),
+      _libMusicLevels(std::move(libMusicLevels)) {
+    this->_getLevelsName();
+    if (!this->_listNextLevel.empty()) {
+        this->_nextLevelIteratorCurrent = this->_listNextLevel.begin();
+        this->_nextLevelId = this->_nextLevelIteratorCurrent->first;
+    }
+
     this->_listEntity = (EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "Level Creator"));
+        this->_registry, this->_assetsManager, "Level Creator", nullptr));
+
+    this->_musicLevelIteratorCurrent = this->_libMusicLevels.begin();
+
+    this->_musicLevelId = this->_musicLevelIteratorCurrent->first;
+
+    this->_bgIteratorCurrent = _libBackgrounds.begin();
+
+    this->_bgPluginName = this->_bgIteratorCurrent->first;
 
     float startX = kLevelSectionPosLeft;
     float startY = kLevelSectionPosTop;
@@ -85,9 +156,9 @@ LevelCreatorScene::LevelCreatorScene(
         EntityFactory::createStaticText(_registry, _assetsManager,
                                         "ID:", "main_font", {labelX, 0}, 24.f),
         currentY);
-    _levelIdInput = EntityFactory::createTextInput(
-        _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "level_1",
-        "level_1", 50, false);
+    _levelIdInput =
+        EntityFactory::createTextInput(_registry, _assetsManager, {inputX, 0},
+                                       {inputW, 40}, "level_1", "", 50, false);
     addElementToSection("settings", _levelIdInput, currentY);
 
     currentY += gapY;
@@ -96,9 +167,9 @@ LevelCreatorScene::LevelCreatorScene(
         EntityFactory::createStaticText(
             _registry, _assetsManager, "Name:", "main_font", {labelX, 0}, 24.f),
         currentY);
-    _levelNameInput = EntityFactory::createTextInput(
-        _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "Map Name",
-        "Space Station", 50, false);
+    _levelNameInput =
+        EntityFactory::createTextInput(_registry, _assetsManager, {inputX, 0},
+                                       {inputW, 40}, "Map Name", "", 50, false);
     addElementToSection("settings", _levelNameInput, currentY);
 
     currentY += gapY;
@@ -107,10 +178,33 @@ LevelCreatorScene::LevelCreatorScene(
                             _registry, _assetsManager,
                             "Background:", "main_font", {labelX, 0}, 24.f),
                         currentY);
-    _bgInputInput = EntityFactory::createTextInput(
-        _registry, _assetsManager, {inputX, 0}, {inputW, 40}, "Path",
-        "assets/backgrounds/space_station.png", 100, false);
-    addElementToSection("settings", _bgInputInput, currentY);
+    _levelBackgroundBtn = EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text("main_font",
+                                          rtype::display::Color::White(), 20,
+                                          this->_bgPluginName),
+        rtype::games::rtype::shared::TransformComponent(inputX, 0),
+        rtype::games::rtype::client::Rectangle(
+            {120, 40}, rtype::display::Color(0, 180, 0, 255),
+            rtype::display::Color(0, 135, 0, 255)),
+        this->_assetsManager, std::function<void()>([this]() {
+            if (this->_libBackgrounds.empty()) return;
+            ++this->_bgIteratorCurrent;
+            if (this->_bgIteratorCurrent == this->_libBackgrounds.end()) {
+                this->_bgIteratorCurrent = this->_libBackgrounds.begin();
+            }
+            this->_bgPluginName = this->_bgIteratorCurrent->first;
+
+            if (this->_registry
+                    ->hasComponent<rtype::games::rtype::client::Text>(
+                        this->_levelBackgroundBtn)) {
+                this->_registry
+                    ->getComponent<rtype::games::rtype::client::Text>(
+                        this->_levelBackgroundBtn)
+                    .textContent = this->_bgPluginName;
+            }
+        }));
+    addElementToSection("settings", _levelBackgroundBtn, currentY);
 
     currentY += gapY;
     addElementToSection("settings",
@@ -132,9 +226,81 @@ LevelCreatorScene::LevelCreatorScene(
     _bossInput = EntityFactory::createTextInput(_registry, _assetsManager,
                                                 {inputX, 0}, {inputW, 40},
                                                 "boss_1", "boss_1", 50, false);
-
     addElementToSection("settings", _bossInput, currentY);
 
+    currentY += gapY;
+    addElementToSection("settings",
+                        EntityFactory::createStaticText(
+                            _registry, _assetsManager,
+                            "Next Level:", "main_font", {labelX, 0}, 24.f),
+                        currentY);
+
+    _btnNextLevel = EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text("main_font",
+                                          rtype::display::Color::White(), 20,
+                                          this->_nextLevelId),
+        rtype::games::rtype::shared::TransformComponent(inputX, 0),
+        rtype::games::rtype::client::Rectangle(
+            {120, 40}, rtype::display::Color(0, 180, 0, 255),
+            rtype::display::Color(0, 135, 0, 255)),
+        this->_assetsManager, std::function<void()>([this]() {
+            if (this->_listNextLevel.empty()) return;
+            ++this->_nextLevelIteratorCurrent;
+            if (this->_nextLevelIteratorCurrent == this->_listNextLevel.end()) {
+                this->_nextLevelIteratorCurrent = this->_listNextLevel.begin();
+            }
+            this->_nextLevelId = this->_nextLevelIteratorCurrent->first;
+
+            if (this->_registry
+                    ->hasComponent<rtype::games::rtype::client::Text>(
+                        this->_btnNextLevel)) {
+                this->_registry
+                    ->getComponent<rtype::games::rtype::client::Text>(
+                        this->_btnNextLevel)
+                    .textContent = this->_nextLevelId;
+            }
+        }));
+
+    addElementToSection("settings", _btnNextLevel, currentY);
+    currentY += gapY;
+
+    addElementToSection("settings",
+                        EntityFactory::createStaticText(
+                            _registry, _assetsManager,
+                            "Music Level:", "main_font", {labelX, 0}, 24.f),
+                        currentY);
+
+    _btnMusicLevel = EntityFactory::createButton(
+        this->_registry,
+        rtype::games::rtype::client::Text("main_font",
+                                          rtype::display::Color::White(), 20,
+                                          this->_musicLevelId),
+        rtype::games::rtype::shared::TransformComponent(inputX, 0),
+        rtype::games::rtype::client::Rectangle(
+            {120, 40}, rtype::display::Color(0, 180, 0, 255),
+            rtype::display::Color(0, 135, 0, 255)),
+        this->_assetsManager, std::function<void()>([this]() {
+            if (this->_libMusicLevels.empty()) return;
+            ++this->_musicLevelIteratorCurrent;
+            if (this->_musicLevelIteratorCurrent ==
+                this->_libMusicLevels.end()) {
+                this->_musicLevelIteratorCurrent =
+                    this->_libMusicLevels.begin();
+            }
+            this->_musicLevelId = this->_musicLevelIteratorCurrent->first;
+
+            if (this->_registry
+                    ->hasComponent<rtype::games::rtype::client::Text>(
+                        this->_btnMusicLevel)) {
+                this->_registry
+                    ->getComponent<rtype::games::rtype::client::Text>(
+                        this->_btnMusicLevel)
+                    .textContent = this->_musicLevelId;
+            }
+        }));
+
+    addElementToSection("settings", _btnMusicLevel, currentY);
     currentY += 80.f;
 
     auto btnAdd = EntityFactory::createButton(
@@ -298,10 +464,58 @@ void LevelCreatorScene::saveCurrentWaveStats() {
 
 void LevelCreatorScene::saveToToml() {
     saveCurrentWaveStats();
-
-    std::string filename = "level_config.toml";
     std::string lvlId = getInputValue(_levelIdInput);
-    if (!lvlId.empty()) filename = lvlId + ".toml";
+    std::string lvlName = getInputValue(_levelNameInput);
+    if (lvlId.empty()) {
+        LOG_ERROR_CAT(rtype::LogCategory::UI,
+                      "Level ID is empty, cannot save level configuration.");
+        if (_statusMessageEntity != ECS::Entity(0) &&
+            _registry->isAlive(_statusMessageEntity)) {
+            _registry->killEntity(_statusMessageEntity);
+        }
+
+        float startX = kLevelSectionPosLeft;
+        _statusMessageEntity = EntityFactory::createStaticText(
+            _registry, _assetsManager,
+            "You must enter a level ID before saving.", "main_font",
+            {startX, 810.f}, 20.f);
+
+        try {
+            auto& textComp =
+                _registry->getComponent<rtype::games::rtype::client::Text>(
+                    _statusMessageEntity);
+            textComp.color = rtype::display::Color::Red();
+        } catch (const std::exception&) {
+        }
+        _listEntity.push_back(_statusMessageEntity);
+        return;
+    }
+    if (lvlName.empty()) {
+        LOG_ERROR_CAT(rtype::LogCategory::UI,
+                      "Level Name is empty, cannot save level configuration.");
+        if (_statusMessageEntity != ECS::Entity(0) &&
+            _registry->isAlive(_statusMessageEntity)) {
+            _registry->killEntity(_statusMessageEntity);
+        }
+
+        float startX = kLevelSectionPosLeft;
+        _statusMessageEntity = EntityFactory::createStaticText(
+            _registry, _assetsManager,
+            "You must enter a level Name before saving.", "main_font",
+            {startX, 810.f}, 20.f);
+
+        try {
+            auto& textComp =
+                _registry->getComponent<rtype::games::rtype::client::Text>(
+                    _statusMessageEntity);
+            textComp.color = rtype::display::Color::Red();
+        } catch (const std::exception&) {
+        }
+        _listEntity.push_back(_statusMessageEntity);
+        return;
+    }
+
+    auto filename = "config/game/levels/" + lvlId + ".toml";
 
     std::ofstream file(filename);
     if (!file.is_open()) {
@@ -324,14 +538,17 @@ void LevelCreatorScene::saveToToml() {
     file << "[level]" << std::endl;
     file << "id = \"" << getInputValue(_levelIdInput) << "\"" << std::endl;
     file << "name = \"" << getInputValue(_levelNameInput) << "\"" << std::endl;
-    file << "background = \"" << getInputValue(_bgInputInput) << "\""
-         << std::endl;
+    file << "background = \"" << this->_bgPluginName << "\"" << std::endl;
+    file << "level_music = \"" << this->_musicLevelId << "\"" << std::endl;
     file << "scroll_speed = "
          << (getInputValue(_scrollSpeedInput).empty()
                  ? "0.0"
                  : getInputValue(_scrollSpeedInput))
          << std::endl;
     file << "boss = \"" << getInputValue(_bossInput) << "\"" << std::endl;
+    std::filesystem::path pathObj(this->_listNextLevel[this->_nextLevelId]);
+    std::string nextLevel = pathObj.filename().string();
+    file << "next_level = \"" << nextLevel << "\"" << std::endl;
     file << std::endl;
 
     for (const auto& wave : _waves) {
@@ -367,7 +584,7 @@ void LevelCreatorScene::saveToToml() {
     }
 
     file.close();
-    std::cout << "Level configuration saved to " << filename << std::endl;
+    LOG_INFO("Level configuration saved to " + filename + ".");
 
     if (_statusMessageEntity != ECS::Entity(0) &&
         _registry->isAlive(_statusMessageEntity)) {
@@ -388,6 +605,7 @@ void LevelCreatorScene::saveToToml() {
     } catch (const std::exception&) {
     }
     _listEntity.push_back(_statusMessageEntity);
+    this->_getLevelsName();
 }
 
 void LevelCreatorScene::addWave() {

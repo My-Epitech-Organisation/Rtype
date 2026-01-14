@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <filesystem>
 #include <optional>
 #include <utility>
 
@@ -393,6 +394,56 @@ void Graphic::_initializeSystems() {
                                       {"boxing"});
 }
 
+void Graphic::_loadBackgrounds() {
+    if (!this->_sceneManager) {
+        LOG_ERROR(
+            "[Graphic] _loadBackgrounds called before _sceneManager was "
+            "initialized");
+        return;
+    }
+    if (!std::filesystem::exists("./plugins/background")) return;
+    for (const auto& s :
+         std::filesystem::directory_iterator("./plugins/background")) {
+        std::string path = s.path().string();
+        auto instance =
+            std::make_unique<rtype::common::DLLoader<IBackground>>(path);
+        auto bg = instance->getInstance<std::shared_ptr<ECS::Registry>,
+                                        std::shared_ptr<AssetManager>>(
+            "createBackground", std::shared_ptr<ECS::Registry>(this->_registry),
+            std::shared_ptr<AssetManager>(this->_assetsManager));
+        if (bg) {
+            this->_backgroundLoaders.push_back(std::move(instance));
+            this->_sceneManager->registerBackgroundPlugin(
+                bg->getBackgroundName(), std::shared_ptr<IBackground>(bg));
+        }
+    }
+}
+
+void Graphic::_loadMusicLevels() {
+    if (!std::filesystem::exists("./plugins/music")) return;
+    for (const auto& s :
+         std::filesystem::directory_iterator("./plugins/music")) {
+        std::string path = s.path().string();
+        auto instance =
+            std::make_unique<rtype::common::DLLoader<ILevelMusic>>(path);
+        auto musicLib = instance->getInstance<std::shared_ptr<ECS::Registry>,
+                                              std::shared_ptr<AssetManager>>(
+            "createLevelMusic", std::shared_ptr<ECS::Registry>(this->_registry),
+            std::shared_ptr<AssetManager>(this->_assetsManager));
+        if (musicLib) {
+            this->_audioLevelLoaders.push_back(std::move(instance));
+            this->_sceneManager->registerMusicLevelPlugin(
+                musicLib->getLevelMusicName(),
+                std::shared_ptr<ILevelMusic>(musicLib));
+        }
+    }
+    if (!this->_audioLib) {
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[Graphic] No valid music plugin found in ./plugins/"
+                        "music");
+    }
+}
+
 void Graphic::_initializeCommonAssets() {
     auto manager = this->_assetsManager;
     auto config = manager->configGameAssets;
@@ -558,18 +609,30 @@ Graphic::Graphic(
     this->_keybinds = std::make_shared<KeyboardActions>();
 
 #ifdef _WIN32
-    this->_displayLoader =
-        std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
-            "./display.dll");
+    try {
+        this->_displayLoader =
+            std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
+                "./plugins/display.dll");
+    } catch (std::exception& e) {
+        LOG_FATAL("Error while loading plugins/display.dll" << e.what());
+    }
 #else
-    this->_displayLoader =
-        std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
-            "./display.so");
+    try {
+        this->_displayLoader =
+            std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
+                "./plugins/display.so");
+    } catch (std::exception& e) {
+        LOG_FATAL("Error while loading plugins/display.so " << e.what());
+    }
 #endif
-    this->_display = std::shared_ptr<rtype::display::IDisplay>(
-        this->_displayLoader->getInstance("createInstanceDisplay"));
-    this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT, "R-Type - Epitech 2025",
-                         false);
+    try {
+        this->_display = std::shared_ptr<rtype::display::IDisplay>(
+            this->_displayLoader->getInstance("createInstanceDisplay"));
+        this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT,
+                             "R-Type - Epitech 2025", false);
+    } catch (std::exception& e) {
+        LOG_FATAL("Error while init display lib" << e.what());
+    }
 
     this->_keybinds->initialize(*this->_display);
 
@@ -597,10 +660,12 @@ Graphic::Graphic(
         AccessibilitySettings{ColorBlindMode::None, 1.0f, false, false});
     this->_registry->setSingleton<rtype::games::rtype::client::PauseState>(
         rtype::games::rtype::client::PauseState{false});
-    this->_initializeCommonAssets();
     this->_sceneManager = std::make_unique<SceneManager>(
         _registry, this->_assetsManager, this->_display, this->_keybinds,
         _networkClient, _networkSystem, this->_audioLib);
+    this->_loadBackgrounds();
+    this->_loadMusicLevels();
+    this->_sceneManager->initializeScenes();
     _initializeSystems();
     _lastFrameTime = std::chrono::steady_clock::now();
 

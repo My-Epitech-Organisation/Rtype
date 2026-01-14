@@ -91,8 +91,9 @@ TEST(AdminServerAuthBasic, LoginSetsCookie_ThenCookieAllowsAdminPage) {
     // Successful login should redirect to /admin
     EXPECT_EQ(res->status, 302);
 
-    // Now access /admin with cookie header
-    httplib::Headers cookie{{"Cookie", "admin_auth=1"}};
+    // Now access /admin with cookie header using the session token issued by the server
+    auto token = server.getSessionTokenForTests();
+    httplib::Headers cookie{{"Cookie", std::string("admin_auth=") + token}};
     auto res2 = cli.Get("/admin", cookie);
     ASSERT_NE(res2, nullptr);
     EXPECT_EQ(res2->status, 200);
@@ -166,7 +167,7 @@ TEST(AdminServerAuthBasic, BearerToken_AllowsMetrics_ButServerMissing_Returns500
     server.stop();
 }
 
-TEST(AdminServerAuthBasic, LocalhostOnly_AllowsAccess_WithoutAuth) {
+TEST(AdminServerAuthBasic, LocalhostOnly_RequiresAuth) {
     AdminServer::Config cfg;
     cfg.port = 9306;
     cfg.token = "";
@@ -178,7 +179,7 @@ TEST(AdminServerAuthBasic, LocalhostOnly_AllowsAccess_WithoutAuth) {
     httplib::Client cli("127.0.0.1", cfg.port);
     auto res = cli.Get("/api/bans");
     ASSERT_NE(res, nullptr);
-    EXPECT_EQ(res->status, 200);
+    EXPECT_EQ(res->status, 401);
 
     server.stop();
 }
