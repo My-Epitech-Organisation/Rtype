@@ -34,6 +34,7 @@ using shared::EnemyTag;
 using shared::EntityType;
 using shared::HealthComponent;
 using shared::InvincibleTag;
+using shared::LaserBeamTag;
 using shared::NetworkIdComponent;
 using shared::ObstacleTag;
 using shared::PickupTag;
@@ -46,7 +47,6 @@ using shared::ProjectileTag;
 using shared::QuadTreeSystem;
 using shared::TransformComponent;
 using shared::WeaponComponent;
-using shared::LaserBeamTag;
 using shared::collision::overlaps;
 using shared::collision::Rect;
 
@@ -658,8 +658,8 @@ void CollisionSystem::handleLaserEnemyCollision(ECS::Registry& registry,
     int32_t prevHealth = health.current;
     health.takeDamage(damage);
 
-    LOG_DEBUG("[CollisionSystem] Laser DPS hit enemy " << enemy.id
-              << ": " << prevHealth << " -> " << health.current
+    LOG_DEBUG("[CollisionSystem] Laser DPS hit enemy "
+              << enemy.id << ": " << prevHealth << " -> " << health.current
               << " (damage=" << damage << ")");
 
     // Emit health change event
