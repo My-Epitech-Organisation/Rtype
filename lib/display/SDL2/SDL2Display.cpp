@@ -204,7 +204,7 @@ bool SDL2Display::isFullscreen() const {
 }
 
 void SDL2Display::drawSprite(const std::string& textureName, const Vector2<float>& position,
-                             const Rect<int>& rect, const Vector2<float>& scale, const Color& color) {
+                             const Rect<int>& rect, const Vector2<float>& scale, const Color& color, float rotation) {
     auto it = _textures.find(textureName);
     if (it == _textures.end()) return;
 
@@ -226,7 +226,11 @@ void SDL2Display::drawSprite(const std::string& textureName, const Vector2<float
     SDL_SetTextureAlphaMod(texture, color.a);
 
     if (srcRect.x + srcRect.w <= texW) {
-        SDL_RenderCopy(_renderer, texture, &srcRect, &dstRect);
+        if (rotation != 0.0f) {
+            SDL_RenderCopyEx(_renderer, texture, &srcRect, &dstRect, rotation, nullptr, SDL_FLIP_NONE);
+        } else {
+            SDL_RenderCopy(_renderer, texture, &srcRect, &dstRect);
+        }
     } else {
         int part1Width = texW - srcRect.x;
         int part2Width = srcRect.w - part1Width;
@@ -237,11 +241,19 @@ void SDL2Display::drawSprite(const std::string& textureName, const Vector2<float
 
         SDL_Rect src1 = {srcRect.x, srcRect.y, part1Width, srcRect.h};
         SDL_Rect dst1 = {dstRect.x, dstRect.y, screenPart1W, dstRect.h};
-        SDL_RenderCopy(_renderer, texture, &src1, &dst1);
+        if (rotation != 0.0f) {
+            SDL_RenderCopyEx(_renderer, texture, &src1, &dst1, rotation, nullptr, SDL_FLIP_NONE);
+        } else {
+            SDL_RenderCopy(_renderer, texture, &src1, &dst1);
+        }
 
         SDL_Rect src2 = {0, srcRect.y, part2Width, srcRect.h};
         SDL_Rect dst2 = {dstRect.x + screenPart1W, dstRect.y, screenPart2W, dstRect.h};
-        SDL_RenderCopy(_renderer, texture, &src2, &dst2);
+        if (rotation != 0.0f) {
+            SDL_RenderCopyEx(_renderer, texture, &src2, &dst2, rotation, nullptr, SDL_FLIP_NONE);
+        } else {
+            SDL_RenderCopy(_renderer, texture, &src2, &dst2);
+        }
     }
 }
 
@@ -361,6 +373,14 @@ Vector2<float> SDL2Display::getViewSize() const {
 void SDL2Display::resetView() {
     _viewSize = {static_cast<float>(_windowSizeWidth), static_cast<float>(_windowSizeHeight)};
     _viewCenter = {_windowSizeWidth / 2.0f, _windowSizeHeight / 2.0f};
+}
+
+Vector2<float> SDL2Display::mapPixelToCoords(const Vector2<int>& pixelPos) const {
+    float left = _viewCenter.x - (_viewSize.x / 2.0f);
+    float top = _viewCenter.y - (_viewSize.y / 2.0f);
+    float worldX = left + (pixelPos.x * _viewSize.x / static_cast<float>(_windowSizeWidth));
+    float worldY = top + (pixelPos.y * _viewSize.y / static_cast<float>(_windowSizeHeight));
+    return {worldX, worldY};
 }
 
 Vector2<int> SDL2Display::worldToScreenPosition(const Vector2<float>& pos) const {
@@ -652,6 +672,20 @@ MouseButton SDL2Display::translateMouseButton(Uint8 button) {
         case SDL_BUTTON_MIDDLE: return MouseButton::Middle;
         default: return MouseButton::Left;
     }
+}
+
+void SDL2Display::setClipboardText(const std::string& text) {
+    SDL_SetClipboardText(text.c_str());
+}
+
+std::string SDL2Display::getClipboardText() const {
+    char* text = SDL_GetClipboardText();
+    std::string result;
+    if (text) {
+        result = text;
+        SDL_free(text);
+    }
+    return result;
 }
 
 }  // namespace rtype::display
