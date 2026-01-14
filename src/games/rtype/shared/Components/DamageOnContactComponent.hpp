@@ -21,21 +21,21 @@ namespace rtype::games::rtype::shared {
  */
 struct DamageOnContactComponent {
     // Instant damage mode
-    int32_t damage{10};           ///< Fixed damage per hit (when isDPS=false)
+    int32_t damage{10};  ///< Fixed damage per hit (when isDPS=false)
 
     // DPS mode (continuous damage)
     float damagePerSecond{0.0F};  ///< Damage per second (when isDPS=true)
     bool isDPS{false};            ///< Enable DPS mode instead of instant
 
     // Behavior
-    bool destroySelf{false};      ///< Destroy this entity after dealing damage
+    bool destroySelf{false};  ///< Destroy this entity after dealing damage
 
     // Owner tracking (to prevent friendly fire)
-    uint32_t ownerNetworkId{0};   ///< Network ID of owner (0 = no owner)
+    uint32_t ownerNetworkId{0};  ///< Network ID of owner (0 = no owner)
 
     // Startup delay (for weapons with charge-up animation)
-    float startupDelay{0.0F};     ///< Delay before damage becomes active
-    float activeTime{0.0F};       ///< Time since activation (for startup check)
+    float startupDelay{0.0F};  ///< Delay before damage becomes active
+    float activeTime{0.0F};    ///< Time since activation (for startup check)
 
     /**
      * @brief Check if damage is currently active (past startup delay)
