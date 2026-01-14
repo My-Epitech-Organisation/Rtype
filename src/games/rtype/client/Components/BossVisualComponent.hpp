@@ -50,65 +50,19 @@ struct BossVisualComponent {
     int32_t segmentIndex = 0;
     std::string customPartId;
 
-    [[nodiscard]] const std::string& getCurrentTexture() const {
-        if (isDying && !deathTexture.empty()) return deathTexture;
-        if (isAttacking && !attackTexture.empty()) return attackTexture;
-        switch (state) {
-            case BossVisualState::IDLE:
-                return idleTexture.empty() ? moveTexture : idleTexture;
-            case BossVisualState::ATTACK:
-                return attackTexture.empty() ? moveTexture : attackTexture;
-            case BossVisualState::DIE:
-                return deathTexture.empty() ? moveTexture : deathTexture;
-            case BossVisualState::MOVE:
-            default:
-                return moveTexture;
-        }
-    }
+    [[nodiscard]] const std::string& getCurrentTexture() const;
 
-    void getTextureRect(int& x, int& y, int& w, int& h) const {
-        x = spriteOffsetX + (currentFrame * frameWidth);
-        y = 0;
-        w = frameWidth;
-        h = frameHeight;
-    }
+    void getTextureRect(int& x, int& y, int& w, int& h) const;
 
-    void updateAnimation(float deltaTime) {
-        animationTimer += deltaTime;
-        if (animationTimer >= frameDuration) {
-            animationTimer -= frameDuration;
-            if (loop || currentFrame < frameCount - 1) {
-                currentFrame = (currentFrame + 1) % frameCount;
-            }
-        }
-    }
+    void updateAnimation(float deltaTime);
 
-    void resetAnimation() {
-        currentFrame = 0;
-        animationTimer = 0.0F;
-    }
+    void resetAnimation();
 
-    void setState(BossVisualState newState) {
-        if (state != newState) {
-            state = newState;
-            resetAnimation();
-        }
-    }
+    void setState(BossVisualState newState);
 
-    void setAttacking(bool attacking) {
-        if (isAttacking != attacking) {
-            isAttacking = attacking;
-            resetAnimation();
-        }
-    }
+    void setAttacking(bool attacking);
 
-    void setDying(bool dying) {
-        if (isDying != dying) {
-            isDying = dying;
-            loop = false;
-            resetAnimation();
-        }
-    }
+    void setDying(bool dying);
 };
 
 }  // namespace rtype::games::rtype::client
