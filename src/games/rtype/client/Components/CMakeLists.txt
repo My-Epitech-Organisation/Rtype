@@ -1,4 +1,6 @@
 add_library(rtype_game_client_components STATIC
+    BossSerpentComponent.cpp
+    BossVisualComponent.cpp
     ChargeShotVisualComponent.cpp
 )
 
