@@ -686,19 +686,31 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
         case GameState::GameOver:
             LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                          "[Server] *** GAME OVER *** Final score=" << _score);
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "[Server] Victory Status: "
+                             << (_isVictory ? "VICTORY" : "DEFEAT"));
+
+            if (!_isVictory) {
+                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                             "[Server] Sending DEFEAT packet to all clients");
+            } else {
+                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                             "[Server] Sending VICTORY packet to all clients");
+            }
+
             if (_networkSystem) {
                 LOG_INFO_CAT(
                     ::rtype::LogCategory::GameEngine,
                     "[Server] Broadcasting GameOver via NetworkSystem");
                 _networkSystem->broadcastGameState(
                     NetworkServer::GameState::GameOver);
-                _networkSystem->broadcastGameOver(_score);
+                _networkSystem->broadcastGameOver(_score, _isVictory);
             } else if (_networkServer) {
                 LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                              "[Server] Sending GameOver via NetworkServer");
                 _networkServer->updateGameState(
                     NetworkServer::GameState::GameOver);
-                _networkServer->sendGameOver(_score);
+                _networkServer->sendGameOver(_score, _isVictory);
             }
             resetToLobby();
             break;
@@ -803,7 +815,15 @@ void ServerApp::checkGameOverCondition() {
     }
 
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
-                 "[Server] All players defeated - ending game");
+                 "[Server] DEBUG: checkGameOverCondition triggered");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Alive players count: 0");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] All players defeated - ending game (DEFEAT)");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Setting isVictory = false and shutting down engine");
+
+    _isVictory = false;
 
     if (_gameEngine && _gameEngine->isRunning()) {
         _gameEngine->shutdown();
@@ -828,6 +848,7 @@ void ServerApp::resetToLobby() {
     }
 
     _score = 0;
+    _isVictory = false;
 
     if (_gameEngine) {
         if (_gameEngine->isRunning()) {
@@ -871,22 +892,69 @@ void ServerApp::resetToLobby() {
 
 std::size_t ServerApp::countAlivePlayers() {
     if (!_registry) {
+        LOG_WARNING_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[ServerApp] countAlivePlayers: _registry is null! Returning 0.");
         return 0;
     }
 
     std::size_t aliveCount = 0;
+    std::size_t totalPlayers = 0;
     auto view = _registry->view<games::rtype::shared::PlayerTag,
                                 games::rtype::shared::HealthComponent>();
 
-    view.each([this, &aliveCount](
+    view.each([this, &aliveCount, &totalPlayers](
                   ECS::Entity entity, const games::rtype::shared::PlayerTag&,
                   const games::rtype::shared::HealthComponent& health) {
         bool markedForDestroy =
             _registry->hasComponent<games::rtype::shared::DestroyTag>(entity);
-        if (health.isAlive() && !markedForDestroy) {
+        totalPlayers++;
+
+        bool isAlive = health.isAlive();
+        if (isAlive && !markedForDestroy) {
             ++aliveCount;
+        } else {
+            // Only log why we think this player is dead if we are about to
+            // return 0 total alive
         }
     });
+
+    if (aliveCount == 0) {
+        // If we found NO alive players, we should explain why
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[ServerApp] countAlivePlayers returned 0. Detailed scan:");
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "  - Registry p: " << _registry.get());
+
+        view.each([this](ECS::Entity entity,
+                         const games::rtype::shared::PlayerTag&,
+                         const games::rtype::shared::HealthComponent& health) {
+            bool markedForDestroy =
+                _registry->hasComponent<games::rtype::shared::DestroyTag>(
+                    entity);
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "  - Player Entity "
+                             << entity.id << ": Health=" << health.current
+                             << "/" << health.max
+                             << " Alive=" << health.isAlive()
+                             << " DestroyTag=" << markedForDestroy);
+        });
+
+        if (totalPlayers == 0) {
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "  - NO PlayerTag entities found in registry!");
+            // Debug: check manually if any entity has PlayerTag
+            _registry->view<games::rtype::shared::PlayerTag>().each(
+                [](auto entity, auto&) {
+                    LOG_INFO_CAT(
+                        ::rtype::LogCategory::GameEngine,
+                        "  - Found entity "
+                            << entity.id
+                            << " with PlayerTag but MISSING HealthComponent??");
+                });
+        }
+    }
 
     return aliveCount;
 }
@@ -981,8 +1049,9 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
 
         LOG_INFO_CAT(
             ::rtype::LogCategory::GameEngine,
-            "[ServerApp] GameOver event received, transitioning to GameOver "
-            "state");
+            "[ServerApp] GameOver event received (VICTORY), transitioning to "
+            "GameOver state");
+        _isVictory = true;
         _stateManager->transitionTo(GameState::GameOver);
         return;
     }
@@ -1038,8 +1107,10 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
                         levelName, background, levelMusic);
                 }
             } else {
-                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
-                             "[ServerApp] No next level, ending game");
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::GameEngine,
+                    "[ServerApp] No next level, ending game (VICTORY)");
+                _isVictory = true;
                 _stateManager->transitionTo(GameState::GameOver);
             }
         }

@@ -64,12 +64,12 @@ RtypeGameScene::RtypeGameScene(
                         registry->setSingleton<
                             ::rtype::games::rtype::client::GameOverState>(
                             ::rtype::games::rtype::client::GameOverState{
-                                event.finalScore});
+                                event.finalScore, event.isVictory});
                     } else {
-                        registry
-                            ->getSingleton<
-                                ::rtype::games::rtype::client::GameOverState>()
-                            .finalScore = event.finalScore;
+                        auto& state = registry->getSingleton<
+                            ::rtype::games::rtype::client::GameOverState>();
+                        state.finalScore = event.finalScore;
+                        state.isVictory = event.isVictory;
                     }
                 }
                 if (switchToScene) {
@@ -1079,6 +1079,25 @@ void RtypeGameScene::showLevelAnnounce(const std::string& levelName) {
     _levelAnnounceBgEntity = bg;
     _levelAnnounceTextEntity = txt;
     _levelAnnounceTimer = 3.0f;
+
+    // Create confetti effect for level transition celebration
+    // Only show if it's NOT the first level (transition from lobby)
+    if (!_isFirstLevelAnnounce) {
+        VisualCueFactory::createConfetti(*_registry,
+                                         static_cast<float>(windowSize.x),
+                                         static_cast<float>(windowSize.y), 150);
+
+        LOG_INFO_CAT(::rtype::LogCategory::UI,
+                     "[RtypeGameScene] Level transition confetti triggered "
+                     "(150 particles)");
+    } else {
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::UI,
+            "[RtypeGameScene] First level announce - skipping confetti");
+    }
+
+    _isFirstLevelAnnounce = false;
+
     LOG_INFO_CAT(::rtype::LogCategory::UI,
                  "[RtypeGameScene] Level announce displayed for 3 seconds");
 }

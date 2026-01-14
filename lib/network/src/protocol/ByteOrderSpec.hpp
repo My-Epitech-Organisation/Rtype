@@ -332,6 +332,7 @@ fromNetwork(const T& data) noexcept {
     const GameOverPayload& p) noexcept {
     GameOverPayload result;
     result.finalScore = ByteOrder::toNetwork(p.finalScore);
+    result.isVictory = p.isVictory;
     return result;
 }
 
@@ -339,6 +340,7 @@ fromNetwork(const T& data) noexcept {
     const GameOverPayload& p) noexcept {
     GameOverPayload result;
     result.finalScore = ByteOrder::fromNetwork(p.finalScore);
+    result.isVictory = p.isVictory;
     return result;
 }
 

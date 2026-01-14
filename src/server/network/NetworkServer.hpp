@@ -284,8 +284,10 @@ class NetworkServer {
      * Sent reliably to all clients so they can display the end-game screen.
      *
      * @param finalScore Final aggregated score for the session
+     * @param isVictory True if player won (completed all levels), false if
+     * defeated
      */
-    void sendGameOver(std::uint32_t finalScore);
+    void sendGameOver(std::uint32_t finalScore, bool isVictory = false);
 
     /**
      * @brief Broadcast game start with countdown

@@ -121,6 +121,8 @@ struct UpdateStatePayload {
  */
 struct GameOverPayload {
     std::uint32_t finalScore{0};
+    std::uint8_t isVictory{0};  ///< 1 if player won (completed all levels), 0 if defeated
+    std::uint8_t padding[3]{0, 0, 0};  ///< Padding for alignment
 };
 
 /**
@@ -455,8 +457,8 @@ static_assert(sizeof(GetUsersResponseHeader) == 1,
               "GetUsersResponseHeader must be 1 byte");
 static_assert(sizeof(UpdateStatePayload) == 1,
               "UpdateStatePayload must be 1 byte");
-static_assert(sizeof(GameOverPayload) == 4,
-              "GameOverPayload must be 4 bytes (uint32_t)");
+static_assert(sizeof(GameOverPayload) == 8,
+              "GameOverPayload must be 8 bytes (uint32_t + uint8_t + padding)");
 static_assert(sizeof(EntitySpawnPayload) == 14,
               "EntitySpawnPayload must be 14 bytes (4+1+1+4+4)");
 static_assert(sizeof(EntityMovePayload) == 16,

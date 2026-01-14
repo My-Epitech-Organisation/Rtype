@@ -13,6 +13,7 @@
 namespace rtype::games::rtype::client {
 struct GameOverState {
     std::uint32_t finalScore = 0;
+    bool isVictory = false;  ///< True if player won, false if defeated
 };
 }  // namespace rtype::games::rtype::client
 
