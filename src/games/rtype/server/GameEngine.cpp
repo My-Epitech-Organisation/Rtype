@@ -168,6 +168,29 @@ bool GameEngine::initialize() {
 
     _forcePodAttachmentSystem->setLaunchSystem(_forcePodLaunchSystem.get());
 
+    _bossPhaseSystem = std::make_unique<BossPhaseSystem>(eventEmitter);
+    auto bossProjectileSpawner =
+        [this](ECS::Registry& reg, float x, float y, float vx, float vy,
+               int32_t damage, uint32_t ownerNetId) -> uint32_t {
+        if (_projectileSpawnerSystem) {
+            return _projectileSpawnerSystem->spawnBossProjectile(
+                reg, x, y, vx, vy, damage, ownerNetId);
+        }
+        return 0U;
+    };
+    auto minionSpawner = [this](ECS::Registry& /*reg*/,
+                                const std::string& minionType, float x,
+                                float y) {
+        if (_dataDrivenSpawnerSystem) {
+            LOG_INFO("[GameEngine] Boss spawning minion: " << minionType
+                                                           << " at (" << x
+                                                           << ", " << y << ")");
+        }
+    };
+    _bossAttackSystem = std::make_unique<BossAttackSystem>(
+        eventEmitter, bossProjectileSpawner, minionSpawner);
+    _weakPointSystem = std::make_unique<WeakPointSystem>(eventEmitter);
+
     _systemScheduler->addSystem("Spawner", [this](ECS::Registry& reg) {
         if (_useDataDrivenSpawner && _dataDrivenSpawnerSystem) {
             _dataDrivenSpawnerSystem->update(reg, _lastDeltaTime);
@@ -225,17 +248,35 @@ bool GameEngine::initialize() {
                                                              _lastDeltaTime);
                                 },
                                 {"Movement"});
+    _systemScheduler->addSystem("BossPhase",
+                                [this](ECS::Registry& reg) {
+                                    _bossPhaseSystem->update(reg,
+                                                             _lastDeltaTime);
+                                },
+                                {"Collision"});
+    _systemScheduler->addSystem("BossAttack",
+                                [this](ECS::Registry& reg) {
+                                    _bossAttackSystem->update(reg,
+                                                              _lastDeltaTime);
+                                },
+                                {"BossPhase"});
+    _systemScheduler->addSystem("WeakPoint",
+                                [this](ECS::Registry& reg) {
+                                    _weakPointSystem->update(reg,
+                                                             _lastDeltaTime);
+                                },
+                                {"BossPhase"});
     _systemScheduler->addSystem("Cleanup",
                                 [this](ECS::Registry& reg) {
                                     _cleanupSystem->update(reg, _lastDeltaTime);
                                 },
-                                {"Collision"});
+                                {"Collision", "BossPhase", "WeakPoint"});
     _systemScheduler->addSystem(
         "Destroy",
         [this](ECS::Registry& reg) {
             _destroySystem->update(reg, _lastDeltaTime);
         },
-        {"Cleanup", "Collision", "Lifetime", "PowerUp"});
+        {"Cleanup", "Collision", "Lifetime", "PowerUp", "BossPhase", "WeakPoint"});
 
     _running = true;
     return true;

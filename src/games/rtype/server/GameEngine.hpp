@@ -213,6 +213,9 @@ class GameEngine : public engine::AGameEngine {
     std::unique_ptr<ForcePodAttachmentSystem> _forcePodAttachmentSystem;
     std::unique_ptr<ForcePodLaunchSystem> _forcePodLaunchSystem;
     std::unique_ptr<ForcePodShootingSystem> _forcePodShootingSystem;
+    std::unique_ptr<BossPhaseSystem> _bossPhaseSystem;
+    std::unique_ptr<BossAttackSystem> _bossAttackSystem;
+    std::unique_ptr<WeakPointSystem> _weakPointSystem;
 
     EventCallback _eventCallback;
     std::vector<engine::GameEvent> _pendingEvents;
