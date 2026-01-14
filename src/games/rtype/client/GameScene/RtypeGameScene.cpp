@@ -258,6 +258,24 @@ void RtypeGameScene::update() {
             shouldSend = true;
         }
 
+        // Check for weapon switch state change
+        bool isWeaponSwitchNow =
+            (inputMask & ::rtype::network::InputMask::kWeaponSwitch) != 0;
+        bool wasWeaponSwitchLast =
+            (_lastInputMask & ::rtype::network::InputMask::kWeaponSwitch) != 0;
+        if (isWeaponSwitchNow != wasWeaponSwitchLast) {
+            shouldSend = true;
+        }
+
+        // Check for force pod state change
+        bool isForcePodNow =
+            (inputMask & ::rtype::network::InputMask::kForcePod) != 0;
+        bool wasForcePodLast =
+            (_lastInputMask & ::rtype::network::InputMask::kForcePod) != 0;
+        if (isForcePodNow != wasForcePodLast) {
+            shouldSend = true;
+        }
+
         if (shouldSend) {
             _networkSystem->sendInput(inputMask);
         }
