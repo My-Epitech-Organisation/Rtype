@@ -8,6 +8,7 @@
 #include "SDL2SnakeRenderer.hpp"
 
 #include <iostream>
+#include <string>
 
 namespace rtype::games::snake::client::sdl2 {
 
