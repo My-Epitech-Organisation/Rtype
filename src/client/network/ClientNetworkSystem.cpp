@@ -210,6 +210,8 @@ void ClientNetworkSystem::reset() {
     pendingPlayerSpawns_.clear();
     lastKnownHealth_.clear();
     disconnectedHandled_ = false;
+    debugNotFoundLogCount_ = 0;
+    debugBossPartLogCount_ = 0;
 
     LOG_DEBUG_CAT(rtype::LogCategory::Network,
                   "[ClientNetworkSystem] Network system state reset complete");
@@ -298,13 +300,12 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
 void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
     auto it = networkIdToEntity_.find(event.entityId);
     if (it == networkIdToEntity_.end()) {
-        static int notFoundCount = 0;
-        if (notFoundCount < 100) {
+        if (debugNotFoundLogCount_ < 100) {
             LOG_DEBUG_CAT(rtype::LogCategory::Network,
                           "[ClientNetworkSystem] handleEntityMove: networkId="
                               << event.entityId << " NOT FOUND in map (size="
                               << networkIdToEntity_.size() << ")");
-            notFoundCount++;
+            debugNotFoundLogCount_++;
         }
         return;
     }
@@ -341,9 +342,7 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
     if (registry_->hasComponent<Transform>(entity)) {
         auto& pos = registry_->getComponent<Transform>(entity);
 
-        // Debug log for boss part position updates
-        static int bossPartLogCount = 0;
-        if (bossPartLogCount < 60 &&
+        if (debugBossPartLogCount_ < 60 &&
             registry_->hasComponent<rtype::games::rtype::shared::WeakPointTag>(
                 entity)) {
             LOG_DEBUG_CAT(rtype::LogCategory::Network,
@@ -351,7 +350,7 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
                               << event.entityId << " entity=" << entity.id
                               << " pos (" << pos.x << "," << pos.y << ") -> ("
                               << event.x << "," << event.y << ")");
-            bossPartLogCount++;
+            debugBossPartLogCount_++;
         }
 
         pos.x = event.x;
