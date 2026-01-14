@@ -29,12 +29,13 @@ enum class GameState : std::uint8_t {
  * @brief Entity type enumeration for S_ENTITY_SPAWN payload
  */
 enum class EntityType : std::uint8_t {
-    Player = 0,    ///< Player spaceship
-    Bydos = 1,     ///< Enemy (Bydos)
-    Missile = 2,   ///< Projectile
-    Pickup = 3,    ///< Collectible / power-up
-    Obstacle = 4,  ///< Static or moving obstacle
-    ForcePod = 5   ///< Force Pod companion
+    Player = 0,     ///< Player spaceship
+    Bydos = 1,      ///< Enemy (Bydos)
+    Missile = 2,    ///< Projectile
+    Pickup = 3,     ///< Collectible / power-up
+    Obstacle = 4,   ///< Static or moving obstacle
+    ForcePod = 5,   ///< Force Pod companion
+    LaserBeam = 6   ///< Continuous laser beam weapon
 };
 
 /**
@@ -50,6 +51,7 @@ inline constexpr std::uint8_t kLeft = 0x04;
 inline constexpr std::uint8_t kRight = 0x08;
 inline constexpr std::uint8_t kShoot = 0x10;
 inline constexpr std::uint8_t kForcePod = 0x20;
+inline constexpr std::uint8_t kWeaponSwitch = 0x40;
 }  // namespace InputMask
 
 #pragma pack(push, 1)
