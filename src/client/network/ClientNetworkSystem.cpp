@@ -28,6 +28,7 @@
 #include "games/rtype/shared/Components/PowerUpComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
+#include "games/rtype/client/Components/LaserBeamAnimationComponent.hpp"
 
 namespace rtype::client {
 
@@ -355,6 +356,25 @@ void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
     ECS::Entity entity = it->second;
 
     if (registry_->isAlive(entity)) {
+        // Special handling for laser beams: trigger end animation instead of
+        // immediate destruction
+        using LaserAnim = games::rtype::client::LaserBeamAnimationComponent;
+        if (registry_->hasComponent<LaserAnim>(entity)) {
+            auto& anim = registry_->getComponent<LaserAnim>(entity);
+            if (!anim.pendingDestroy) {
+                anim.pendingDestroy = true;
+                LOG_DEBUG_CAT(
+                    rtype::LogCategory::Network,
+                    "[ClientNetworkSystem] Laser beam end animation triggered");
+            }
+            // Remove from map immediately so new spawn events work correctly
+            // The entity will be destroyed after end animation by
+            // LaserBeamAnimationSystem
+            this->networkIdToEntity_.erase(it);
+            lastKnownHealth_.erase(entityId);
+            return;
+        }
+
         _playDeathSound(entity);
         registry_->killEntity(entity);
         LOG_DEBUG_CAT(rtype::LogCategory::Network,
