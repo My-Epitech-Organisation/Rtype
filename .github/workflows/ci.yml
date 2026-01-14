@@ -412,13 +412,13 @@ jobs:
             -DUSE_SFML=ON
 
       - name: Build
-        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml
+        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-asteroidsSpace rtype-graphic-background-lobby rtype-graphic-background-labs rtype-graphic-background-spatialStation  rtype-graphic-music-chillMusic rtype-graphic-music-battleMusic rtype-graphic-music-exploreMusic
 
       - name: Prepare Windows dist (exe + DLLs only)
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          mkdir -p build/dist/client build/dist/server
+          mkdir -p build/dist/client build/dist/client/plugins build/dist/client/plugins/background build/dist/client/plugins/music build/dist/server
           echo "Staging Windows client + DLLs"
           if ! ls build/src/client/*.exe >/dev/null 2>&1; then
             echo "Error: No client executable found"
@@ -430,7 +430,21 @@ jobs:
             echo "Error: No display lib found"
             exit 1
           fi
-          cp -v build/lib/display/**/*.dll build/dist/client/
+          cp -v build/lib/display/**/*.dll build/dist/client/plugins/
+          echo "Staging Background lib"
+          if ! ls build/lib/background/**/*.dll >/dev/null 2>&1; then
+            echo "Error: No background lib found"
+            exit 1
+          fi
+          cp -v build/lib/background/**/*.dll build/dist/client/plugins/background/
+
+          echo "Staging Audio lib"
+          if ! ls build/lib/audio/**/*.dll >/dev/null 2>&1; then
+            echo "Error: No audio lib found"
+            exit 1
+          fi
+          cp -v build/lib/audio/**/*.dll build/dist/client/plugins/music/
+
           if ! ls build/vcpkg_installed/x64-windows/bin/*.dll >/dev/null 2>&1; then
             echo "Error: No DLLs found for client"
             exit 1
@@ -470,9 +484,11 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
-          mkdir -p build/dist/client
+          mkdir -p build/dist/client build/dist/client/plugins build/dist/client/plugins/background build/dist/client/plugins/music
           cp build/src/client/r-type_client build/dist/client/
-          cp -r build/lib/display/**/*.so build/dist/client/ 2>/dev/null || true
+          cp -r build/lib/display/**/*.so build/dist/client/plugins 2>/dev/null || true
+          cp -r build/lib/background/**/*.so build/dist/client/plugins/background 2>/dev/null || true
+          cp -r build/lib/audio/**/*.so build/dist/client/plugins/music 2>/dev/null || true
 
       - name: Upload Client Artifact (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -498,7 +514,7 @@ jobs:
 
   call-release:
     needs: [build, test]
-    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     uses: ./.github/workflows/release.yml
     permissions:
       contents: write

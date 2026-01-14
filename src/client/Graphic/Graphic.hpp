@@ -18,6 +18,9 @@
 #include "../../games/rtype/client/GraphicsConstants.hpp"
 #include "../../games/rtype/client/Systems/BoxingSystem.hpp"
 #include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
+#include "../../games/rtype/client/Systems/ChargeInputSystem.hpp"
+#include "../../games/rtype/client/Systems/ChargeVisualSystem.hpp"
+#include "../../games/rtype/client/Systems/ChargedProjectileAnimationSystem.hpp"
 #include "../../games/rtype/client/Systems/ClientDestroySystem.hpp"
 #include "../../games/rtype/client/Systems/ColorTintSystem.hpp"
 #include "../../games/rtype/client/Systems/EnemyHealthBarSystem.hpp"
@@ -41,6 +44,8 @@
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
 #include "Systems/AnimationSystem.hpp"
+#include "lib/audio/ILevelMusic.hpp"
+#include "lib/background/IBackground.hpp"
 
 namespace rtype::games::rtype::client {
 class ChaserRotationSystem;
@@ -92,6 +97,12 @@ class Graphic {
     /// @brief DLL loader for the display module
     std::unique_ptr<rtype::common::DLLoader<rtype::display::IDisplay>>
         _displayLoader;
+
+    std::vector<std::unique_ptr<rtype::common::DLLoader<IBackground>>>
+        _backgroundLoaders;
+
+    std::vector<std::unique_ptr<rtype::common::DLLoader<ILevelMusic>>>
+        _audioLevelLoaders;
 
     /// @brief Display interface loaded from DLL
     std::shared_ptr<rtype::display::IDisplay> _display;
@@ -173,6 +184,13 @@ class Graphic {
         _forcePodVisualSystem;
     std::unique_ptr<::rtype::games::rtype::client::EnemyHealthBarSystem>
         _enemyHealthBarSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ChargeInputSystem>
+        _chargeInputSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ChargeVisualSystem>
+        _chargeVisualSystem;
+    std::unique_ptr<
+        ::rtype::games::rtype::client::ChargedProjectileAnimationSystem>
+        _chargedProjectileAnimationSystem;
 
     // ========================================================================
     // Runtime state
@@ -208,6 +226,12 @@ class Graphic {
 
     /// @brief Initialize and register all systems with the scheduler
     void _initializeSystems();
+
+    /// @brief Load all backgrounds plugins (Lobby, AsteroidsSpace ...)
+    void _loadBackgrounds();
+
+    /// @brief Load all music plugins (ChillMusic, etc.)
+    void _loadMusicLevels();
 
     /// @brief Initialize all common assets (textures, sound, fonts)
     void _initializeCommonAssets();

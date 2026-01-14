@@ -8,6 +8,8 @@
 #ifndef SRC_ENGINE_ECS_CORE_ENTITY_HPP_
 #define SRC_ENGINE_ECS_CORE_ENTITY_HPP_
 
+#define NOMINMAX
+
 #include <compare>
 #include <cstdint>
 #include <functional>
@@ -35,7 +37,7 @@ struct Entity {
     static constexpr std::uint32_t _GenerationMask = (1 << _GenerationBits) - 1;
     static constexpr std::uint32_t _MaxGeneration = _GenerationMask;
     static constexpr std::uint32_t _NullID =
-        std::numeric_limits<std::uint32_t>::max();
+        (std::numeric_limits<std::uint32_t>::max)();
 
     constexpr Entity() = default;
     constexpr explicit Entity(std::uint32_t raw) : id(raw) {}

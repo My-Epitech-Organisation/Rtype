@@ -37,6 +37,12 @@ add_library(rtype_game_client_systems STATIC
     EnemyHealthBarSystem.hpp
     LaserBeamAnimationSystem.cpp
     LaserBeamAnimationSystem.hpp
+    ChargeInputSystem.cpp
+    ChargeInputSystem.hpp
+    ChargeVisualSystem.cpp
+    ChargeVisualSystem.hpp
+    ChargedProjectileAnimationSystem.cpp
+    ChargedProjectileAnimationSystem.hpp
 )
 
 target_link_libraries(rtype_game_client_systems

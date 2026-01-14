@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <filesystem>
 #include <optional>
 #include <utility>
 
@@ -100,8 +101,13 @@ void Graphic::_update() {
         this->_systemScheduler->runSystem("chaser_rotation");
         this->_systemScheduler->runSystem("chaser_explosion");
         this->_systemScheduler->runSystem("animation");
+        this->_systemScheduler->runSystem("charged_projectile_animation");
         this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
+        this->_systemScheduler->runSystem("charge_input");
+        this->_systemScheduler->runSystem("charge_visual");
+        this->_systemScheduler->runSystem("forcepod_visual");
+        this->_systemScheduler->runSystem("powerup_collection");
         this->_systemScheduler->runSystem("enemy_health_bars");
     }
 
@@ -122,6 +128,10 @@ void Graphic::_render() {
 
     this->_systemScheduler->runSystem("render");
     this->_systemScheduler->runSystem("boxing");
+    if (_chargeVisualSystem &&
+        _sceneManager->getCurrentScene() == SceneManager::IN_GAME) {
+        _chargeVisualSystem->renderChargeBar(*_registry);
+    }
 
     this->_display->endRenderToTexture();
 
@@ -213,6 +223,13 @@ void Graphic::_initializeSystems() {
     this->_enemyHealthBarSystem =
         std::make_unique<::rtype::games::rtype::client::EnemyHealthBarSystem>(
             this->_registry);
+    this->_chargeInputSystem =
+        std::make_unique<::rtype::games::rtype::client::ChargeInputSystem>();
+    this->_chargeVisualSystem =
+        std::make_unique<::rtype::games::rtype::client::ChargeVisualSystem>(
+            this->_display, this->_audioLib);
+    this->_chargedProjectileAnimationSystem = std::make_unique<
+        ::rtype::games::rtype::client::ChargedProjectileAnimationSystem>();
 
     this->_systemScheduler =
         std::make_unique<ECS::SystemScheduler>(*this->_registry);
@@ -278,6 +295,27 @@ void Graphic::_initializeSystems() {
                                       },
                                       {"animation"});
 
+    this->_systemScheduler->addSystem("charge_input",
+                                      [this](ECS::Registry& reg) {
+                                          _chargeInputSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {});
+
+    this->_systemScheduler->addSystem("charge_visual",
+                                      [this](ECS::Registry& reg) {
+                                          _chargeVisualSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"charge_input"});
+
+    this->_systemScheduler->addSystem(
+        "charged_projectile_animation",
+        [this](ECS::Registry& reg) {
+            _chargedProjectileAnimationSystem->update(reg, _currentDeltaTime);
+        },
+        {"animation"});
+
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {
                                           _parallaxScrolling->update(
@@ -336,6 +374,56 @@ void Graphic::_initializeSystems() {
                                       {"boxing"});
 }
 
+void Graphic::_loadBackgrounds() {
+    if (!this->_sceneManager) {
+        LOG_ERROR(
+            "[Graphic] _loadBackgrounds called before _sceneManager was "
+            "initialized");
+        return;
+    }
+    if (!std::filesystem::exists("./plugins/background")) return;
+    for (const auto& s :
+         std::filesystem::directory_iterator("./plugins/background")) {
+        std::string path = s.path().string();
+        auto instance =
+            std::make_unique<rtype::common::DLLoader<IBackground>>(path);
+        auto bg = instance->getInstance<std::shared_ptr<ECS::Registry>,
+                                        std::shared_ptr<AssetManager>>(
+            "createBackground", std::shared_ptr<ECS::Registry>(this->_registry),
+            std::shared_ptr<AssetManager>(this->_assetsManager));
+        if (bg) {
+            this->_backgroundLoaders.push_back(std::move(instance));
+            this->_sceneManager->registerBackgroundPlugin(
+                bg->getBackgroundName(), std::shared_ptr<IBackground>(bg));
+        }
+    }
+}
+
+void Graphic::_loadMusicLevels() {
+    if (!std::filesystem::exists("./plugins/music")) return;
+    for (const auto& s :
+         std::filesystem::directory_iterator("./plugins/music")) {
+        std::string path = s.path().string();
+        auto instance =
+            std::make_unique<rtype::common::DLLoader<ILevelMusic>>(path);
+        auto musicLib = instance->getInstance<std::shared_ptr<ECS::Registry>,
+                                              std::shared_ptr<AssetManager>>(
+            "createLevelMusic", std::shared_ptr<ECS::Registry>(this->_registry),
+            std::shared_ptr<AssetManager>(this->_assetsManager));
+        if (musicLib) {
+            this->_audioLevelLoaders.push_back(std::move(instance));
+            this->_sceneManager->registerMusicLevelPlugin(
+                musicLib->getLevelMusicName(),
+                std::shared_ptr<ILevelMusic>(musicLib));
+        }
+    }
+    if (!this->_audioLib) {
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[Graphic] No valid music plugin found in ./plugins/"
+                        "music");
+    }
+}
+
 void Graphic::_initializeCommonAssets() {
     auto manager = this->_assetsManager;
     auto config = manager->configGameAssets;
@@ -383,6 +471,8 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.EnemyWave);
     manager->textureManager->load("projectile_player_laser",
                                   config.assets.textures.missileLaser);
+    manager->textureManager->load("charged_shot",
+                                  config.assets.textures.chargedShot);
     manager->textureManager->load("force_pod", config.assets.textures.forcePod);
 
     // Load power-up textures
@@ -440,6 +530,9 @@ void Graphic::_initializeCommonAssets() {
                                 config.assets.sfx.forcePodLaunch);
     manager->soundManager->load("forcepod_return",
                                 config.assets.sfx.forcePodReturn);
+    manager->soundManager->load("charged_shot", config.assets.sfx.chargedShot);
+    manager->soundManager->load("charged_shot_max",
+                                config.assets.sfx.chargedShotMax);
 
     manager->textureManager->get("bg_menu")->setRepeated(true);
     manager->textureManager->get("bg_planet_1")->setRepeated(true);
@@ -464,23 +557,48 @@ Graphic::Graphic(
       _networkClient(std::move(networkClient)),
       _networkSystem(std::move(networkSystem)) {
     rtype::game::config::RTypeConfigParser parser;
-    auto assetsConfig = parser.loadFromFile("./assets/config.toml");
-    if (!assetsConfig.has_value()) throw std::exception();
+    std::optional<rtype::game::config::RTypeGameConfig> assetsConfig;
+    try {
+        assetsConfig = parser.loadFromFile("./assets/config.toml");
+    } catch (const std::exception& e) {
+        LOG_ERROR_CAT(
+            ::rtype::LogCategory::Graphics,
+            "[Graphic] Exception loading config: " + std::string(e.what()));
+        throw;
+    } catch (...) {
+        LOG_ERROR_CAT(::rtype::LogCategory::Graphics,
+                      "[Graphic] Unknown exception loading config");
+        throw;
+    }
+    if (!assetsConfig.has_value())
+        throw std::runtime_error("Failed to load config");
     this->_keybinds = std::make_shared<KeyboardActions>();
 
 #ifdef _WIN32
-    this->_displayLoader =
-        std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
-            "./display.dll");
+    try {
+        this->_displayLoader =
+            std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
+                "./plugins/display.dll");
+    } catch (std::exception& e) {
+        LOG_FATAL("Error while loading plugins/display.dll" << e.what());
+    }
 #else
-    this->_displayLoader =
-        std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
-            "./display.so");
+    try {
+        this->_displayLoader =
+            std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
+                "./plugins/display.so");
+    } catch (std::exception& e) {
+        LOG_FATAL("Error while loading plugins/display.so " << e.what());
+    }
 #endif
-    this->_display = std::shared_ptr<rtype::display::IDisplay>(
-        this->_displayLoader->getInstance("createInstanceDisplay"));
-    this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT, "R-Type - Epitech 2025",
-                         false);
+    try {
+        this->_display = std::shared_ptr<rtype::display::IDisplay>(
+            this->_displayLoader->getInstance("createInstanceDisplay"));
+        this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT,
+                             "R-Type - Epitech 2025", false);
+    } catch (std::exception& e) {
+        LOG_FATAL("Error while init display lib" << e.what());
+    }
 
     this->_keybinds->initialize(*this->_display);
 
@@ -508,10 +626,12 @@ Graphic::Graphic(
         AccessibilitySettings{ColorBlindMode::None, 1.0f, false, false});
     this->_registry->setSingleton<rtype::games::rtype::client::PauseState>(
         rtype::games::rtype::client::PauseState{false});
-    this->_initializeCommonAssets();
     this->_sceneManager = std::make_unique<SceneManager>(
         _registry, this->_assetsManager, this->_display, this->_keybinds,
         _networkClient, _networkSystem, this->_audioLib);
+    this->_loadBackgrounds();
+    this->_loadMusicLevels();
+    this->_sceneManager->initializeScenes();
     _initializeSystems();
     _lastFrameTime = std::chrono::steady_clock::now();
 
@@ -543,6 +663,10 @@ Graphic::~Graphic() {
     }
     _sceneManager.reset();
     _systemScheduler.reset();
+    _chargedProjectileAnimationSystem.reset();
+    _chargeVisualSystem.reset();
+    _chargeInputSystem.reset();
+    _enemyHealthBarSystem.reset();
     _forcePodVisualSystem.reset();
     _shaderRenderSystem.reset();
     _clientDestroySystem.reset();
@@ -556,8 +680,9 @@ Graphic::~Graphic() {
     _buttonUpdateSystem.reset();
     _powerUpCollectionSystem.reset();
     _playerPowerUpVisualSystem.reset();
-    _animationSystem.reset();
+    _chaserExplosionSystem.reset();
     _chaserRotationSystem.reset();
+    _animationSystem.reset();
     _playerAnimationSystem.reset();
     _colorTintSystem.reset();
     if (_registry) {

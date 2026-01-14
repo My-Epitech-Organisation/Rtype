@@ -127,6 +127,7 @@ struct TexturesConfig {
     std::string EnemyWave;
     std::string astroVessel;
     std::string missileLaser;
+    std::string chargedShot;
     std::string forcePod;
 
     // Power-ups
@@ -169,6 +170,8 @@ struct SfxConfig {
     std::string playerDeath;
     std::string forcePodLaunch;
     std::string forcePodReturn;
+    std::string chargedShot;
+    std::string chargedShotMax;
 
     bool operator==(const SfxConfig&) const = default;
 };

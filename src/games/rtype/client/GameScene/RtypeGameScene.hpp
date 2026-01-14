@@ -45,6 +45,8 @@ class RtypeGameScene : public AGameScene {
         std::shared_ptr<::rtype::display::IDisplay> display,
         std::shared_ptr<KeyboardActions> keybinds,
         std::function<void(const SceneManager::Scene&)> switchToScene,
+        std::function<void(const std::string&)> setBackground,
+        std::function<void(const std::string&)> setLevelMusic,
         std::shared_ptr<::rtype::client::NetworkClient> networkClient,
         std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem,
         std::shared_ptr<AudioLib> audioLib = nullptr);
@@ -99,6 +101,23 @@ class RtypeGameScene : public AGameScene {
      * @brief Initialize the HUD with lives display text
      */
     void setupHud();
+
+    /**
+     * @brief Setup the level announcement callback
+     */
+    void setupLevelAnnounceCallback();
+
+    /**
+     * @brief Show the level announcement
+     * @param levelName The name of the level
+     */
+    void showLevelAnnounce(const std::string& levelName);
+
+    /**
+     * @brief Update the level announcement visual
+     * @param dt Delta time
+     */
+    void updateLevelAnnounce(float dt);
 
     /**
      * @brief Update the lives display text with current health values
@@ -158,6 +177,11 @@ class RtypeGameScene : public AGameScene {
     std::optional<ECS::Entity> _disconnectMessageEntity;
     std::optional<ECS::Entity> _disconnectButtonEntity;
     bool _isDisconnected{false};
+
+    // Level Announcement
+    std::optional<ECS::Entity> _levelAnnounceTextEntity;
+    std::optional<ECS::Entity> _levelAnnounceBgEntity;
+    float _levelAnnounceTimer = 0.0f;
 
     std::unique_ptr<::rtype::games::rtype::shared::MovementSystem>
         _movementSystem;

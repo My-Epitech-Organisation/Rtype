@@ -144,9 +144,32 @@ TEST(AdminServerAdminPage, ServesHtmlDashboard) {
     httplib::Client cli("127.0.0.1", cfg.port);
 
     // Retry briefly to avoid race where server starts but asset isn't ready yet
-    decltype(cli.Get("/admin")) res{};
+    // Use the server-generated admin credentials to form a Basic auth header.
+    auto user = admin.getAdminUserForTests();
+    auto pass = admin.getAdminPassForTests();
+    auto toEncode = user + ":" + pass;
+    auto base64_encode = [](const std::string &in) {
+        static const std::string b64_chars =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        std::string out;
+        int val=0, valb=-6;
+        for (unsigned char c : in) {
+            val = (val<<8) + c;
+            valb += 8;
+            while (valb>=0) {
+                out.push_back(b64_chars[(val>>valb)&0x3F]);
+                valb-=6;
+            }
+        }
+        if (valb>-6) out.push_back(b64_chars[((val<<8)>>(valb+8))&0x3F]);
+        while (out.size()%4) out.push_back('=');
+        return out;
+    };
+    httplib::Headers auth{{"Authorization", std::string("Basic ") + base64_encode(toEncode)}};
+
+    decltype(cli.Get("/admin", auth)) res{};
     for (int i = 0; i < 50; ++i) {
-        res = cli.Get("/admin");
+        res = cli.Get("/admin", auth);
         if (res && res->status == 200 && res->body.find("<html") != std::string::npos) break;
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }

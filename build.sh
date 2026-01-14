@@ -25,6 +25,10 @@ PROJECT_ROOT="$SCRIPT_DIR"
 BUILD_TESTS=false
 INCREMENTAL_BUILD=false
 FORCE_CPM=false
+BUILD_SNAKE=false
+BUILD_RTYPE=true
+USE_SDL2=false
+USE_SFML=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         -t|--tests)
@@ -39,11 +43,29 @@ while [[ $# -gt 0 ]]; do
             FORCE_CPM=true
             shift
             ;;
+        -snake|--snake)
+            BUILD_SNAKE=true
+            BUILD_RTYPE=false
+            shift
+            ;;
+        --sdl|--sdl2)
+            USE_SDL2=true
+            USE_SFML=false
+            shift
+            ;;
+        --sfml)
+            USE_SFML=true
+            USE_SDL2=false
+            shift
+            ;;
         -h|--help)
-            echo "Usage: $0 [-t|--tests] [-r|--reuse] [-c|--cpm]"
+            echo "Usage: $0 [-t|--tests] [-r|--reuse] [-c|--cpm] [-snake|--snake] [--sfml|--sdl]"
             echo "  -t, --tests    Build with unit tests"
             echo "  -r, --reuse    Incremental build (reuse existing build directory)"
             echo "  -c, --cpm      Force CPM (skip vcpkg even if available)"
+            echo "  -snake, --snake Build Snake game only (instead of R-Type)"
+            echo "  --sfml         Use SFML for display.so (default for R-Type)"
+            echo "  --sdl, --sdl2  Use SDL2 for display.so (default for Snake)"
             echo "  -h, --help     Show this help message"
             exit 0
             ;;
@@ -60,11 +82,25 @@ echo "║           R-Type - Release Build Script (Linux)          ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-if [ "$BUILD_TESTS" = true ]; then
+if [ "$BUILD_SNAKE" = true ]; then
+    if [ "$USE_SFML" = true ]; then
+        DISPLAY_LIB="sfml"
+    else
+        DISPLAY_LIB="sdl2"
+    fi
+    echo "→ Build mode: Snake Game (Executable)"
+elif [ "$BUILD_TESTS" = true ]; then
     echo "→ Build mode: Client + Server + Tests"
+    DISPLAY_LIB="sfml"
 else
+    if [ "$USE_SDL2" = true ]; then
+        DISPLAY_LIB="sdl2"
+    else
+        DISPLAY_LIB="sfml"
+    fi
     echo "→ Build mode: Client + Server"
 fi
+echo "→ Display library: ${DISPLAY_LIB^^}"
 if [ "$INCREMENTAL_BUILD" = true ]; then
     echo "→ Build type: Incremental"
 else
@@ -113,7 +149,7 @@ if [ "$FORCE_CPM" = false ]; then
             FORCE_CPM=true
         fi
     fi
-    
+
     if [ "$FORCE_CPM" = false ]; then
         if [ -n "$VCPKG_ROOT" ] && verify_vcpkg_ready "$VCPKG_ROOT"; then
             echo "  ✓ Using personal vcpkg from VCPKG_ROOT: $VCPKG_ROOT"
@@ -202,10 +238,12 @@ echo ""
 # Step 3: Build
 # ========================================================================
 echo "→ Step 3/4: Building project..."
-if [ "$BUILD_TESTS" = true ]; then
+if [ "$BUILD_SNAKE" = true ]; then
+    cmake --build --preset "$CMAKE_PRESET" --target snake_game snake_server rtype-display-sfml rtype-display-sdl2 -- -j$(nproc 2>/dev/null || echo 4)
+elif [ "$BUILD_TESTS" = true ]; then
     cmake --build --preset "$CMAKE_PRESET" -- -j$(nproc 2>/dev/null || echo 4)
 else
-    cmake --build --preset "$CMAKE_PRESET" --target r-type_client r-type_server rtype-display-sfml -- -j$(nproc 2>/dev/null || echo 4)
+    cmake --build --preset "$CMAKE_PRESET" --target r-type_client r-type_server rtype-display-sfml rtype-display-sdl2 -- -j$(nproc 2>/dev/null || echo 4)
 fi
 echo "✓ Build complete"
 echo ""
@@ -215,38 +253,88 @@ echo ""
 # ========================================================================
 echo "→ Step 4/4: Copying executables to repository root..."
 
-CLIENT_EXE="$BUILD_DIR/src/client/r-type_client"
-SERVER_EXE="$BUILD_DIR/src/server/r-type_server"
-DISPLAY_SO="$BUILD_DIR/lib/display/SFML/librtype-display-sfml.so"
+# Helper function to copy the appropriate display library
+copy_display_lib() {
+    SFML_DISPLAY="$BUILD_DIR/lib/display/SFML/librtype-display-sfml.so"
+    SDL2_DISPLAY="$BUILD_DIR/lib/display/SDL2/librtype-display-sdl2.so"
 
-if [ -f "$CLIENT_EXE" ]; then
-    cp "$CLIENT_EXE" "$PROJECT_ROOT/"
-    echo "  ✓ Copied r-type_client"
-else
-    echo "  ⚠ Warning: Client executable not found at $CLIENT_EXE"
-fi
+    if [ "$DISPLAY_LIB" = "sdl2" ]; then
+        if [ -f "$SDL2_DISPLAY" ]; then
+            cp "$SDL2_DISPLAY" "$PROJECT_ROOT/display.so"
+            echo "  ✓ Copied SDL2 display library as display.so"
+        else
+            echo "  ⚠ Warning: SDL2 display library not found"
+        fi
+    else
+        if [ -f "$SFML_DISPLAY" ]; then
+            cp "$SFML_DISPLAY" "$PROJECT_ROOT/display.so"
+            echo "  ✓ Copied SFML display library as display.so"
+        else
+            echo "  ⚠ Warning: SFML display library not found"
+        fi
+    fi
+}
 
-if [ -f "$SERVER_EXE" ]; then
-    cp "$SERVER_EXE" "$PROJECT_ROOT/"
-    echo "  ✓ Copied r-type_server"
-else
-    echo "  ⚠ Warning: Server executable not found at $SERVER_EXE"
-fi
+if [ "$BUILD_SNAKE" = true ]; then
+    SNAKE_EXE="$BUILD_DIR/src/games/snake/snake_game"
+    if [ -f "$SNAKE_EXE" ]; then
+        cp "$SNAKE_EXE" "$PROJECT_ROOT/"
+        echo "  ✓ Copied snake_game executable to repository root"
+    else
+        echo "  ✗ Snake game executable not found at $SNAKE_EXE"
+    fi
 
-if [ -f "$DISPLAY_SO" ]; then
-    cp "$DISPLAY_SO" "$PROJECT_ROOT/display.so"
-    echo "  ✓ Copied display.so"
+    SNAKE_SERVER_EXE="$BUILD_DIR/src/games/snake/snake_server"
+    if [ -f "$SNAKE_SERVER_EXE" ]; then
+        cp "$SNAKE_SERVER_EXE" "$PROJECT_ROOT/"
+        echo "  ✓ Copied snake_server"
+    else
+        echo "  ⚠ Warning: snake_server executable not found at $SNAKE_SERVER_EXE"
+    fi
+
+    # Copy the selected display library
+    copy_display_lib
 else
-    echo "  ⚠ Warning: Server executable not found at $DISPLAY_SO"
+    CLIENT_EXE="$BUILD_DIR/src/client/r-type_client"
+    SERVER_EXE="$BUILD_DIR/src/server/r-type_server"
+
+    if [ -f "$CLIENT_EXE" ]; then
+        cp "$CLIENT_EXE" "$PROJECT_ROOT/"
+        echo "  ✓ Copied r-type_client"
+    else
+        echo "  ⚠ Warning: Client executable not found at $CLIENT_EXE"
+    fi
+
+    if [ -f "$SERVER_EXE" ]; then
+        cp "$SERVER_EXE" "$PROJECT_ROOT/"
+        echo "  ✓ Copied r-type_server"
+    else
+        echo "  ⚠ Warning: Server executable not found at $SERVER_EXE"
+    fi
+
+    # Copy the selected display library
+    copy_display_lib
 fi
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║                   Build Complete!                        ║"
+if [ "$BUILD_SNAKE" = true ]; then
+    echo "║         Snake Game Build Complete!                       ║"
+else
+    echo "║                   Build Complete!                        ║"
+fi
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
-echo "Executables are now in the repository root:"
-ls -lh "$PROJECT_ROOT"/r-type_* "$PROJECT_ROOT"/display.so 2>/dev/null || echo "  (No executables found)"
+
+if [ "$BUILD_SNAKE" = true ]; then
+    echo "Snake game built successfully!"
+    echo ""
+    echo "🎮 To play:"
+    if [ -f "$PROJECT_ROOT/snake_game" ]; then
+        echo "  ./snake_game"
+    fi
+    echo ""
+fi
 echo ""
 echo "Dependency strategy used: $([ "$VCPKG_AVAILABLE" = true ] && echo "vcpkg" || echo "CPM")"
 echo "Build directory: $BUILD_DIR"

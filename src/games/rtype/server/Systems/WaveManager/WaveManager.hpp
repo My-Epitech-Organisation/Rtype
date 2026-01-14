@@ -197,6 +197,32 @@ class WaveManager {
     }
 
     /**
+     * @brief Get the next level ID (if any)
+     * @return Optional next level ID
+     */
+    [[nodiscard]] std::optional<std::string> getNextLevel() const noexcept {
+        return _levelConfig ? _levelConfig->nextLevel : std::nullopt;
+    }
+
+    /**
+     * @brief Get the background path/name for the level
+     * @return Background name or empty string if not loaded
+     */
+    [[nodiscard]] const std::string& getBackground() const noexcept {
+        static const std::string empty;
+        return _levelConfig ? _levelConfig->backgroundPath : empty;
+    }
+
+    /**
+     * @brief Get the level music name for the level
+     * @return Level music name or empty string if not loaded
+     */
+    [[nodiscard]] const std::string& getLevelMusic() const noexcept {
+        static const std::string empty;
+        return _levelConfig ? _levelConfig->levelMusic : empty;
+    }
+
+    /**
      * @brief Get last error message
      * @return Error message from last failed operation
      */
@@ -217,6 +243,8 @@ class WaveManager {
     void setWaveTransitionDelay(float delay) noexcept {
         _waveTransitionDelay = delay;
     }
+
+    void setStartDelay(float delay) noexcept { _startDelay = delay; }
 
    private:
     /**
@@ -250,6 +278,7 @@ class WaveManager {
     float _waveTransitionDelay = 2.0F;
     bool _waitForClear = true;
     std::string _lastError;
+    float _startDelay = 0.0f;
 };
 
 }  // namespace rtype::games::rtype::server

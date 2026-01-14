@@ -45,6 +45,7 @@ if(NOT ECS_SOURCES)
 else()
     # Static library
     add_library(ecs STATIC ${ECS_SOURCES})
+    set_target_properties(ecs PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_include_directories(ecs PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/..
     )

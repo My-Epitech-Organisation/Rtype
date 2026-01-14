@@ -1,0 +1,26 @@
+# =============================================================================
+# R-Type Level Configuration
+# =============================================================================
+
+[level]
+id = "level1-custom"
+name = "MonPtit1"
+background = "SpatialStation"
+scroll_speed = 50.0
+boss = "boss_1"
+next_level = "level2-custom.toml"
+level_music = "ChillMusic"
+
+# -----------------------------------------------------------------------------
+# Wave 1
+# -----------------------------------------------------------------------------
+[[wave]]
+number = 1
+spawn_delay = 0.8
+
+[[wave.spawn]]
+enemy = "basic"
+delay = 0.0
+count = 1
+
+

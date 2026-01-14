@@ -35,6 +35,8 @@ target_include_directories(r-type_client PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 
+set_property(TARGET r-type_client PROPERTY ENABLE_EXPORTS ON)
+
 target_link_libraries(r-type_client PUBLIC
     engine
     network

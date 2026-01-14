@@ -96,18 +96,11 @@ class GameEngine : public engine::AGameEngine {
         override;
 
     /**
-     * @brief Load a level for data-driven wave spawning
-     * @param levelId Level identifier (e.g., "level_1")
-     * @return true if level loaded successfully
-     */
-    bool loadLevel(const std::string& levelId);
-
-    /**
      * @brief Load a level from file path
-     * @param filepath Path to level TOML file
+     * @param filepath Path to level configuration file
      * @return true if level loaded successfully
      */
-    bool loadLevelFromFile(const std::string& filepath);
+    bool loadLevelFromFile(const std::string& filepath) override;
 
     /**
      * @brief Start the loaded level
@@ -139,6 +132,17 @@ class GameEngine : public engine::AGameEngine {
      */
     uint32_t spawnProjectile(uint32_t playerNetworkId, float playerX,
                              float playerY);
+
+    /**
+     * @brief Spawn a charged projectile for a player
+     * @param playerNetworkId Network ID of the player shooting
+     * @param playerX Player X position
+     * @param playerY Player Y position
+     * @param chargeLevel Charge level (1-3)
+     * @return Network ID of the spawned projectile (0 if failed)
+     */
+    uint32_t spawnChargedProjectile(uint32_t playerNetworkId, float playerX,
+                                    float playerY, uint8_t chargeLevel);
 
     /**
      * @brief Get the ECS registry

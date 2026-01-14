@@ -41,7 +41,7 @@ PlayerInputHandler::PlayerInputHandler(
 }
 
 void PlayerInputHandler::handleInput(std::uint32_t userId,
-                                     std::uint8_t inputMask,
+                                     std::uint16_t inputMask,
                                      std::optional<ECS::Entity> entity) {
     if (_stateManager &&
         (_stateManager->isWaiting() || _stateManager->isPaused())) {
@@ -87,8 +87,24 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
         if (networkIdOpt.has_value()) {
             _laserCallback(playerEntity, *networkIdOpt, isShooting);
         }
-    } else if (isShooting) {
-        processShoot(userId, playerEntity);
+    } else {
+        std::uint16_t chargeLevel =
+            (inputMask & rtype::network::InputMask::kChargeLevelMask);
+        if (chargeLevel != 0) {
+            std::uint8_t level = 0;
+            if (chargeLevel == rtype::network::InputMask::kChargeLevel3) {
+                level = 3;
+            } else if (chargeLevel == rtype::network::InputMask::kChargeLevel2) {
+                level = 2;
+            } else if (chargeLevel == rtype::network::InputMask::kChargeLevel1) {
+                level = 1;
+            }
+            if (level > 0) {
+                processChargedShot(userId, playerEntity, level);
+            }
+        } else if (isShooting) {
+            processShoot(userId, playerEntity);
+        }
     }
 
     if (inputMask & rtype::network::InputMask::kForcePod) {
@@ -106,7 +122,7 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
 }
 
 void PlayerInputHandler::processMovement(ECS::Entity entity,
-                                         std::uint8_t inputMask) {
+                                         std::uint16_t inputMask) {
     float vx = 0.0F;
     float vy = 0.0F;
 
@@ -219,6 +235,76 @@ void PlayerInputHandler::processWeaponSwitch(ECS::Entity entity) {
     } else {
         LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                      "[InputHandler] Cannot switch: only 1 slot unlocked");
+    }
+}
+
+void PlayerInputHandler::processChargedShot(std::uint32_t userId,
+                                            ECS::Entity entity,
+                                            std::uint8_t chargeLevel) {
+    if (!_registry->hasComponent<Transform>(entity) ||
+        !_registry->hasComponent<ShootCooldown>(entity)) {
+        if (_verbose) {
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[InputHandler] Player "
+                    << userId
+                    << " missing Position or ShootCooldown for charged shot");
+        }
+        return;
+    }
+
+    auto& cooldown = _registry->getComponent<ShootCooldown>(entity);
+    if (!cooldown.canShoot()) {
+        if (_verbose) {
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[InputHandler] Player "
+                              << userId
+                              << " cooldown not ready for charged shot: "
+                              << cooldown.currentCooldown);
+        }
+        return;
+    }
+
+    if (!_chargedShotCallback || !_networkSystem) {
+        if (_shootCallback) {
+            auto networkIdOpt = _networkSystem->getNetworkId(entity);
+            if (networkIdOpt.has_value()) {
+                auto& pos = _registry->getComponent<Transform>(entity);
+                std::uint32_t projectileId =
+                    _shootCallback(*networkIdOpt, pos.x, pos.y);
+                if (projectileId != 0) {
+                    cooldown.triggerCooldown();
+                }
+            }
+        }
+        return;
+    }
+
+    auto networkIdOpt = _networkSystem->getNetworkId(entity);
+    if (!networkIdOpt.has_value()) {
+        if (_verbose) {
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[InputHandler] Player "
+                              << userId
+                              << " has no networkId for charged shot");
+        }
+        return;
+    }
+
+    auto& pos = _registry->getComponent<Transform>(entity);
+    std::uint32_t projectileId =
+        _chargedShotCallback(*networkIdOpt, pos.x, pos.y, chargeLevel);
+
+    if (projectileId != 0) {
+        // Trigger cooldown twice for charged shots to balance their increased
+        // power with a longer recovery time compared to regular shots
+        cooldown.triggerCooldown();
+        cooldown.triggerCooldown();
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[InputHandler] Player "
+                          << userId << " fired charged projectile "
+                          << projectileId << " at level "
+                          << static_cast<int>(chargeLevel));
     }
 }
 

@@ -25,6 +25,7 @@ GameOverScene::GameOverScene(
     std::shared_ptr<AssetManager> assetsManager,
     std::shared_ptr<rtype::display::IDisplay> window,
     std::shared_ptr<AudioLib> audio,
+    std::function<void(const std::string&)> setBackground,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(std::move(registry), std::move(assetsManager), std::move(window),
              std::move(audio)),
@@ -53,7 +54,7 @@ void GameOverScene::render(std::shared_ptr<rtype::display::IDisplay> window) {
 
 void GameOverScene::_buildLayout() {
     auto backgroundEntities = EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "");
+        this->_registry, this->_assetsManager, "", nullptr);
     this->_listEntity.insert(this->_listEntity.end(),
                              backgroundEntities.begin(),
                              backgroundEntities.end());

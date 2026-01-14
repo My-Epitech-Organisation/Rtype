@@ -1,0 +1,25 @@
+# =============================================================================
+# R-Type Level 1 - Space Station
+# =============================================================================
+# First level configuration with waves and boss
+
+[level]
+id = "level_1Custom"
+name = "Space Station"
+background = "Labs"
+scroll_speed = 50.0
+boss = "boss_1"
+next_level = "level_2.toml"
+level_music = "BattleMusic"
+
+# -----------------------------------------------------------------------------
+# Wave 1 - Introduction (Basic enemies only)
+# -----------------------------------------------------------------------------
+[[wave]]
+number = 1
+spawn_delay = 0.8
+
+[[wave.spawn]]
+enemy = "basic"
+delay = 0.0
+count = 1

@@ -42,6 +42,7 @@ enum class EntityType : std::uint8_t {
  * @brief Input mask flags for C_INPUT payload
  *
  * Can be combined with bitwise OR for simultaneous inputs.
+ * Bits 6-7 encode charge level for charged shots.
  */
 namespace InputMask {
 inline constexpr std::uint8_t kNone = 0x00;
@@ -51,7 +52,12 @@ inline constexpr std::uint8_t kLeft = 0x04;
 inline constexpr std::uint8_t kRight = 0x08;
 inline constexpr std::uint8_t kShoot = 0x10;
 inline constexpr std::uint8_t kForcePod = 0x20;
-inline constexpr std::uint8_t kWeaponSwitch = 0x40;
+inline constexpr std::uint8_t kWeaponSwitch = 0x20;  ///< Shares bit with kForcePod (mutually exclusive)
+inline constexpr std::uint8_t kChargeShot = 0x40;
+inline constexpr std::uint8_t kChargeLevelMask = 0xC0;
+inline constexpr std::uint8_t kChargeLevel1 = 0x40;
+inline constexpr std::uint8_t kChargeLevel2 = 0x80;
+inline constexpr std::uint8_t kChargeLevel3 = 0xC0;
 }  // namespace InputMask
 
 #pragma pack(push, 1)
@@ -142,6 +148,7 @@ struct LobbyInfo {
     std::uint8_t playerCount;
     std::uint8_t maxPlayers;
     std::uint8_t isActive;
+    std::array<char, 16> levelName;
 };
 
 /**
@@ -160,7 +167,7 @@ struct LobbyListHeader {
  * Limited by payload size: (kMaxPayloadSize - 1) / sizeof(LobbyInfo)
  * = (1384 - 1) / 11 = 125 lobbies (well above our max of 16)
  */
-inline constexpr std::size_t kMaxLobbiesInResponse = 125;
+inline constexpr std::size_t kMaxLobbiesInResponse = 50;
 
 /**
  * @brief Payload for S_ENTITY_SPAWN (0x10)
@@ -238,6 +245,7 @@ struct JoinLobbyPayload {
 struct JoinLobbyResponsePayload {
     std::uint8_t accepted;      ///< 1 = accepted, 0 = rejected
     std::uint8_t reason;        ///< Reason code (0 = success, 1 = invalid code, 2 = lobby full)
+    std::array<char, 16> levelName;
 };
 
 /**
@@ -281,6 +289,17 @@ struct PowerUpEventPayload {
 };
 
 /**
+ * @brief Payload for S_LEVEL_ANNOUNCE (0x18)
+ *
+ * Server announces name of new level for visual notification.
+ */
+struct LevelAnnouncePayload {
+    std::array<char, 32> levelName;
+    std::array<char, 32> background;
+    std::array<char, 32> levelMusic;
+};
+
+/**
  * @brief Payload for C_INPUT (0x20)
  *
  * Client sends current input state to server.
@@ -302,6 +321,19 @@ struct InputPayload {
     }
     [[nodiscard]] constexpr bool isShoot() const noexcept {
         return (inputMask & InputMask::kShoot) != 0;
+    }
+    [[nodiscard]] constexpr bool isChargeShot() const noexcept {
+        return (inputMask & InputMask::kChargeLevelMask) != 0;
+    }
+    /**
+     * @brief Get charge level (0 = none, 1-3 = charge levels)
+     */
+    [[nodiscard]] constexpr std::uint8_t getChargeLevel() const noexcept {
+        std::uint8_t bits = inputMask & InputMask::kChargeLevelMask;
+        if (bits == InputMask::kChargeLevel3) return 3;
+        if (bits == InputMask::kChargeLevel2) return 2;
+        if (bits == InputMask::kChargeLevel1) return 1;
+        return 0;
     }
 };
 
@@ -467,14 +499,14 @@ static_assert(sizeof(GameStartPayload) == 4,
               "GameStartPayload must be 4 bytes (float)");
 static_assert(sizeof(PlayerReadyStatePayload) == 5,
               "PlayerReadyStatePayload must be 5 bytes (4+1)");
-static_assert(sizeof(LobbyInfo) == 11,
-              "LobbyInfo must be 11 bytes (6+2+1+1+1)");
+static_assert(sizeof(LobbyInfo) == 27,
+              "LobbyInfo must be 27 bytes (6+2+1+1+1+16)");
 static_assert(sizeof(LobbyListHeader) == 1,
               "LobbyListHeader must be 1 byte");
 static_assert(sizeof(JoinLobbyPayload) == 6,
               "JoinLobbyPayload must be 6 bytes (char[6])");
-static_assert(sizeof(JoinLobbyResponsePayload) == 2,
-              "JoinLobbyResponsePayload must be 2 bytes (uint8_t+uint8_t)");
+static_assert(sizeof(JoinLobbyResponsePayload) == 18,
+              "JoinLobbyResponsePayload must be 18 bytes (uint8_t+uint8_t+char[16])");
 static_assert(sizeof(ChatPayload) == 260,
               "ChatPayload must be 260 bytes (4+256)");
 static_assert(sizeof(AdminCommandPayload) == 2,
@@ -537,6 +569,8 @@ static_assert(std::is_standard_layout_v<AdminResponsePayload>);
 
         case OpCode::S_ACCEPT:
             return sizeof(AcceptPayload);
+        case OpCode::S_LEVEL_ANNOUNCE:
+            return sizeof(LevelAnnouncePayload);
         case OpCode::R_GET_USERS:
             return 0;
         case OpCode::S_UPDATE_STATE:
