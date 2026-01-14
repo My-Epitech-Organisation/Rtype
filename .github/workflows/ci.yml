@@ -431,6 +431,7 @@ jobs:
             exit 1
           fi
           cp -v build/lib/display/**/*.dll build/dist/client/plugins/
+          cp -v build/lib/display/SFML/*.dll build/dist/client/plugins/display.dll 2>/dev/null || true
           echo "Staging Background lib"
           if ! ls build/lib/background/**/*.dll >/dev/null 2>&1; then
             echo "Error: No background lib found"
@@ -487,6 +488,7 @@ jobs:
           mkdir -p build/dist/client build/dist/client/plugins build/dist/client/plugins/background build/dist/client/plugins/music
           cp build/src/client/r-type_client build/dist/client/
           cp -r build/lib/display/**/*.so build/dist/client/plugins 2>/dev/null || true
+          cp -r build/lib/display/SFML/*.so build/dist/client/plugins/display.so 2>/dev/null || true
           cp -r build/lib/background/**/*.so build/dist/client/plugins/background 2>/dev/null || true
           cp -r build/lib/audio/**/*.so build/dist/client/plugins/music 2>/dev/null || true
 
