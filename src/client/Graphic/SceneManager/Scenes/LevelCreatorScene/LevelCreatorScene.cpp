@@ -10,8 +10,8 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 #include <toml++/toml.hpp>
@@ -438,10 +438,9 @@ bool LevelCreatorScene::saveCurrentWaveStats() {
                             " spawn delay must be filled.",
                         "main_font", {startX, 810.f}, 20.f);
                     try {
-                        auto& textComp =
-                            _registry
-                                ->getComponent<rtype::games::rtype::client::Text>(
-                                    _statusMessageEntity);
+                        auto& textComp = _registry->getComponent<
+                            rtype::games::rtype::client::Text>(
+                            _statusMessageEntity);
                         textComp.color = rtype::display::Color::Red();
                     } catch (...) {
                     }
@@ -467,11 +466,9 @@ bool LevelCreatorScene::saveCurrentWaveStats() {
                             "Spawn delay must be filled.", "main_font",
                             {startX, 810.f}, 20.f);
                         try {
-                            auto& textComp =
-                                _registry
-                                    ->getComponent<
-                                        rtype::games::rtype::client::Text>(
-                                        _statusMessageEntity);
+                            auto& textComp = _registry->getComponent<
+                                rtype::games::rtype::client::Text>(
+                                _statusMessageEntity);
                             textComp.color = rtype::display::Color::Red();
                         } catch (...) {
                         }
@@ -495,11 +492,9 @@ bool LevelCreatorScene::saveCurrentWaveStats() {
                             "Spawn count must be filled.", "main_font",
                             {startX, 810.f}, 20.f);
                         try {
-                            auto& textComp =
-                                _registry
-                                    ->getComponent<
-                                        rtype::games::rtype::client::Text>(
-                                        _statusMessageEntity);
+                            auto& textComp = _registry->getComponent<
+                                rtype::games::rtype::client::Text>(
+                                _statusMessageEntity);
                             textComp.color = rtype::display::Color::Red();
                         } catch (...) {
                         }
@@ -526,11 +521,9 @@ bool LevelCreatorScene::saveCurrentWaveStats() {
                             "Powerup delay must be filled.", "main_font",
                             {startX, 810.f}, 20.f);
                         try {
-                            auto& textComp =
-                                _registry
-                                    ->getComponent<
-                                        rtype::games::rtype::client::Text>(
-                                        _statusMessageEntity);
+                            auto& textComp = _registry->getComponent<
+                                rtype::games::rtype::client::Text>(
+                                _statusMessageEntity);
                             textComp.color = rtype::display::Color::Red();
                         } catch (...) {
                         }
@@ -554,11 +547,9 @@ bool LevelCreatorScene::saveCurrentWaveStats() {
                             "Powerup Y position must be filled.", "main_font",
                             {startX, 810.f}, 20.f);
                         try {
-                            auto& textComp =
-                                _registry
-                                    ->getComponent<
-                                        rtype::games::rtype::client::Text>(
-                                        _statusMessageEntity);
+                            auto& textComp = _registry->getComponent<
+                                rtype::games::rtype::client::Text>(
+                                _statusMessageEntity);
                             textComp.color = rtype::display::Color::Red();
                         } catch (...) {
                         }
@@ -710,12 +701,10 @@ void LevelCreatorScene::saveToToml() {
     file << "level_music = \"" << this->_musicLevelId << "\"" << std::endl;
     std::string scrollSpeedValue = getInputValue(_scrollSpeedInput);
     file << "scroll_speed = "
-         << (scrollSpeedValue.empty()
-                 ? "50.0"
-                 : scrollSpeedValue)
-         << std::endl;
+         << (scrollSpeedValue.empty() ? "50.0" : scrollSpeedValue) << std::endl;
     std::string bossValue = getInputValue(_bossInput);
-    file << "boss = \"" << (bossValue.empty() ? "boss_1" : bossValue) << "\"" << std::endl;
+    file << "boss = \"" << (bossValue.empty() ? "boss_1" : bossValue) << "\""
+         << std::endl;
     std::filesystem::path pathObj(this->_listNextLevel[this->_nextLevelId]);
     std::string nextLevel = pathObj.filename().string();
     file << "next_level = \"" << nextLevel << "\"" << std::endl;
@@ -745,7 +734,9 @@ void LevelCreatorScene::saveToToml() {
                 _registry->isAlive(spawn.delayInputVal)) {
                 std::string val = getInputValue(spawn.delayInputVal);
                 if (val.empty()) {
-                    LOG_ERROR_CAT(rtype::LogCategory::UI, "Wave " + std::to_string(wave.number) + " spawn delay is empty.");
+                    LOG_ERROR_CAT(rtype::LogCategory::UI,
+                                  "Wave " + std::to_string(wave.number) +
+                                      " spawn delay is empty.");
                     if (_statusMessageEntity != ECS::Entity(0) &&
                         _registry->isAlive(_statusMessageEntity)) {
                         _registry->killEntity(_statusMessageEntity);
@@ -753,12 +744,16 @@ void LevelCreatorScene::saveToToml() {
                     float startX = kLevelSectionPosLeft;
                     _statusMessageEntity = EntityFactory::createStaticText(
                         _registry, _assetsManager,
-                        "Wave " + std::to_string(wave.number) + " spawn delay must be filled.", "main_font",
-                        {startX, 810.f}, 20.f);
+                        "Wave " + std::to_string(wave.number) +
+                            " spawn delay must be filled.",
+                        "main_font", {startX, 810.f}, 20.f);
                     try {
-                        auto& textComp = _registry->getComponent<rtype::games::rtype::client::Text>(_statusMessageEntity);
+                        auto& textComp = _registry->getComponent<
+                            rtype::games::rtype::client::Text>(
+                            _statusMessageEntity);
                         textComp.color = rtype::display::Color::Red();
-                    } catch (const std::exception&) {}
+                    } catch (const std::exception&) {
+                    }
                     _listEntity.push_back(_statusMessageEntity);
                     file.close();
                     std::filesystem::remove(filename);
@@ -767,7 +762,7 @@ void LevelCreatorScene::saveToToml() {
                 try {
                     delay = std::stof(val);
                 } catch (...) {
-                    // if parse failure, maybe also error? or let it be 0? 
+                    // if parse failure, maybe also error? or let it be 0?
                     // User asked to check if empty.
                 }
             }
@@ -778,7 +773,9 @@ void LevelCreatorScene::saveToToml() {
                 _registry->isAlive(spawn.countInputVal)) {
                 std::string val = getInputValue(spawn.countInputVal);
                 if (val.empty()) {
-                    LOG_ERROR_CAT(rtype::LogCategory::UI, "Wave " + std::to_string(wave.number) + " spawn count is empty.");
+                    LOG_ERROR_CAT(rtype::LogCategory::UI,
+                                  "Wave " + std::to_string(wave.number) +
+                                      " spawn count is empty.");
                     if (_statusMessageEntity != ECS::Entity(0) &&
                         _registry->isAlive(_statusMessageEntity)) {
                         _registry->killEntity(_statusMessageEntity);
@@ -786,12 +783,16 @@ void LevelCreatorScene::saveToToml() {
                     float startX = kLevelSectionPosLeft;
                     _statusMessageEntity = EntityFactory::createStaticText(
                         _registry, _assetsManager,
-                        "Wave " + std::to_string(wave.number) + " spawn count must be filled.", "main_font",
-                        {startX, 810.f}, 20.f);
+                        "Wave " + std::to_string(wave.number) +
+                            " spawn count must be filled.",
+                        "main_font", {startX, 810.f}, 20.f);
                     try {
-                        auto& textComp = _registry->getComponent<rtype::games::rtype::client::Text>(_statusMessageEntity);
+                        auto& textComp = _registry->getComponent<
+                            rtype::games::rtype::client::Text>(
+                            _statusMessageEntity);
                         textComp.color = rtype::display::Color::Red();
-                    } catch (const std::exception&) {}
+                    } catch (const std::exception&) {
+                    }
                     _listEntity.push_back(_statusMessageEntity);
                     file.close();
                     std::filesystem::remove(filename);
@@ -799,7 +800,8 @@ void LevelCreatorScene::saveToToml() {
                 }
                 try {
                     count = std::stoi(val);
-                } catch (...) {}
+                } catch (...) {
+                }
             }
             file << "count = " << count << std::endl;
             file << std::endl;
@@ -814,7 +816,9 @@ void LevelCreatorScene::saveToToml() {
                 _registry->isAlive(powerup.delayInputVal)) {
                 std::string val = getInputValue(powerup.delayInputVal);
                 if (val.empty()) {
-                    LOG_ERROR_CAT(rtype::LogCategory::UI, "Wave " + std::to_string(wave.number) + " powerup delay is empty.");
+                    LOG_ERROR_CAT(rtype::LogCategory::UI,
+                                  "Wave " + std::to_string(wave.number) +
+                                      " powerup delay is empty.");
                     if (_statusMessageEntity != ECS::Entity(0) &&
                         _registry->isAlive(_statusMessageEntity)) {
                         _registry->killEntity(_statusMessageEntity);
@@ -822,12 +826,16 @@ void LevelCreatorScene::saveToToml() {
                     float startX = kLevelSectionPosLeft;
                     _statusMessageEntity = EntityFactory::createStaticText(
                         _registry, _assetsManager,
-                        "Wave " + std::to_string(wave.number) + " powerup delay must be filled.", "main_font",
-                        {startX, 810.f}, 20.f);
+                        "Wave " + std::to_string(wave.number) +
+                            " powerup delay must be filled.",
+                        "main_font", {startX, 810.f}, 20.f);
                     try {
-                        auto& textComp = _registry->getComponent<rtype::games::rtype::client::Text>(_statusMessageEntity);
+                        auto& textComp = _registry->getComponent<
+                            rtype::games::rtype::client::Text>(
+                            _statusMessageEntity);
                         textComp.color = rtype::display::Color::Red();
-                    } catch (const std::exception&) {}
+                    } catch (const std::exception&) {
+                    }
                     _listEntity.push_back(_statusMessageEntity);
                     file.close();
                     std::filesystem::remove(filename);
@@ -835,7 +843,8 @@ void LevelCreatorScene::saveToToml() {
                 }
                 try {
                     delay = std::stof(val);
-                } catch (...) {}
+                } catch (...) {
+                }
             }
             file << "delay = " << delay << std::endl;
 
@@ -844,7 +853,9 @@ void LevelCreatorScene::saveToToml() {
                 _registry->isAlive(powerup.yInputVal)) {
                 std::string val = getInputValue(powerup.yInputVal);
                 if (val.empty()) {
-                    LOG_ERROR_CAT(rtype::LogCategory::UI, "Wave " + std::to_string(wave.number) + " powerup Y pos is empty.");
+                    LOG_ERROR_CAT(rtype::LogCategory::UI,
+                                  "Wave " + std::to_string(wave.number) +
+                                      " powerup Y pos is empty.");
                     if (_statusMessageEntity != ECS::Entity(0) &&
                         _registry->isAlive(_statusMessageEntity)) {
                         _registry->killEntity(_statusMessageEntity);
@@ -852,12 +863,16 @@ void LevelCreatorScene::saveToToml() {
                     float startX = kLevelSectionPosLeft;
                     _statusMessageEntity = EntityFactory::createStaticText(
                         _registry, _assetsManager,
-                        "Wave " + std::to_string(wave.number) + " powerup Y pos must be filled.", "main_font",
-                        {startX, 810.f}, 20.f);
+                        "Wave " + std::to_string(wave.number) +
+                            " powerup Y pos must be filled.",
+                        "main_font", {startX, 810.f}, 20.f);
                     try {
-                        auto& textComp = _registry->getComponent<rtype::games::rtype::client::Text>(_statusMessageEntity);
+                        auto& textComp = _registry->getComponent<
+                            rtype::games::rtype::client::Text>(
+                            _statusMessageEntity);
                         textComp.color = rtype::display::Color::Red();
-                    } catch (const std::exception&) {}
+                    } catch (const std::exception&) {
+                    }
                     _listEntity.push_back(_statusMessageEntity);
                     file.close();
                     std::filesystem::remove(filename);
@@ -865,7 +880,8 @@ void LevelCreatorScene::saveToToml() {
                 }
                 try {
                     y = std::stof(val);
-                } catch (...) {}
+                } catch (...) {
+                }
             }
             file << "y = " << y << std::endl;
             file << std::endl;
