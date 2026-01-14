@@ -68,3 +68,22 @@ TubeMetal = "img/tubeMetal.png"
 [Fonts]
 MainFont = "fonts/Orbitron-VariableFont_wght.ttf"
 TitleFont = "fonts/Audiowide-Regular.ttf"
+
+# Gameplay configuration
+[Gameplay]
+Difficulty = "normal"
+StartingLives = 3
+Waves = 10
+PlayerSpeed = 260.0
+EnemySpeedMultiplier = 1.0
+FriendlyFire = false
+
+# Laser weapon configuration
+[Gameplay.Laser]
+DamagePerSecond = 50.0
+StartupDelay = 0.56
+MaxDuration = 3.0
+CooldownDuration = 2.0
+HitboxWidth = 614.0
+HitboxHeight = 50.0
+OffsetX = 340.0
