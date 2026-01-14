@@ -235,6 +235,8 @@ bool EntityConfigRegistry::loadEnemies(const std::string& filepath) {
                                     (*wpTbl)["critical"].value_or(false);
                                 wp.disablesAttack =
                                     (*wpTbl)["disables_attack"].value_or("");
+                                wp.segmentIndex =
+                                    (*wpTbl)["segment_index"].value_or(-1);
                                 config.weakPoints.push_back(std::move(wp));
                             }
                         }
