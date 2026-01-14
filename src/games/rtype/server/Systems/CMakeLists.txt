@@ -10,6 +10,9 @@ add_library(rtype_game_server_systems OBJECT
     ForcePod/ForcePodAttachmentSystem.cpp
     ForcePod/ForcePodLaunchSystem.cpp
     ForcePod/ForcePodShootingSystem.cpp
+    Boss/BossPhaseSystem.cpp
+    Boss/BossAttackSystem.cpp
+    Boss/WeakPointSystem.cpp
 )
 
 target_include_directories(rtype_game_server_systems PUBLIC
