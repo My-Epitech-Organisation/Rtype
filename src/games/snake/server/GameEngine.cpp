@@ -94,7 +94,7 @@ void SnakeGameEngine::spawnInitialSnakes() {
         _registry->emplaceComponent<PositionComponent>(segment,
                                                        PositionComponent{
                                                            .gridX = 10 - i,
-                                                           .gridY = 15,
+                                                           .gridY = 10,
                                                        });
     }
 
