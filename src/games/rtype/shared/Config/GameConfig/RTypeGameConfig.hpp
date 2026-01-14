@@ -138,6 +138,8 @@ struct TexturesConfig {
     std::string rapidFire;
     std::string damageBoost;
     std::string extraLife;
+    std::string laserUpgrade;
+    std::string laserBeam;
 
     bool operator==(const TexturesConfig&) const = default;
 };
