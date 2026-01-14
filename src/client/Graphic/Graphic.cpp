@@ -100,6 +100,7 @@ void Graphic::_update() {
         this->_systemScheduler->runSystem("chaser_rotation");
         this->_systemScheduler->runSystem("chaser_explosion");
         this->_systemScheduler->runSystem("animation");
+        this->_systemScheduler->runSystem("boss_serpent_animation");
         this->_systemScheduler->runSystem("charged_projectile_animation");
         this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
@@ -427,8 +428,14 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.EnemyPatrol);
     manager->textureManager->load("bdos_enemy_wave",
                                   config.assets.textures.EnemyWave);
-    manager->textureManager->load("boss_serpent",
-                                  config.assets.textures.BossSerpent);
+    manager->textureManager->load("boss_serpent_head",
+                                  config.assets.textures.BossSerpentHead);
+    manager->textureManager->load("boss_serpent_attack",
+                                  config.assets.textures.BossSerpentAttack);
+    manager->textureManager->load("boss_serpent_body",
+                                  config.assets.textures.BossSerpentBody);
+    manager->textureManager->load("boss_serpent_tail",
+                                  config.assets.textures.BossSerpentTail);
     manager->textureManager->load("projectile_player_laser",
                                   config.assets.textures.missileLaser);
     manager->textureManager->load("charged_shot",
