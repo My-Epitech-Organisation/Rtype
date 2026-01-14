@@ -45,6 +45,7 @@ using shared::ProjectileOwner;
 using shared::ProjectileTag;
 using shared::QuadTreeSystem;
 using shared::TransformComponent;
+using shared::WeaponComponent;
 using shared::collision::overlaps;
 using shared::collision::Rect;
 
@@ -437,6 +438,21 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                 }
             } else {
                 LOG_INFO("[CollisionSystem] Player missing NetworkIdComponent");
+            }
+            break;
+        case shared::PowerUpType::LaserUpgrade:
+            LOG_INFO("[CollisionSystem] Applying LaserUpgrade for player="
+                     << player.id);
+            if (registry.hasComponent<WeaponComponent>(player)) {
+                auto& weapon = registry.getComponent<WeaponComponent>(player);
+                weapon.unlockSlot();
+                uint8_t newSlot = weapon.unlockedSlots - 1;
+                if (newSlot < shared::MAX_WEAPON_SLOTS) {
+                    weapon.weapons[newSlot] =
+                        shared::WeaponPresets::ContinuousLaser;
+                    LOG_INFO("[CollisionSystem] Laser weapon added to slot "
+                             << static_cast<int>(newSlot));
+                }
             }
             break;
         case shared::PowerUpType::None:
