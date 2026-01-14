@@ -5,7 +5,7 @@
 ** BossVisualComponent.cpp - Implementation of boss visual component methods
 */
 
-#include "BossVisualComponent.hpp"
+#include "games/rtype/client/Components/BossVisualComponent.hpp"
 
 namespace rtype::games::rtype::client {
 

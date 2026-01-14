@@ -5,7 +5,7 @@
 ** BossSerpentComponent.cpp - Implementation of boss serpent visual methods
 */
 
-#include "BossSerpentComponent.hpp"
+#include "games/rtype/client/Components/BossSerpentComponent.hpp"
 
 const char* BossSerpentVisual::getTextureName() const {
     if (partType == BossSerpentPartType::HEAD) {

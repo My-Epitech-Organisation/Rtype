@@ -5,7 +5,7 @@
 ** BossComponent - Implementation of boss component utility functions
 */
 
-#include "BossComponent.hpp"
+#include "Components/BossComponent.hpp"
 
 namespace rtype::games::rtype::shared {
 

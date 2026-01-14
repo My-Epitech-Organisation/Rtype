@@ -5,7 +5,7 @@
 ** BossPatternComponent - Implementation of boss pattern component methods
 */
 
-#include "BossPatternComponent.hpp"
+#include "Components/BossPatternComponent.hpp"
 
 namespace rtype::games::rtype::shared {
 

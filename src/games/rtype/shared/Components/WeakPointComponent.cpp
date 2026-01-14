@@ -5,7 +5,7 @@
 ** WeakPointComponent - Implementation of weak point utility functions
 */
 
-#include "WeakPointComponent.hpp"
+#include "Components/WeakPointComponent.hpp"
 
 namespace rtype::games::rtype::shared {
 
