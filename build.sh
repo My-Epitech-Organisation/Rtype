@@ -239,7 +239,7 @@ echo ""
 # ========================================================================
 echo "→ Step 3/4: Building project..."
 if [ "$BUILD_SNAKE" = true ]; then
-    cmake --build --preset "$CMAKE_PRESET" --target snake_game rtype-display-sfml rtype-display-sdl2 -- -j$(nproc 2>/dev/null || echo 4)
+    cmake --build --preset "$CMAKE_PRESET" --target snake_game snake_server rtype-display-sfml rtype-display-sdl2 -- -j$(nproc 2>/dev/null || echo 4)
 elif [ "$BUILD_TESTS" = true ]; then
     cmake --build --preset "$CMAKE_PRESET" -- -j$(nproc 2>/dev/null || echo 4)
 else
@@ -282,6 +282,14 @@ if [ "$BUILD_SNAKE" = true ]; then
         echo "  ✓ Copied snake_game executable to repository root"
     else
         echo "  ✗ Snake game executable not found at $SNAKE_EXE"
+    fi
+
+    SNAKE_SERVER_EXE="$BUILD_DIR/src/games/snake/snake_server"
+    if [ -f "$SNAKE_SERVER_EXE" ]; then
+        cp "$SNAKE_SERVER_EXE" "$PROJECT_ROOT/"
+        echo "  ✓ Copied snake_server"
+    else
+        echo "  ⚠ Warning: snake_server executable not found at $SNAKE_SERVER_EXE"
     fi
 
     # Copy the selected display library
