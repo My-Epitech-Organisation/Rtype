@@ -12,8 +12,7 @@
 namespace rtype::games::rtype::server {
 
 using shared::BoundingBoxComponent;
-using shared::EnemyTag;
-using shared::HealthComponent;
+using shared::DamageOnContactComponent;
 using shared::LaserBeamComponent;
 using shared::LaserBeamState;
 using shared::LaserBeamTag;
@@ -31,10 +30,9 @@ LaserBeamSystem::LaserBeamSystem(EventEmitter emitter)
     : ASystem("LaserBeamSystem"), _emitEvent(std::move(emitter)) {}
 
 void LaserBeamSystem::update(ECS::Registry& registry, float deltaTime) {
-    _damagedThisFrame.clear();
     updateActiveBeams(registry, deltaTime);
     updateBeamPositions(registry);
-    performBeamCollisions(registry, deltaTime);
+    // Collision detection is now handled by CollisionSystem
 }
 
 void LaserBeamSystem::handleLaserInput(ECS::Registry& registry,
@@ -117,17 +115,34 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
     // Create new beam entity
     ECS::Entity beamEntity = registry.spawnEntity();
 
+    // Laser beam dimensions (matching visual: 614px wide, 50px tall)
+    constexpr float kBeamWidth = 614.0F;
+    constexpr float kBeamHeight = 50.0F;
+    constexpr float kDamagePerSecond = 50.0F;
+    constexpr float kStartupDelay = 0.56F;  // 7 frames * 0.08s
+
     // Add components (spawn in front of player)
     registry.emplaceComponent<TransformComponent>(
         beamEntity, playerPos.x + kLaserOffsetX, playerPos.y, 0.0F);
-    registry.emplaceComponent<BoundingBoxComponent>(beamEntity, 0.0F,
-                                                    16.0F);  // Width grows
+    registry.emplaceComponent<BoundingBoxComponent>(beamEntity, kBeamWidth,
+                                                    kBeamHeight);
     registry.emplaceComponent<LaserBeamTag>(beamEntity);
 
     LaserBeamComponent beamComp;
     beamComp.ownerNetworkId = playerNetworkId;
     beamComp.startFiring();
     registry.emplaceComponent<LaserBeamComponent>(beamEntity, beamComp);
+
+    // Add DamageOnContactComponent for collision-based damage (DPS mode)
+    shared::DamageOnContactComponent dmgComp;
+    dmgComp.damagePerSecond = kDamagePerSecond;
+    dmgComp.isDPS = true;
+    dmgComp.destroySelf = false;
+    dmgComp.ownerNetworkId = playerNetworkId;
+    dmgComp.startupDelay = kStartupDelay;
+    dmgComp.activeTime = 0.0F;
+    registry.emplaceComponent<shared::DamageOnContactComponent>(beamEntity,
+                                                                 dmgComp);
 
     // Assign network ID
     uint32_t beamNetworkId = _nextBeamNetworkId++;
@@ -166,18 +181,20 @@ void LaserBeamSystem::stopLaser(ECS::Registry& registry,
 void LaserBeamSystem::updateActiveBeams(ECS::Registry& registry,
                                         float deltaTime) {
     auto view = registry.view<LaserBeamTag, LaserBeamComponent,
-                              BoundingBoxComponent, NetworkIdComponent>();
+                              NetworkIdComponent>();
 
-    view.each([this, deltaTime](ECS::Entity /*entity*/, const LaserBeamTag&,
-                                LaserBeamComponent& beam,
-                                BoundingBoxComponent& bbox,
-                                const NetworkIdComponent& netId) {
+    view.each([this, &registry, deltaTime](ECS::Entity entity,
+                                           const LaserBeamTag&,
+                                           LaserBeamComponent& beam,
+                                           const NetworkIdComponent& netId) {
         bool wasActive = beam.isActive();
         bool forceStop = beam.update(deltaTime);
 
-        // Update bounding box width to match beam length
-        if (beam.isActive()) {
-            bbox.width = beam.beamLength;
+        // Synchronize activeTime with DamageOnContactComponent for startup delay
+        if (registry.hasComponent<shared::DamageOnContactComponent>(entity)) {
+            auto& dmgComp =
+                registry.getComponent<shared::DamageOnContactComponent>(entity);
+            dmgComp.activeTime = beam.activeTime;
         }
 
         // If max duration was reached, emit destroy event
@@ -217,109 +234,6 @@ void LaserBeamSystem::updateBeamPositions(ECS::Registry& registry) {
             }
         });
     });
-}
-
-void LaserBeamSystem::performBeamCollisions(ECS::Registry& registry,
-                                            float deltaTime) {
-    auto beamView = registry.view<LaserBeamTag, LaserBeamComponent,
-                                  TransformComponent>();
-
-    beamView.each([this, &registry, deltaTime](
-                      ECS::Entity /*beamEntity*/, const LaserBeamTag&,
-                      const LaserBeamComponent& beam,
-                      const TransformComponent& beamPos) {
-        // Only deal damage during Loop phase (after startup animation)
-        if (!beam.isDamaging() || beam.beamLength <= 0.0F) {
-            return;
-        }
-
-        // Calculate beam rectangle (sprite is rendered centered on beamPos)
-        // Full sprite width = beamLength * 2 (beamLength is half-width)
-        float halfWidth = beam.beamLength;
-        float beamLeft = beamPos.x - halfWidth;
-        float beamRight = beamPos.x + halfWidth;
-        float beamTop = beamPos.y - beam.beamWidth / 2.0F;
-        float beamBottom = beamPos.y + beam.beamWidth / 2.0F;
-
-        // Check against all enemies
-        auto enemyView =
-            registry.view<EnemyTag, TransformComponent, BoundingBoxComponent,
-                          HealthComponent, NetworkIdComponent>();
-
-        enemyView.each([this, &registry, deltaTime, &beam, beamLeft, beamRight,
-                        beamTop, beamBottom](
-                           ECS::Entity enemyEntity, const EnemyTag&,
-                           const TransformComponent& enemyPos,
-                           const BoundingBoxComponent& enemyBox,
-                           HealthComponent& /*health*/,
-                           const NetworkIdComponent& enemyNetId) {
-            // Calculate enemy bounds
-            float enemyHalfW = enemyBox.width / 2.0F;
-            float enemyHalfH = enemyBox.height / 2.0F;
-            float enemyLeft = enemyPos.x - enemyHalfW;
-            float enemyRight = enemyPos.x + enemyHalfW;
-            float enemyTop = enemyPos.y - enemyHalfH;
-            float enemyBottom = enemyPos.y + enemyHalfH;
-
-            // AABB overlap check
-            bool overlaps = !(beamRight < enemyLeft || enemyRight < beamLeft ||
-                              beamBottom < enemyTop || enemyBottom < beamTop);
-
-            if (overlaps) {
-                // Create unique key for this beam-enemy pair this frame
-                uint64_t pairKey =
-                    (static_cast<uint64_t>(beam.ownerNetworkId) << 32) |
-                    enemyNetId.networkId;
-
-                // Only damage once per frame
-                if (_damagedThisFrame.find(pairKey) ==
-                    _damagedThisFrame.end()) {
-                    _damagedThisFrame.insert(pairKey);
-
-                    // Apply DPS damage
-                    float damage = beam.damagePerSecond * deltaTime;
-                    applyDamage(registry, enemyEntity, damage,
-                                beam.ownerNetworkId);
-                }
-            }
-        });
-    });
-}
-
-void LaserBeamSystem::applyDamage(ECS::Registry& registry, ECS::Entity target,
-                                  float damage, uint32_t attackerNetworkId) {
-    if (!registry.hasComponent<HealthComponent>(target)) {
-        return;
-    }
-
-    auto& health = registry.getComponent<HealthComponent>(target);
-    int32_t damageInt = static_cast<int32_t>(damage);
-    if (damageInt < 1) {
-        damageInt = 1;  // Minimum 1 damage per frame
-    }
-
-    health.takeDamage(damageInt);
-
-    // Emit health changed event
-    if (_emitEvent && registry.hasComponent<NetworkIdComponent>(target)) {
-        const auto& netId = registry.getComponent<NetworkIdComponent>(target);
-
-        engine::GameEvent event{};
-        event.type = engine::GameEventType::EntityHealthChanged;
-        event.entityNetworkId = netId.networkId;
-        event.entityType = 1;  // Bydos
-        event.healthCurrent = health.current;
-        event.healthMax = health.max;
-        event.damage = damageInt;
-        _emitEvent(event);
-    }
-
-    // Mark for destruction if dead
-    if (!health.isAlive()) {
-        if (!registry.hasComponent<shared::DestroyTag>(target)) {
-            registry.emplaceComponent<shared::DestroyTag>(target);
-        }
-    }
 }
 
 void LaserBeamSystem::emitBeamSpawn(uint32_t beamNetworkId, float x, float y,
