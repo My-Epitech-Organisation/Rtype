@@ -14,6 +14,7 @@
 
 #include "../../../Components/AIComponent.hpp"
 #include "../../../Components/BossComponent.hpp"
+#include "BossAnimationConfig.hpp"
 
 namespace rtype::games::rtype::shared {
 
@@ -51,6 +52,7 @@ struct WeakPointConfig {
     bool critical = false;
     std::string disablesAttack;
     int32_t segmentIndex = -1;
+    BossPartAnimationConfig animation;
 };
 
 /**
@@ -88,6 +90,7 @@ struct EnemyConfig {
     float invulnerabilityDuration = 1.0F;
     std::vector<BossPhaseConfig> phases;
     std::vector<WeakPointConfig> weakPoints;
+    BossAnimationConfig animationConfig;
 
     /**
      * @brief Validate the enemy configuration

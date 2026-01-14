@@ -25,6 +25,8 @@ add_library(rtype_game_client_systems STATIC
     AnimationSystem.hpp
     BossSerpentAnimationSystem.cpp
     BossSerpentAnimationSystem.hpp
+    BossAnimationSystem.cpp
+    BossAnimationSystem.hpp
     ChaserRotationSystem.cpp
     ChaserRotationSystem.hpp
     ChaserExplosionSystem.cpp

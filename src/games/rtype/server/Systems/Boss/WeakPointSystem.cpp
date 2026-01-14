@@ -43,9 +43,13 @@ void WeakPointSystem::syncWeakPointPositions(ECS::Registry& registry) {
     auto view =
         registry.view<WeakPointComponent, WeakPointTag, TransformComponent>();
 
-    view.each([&registry](ECS::Entity /*entity*/, WeakPointComponent& weakPoint,
+    static int logCount = 0;
+    int entityCount = 0;
+    
+    view.each([&registry, &entityCount](ECS::Entity entity, WeakPointComponent& weakPoint,
                           const WeakPointTag& /*tag*/,
                           TransformComponent& transform) {
+        entityCount++;
         if (weakPoint.destroyed) {
             return;
         }
@@ -62,6 +66,9 @@ void WeakPointSystem::syncWeakPointPositions(ECS::Registry& registry) {
         const auto& parentTransform =
             registry.getComponent<TransformComponent>(parent);
 
+        float oldX = transform.x;
+        float oldY = transform.y;
+
         if (weakPoint.segmentIndex > 0 &&
             registry.hasComponent<BossComponent>(parent)) {
             const auto& boss = registry.getComponent<BossComponent>(parent);
@@ -77,7 +84,22 @@ void WeakPointSystem::syncWeakPointPositions(ECS::Registry& registry) {
             transform.rotation =
                 parentTransform.rotation + weakPoint.localRotation;
         }
+        
+        if (logCount < 60 && weakPoint.segmentIndex < 0) {
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                "[WeakPointSystem] Entity " << entity.id 
+                << " segIdx=" << weakPoint.segmentIndex
+                << " parent=(" << parentTransform.x << "," << parentTransform.y << ")"
+                << " offset=(" << weakPoint.localOffsetX << "," << weakPoint.localOffsetY << ")"
+                << " pos: (" << oldX << "," << oldY << ") -> (" << transform.x << "," << transform.y << ")");
+        }
     });
+    
+    if (logCount < 60) {
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+            "[WeakPointSystem] Synced " << entityCount << " weak points");
+        logCount++;
+    }
 }
 
 void WeakPointSystem::handleWeakPointDestruction(ECS::Registry& registry) {

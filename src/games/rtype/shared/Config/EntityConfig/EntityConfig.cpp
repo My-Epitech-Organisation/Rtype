@@ -50,11 +50,6 @@ PowerUpConfig::EffectType stringToEffect(const std::string& str) {
     return PowerUpConfig::EffectType::Health;
 }
 
-/**
- * @brief Try to find a file in multiple locations
- * @param filepath Relative path to search for
- * @return First existing path, or original if none found
- */
 std::string findConfigPath(const std::string& filepath) {
     namespace fs = std::filesystem;
 
@@ -69,6 +64,82 @@ std::string findConfigPath(const std::string& filepath) {
     }
 
     return filepath;
+}
+
+BossSpriteConfig parseSpriteConfig(const toml::table* tbl,
+                                   const std::string& prefix) {
+    BossSpriteConfig sprite;
+    if (!tbl) return sprite;
+    sprite.textureName = (*tbl)[prefix + "_texture"].value_or("");
+    sprite.frameWidth = (*tbl)[prefix + "_frame_width"].value_or(64);
+    sprite.frameHeight = (*tbl)[prefix + "_frame_height"].value_or(64);
+    sprite.frameCount = (*tbl)[prefix + "_frame_count"].value_or(1);
+    sprite.frameDuration = (*tbl)[prefix + "_frame_duration"].value_or(0.1F);
+    sprite.loop = (*tbl)[prefix + "_loop"].value_or(true);
+    sprite.spriteOffsetX = (*tbl)[prefix + "_offset_x"].value_or(0);
+    return sprite;
+}
+
+BossPartAnimationConfig parsePartAnimation(const toml::table* tbl) {
+    BossPartAnimationConfig part;
+    if (!tbl) return part;
+    part.partId = (*tbl)["part_id"].value_or("");
+    part.partType = (*tbl)["part_type"].value_or("body");
+    part.idleSprite = parseSpriteConfig(tbl, "idle");
+    part.moveSprite = parseSpriteConfig(tbl, "move");
+    part.attackSprite = parseSpriteConfig(tbl, "attack");
+    part.deathSprite = parseSpriteConfig(tbl, "death");
+    if (part.idleSprite.textureName.empty() &&
+        !part.moveSprite.textureName.empty()) {
+        part.idleSprite = part.moveSprite;
+    }
+    part.scaleX = (*tbl)["scale_x"].value_or(1.0F);
+    part.scaleY = (*tbl)["scale_y"].value_or(1.0F);
+    part.enableRotation = (*tbl)["enable_rotation"].value_or(true);
+    part.rotationSmoothing = (*tbl)["rotation_smoothing"].value_or(0.15F);
+    part.rotationOffset = (*tbl)["rotation_offset"].value_or(0.0F);
+    return part;
+}
+
+BossAnimationConfig parseAnimationConfig(const toml::table* animTbl) {
+    BossAnimationConfig animConfig;
+    if (!animTbl) return animConfig;
+    animConfig.bossId = (*animTbl)["boss_id"].value_or("");
+    if (auto* headTbl = (*animTbl)["head"].as_table()) {
+        animConfig.headAnimation = parsePartAnimation(headTbl);
+        animConfig.headAnimation.partType = "head";
+    }
+    if (auto* bodyTbl = (*animTbl)["body"].as_table()) {
+        animConfig.bodyAnimation = parsePartAnimation(bodyTbl);
+        animConfig.bodyAnimation.partType = "body";
+    }
+    if (auto* tailTbl = (*animTbl)["tail"].as_table()) {
+        animConfig.tailAnimation = parsePartAnimation(tailTbl);
+        animConfig.tailAnimation.partType = "tail";
+    }
+    if (auto* moveTbl = (*animTbl)["movement"].as_table()) {
+        animConfig.movement.amplitude =
+            (*moveTbl)["amplitude"].value_or(150.0F);
+        animConfig.movement.frequency =
+            (*moveTbl)["frequency"].value_or(0.5F);
+        animConfig.movement.horizontalAmplitude =
+            (*moveTbl)["horizontal_amplitude"].value_or(100.0F);
+        animConfig.movement.verticalAmplitude =
+            (*moveTbl)["vertical_amplitude"].value_or(200.0F);
+        animConfig.movement.enablePositionHistory =
+            (*moveTbl)["enable_position_history"].value_or(false);
+        animConfig.movement.maxPositionHistory =
+            (*moveTbl)["max_position_history"].value_or(500);
+        animConfig.movement.minRecordDistance =
+            (*moveTbl)["min_record_distance"].value_or(3.0F);
+        animConfig.movement.segmentSpacing =
+            (*moveTbl)["segment_spacing"].value_or(100.0F);
+    }
+    animConfig.spawnOffsetX = (*animTbl)["spawn_offset_x"].value_or(-200.0F);
+    animConfig.spawnOffsetY = (*animTbl)["spawn_offset_y"].value_or(0.0F);
+    animConfig.useRelativeSpawn =
+        (*animTbl)["use_relative_spawn"].value_or(true);
+    return animConfig;
 }
 
 }  // namespace
@@ -237,9 +308,18 @@ bool EntityConfigRegistry::loadEnemies(const std::string& filepath) {
                                     (*wpTbl)["disables_attack"].value_or("");
                                 wp.segmentIndex =
                                     (*wpTbl)["segment_index"].value_or(-1);
+                                if (auto* animTbl =
+                                        (*wpTbl)["animation"].as_table()) {
+                                    wp.animation = parsePartAnimation(animTbl);
+                                }
                                 config.weakPoints.push_back(std::move(wp));
                             }
                         }
+                    }
+
+                    if (auto* animTbl = (*enemyTbl)["animation"].as_table()) {
+                        config.animationConfig = parseAnimationConfig(animTbl);
+                        config.animationConfig.bossId = config.id;
                     }
 
                     if (config.isValid()) {

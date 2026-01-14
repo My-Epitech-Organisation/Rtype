@@ -335,8 +335,10 @@ void DataDrivenSpawnerSystem::spawnBoss(ECS::Registry& registry,
     bossComp.levelCompleteTrigger = bossConfig.levelCompleteTrigger;
     bossComp.baseX = spawnX;
     bossComp.baseY = spawnY;
-    bossComp.amplitude = 200.0F;
-    bossComp.frequency = 0.7F;
+
+    const auto& movementConfig = bossConfig.animationConfig.movement;
+    bossComp.amplitude = movementConfig.amplitude;
+    bossComp.frequency = movementConfig.frequency;
 
     for (const auto& phaseConfig : bossConfig.phases) {
         shared::BossPhase phase;
@@ -423,7 +425,15 @@ void DataDrivenSpawnerSystem::spawnBoss(ECS::Registry& registry,
         wpEvent.y = wpY;
         wpEvent.rotation = 0.0F;
         wpEvent.entityType = static_cast<uint8_t>(EntityType::BossPart);
-        wpEvent.subType = static_cast<uint8_t>(wpComp.type);
+        // Always send segmentIndex - use offset 100 for negative values to keep them unique
+        // Positive: 1, 2, 3... (serpent chain segments)
+        // Negative: -1 -> 101, -2 -> 102... (scorpion fixed parts)
+        if (wpComp.segmentIndex >= 0) {
+            wpEvent.subType = static_cast<uint8_t>(wpComp.segmentIndex);
+        } else {
+            wpEvent.subType = static_cast<uint8_t>(100 + std::abs(wpComp.segmentIndex));
+        }
+        wpEvent.parentNetworkId = networkId;
         _emitEvent(wpEvent);
 
         LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
