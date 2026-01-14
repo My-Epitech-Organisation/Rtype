@@ -124,7 +124,8 @@ void ChargeVisualSystem::applyScreenShake(float intensity) {
         _isShaking = true;
     }
 
-    static thread_local std::mt19937 rng(std::random_device{}());
+    static thread_local std::random_device rd;
+    static thread_local std::mt19937 rng(rd());
     std::uniform_real_distribution<float> dist(-1.0F, 1.0F);
 
     float offsetX = dist(rng) * intensity;
