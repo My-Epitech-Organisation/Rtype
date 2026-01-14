@@ -101,6 +101,7 @@ void Graphic::_update() {
         this->_systemScheduler->runSystem("chaser_explosion");
         this->_systemScheduler->runSystem("animation");
         this->_systemScheduler->runSystem("boss_serpent_animation");
+        this->_systemScheduler->runSystem("boss_animation");
         this->_systemScheduler->runSystem("charged_projectile_animation");
         this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
@@ -186,6 +187,8 @@ void Graphic::_initializeSystems() {
         std::make_unique<::rtype::games::rtype::client::AnimationSystem>();
     this->_bossSerpentAnimationSystem = std::make_unique<
         ::rtype::games::rtype::client::BossSerpentAnimationSystem>();
+    this->_bossAnimationSystem = std::make_unique<
+        ::rtype::games::rtype::client::BossAnimationSystem>();
     this->_chaserRotationSystem =
         std::make_unique<::rtype::games::rtype::client::ChaserRotationSystem>();
     this->_chaserExplosionSystem = std::make_unique<
@@ -268,6 +271,13 @@ void Graphic::_initializeSystems() {
                                               reg, _currentDeltaTime);
                                       },
                                       {"animation"});
+
+    this->_systemScheduler->addSystem("boss_animation",
+                                      [this](ECS::Registry& reg) {
+                                          _bossAnimationSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"boss_serpent_animation"});
 
     this->_systemScheduler->addSystem("chaser_rotation",
                                       [this](ECS::Registry& reg) {
@@ -436,6 +446,16 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.BossSerpentBody);
     manager->textureManager->load("boss_serpent_tail",
                                   config.assets.textures.BossSerpentTail);
+    manager->textureManager->load("boss_scorpion_body",
+                                  config.assets.textures.BossScorpionBody);
+    manager->textureManager->load("boss_scorpion_claws",
+                                  config.assets.textures.BossScorpionClaws);
+    manager->textureManager->load("boss_scorpion_tail",
+                                  config.assets.textures.BossScorpionTail);
+    manager->textureManager->load("boss_scorpion_stinger",
+                                  config.assets.textures.BossScorpionStinger);
+    manager->textureManager->load("boss_scorpion_cannon",
+                                  config.assets.textures.BossScorpionCannon);
     manager->textureManager->load("projectile_player_laser",
                                   config.assets.textures.missileLaser);
     manager->textureManager->load("charged_shot",
@@ -631,6 +651,7 @@ Graphic::~Graphic() {
     _playerPowerUpVisualSystem.reset();
     _chaserExplosionSystem.reset();
     _chaserRotationSystem.reset();
+    _bossAnimationSystem.reset();
     _bossSerpentAnimationSystem.reset();
     _animationSystem.reset();
     _playerAnimationSystem.reset();

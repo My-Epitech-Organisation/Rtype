@@ -28,6 +28,7 @@
 #include "games/rtype/shared/Components/PowerUpComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
+#include "games/rtype/shared/Components/WeakPointComponent.hpp"
 
 namespace rtype::client {
 
@@ -279,6 +280,14 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
 void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
     auto it = networkIdToEntity_.find(event.entityId);
     if (it == networkIdToEntity_.end()) {
+        static int notFoundCount = 0;
+        if (notFoundCount < 100) {
+            LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                "[ClientNetworkSystem] handleEntityMove: networkId="
+                    << event.entityId << " NOT FOUND in map (size="
+                    << networkIdToEntity_.size() << ")");
+            notFoundCount++;
+        }
         return;
     }
 
@@ -313,6 +322,19 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
 
     if (registry_->hasComponent<Transform>(entity)) {
         auto& pos = registry_->getComponent<Transform>(entity);
+        
+        // Debug log for boss part position updates
+        static int bossPartLogCount = 0;
+        if (bossPartLogCount < 60 &&
+            registry_->hasComponent<rtype::games::rtype::shared::WeakPointTag>(entity)) {
+            LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                "[ClientNetworkSystem] BossPart move: netId=" << event.entityId
+                    << " entity=" << entity.id
+                    << " pos (" << pos.x << "," << pos.y << ") -> ("
+                    << event.x << "," << event.y << ")");
+            bossPartLogCount++;
+        }
+        
         pos.x = event.x;
         pos.y = event.y;
     }
