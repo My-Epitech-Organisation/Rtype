@@ -806,7 +806,8 @@ void RtypeEntityFactory::setupBossPartEntity(
         entity, std::pair<int, int>({0, 0}),
         std::pair<int, int>(
             {BossSerpentVisual::FRAME_WIDTH, BossSerpentVisual::FRAME_HEIGHT}));
-    float xScale = (serpentPartType == BossSerpentPartType::TAIL) ? scale : -scale;
+    float xScale =
+        (serpentPartType == BossSerpentPartType::TAIL) ? scale : -scale;
     reg.emplaceComponent<Size>(entity, xScale, scale);
 
     BossSerpentBodyVisual bodyVisual;

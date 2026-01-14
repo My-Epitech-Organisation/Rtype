@@ -52,7 +52,8 @@ void BossSerpentAnimationSystem::update(ECS::Registry& registry, float dt) {
                     float vx = transform.x - posData.prevX;
                     float vy = transform.y - posData.prevY;
                     if (std::abs(vx) > 0.5f || std::abs(vy) > 0.5f) {
-                        float targetAngle = std::atan2(vy, vx) * 180.0f / 3.14159265f;
+                        float targetAngle =
+                            std::atan2(vy, vx) * 180.0f / 3.14159265f;
                         targetAngle += 180.0f;
                         while (targetAngle > 180.0f) targetAngle -= 360.0f;
                         while (targetAngle < -180.0f) targetAngle += 360.0f;
@@ -79,7 +80,8 @@ void BossSerpentAnimationSystem::update(ECS::Registry& registry, float dt) {
             texRect.rect.height = h;
         });
 
-    registry.view<BossSerpentBodyVisual, TransformComponent, TextureRect, Image>()
+    registry
+        .view<BossSerpentBodyVisual, TransformComponent, TextureRect, Image>()
         .each([&registry, dt](auto entity, BossSerpentBodyVisual& bodyVisual,
                               TransformComponent& transform,
                               TextureRect& texRect, Image& image) {
@@ -93,7 +95,8 @@ void BossSerpentAnimationSystem::update(ECS::Registry& registry, float dt) {
                     float vy = transform.y - posData.prevY;
 
                     if (std::abs(vx) > 0.5f || std::abs(vy) > 0.5f) {
-                        float targetAngle = std::atan2(vy, vx) * 180.0f / 3.14159265f;
+                        float targetAngle =
+                            std::atan2(vy, vx) * 180.0f / 3.14159265f;
                         targetAngle += 180.0f;
 
                         while (targetAngle > 180.0f) targetAngle -= 360.0f;

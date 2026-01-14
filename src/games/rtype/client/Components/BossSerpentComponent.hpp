@@ -33,11 +33,7 @@ enum class BossSerpentState : uint8_t {
  * @enum BossSerpentPartType
  * @brief Type of serpent body part for texture selection
  */
-enum class BossSerpentPartType : uint8_t {
-    HEAD = 0,
-    BODY = 1,
-    TAIL = 2
-};
+enum class BossSerpentPartType : uint8_t { HEAD = 0, BODY = 1, TAIL = 2 };
 
 /**
  * @struct BossSerpentVisual
@@ -72,7 +68,7 @@ struct BossSerpentVisual {
     static constexpr int SHEET_WIDTH = 677;
     static constexpr int SHEET_HEIGHT = 369;
     static constexpr int FRAME_COUNT = 5;
-    static constexpr int FRAME_WIDTH = 135;   // 677 / 5 = 135.4, using 135
+    static constexpr int FRAME_WIDTH = 135;  // 677 / 5 = 135.4, using 135
     static constexpr int FRAME_HEIGHT = 369;
 
     // Animation speed (seconds per frame)
@@ -169,8 +165,7 @@ struct BossSerpentBodyVisual {
         animationTimer += deltaTime;
         if (animationTimer >= BossSerpentVisual::ANIMATION_SPEED) {
             animationTimer -= BossSerpentVisual::ANIMATION_SPEED;
-            currentFrame =
-                (currentFrame + 1) % BossSerpentVisual::FRAME_COUNT;
+            currentFrame = (currentFrame + 1) % BossSerpentVisual::FRAME_COUNT;
         }
     }
 };

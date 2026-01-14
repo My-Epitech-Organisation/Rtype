@@ -285,8 +285,9 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
         "assets/" + _parser.getString(table, "Textures", "BossSerpentHead",
                                       defaults.assets.textures.BossSerpentHead);
     config.assets.textures.BossSerpentAttack =
-        "assets/" + _parser.getString(table, "Textures", "BossSerpentAttack",
-                                      defaults.assets.textures.BossSerpentAttack);
+        "assets/" +
+        _parser.getString(table, "Textures", "BossSerpentAttack",
+                          defaults.assets.textures.BossSerpentAttack);
     config.assets.textures.BossSerpentBody =
         "assets/" + _parser.getString(table, "Textures", "BossSerpentBody",
                                       defaults.assets.textures.BossSerpentBody);
