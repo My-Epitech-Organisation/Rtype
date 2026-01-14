@@ -252,7 +252,7 @@ class NetworkClient {
      * InputMask::kShoot)
      * @return true if sent, false if not connected
      */
-    bool sendInput(std::uint8_t inputMask);
+    bool sendInput(std::uint16_t inputMask);
 
     /**
      * @brief Send a chat message to the lobby

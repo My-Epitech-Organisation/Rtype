@@ -78,7 +78,9 @@ TEST(CoverageHarness, ValidatorExhaustiveHeaders) {
     Header good = Header::create(OpCode::C_INPUT, kMinClientUserId, 123, sizeof(InputPayload));
     auto hb = ByteOrderSpec::serializeToNetwork(good);
     std::vector<std::uint8_t> raw(hb.begin(), hb.end());
-    raw.push_back(InputMask::kShoot);
+    // InputPayload is 2 bytes (uint16_t)
+    raw.push_back(InputMask::kShoot);  // low byte
+    raw.push_back(0x00);  // high byte
 
     // valid packet
     auto res = Validator::validatePacket(std::span<const std::uint8_t>(raw), false);

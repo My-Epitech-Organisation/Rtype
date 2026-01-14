@@ -20,6 +20,7 @@
 #include "client/Graphic/AudioLib/AudioLib.hpp"
 #include "games/rtype/client/Components/BoxingComponent.hpp"
 #include "games/rtype/client/Components/ImageComponent.hpp"
+#include "games/rtype/client/Components/LaserBeamAnimationComponent.hpp"
 #include "games/rtype/client/Components/RectangleComponent.hpp"
 #include "games/rtype/client/Components/TagComponent.hpp"
 #include "games/rtype/client/Components/ZIndexComponent.hpp"
@@ -167,7 +168,7 @@ void ClientNetworkSystem::onHealthUpdate(
 
 void ClientNetworkSystem::update() { client_->poll(); }
 
-void ClientNetworkSystem::sendInput(std::uint8_t inputMask) {
+void ClientNetworkSystem::sendInput(std::uint16_t inputMask) {
     client_->sendInput(inputMask);
 }
 
@@ -222,6 +223,23 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
                       std::to_string(event.y) + ") localUserId=" +
                       (localUserId_.has_value() ? std::to_string(*localUserId_)
                                                 : "none"));
+
+    if (event.type == network::EntityType::LaserBeam) {
+        using LaserAnim = games::rtype::client::LaserBeamAnimationComponent;
+        std::vector<ECS::Entity> toDestroy;
+        registry_->view<LaserAnim>().each(
+            [&toDestroy](ECS::Entity entity, const LaserAnim& anim) {
+                if (anim.pendingDestroy) {
+                    toDestroy.push_back(entity);
+                }
+            });
+        for (auto entity : toDestroy) {
+            registry_->killEntity(entity);
+            LOG_DEBUG_CAT(
+                rtype::LogCategory::Network,
+                "[ClientNetworkSystem] Cleaned up old laser beam entity");
+        }
+    }
 
     auto existingIt = networkIdToEntity_.find(event.entityId);
     if (existingIt != networkIdToEntity_.end()) {
@@ -370,6 +388,20 @@ void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
     ECS::Entity entity = it->second;
 
     if (registry_->isAlive(entity)) {
+        using LaserAnim = games::rtype::client::LaserBeamAnimationComponent;
+        if (registry_->hasComponent<LaserAnim>(entity)) {
+            auto& anim = registry_->getComponent<LaserAnim>(entity);
+            if (!anim.pendingDestroy) {
+                anim.pendingDestroy = true;
+                LOG_DEBUG_CAT(
+                    rtype::LogCategory::Network,
+                    "[ClientNetworkSystem] Laser beam end animation triggered");
+            }
+            this->networkIdToEntity_.erase(it);
+            lastKnownHealth_.erase(entityId);
+            return;
+        }
+
         _playDeathSound(entity);
         registry_->killEntity(entity);
         LOG_DEBUG_CAT(rtype::LogCategory::Network,

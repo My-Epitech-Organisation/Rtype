@@ -34,6 +34,7 @@ using shared::EnemyTag;
 using shared::EntityType;
 using shared::HealthComponent;
 using shared::InvincibleTag;
+using shared::LaserBeamTag;
 using shared::NetworkIdComponent;
 using shared::ObstacleTag;
 using shared::PickupTag;
@@ -45,6 +46,7 @@ using shared::ProjectileOwner;
 using shared::ProjectileTag;
 using shared::QuadTreeSystem;
 using shared::TransformComponent;
+using shared::WeaponComponent;
 using shared::collision::overlaps;
 using shared::collision::Rect;
 
@@ -59,6 +61,8 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
     _quadTreeSystem->update(registry, deltaTime);
     auto collisionPairs = _quadTreeSystem->queryCollisionPairs(registry);
     ECS::CommandBuffer cmdBuffer(std::ref(registry));
+
+    _laserDamagedThisFrame.clear();
 
     for (const auto& pair : collisionPairs) {
         ECS::Entity entityA = pair.entityA;
@@ -100,6 +104,8 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         bool bIsPickup = registry.hasComponent<PickupTag>(entityB);
         bool aIsObstacle = registry.hasComponent<ObstacleTag>(entityA);
         bool bIsObstacle = registry.hasComponent<ObstacleTag>(entityB);
+        bool aIsLaser = registry.hasComponent<LaserBeamTag>(entityA);
+        bool bIsLaser = registry.hasComponent<LaserBeamTag>(entityB);
         bool aHasHealth = registry.hasComponent<HealthComponent>(entityA);
         bool bHasHealth = registry.hasComponent<HealthComponent>(entityB);
 
@@ -126,6 +132,17 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         if (bIsObstacle && (aIsPlayer || aIsProjectile)) {
             handleObstacleCollision(registry, cmdBuffer, entityB, entityA,
                                     aIsPlayer);
+            continue;
+        }
+
+        if (aIsLaser && bIsEnemy) {
+            handleLaserEnemyCollision(registry, cmdBuffer, entityA, entityB,
+                                      deltaTime);
+            continue;
+        }
+        if (bIsLaser && aIsEnemy) {
+            handleLaserEnemyCollision(registry, cmdBuffer, entityB, entityA,
+                                      deltaTime);
             continue;
         }
 
@@ -439,6 +456,21 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                 LOG_INFO("[CollisionSystem] Player missing NetworkIdComponent");
             }
             break;
+        case shared::PowerUpType::LaserUpgrade:
+            LOG_INFO("[CollisionSystem] Applying LaserUpgrade for player="
+                     << player.id);
+            if (registry.hasComponent<WeaponComponent>(player)) {
+                auto& weapon = registry.getComponent<WeaponComponent>(player);
+                weapon.unlockSlot();
+                uint8_t newSlot = weapon.unlockedSlots - 1;
+                if (newSlot < shared::MAX_WEAPON_SLOTS) {
+                    weapon.weapons[newSlot] =
+                        shared::WeaponPresets::ContinuousLaser;
+                    LOG_INFO("[CollisionSystem] Laser weapon added to slot "
+                             << static_cast<int>(newSlot));
+                }
+            }
+            break;
         case shared::PowerUpType::None:
         default:
             break;
@@ -569,6 +601,77 @@ void CollisionSystem::handleEnemyPlayerCollision(ECS::Registry& registry,
     if (damageComp.destroySelf) {
         LOG_DEBUG("[CollisionSystem] Enemy " << enemy.id
                                              << " destroyed on contact");
+        cmdBuffer.emplaceComponentDeferred<DestroyTag>(enemy, DestroyTag{});
+    }
+}
+
+void CollisionSystem::handleLaserEnemyCollision(ECS::Registry& registry,
+                                                ECS::CommandBuffer& cmdBuffer,
+                                                ECS::Entity laser,
+                                                ECS::Entity enemy,
+                                                float deltaTime) {
+    if (registry.hasComponent<DestroyTag>(laser) ||
+        registry.hasComponent<DestroyTag>(enemy)) {
+        return;
+    }
+
+    if (!registry.hasComponent<DamageOnContactComponent>(laser)) {
+        return;
+    }
+
+    auto& dmgComp = registry.getComponent<DamageOnContactComponent>(laser);
+
+    if (!dmgComp.isActive()) {
+        return;
+    }
+
+    if (!registry.hasComponent<HealthComponent>(enemy)) {
+        return;
+    }
+
+    uint32_t laserNetId = 0;
+    uint32_t enemyNetId = 0;
+
+    if (registry.hasComponent<NetworkIdComponent>(laser)) {
+        laserNetId = registry.getComponent<NetworkIdComponent>(laser).networkId;
+    }
+    if (registry.hasComponent<NetworkIdComponent>(enemy)) {
+        enemyNetId = registry.getComponent<NetworkIdComponent>(enemy).networkId;
+    }
+
+    uint64_t pairKey = (static_cast<uint64_t>(laserNetId) << 32) | enemyNetId;
+    if (_laserDamagedThisFrame.count(pairKey) > 0) {
+        return;
+    }
+    _laserDamagedThisFrame.insert(pairKey);
+
+    int32_t damage = dmgComp.calculateDamage(deltaTime);
+    auto& health = registry.getComponent<HealthComponent>(enemy);
+    int32_t prevHealth = health.current;
+    health.takeDamage(damage);
+
+    LOG_DEBUG("[CollisionSystem] Laser DPS hit enemy "
+              << enemy.id << ": " << prevHealth << " -> " << health.current
+              << " (damage=" << damage << ")");
+
+    if (_emitEvent && registry.hasComponent<NetworkIdComponent>(enemy)) {
+        const auto& netId = registry.getComponent<NetworkIdComponent>(enemy);
+        if (netId.isValid()) {
+            engine::GameEvent event{};
+            event.type = engine::GameEventType::EntityHealthChanged;
+            event.entityNetworkId = netId.networkId;
+            event.entityType =
+                static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
+            event.healthCurrent = health.current;
+            event.healthMax = health.max;
+            event.damage = damage;
+            _emitEvent(event);
+        }
+    }
+
+    if (!health.isAlive()) {
+        LOG_DEBUG("[CollisionSystem] Enemy " << enemy.id
+                                             << " destroyed by laser");
         cmdBuffer.emplaceComponentDeferred<DestroyTag>(enemy, DestroyTag{});
     }
 }

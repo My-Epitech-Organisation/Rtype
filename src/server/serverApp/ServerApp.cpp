@@ -14,6 +14,7 @@
 #include <string>
 
 #include "games/rtype/server/GameEngine.hpp"
+#include "games/rtype/server/RTypeGameConfig.hpp"
 #include "games/rtype/shared/Components/EntityType.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
@@ -342,6 +343,20 @@ bool ServerApp::initialize() {
                       "[Server] Failed to create game engine");
         return false;
     }
+
+    // Pass laser configuration to game engine before initialization
+    if (_gameConfig) {
+        auto* rtypeEngine =
+            dynamic_cast<games::rtype::server::GameEngine*>(_gameEngine.get());
+        auto* rtypeConfig =
+            dynamic_cast<games::rtype::server::RTypeGameConfig*>(
+                _gameConfig.get());
+        if (rtypeEngine && rtypeConfig) {
+            rtypeEngine->setLaserConfig(
+                rtypeConfig->getRTypeConfig().gameplay.laser);
+        }
+    }
+
     if (!_gameEngine->initialize()) {
         LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
                       "[Server] Failed to initialize game engine");
@@ -496,8 +511,28 @@ bool ServerApp::initialize() {
             }
         });
 
+    _inputHandler->setLaserInputCallback([this](ECS::Entity playerEntity,
+                                                std::uint32_t playerNetworkId,
+                                                bool isFiring) {
+        if (!_gameEngine) {
+            return;
+        }
+        auto* rtypeEngine =
+            dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                _gameEngine.get());
+        if (!rtypeEngine) {
+            return;
+        }
+        auto* laserSystem = rtypeEngine->getLaserBeamSystem();
+        if (laserSystem) {
+            laserSystem->handleLaserInput(rtypeEngine->getRegistry(),
+                                          playerEntity, playerNetworkId,
+                                          isFiring);
+        }
+    });
+
     _networkSystem->setInputHandler([this](std::uint32_t userId,
-                                           std::uint8_t inputMask,
+                                           std::uint16_t inputMask,
                                            std::optional<ECS::Entity> entity) {
         _inputHandler->handleInput(userId, inputMask, entity);
     });

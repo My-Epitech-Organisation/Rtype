@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <memory>
+#include <unordered_set>
 #include <utility>
 
 #include <rtype/engine.hpp>
@@ -78,8 +80,24 @@ class CollisionSystem : public ::rtype::engine::ASystem {
                                  ECS::Entity obstacle, ECS::Entity other,
                                  bool otherIsPlayer);
 
+    /**
+     * @brief Handle collision between a laser beam and an enemy
+     * @param registry ECS registry
+     * @param cmdBuffer Command buffer
+     * @param laser The laser beam entity
+     * @param enemy The enemy entity
+     * @param deltaTime Frame delta time for DPS calculation
+     */
+    void handleLaserEnemyCollision(ECS::Registry& registry,
+                                   ECS::CommandBuffer& cmdBuffer,
+                                   ECS::Entity laser, ECS::Entity enemy,
+                                   float deltaTime);
+
     EventEmitter _emitEvent;
     std::unique_ptr<shared::QuadTreeSystem> _quadTreeSystem;
+
+    /// Tracks laser-enemy pairs damaged this frame to prevent double hits
+    std::unordered_set<uint64_t> _laserDamagedThisFrame;
 };
 
 }  // namespace rtype::games::rtype::server

@@ -111,6 +111,18 @@ class RtypeEntityFactory {
     static void setupForcePodEntity(ECS::Registry& registry,
                                     std::shared_ptr<AssetManager> assetsManager,
                                     ECS::Entity entity);
+
+    /**
+     * @brief Create a Laser Beam entity with all components
+     *
+     * @param registry ECS registry
+     * @param assetsManager Asset manager
+     * @param entity Entity to configure
+     * @param ownerUserId User ID of the player who fired the laser
+     */
+    static void setupLaserBeamEntity(
+        ECS::Registry& registry, std::shared_ptr<AssetManager> assetsManager,
+        ECS::Entity entity, std::uint32_t ownerUserId);
 };
 
 }  // namespace rtype::games::rtype::client

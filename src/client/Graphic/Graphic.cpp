@@ -491,6 +491,10 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.damageBoost);
     manager->textureManager->load("extra_life",
                                   config.assets.textures.extraLife);
+    manager->textureManager->load("laser_upgrade",
+                                  config.assets.textures.laserUpgrade);
+    manager->textureManager->load("laser_beam",
+                                  config.assets.textures.laserBeam);
 
     manager->textureManager->load(
         "projectile1", config.assets.textures.wallTexture.engrenage1);

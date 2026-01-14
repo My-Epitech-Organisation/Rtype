@@ -157,6 +157,8 @@ bool GameEngine::initialize() {
     _forcePodLaunchSystem = std::make_unique<ForcePodLaunchSystem>();
     _forcePodShootingSystem = std::make_unique<ForcePodShootingSystem>(
         _projectileSpawnerSystem.get());
+    _laserBeamSystem =
+        std::make_unique<LaserBeamSystem>(eventEmitter, _laserConfig);
 
     _forcePodAttachmentSystem->setLaunchSystem(_forcePodLaunchSystem.get());
 
@@ -211,6 +213,12 @@ bool GameEngine::initialize() {
                                         reg, _lastDeltaTime);
                                 },
                                 {"ForcePodLaunch"});
+    _systemScheduler->addSystem("LaserBeam",
+                                [this](ECS::Registry& reg) {
+                                    _laserBeamSystem->update(reg,
+                                                             _lastDeltaTime);
+                                },
+                                {"Movement"});
     _systemScheduler->addSystem("Collision",
                                 [this](ECS::Registry& reg) {
                                     _collisionSystem->update(reg,
@@ -263,6 +271,7 @@ void GameEngine::shutdown() {
     _powerUpSystem.reset();
     _cleanupSystem.reset();
     _destroySystem.reset();
+    _laserBeamSystem.reset();
     {
         std::lock_guard<std::mutex> lock(_eventMutex);
         _pendingEvents.clear();
@@ -361,6 +370,7 @@ engine::ProcessedEvent GameEngine::processEvent(
                 case ::rtype::network::EntityType::Pickup:
                 case ::rtype::network::EntityType::Obstacle:
                 case ::rtype::network::EntityType::ForcePod:
+                case ::rtype::network::EntityType::LaserBeam:
                     result.networkEntityType = event.entityType;
                     break;
                 default:

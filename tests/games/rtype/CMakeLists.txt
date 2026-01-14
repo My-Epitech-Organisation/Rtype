@@ -505,6 +505,27 @@ else()
     gtest_discover_tests(test_forcepod_shooting_system)
 endif()
 
+# LaserBeamSystem tests
+add_executable(test_laser_beam_system test_laser_beam_system.cpp)
+
+target_link_libraries(test_laser_beam_system PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_laser_beam_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_laser_beam_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_laser_beam_system)
+endif()
+
 # PowerUpTypeComponent tests
 add_executable(test_powerup_type_component test_powerup_type_component.cpp)
 

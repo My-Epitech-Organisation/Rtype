@@ -98,6 +98,32 @@ std::vector<ConfigError> RTypeGameConfig::validate() const {
                           "Enemy speed multiplier must be positive"});
     }
 
+    // Laser weapon validation
+    if (gameplay.laser.damagePerSecond <= 0.0F) {
+        errors.push_back({"gameplay.laser", "damagePerSecond",
+                          "Damage per second must be positive"});
+    }
+    if (gameplay.laser.startupDelay < 0.0F) {
+        errors.push_back({"gameplay.laser", "startupDelay",
+                          "Startup delay must be non-negative"});
+    }
+    if (gameplay.laser.maxDuration <= 0.0F) {
+        errors.push_back(
+            {"gameplay.laser", "maxDuration", "Max duration must be positive"});
+    }
+    if (gameplay.laser.cooldownDuration < 0.0F) {
+        errors.push_back({"gameplay.laser", "cooldownDuration",
+                          "Cooldown duration must be non-negative"});
+    }
+    if (gameplay.laser.hitboxWidth <= 0.0F) {
+        errors.push_back(
+            {"gameplay.laser", "hitboxWidth", "Hitbox width must be positive"});
+    }
+    if (gameplay.laser.hitboxHeight <= 0.0F) {
+        errors.push_back({"gameplay.laser", "hitboxHeight",
+                          "Hitbox height must be positive"});
+    }
+
     // Input validation
     if (input.moveUp.empty()) {
         errors.push_back({"input", "moveUp", "Move up key cannot be empty"});
@@ -170,6 +196,22 @@ void RTypeGameConfig::applyDefaults() {
         gameplay.playerSpeed = defaults.gameplay.playerSpeed;
     if (gameplay.enemySpeedMultiplier <= 0.0F)
         gameplay.enemySpeedMultiplier = defaults.gameplay.enemySpeedMultiplier;
+
+    // Laser weapon defaults
+    if (gameplay.laser.damagePerSecond <= 0.0F)
+        gameplay.laser.damagePerSecond =
+            defaults.gameplay.laser.damagePerSecond;
+    if (gameplay.laser.startupDelay < 0.0F)
+        gameplay.laser.startupDelay = defaults.gameplay.laser.startupDelay;
+    if (gameplay.laser.maxDuration <= 0.0F)
+        gameplay.laser.maxDuration = defaults.gameplay.laser.maxDuration;
+    if (gameplay.laser.cooldownDuration < 0.0F)
+        gameplay.laser.cooldownDuration =
+            defaults.gameplay.laser.cooldownDuration;
+    if (gameplay.laser.hitboxWidth <= 0.0F)
+        gameplay.laser.hitboxWidth = defaults.gameplay.laser.hitboxWidth;
+    if (gameplay.laser.hitboxHeight <= 0.0F)
+        gameplay.laser.hitboxHeight = defaults.gameplay.laser.hitboxHeight;
 
     if (input.moveUp.empty()) input.moveUp = defaults.input.moveUp;
     if (input.moveDown.empty()) input.moveDown = defaults.input.moveDown;
