@@ -7,9 +7,8 @@
 
 #include "LaserBeamSystem.hpp"
 
-#include "Logger/Macros.hpp"
-
 #include "../../../shared/Components/EntityType.hpp"
+#include "Logger/Macros.hpp"
 
 namespace rtype::games::rtype::server {
 
