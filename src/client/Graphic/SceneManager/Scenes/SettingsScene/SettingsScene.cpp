@@ -26,10 +26,11 @@ SettingsScene::SettingsScene(
     std::shared_ptr<AssetManager> textureManager,
     std::shared_ptr<rtype::display::IDisplay> window,
     std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
+    std::function<void(const std::string&)> setBackground,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(ecs, textureManager, window, audio), _keybinds(keybinds) {
     this->_listEntity = (EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "Settings"));
+        this->_registry, this->_assetsManager, "Settings", nullptr));
 
     this->_initKeybindSection();
     this->_initAudioSection();

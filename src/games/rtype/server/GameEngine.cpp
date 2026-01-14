@@ -83,6 +83,7 @@ bool GameEngine::initialize() {
     ddConfig.maxEnemies = GameConfig::MAX_ENEMIES;
     ddConfig.waveTransitionDelay = 2.0F;
     ddConfig.waitForClear = true;
+    ddConfig.startDelay = 3.0F;
     ddConfig.enableFallbackSpawning = true;
     ddConfig.fallbackMinInterval = GameConfig::MIN_SPAWN_INTERVAL;
     ddConfig.fallbackMaxInterval = GameConfig::MAX_SPAWN_INTERVAL;
@@ -91,15 +92,6 @@ bool GameEngine::initialize() {
     ddConfig.powerUpMaxInterval = 9999.0F;
     _dataDrivenSpawnerSystem =
         std::make_unique<DataDrivenSpawnerSystem>(eventEmitter, ddConfig);
-
-    if (_dataDrivenSpawnerSystem->loadLevel("level_1")) {
-        LOG_INFO(
-            "[GameEngine] Level 'level_1' loaded for data-driven spawning");
-        _dataDrivenSpawnerSystem->startLevel();
-    } else {
-        LOG_WARNING(
-            "[GameEngine] Could not load level_1 - using fallback spawning");
-    }
 
     SpawnerConfig spawnerConfig{};
     spawnerConfig.minSpawnInterval = GameConfig::MIN_SPAWN_INTERVAL;
@@ -279,19 +271,13 @@ void GameEngine::shutdown() {
                   "[GameEngine] Shutdown: Complete");
 }
 
-bool GameEngine::loadLevel(const std::string& levelId) {
-    if (_dataDrivenSpawnerSystem) {
-        return _dataDrivenSpawnerSystem->loadLevel(levelId);
-    }
-    LOG_ERROR(
-        "[GameEngine] Cannot load level: DataDrivenSpawnerSystem not "
-        "initialized");
-    return false;
-}
-
 bool GameEngine::loadLevelFromFile(const std::string& filepath) {
     if (_dataDrivenSpawnerSystem) {
-        return _dataDrivenSpawnerSystem->loadLevelFromFile(filepath);
+        if (_dataDrivenSpawnerSystem->loadLevelFromFile(filepath)) {
+            _dataDrivenSpawnerSystem->startLevel();
+            return true;
+        }
+        return false;
     }
     LOG_ERROR(
         "[GameEngine] Cannot load level: DataDrivenSpawnerSystem not "
@@ -346,6 +332,9 @@ engine::ProcessedEvent GameEngine::processEvent(
     result.valid = false;
 
     switch (event.type) {
+        case engine::GameEventType::LevelComplete:
+            result.valid = true;
+            break;
         case engine::GameEventType::EntitySpawned: {
             ECS::Entity foundEntity{0};
             bool found = false;

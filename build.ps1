@@ -230,7 +230,7 @@ if (-not (Test-Path $DisplayDLL)) {
 }
 
 if (Test-Path $DisplayDLL) {
-    Copy-Item $DisplayDLL (Join-Path $ExecutableDir "display.dll") -Force
+    Copy-Item -Path $DisplayDLL -Destination (Join-Path $ExecutableDir "\plugins\display.dll") -Force
     Write-Host "  ✓ Copied display.dll" -ForegroundColor Green
 } else {
     Write-Host "  ⚠ Warning: Display DLL not found" -ForegroundColor Yellow

@@ -95,18 +95,11 @@ class GameEngine : public engine::AGameEngine {
         override;
 
     /**
-     * @brief Load a level for data-driven wave spawning
-     * @param levelId Level identifier (e.g., "level_1")
-     * @return true if level loaded successfully
-     */
-    bool loadLevel(const std::string& levelId);
-
-    /**
      * @brief Load a level from file path
-     * @param filepath Path to level TOML file
+     * @param filepath Path to level configuration file
      * @return true if level loaded successfully
      */
-    bool loadLevelFromFile(const std::string& filepath);
+    bool loadLevelFromFile(const std::string& filepath) override;
 
     /**
      * @brief Start the loaded level

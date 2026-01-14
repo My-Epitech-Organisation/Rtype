@@ -205,7 +205,7 @@ echo "→ Step 3/4: Building project..."
 if [ "$BUILD_TESTS" = true ]; then
     cmake --build --preset "$CMAKE_PRESET" -- -j$(nproc 2>/dev/null || echo 4)
 else
-    cmake --build --preset "$CMAKE_PRESET" --target r-type_client r-type_server rtype-display-sfml -- -j$(nproc 2>/dev/null || echo 4)
+    cmake --build --preset "$CMAKE_PRESET" --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-asteroidsSpace rtype-graphic-background-lobby rtype-graphic-background-labs rtype-graphic-background-spatialStation  rtype-graphic-music-chillMusic rtype-graphic-music-battleMusic rtype-graphic-music-exploreMusic -- -j$(nproc 2>/dev/null || echo 4)
 fi
 echo "✓ Build complete"
 echo ""
@@ -217,7 +217,9 @@ echo "→ Step 4/4: Copying executables to repository root..."
 
 CLIENT_EXE="$BUILD_DIR/src/client/r-type_client"
 SERVER_EXE="$BUILD_DIR/src/server/r-type_server"
-DISPLAY_SO="$BUILD_DIR/lib/display/SFML/librtype-display-sfml.so"
+DISPLAY_SO="$BUILD_DIR/lib/display/**/*.so"
+BACKGROUND_SO="$BUILD_DIR/lib/background/**/*.so"
+MUSIC_SO="$BUILD_DIR/lib/audio/**/*.so"
 
 if [ -f "$CLIENT_EXE" ]; then
     cp "$CLIENT_EXE" "$PROJECT_ROOT/"
@@ -233,12 +235,35 @@ else
     echo "  ⚠ Warning: Server executable not found at $SERVER_EXE"
 fi
 
-if [ -f "$DISPLAY_SO" ]; then
-    cp "$DISPLAY_SO" "$PROJECT_ROOT/display.so"
-    echo "  ✓ Copied display.so"
+filesDisplayPlugins=($DISPLAY_SO)
+if [ -f "${filesDisplayPlugins[0]}" ]; then
+    mkdir -p "$PROJECT_ROOT/plugins"
+    cp "${filesDisplayPlugins[0]}" "$PROJECT_ROOT/plugins/display.so"
+    echo "  ✓ Copied $(basename "${filesDisplayPlugins[0]}") to plugins/display.so"
 else
-    echo "  ⚠ Warning: Server executable not found at $DISPLAY_SO"
+    echo "  ⚠ Warning: Display lib not found at $DISPLAY_SO"
 fi
+
+filesBackgroundPlugins=($BACKGROUND_SO)
+
+if [ ${#filesBackgroundPlugins[@]} -gt 0 ]; then
+    mkdir -p "$PROJECT_ROOT/plugins/background"
+    cp "${filesBackgroundPlugins[@]}" "$PROJECT_ROOT/plugins/background/"
+    echo "  ✓ Copied ${#filesBackgroundPlugins[@]} background plugin(s)"
+else
+    echo "  ⚠ Warning: No background libs found at $BACKGROUND_SO"
+fi
+
+filesMusicPlugins=($MUSIC_SO)
+
+if [ ${#filesMusicPlugins[@]} -gt 0 ]; then
+    mkdir -p "$PROJECT_ROOT/plugins/music"
+    cp "${filesMusicPlugins[@]}" "$PROJECT_ROOT/plugins/music/"
+    echo "  ✓ Copied ${#filesMusicPlugins[@]} music plugin(s)"
+else
+    echo "  ⚠ Warning: No music libs found at $MUSIC_SO"
+fi
+
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
@@ -246,7 +271,7 @@ echo "║                   Build Complete!                        ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 echo "Executables are now in the repository root:"
-ls -lh "$PROJECT_ROOT"/r-type_* "$PROJECT_ROOT"/display.so 2>/dev/null || echo "  (No executables found)"
+ls -lh "$PROJECT_ROOT"/r-type_* "$PROJECT_ROOT"/plugins/*.so "$PROJECT_ROOT"/plugins/**/*.so 2>/dev/null || echo "  (No executables found)"
 echo ""
 echo "Dependency strategy used: $([ "$VCPKG_AVAILABLE" = true ] && echo "vcpkg" || echo "CPM")"
 echo "Build directory: $BUILD_DIR"

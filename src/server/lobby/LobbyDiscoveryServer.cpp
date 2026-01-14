@@ -198,6 +198,10 @@ Buffer LobbyDiscoveryServer::buildLobbyListPacket() {
 
         info.isActive = lobby.isActive ? 1 : 0;
 
+        std::memset(info.levelName.data(), 0, info.levelName.size());
+        std::memcpy(info.levelName.data(), lobby.levelId.c_str(),
+                    std::min(lobby.levelId.size(), info.levelName.size()));
+
         const std::uint8_t* infoBytes =
             reinterpret_cast<const std::uint8_t*>(&info);
         payload.insert(payload.end(), infoBytes, infoBytes + sizeof(LobbyInfo));

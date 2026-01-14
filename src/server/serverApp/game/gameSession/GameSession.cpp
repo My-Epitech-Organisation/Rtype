@@ -285,6 +285,8 @@ void GameSession::processGameEvents() {
         }
 
         switch (processed.type) {
+            case engine::GameEventType::LevelComplete:
+                break;
             case engine::GameEventType::EntitySpawned: {
                 network::EntityType networkType =
                     static_cast<network::EntityType>(

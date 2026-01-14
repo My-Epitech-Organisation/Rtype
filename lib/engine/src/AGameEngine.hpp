@@ -67,6 +67,15 @@ class AGameEngine : public IGameEngine {
      */
     bool isRunning() const override { return _isRunning; }
 
+    /**
+     * @brief Load a specific level/map from file (default implementation)
+     * @param filepath The path to the level configuration file
+     * @return true if loaded successfully
+     */
+    bool loadLevelFromFile(const std::string& /*filepath*/) override {
+        return true;
+    }
+
    protected:
     AGameEngine() = default;
 

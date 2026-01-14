@@ -36,7 +36,8 @@ class Lobby {
         std::uint32_t tickRate{60};
         std::string configPath{"config/server"};
         std::chrono::seconds emptyTimeout{
-            300};  ///< Time to keep empty lobby alive
+            300};                        ///< Time to keep empty lobby alive
+        std::string levelId{"level_1"};  ///< Level to load
     };
 
     /**
@@ -88,6 +89,15 @@ class Lobby {
     bool isRunning() const;
 
     /**
+     * @brief Change the current level of this lobby
+     *
+     * @param levelId The new level ID to load
+     * @return true if successful, false if game is already running or level
+     * invalid
+     */
+    bool changeLevel(const std::string& levelId);
+
+    /**
      * @brief Get the lobby code
      *
      * @return const std::string& The unique lobby code
@@ -107,6 +117,13 @@ class Lobby {
      * @return std::uint32_t Current player count
      */
     std::uint32_t getPlayerCount() const;
+
+    /**
+     * @brief Get the lobby configuration
+     *
+     * @return const Config& Reference to the configuration
+     */
+    const Config& getConfig() const { return config_; }
 
     /**
      * @brief Get the maximum number of players

@@ -22,6 +22,7 @@ class FakeEngineOk : public IGameEngine {
     std::size_t getEntityCount() const override { return 0; }
     bool isRunning() const override { return true; }
     std::string getGameId() const override { return "fakeOk"; }
+    bool loadLevelFromFile(const std::string& /*filepath*/) override { return true; }
     ProcessedEvent processEvent(const GameEvent&) override { return {GameEventType::GameOver, 0u, static_cast<uint8_t>(0), static_cast<uint8_t>(0), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, false}; }
     void syncEntityPositions(std::function<void(uint32_t, float, float, float, float)>) override {}
 };
@@ -38,6 +39,7 @@ class FakeEngineFail : public IGameEngine {
     std::size_t getEntityCount() const override { return 0; }
     bool isRunning() const override { return false; }
     std::string getGameId() const override { return "fakeFail"; }
+    bool loadLevelFromFile(const std::string& /*filepath*/) override { return true; }
     ProcessedEvent processEvent(const GameEvent&) override { return {GameEventType::GameOver, 0u, static_cast<uint8_t>(0), static_cast<uint8_t>(0), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, false}; }
     void syncEntityPositions(std::function<void(uint32_t, float, float, float, float)>) override {}
 };

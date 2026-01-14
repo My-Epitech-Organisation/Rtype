@@ -17,8 +17,9 @@ add_library(rtype-graphic
     ${CMAKE_SOURCE_DIR}/src/client/DevConsole/DevConsole.hpp
 )
 
-target_include_directories(rtype-graphic PRIVATE
+target_include_directories(rtype-graphic PUBLIC
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}
 )
 
 target_include_directories(rtype-graphic

@@ -341,10 +341,19 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
         config.id = tbl["level"]["id"].value_or("");
         config.name = tbl["level"]["name"].value_or(config.id);
         config.backgroundPath = tbl["level"]["background"].value_or("");
+        config.levelMusic = tbl["level"]["level_music"].value_or("");
         config.scrollSpeed = tbl["level"]["scroll_speed"].value_or(50.0F);
 
         if (auto boss = tbl["level"]["boss"].value<std::string>()) {
             config.bossId = *boss;
+        }
+
+        if (auto nextLv = tbl["level"]["next_level"].value<std::string>()) {
+            std::string n = *nextLv;
+            if (n.length() > 5 && n.substr(n.length() - 5) == ".toml") {
+                n = n.substr(0, n.length() - 5);
+            }
+            config.nextLevel = n;
         }
 
         if (auto* waves = tbl["wave"].as_array()) {

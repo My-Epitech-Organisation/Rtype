@@ -89,6 +89,9 @@ enum class OpCode : std::uint8_t {
     /// Server broadcasts bandwidth mode change to all clients (RELIABLE)
     S_BANDWIDTH_MODE_CHANGED = 0x17,
 
+    /// Server announces a level change with visual notification (RELIABLE)
+    S_LEVEL_ANNOUNCE = 0x18,
+
     /// Client sends input state (UNRELIABLE)
     C_INPUT = 0x20,
 
@@ -154,6 +157,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_LOBBY_LIST:
         case OpCode::C_JOIN_LOBBY:
         case OpCode::S_JOIN_LOBBY_RESPONSE:
+        case OpCode::S_LEVEL_ANNOUNCE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
@@ -220,6 +224,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_PLAYER_READY_STATE:
         case OpCode::S_LOBBY_LIST:
         case OpCode::S_JOIN_LOBBY_RESPONSE:
+        case OpCode::S_LEVEL_ANNOUNCE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_MOVE_BATCH:
@@ -262,6 +267,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_LOBBY_LIST:
         case OpCode::C_JOIN_LOBBY:
         case OpCode::S_JOIN_LOBBY_RESPONSE:
+        case OpCode::S_LEVEL_ANNOUNCE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_MOVE_BATCH:
@@ -342,6 +348,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "C_JOIN_LOBBY";
         case OpCode::S_JOIN_LOBBY_RESPONSE:
             return "S_JOIN_LOBBY_RESPONSE";
+        case OpCode::S_LEVEL_ANNOUNCE:
+            return "S_LEVEL_ANNOUNCE";
         case OpCode::S_ENTITY_SPAWN:
             return "S_ENTITY_SPAWN";
         case OpCode::S_ENTITY_MOVE:

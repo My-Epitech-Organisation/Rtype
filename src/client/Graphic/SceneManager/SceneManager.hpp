@@ -20,6 +20,8 @@
 #include "AudioLib/AudioLib.hpp"
 #include "ECS.hpp"
 #include "Scenes/IScene.hpp"
+#include "lib/audio/ILevelMusic.hpp"
+#include "lib/background/IBackground.hpp"
 
 class SceneManager {
    public:
@@ -34,9 +36,15 @@ class SceneManager {
         NONE,
     };
 
+    std::string loadedBackground = "";
+    std::string loadedLevelMusic = "";
+
    private:
     std::optional<Scene> _nextScene = std::nullopt;  // Scène en attente
     Scene _currentScene = NONE;
+    std::map<std::string, std::shared_ptr<IBackground>> _libBackgrounds;
+
+    std::map<std::string, std::shared_ptr<ILevelMusic>> _libMusicLevels;
 
     std::map<Scene, std::function<std::unique_ptr<IScene>()>> _sceneList;
     std::unique_ptr<IScene> _activeScene;
@@ -44,6 +52,10 @@ class SceneManager {
     std::shared_ptr<AudioLib> _audio;
 
     std::function<void(const Scene&)> _switchToScene;
+
+    std::function<void(const std::string&)> _setBackground;
+
+    std::function<void(const std::string&)> _setLevelMusic;
 
     std::shared_ptr<KeyboardActions> _keybinds;
 
@@ -62,8 +74,22 @@ class SceneManager {
     void _applySceneChange();
 
    public:
+    [[nodiscard]] std::string getLoadedBackground() const {
+        return loadedBackground;
+    }
+    [[nodiscard]] std::string getLoadedLevelMusic() const {
+        return loadedLevelMusic;
+    }
     [[nodiscard]] Scene getCurrentScene() const { return _currentScene; }
     void setCurrentScene(Scene scene);
+
+    void registerBackgroundPlugin(const std::string& name,
+                                  std::shared_ptr<IBackground> background);
+
+    void registerMusicLevelPlugin(const std::string& name,
+                                  std::shared_ptr<ILevelMusic> background);
+
+    void initializeScenes();
 
     void pollEvents(const rtype::display::Event& e);
     void update(float dt);

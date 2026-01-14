@@ -100,6 +100,7 @@ class LobbyManager {
         std::uint32_t playerCount;
         std::uint32_t maxPlayers;
         bool isActive;
+        std::string levelId;
     };
 
     std::vector<LobbyInfo> getActiveLobbyList() const;
@@ -133,9 +134,17 @@ class LobbyManager {
      *
      * @param isPrivate If true, generates alphanumeric code; if false, uses
      * next numeric code
+     * @param levelId Optional specific level to load
      * @return std::string The lobby code, or empty string on failure
      */
-    std::string createLobby(bool isPrivate = true);
+    std::string createLobby(bool isPrivate = true,
+                            const std::string& levelId = "");
+
+    /**
+     * @brief Get list of available levels from config
+     * @return List of level identifiers
+     */
+    std::vector<std::string> getAvailableLevels() const;
 
     /**
      * @brief Delete a lobby by code

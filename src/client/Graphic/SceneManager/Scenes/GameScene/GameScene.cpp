@@ -12,7 +12,10 @@
 
 #include "Accessibility.hpp"
 #include "Components/TagComponent.hpp"
+#include "EntityFactory/EntityFactory.hpp"
+#include "Graphic.hpp"
 #include "Logger/Macros.hpp"
+#include "games/rtype/client/GraphicsConstants.hpp"
 #include "games/rtype/client/PauseState.hpp"
 
 void GameScene::update(float dt) {
@@ -41,6 +44,7 @@ GameScene::GameScene(
     std::shared_ptr<AssetManager> textureManager,
     std::shared_ptr<rtype::display::IDisplay> window,
     std::shared_ptr<KeyboardActions> keybinds,
+    std::function<void(const std::string&)> setBackground,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::unique_ptr<IGameScene> gameScene,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,
@@ -90,12 +94,20 @@ GameScene::GameScene(
             this->_audio->play();
         }
     }
+
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[GameScene] Constructor completed successfully");
 }
 
 GameScene::~GameScene() {
     LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Destructor called");
+
+    if (_networkClient) {
+        _networkClient->onLevelAnnounce(nullptr);
+        _networkClient->onGameStart(nullptr);
+        _networkClient->onGameOver(nullptr);
+        _networkClient->onBandwidthModeChanged(nullptr);
+    }
 
     if (_networkSystem) {
         _networkSystem->onLocalPlayerAssigned(nullptr);
@@ -131,12 +143,6 @@ GameScene::~GameScene() {
                       "[GameScene] Removing PauseState singleton");
         this->_registry
             ->removeSingleton<rtype::games::rtype::client::PauseState>();
-    }
-
-    if (this->_registry->hasSingleton<AccessibilitySettings>()) {
-        LOG_DEBUG_CAT(::rtype::LogCategory::UI,
-                      "[GameScene] Removing AccessibilitySettings singleton");
-        this->_registry->removeSingleton<AccessibilitySettings>();
     }
 
     if (this->_audio) {

@@ -344,6 +344,7 @@
                                 <tr>
                                     <th>Code</th>
                                     <th>Players</th>
+                                    <th>Level</th>
                                     <th>Difficulty</th>
                                     <th>Type</th>
                                     <th>Status</th>
@@ -355,10 +356,13 @@
                                     <td><code>{{ lobby.code }}</code>
                                     <button class="border-0" @click="copyCode(lobby.code)"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-icon lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></td>
                                     <td>{{ lobby.playerCount }}/{{ lobby.maxPlayers }}</td>
+                                    <td>{{ lobby.level || 'Unknown' }}</td>
                                     <td>{{ lobby.difficulty }}</td>
                                     <td><span class="badge" :class="lobby.isPublic ? 'bg-info' : 'bg-secondary'">{{ lobby.isPublic ? 'Public' : 'Private' }}</span></td>
                                     <td><span class="badge" :class="lobby.active ? 'badge-online' : 'badge-offline'">{{ lobby.active ? 'Active' : 'Idle' }}</span></td>
                                     <td>
+                                        <button class="btn btn-sm btn-info me-2" @click="openChangeLevelModal(lobby)">Change Level</button>
+
                                         <button class="btn btn-sm btn-danger" @click="deleteLobby(lobby.code)" :disabled="lobby.playerCount > 0">Delete</button>
                                     </td>
                                 </tr>
@@ -487,6 +491,12 @@
                         <option value="Hard">Hard</option>
                     </select>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">Level</label>
+                    <select v-model="newLobby.levelId" class="form-select">
+                        <option v-for="level in levels" :value="level">{{ level }}</option>
+                    </select>
+                </div>
                 <!-- Public lobby option temporarily disabled -->
                 <!--
                 <div class="mb-3">
@@ -504,6 +514,30 @@
         </div>
     </div>
 </div>
+
+<!-- Change Level Modal -->
+<div class="modal fade" id="changeLevelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Level for Lobby {{ changeLevelData.lobbyCode }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Select New Level</label>
+                    <select v-model="changeLevelData.levelId" class="form-select">
+                        <option v-for="level in levels" :value="level">{{ level }}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" @click="submitChangeLevel" data-bs-dismiss="modal">Change</button>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -516,6 +550,7 @@ let packetLossChart = null;
 let tickOverrunsChart = null;
 
 createApp({
+
     data() {
         return {
             loading: true,
@@ -536,11 +571,17 @@ createApp({
             lobbies: [],
             players: [],
             bans: [],
+            levels: [],
             broadcastMessage: '',
             targetLobby: 'all',
             newLobby: {
                 difficulty: 'Normal',
-                isPublic: true
+                isPublic: true,
+                levelId: ''
+            },
+            changeLevelData: {
+                lobbyCode: '',
+                levelId: ''
             }
         };
     },
@@ -550,6 +591,20 @@ createApp({
         },
         copyToClipboard(code) {
             navigator.clipboard.writeText(code);
+        },
+        async fetchLevels() {
+            try {
+                const res = await fetch('/api/game/levels');
+                if (res.ok) {
+                    const data = await res.json();
+                    this.levels = data.levels || [];
+                    if (this.levels.length > 0) {
+                        if (!this.newLobby.levelId) this.newLobby.levelId = this.levels[0];
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to fetch levels:', e);
+            }
         },
         async fetchMetrics() {
             try {
@@ -618,11 +673,35 @@ createApp({
                 alert('Failed to reset metrics');
             }
         },
+        openChangeLevelModal(lobby) {
+            this.changeLevelData.lobbyCode = lobby.code;
+            this.changeLevelData.levelId = lobby.level || (this.levels.length > 0 ? this.levels[0] : '');
+            const modal = new bootstrap.Modal(document.getElementById('changeLevelModal'));
+            modal.show();
+        },
+        async submitChangeLevel() {
+            try {
+                 const res = await fetch(`/api/lobby/${this.changeLevelData.lobbyCode}/level`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ level: this.changeLevelData.levelId })
+                });
+                if (res.ok) {
+                    await this.fetchLobbies();
+                } else {
+                    const err = await res.json();
+                    alert('Failed to change level: ' + (err.error || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Failed to change level: ' + e.message);
+            }
+        },
         async createLobby() {
             try {
                 const lobbyData = {
                     difficulty: this.newLobby.difficulty,
-                    isPublic: false
+                    isPublic: false,
+                    levelId: this.newLobby.levelId
                 };
                 const res = await fetch('/api/lobby/create', {
                     method: 'POST',
@@ -707,7 +786,7 @@ createApp({
                 const res = await fetch('/api/message/send', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         message: this.broadcastMessage,
                         target: this.targetLobby
                     })
@@ -868,6 +947,7 @@ createApp({
         }
     },
     mounted() {
+        this.fetchLevels();
         this.pollData();
         setInterval(() => this.pollData(), 1000);
     }

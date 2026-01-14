@@ -25,13 +25,14 @@ HowToPlayScene::HowToPlayScene(
     std::shared_ptr<AssetManager> assetsManager,
     std::shared_ptr<rtype::display::IDisplay> window,
     std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
+    std::function<void(const std::string&)> setBackground,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(std::move(ecs), std::move(assetsManager), std::move(window),
              std::move(audio)),
       _keybinds(std::move(keybinds)),
       _switchToScene(std::move(switchToScene)) {
     this->_listEntity = EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "How to Play");
+        this->_registry, this->_assetsManager, "How to Play", nullptr);
     this->_initLayout();
     auto backBtn = EntityFactory::createButton(
         this->_registry,
