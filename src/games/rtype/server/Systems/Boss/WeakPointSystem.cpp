@@ -7,6 +7,7 @@
 
 #include "WeakPointSystem.hpp"
 
+#include <cmath>
 #include <utility>
 
 #include "../../../shared/Components/BossComponent.hpp"
@@ -42,7 +43,7 @@ void WeakPointSystem::syncWeakPointPositions(ECS::Registry& registry) {
     auto view =
         registry.view<WeakPointComponent, WeakPointTag, TransformComponent>();
 
-    view.each([&registry](ECS::Entity entity, WeakPointComponent& weakPoint,
+    view.each([&registry](ECS::Entity /*entity*/, WeakPointComponent& weakPoint,
                           const WeakPointTag& /*tag*/,
                           TransformComponent& transform) {
         if (weakPoint.destroyed) {
@@ -61,9 +62,21 @@ void WeakPointSystem::syncWeakPointPositions(ECS::Registry& registry) {
         const auto& parentTransform =
             registry.getComponent<TransformComponent>(parent);
 
-        transform.x = parentTransform.x + weakPoint.localOffsetX;
-        transform.y = parentTransform.y + weakPoint.localOffsetY;
-        transform.rotation = parentTransform.rotation + weakPoint.localRotation;
+        if (weakPoint.segmentIndex > 0 &&
+            registry.hasComponent<BossComponent>(parent)) {
+            const auto& boss = registry.getComponent<BossComponent>(parent);
+
+            auto [histX, histY] = boss.getSegmentPosition(
+                static_cast<std::size_t>(weakPoint.segmentIndex));
+
+            transform.x = histX;
+            transform.y = histY;
+        } else {
+            transform.x = parentTransform.x + weakPoint.localOffsetX;
+            transform.y = parentTransform.y + weakPoint.localOffsetY;
+            transform.rotation =
+                parentTransform.rotation + weakPoint.localRotation;
+        }
     });
 }
 
