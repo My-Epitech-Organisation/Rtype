@@ -20,14 +20,11 @@ using shared::NetworkIdComponent;
 using shared::PlayerTag;
 using shared::TransformComponent;
 
-// Offset from player center to laser center position
-// Laser sprite is 614px wide (3072 * 0.2 scale), rendered centered
-// Half-width = 307px, plus ~32px for player gun position = 340px
-// This places the laser's left visual edge at the player's front
-constexpr float kLaserOffsetX = 340.0F;
-
-LaserBeamSystem::LaserBeamSystem(EventEmitter emitter)
-    : ASystem("LaserBeamSystem"), _emitEvent(std::move(emitter)) {}
+LaserBeamSystem::LaserBeamSystem(EventEmitter emitter,
+                                 const game::config::LaserConfig& config)
+    : ASystem("LaserBeamSystem"),
+      _emitEvent(std::move(emitter)),
+      _config(config) {}
 
 void LaserBeamSystem::update(ECS::Registry& registry, float deltaTime) {
     updateActiveBeams(registry, deltaTime);
@@ -93,7 +90,7 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
                 if (registry.hasComponent<NetworkIdComponent>(existingBeam)) {
                     const auto& netId =
                         registry.getComponent<NetworkIdComponent>(existingBeam);
-                    emitBeamSpawn(netId.networkId, pos.x + kLaserOffsetX, pos.y,
+                    emitBeamSpawn(netId.networkId, pos.x + _config.offsetX, pos.y,
                                   playerNetworkId);
                 }
             }
@@ -115,31 +112,27 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
     // Create new beam entity
     ECS::Entity beamEntity = registry.spawnEntity();
 
-    // Laser beam dimensions (matching visual: 614px wide, 50px tall)
-    constexpr float kBeamWidth = 614.0F;
-    constexpr float kBeamHeight = 50.0F;
-    constexpr float kDamagePerSecond = 50.0F;
-    constexpr float kStartupDelay = 0.56F;  // 7 frames * 0.08s
-
     // Add components (spawn in front of player)
     registry.emplaceComponent<TransformComponent>(
-        beamEntity, playerPos.x + kLaserOffsetX, playerPos.y, 0.0F);
-    registry.emplaceComponent<BoundingBoxComponent>(beamEntity, kBeamWidth,
-                                                    kBeamHeight);
+        beamEntity, playerPos.x + _config.offsetX, playerPos.y, 0.0F);
+    registry.emplaceComponent<BoundingBoxComponent>(
+        beamEntity, _config.hitboxWidth, _config.hitboxHeight);
     registry.emplaceComponent<LaserBeamTag>(beamEntity);
 
     LaserBeamComponent beamComp;
     beamComp.ownerNetworkId = playerNetworkId;
+    beamComp.maxDuration = _config.maxDuration;
+    beamComp.cooldownDuration = _config.cooldownDuration;
     beamComp.startFiring();
     registry.emplaceComponent<LaserBeamComponent>(beamEntity, beamComp);
 
     // Add DamageOnContactComponent for collision-based damage (DPS mode)
     shared::DamageOnContactComponent dmgComp;
-    dmgComp.damagePerSecond = kDamagePerSecond;
+    dmgComp.damagePerSecond = _config.damagePerSecond;
     dmgComp.isDPS = true;
     dmgComp.destroySelf = false;
     dmgComp.ownerNetworkId = playerNetworkId;
-    dmgComp.startupDelay = kStartupDelay;
+    dmgComp.startupDelay = _config.startupDelay;
     dmgComp.activeTime = 0.0F;
     registry.emplaceComponent<shared::DamageOnContactComponent>(beamEntity,
                                                                  dmgComp);
@@ -149,7 +142,7 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
     registry.emplaceComponent<NetworkIdComponent>(beamEntity, beamNetworkId);
 
     // Emit spawn event (with offset applied)
-    emitBeamSpawn(beamNetworkId, playerPos.x + kLaserOffsetX, playerPos.y,
+    emitBeamSpawn(beamNetworkId, playerPos.x + _config.offsetX, playerPos.y,
                   playerNetworkId);
 
     LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
@@ -212,9 +205,10 @@ void LaserBeamSystem::updateBeamPositions(ECS::Registry& registry) {
     auto beamView = registry.view<LaserBeamTag, LaserBeamComponent,
                                   TransformComponent>();
 
-    beamView.each([&registry](ECS::Entity /*beamEntity*/, const LaserBeamTag&,
-                              const LaserBeamComponent& beam,
-                              TransformComponent& beamPos) {
+    beamView.each([this, &registry](ECS::Entity /*beamEntity*/,
+                                    const LaserBeamTag&,
+                                    const LaserBeamComponent& beam,
+                                    TransformComponent& beamPos) {
         if (!beam.isActive()) {
             return;
         }
@@ -223,13 +217,13 @@ void LaserBeamSystem::updateBeamPositions(ECS::Registry& registry) {
         auto playerView =
             registry.view<PlayerTag, NetworkIdComponent, TransformComponent>();
 
-        playerView.each([&beam, &beamPos](ECS::Entity /*playerEntity*/,
-                                          const PlayerTag&,
-                                          const NetworkIdComponent& netId,
-                                          const TransformComponent& playerPos) {
+        playerView.each([this, &beam, &beamPos](
+                            ECS::Entity /*playerEntity*/, const PlayerTag&,
+                            const NetworkIdComponent& netId,
+                            const TransformComponent& playerPos) {
             if (netId.networkId == beam.ownerNetworkId) {
                 // Beam origin is in front of player, extends to the right
-                beamPos.x = playerPos.x + kLaserOffsetX;
+                beamPos.x = playerPos.x + _config.offsetX;
                 beamPos.y = playerPos.y;
             }
         });
