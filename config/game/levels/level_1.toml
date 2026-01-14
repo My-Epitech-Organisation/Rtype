@@ -31,6 +31,10 @@ count = 1
 id = "force_pod"
 delay = 2.0
 
+[[wave.powerup]]
+id = "laser_upgrade"
+delay = 3.0
+
 # -----------------------------------------------------------------------------
 # Wave 2 - Wave enemies with Force Pod
 # -----------------------------------------------------------------------------
@@ -63,6 +67,11 @@ count = 2
 [[wave.powerup]]
 id = "shield"
 delay = 1.5
+
+[[wave.powerup]]
+id = "laser_upgrade"
+delay = 3.0
+y = 400.0
 
 # -----------------------------------------------------------------------------
 # Wave 4 - Chasers with rapid fire
