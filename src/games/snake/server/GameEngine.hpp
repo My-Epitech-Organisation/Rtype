@@ -43,7 +43,8 @@ class SnakeGameEngine : public engine::AGameEngine {
      * @brief Construct SnakeGameEngine with a shared ECS registry
      * @param registry Shared pointer to the ECS registry
      */
-    explicit SnakeGameEngine(std::shared_ptr<ECS::Registry> registry, bool autoSpawnInitial = true);
+    explicit SnakeGameEngine(std::shared_ptr<ECS::Registry> registry,
+                             bool autoSpawnInitial = true);
     ~SnakeGameEngine() override;
 
     // Prevent copy/move
