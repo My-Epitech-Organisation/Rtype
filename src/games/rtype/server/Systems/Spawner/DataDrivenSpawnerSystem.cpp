@@ -402,6 +402,7 @@ void DataDrivenSpawnerSystem::spawnBoss(ECS::Registry& registry,
         wpComp.bonusScore = wpConfig.bonusScore;
         wpComp.damageToParent = wpConfig.damageToParent;
         wpComp.critical = wpConfig.critical;
+        wpComp.segmentIndex = wpConfig.segmentIndex;
         if (!wpConfig.disablesAttack.empty()) {
             wpComp.disablesBossAttack = true;
             wpComp.disabledAttackPattern = wpConfig.disablesAttack;
