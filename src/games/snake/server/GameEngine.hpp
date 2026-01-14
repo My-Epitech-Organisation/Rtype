@@ -43,7 +43,7 @@ class SnakeGameEngine : public engine::AGameEngine {
      * @brief Construct SnakeGameEngine with a shared ECS registry
      * @param registry Shared pointer to the ECS registry
      */
-    explicit SnakeGameEngine(std::shared_ptr<ECS::Registry> registry);
+    explicit SnakeGameEngine(std::shared_ptr<ECS::Registry> registry, bool autoSpawnInitial = true);
     ~SnakeGameEngine() override;
 
     // Prevent copy/move
@@ -91,6 +91,25 @@ class SnakeGameEngine : public engine::AGameEngine {
      */
     [[nodiscard]] std::string getGameId() const override { return "snake"; }
 
+    /**
+     * @brief Start the game (public API for server to begin running)
+     */
+    void startGame();
+
+    /**
+     * @brief Stop the game and return to lobby
+     */
+    void stopGame();
+
+    /**
+     * @brief Spawn a snake for a specific player (server use)
+     * @param playerId Network player id
+     * @param startX Grid X start
+     * @param startY Grid Y start
+     * @return Created head ECS::Entity
+     */
+    ECS::Entity spawnSnakeForPlayer(uint32_t playerId, int startX, int startY);
+
    private:
     std::shared_ptr<ECS::Registry> _registry;
     float _moveTimer = 0.0F;
@@ -113,6 +132,9 @@ class SnakeGameEngine : public engine::AGameEngine {
      * @brief Spawn food at random position
      */
     void spawnFood();
+
+   private:
+    bool _autoSpawnInitial = true;
 };
 
 /**

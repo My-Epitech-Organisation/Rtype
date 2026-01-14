@@ -26,8 +26,8 @@ using rtype::games::snake::shared::SnakeHeadComponent;
 using rtype::games::snake::shared::SnakeSegmentComponent;
 using rtype::games::snake::shared::VelocityComponent;
 
-SnakeGameEngine::SnakeGameEngine(std::shared_ptr<ECS::Registry> registry)
-    : _registry(registry), _rng(std::random_device()()) {
+SnakeGameEngine::SnakeGameEngine(std::shared_ptr<ECS::Registry> registry, bool autoSpawnInitial)
+    : _registry(registry), _rng(std::random_device()()), _autoSpawnInitial(autoSpawnInitial) {
     if (!_registry) {
         throw std::runtime_error(
             "SnakeGameEngine requires a valid ECS registry");
@@ -41,9 +41,11 @@ bool SnakeGameEngine::initialize() {
 
     try {
         setupSystems();
-        spawnInitialSnakes();
+        if (_autoSpawnInitial) {
+            spawnInitialSnakes();
+            setRunning(true);
+        }
         spawnFood();
-        setRunning(true);
         _moveTimer = 0.0F;
 
         std::cout << "[SnakeGameEngine] Initialization successful" << std::endl;
@@ -94,6 +96,24 @@ void SnakeGameEngine::spawnInitialSnakes() {
     }
 
     std::cout << "[SnakeGameEngine] Player 1 snake spawned" << std::endl;
+}
+
+ECS::Entity SnakeGameEngine::spawnSnakeForPlayer(uint32_t playerId, int startX, int startY) {
+    auto head = _registry->spawnEntity();
+    _registry->emplaceComponent<SnakeHeadComponent>(head, SnakeHeadComponent{.playerId = playerId});
+    _registry->emplaceComponent<PositionComponent>(head, PositionComponent{.gridX = startX, .gridY = startY});
+    _registry->emplaceComponent<VelocityComponent>(head, VelocityComponent{.dirX = 1, .dirY = 0});
+    _registry->emplaceComponent<PlayerInputComponent>(head, PlayerInputComponent{.playerId = playerId, .nextDirection = Direction::NONE});
+
+    for (int i = 1; i < SnakeGameConfig::INITIAL_LENGTH; i++) {
+        auto segment = _registry->spawnEntity();
+        _registry->emplaceComponent<SnakeSegmentComponent>(
+            segment, SnakeSegmentComponent{.playerId = playerId, .segmentIndex = i});
+        _registry->emplaceComponent<PositionComponent>(segment, PositionComponent{.gridX = startX - i, .gridY = startY});
+    }
+
+    std::cout << "[SnakeGameEngine] Player " << playerId << " snake spawned" << std::endl;
+    return head;
 }
 
 void SnakeGameEngine::spawnFood() {
@@ -361,6 +381,14 @@ void SnakeGameEngine::update(float deltaTime) {
 
 void SnakeGameEngine::shutdown() {
     std::cout << "[SnakeGameEngine] Shutting down..." << std::endl;
+    setRunning(false);
+}
+
+void SnakeGameEngine::startGame() {
+    setRunning(true);
+}
+
+void SnakeGameEngine::stopGame() {
     setRunning(false);
 }
 

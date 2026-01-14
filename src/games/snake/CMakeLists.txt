@@ -129,6 +129,7 @@ if(SDL2_FOUND)
         ecs
         engine
         common
+        rtype_client_network
         ${CMAKE_DL_LIBS}
     )
 
@@ -153,6 +154,39 @@ if(SDL2_FOUND)
     install(TARGETS snake_game
         DESTINATION bin
         COMPONENT snake_game
+    )
+
+    # Minimal local server for Snake (reuses R-Type networking)
+    add_executable(snake_server server/main.cpp)
+
+    target_link_libraries(snake_server PRIVATE
+        snake_game_server
+        rtype_server_network
+        network
+        ecs
+        engine
+        common
+        ${CMAKE_DL_LIBS}
+    )
+
+    target_include_directories(snake_server PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+
+    target_compile_features(snake_server PRIVATE cxx_std_20)
+
+    if(MSVC)
+        target_compile_options(snake_server PRIVATE /W4)
+    else()
+        target_compile_options(snake_server PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    install(TARGETS snake_server
+        DESTINATION bin
+        COMPONENT snake_server
     )
 endif()
 
