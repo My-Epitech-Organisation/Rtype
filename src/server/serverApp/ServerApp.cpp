@@ -455,25 +455,25 @@ bool ServerApp::initialize() {
             }
         });
 
-    _inputHandler->setLaserInputCallback(
-        [this](ECS::Entity playerEntity, std::uint32_t playerNetworkId,
-               bool isFiring) {
-            if (!_gameEngine) {
-                return;
-            }
-            auto* rtypeEngine =
-                dynamic_cast<rtype::games::rtype::server::GameEngine*>(
-                    _gameEngine.get());
-            if (!rtypeEngine) {
-                return;
-            }
-            auto* laserSystem = rtypeEngine->getLaserBeamSystem();
-            if (laserSystem) {
-                laserSystem->handleLaserInput(rtypeEngine->getRegistry(),
-                                              playerEntity, playerNetworkId,
-                                              isFiring);
-            }
-        });
+    _inputHandler->setLaserInputCallback([this](ECS::Entity playerEntity,
+                                                std::uint32_t playerNetworkId,
+                                                bool isFiring) {
+        if (!_gameEngine) {
+            return;
+        }
+        auto* rtypeEngine =
+            dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                _gameEngine.get());
+        if (!rtypeEngine) {
+            return;
+        }
+        auto* laserSystem = rtypeEngine->getLaserBeamSystem();
+        if (laserSystem) {
+            laserSystem->handleLaserInput(rtypeEngine->getRegistry(),
+                                          playerEntity, playerNetworkId,
+                                          isFiring);
+        }
+    });
 
     _networkSystem->setInputHandler([this](std::uint32_t userId,
                                            std::uint8_t inputMask,
