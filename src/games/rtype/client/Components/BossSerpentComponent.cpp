@@ -42,7 +42,8 @@ const char* BossSerpentBodyVisual::getTextureName() const {
                : BossSerpentVisual::TEXTURE_BODY;
 }
 
-void BossSerpentBodyVisual::getTextureRect(int& x, int& y, int& w, int& h) const {
+void BossSerpentBodyVisual::getTextureRect(int& x, int& y, int& w,
+                                           int& h) const {
     x = currentFrame * BossSerpentVisual::FRAME_WIDTH;
     y = 0;
     w = BossSerpentVisual::FRAME_WIDTH;
