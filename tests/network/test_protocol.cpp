@@ -233,7 +233,7 @@ TEST_F(PayloadTest, PayloadSizesMatchRFC) {
     EXPECT_EQ(sizeof(EntitySpawnPayload), 14u);
     EXPECT_EQ(sizeof(EntityMovePayload), 16u);
     EXPECT_EQ(sizeof(EntityDestroyPayload), 4u);
-    EXPECT_EQ(sizeof(InputPayload), 1u);
+    EXPECT_EQ(sizeof(InputPayload), 2u);
     EXPECT_EQ(sizeof(UpdatePosPayload), 8u);
 }
 

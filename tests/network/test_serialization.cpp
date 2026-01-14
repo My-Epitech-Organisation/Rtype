@@ -890,7 +890,9 @@ TEST(SerializerValidationPipeline, ValidateAndExtractAcceptsWellFormedPacket) {
     auto headerBytes = ByteOrderSpec::serializeToNetwork(header);
 
     std::vector<std::uint8_t> rawData(headerBytes.begin(), headerBytes.end());
-    rawData.push_back(::rtype::network::InputMask::kShoot);
+    // InputPayload is now 2 bytes (uint16_t inputMask)
+    rawData.push_back(::rtype::network::InputMask::kShoot);  // low byte
+    rawData.push_back(0x00);  // high byte
 
     auto result = Serializer::validateAndExtractPacket(rawData, false);
 
@@ -941,6 +943,8 @@ TEST(SerializerValidationPipeline, RejectsServerUserIdFromClient) {
     constexpr std::uint16_t payloadSize = sizeof(InputPayload);
     Header header = Header::create(OpCode::C_INPUT, kServerUserId, 1, payloadSize);
     auto rawData = ByteOrderSpec::serializeToNetwork(header);
+    // InputPayload is 2 bytes (uint16_t)
+    rawData.push_back(0x00);
     rawData.push_back(0x00);
 
     auto result = Serializer::validateAndExtractPacket(rawData, false);

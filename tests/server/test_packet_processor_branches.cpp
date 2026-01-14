@@ -79,18 +79,19 @@ TEST_F(PacketProcessorBranchesTest, PayloadIsAttachedToPacket) {
     // Register mapping then send a packet with payload
     processor.registerConnection("ep_payload", 9u);
 
-    // C_INPUT payload is a single byte (input mask)
-    Header header = Header::create(OpCode::C_INPUT, 9u, static_cast<std::uint16_t>(1u), 1u);
+    // C_INPUT payload is 2 bytes (input mask uint16_t)
+    Header header = Header::create(OpCode::C_INPUT, 9u, static_cast<std::uint16_t>(1u), 2u);
     auto headerBytes = ByteOrderSpec::serializeToNetwork(header);
 
     std::vector<uint8_t> bytes(headerBytes.begin(), headerBytes.end());
-    // Append 1 byte of payload
+    // Append 2 bytes of payload (little-endian uint16_t)
     bytes.push_back(0x0F);
+    bytes.push_back(0x00);
 
     auto res = processor.processRawData("ep_payload", std::span<const uint8_t>(bytes.data(), bytes.size()));
     ASSERT_TRUE(res.has_value());
     auto pkt = res.value();
-    EXPECT_EQ(pkt.data().size(), 1u);
+    EXPECT_EQ(pkt.data().size(), 2u);
     EXPECT_EQ(pkt.data()[0], 0x0F);
 }
 
