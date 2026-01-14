@@ -50,6 +50,7 @@ struct WeakPointConfig {
     int32_t damageToParent = 0;
     bool critical = false;
     std::string disablesAttack;
+    int32_t segmentIndex = -1;
 };
 
 /**
