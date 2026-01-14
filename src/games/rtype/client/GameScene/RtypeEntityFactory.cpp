@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "../../shared/Components/BoundingBoxComponent.hpp"
+#include "../../shared/Components/BossComponent.hpp"
 #include "../../shared/Components/ChargedProjectileComponent.hpp"
 #include "../../shared/Components/EnemyTypeComponent.hpp"
 #include "../../shared/Components/ForcePodComponent.hpp"
@@ -20,6 +21,7 @@
 #include "../../shared/Components/PlayerIdComponent.hpp"
 #include "../../shared/Components/PowerUpTypeComponent.hpp"
 #include "../../shared/Components/Tags.hpp"
+#include "../../shared/Components/WeakPointComponent.hpp"
 #include "../../shared/Config/EntityConfig/EntityConfig.hpp"
 #include "../../shared/Config/GameConfig/RTypeGameConfig.hpp"
 #include "../Components/AnnimationComponent.hpp"
@@ -136,6 +138,14 @@ RtypeEntityFactory::createNetworkEntityFactory(
 
             case ::rtype::network::EntityType::ForcePod:
                 setupForcePodEntity(reg, assetsManager, entity);
+                break;
+
+            case ::rtype::network::EntityType::Boss:
+                setupBossEntity(reg, assetsManager, entity, event.subType);
+                break;
+
+            case ::rtype::network::EntityType::BossPart:
+                setupBossPartEntity(reg, assetsManager, entity, event.subType);
                 break;
         }
 
@@ -706,6 +716,112 @@ void RtypeEntityFactory::setupForcePodEntity(
     LOG_DEBUG_CAT(
         ::rtype::LogCategory::ECS,
         "[RtypeEntityFactory] Force Pod entity created with animation");
+}
+
+void RtypeEntityFactory::setupBossEntity(
+    ECS::Registry& reg, std::shared_ptr<AssetManager> /*assetsManager*/,
+    ECS::Entity entity, uint8_t bossType) {
+    LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                 "[RtypeEntityFactory] Creating Boss entity type="
+                     << static_cast<int>(bossType));
+
+    // Boss entity is invisible - only used for logic/hitbox
+    // The visible parts are the BossPart entities (weak points)
+    float bossWidth = 64.0F;
+    float bossHeight = 64.0F;
+
+    // Invisible rectangle for the boss body center
+    ::rtype::display::Color fillColor{0, 0, 0, 0};  // Fully transparent
+    ::rtype::display::Color hoverColor{0, 0, 0, 0};
+    reg.emplaceComponent<Rectangle>(
+        entity, std::pair<float, float>{bossWidth, bossHeight}, fillColor,
+        hoverColor);
+    reg.getComponent<Rectangle>(entity).outlineThickness = 0.0F;
+    reg.getComponent<Rectangle>(entity).outlineColor = {0, 0, 0, 0};
+
+    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+        entity, bossWidth, bossHeight);
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0.0f, 0.0f},
+        ::rtype::display::Vector2f{bossWidth, bossHeight});
+    reg.getComponent<BoxingComponent>(entity).outlineColor =
+        ::rtype::display::Color{0, 0, 0, 0};  // Invisible debug box
+    reg.getComponent<BoxingComponent>(entity).fillColor =
+        ::rtype::display::Color{0, 0, 0, 0};
+
+    reg.emplaceComponent<shared::HealthComponent>(entity, 3000, 3000);
+    reg.emplaceComponent<ZIndex>(entity, 1);  // Behind weak points
+    reg.emplaceComponent<GameTag>(entity);
+    reg.emplaceComponent<shared::EnemyTag>(entity);
+    reg.emplaceComponent<shared::BossTag>(entity);
+
+    LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                 "[RtypeEntityFactory] Boss entity created (invisible center)");
+}
+
+void RtypeEntityFactory::setupBossPartEntity(
+    ECS::Registry& reg, std::shared_ptr<AssetManager> /*assetsManager*/,
+    ECS::Entity entity, uint8_t partType) {
+    LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                 "[RtypeEntityFactory] Creating Boss Part entity type="
+                     << static_cast<int>(partType));
+
+    // WeakPointType: 0=Generic, 1=Head, 2=Tail, 3=Core
+    float partWidth = 48.0F;
+    float partHeight = 48.0F;
+    ::rtype::display::Color fillColor{180, 80, 180, 255};   // Purple default
+    ::rtype::display::Color outlineColor{220, 100, 220, 255};
+
+    switch (partType) {
+        case 1:  // Head - largest, bright red/orange
+            partWidth = 64.0F;
+            partHeight = 64.0F;
+            fillColor = {255, 80, 50, 255};      // Bright orange-red
+            outlineColor = {255, 200, 50, 255};  // Yellow outline
+            break;
+        case 2:  // Tail - medium, purple/magenta
+            partWidth = 40.0F;
+            partHeight = 56.0F;
+            fillColor = {200, 50, 200, 255};     // Magenta
+            outlineColor = {255, 100, 255, 255}; // Pink outline
+            break;
+        case 3:  // Core/Body - green segments
+            partWidth = 52.0F;
+            partHeight = 52.0F;
+            fillColor = {50, 180, 80, 255};      // Green
+            outlineColor = {100, 255, 120, 255}; // Bright green outline
+            break;
+        default:  // Generic
+            partWidth = 44.0F;
+            partHeight = 44.0F;
+            fillColor = {150, 150, 150, 255};
+            outlineColor = {200, 200, 200, 255};
+            break;
+    }
+
+    reg.emplaceComponent<Rectangle>(
+        entity, std::pair<float, float>{partWidth, partHeight}, fillColor,
+        fillColor);
+    reg.getComponent<Rectangle>(entity).outlineThickness = 3.0F;
+    reg.getComponent<Rectangle>(entity).outlineColor = outlineColor;
+
+    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+        entity, partWidth, partHeight);
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0.0f, 0.0f},
+        ::rtype::display::Vector2f{partWidth, partHeight});
+    reg.getComponent<BoxingComponent>(entity).outlineColor = outlineColor;
+    reg.getComponent<BoxingComponent>(entity).fillColor = {
+        fillColor.r, fillColor.g, fillColor.b, 60};
+
+    reg.emplaceComponent<shared::HealthComponent>(entity, 500, 500);
+    reg.emplaceComponent<ZIndex>(entity, 3);
+    reg.emplaceComponent<GameTag>(entity);
+    reg.emplaceComponent<shared::WeakPointTag>(entity);
+
+    LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                 "[RtypeEntityFactory] Boss Part entity created with size "
+                     << partWidth << "x" << partHeight);
 }
 
 }  // namespace rtype::games::rtype::client
