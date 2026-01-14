@@ -11,8 +11,10 @@
 #include <rtype/network.hpp>
 
 #include "games/rtype/shared/Components/CooldownComponent.hpp"
+#include "games/rtype/shared/Components/ProjectileComponent.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "games/rtype/shared/Components/VelocityComponent.hpp"
+#include "games/rtype/shared/Components/WeaponComponent.hpp"
 #include "network/ServerNetworkSystem.hpp"
 
 namespace rtype::server {
@@ -20,6 +22,8 @@ namespace rtype::server {
 using Transform = rtype::games::rtype::shared::TransformComponent;
 using Velocity = rtype::games::rtype::shared::VelocityComponent;
 using ShootCooldown = rtype::games::rtype::shared::ShootCooldownComponent;
+using WeaponComp = rtype::games::rtype::shared::WeaponComponent;
+using ProjectileType = rtype::games::rtype::shared::ProjectileType;
 
 PlayerInputHandler::PlayerInputHandler(
     std::shared_ptr<ECS::Registry> registry,
@@ -69,12 +73,39 @@ void PlayerInputHandler::handleInput(std::uint32_t userId,
 
     processMovement(playerEntity, inputMask);
 
-    if (inputMask & rtype::network::InputMask::kShoot) {
+    // Check if player has continuous laser weapon selected
+    bool hasLaserWeapon = false;
+    if (_registry->hasComponent<WeaponComp>(playerEntity)) {
+        const auto& weapon = _registry->getComponent<WeaponComp>(playerEntity);
+        hasLaserWeapon = (weapon.getCurrentWeapon().projectileType ==
+                         ProjectileType::ContinuousLaser);
+    }
+
+    bool isShooting = (inputMask & rtype::network::InputMask::kShoot) != 0;
+
+    if (hasLaserWeapon && _laserCallback && _networkSystem) {
+        // Handle laser weapon - call callback every frame with current state
+        auto networkIdOpt = _networkSystem->getNetworkId(playerEntity);
+        if (networkIdOpt.has_value()) {
+            _laserCallback(playerEntity, *networkIdOpt, isShooting);
+        }
+    } else if (isShooting) {
+        // Normal projectile shooting
         processShoot(userId, playerEntity);
     }
 
     if (inputMask & rtype::network::InputMask::kForcePod) {
         processForcePodLaunch(userId);
+    }
+
+    // Handle weapon switch (only on rising edge)
+    bool weaponSwitchPressed =
+        (inputMask & rtype::network::InputMask::kWeaponSwitch) != 0;
+    bool wasWeaponSwitchPressed = _weaponSwitchStates[userId];
+    _weaponSwitchStates[userId] = weaponSwitchPressed;
+
+    if (weaponSwitchPressed && !wasWeaponSwitchPressed) {
+        processWeaponSwitch(playerEntity);
     }
 }
 
@@ -169,6 +200,29 @@ void PlayerInputHandler::processForcePodLaunch(std::uint32_t userId) {
         return;
     }
     _forcePodCallback(userId);
+}
+
+void PlayerInputHandler::processWeaponSwitch(ECS::Entity entity) {
+    if (!_registry->hasComponent<WeaponComp>(entity)) {
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[InputHandler] Weapon switch: no WeaponComponent");
+        return;
+    }
+
+    auto& weapon = _registry->getComponent<WeaponComp>(entity);
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[InputHandler] Weapon switch requested: unlockedSlots="
+                     << static_cast<int>(weapon.unlockedSlots)
+                     << " currentSlot=" << static_cast<int>(weapon.currentSlot));
+    if (weapon.unlockedSlots > 1) {
+        weapon.nextWeapon();
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[InputHandler] Weapon switched to slot "
+                         << static_cast<int>(weapon.currentSlot));
+    } else {
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[InputHandler] Cannot switch: only 1 slot unlocked");
+    }
 }
 
 }  // namespace rtype::server
