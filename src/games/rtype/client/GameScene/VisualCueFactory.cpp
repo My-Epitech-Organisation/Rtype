@@ -128,15 +128,10 @@ void VisualCueFactory::createConfetti(ECS::Registry& registry,
     std::uniform_real_distribution<float> lifetimeDist(1.2f, 2.0f);
     std::uniform_int_distribution<int> colorDist(0, 5);
 
-    // Festive colors: red, green, blue, yellow, magenta, cyan
     const ::rtype::display::Color colors[] = {
-        ::rtype::display::Color(255, 50, 50, 255),   // Red
-        ::rtype::display::Color(50, 255, 50, 255),   // Green
-        ::rtype::display::Color(50, 100, 255, 255),  // Blue
-        ::rtype::display::Color(255, 255, 50, 255),  // Yellow
-        ::rtype::display::Color(255, 50, 255, 255),  // Magenta
-        ::rtype::display::Color(50, 255, 255, 255)   // Cyan
-    };
+        ::rtype::display::Color::Red(),     ::rtype::display::Color::Green(),
+        ::rtype::display::Color::Blue(),    ::rtype::display::Color::Yellow(),
+        ::rtype::display::Color::Magenta(), ::rtype::display::Color::Cyan()};
 
     LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
                   "[VisualCueFactory] Creating confetti effect with "

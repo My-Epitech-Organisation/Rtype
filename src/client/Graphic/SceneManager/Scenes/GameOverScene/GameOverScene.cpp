@@ -70,7 +70,6 @@ void GameOverScene::_buildLayout() {
         isVictory = state.isVictory;
     }
 
-    // Dark overlay
     auto popUpOverlay = EntityFactory::createRectangle(
         this->_registry,
         rtype::display::Vector2<int>{
@@ -83,9 +82,7 @@ void GameOverScene::_buildLayout() {
         rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
     this->_listEntity.push_back(popUpOverlay);
 
-    // Blood effect (vignette) for defeat - red overlay on edges
     if (!isVictory) {
-        // Top blood drip
         auto bloodTop = EntityFactory::createRectangle(
             this->_registry,
             rtype::display::Vector2<int>{
@@ -97,7 +94,6 @@ void GameOverScene::_buildLayout() {
             rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
         this->_listEntity.push_back(bloodTop);
 
-        // Bottom blood pool
         auto bloodBottom = EntityFactory::createRectangle(
             this->_registry,
             rtype::display::Vector2<int>{
@@ -125,7 +121,6 @@ void GameOverScene::_buildLayout() {
             rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
         this->_listEntity.push_back(bloodLeft);
 
-        // Right blood streak
         auto bloodRight = EntityFactory::createRectangle(
             this->_registry,
             rtype::display::Vector2<int>{
@@ -144,7 +139,6 @@ void GameOverScene::_buildLayout() {
 
     const float centerX = static_cast<float>(Graphic::WINDOW_WIDTH) / 2.0f;
 
-    // Title: "YOU WIN" (green) or "YOU DIED" (red)
     std::string titleText = isVictory ? "YOU WIN" : "YOU DIED";
     auto title = EntityFactory::createStaticText(
         this->_registry, _assetsManager, titleText, "title_font",
@@ -153,7 +147,6 @@ void GameOverScene::_buildLayout() {
             rtype::games::rtype::client::GraphicsConfig::GAME_OVER_TITLE_Y},
         96.f);
 
-    // Set title color based on victory/defeat
     if (this->_registry->hasComponent<rtype::games::rtype::client::Text>(
             title)) {
         auto& textComp =

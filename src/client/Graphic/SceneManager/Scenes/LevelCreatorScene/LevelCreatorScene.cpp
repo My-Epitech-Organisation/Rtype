@@ -540,7 +540,7 @@ void LevelCreatorScene::saveToToml() {
         return;
     }
 
-    for (auto s : this->_waves) {
+    for (const auto& s : this->_waves) {
         if (s.spawns.empty() && s.powerups.empty()) {
             LOG_ERROR_CAT(rtype::LogCategory::UI,
                           "Wave " + std::to_string(s.number) +

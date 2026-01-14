@@ -1080,8 +1080,6 @@ void RtypeGameScene::showLevelAnnounce(const std::string& levelName) {
     _levelAnnounceTextEntity = txt;
     _levelAnnounceTimer = 3.0f;
 
-    // Create confetti effect for level transition celebration
-    // Only show if it's NOT the first level (transition from lobby)
     if (!_isFirstLevelAnnounce) {
         VisualCueFactory::createConfetti(*_registry,
                                          static_cast<float>(windowSize.x),
