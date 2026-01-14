@@ -5,10 +5,12 @@
 ** Snake Game - Playable executable with IDisplay abstraction
 */
 
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <thread>
 #include <utility>
 
