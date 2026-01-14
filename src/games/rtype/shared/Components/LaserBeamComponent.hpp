@@ -25,8 +25,8 @@ enum class LaserBeamState : uint8_t {
  * @struct LaserBeamComponent
  * @brief Component for continuous laser beam weapon state and timing
  *
- * This component handles the laser beam state machine (Inactive/Active/Cooldown).
- * Collision and damage are handled separately via:
+ * This component handles the laser beam state machine
+ * (Inactive/Active/Cooldown). Collision and damage are handled separately via:
  * - BoundingBoxComponent: Collision dimensions
  * - DamageOnContactComponent: DPS damage with startup delay
  */
@@ -35,14 +35,14 @@ struct LaserBeamComponent {
     uint32_t ownerNetworkId{0};
 
     // Timing
-    float activeTime{0.0F};           ///< Time beam has been active
-    float maxDuration{3.0F};          ///< Maximum fire duration (seconds)
-    float cooldownTime{0.0F};         ///< Current cooldown remaining
-    float cooldownDuration{2.0F};     ///< Cooldown after release (seconds)
+    float activeTime{0.0F};        ///< Time beam has been active
+    float maxDuration{3.0F};       ///< Maximum fire duration (seconds)
+    float cooldownTime{0.0F};      ///< Current cooldown remaining
+    float cooldownDuration{2.0F};  ///< Cooldown after release (seconds)
 
     // Animation (optional visual effect)
-    float pulsePhase{0.0F};           ///< For pulsation visual effect
-    float pulseSpeed{8.0F};           ///< Pulsation frequency
+    float pulsePhase{0.0F};  ///< For pulsation visual effect
+    float pulseSpeed{8.0F};  ///< Pulsation frequency
 
     LaserBeamComponent() = default;
 
