@@ -135,7 +135,9 @@ TEST_F(CollisionExtraFixture, ObstacleDamageDestroysIfConfigured) {
     registry->emplaceComponent<shared::TransformComponent>(obstacle, 500.0F, 500.0F, 0.0F);
     registry->emplaceComponent<shared::BoundingBoxComponent>(obstacle, 10.0F, 10.0F);
     registry->emplaceComponent<shared::ObstacleTag>(obstacle);
-    shared::DamageOnContactComponent dmg{50, true};
+    shared::DamageOnContactComponent dmg{};
+    dmg.damage = 50;
+    dmg.destroySelf = true;
     registry->emplaceComponent<shared::DamageOnContactComponent>(obstacle, dmg);
 
     auto player = registry->spawnEntity();

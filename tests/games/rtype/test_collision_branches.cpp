@@ -282,7 +282,10 @@ TEST_F(CollisionBranchFixture, ObstacleDestroysItself) {
     registry->emplaceComponent<shared::TransformComponent>(obstacle, 105.0F, 100.0F, 0.0F);
     registry->emplaceComponent<shared::BoundingBoxComponent>(obstacle, 32.0F, 32.0F);
     registry->emplaceComponent<shared::ObstacleTag>(obstacle);
-    registry->emplaceComponent<shared::DamageOnContactComponent>(obstacle, 15, true);  // destroySelf = true
+    shared::DamageOnContactComponent obstacleDmg{};
+    obstacleDmg.damage = 15;
+    obstacleDmg.destroySelf = true;
+    registry->emplaceComponent<shared::DamageOnContactComponent>(obstacle, obstacleDmg);
 
     system.update(*registry, 0.0F);
 
@@ -342,7 +345,10 @@ TEST_F(CollisionBranchFixture, EnemyPlayerCollisionDestroysEnemy) {
     registry->emplaceComponent<shared::TransformComponent>(enemy, 105.0F, 100.0F, 0.0F);
     registry->emplaceComponent<shared::BoundingBoxComponent>(enemy, 32.0F, 32.0F);
     registry->emplaceComponent<shared::EnemyTag>(enemy);
-    registry->emplaceComponent<shared::DamageOnContactComponent>(enemy, 30, true);  // destroySelf = true
+    shared::DamageOnContactComponent enemyDmg{};
+    enemyDmg.damage = 30;
+    enemyDmg.destroySelf = true;
+    registry->emplaceComponent<shared::DamageOnContactComponent>(enemy, enemyDmg);
 
     system.update(*registry, 0.0F);
 
