@@ -174,7 +174,8 @@ struct BossPatternComponent {
     bool enabled = true;
     float telegraphAngle = 0.0F;
     int32_t projectilesFired = 0;
-    float lastFireTime = 0.0F;  ///< Entity-specific fire timer for continuous attacks
+    float lastFireTime =
+        0.0F;  ///< Entity-specific fire timer for continuous attacks
 
     /**
      * @brief Check if a pattern is currently being executed
