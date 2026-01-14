@@ -104,8 +104,11 @@ TEST(AdminServerLobbyAPI, Metrics_NoLobbyManager_ReturnsBase) {
 }
 
 TEST(AdminServerLobbyAPI, Create_NoManager_Returns500) {
+    // Wait a bit to ensure previous test's server is fully stopped
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
     AdminServer::Config cfg;
-    cfg.port = 9221;
+    cfg.port = 9331;  // Changed port to avoid conflicts
     cfg.token = "testtoken";
     cfg.localhostOnly = true;
 

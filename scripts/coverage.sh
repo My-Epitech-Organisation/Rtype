@@ -215,7 +215,13 @@ if $GENERATE_HTML; then
         '*/lib/display/SDL2/*' \
         '*/src/server/shared/AdminServer.*' \
         '*/serverApp.cpp' \
+        '*/ServerApp.cpp' \
         '*/NetworkClient.cpp' \
+        '*/NetworkServer.cpp' \
+        '*/AdminServer.cpp' \
+        '*/LobbyDiscoveryServer.cpp' \
+        '*/DataDrivenSpawnerSystem.cpp' \
+        '*/PrefabLoader.cpp' \
         '*/TomlParser.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
@@ -347,7 +353,13 @@ else
         '*/lib/display/SDL2/*' \
         '*/src/server/shared/AdminServer.*' \
         '*/serverApp.cpp' \
+        '*/ServerApp.cpp' \
         '*/NetworkClient.cpp' \
+        '*/NetworkServer.cpp' \
+        '*/AdminServer.cpp' \
+        '*/LobbyDiscoveryServer.cpp' \
+        '*/DataDrivenSpawnerSystem.cpp' \
+        '*/PrefabLoader.cpp' \
         '*/TomlParser.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true

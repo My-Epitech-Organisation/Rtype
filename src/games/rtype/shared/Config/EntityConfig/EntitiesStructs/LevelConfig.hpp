@@ -23,12 +23,16 @@ struct LevelConfig {
     std::string id;
     std::string name;
     std::string backgroundPath;
+    std::string levelMusic;
 
     float scrollSpeed = 50.0F;
     std::vector<WaveConfig> waves;
 
     // Boss (optional)
     std::optional<std::string> bossId;
+
+    // Next Level (optional)
+    std::optional<std::string> nextLevel;
 
     [[nodiscard]] bool isValid() const noexcept {
         return !id.empty() && !waves.empty();

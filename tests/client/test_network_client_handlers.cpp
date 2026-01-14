@@ -205,6 +205,8 @@ TEST(NetworkClientHandlersTest, LobbyListMultipleEntriesParsed) {
     payload.push_back(0);
     payload.push_back(2);
     payload.push_back(0);
+    // levelName (16 bytes)
+    for (int j = 0; j < 16; ++j) payload.push_back(0);
 
     // Second lobby: code "ZZZZZZ", port 4242, players 1, max 4, active
     const char code2[6] = {'Z','Z','Z','Z','Z','Z'};
@@ -214,6 +216,8 @@ TEST(NetworkClientHandlersTest, LobbyListMultipleEntriesParsed) {
     payload.push_back(1);
     payload.push_back(4);
     payload.push_back(1);
+    // levelName (16 bytes)
+    for (int j = 0; j < 16; ++j) payload.push_back(0);
 
     Header hdr{};
     hdr.magic = kMagicByte;
@@ -284,7 +288,7 @@ TEST(NetworkClientHandlersTest, JoinLobbyResponseInvokesCallback) {
     bool acceptedVal = false;
     uint8_t reasonVal = 0;
 
-    client.onJoinLobbyResponse([&](bool accepted, uint8_t reason) {
+    client.onJoinLobbyResponse([&](bool accepted, uint8_t reason, const std::string&) {
         called = true;
         acceptedVal = accepted;
         reasonVal = reason;

@@ -13,6 +13,7 @@ add_library(rtype_game_client_gamescene
 )
 
 target_include_directories(rtype_game_client_gamescene PUBLIC
+    ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/src/client
     ${CMAKE_SOURCE_DIR}/src/client/Graphic
     ${CMAKE_SOURCE_DIR}/src/games/rtype/client

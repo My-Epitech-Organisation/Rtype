@@ -71,6 +71,8 @@ class MockGameEngine : public IGameEngine {
 
     [[nodiscard]] std::string getGameId() const override { return "mock_game"; }
 
+    bool loadLevelFromFile(const std::string& /*filepath*/) override { return true; }
+
     // Test helpers
     void addPendingEvent(const GameEvent& event) {
         _pendingEvents.push_back(event);

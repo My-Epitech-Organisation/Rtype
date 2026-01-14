@@ -29,11 +29,12 @@ enum class GameState : std::uint8_t {
  * @brief Entity type enumeration for S_ENTITY_SPAWN payload
  */
 enum class EntityType : std::uint8_t {
-    Player = 0,   ///< Player spaceship
-    Bydos = 1,    ///< Enemy (Bydos)
-    Missile = 2,  ///< Projectile
-    Pickup = 3,   ///< Collectible / power-up
-    Obstacle = 4  ///< Static or moving obstacle
+    Player = 0,    ///< Player spaceship
+    Bydos = 1,     ///< Enemy (Bydos)
+    Missile = 2,   ///< Projectile
+    Pickup = 3,    ///< Collectible / power-up
+    Obstacle = 4,  ///< Static or moving obstacle
+    ForcePod = 5   ///< Force Pod companion
 };
 
 /**
@@ -48,6 +49,7 @@ inline constexpr std::uint8_t kDown = 0x02;
 inline constexpr std::uint8_t kLeft = 0x04;
 inline constexpr std::uint8_t kRight = 0x08;
 inline constexpr std::uint8_t kShoot = 0x10;
+inline constexpr std::uint8_t kForcePod = 0x20;
 }  // namespace InputMask
 
 #pragma pack(push, 1)
@@ -138,6 +140,7 @@ struct LobbyInfo {
     std::uint8_t playerCount;
     std::uint8_t maxPlayers;
     std::uint8_t isActive;
+    std::array<char, 16> levelName;
 };
 
 /**
@@ -156,7 +159,7 @@ struct LobbyListHeader {
  * Limited by payload size: (kMaxPayloadSize - 1) / sizeof(LobbyInfo)
  * = (1384 - 1) / 11 = 125 lobbies (well above our max of 16)
  */
-inline constexpr std::size_t kMaxLobbiesInResponse = 125;
+inline constexpr std::size_t kMaxLobbiesInResponse = 50;
 
 /**
  * @brief Payload for S_ENTITY_SPAWN (0x10)
@@ -234,6 +237,7 @@ struct JoinLobbyPayload {
 struct JoinLobbyResponsePayload {
     std::uint8_t accepted;      ///< 1 = accepted, 0 = rejected
     std::uint8_t reason;        ///< Reason code (0 = success, 1 = invalid code, 2 = lobby full)
+    std::array<char, 16> levelName;
 };
 
 /**
@@ -274,6 +278,17 @@ struct PowerUpEventPayload {
     std::uint32_t playerId;
     std::uint8_t powerUpType;
     float duration;
+};
+
+/**
+ * @brief Payload for S_LEVEL_ANNOUNCE (0x18)
+ *
+ * Server announces name of new level for visual notification.
+ */
+struct LevelAnnouncePayload {
+    std::array<char, 32> levelName;
+    std::array<char, 32> background;
+    std::array<char, 32> levelMusic;
 };
 
 /**
@@ -382,6 +397,35 @@ struct ChatPayload {
     char message[256];
 };
 
+/**
+ * @brief Admin command types for C_ADMIN_COMMAND (0xD0)
+ */
+enum class AdminCommandType : std::uint8_t {
+    GodMode = 0x01,  ///< Toggle invincibility
+};
+
+/**
+ * @brief Payload for C_ADMIN_COMMAND (0xD0)
+ *
+ * Client requests admin action (validated server-side for localhost only).
+ */
+struct AdminCommandPayload {
+    std::uint8_t commandType;  ///< AdminCommandType
+    std::uint8_t param;        ///< 0 = off, 1 = on, 2 = toggle
+};
+
+/**
+ * @brief Payload for S_ADMIN_RESPONSE (0xD1)
+ *
+ * Server responds to admin command with success/failure and message.
+ */
+struct AdminResponsePayload {
+    std::uint8_t commandType;  ///< AdminCommandType echoed back
+    std::uint8_t success;      ///< 0 = failed, 1 = success
+    std::uint8_t newState;     ///< Resulting state (0 = off, 1 = on)
+    char message[61];          ///< Response message (max 60 chars + null)
+};
+
 #pragma pack(pop)
 
 static_assert(sizeof(ConnectPayload) == 1,
@@ -434,16 +478,20 @@ static_assert(sizeof(GameStartPayload) == 4,
               "GameStartPayload must be 4 bytes (float)");
 static_assert(sizeof(PlayerReadyStatePayload) == 5,
               "PlayerReadyStatePayload must be 5 bytes (4+1)");
-static_assert(sizeof(LobbyInfo) == 11,
-              "LobbyInfo must be 11 bytes (6+2+1+1+1)");
+static_assert(sizeof(LobbyInfo) == 27,
+              "LobbyInfo must be 27 bytes (6+2+1+1+1+16)");
 static_assert(sizeof(LobbyListHeader) == 1,
               "LobbyListHeader must be 1 byte");
 static_assert(sizeof(JoinLobbyPayload) == 6,
               "JoinLobbyPayload must be 6 bytes (char[6])");
-static_assert(sizeof(JoinLobbyResponsePayload) == 2,
-              "JoinLobbyResponsePayload must be 2 bytes (uint8_t+uint8_t)");
+static_assert(sizeof(JoinLobbyResponsePayload) == 18,
+              "JoinLobbyResponsePayload must be 18 bytes (uint8_t+uint8_t+char[16])");
 static_assert(sizeof(ChatPayload) == 260,
               "ChatPayload must be 260 bytes (4+256)");
+static_assert(sizeof(AdminCommandPayload) == 2,
+              "AdminCommandPayload must be 2 bytes (1+1)");
+static_assert(sizeof(AdminResponsePayload) == 64,
+              "AdminResponsePayload must be 64 bytes (1+1+1+61)");
 
 static_assert(std::is_trivially_copyable_v<AcceptPayload>);
 static_assert(std::is_trivially_copyable_v<UpdateStatePayload>);
@@ -460,6 +508,8 @@ static_assert(std::is_trivially_copyable_v<LobbyReadyPayload>);
 static_assert(std::is_trivially_copyable_v<GameStartPayload>);
 static_assert(std::is_trivially_copyable_v<PlayerReadyStatePayload>);
 static_assert(std::is_trivially_copyable_v<ChatPayload>);
+static_assert(std::is_trivially_copyable_v<AdminCommandPayload>);
+static_assert(std::is_trivially_copyable_v<AdminResponsePayload>);
 
 static_assert(std::is_standard_layout_v<AcceptPayload>);
 static_assert(std::is_standard_layout_v<UpdateStatePayload>);
@@ -476,6 +526,8 @@ static_assert(std::is_standard_layout_v<LobbyReadyPayload>);
 static_assert(std::is_standard_layout_v<GameStartPayload>);
 static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
 static_assert(std::is_standard_layout_v<ChatPayload>);
+static_assert(std::is_standard_layout_v<AdminCommandPayload>);
+static_assert(std::is_standard_layout_v<AdminResponsePayload>);
 
 /**
  * @brief Get the expected payload size for a given OpCode
@@ -496,6 +548,8 @@ static_assert(std::is_standard_layout_v<ChatPayload>);
 
         case OpCode::S_ACCEPT:
             return sizeof(AcceptPayload);
+        case OpCode::S_LEVEL_ANNOUNCE:
+            return sizeof(LevelAnnouncePayload);
         case OpCode::R_GET_USERS:
             return 0;
         case OpCode::S_UPDATE_STATE:
@@ -542,6 +596,11 @@ static_assert(std::is_standard_layout_v<ChatPayload>);
             return sizeof(UpdatePosPayload);
         case OpCode::DISCONNECT:
             return sizeof(DisconnectPayload);
+
+        case OpCode::C_ADMIN_COMMAND:
+            return sizeof(AdminCommandPayload);
+        case OpCode::S_ADMIN_RESPONSE:
+            return sizeof(AdminResponsePayload);
     }
     return 0;
 }

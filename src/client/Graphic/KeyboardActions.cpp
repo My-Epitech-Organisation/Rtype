@@ -20,12 +20,16 @@ KeyboardActions::KeyboardActions() {
     this->_keyBindings.emplace(GameAction::MOVE_LEFT,
                                ::rtype::display::Key::Left);
     this->_keyBindings.emplace(GameAction::SHOOT, ::rtype::display::Key::Space);
+    this->_keyBindings.emplace(GameAction::FORCE_POD,
+                               ::rtype::display::Key::LShift);
     this->_keyBindings.emplace(GameAction::PAUSE,
                                ::rtype::display::Key::Escape);
     this->_keyBindings.emplace(GameAction::CHANGE_AMMO,
                                ::rtype::display::Key::Tab);
     this->_keyBindings.emplace(GameAction::TOGGLE_LOW_BANDWIDTH,
                                ::rtype::display::Key::F9);
+    this->_keyBindings.emplace(GameAction::TOGGLE_CONSOLE,
+                               ::rtype::display::Key::F1);
 
     this->_joyAxisBindings.emplace(GameAction::MOVE_UP,
                                    ::rtype::display::JoystickAxis::Y);

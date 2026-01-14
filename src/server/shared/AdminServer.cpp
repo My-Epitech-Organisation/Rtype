@@ -320,6 +320,64 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
 
     registerBanRoutes(server);
 
+    server->Post("/api/message/send", [this](const Request& req,
+                                             Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+
+        std::string message;
+        std::string target = "all";
+        try {
+            auto j = json::parse(req.body);
+            if (!j.contains("message") || !j["message"].is_string()) {
+                res.set_content(
+                    R"({"success":false,"error":"Missing or invalid 'message'"})",
+                    "application/json");
+                res.status = 400;
+                return;
+            }
+            message = j["message"].get<std::string>();
+            if (j.contains("target") && j["target"].is_string()) {
+                target = j["target"].get<std::string>();
+            }
+        } catch (const json::parse_error&) {
+            res.set_content(R"({"success":false,"error":"Malformed JSON"})",
+                            "application/json");
+            res.status = 400;
+            return;
+        }
+
+        if (message.length() > 75) {
+            message = message.substr(0, 75);
+        }
+
+        if (_lobbyManager) {
+            if (target != "all" && !target.empty()) {
+                auto* lobby = _lobbyManager->findLobbyByCode(target);
+                if (lobby) {
+                    if (auto* sa = lobby->getServerApp()) {
+                        sa->broadcastMessage(message);
+                    }
+                }
+            } else {
+                auto lobbies = _lobbyManager->getAllLobbies();
+                for (auto* lobby : lobbies) {
+                    if (auto* sa = lobby->getServerApp()) {
+                        sa->broadcastMessage(message);
+                    }
+                }
+            }
+        } else if (_serverApp) {
+            _serverApp->broadcastMessage(message);
+        }
+
+        res.set_content(R"({"success":true})", "application/json");
+        res.status = 200;
+    });
+
     server->Post("/api/unban", [this](const Request& req, Response& res) {
         if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
@@ -421,6 +479,58 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
             oss << "{\"success\":true,\"code\":\"" << code << "\"}";
             res.set_content(oss.str(), "application/json");
             res.status = 200;
+        }
+    });
+
+    server->Post("/api/lobby/:code/level", [this](const Request& req,
+                                                  Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+
+        std::string levelId;
+        try {
+            auto j = json::parse(req.body);
+            if (j.contains("level") && j["level"].is_string()) {
+                levelId = j["level"].get<std::string>();
+            }
+        } catch (...) {
+            res.set_content(R"({"error":"Invalid JSON"})", "application/json");
+            res.status = 400;
+            return;
+        }
+
+        if (levelId.empty()) {
+            res.set_content(R"({"error":"Missing level ID"})",
+                            "application/json");
+            res.status = 400;
+            return;
+        }
+
+        auto lobbyCode = req.path_params.at("code");
+        if (_lobbyManager) {
+            auto* lobby = _lobbyManager->findLobbyByCode(lobbyCode);
+            if (lobby) {
+                if (lobby->changeLevel(levelId)) {
+                    res.set_content(R"({"success":true})", "application/json");
+                    res.status = 200;
+                } else {
+                    res.set_content(
+                        R"JSON({"error":"Failed to change level (game running?)"})JSON",
+                        "application/json");
+                    res.status = 409;
+                }
+            } else {
+                res.set_content(R"({"error":"Lobby not found"})",
+                                "application/json");
+                res.status = 404;
+            }
+        } else {
+            res.set_content(R"({"error":"Lobby manager not available"})",
+                            "application/json");
+            res.status = 500;
         }
     });
 
@@ -800,6 +910,58 @@ void AdminServer::registerAdminPageRoutes(void* serverPtr) {
 
 void AdminServer::registerLobbyRoutes(void* serverPtr) {
     auto* server = static_cast<Server*>(serverPtr);
+
+    server->Get("/api/game/levels", [this](const Request& req, Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+
+        std::vector<std::string> levels;
+        if (_lobbyManager) {
+            levels = _lobbyManager->getAvailableLevels();
+        }
+
+        json j;
+        j["levels"] = levels;
+        res.set_content(j.dump(), "application/json");
+        res.status = 200;
+    });
+
+    server->Post("/api/lobbies", [this](const Request& req, Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+
+        try {
+            auto j = json::parse(req.body);
+            bool isPrivate = j.value("isPrivate", true);
+            std::string levelId = j.value("level", "");
+
+            std::string code;
+            if (_lobbyManager) {
+                code = _lobbyManager->createLobby(isPrivate, levelId);
+            }
+
+            if (!code.empty()) {
+                json resp;
+                resp["code"] = code;
+                res.set_content(resp.dump(), "application/json");
+                res.status = 200;
+            } else {
+                res.set_content(R"({"error":"Failed to create lobby"})",
+                                "application/json");
+                res.status = 500;
+            }
+        } catch (...) {
+            res.set_content(R"({"error":"Invalid JSON"})", "application/json");
+            res.status = 400;
+        }
+    });
+
     server->Get("/api/lobbies", [this](const Request& req, Response& res) {
         if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
@@ -826,6 +988,7 @@ void AdminServer::registerLobbyRoutes(void* serverPtr) {
                     << R"("active":)" << (lobby.isActive ? "true" : "false")
                     << ","
                     << R"("isPublic":)" << (isPublic ? "true" : "false") << ","
+                    << R"("level":")" << lobby.levelId << R"(",)"
                     << R"("difficulty":"Normal")"
                     << "}";
             }

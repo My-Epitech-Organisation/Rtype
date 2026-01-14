@@ -1,13 +1,6 @@
 name: 🚀 R-Type Release
 
 on:
-  workflow_run:
-    workflows: ["R-Type Action"]
-    types:
-      - completed
-    branches:
-      - main
-      - dev
   workflow_dispatch:
     inputs:
       release_type:
@@ -19,6 +12,8 @@ on:
           - patch
           - minor
           - major
+
+  workflow_call:
 
 jobs:
   release:

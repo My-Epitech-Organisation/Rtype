@@ -341,10 +341,19 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
         config.id = tbl["level"]["id"].value_or("");
         config.name = tbl["level"]["name"].value_or(config.id);
         config.backgroundPath = tbl["level"]["background"].value_or("");
+        config.levelMusic = tbl["level"]["level_music"].value_or("");
         config.scrollSpeed = tbl["level"]["scroll_speed"].value_or(50.0F);
 
         if (auto boss = tbl["level"]["boss"].value<std::string>()) {
             config.bossId = *boss;
+        }
+
+        if (auto nextLv = tbl["level"]["next_level"].value<std::string>()) {
+            std::string n = *nextLv;
+            if (n.length() > 5 && n.substr(n.length() - 5) == ".toml") {
+                n = n.substr(0, n.length() - 5);
+            }
+            config.nextLevel = n;
         }
 
         if (auto* waves = tbl["wave"].as_array()) {
@@ -371,6 +380,27 @@ bool EntityConfigRegistry::loadLevel(const std::string& filepath) {
                                     (*spawnTbl)["delay"].value_or(0.0F);
                                 spawn.count = (*spawnTbl)["count"].value_or(1);
                                 wave.spawns.push_back(spawn);
+                            }
+                        }
+                    }
+
+                    if (auto* powerups = (*waveTbl)["powerup"].as_array()) {
+                        for (const auto& powerupElem : *powerups) {
+                            if (auto* powerupTbl = powerupElem.as_table()) {
+                                WaveConfig::PowerUpEntry powerup;
+                                powerup.powerUpId =
+                                    (*powerupTbl)["id"].value_or("");
+                                if (auto xVal =
+                                        (*powerupTbl)["x"].value<double>()) {
+                                    powerup.x = static_cast<float>(*xVal);
+                                }
+                                if (auto yVal =
+                                        (*powerupTbl)["y"].value<double>()) {
+                                    powerup.y = static_cast<float>(*yVal);
+                                }
+                                powerup.delay =
+                                    (*powerupTbl)["delay"].value_or(0.0F);
+                                wave.powerups.push_back(powerup);
                             }
                         }
                     }

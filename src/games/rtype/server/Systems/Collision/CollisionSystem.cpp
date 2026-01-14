@@ -9,6 +9,7 @@
 #include "CollisionSystem.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -103,10 +104,16 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         bool bHasHealth = registry.hasComponent<HealthComponent>(entityB);
 
         if (aIsPickup && bIsPlayer) {
+            LOG_INFO(
+                "[CollisionSystem] Pickup-Player collision detected: pickup="
+                << entityA.id << " player=" << entityB.id);
             handlePickupCollision(registry, cmdBuffer, entityB, entityA);
             continue;
         }
         if (bIsPickup && aIsPlayer) {
+            LOG_INFO(
+                "[CollisionSystem] Player-Pickup collision detected: player="
+                << entityA.id << " pickup=" << entityB.id);
             handlePickupCollision(registry, cmdBuffer, entityA, entityB);
             continue;
         }
@@ -179,6 +186,10 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
         return;
     }
 
+    if (isTargetPlayer && registry.hasComponent<InvincibleTag>(target)) {
+        return;
+    }
+
     LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                   "[CollisionSystem] Collision detected! Projectile "
                       << projectile.id << " hit target " << target.id
@@ -193,24 +204,25 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
                           << prevHealth << " -> " << health.current
                           << " (damage=" << damage << ")");
 
-        if (isTargetPlayer && _emitEvent &&
-            registry.hasComponent<NetworkIdComponent>(target)) {
+        if (_emitEvent && registry.hasComponent<NetworkIdComponent>(target)) {
             const auto& netId =
                 registry.getComponent<NetworkIdComponent>(target);
             if (netId.isValid()) {
-                LOG_DEBUG_CAT(
-                    ::rtype::LogCategory::GameEngine,
-                    "[CollisionSystem] Emitting EntityHealthChanged for player "
-                    "networkId="
-                        << netId.networkId << " health=" << health.current
-                        << "/" << health.max);
+                ::rtype::network::EntityType entityType =
+                    isTargetPlayer ? ::rtype::network::EntityType::Player
+                                   : ::rtype::network::EntityType::Bydos;
+                LOG_INFO("[CollisionSystem] Emitting EntityHealthChanged for "
+                         << (isTargetPlayer ? "player" : "enemy")
+                         << " networkId=" << netId.networkId
+                         << " health=" << health.current << "/" << health.max
+                         << " damage=" << damage);
                 engine::GameEvent event{};
                 event.type = engine::GameEventType::EntityHealthChanged;
                 event.entityNetworkId = netId.networkId;
-                event.entityType =
-                    static_cast<uint8_t>(::rtype::network::EntityType::Player);
+                event.entityType = static_cast<uint8_t>(entityType);
                 event.healthCurrent = health.current;
                 event.healthMax = health.max;
+                event.damage = damage;
                 _emitEvent(event);
             }
         }
@@ -251,16 +263,26 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                                             ECS::CommandBuffer& cmdBuffer,
                                             ECS::Entity player,
                                             ECS::Entity pickup) {
+    LOG_INFO("[CollisionSystem] handlePickupCollision called: player="
+             << player.id << " pickup=" << pickup.id);
+
     if (registry.hasComponent<DestroyTag>(pickup) ||
         registry.hasComponent<DestroyTag>(player)) {
+        LOG_INFO("[CollisionSystem] Entity already has DestroyTag, skipping");
         return;
     }
 
     if (!registry.hasComponent<PowerUpComponent>(pickup)) {
+        LOG_WARNING("[CollisionSystem] Pickup entity "
+                    << pickup.id << " missing PowerUpComponent!");
         return;
     }
 
     const auto& powerUp = registry.getComponent<PowerUpComponent>(pickup);
+
+    LOG_INFO("[CollisionSystem] PowerUp type="
+             << static_cast<int>(powerUp.type) << " duration="
+             << powerUp.duration << " magnitude=" << powerUp.magnitude);
 
     if (powerUp.type == shared::PowerUpType::None) {
         LOG_DEBUG_CAT(
@@ -334,6 +356,89 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                     std::min(health.current + healthBoost, health.max);
             }
             break;
+        case shared::PowerUpType::ForcePod:
+            LOG_INFO("[CollisionSystem] Spawning Force Pod for player="
+                     << player.id);
+            if (registry.hasComponent<NetworkIdComponent>(player)) {
+                const auto& playerNetId =
+                    registry.getComponent<NetworkIdComponent>(player);
+                int existingPodCount = 0;
+                auto view =
+                    registry
+                        .view<shared::ForcePodTag, shared::ForcePodComponent>();
+                view.each([&existingPodCount, &playerNetId](
+                              ECS::Entity /*entity*/,
+                              const shared::ForcePodTag&,
+                              const shared::ForcePodComponent& podComp) {
+                    if (podComp.ownerNetworkId == playerNetId.networkId) {
+                        existingPodCount++;
+                    }
+                });
+
+                const float distance = 60.0F;
+                const std::vector<std::pair<float, float>> positions = {
+                    {0.0F, -distance},
+                    {0.0F, distance},
+                    {distance, 0.0F},
+                    {-distance, 0.0F},
+                    {distance * 0.7F, -distance * 0.7F},
+                    {distance * 0.7F, distance * 0.7F},
+                    {-distance * 0.7F, -distance * 0.7F},
+                    {-distance * 0.7F, distance * 0.7F}};
+
+                float offsetX = 0.0F;
+                float offsetY = 0.0F;
+                if (existingPodCount < static_cast<int>(positions.size())) {
+                    offsetX = positions[existingPodCount].first;
+                    offsetY = positions[existingPodCount].second;
+                } else {
+                    const float angle =
+                        2.0F * 3.14159265359F * existingPodCount / 8.0F;
+                    offsetX = distance * std::cos(angle);
+                    offsetY = distance * std::sin(angle);
+                }
+
+                LOG_INFO(
+                    "[CollisionSystem] Creating Force Pod entity with "
+                    "parentNetId="
+                    << playerNetId.networkId << " at position "
+                    << existingPodCount << " (offset: " << offsetX << ", "
+                    << offsetY << ")");
+
+                ECS::Entity forcePod = registry.spawnEntity();
+                registry.emplaceComponent<shared::ForcePodComponent>(
+                    forcePod, shared::ForcePodState::Attached, offsetX, offsetY,
+                    playerNetId.networkId);
+                registry.emplaceComponent<shared::PlayerTag>(forcePod);
+                registry.emplaceComponent<shared::ForcePodTag>(forcePod);
+                registry.emplaceComponent<TransformComponent>(forcePod, 0.0F,
+                                                              0.0F, 0.0F);
+                registry.emplaceComponent<BoundingBoxComponent>(forcePod, 32.0F,
+                                                                32.0F);
+
+                if (_emitEvent) {
+                    uint32_t forcePodNetId =
+                        playerNetId.networkId + 10000 + existingPodCount;
+                    registry.emplaceComponent<NetworkIdComponent>(
+                        forcePod, forcePodNetId);
+
+                    LOG_INFO(
+                        "[CollisionSystem] Emitting ForcePod spawn event: "
+                        "networkId="
+                        << forcePodNetId);
+
+                    engine::GameEvent evt{};
+                    evt.type = engine::GameEventType::EntitySpawned;
+                    evt.entityNetworkId = forcePodNetId;
+                    evt.entityType = 5;
+                    evt.x = 0.0F;
+                    evt.y = 0.0F;
+                    _emitEvent(evt);
+                }
+            } else {
+                LOG_INFO("[CollisionSystem] Player missing NetworkIdComponent");
+            }
+            break;
         case shared::PowerUpType::None:
         default:
             break;
@@ -348,6 +453,11 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
         evt.subType = static_cast<uint8_t>(powerUp.type);
         evt.duration = powerUp.duration;
         _emitEvent(evt);
+
+        LOG_INFO("[CollisionSystem] Emitted PowerUpApplied event: playerId="
+                 << netId.networkId
+                 << " type=" << static_cast<int>(powerUp.type)
+                 << " duration=" << powerUp.duration);
     }
 
     cmdBuffer.emplaceComponentDeferred<DestroyTag>(pickup, DestroyTag{});

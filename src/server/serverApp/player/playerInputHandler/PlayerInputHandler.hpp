@@ -34,6 +34,13 @@ using ShootCallback =
     std::function<std::uint32_t(std::uint32_t networkId, float x, float y)>;
 
 /**
+ * @brief Callback for Force Pod launch/recall
+ * @param playerNetworkId Player's network ID
+ */
+using ForcePodLaunchCallback =
+    std::function<void(std::uint32_t playerNetworkId)>;
+
+/**
  * @brief Handles player input processing
  *
  * Processes movement and shooting inputs from players,
@@ -79,6 +86,13 @@ class PlayerInputHandler {
     }
 
     /**
+     * @brief Set callback for Force Pod launch/recall
+     */
+    void setForcePodLaunchCallback(ForcePodLaunchCallback callback) {
+        _forcePodCallback = std::move(callback);
+    }
+
+    /**
      * @brief Set player speed override
      */
     void setPlayerSpeed(float speed) { _playerSpeed = speed; }
@@ -94,11 +108,17 @@ class PlayerInputHandler {
      */
     void processShoot(std::uint32_t userId, ECS::Entity entity);
 
+    /**
+     * @brief Process Force Pod launch/recall input
+     */
+    void processForcePodLaunch(std::uint32_t userId);
+
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<ServerNetworkSystem> _networkSystem;
     std::shared_ptr<GameStateManager> _stateManager;
     std::shared_ptr<const IGameConfig> _gameConfig;
     ShootCallback _shootCallback;
+    ForcePodLaunchCallback _forcePodCallback;
     float _playerSpeed{DEFAULT_PLAYER_SPEED};
     bool _verbose;
 };

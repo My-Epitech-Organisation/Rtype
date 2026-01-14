@@ -17,6 +17,9 @@
 
 #include "../shared/Config/PrefabLoader.hpp"
 #include "../shared/Systems/Systems.hpp"
+#include "Systems/ForcePod/ForcePodAttachmentSystem.hpp"
+#include "Systems/ForcePod/ForcePodLaunchSystem.hpp"
+#include "Systems/ForcePod/ForcePodShootingSystem.hpp"
 #include "Systems/Spawner/DataDrivenSpawnerSystem.hpp"
 #include "Systems/Systems.hpp"
 
@@ -92,18 +95,11 @@ class GameEngine : public engine::AGameEngine {
         override;
 
     /**
-     * @brief Load a level for data-driven wave spawning
-     * @param levelId Level identifier (e.g., "level_1")
-     * @return true if level loaded successfully
-     */
-    bool loadLevel(const std::string& levelId);
-
-    /**
      * @brief Load a level from file path
-     * @param filepath Path to level TOML file
+     * @param filepath Path to level configuration file
      * @return true if level loaded successfully
      */
-    bool loadLevelFromFile(const std::string& filepath);
+    bool loadLevelFromFile(const std::string& filepath) override;
 
     /**
      * @brief Start the loaded level
@@ -152,6 +148,14 @@ class GameEngine : public engine::AGameEngine {
     }
 
     /**
+     * @brief Get Force Pod launch system
+     * @return Pointer to ForcePodLaunchSystem
+     */
+    ForcePodLaunchSystem* getForcePodLaunchSystem() {
+        return _forcePodLaunchSystem.get();
+    }
+
+    /**
      * @brief Get the data-driven spawner (for wave management)
      * @return Pointer to DataDrivenSpawnerSystem
      */
@@ -188,6 +192,9 @@ class GameEngine : public engine::AGameEngine {
     std::unique_ptr<CollisionSystem> _collisionSystem;
     std::unique_ptr<CleanupSystem> _cleanupSystem;
     std::unique_ptr<DestroySystem> _destroySystem;
+    std::unique_ptr<ForcePodAttachmentSystem> _forcePodAttachmentSystem;
+    std::unique_ptr<ForcePodLaunchSystem> _forcePodLaunchSystem;
+    std::unique_ptr<ForcePodShootingSystem> _forcePodShootingSystem;
 
     EventCallback _eventCallback;
     std::vector<engine::GameEvent> _pendingEvents;

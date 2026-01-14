@@ -25,7 +25,8 @@ enum class GameEventType : uint8_t {
     EntityUpdated,
     EntityHealthChanged,
     PowerUpApplied,
-    GameOver
+    GameOver,
+    LevelComplete
 };
 
 /**
@@ -45,6 +46,7 @@ struct GameEvent {
     float velocityY = 0.0F;
     int32_t healthCurrent{0};
     int32_t healthMax{0};
+    int32_t damage{0};
     float duration{0.0F};
 };
 
@@ -150,6 +152,13 @@ class IGameEngine {
      * @return Game identifier string (e.g., "rtype", "spaceinvaders")
      */
     [[nodiscard]] virtual std::string getGameId() const = 0;
+
+    /**
+     * @brief Load a specific level/map from file
+     * @param filepath The path to the level configuration file
+     * @return true if loaded successfully
+     */
+    virtual bool loadLevelFromFile(const std::string& filepath) = 0;
 
     /**
      * @brief Process a game event and return network-ready data

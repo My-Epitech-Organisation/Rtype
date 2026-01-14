@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <filesystem>
 #include <optional>
 #include <utility>
 
@@ -18,6 +19,8 @@
 #include "Logger/Macros.hpp"
 #include "SceneManager/SceneException.hpp"
 #include "Systems/AnimationSystem.hpp"
+#include "Systems/ChaserExplosionSystem.hpp"
+#include "Systems/ChaserRotationSystem.hpp"
 #include "games/rtype/client/AllComponents.hpp"
 #include "games/rtype/client/GameScene/RtypeEntityFactory.hpp"
 #include "games/rtype/client/GameScene/RtypeInputHandler.hpp"
@@ -32,6 +35,10 @@ void Graphic::_pollEvents() {
     while (this->_display->pollEvent(event)) {
         if (event.type == rtype::display::EventType::Closed) {
             this->_display->close();
+        }
+
+        if (_devConsole && _devConsole->handleEvent(event)) {
+            continue;
         }
 
         this->_eventSystem->setEvent(event);
@@ -91,13 +98,20 @@ void Graphic::_update() {
     if (!isPaused) {
         this->_systemScheduler->runSystem("color_tint");
         this->_systemScheduler->runSystem("player_animation");
+        this->_systemScheduler->runSystem("chaser_rotation");
+        this->_systemScheduler->runSystem("chaser_explosion");
         this->_systemScheduler->runSystem("animation");
         this->_systemScheduler->runSystem("powerup_visuals");
         this->_systemScheduler->runSystem("projectile");
+        this->_systemScheduler->runSystem("enemy_health_bars");
     }
 
     this->_systemScheduler->runSystem("lifetime");
     this->_sceneManager->update(this->_currentDeltaTime);
+
+    if (_devConsole) {
+        _devConsole->update(this->_currentDeltaTime);
+    }
 }
 
 void Graphic::_render() {
@@ -115,6 +129,11 @@ void Graphic::_render() {
     this->_systemScheduler->runSystem("shader_render");
 
     this->_sceneManager->draw();
+
+    if (_devConsole) {
+        _devConsole->render();
+    }
+
     this->_display->display();
 }
 
@@ -156,6 +175,10 @@ void Graphic::_initializeSystems() {
         ::rtype::games::rtype::client::PlayerAnimationSystem>();
     this->_animationSystem =
         std::make_unique<::rtype::games::rtype::client::AnimationSystem>();
+    this->_chaserRotationSystem =
+        std::make_unique<::rtype::games::rtype::client::ChaserRotationSystem>();
+    this->_chaserExplosionSystem = std::make_unique<
+        ::rtype::games::rtype::client::ChaserExplosionSystem>();
     this->_playerPowerUpVisualSystem = std::make_unique<
         ::rtype::games::rtype::client::PlayerPowerUpVisualSystem>();
     this->_powerUpCollectionSystem = std::make_unique<
@@ -186,6 +209,11 @@ void Graphic::_initializeSystems() {
     this->_shaderRenderSystem =
         std::make_unique<::rtype::games::rtype::client::ShaderRenderSystem>(
             this->_display);
+    this->_forcePodVisualSystem =
+        std::make_unique<::rtype::games::rtype::client::ForcePodVisualSystem>();
+    this->_enemyHealthBarSystem =
+        std::make_unique<::rtype::games::rtype::client::EnemyHealthBarSystem>(
+            this->_registry);
 
     this->_systemScheduler =
         std::make_unique<ECS::SystemScheduler>(*this->_registry);
@@ -216,6 +244,20 @@ void Graphic::_initializeSystems() {
                                       },
                                       {"reset_triggers"});
 
+    this->_systemScheduler->addSystem("chaser_rotation",
+                                      [this](ECS::Registry& reg) {
+                                          _chaserRotationSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {});
+
+    this->_systemScheduler->addSystem("chaser_explosion",
+                                      [this](ECS::Registry& reg) {
+                                          _chaserExplosionSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {});
+
     this->_systemScheduler->addSystem("powerup_visuals",
                                       [this](ECS::Registry& reg) {
                                           _playerPowerUpVisualSystem->update(
@@ -229,6 +271,13 @@ void Graphic::_initializeSystems() {
                                               reg, _currentDeltaTime);
                                       },
                                       {"powerup_visuals"});
+
+    this->_systemScheduler->addSystem("forcepod_visual",
+                                      [this](ECS::Registry& reg) {
+                                          _forcePodVisualSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"animation"});
 
     this->_systemScheduler->addSystem("parallax",
                                       [this](ECS::Registry& reg) {
@@ -263,10 +312,17 @@ void Graphic::_initializeSystems() {
                                       },
                                       {"lifetime"});
 
+    this->_systemScheduler->addSystem("enemy_health_bars",
+                                      [this](ECS::Registry& reg) {
+                                          this->_enemyHealthBarSystem->update(
+                                              reg, this->_currentDeltaTime);
+                                      },
+                                      {"client_destroy"});
+
     this->_systemScheduler->addSystem(
         "render",
         [this](ECS::Registry& reg) { this->_renderSystem->update(reg, 0.f); },
-        {"client_destroy"});
+        {"enemy_health_bars", "chaser_rotation"});
 
     this->_systemScheduler->addSystem(
         "boxing",
@@ -279,6 +335,56 @@ void Graphic::_initializeSystems() {
                                               reg, 0.f);
                                       },
                                       {"boxing"});
+}
+
+void Graphic::_loadBackgrounds() {
+    if (!this->_sceneManager) {
+        LOG_ERROR(
+            "[Graphic] _loadBackgrounds called before _sceneManager was "
+            "initialized");
+        return;
+    }
+    if (!std::filesystem::exists("./plugins/background")) return;
+    for (const auto& s :
+         std::filesystem::directory_iterator("./plugins/background")) {
+        std::string path = s.path().string();
+        auto instance =
+            std::make_unique<rtype::common::DLLoader<IBackground>>(path);
+        auto bg = instance->getInstance<std::shared_ptr<ECS::Registry>,
+                                        std::shared_ptr<AssetManager>>(
+            "createBackground", std::shared_ptr<ECS::Registry>(this->_registry),
+            std::shared_ptr<AssetManager>(this->_assetsManager));
+        if (bg) {
+            this->_backgroundLoaders.push_back(std::move(instance));
+            this->_sceneManager->registerBackgroundPlugin(
+                bg->getBackgroundName(), std::shared_ptr<IBackground>(bg));
+        }
+    }
+}
+
+void Graphic::_loadMusicLevels() {
+    if (!std::filesystem::exists("./plugins/music")) return;
+    for (const auto& s :
+         std::filesystem::directory_iterator("./plugins/music")) {
+        std::string path = s.path().string();
+        auto instance =
+            std::make_unique<rtype::common::DLLoader<ILevelMusic>>(path);
+        auto musicLib = instance->getInstance<std::shared_ptr<ECS::Registry>,
+                                              std::shared_ptr<AssetManager>>(
+            "createLevelMusic", std::shared_ptr<ECS::Registry>(this->_registry),
+            std::shared_ptr<AssetManager>(this->_assetsManager));
+        if (musicLib) {
+            this->_audioLevelLoaders.push_back(std::move(instance));
+            this->_sceneManager->registerMusicLevelPlugin(
+                musicLib->getLevelMusicName(),
+                std::shared_ptr<ILevelMusic>(musicLib));
+        }
+    }
+    if (!this->_audioLib) {
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[Graphic] No valid music plugin found in ./plugins/"
+                        "music");
+    }
 }
 
 void Graphic::_initializeCommonAssets() {
@@ -328,6 +434,24 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.EnemyWave);
     manager->textureManager->load("projectile_player_laser",
                                   config.assets.textures.missileLaser);
+    manager->textureManager->load("force_pod", config.assets.textures.forcePod);
+
+    // Load power-up textures
+    manager->textureManager->load("health_small",
+                                  config.assets.textures.healthSmall);
+    manager->textureManager->load("health_large",
+                                  config.assets.textures.healthLarge);
+    manager->textureManager->load("speed_boost",
+                                  config.assets.textures.speedBoost);
+    manager->textureManager->load("weapon_upgrade",
+                                  config.assets.textures.weaponUpgrade);
+    manager->textureManager->load("shield", config.assets.textures.shield);
+    manager->textureManager->load("rapid_fire",
+                                  config.assets.textures.rapidFire);
+    manager->textureManager->load("double_damage",
+                                  config.assets.textures.damageBoost);
+    manager->textureManager->load("extra_life",
+                                  config.assets.textures.extraLife);
 
     manager->textureManager->load(
         "projectile1", config.assets.textures.wallTexture.engrenage1);
@@ -359,6 +483,10 @@ void Graphic::_initializeCommonAssets() {
     manager->soundManager->load("bydos_spawn", config.assets.sfx.enemySpawn);
     manager->soundManager->load("bydos_death", config.assets.sfx.enemyDeath);
     manager->soundManager->load("laser_sfx", config.assets.sfx.laser);
+    manager->soundManager->load("forcepod_launch",
+                                config.assets.sfx.forcePodLaunch);
+    manager->soundManager->load("forcepod_return",
+                                config.assets.sfx.forcePodReturn);
 
     manager->textureManager->get("bg_menu")->setRepeated(true);
     manager->textureManager->get("bg_planet_1")->setRepeated(true);
@@ -388,18 +516,30 @@ Graphic::Graphic(
     this->_keybinds = std::make_shared<KeyboardActions>();
 
 #ifdef _WIN32
-    this->_displayLoader =
-        std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
-            "./display.dll");
+    try {
+        this->_displayLoader =
+            std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
+                "./plugins/display.dll");
+    } catch (std::exception& e) {
+        LOG_FATAL("Error while loading plugins/display.dll" << e.what());
+    }
 #else
-    this->_displayLoader =
-        std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
-            "./display.so");
+    try {
+        this->_displayLoader =
+            std::make_unique<rtype::common::DLLoader<rtype::display::IDisplay>>(
+                "./plugins/display.so");
+    } catch (std::exception& e) {
+        LOG_FATAL("Error while loading plugins/display.so " << e.what());
+    }
 #endif
-    this->_display = std::shared_ptr<rtype::display::IDisplay>(
-        this->_displayLoader->getInstance("createInstanceDisplay"));
-    this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT, "R-Type - Epitech 2025",
-                         false);
+    try {
+        this->_display = std::shared_ptr<rtype::display::IDisplay>(
+            this->_displayLoader->getInstance("createInstanceDisplay"));
+        this->_display->open(WINDOW_WIDTH, WINDOW_HEIGHT,
+                             "R-Type - Epitech 2025", false);
+    } catch (std::exception& e) {
+        LOG_FATAL("Error while init display lib" << e.what());
+    }
 
     this->_keybinds->initialize(*this->_display);
 
@@ -424,24 +564,68 @@ Graphic::Graphic(
     this->_audioLib = std::make_shared<AudioLib>(this->_display);
     this->_registry->setSingleton<std::shared_ptr<AudioLib>>(this->_audioLib);
     this->_registry->setSingleton<AccessibilitySettings>(
-        AccessibilitySettings{ColorBlindMode::None});
+        AccessibilitySettings{ColorBlindMode::None, 1.0f, false, false});
     this->_registry->setSingleton<rtype::games::rtype::client::PauseState>(
         rtype::games::rtype::client::PauseState{false});
-    this->_initializeCommonAssets();
     this->_sceneManager = std::make_unique<SceneManager>(
         _registry, this->_assetsManager, this->_display, this->_keybinds,
         _networkClient, _networkSystem, this->_audioLib);
+    this->_loadBackgrounds();
+    this->_loadMusicLevels();
+    this->_sceneManager->initializeScenes();
     _initializeSystems();
     _lastFrameTime = std::chrono::steady_clock::now();
+
+    _devConsole = std::make_unique<rtype::client::DevConsole>(
+        this->_display, _networkClient, _registry, _audioLib,
+        &_currentDeltaTime, _keybinds);
+
+    if (_networkClient) {
+        _networkClient->onAdminResponse([this](std::uint8_t cmdType,
+                                               bool success, bool newState,
+                                               const std::string& msg) {
+            if (_devConsole) {
+                if (success) {
+                    _devConsole->print(msg);
+                } else {
+                    _devConsole->printError(msg);
+                }
+            }
+        });
+    }
+
+    LOG_DEBUG_CAT(::rtype::LogCategory::UI,
+                  "[Graphic] Developer console initialized");
 }
 
 Graphic::~Graphic() {
+    if (_display) {
+        _display->close();
+    }
     _sceneManager.reset();
     _systemScheduler.reset();
-    _assetsManager.reset();
-    _audioLib.reset();
-
+    _forcePodVisualSystem.reset();
+    _shaderRenderSystem.reset();
+    _clientDestroySystem.reset();
+    _lifetimeSystem.reset();
+    _projectileSystem.reset();
+    _eventSystem.reset();
+    _resetTriggersSystem.reset();
+    _boxingSystem.reset();
+    _renderSystem.reset();
+    _parallaxScrolling.reset();
+    _buttonUpdateSystem.reset();
+    _powerUpCollectionSystem.reset();
+    _playerPowerUpVisualSystem.reset();
+    _animationSystem.reset();
+    _chaserRotationSystem.reset();
+    _playerAnimationSystem.reset();
+    _colorTintSystem.reset();
     if (_registry) {
         _registry->clear();
     }
+    _assetsManager.reset();
+    _audioLib.reset();
+    _display.reset();
+    _displayLoader.reset();
 }

@@ -119,7 +119,7 @@ namespace rtype::display {
          * @param scale Scale applied to the sprite
          * @param color Modulation color (tint)
          */
-        virtual void drawSprite(const std::string& textureName, const Vector2<float>& position, const Rect<int>& rect, const Vector2<float>& scale, const Color& color) = 0;
+        virtual void drawSprite(const std::string& textureName, const Vector2<float>& position, const Rect<int>& rect, const Vector2<float>& scale, const Color& color, float rotation = 0.0f) = 0;
 
         /**
          * @brief Draws text to the screen.
@@ -181,6 +181,13 @@ namespace rtype::display {
          * @brief Resets the view to the default value (usually the window size).
          */
         virtual void resetView() = 0;
+
+        /**
+         * @brief Maps pixel coordinates to world coordinates based on the current view.
+         * @param pixelPos Pixel position in the window
+         * @return World coordinates
+         */
+        [[nodiscard]] virtual Vector2<float> mapPixelToCoords(const Vector2<int>& pixelPos) const = 0;
 
         /**
          * @brief Returns the current window size in pixels.
@@ -285,6 +292,20 @@ namespace rtype::display {
         virtual void beginRenderToTexture(const std::string& textureName) = 0;
         virtual void endRenderToTexture() = 0;
         virtual void drawRenderTexture(const std::string& textureName, const std::string& shaderName) = 0;
+
+        // Clipboard
+
+        /**
+         * @brief Sets the system clipboard text.
+         * @param text Text to set in the clipboard
+         */
+        virtual void setClipboardText(const std::string& text) = 0;
+
+        /**
+         * @brief Retrieves the current text from the system clipboard.
+         * @return Clipboard text
+         */
+        [[nodiscard]] virtual std::string getClipboardText() const = 0;
 
         // Joystick
         /**

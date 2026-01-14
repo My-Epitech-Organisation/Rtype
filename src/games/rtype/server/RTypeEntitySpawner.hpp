@@ -96,6 +96,9 @@ class RTypeEntitySpawner : public ::rtype::server::IEntitySpawner {
     void updateAllPlayersMovement(
         float deltaTime, const PositionUpdateCallback& callback) override;
 
+    [[nodiscard]] ECS::Entity spawnForcePod(std::uint32_t ownerNetworkId,
+                                            float offsetX, float offsetY);
+
    private:
     std::shared_ptr<ECS::Registry> _registry;
     std::shared_ptr<::rtype::server::ServerNetworkSystem> _networkSystem;

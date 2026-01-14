@@ -89,6 +89,9 @@ enum class OpCode : std::uint8_t {
     /// Server broadcasts bandwidth mode change to all clients (RELIABLE)
     S_BANDWIDTH_MODE_CHANGED = 0x17,
 
+    /// Server announces a level change with visual notification (RELIABLE)
+    S_LEVEL_ANNOUNCE = 0x18,
+
     /// Client sends input state (UNRELIABLE)
     C_INPUT = 0x20,
 
@@ -109,6 +112,12 @@ enum class OpCode : std::uint8_t {
 
     /// Server broadcasts chat message (RELIABLE)
     S_CHAT = 0x31,
+
+    /// Client sends admin/debug command (RELIABLE) - localhost only
+    C_ADMIN_COMMAND = 0xD0,
+
+    /// Server responds to admin command (RELIABLE)
+    S_ADMIN_RESPONSE = 0xD1,
 };
 
 namespace OpCodeRange {
@@ -148,6 +157,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_LOBBY_LIST:
         case OpCode::C_JOIN_LOBBY:
         case OpCode::S_JOIN_LOBBY_RESPONSE:
+        case OpCode::S_LEVEL_ANNOUNCE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_DESTROY:
         case OpCode::S_ENTITY_HEALTH:
@@ -156,6 +166,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_BANDWIDTH_MODE_CHANGED:
         case OpCode::C_CHAT:
         case OpCode::S_CHAT:
+        case OpCode::C_ADMIN_COMMAND:
+        case OpCode::S_ADMIN_RESPONSE:
             return true;
 
         case OpCode::S_ENTITY_MOVE:
@@ -185,6 +197,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::C_SET_BANDWIDTH_MODE:
         case OpCode::C_INPUT:
         case OpCode::C_CHAT:
+        case OpCode::C_ADMIN_COMMAND:
         case OpCode::PING:
             return true;
 
@@ -211,6 +224,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_PLAYER_READY_STATE:
         case OpCode::S_LOBBY_LIST:
         case OpCode::S_JOIN_LOBBY_RESPONSE:
+        case OpCode::S_LEVEL_ANNOUNCE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_MOVE_BATCH:
@@ -220,6 +234,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_UPDATE_POS:
         case OpCode::S_BANDWIDTH_MODE_CHANGED:
         case OpCode::S_CHAT:
+        case OpCode::S_ADMIN_RESPONSE:
         case OpCode::PONG:
             return true;
 
@@ -252,6 +267,7 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::S_LOBBY_LIST:
         case OpCode::C_JOIN_LOBBY:
         case OpCode::S_JOIN_LOBBY_RESPONSE:
+        case OpCode::S_LEVEL_ANNOUNCE:
         case OpCode::S_ENTITY_SPAWN:
         case OpCode::S_ENTITY_MOVE:
         case OpCode::S_ENTITY_MOVE_BATCH:
@@ -267,6 +283,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
         case OpCode::ACK:
         case OpCode::C_CHAT:
         case OpCode::S_CHAT:
+        case OpCode::C_ADMIN_COMMAND:
+        case OpCode::S_ADMIN_RESPONSE:
             return true;
         default:
             return false;
@@ -330,6 +348,8 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "C_JOIN_LOBBY";
         case OpCode::S_JOIN_LOBBY_RESPONSE:
             return "S_JOIN_LOBBY_RESPONSE";
+        case OpCode::S_LEVEL_ANNOUNCE:
+            return "S_LEVEL_ANNOUNCE";
         case OpCode::S_ENTITY_SPAWN:
             return "S_ENTITY_SPAWN";
         case OpCode::S_ENTITY_MOVE:
@@ -360,6 +380,10 @@ constexpr std::uint8_t kSystemMax = 0xFF;
             return "PONG";
         case OpCode::ACK:
             return "ACK";
+        case OpCode::C_ADMIN_COMMAND:
+            return "C_ADMIN_COMMAND";
+        case OpCode::S_ADMIN_RESPONSE:
+            return "S_ADMIN_RESPONSE";
     }
     return "UNKNOWN";
 }

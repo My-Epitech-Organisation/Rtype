@@ -283,6 +283,36 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.textures.missileLaser =
         "assets/" + _parser.getString(table, "Textures", "MissileLaser",
                                       defaults.assets.textures.missileLaser);
+    config.assets.textures.forcePod =
+        "assets/" + _parser.getString(table, "Textures", "ForcePod",
+                                      defaults.assets.textures.forcePod);
+
+    // Power-ups textures
+    config.assets.textures.healthSmall =
+        "assets/" + _parser.getString(table, "Textures", "HealthSmall",
+                                      defaults.assets.textures.healthSmall);
+    config.assets.textures.healthLarge =
+        "assets/" + _parser.getString(table, "Textures", "HealthLarge",
+                                      defaults.assets.textures.healthLarge);
+    config.assets.textures.speedBoost =
+        "assets/" + _parser.getString(table, "Textures", "SpeedBoost",
+                                      defaults.assets.textures.speedBoost);
+    config.assets.textures.weaponUpgrade =
+        "assets/" + _parser.getString(table, "Textures", "WeaponUpgrade",
+                                      defaults.assets.textures.weaponUpgrade);
+    config.assets.textures.shield =
+        "assets/" + _parser.getString(table, "Textures", "Shield",
+                                      defaults.assets.textures.shield);
+    config.assets.textures.rapidFire =
+        "assets/" + _parser.getString(table, "Textures", "RapidFire",
+                                      defaults.assets.textures.rapidFire);
+    config.assets.textures.damageBoost =
+        "assets/" + _parser.getString(table, "Textures", "DamageBoost",
+                                      defaults.assets.textures.damageBoost);
+    config.assets.textures.extraLife =
+        "assets/" + _parser.getString(table, "Textures", "ExtraLife",
+                                      defaults.assets.textures.extraLife);
+
     // Wall - Textures
     config.assets.textures.wallTexture.engrenage1 =
         "assets/" +
@@ -363,6 +393,12 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.sfx.enemyDeath =
         "assets/" + _parser.getString(table, "SFX", "EnemyDeath",
                                       defaults.assets.sfx.enemyDeath);
+    config.assets.sfx.forcePodLaunch =
+        "assets/" + _parser.getString(table, "SFX", "ForcePodLaunch",
+                                      defaults.assets.sfx.forcePodLaunch);
+    config.assets.sfx.forcePodReturn =
+        "assets/" + _parser.getString(table, "SFX", "ForcePodReturn",
+                                      defaults.assets.sfx.forcePodReturn);
 
     return config;
 }

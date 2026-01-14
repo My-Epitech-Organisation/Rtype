@@ -9,6 +9,7 @@ add_library(rtype-graphic-scene-manager
 
 target_include_directories(rtype-graphic-scene-manager PRIVATE
     ${CMAKE_SOURCE_DIR}/src/games/rtype/client
+    ${CMAKE_SOURCE_DIR}
 )
 
 target_link_libraries(rtype-graphic-scene-manager

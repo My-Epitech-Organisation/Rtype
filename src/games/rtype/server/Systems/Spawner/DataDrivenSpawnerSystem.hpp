@@ -29,6 +29,7 @@ struct DataDrivenSpawnerConfig {
     std::size_t maxEnemies = 100;
     float waveTransitionDelay = 2.0F;
     bool waitForClear = true;
+    float startDelay = 0.0F;
 
     // Fallback random spawning when no level is loaded
     bool enableFallbackSpawning = true;
@@ -139,6 +140,20 @@ class DataDrivenSpawnerSystem : public ::rtype::engine::ASystem {
     }
 
     /**
+     * @brief Get reference to the wave manager
+     */
+    [[nodiscard]] const WaveManager& getWaveManager() const noexcept {
+        return _waveManager;
+    }
+
+    /**
+     * @brief Get the next level ID if available
+     */
+    [[nodiscard]] std::optional<std::string> getNextLevel() const noexcept {
+        return _waveManager.getNextLevel();
+    }
+
+    /**
      * @brief Set enemy count (used by GameEngine)
      */
     void setEnemyCount(std::size_t count) noexcept { _enemyCount = count; }
@@ -154,6 +169,8 @@ class DataDrivenSpawnerSystem : public ::rtype::engine::ASystem {
     void spawnBoss(ECS::Registry& registry, const std::string& bossId);
     void spawnObstacle(ECS::Registry& registry);
     void spawnPowerUp(ECS::Registry& registry);
+    void spawnPowerUpFromConfig(ECS::Registry& registry,
+                                const PowerUpSpawnRequest& request);
 
     void updateFallbackSpawning(ECS::Registry& registry, float deltaTime);
     void generateNextObstacleSpawnTime();

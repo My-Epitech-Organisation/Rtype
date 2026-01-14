@@ -107,12 +107,39 @@ class LevelCreatorScene : public AScene {
      * background, etc.).
      * @{
      */
+
+    std::map<std::string, std::shared_ptr<IBackground>> _libBackgrounds;
+    std::map<std::string, std::shared_ptr<IBackground>>::iterator
+        _bgIteratorCurrent;
+
+    /** @brief List of levels availables, Name of the level; Path of the level.
+     */
+    std::map<std::string, std::string> _listNextLevel;
+    std::map<std::string, std::string>::iterator _nextLevelIteratorCurrent;
+
+    /** @brief List of music levels availables, Name of the level; Path of the
+     * level.
+     */
+    std::map<std::string, std::shared_ptr<ILevelMusic>> _libMusicLevels;
+    std::map<std::string, std::shared_ptr<ILevelMusic>>::iterator
+        _musicLevelIteratorCurrent;
+
+    /** @brief Name of the plugin for the background selection button. */
+    std::string _bgPluginName;
+    /** @brief Name of the next level selection button. */
+    std::string _nextLevelId;
+    /** @brief Name of the music level selection button. */
+    std::string _musicLevelId;
+    /** @brief Entity id for the background selection button. */
+    ECS::Entity _levelBackgroundBtn;
+    /** @brief Entity id for the next level selection button. */
+    ECS::Entity _btnNextLevel;
+    /** @brief Entity id for the music level selection button. */
+    ECS::Entity _btnMusicLevel;
     /** @brief Entity id for the level name input field. */
     ECS::Entity _levelNameInput;
     /** @brief Entity id for the level identifier input field. */
     ECS::Entity _levelIdInput;
-    /** @brief Entity id for the background selection/input field. */
-    ECS::Entity _bgInputInput;
     /** @brief Entity id for the scroll speed input field. */
     ECS::Entity _scrollSpeedInput;
     /** @brief Entity id for the boss identifier input field. */
@@ -199,6 +226,11 @@ class LevelCreatorScene : public AScene {
     std::function<void(const SceneManager::Scene&)> _switchToScene;
 
     /**
+     * @brief Scans level directory for .toml files to populate the levels list.
+     */
+    void _getLevelsName();
+
+    /**
      * @brief Temporary status message entity.
      *
      * Holds an entity id pointing to a transient message shown after operations
@@ -282,6 +314,9 @@ class LevelCreatorScene : public AScene {
         std::shared_ptr<::rtype::display::IDisplay> window,
         std::shared_ptr<KeyboardActions> keybinds,
         std::shared_ptr<AudioLib> audio,
+        std::map<std::string, std::shared_ptr<IBackground>> libBackgrounds,
+        std::map<std::string, std::shared_ptr<ILevelMusic>> libMusicLevels,
+        std::function<void(const std::string&)> setBackground,
         std::function<void(const SceneManager::Scene&)> switchToScene);
 
     /**

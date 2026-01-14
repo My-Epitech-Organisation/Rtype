@@ -95,6 +95,20 @@ class ServerApp {
     void stop() noexcept;
 
     /**
+     * @brief Set the level/map to load on initialization
+     * @param levelId The level identifier
+     */
+    void setLevel(const std::string& levelId) { _initialLevel = levelId; }
+
+    /**
+     * @brief Change the current level (reloads if necessary)
+     * @param levelId The level identifier
+     * @param force Force level change even if game is running (for automatic
+     * transitions)
+     */
+    bool changeLevel(const std::string& levelId, bool force = false);
+
+    /**
      * @brief Check if server is running
      */
     [[nodiscard]] bool isRunning() const noexcept;
@@ -195,6 +209,12 @@ class ServerApp {
     void setLobbyCode(const std::string& code);
 
     /**
+     * @brief Broadcast a system message (chat) to all connected clients
+     * @param message The message content
+     */
+    void broadcastMessage(const std::string& message);
+
+    /**
      * @brief Test hook: set default countdown duration used by GameStateManager
      * (useful to make tests deterministic)
      */
@@ -227,6 +247,8 @@ class ServerApp {
     void handleClientConnected(std::uint32_t userId);
     void handleClientDisconnected(std::uint32_t userId);
     void handleStateChange(GameState oldState, GameState newState);
+    void handleAdminCommand(std::uint32_t userId, std::uint8_t commandType,
+                            std::uint8_t param, const std::string& clientIp);
 
     void resetToLobby();
 
@@ -279,6 +301,7 @@ class ServerApp {
 
     std::uint32_t _score{0};
     static constexpr std::uint32_t ENEMY_DESTRUCTION_SCORE = 100;
+    std::string _initialLevel;
 };
 
 }  // namespace rtype::server
