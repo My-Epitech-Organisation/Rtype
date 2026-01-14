@@ -135,15 +135,6 @@ static int runApplication(IDisplay* display) {  // NOLINT(readability/fn_size)
     std::cout << "  ESC                      Quit\n";
     std::cout << "═══════════════════════════════════════\n\n";
 
-    std::cout << "═══════════════════════════════════════\n";
-    std::cout << "    SNAKE GAME - Graphics Abstraction\n";
-    std::cout << "      Library: " << display->getLibName() << "\n";
-    std::cout << "═══════════════════════════════════════\n";
-    std::cout << "Controls:\n";
-    std::cout << "  ↑ W / ↓ S / ← A / → D   Move\n";
-    std::cout << "  ESC                      Quit\n";
-    std::cout << "═══════════════════════════════════════\n\n";
-
     auto lastTime = std::chrono::high_resolution_clock::now();
     bool running = true;
     bool showGameOver = false;
