@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** Rtype
 ** File description:
-** LaserBeamComponent - Continuous laser beam weapon state and configuration
+** LaserBeamComponent - Continuous laser beam weapon state and timing
 */
 
 #pragma once
@@ -23,10 +23,12 @@ enum class LaserBeamState : uint8_t {
 
 /**
  * @struct LaserBeamComponent
- * @brief Component for continuous laser beam weapon attached to player
+ * @brief Component for continuous laser beam weapon state and timing
  *
- * The laser beam is a hold-to-fire weapon that deals damage per second
- * to all enemies it touches. It has a maximum duration and cooldown.
+ * This component handles the laser beam state machine (Inactive/Active/Cooldown).
+ * Collision and damage are handled separately via:
+ * - BoundingBoxComponent: Collision dimensions
+ * - DamageOnContactComponent: DPS damage with startup delay
  */
 struct LaserBeamComponent {
     LaserBeamState state{LaserBeamState::Inactive};
@@ -38,19 +40,7 @@ struct LaserBeamComponent {
     float cooldownTime{0.0F};         ///< Current cooldown remaining
     float cooldownDuration{2.0F};     ///< Cooldown after release (seconds)
 
-    // Damage
-    float damagePerSecond{50.0F};     ///< DPS while touching enemies
-
-    // Geometry
-    float beamLength{0.0F};           ///< Current beam length (0 or max)
-    float maxBeamLength{307.0F};      ///< Maximum beam reach (matches sprite half-width)
-    float beamWidth{50.0F};           ///< Beam width for collision (matches visual)
-
-    // Startup delay - damage only after this time (matches client Startup animation)
-    // 7 frames * 0.08s = 0.56s
-    float startupDuration{0.56F};     ///< Time before damage is active
-
-    // Animation
+    // Animation (optional visual effect)
     float pulsePhase{0.0F};           ///< For pulsation visual effect
     float pulseSpeed{8.0F};           ///< Pulsation frequency
 
@@ -87,17 +77,8 @@ struct LaserBeamComponent {
         if (canFire()) {
             state = LaserBeamState::Active;
             activeTime = 0.0F;
-            beamLength = maxBeamLength;  // Instant full reach
             pulsePhase = 0.0F;
         }
-    }
-
-    /**
-     * @brief Check if laser is in damaging phase (after startup animation)
-     * @return true if damage should be applied
-     */
-    [[nodiscard]] bool isDamaging() const noexcept {
-        return isActive() && activeTime >= startupDuration;
     }
 
     /**
@@ -107,7 +88,6 @@ struct LaserBeamComponent {
         if (isActive()) {
             state = LaserBeamState::Cooldown;
             cooldownTime = cooldownDuration;
-            beamLength = 0.0F;
         }
     }
 
@@ -117,7 +97,6 @@ struct LaserBeamComponent {
     void forceStop() noexcept {
         state = LaserBeamState::Cooldown;
         cooldownTime = cooldownDuration;
-        beamLength = 0.0F;
     }
 
     /**
