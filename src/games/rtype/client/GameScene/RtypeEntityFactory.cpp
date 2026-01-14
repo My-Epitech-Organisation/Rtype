@@ -654,9 +654,11 @@ void RtypeEntityFactory::setupLaserBeamEntity(
     // Scale from 3072x512 to ~614x102 on screen (50% sprite with 0.2 scale)
     reg.emplaceComponent<Size>(entity, displayScale, displayScale);
 
-    // Hitbox for collision detection
-    constexpr float hitboxWidth = 614.0f;
-    constexpr float hitboxHeight = 102.0f;
+    // Hitbox for collision detection (matches server hitbox size)
+    // Width: 614px (full laser visual width)
+    // Height: 50px (smaller than visual for precise collision)
+    constexpr float hitboxWidth = 614.0F;
+    constexpr float hitboxHeight = 50.0F;
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, hitboxWidth, hitboxHeight);
     // Note: BoxingComponent removed - laser hitbox is rendered via
