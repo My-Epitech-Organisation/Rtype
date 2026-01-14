@@ -236,7 +236,27 @@ void ServerNetworkSystem::updateEntityPosition(std::uint32_t networkId, float x,
                                                float y, float vx, float vy) {
     auto it = networkedEntities_.find(networkId);
     if (it == networkedEntities_.end()) {
+        // Debug: entity not found
+        static int notFoundCount = 0;
+        if (notFoundCount < 50) {
+            LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                "[ServerNetwork] updateEntityPosition: networkId=" << networkId 
+                    << " NOT FOUND in networkedEntities_ (size=" 
+                    << networkedEntities_.size() << ")");
+            notFoundCount++;
+        }
         return;
+    }
+
+    // Debug log for BossPart position updates
+    static int bossPartUpdateCount = 0;
+    if ((it->second.type == EntityType::BossPart || it->second.type == EntityType::Boss) 
+        && bossPartUpdateCount < 30) {
+        LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+            "[ServerNetwork] BossPart/Boss update: networkId=" << networkId 
+                << " pos=(" << x << "," << y << ")"
+                << " oldPos=(" << it->second.lastX << "," << it->second.lastY << ")");
+        bossPartUpdateCount++;
     }
 
     it->second.lastX = x;
@@ -323,7 +343,9 @@ void ServerNetworkSystem::broadcastEntityUpdates() {
         float posThreshold = playerPosDelta;
         float velThreshold = playerVelDelta;
         if (info.type == EntityType::Bydos ||
-            info.type == EntityType::Obstacle) {
+            info.type == EntityType::Obstacle ||
+            info.type == EntityType::Boss ||
+            info.type == EntityType::BossPart) {
             updateInterval = enemyInterval;
             posThreshold = enemyPosDelta;
             velThreshold = enemyVelDelta;
@@ -398,6 +420,18 @@ void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
     info.dirty = false;
 
     networkedEntities_[networkId] = info;
+    
+    // Debug log for BossPart registration
+    if (type == EntityType::BossPart || type == EntityType::Boss) {
+        LOG_INFO_CAT(::rtype::LogCategory::Network,
+            "[ServerNetwork] Registered " 
+                << (type == EntityType::Boss ? "Boss" : "BossPart")
+                << " networkId=" << networkId 
+                << " subType=" << static_cast<int>(subType)
+                << " pos=(" << x << "," << y << ")"
+                << " entity=" << info.entity.id);
+    }
+    
     if (server_) {
         server_->spawnEntity(networkId, type, subType, x, y);
 
