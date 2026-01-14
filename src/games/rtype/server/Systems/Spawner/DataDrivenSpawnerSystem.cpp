@@ -410,6 +410,7 @@ void DataDrivenSpawnerSystem::spawnBoss(ECS::Registry& registry,
         registry.emplaceComponent<shared::WeakPointComponent>(
             weakPoint, std::move(wpComp));
         registry.emplaceComponent<shared::WeakPointTag>(weakPoint);
+        registry.emplaceComponent<shared::EnemyTag>(weakPoint);  // For collision detection
 
         uint32_t wpNetworkId = _nextNetworkId++;
         registry.emplaceComponent<NetworkIdComponent>(weakPoint, wpNetworkId);
