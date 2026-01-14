@@ -7,7 +7,9 @@
 
 #pragma once
 
+#include <cstdint>
 #include <functional>
+#include <unordered_map>
 
 #include <rtype/ecs.hpp>
 #include <rtype/engine.hpp>
@@ -105,9 +107,27 @@ class LaserBeamSystem : public ::rtype::engine::ASystem {
      */
     void emitBeamDestroy(uint32_t beamNetworkId);
 
+    /**
+     * @brief Rebuild player cache for O(1) lookups
+     * @param registry ECS registry
+     */
+    void rebuildPlayerCache(ECS::Registry& registry);
+
     EventEmitter _emitEvent;
     game::config::LaserConfig _config;
-    uint32_t _nextBeamNetworkId{200000};  // Start beam IDs at 200000
+
+    /// Cache NetworkId -> Player Entity for O(1) lookup in updateBeamPositions
+    std::unordered_map<uint32_t, ECS::Entity> _playerCache;
+
+    /// Starting network ID for laser beams.
+    /// Uses a high range (200000+) to avoid collisions with:
+    /// - Players: 1-999
+    /// - Enemies: 1000-99999
+    /// - Projectiles: 100000-199999
+    /// - Force Pods: 150000-199999
+    static constexpr uint32_t kLaserBeamNetworkIdStart = 200000;
+
+    uint32_t _nextBeamNetworkId{kLaserBeamNetworkIdStart};
 };
 
 }  // namespace rtype::games::rtype::server

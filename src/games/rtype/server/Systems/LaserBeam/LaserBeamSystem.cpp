@@ -27,6 +27,7 @@ LaserBeamSystem::LaserBeamSystem(EventEmitter emitter,
       _config(config) {}
 
 void LaserBeamSystem::update(ECS::Registry& registry, float deltaTime) {
+    rebuildPlayerCache(registry);  // O(P) once per frame
     updateActiveBeams(registry, deltaTime);
     updateBeamPositions(registry);
     // Collision detection is now handled by CollisionSystem
@@ -211,20 +212,30 @@ void LaserBeamSystem::updateBeamPositions(ECS::Registry& registry) {
             return;
         }
 
-        // Find owner player and update beam position
-        auto playerView =
-            registry.view<PlayerTag, NetworkIdComponent, TransformComponent>();
+        // O(1) lookup using player cache instead of O(n) iteration
+        auto it = _playerCache.find(beam.ownerNetworkId);
+        if (it == _playerCache.end()) {
+            return;
+        }
 
-        playerView.each([this, &beam, &beamPos](
-                            ECS::Entity /*playerEntity*/, const PlayerTag&,
-                            const NetworkIdComponent& netId,
-                            const TransformComponent& playerPos) {
-            if (netId.networkId == beam.ownerNetworkId) {
-                // Beam origin is in front of player, extends to the right
-                beamPos.x = playerPos.x + _config.offsetX;
-                beamPos.y = playerPos.y;
-            }
-        });
+        ECS::Entity playerEntity = it->second;
+        if (!registry.hasComponent<TransformComponent>(playerEntity)) {
+            return;
+        }
+
+        const auto& playerPos =
+            registry.getComponent<TransformComponent>(playerEntity);
+        beamPos.x = playerPos.x + _config.offsetX;
+        beamPos.y = playerPos.y;
+    });
+}
+
+void LaserBeamSystem::rebuildPlayerCache(ECS::Registry& registry) {
+    _playerCache.clear();
+    auto view = registry.view<PlayerTag, NetworkIdComponent>();
+    view.each([this](ECS::Entity entity, const PlayerTag&,
+                     const NetworkIdComponent& netId) {
+        _playerCache[netId.networkId] = entity;
     });
 }
 
