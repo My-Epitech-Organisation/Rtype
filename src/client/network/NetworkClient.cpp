@@ -1190,7 +1190,8 @@ void NetworkClient::handleGameOver(const network::Header& header,
         auto deserialized = network::Serializer::deserializeFromNetwork<
             network::GameOverPayload>(payload);
 
-        GameOverEvent event{deserialized.finalScore};
+        GameOverEvent event{deserialized.finalScore,
+                            deserialized.isVictory != 0};
 
         queueCallback([this, event]() {
             if (onGameOverCallback_) {

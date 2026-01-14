@@ -15,6 +15,7 @@
 #include "EntityFactory/EntityFactory.hpp"
 #include "Graphic.hpp"
 #include "Logger/Macros.hpp"
+#include "games/rtype/client/GameScene/RtypeInputHandler.hpp"
 #include "games/rtype/client/GraphicsConstants.hpp"
 #include "games/rtype/client/PauseState.hpp"
 
@@ -163,5 +164,7 @@ GameScene::~GameScene() {
         LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Pausing music");
         this->_audio->pauseMusic();
     }
+
+    ::rtype::games::rtype::client::RtypeInputHandler::clearKeyStates();
     LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[GameScene] Destructor completed");
 }

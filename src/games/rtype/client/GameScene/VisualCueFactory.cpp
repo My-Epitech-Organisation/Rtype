@@ -115,4 +115,56 @@ void VisualCueFactory::createPowerUpPopup(
     registry.emplaceComponent<GameTag>(entity);
 }
 
+void VisualCueFactory::createConfetti(ECS::Registry& registry,
+                                      float screenWidth, float screenHeight,
+                                      int particleCount) {
+    static thread_local std::random_device rd;
+    static thread_local std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> posXDist(0.f, screenWidth);
+    std::uniform_real_distribution<float> posYDist(-150.f, 0.f);
+    std::uniform_real_distribution<float> velXDist(-120.f, 120.f);
+    std::uniform_real_distribution<float> velYDist(300.f, 700.f);
+    std::uniform_real_distribution<float> sizeDist(6.f, 22.f);
+    std::uniform_real_distribution<float> lifetimeDist(1.2f, 2.0f);
+    std::uniform_int_distribution<int> colorDist(0, 5);
+
+    const ::rtype::display::Color colors[] = {
+        ::rtype::display::Color::Red(),     ::rtype::display::Color::Green(),
+        ::rtype::display::Color::Blue(),    ::rtype::display::Color::Yellow(),
+        ::rtype::display::Color::Magenta(), ::rtype::display::Color::Cyan()};
+
+    LOG_DEBUG_CAT(::rtype::LogCategory::Graphics,
+                  "[VisualCueFactory] Creating confetti effect with "
+                      << particleCount << " particles");
+
+    for (int i = 0; i < particleCount; ++i) {
+        auto entity = registry.spawnEntity();
+
+        float size = sizeDist(gen);
+        const auto& color = colors[colorDist(gen)];
+
+        registry.emplaceComponent<Rectangle>(
+            entity, std::pair<float, float>({size, size}), color, color);
+
+        float x = posXDist(gen);
+        float y = posYDist(gen);
+        registry.emplaceComponent<
+            ::rtype::games::rtype::shared::TransformComponent>(entity, x, y);
+
+        float velX = velXDist(gen);
+        float velY = velYDist(gen);
+        registry
+            .emplaceComponent<::rtype::games::rtype::shared::VelocityComponent>(
+                entity, velX, velY);
+
+        registry.emplaceComponent<ZIndex>(entity, 250);
+
+        float lifetime = lifetimeDist(gen);
+        registry
+            .emplaceComponent<::rtype::games::rtype::shared::LifetimeComponent>(
+                entity, lifetime);
+        registry.emplaceComponent<GameTag>(entity);
+    }
+}
+
 }  // namespace rtype::games::rtype::client

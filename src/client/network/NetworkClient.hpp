@@ -108,6 +108,7 @@ struct GameStateEvent {
  */
 struct GameOverEvent {
     std::uint32_t finalScore;
+    bool isVictory{false};
 };
 
 /**

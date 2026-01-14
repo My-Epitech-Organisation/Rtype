@@ -54,6 +54,16 @@ class VisualCueFactory {
         const ::rtype::display::Vector2<float>& position,
         const std::string& powerUpName, const std::string& font,
         const ::rtype::display::Color& color);
+
+    /**
+     * @brief Create a confetti effect with falling colored particles
+     * @param registry The ECS registry
+     * @param screenWidth Width of the screen for particle spread
+     * @param screenHeight Height of the screen for spawn position
+     * @param particleCount Number of confetti particles to spawn
+     */
+    static void createConfetti(ECS::Registry& registry, float screenWidth,
+                               float screenHeight, int particleCount = 50);
 };
 
 }  // namespace rtype::games::rtype::client

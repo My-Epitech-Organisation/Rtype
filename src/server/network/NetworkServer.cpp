@@ -213,12 +213,13 @@ void NetworkServer::updateGameState(GameState state) {
     broadcastToAll(network::OpCode::S_UPDATE_STATE, serialized);
 }
 
-void NetworkServer::sendGameOver(std::uint32_t finalScore) {
-    LOG_INFO_CAT(
-        ::rtype::LogCategory::Network,
-        "[NetworkServer] Sending GameOver packet with score=" << finalScore);
+void NetworkServer::sendGameOver(std::uint32_t finalScore, bool isVictory) {
+    LOG_INFO_CAT(::rtype::LogCategory::Network,
+                 "[NetworkServer] Sending GameOver packet with score="
+                     << finalScore << " isVictory=" << isVictory);
     network::GameOverPayload payload;
     payload.finalScore = finalScore;
+    payload.isVictory = isVictory ? 1 : 0;
 
     auto serialized = network::Serializer::serializeForNetwork(payload);
 

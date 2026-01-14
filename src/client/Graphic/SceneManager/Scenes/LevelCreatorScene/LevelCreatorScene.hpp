@@ -264,7 +264,7 @@ class LevelCreatorScene : public AScene {
      * Reads values from input entities and writes them to the Wave struct so
      * that switching waves or exporting reflects the edited values.
      */
-    void saveCurrentWaveStats();
+    bool saveCurrentWaveStats();
 
     /**
      * @brief Serializes the current level configuration to a TOML file.

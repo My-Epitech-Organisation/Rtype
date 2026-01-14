@@ -243,8 +243,10 @@ class ServerNetworkSystem {
 
     /**
      * @brief Broadcast final score when the game ends
+     * @param finalScore The final game score
+     * @param isVictory True if player won, false if defeated
      */
-    void broadcastGameOver(std::uint32_t finalScore);
+    void broadcastGameOver(std::uint32_t finalScore, bool isVictory = false);
 
     /**
      * @brief Reset all tracked network state

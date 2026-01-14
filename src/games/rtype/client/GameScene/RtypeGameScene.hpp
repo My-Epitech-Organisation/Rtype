@@ -182,6 +182,7 @@ class RtypeGameScene : public AGameScene {
     std::optional<ECS::Entity> _levelAnnounceTextEntity;
     std::optional<ECS::Entity> _levelAnnounceBgEntity;
     float _levelAnnounceTimer = 0.0f;
+    bool _isFirstLevelAnnounce = true;
 
     std::unique_ptr<::rtype::games::rtype::shared::MovementSystem>
         _movementSystem;

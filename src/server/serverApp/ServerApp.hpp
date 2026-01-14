@@ -300,6 +300,7 @@ class ServerApp {
     std::function<void(float)> _onGameStartBroadcastCallback;
 
     std::uint32_t _score{0};
+    bool _isVictory{false};
     static constexpr std::uint32_t ENEMY_DESTRUCTION_SCORE = 100;
     std::string _initialLevel;
 };

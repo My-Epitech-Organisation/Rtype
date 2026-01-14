@@ -379,7 +379,7 @@ TEST(UpdateStatePayloadTest, AllStates) {
 }
 
 TEST(GameOverPayloadTest, Size) {
-    EXPECT_EQ(sizeof(GameOverPayload), 4u);
+    EXPECT_EQ(sizeof(GameOverPayload), 8u);
 }
 
 TEST(GameOverPayloadTest, SetScore) {

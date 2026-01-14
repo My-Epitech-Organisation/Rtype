@@ -293,7 +293,7 @@ TEST_F(PayloadTest, UpdateStatePayloadState) {
 
 TEST_F(PayloadTest, GameOverPayloadStructure) {
     GameOverPayload gameOver;
-    EXPECT_EQ(sizeof(GameOverPayload), sizeof(std::uint32_t));
+    EXPECT_EQ(sizeof(GameOverPayload), 8u);
 
     gameOver.finalScore = 12345;
     EXPECT_EQ(gameOver.finalScore, 12345u);
