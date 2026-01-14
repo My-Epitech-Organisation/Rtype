@@ -7,6 +7,7 @@
 
 #include "RtypeEntityFactory.hpp"
 
+#include <cmath>
 #include <memory>
 #include <random>
 #include <utility>
@@ -26,6 +27,7 @@
 #include "../../shared/Config/GameConfig/RTypeGameConfig.hpp"
 #include "../Components/AnnimationComponent.hpp"
 #include "../Components/BossSerpentComponent.hpp"
+#include "../Components/BossVisualComponent.hpp"
 #include "../Components/ChaserExplosionComponent.hpp"
 #include "../Components/ColorTintComponent.hpp"
 #include "../Components/ForcePodVisualComponent.hpp"
@@ -726,118 +728,261 @@ void RtypeEntityFactory::setupBossEntity(
                  "[RtypeEntityFactory] Creating Boss entity type="
                      << static_cast<int>(bossType));
 
-    reg.emplaceComponent<Image>(entity, BossSerpentVisual::TEXTURE_HEAD);
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    std::string bossId;
 
+    switch (static_cast<shared::BossType>(bossType)) {
+        case shared::BossType::Serpent:
+            bossId = "boss_serpent";
+            break;
+        case shared::BossType::Scorpion:
+            bossId = "boss_scorpion";
+            break;
+        case shared::BossType::Battleship:
+            bossId = "boss_battleship";
+            break;
+        case shared::BossType::Hive:
+            bossId = "boss_hive";
+            break;
+        default:
+            bossId = "boss_serpent";
+            break;
+    }
+
+    auto enemyConfigOpt = configRegistry.getEnemy(bossId);
+
+    BossVisualComponent visual;
+    visual.bossTypeId = bossId;
+    visual.partType = BossPartType::HEAD;
+    visual.state = BossVisualState::MOVE;
+
+    float hitboxWidth = 100.0F;
+    float hitboxHeight = 280.0F;
+    int32_t health = 3000;
+
+    if (enemyConfigOpt.has_value()) {
+        const auto& bossConfig = enemyConfigOpt.value().get();
+        const auto& animConfig = bossConfig.animationConfig;
+
+        hitboxWidth = bossConfig.hitboxWidth;
+        hitboxHeight = bossConfig.hitboxHeight;
+        health = bossConfig.health;
+
+        if (!animConfig.headAnimation.moveSprite.textureName.empty()) {
+            visual.moveTexture = animConfig.headAnimation.moveSprite.textureName;
+            visual.idleTexture = animConfig.headAnimation.idleSprite.textureName;
+            visual.attackTexture = animConfig.headAnimation.attackSprite.textureName;
+            visual.deathTexture = animConfig.headAnimation.deathSprite.textureName;
+            visual.frameWidth = animConfig.headAnimation.moveSprite.frameWidth;
+            visual.frameHeight = animConfig.headAnimation.moveSprite.frameHeight;
+            visual.frameCount = animConfig.headAnimation.moveSprite.frameCount;
+            visual.frameDuration = animConfig.headAnimation.moveSprite.frameDuration;
+            visual.loop = animConfig.headAnimation.moveSprite.loop;
+            visual.spriteOffsetX = animConfig.headAnimation.moveSprite.spriteOffsetX;
+            visual.scaleX = animConfig.headAnimation.scaleX;
+            visual.scaleY = animConfig.headAnimation.scaleY;
+            visual.enableRotation = animConfig.headAnimation.enableRotation;
+            visual.rotationSmoothing = animConfig.headAnimation.rotationSmoothing;
+            visual.rotationOffset = animConfig.headAnimation.rotationOffset;
+        } else {
+            visual.moveTexture = "boss_serpent_head";
+            visual.attackTexture = "boss_serpent_attack";
+            visual.frameWidth = 135;
+            visual.frameHeight = 369;
+            visual.frameCount = 5;
+            visual.frameDuration = 0.1F;
+            visual.scaleX = -0.85F;
+            visual.scaleY = 0.85F;
+        }
+    } else {
+        visual.moveTexture = "boss_serpent_head";
+        visual.attackTexture = "boss_serpent_attack";
+        visual.frameWidth = 135;
+        visual.frameHeight = 369;
+        visual.frameCount = 5;
+        visual.frameDuration = 0.1F;
+        visual.scaleX = -0.85F;
+        visual.scaleY = 0.85F;
+    }
+
+    if (visual.idleTexture.empty()) {
+        visual.idleTexture = visual.moveTexture;
+    }
+
+    reg.emplaceComponent<Image>(entity, visual.moveTexture);
     reg.emplaceComponent<TextureRect>(
         entity, std::pair<int, int>({0, 0}),
-        std::pair<int, int>(
-            {BossSerpentVisual::FRAME_WIDTH, BossSerpentVisual::FRAME_HEIGHT}));
+        std::pair<int, int>({visual.frameWidth, visual.frameHeight}));
+    reg.emplaceComponent<Size>(entity, visual.scaleX, visual.scaleY);
+    reg.emplaceComponent<BossVisualComponent>(entity, visual);
 
-    reg.emplaceComponent<Size>(entity, -0.85f, 0.85f);
-
-    BossSerpentVisual visual;
-    visual.state = BossSerpentState::MOVE;
-    visual.partType = BossSerpentPartType::HEAD;
-    visual.isAttacking = false;
-    reg.emplaceComponent<BossSerpentVisual>(entity, visual);
-
-    float hitboxWidth = BossSerpentVisual::FRAME_WIDTH * 0.85f;
-    float hitboxHeight = BossSerpentVisual::FRAME_HEIGHT * 0.85f;
+    float scaledHitboxW = visual.frameWidth * std::abs(visual.scaleX);
+    float scaledHitboxH = visual.frameHeight * std::abs(visual.scaleY);
 
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, hitboxWidth, hitboxHeight);
+        entity, scaledHitboxW, scaledHitboxH);
     reg.emplaceComponent<BoxingComponent>(
-        entity, ::rtype::display::Vector2f{0.0f, 0.0f},
-        ::rtype::display::Vector2f{hitboxWidth, hitboxHeight});
+        entity, ::rtype::display::Vector2f{0.0F, 0.0F},
+        ::rtype::display::Vector2f{scaledHitboxW, scaledHitboxH});
     reg.getComponent<BoxingComponent>(entity).outlineColor =
         ::rtype::display::Color{255, 100, 50, 200};
     reg.getComponent<BoxingComponent>(entity).fillColor =
         ::rtype::display::Color{255, 100, 50, 40};
 
-    reg.emplaceComponent<shared::HealthComponent>(entity, 3000, 3000);
-    reg.emplaceComponent<ZIndex>(entity, 5);  // Boss on top
+    reg.emplaceComponent<shared::HealthComponent>(entity, health, health);
+    reg.emplaceComponent<ZIndex>(entity, 5);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<shared::EnemyTag>(entity);
     reg.emplaceComponent<shared::BossTag>(entity);
 
-    reg.emplaceComponent<Rotation>(entity, 0.0f);
+    if (visual.enableRotation) {
+        reg.emplaceComponent<Rotation>(entity, 0.0F);
+    }
 
     LOG_INFO_CAT(::rtype::LogCategory::ECS,
-                 "[RtypeEntityFactory] Boss Serpent head entity created");
+                 "[RtypeEntityFactory] Boss entity created: " << bossId);
 }
 
 void RtypeEntityFactory::setupBossPartEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> /*assetsManager*/,
-    ECS::Entity entity, uint8_t partType) {
+    ECS::Entity entity, uint8_t segmentIndex) {
+    // Decode segmentIndex: values >= 100 are negative indices (100 + abs(index))
+    // Used for fixed-position boss parts (scorpion) vs chained segments (serpent)
+    int32_t decodedSegmentIndex = static_cast<int32_t>(segmentIndex);
+    if (segmentIndex >= 100) {
+        decodedSegmentIndex = -(static_cast<int32_t>(segmentIndex) - 100);
+    }
+    
     LOG_INFO_CAT(::rtype::LogCategory::ECS,
-                 "[RtypeEntityFactory] Creating Boss Part entity type="
-                     << static_cast<int>(partType));
+                 "[RtypeEntityFactory] Creating Boss Part entity segmentIndex="
+                     << static_cast<int>(segmentIndex) << " (decoded=" << decodedSegmentIndex << ")");
 
-    const char* textureName = BossSerpentVisual::TEXTURE_BODY;
-    BossSerpentPartType serpentPartType = BossSerpentPartType::BODY;
-    float scale = 0.75f;
+    BossVisualComponent visual;
+    visual.state = BossVisualState::MOVE;
+    visual.segmentIndex = decodedSegmentIndex;
 
-    switch (partType) {
-        case 1:
-            textureName = BossSerpentVisual::TEXTURE_HEAD;
-            serpentPartType = BossSerpentPartType::HEAD;
-            scale = 0.8f;
-            break;
-        case 2:
-            textureName = BossSerpentVisual::TEXTURE_TAIL;
-            serpentPartType = BossSerpentPartType::TAIL;
-            scale = 0.7f;
-            break;
-        case 3:
-            textureName = BossSerpentVisual::TEXTURE_BODY;
-            serpentPartType = BossSerpentPartType::BODY;
-            scale = 0.75f;
-            break;
-        default:
-            textureName = BossSerpentVisual::TEXTURE_BODY;
-            serpentPartType = BossSerpentPartType::BODY;
-            scale = 0.7f;
-            break;
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    bool foundConfig = false;
+    
+    // Hitbox from TOML config (fallback to calculated)
+    float configHitboxW = 0.0F;
+    float configHitboxH = 0.0F;
+    int32_t configHealth = 400;
+
+    for (const auto& [bossId, bossConfig] : configRegistry.getAllEnemies()) {
+        if (!bossConfig.isBoss) continue;
+
+        for (const auto& wpConfig : bossConfig.weakPoints) {
+            if (wpConfig.segmentIndex == decodedSegmentIndex) {
+                const auto& partAnim = wpConfig.animation;
+
+                if (!partAnim.moveSprite.textureName.empty()) {
+                    visual.bossTypeId = bossId;
+                    visual.customPartId = wpConfig.id;
+                    visual.moveTexture = partAnim.moveSprite.textureName;
+                    visual.idleTexture = partAnim.idleSprite.textureName;
+                    visual.attackTexture = partAnim.attackSprite.textureName;
+                    visual.deathTexture = partAnim.deathSprite.textureName;
+                    visual.frameWidth = partAnim.moveSprite.frameWidth;
+                    visual.frameHeight = partAnim.moveSprite.frameHeight;
+                    visual.frameCount = partAnim.moveSprite.frameCount;
+                    visual.frameDuration = partAnim.moveSprite.frameDuration;
+                    visual.loop = partAnim.moveSprite.loop;
+                    visual.spriteOffsetX = partAnim.moveSprite.spriteOffsetX;
+                    visual.scaleX = partAnim.scaleX;
+                    visual.scaleY = partAnim.scaleY;
+                    visual.enableRotation = partAnim.enableRotation;
+                    visual.rotationSmoothing = partAnim.rotationSmoothing;
+                    visual.rotationOffset = partAnim.rotationOffset;
+                    
+                    // Get hitbox from config
+                    configHitboxW = wpConfig.hitboxWidth;
+                    configHitboxH = wpConfig.hitboxHeight;
+                    configHealth = wpConfig.health;
+
+                    if (partAnim.partType == "head") {
+                        visual.partType = BossPartType::HEAD;
+                    } else if (partAnim.partType == "tail") {
+                        visual.partType = BossPartType::TAIL;
+                    } else if (partAnim.partType == "body") {
+                        visual.partType = BossPartType::BODY;
+                    } else {
+                        visual.partType = BossPartType::CUSTOM;
+                    }
+
+                    if (visual.idleTexture.empty()) {
+                        visual.idleTexture = visual.moveTexture;
+                    }
+                    foundConfig = true;
+                    break;
+                }
+            }
+        }
+
+        if (foundConfig) break;
     }
 
-    reg.emplaceComponent<Image>(entity, textureName);
+    if (!foundConfig) {
+        LOG_WARNING_CAT(::rtype::LogCategory::ECS,
+                        "[RtypeEntityFactory] No config found for segmentIndex="
+                            << static_cast<int>(segmentIndex)
+                            << ", using defaults");
+        visual.moveTexture = "boss_serpent_body";
+        visual.idleTexture = visual.moveTexture;
+        visual.frameWidth = 135;
+        visual.frameHeight = 369;
+        visual.frameCount = 5;
+        visual.frameDuration = 0.1F;
+        visual.scaleX = -0.75F;
+        visual.scaleY = 0.75F;
+        visual.partType = BossPartType::BODY;
+    } else {
+        LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                     "[RtypeEntityFactory] Config found for segmentIndex="
+                         << decodedSegmentIndex
+                         << " texture=" << visual.moveTexture
+                         << " frameCount=" << visual.frameCount
+                         << " hitbox=(" << configHitboxW << "x" << configHitboxH << ")"
+                         << " rotation=" << visual.enableRotation);
+    }
 
+    reg.emplaceComponent<Image>(entity, visual.moveTexture);
     reg.emplaceComponent<TextureRect>(
         entity, std::pair<int, int>({0, 0}),
-        std::pair<int, int>(
-            {BossSerpentVisual::FRAME_WIDTH, BossSerpentVisual::FRAME_HEIGHT}));
-    float xScale =
-        (serpentPartType == BossSerpentPartType::TAIL) ? scale : -scale;
-    reg.emplaceComponent<Size>(entity, xScale, scale);
+        std::pair<int, int>({visual.frameWidth, visual.frameHeight}));
+    reg.emplaceComponent<Size>(entity, visual.scaleX, visual.scaleY);
+    reg.emplaceComponent<BossVisualComponent>(entity, visual);
 
-    BossSerpentBodyVisual bodyVisual;
-    bodyVisual.partType = serpentPartType;
-    bodyVisual.segmentIndex = static_cast<int>(entity.id % 10);
-    reg.emplaceComponent<BossSerpentBodyVisual>(entity, bodyVisual);
-
-    float hitboxWidth = BossSerpentVisual::FRAME_WIDTH * scale;
-    float hitboxHeight = BossSerpentVisual::FRAME_HEIGHT * scale;
+    // Use hitbox from config if available, otherwise calculate from sprite
+    float hitboxW = configHitboxW;
+    float hitboxH = configHitboxH;
+    if (hitboxW <= 0.0F || hitboxH <= 0.0F) {
+        hitboxW = visual.frameWidth * std::abs(visual.scaleX);
+        hitboxH = visual.frameHeight * std::abs(visual.scaleY);
+    }
 
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
-        entity, hitboxWidth, hitboxHeight);
+        entity, hitboxW, hitboxH);
     reg.emplaceComponent<BoxingComponent>(
-        entity, ::rtype::display::Vector2f{0.0f, 0.0f},
-        ::rtype::display::Vector2f{hitboxWidth, hitboxHeight});
+        entity, ::rtype::display::Vector2f{0.0F, 0.0F},
+        ::rtype::display::Vector2f{hitboxW, hitboxH});
     reg.getComponent<BoxingComponent>(entity).outlineColor =
         ::rtype::display::Color{200, 150, 100, 200};
     reg.getComponent<BoxingComponent>(entity).fillColor =
         ::rtype::display::Color{200, 150, 100, 40};
 
-    reg.emplaceComponent<shared::HealthComponent>(entity, 400, 400);
+    reg.emplaceComponent<shared::HealthComponent>(entity, configHealth, configHealth);
     reg.emplaceComponent<ZIndex>(entity, 4);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<shared::WeakPointTag>(entity);
 
-    reg.emplaceComponent<Rotation>(entity, 0.0f);
+    if (visual.enableRotation) {
+        reg.emplaceComponent<Rotation>(entity, 0.0F);
+    }
 
     LOG_INFO_CAT(::rtype::LogCategory::ECS,
-                 "[RtypeEntityFactory] Boss segment created (type="
-                     << static_cast<int>(partType) << ")");
+                 "[RtypeEntityFactory] Boss segment created (segmentIndex="
+                     << decodedSegmentIndex << " hitbox=" << hitboxW << "x" << hitboxH << ")");
 }
 
 }  // namespace rtype::games::rtype::client

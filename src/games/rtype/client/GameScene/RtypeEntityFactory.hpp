@@ -124,17 +124,9 @@ class RtypeEntityFactory {
                                 std::shared_ptr<AssetManager> assetsManager,
                                 ECS::Entity entity, uint8_t bossType);
 
-    /**
-     * @brief Create a Boss Part (weak point) entity with visual components
-     *
-     * @param registry ECS registry
-     * @param assetsManager Asset manager
-     * @param entity Entity to configure
-     * @param partType Type of weak point (head, tail, etc.)
-     */
     static void setupBossPartEntity(ECS::Registry& registry,
                                     std::shared_ptr<AssetManager> assetsManager,
-                                    ECS::Entity entity, uint8_t partType);
+                                    ECS::Entity entity, uint8_t segmentIndex);
 };
 
 }  // namespace rtype::games::rtype::client
