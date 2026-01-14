@@ -936,7 +936,6 @@ std::size_t ServerApp::countAlivePlayers() {
     });
 
     if (aliveCount == 0) {
-        // If we found NO alive players, we should explain why
         LOG_INFO_CAT(
             ::rtype::LogCategory::GameEngine,
             "[ServerApp] countAlivePlayers returned 0. Detailed scan:");
@@ -960,7 +959,6 @@ std::size_t ServerApp::countAlivePlayers() {
         if (totalPlayers == 0) {
             LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                          "  - NO PlayerTag entities found in registry!");
-            // Debug: check manually if any entity has PlayerTag
             _registry->view<games::rtype::shared::PlayerTag>().each(
                 [](auto entity, auto&) {
                     LOG_INFO_CAT(
