@@ -551,7 +551,13 @@ void SDL2Display::drawRenderTexture(const std::string& textureName, const std::s
 }
 
 bool SDL2Display::isJoystickConnected(unsigned int joystickId) const {
-    return SDL_JoystickGetAttached(SDL_JoystickOpen(joystickId)) == SDL_TRUE;
+    SDL_Joystick* joystick = SDL_JoystickOpen(static_cast<int>(joystickId));
+    if (!joystick) {
+        return false;
+    }
+    SDL_bool attached = SDL_JoystickGetAttached(joystick);
+    SDL_JoystickClose(joystick);
+    return attached == SDL_TRUE;
 }
 
 unsigned int SDL2Display::getJoystickCount() const {
