@@ -50,8 +50,7 @@ bool LaserBeamSystem::hasActiveLaser(ECS::Registry& registry,
     auto view = registry.view<LaserBeamTag, LaserBeamComponent>();
     bool found = false;
 
-    view.each([&found, playerNetworkId](ECS::Entity,
-                                        const LaserBeamTag&,
+    view.each([&found, playerNetworkId](ECS::Entity, const LaserBeamTag&,
                                         const LaserBeamComponent& beam) {
         if (beam.ownerNetworkId == playerNetworkId && beam.isActive()) {
             found = true;
@@ -191,8 +190,7 @@ void LaserBeamSystem::updateBeamPositions(ECS::Registry& registry) {
     auto beamView =
         registry.view<LaserBeamTag, LaserBeamComponent, TransformComponent>();
 
-    beamView.each([this, &registry](ECS::Entity,
-                                    const LaserBeamTag&,
+    beamView.each([this, &registry](ECS::Entity, const LaserBeamTag&,
                                     const LaserBeamComponent& beam,
                                     TransformComponent& beamPos) {
         if (!beam.isActive()) {
@@ -224,7 +222,6 @@ void LaserBeamSystem::rebuildPlayerCache(ECS::Registry& registry) {
         _playerCache[netId.networkId] = entity;
     });
 }
-
 
 void LaserBeamSystem::startFiringBeam(LaserBeamComponent& beam) {
     if (beam.canFire()) {
@@ -267,7 +264,7 @@ bool LaserBeamSystem::updateBeamState(LaserBeamComponent& beam,
 }
 
 void LaserBeamSystem::emitBeamSpawn(uint32_t beamNetworkId, float x, float y,
-                                    uint32_t ) {
+                                    uint32_t) {
     if (!_emitEvent) {
         return;
     }
