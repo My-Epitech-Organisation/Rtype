@@ -260,18 +260,50 @@ copy_display_lib() {
 
     if [ "$DISPLAY_LIB" = "sdl2" ]; then
         if [ -f "$SDL2_DISPLAY" ]; then
+            mkdir -p "$PROJECT_ROOT/plugins"
             cp "$SDL2_DISPLAY" "$PROJECT_ROOT/display.so"
+            cp "$SDL2_DISPLAY" "$PROJECT_ROOT/plugins/display.so"
             echo "  ✓ Copied SDL2 display library as display.so"
         else
             echo "  ⚠ Warning: SDL2 display library not found"
         fi
     else
         if [ -f "$SFML_DISPLAY" ]; then
+            mkdir -p "$PROJECT_ROOT/plugins"
             cp "$SFML_DISPLAY" "$PROJECT_ROOT/display.so"
+            cp "$SFML_DISPLAY" "$PROJECT_ROOT/plugins/display.so"
             echo "  ✓ Copied SFML display library as display.so"
         else
             echo "  ⚠ Warning: SFML display library not found"
         fi
+    fi
+}
+
+copy_background_lib() {
+    BACKGROUND_LIB="$BUILD_DIR/lib/background/**/*.so"
+    filesBackgroundPlugins=($BACKGROUND_LIB)
+
+
+    if [ ${#filesBackgroundPlugins[@]} -gt 0 ]; then
+        mkdir -p "$PROJECT_ROOT/plugins/background"
+        cp "${filesBackgroundPlugins[@]}" "$PROJECT_ROOT/plugins/background/"
+        echo "  ✓ Copied ${#filesBackgroundPlugins[@]} background plugin(s)"
+    else
+        echo "  ⚠ Warning: No background libs found at $BACKGROUND_SO"
+    fi
+}
+
+copy_audio_lib() {
+    AUDIO_LIB="$BUILD_DIR/lib/audio/**/*.so"
+    filesAudioPlugins=($AUDIO_LIB)
+
+
+    if [ ${#filesAudioPlugins[@]} -gt 0 ]; then
+        mkdir -p "$PROJECT_ROOT/plugins/music"
+        cp "${filesAudioPlugins[@]}" "$PROJECT_ROOT/plugins/music/"
+        echo "  ✓ Copied ${#filesAudioPlugins[@]} music plugin(s)"
+    else
+        echo "  ⚠ Warning: No music libs found at $AUDIO_LIB"
     fi
 }
 
@@ -314,6 +346,8 @@ else
 
     # Copy the selected display library
     copy_display_lib
+    copy_background_lib
+    copy_audio_lib
 fi
 
 echo ""
