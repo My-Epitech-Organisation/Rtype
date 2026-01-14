@@ -244,12 +244,11 @@ void BossAttackSystem::executeLaserSweep(ECS::Registry& registry,
 
     patterns.telegraphAngle = currentAngle;
 
-    static float lastFireTime = 0.0F;
-    lastFireTime += deltaTime;
+    patterns.lastFireTime += deltaTime;
     constexpr float fireInterval = 0.1F;
 
-    if (lastFireTime >= fireInterval) {
-        lastFireTime = 0.0F;
+    if (patterns.lastFireTime >= fireInterval) {
+        patterns.lastFireTime = 0.0F;
 
         float vx = std::cos(currentAngle) * config.projectileSpeed;
         float vy = std::sin(currentAngle) * config.projectileSpeed;
