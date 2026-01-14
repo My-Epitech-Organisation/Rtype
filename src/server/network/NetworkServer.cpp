@@ -213,12 +213,13 @@ void NetworkServer::updateGameState(GameState state) {
     broadcastToAll(network::OpCode::S_UPDATE_STATE, serialized);
 }
 
-void NetworkServer::sendGameOver(std::uint32_t finalScore) {
-    LOG_INFO_CAT(
-        ::rtype::LogCategory::Network,
-        "[NetworkServer] Sending GameOver packet with score=" << finalScore);
+void NetworkServer::sendGameOver(std::uint32_t finalScore, bool isVictory) {
+    LOG_INFO_CAT(::rtype::LogCategory::Network,
+                 "[NetworkServer] Sending GameOver packet with score="
+                     << finalScore << " isVictory=" << isVictory);
     network::GameOverPayload payload;
     payload.finalScore = finalScore;
+    payload.isVictory = isVictory ? 1 : 0;
 
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
@@ -410,7 +411,7 @@ void NetworkServer::onClientDisconnected(
 }
 
 void NetworkServer::onClientInput(
-    std::function<void(std::uint32_t userId, std::uint8_t input)> callback) {
+    std::function<void(std::uint32_t userId, std::uint16_t input)> callback) {
     onClientInputCallback_ = std::move(callback);
 }
 
@@ -849,7 +850,7 @@ void NetworkServer::handleInput(const network::Header& header,
                 payload);
 
         std::uint32_t userId = header.userId;
-        std::uint8_t inputMask = deserialized.inputMask;
+        std::uint16_t inputMask = deserialized.inputMask;
 
         auto client = findClientByUserId(userId);
         if (!client) {

@@ -284,8 +284,10 @@ class NetworkServer {
      * Sent reliably to all clients so they can display the end-game screen.
      *
      * @param finalScore Final aggregated score for the session
+     * @param isVictory True if player won (completed all levels), false if
+     * defeated
      */
-    void sendGameOver(std::uint32_t finalScore);
+    void sendGameOver(std::uint32_t finalScore, bool isVictory = false);
 
     /**
      * @brief Broadcast game start with countdown
@@ -406,7 +408,8 @@ class NetworkServer {
      * @param callback Function receiving (userId, inputMask)
      */
     void onClientInput(
-        std::function<void(std::uint32_t userId, std::uint8_t input)> callback);
+        std::function<void(std::uint32_t userId, std::uint16_t input)>
+            callback);
 
     /**
      * @brief Register callback for get users request
@@ -644,7 +647,7 @@ class NetworkServer {
     std::function<void(std::uint32_t)> onClientConnectedCallback_;
     std::function<void(std::uint32_t, network::DisconnectReason)>
         onClientDisconnectedCallback_;
-    std::function<void(std::uint32_t, std::uint8_t)> onClientInputCallback_;
+    std::function<void(std::uint32_t, std::uint16_t)> onClientInputCallback_;
     std::function<void(std::uint32_t)> onGetUsersRequestCallback_;
     std::function<void(std::uint32_t, bool)> onClientReadyCallback_;
     std::function<void(std::uint32_t, const std::string&)>

@@ -52,7 +52,8 @@ RtypeGameScene::RtypeGameScene(
                  std::move(setBackground), std::move(setLevelMusic),
                  std::move(networkClient), std::move(networkSystem)),
       _movementSystem(
-          std::make_unique<::rtype::games::rtype::shared::MovementSystem>()) {
+          std::make_unique<::rtype::games::rtype::shared::MovementSystem>()),
+      _laserBeamAnimationSystem(std::make_unique<LaserBeamAnimationSystem>()) {
     if (_networkClient) {
         auto registry = _registry;
         auto switchToScene = _switchToScene;
@@ -65,12 +66,12 @@ RtypeGameScene::RtypeGameScene(
                         registry->setSingleton<
                             ::rtype::games::rtype::client::GameOverState>(
                             ::rtype::games::rtype::client::GameOverState{
-                                event.finalScore});
+                                event.finalScore, event.isVictory});
                     } else {
-                        registry
-                            ->getSingleton<
-                                ::rtype::games::rtype::client::GameOverState>()
-                            .finalScore = event.finalScore;
+                        auto& state = registry->getSingleton<
+                            ::rtype::games::rtype::client::GameOverState>();
+                        state.finalScore = event.finalScore;
+                        state.isVictory = event.isVictory;
                     }
                 }
                 if (switchToScene) {
@@ -212,6 +213,10 @@ void RtypeGameScene::update() {
         _movementSystem->update(*_registry, dt);
     }
 
+    if (_laserBeamAnimationSystem && _registry) {
+        _laserBeamAnimationSystem->update(*_registry, dt);
+    }
+
     bool isPaused = false;
     if (_registry->hasSingleton<PauseState>()) {
         isPaused = _registry->getSingleton<PauseState>().isPaused;
@@ -221,19 +226,19 @@ void RtypeGameScene::update() {
         return;
     }
 
-    std::uint8_t inputMask = getInputMask();
+    std::uint16_t inputMask = getInputMask();
 
     if (_networkSystem && _networkSystem->isConnected()) {
         bool shouldSend = false;
 
-        constexpr std::uint8_t kMovementMask =
+        constexpr std::uint16_t kMovementMask =
             ::rtype::network::InputMask::kUp |
             ::rtype::network::InputMask::kDown |
             ::rtype::network::InputMask::kLeft |
             ::rtype::network::InputMask::kRight;
 
-        std::uint8_t currentMovement = inputMask & kMovementMask;
-        std::uint8_t lastMovement = _lastInputMask & kMovementMask;
+        std::uint16_t currentMovement = inputMask & kMovementMask;
+        std::uint16_t lastMovement = _lastInputMask & kMovementMask;
 
         if (currentMovement != lastMovement) {
             shouldSend = true;
@@ -264,6 +269,22 @@ void RtypeGameScene::update() {
         if (isChargedShotNow && !wasChargedShotLast) {
             LOG_INFO("[RtypeGameScene] *** SENDING CHARGED SHOT *** mask=0x"
                      << std::hex << static_cast<int>(inputMask));
+            shouldSend = true;
+        }
+
+        bool isWeaponSwitchNow =
+            (inputMask & ::rtype::network::InputMask::kWeaponSwitch) != 0;
+        bool wasWeaponSwitchLast =
+            (_lastInputMask & ::rtype::network::InputMask::kWeaponSwitch) != 0;
+        if (isWeaponSwitchNow != wasWeaponSwitchLast) {
+            shouldSend = true;
+        }
+
+        bool isForcePodNow =
+            (inputMask & ::rtype::network::InputMask::kForcePod) != 0;
+        bool wasForcePodLast =
+            (_lastInputMask & ::rtype::network::InputMask::kForcePod) != 0;
+        if (isForcePodNow != wasForcePodLast) {
             shouldSend = true;
         }
 
@@ -364,8 +385,8 @@ void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
     }
 }
 
-std::uint8_t RtypeGameScene::getInputMask() const {
-    std::uint8_t mask = RtypeInputHandler::getInputMask(_keybinds);
+std::uint16_t RtypeGameScene::getInputMask() const {
+    std::uint16_t mask = RtypeInputHandler::getInputMask(_keybinds);
     if (_registry && _registry->hasSingleton<ChargeShotInputState>()) {
         auto& chargeState = _registry->getSingleton<ChargeShotInputState>();
         if (chargeState.isPressed && !chargeState.shouldFireShot) {
@@ -1197,6 +1218,23 @@ void RtypeGameScene::showLevelAnnounce(const std::string& levelName) {
     _levelAnnounceBgEntity = bg;
     _levelAnnounceTextEntity = txt;
     _levelAnnounceTimer = 3.0f;
+
+    if (!_isFirstLevelAnnounce) {
+        VisualCueFactory::createConfetti(*_registry,
+                                         static_cast<float>(windowSize.x),
+                                         static_cast<float>(windowSize.y), 150);
+
+        LOG_INFO_CAT(::rtype::LogCategory::UI,
+                     "[RtypeGameScene] Level transition confetti triggered "
+                     "(150 particles)");
+    } else {
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::UI,
+            "[RtypeGameScene] First level announce - skipping confetti");
+    }
+
+    _isFirstLevelAnnounce = false;
+
     LOG_INFO_CAT(::rtype::LogCategory::UI,
                  "[RtypeGameScene] Level announce displayed for 3 seconds");
 }

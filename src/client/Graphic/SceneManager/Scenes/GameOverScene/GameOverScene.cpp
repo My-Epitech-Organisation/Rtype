@@ -60,12 +60,14 @@ void GameOverScene::_buildLayout() {
                              backgroundEntities.end());
 
     std::uint32_t finalScore = 0;
+    bool isVictory = false;
     if (this->_registry
             ->hasSingleton<rtype::games::rtype::client::GameOverState>()) {
-        finalScore =
+        const auto& state =
             this->_registry
-                ->getSingleton<rtype::games::rtype::client::GameOverState>()
-                .finalScore;
+                ->getSingleton<rtype::games::rtype::client::GameOverState>();
+        finalScore = state.finalScore;
+        isVictory = state.isVictory;
     }
 
     auto popUpOverlay = EntityFactory::createRectangle(
@@ -80,14 +82,82 @@ void GameOverScene::_buildLayout() {
         rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
     this->_listEntity.push_back(popUpOverlay);
 
+    if (!isVictory) {
+        auto bloodTop = EntityFactory::createRectangle(
+            this->_registry,
+            rtype::display::Vector2<int>{
+                rtype::games::rtype::client::GraphicsConfig::WINDOW_WIDTH, 80},
+            rtype::display::Color(139, 0, 0, 180),
+            rtype::display::Vector2<float>{0.f, 0.f});
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            bloodTop,
+            rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
+        this->_listEntity.push_back(bloodTop);
+
+        auto bloodBottom = EntityFactory::createRectangle(
+            this->_registry,
+            rtype::display::Vector2<int>{
+                rtype::games::rtype::client::GraphicsConfig::WINDOW_WIDTH, 100},
+            rtype::display::Color(139, 0, 0, 200),
+            rtype::display::Vector2<float>{
+                0.f,
+                static_cast<float>(
+                    rtype::games::rtype::client::GraphicsConfig::WINDOW_HEIGHT -
+                    100)});
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            bloodBottom,
+            rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
+        this->_listEntity.push_back(bloodBottom);
+
+        auto bloodLeft = EntityFactory::createRectangle(
+            this->_registry,
+            rtype::display::Vector2<int>{
+                60, rtype::games::rtype::client::GraphicsConfig::WINDOW_HEIGHT},
+            rtype::display::Color(139, 0, 0, 150),
+            rtype::display::Vector2<float>{0.f, 0.f});
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            bloodLeft,
+            rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
+        this->_listEntity.push_back(bloodLeft);
+
+        auto bloodRight = EntityFactory::createRectangle(
+            this->_registry,
+            rtype::display::Vector2<int>{
+                60, rtype::games::rtype::client::GraphicsConfig::WINDOW_HEIGHT},
+            rtype::display::Color(139, 0, 0, 150),
+            rtype::display::Vector2<float>{
+                static_cast<float>(
+                    rtype::games::rtype::client::GraphicsConfig::WINDOW_WIDTH -
+                    60),
+                0.f});
+        this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
+            bloodRight,
+            rtype::games::rtype::client::GraphicsConfig::ZINDEX_UI - 1);
+        this->_listEntity.push_back(bloodRight);
+    }
+
     const float centerX = static_cast<float>(Graphic::WINDOW_WIDTH) / 2.0f;
 
+    std::string titleText = isVictory ? "YOU WIN" : "YOU DIED";
     auto title = EntityFactory::createStaticText(
-        this->_registry, _assetsManager, "GAME OVER", "title_font",
+        this->_registry, _assetsManager, titleText, "title_font",
         rtype::display::Vector2<float>{
             centerX,
             rtype::games::rtype::client::GraphicsConfig::GAME_OVER_TITLE_Y},
         96.f);
+
+    if (this->_registry->hasComponent<rtype::games::rtype::client::Text>(
+            title)) {
+        auto& textComp =
+            this->_registry->getComponent<rtype::games::rtype::client::Text>(
+                title);
+        if (isVictory) {
+            textComp.color = rtype::display::Color::Green();
+        } else {
+            textComp.color = rtype::display::Color::Red();
+        }
+    }
+
     this->_registry
         ->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(title);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(

@@ -35,8 +35,9 @@ enum class EntityType : std::uint8_t {
     Pickup = 3,    ///< Collectible / power-up
     Obstacle = 4,  ///< Static or moving obstacle
     ForcePod = 5,  ///< Force Pod companion
-    Boss = 6,      ///< Boss entity
-    BossPart = 7   ///< Boss weak point / body part
+    LaserBeam = 7,   ///< Continuous laser beam weapon
+    Boss = 8,      ///< Boss entity
+    BossPart = 9   ///< Boss weak point / body part
 };
 
 /**
@@ -46,18 +47,19 @@ enum class EntityType : std::uint8_t {
  * Bits 6-7 encode charge level for charged shots.
  */
 namespace InputMask {
-inline constexpr std::uint8_t kNone = 0x00;
-inline constexpr std::uint8_t kUp = 0x01;
-inline constexpr std::uint8_t kDown = 0x02;
-inline constexpr std::uint8_t kLeft = 0x04;
-inline constexpr std::uint8_t kRight = 0x08;
-inline constexpr std::uint8_t kShoot = 0x10;
-inline constexpr std::uint8_t kForcePod = 0x20;
-inline constexpr std::uint8_t kChargeShot = 0x40;
-inline constexpr std::uint8_t kChargeLevelMask = 0xC0;
-inline constexpr std::uint8_t kChargeLevel1 = 0x40;
-inline constexpr std::uint8_t kChargeLevel2 = 0x80;
-inline constexpr std::uint8_t kChargeLevel3 = 0xC0;
+inline constexpr std::uint16_t kNone = 0x00;
+inline constexpr std::uint16_t kUp = 0x01;
+inline constexpr std::uint16_t kDown = 0x02;
+inline constexpr std::uint16_t kLeft = 0x04;
+inline constexpr std::uint16_t kRight = 0x08;
+inline constexpr std::uint16_t kShoot = 0x10;
+inline constexpr std::uint16_t kForcePod = 0x20;
+inline constexpr std::uint16_t kChargeShot = 0x40;
+inline constexpr std::uint16_t kChargeLevelMask = 0xC0;
+inline constexpr std::uint16_t kChargeLevel1 = 0x40;
+inline constexpr std::uint16_t kChargeLevel2 = 0x80;
+inline constexpr std::uint16_t kChargeLevel3 = 0xC0;
+inline constexpr std::uint16_t kWeaponSwitch = 0x100;
 }  // namespace InputMask
 
 #pragma pack(push, 1)
@@ -129,6 +131,8 @@ struct UpdateStatePayload {
  */
 struct GameOverPayload {
     std::uint32_t finalScore{0};
+    std::uint8_t isVictory{0};  ///< 1 if player won (completed all levels), 0 if defeated
+    std::uint8_t padding[3]{0, 0, 0};  ///< Padding for alignment
 };
 
 /**
@@ -305,7 +309,7 @@ struct LevelAnnouncePayload {
  * Client sends current input state to server.
  */
 struct InputPayload {
-    std::uint8_t inputMask;
+    std::uint16_t inputMask;
 
     [[nodiscard]] constexpr bool isUp() const noexcept {
         return (inputMask & InputMask::kUp) != 0;
@@ -329,7 +333,7 @@ struct InputPayload {
      * @brief Get charge level (0 = none, 1-3 = charge levels)
      */
     [[nodiscard]] constexpr std::uint8_t getChargeLevel() const noexcept {
-        std::uint8_t bits = inputMask & InputMask::kChargeLevelMask;
+        std::uint16_t bits = inputMask & InputMask::kChargeLevelMask;
         if (bits == InputMask::kChargeLevel3) return 3;
         if (bits == InputMask::kChargeLevel2) return 2;
         if (bits == InputMask::kChargeLevel1) return 1;
@@ -476,8 +480,8 @@ static_assert(sizeof(GetUsersResponseHeader) == 1,
               "GetUsersResponseHeader must be 1 byte");
 static_assert(sizeof(UpdateStatePayload) == 1,
               "UpdateStatePayload must be 1 byte");
-static_assert(sizeof(GameOverPayload) == 4,
-              "GameOverPayload must be 4 bytes (uint32_t)");
+static_assert(sizeof(GameOverPayload) == 8,
+              "GameOverPayload must be 8 bytes (uint32_t + uint8_t + padding)");
 static_assert(sizeof(EntitySpawnPayload) == 14,
               "EntitySpawnPayload must be 14 bytes (4+1+1+4+4)");
 static_assert(sizeof(EntityMovePayload) == 16,
@@ -492,7 +496,7 @@ static_assert(sizeof(EntityHealthPayload) == 12,
               "EntityHealthPayload must be 12 bytes (4+4+4)");
 static_assert(sizeof(PowerUpEventPayload) == 9,
               "PowerUpEventPayload must be 9 bytes (4+1+4)");
-static_assert(sizeof(InputPayload) == 1, "InputPayload must be 1 byte");
+static_assert(sizeof(InputPayload) == 2, "InputPayload must be 2 bytes");
 static_assert(sizeof(UpdatePosPayload) == 8,
               "UpdatePosPayload must be 8 bytes (4+4)");
 static_assert(sizeof(GameStartPayload) == 4,

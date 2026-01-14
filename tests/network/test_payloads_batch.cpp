@@ -209,7 +209,7 @@ TEST(EntityDestroyPayloadTest, Serialization) {
 // =============================================================================
 
 TEST(InputPayloadTest, Size) {
-    EXPECT_EQ(sizeof(InputPayload), 1u);
+    EXPECT_EQ(sizeof(InputPayload), 2u);
 }
 
 TEST(InputPayloadTest, InputMask) {
@@ -221,9 +221,9 @@ TEST(InputPayloadTest, InputMask) {
 
 TEST(InputPayloadTest, AllBitsSet) {
     InputPayload payload{};
-    payload.inputMask = 0xFF;
+    payload.inputMask = 0xFFFF;
 
-    EXPECT_EQ(payload.inputMask, 0xFF);
+    EXPECT_EQ(payload.inputMask, 0xFFFF);
 }
 
 // =============================================================================
@@ -379,7 +379,7 @@ TEST(UpdateStatePayloadTest, AllStates) {
 }
 
 TEST(GameOverPayloadTest, Size) {
-    EXPECT_EQ(sizeof(GameOverPayload), 4u);
+    EXPECT_EQ(sizeof(GameOverPayload), 8u);
 }
 
 TEST(GameOverPayloadTest, SetScore) {

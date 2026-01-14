@@ -45,7 +45,8 @@ class RtypeInputHandler {
      * @param keybinds Keyboard bindings
      * @return Input mask representing current inputs
      */
-    static std::uint8_t getInputMask(std::shared_ptr<KeyboardActions> keybinds);
+    static std::uint16_t getInputMask(
+        std::shared_ptr<KeyboardActions> keybinds);
 
     /**
      * @brief Handle key released events

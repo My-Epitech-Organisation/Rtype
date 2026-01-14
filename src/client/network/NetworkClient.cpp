@@ -265,7 +265,7 @@ std::uint32_t NetworkClient::latencyMs() const noexcept {
     return connection_.latencyMs();
 }
 
-bool NetworkClient::sendInput(std::uint8_t inputMask) {
+bool NetworkClient::sendInput(std::uint16_t inputMask) {
     if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
         return false;
     }
@@ -1190,7 +1190,8 @@ void NetworkClient::handleGameOver(const network::Header& header,
         auto deserialized = network::Serializer::deserializeFromNetwork<
             network::GameOverPayload>(payload);
 
-        GameOverEvent event{deserialized.finalScore};
+        GameOverEvent event{deserialized.finalScore,
+                            deserialized.isVictory != 0};
 
         queueCallback([this, event]() {
             if (onGameOverCallback_) {

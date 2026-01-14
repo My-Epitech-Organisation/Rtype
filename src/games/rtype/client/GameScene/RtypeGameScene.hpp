@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "../Systems/LaserBeamAnimationSystem.hpp"
 #include "../lib/display/Clock/Clock.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Graphic/SceneManager/Scenes/GameScene/AGameScene.hpp"
@@ -83,7 +84,7 @@ class RtypeGameScene : public AGameScene {
      * @brief Get current input mask for R-Type controls
      * @return Input mask
      */
-    [[nodiscard]] std::uint8_t getInputMask() const override;
+    [[nodiscard]] std::uint16_t getInputMask() const override;
 
     /**
      * @brief Set up the entity factory for R-Type entities
@@ -181,9 +182,11 @@ class RtypeGameScene : public AGameScene {
     std::optional<ECS::Entity> _levelAnnounceTextEntity;
     std::optional<ECS::Entity> _levelAnnounceBgEntity;
     float _levelAnnounceTimer = 0.0f;
+    bool _isFirstLevelAnnounce = true;
 
     std::unique_ptr<::rtype::games::rtype::shared::MovementSystem>
         _movementSystem;
+    std::unique_ptr<LaserBeamAnimationSystem> _laserBeamAnimationSystem;
 
     bool _lowBandwidthMode{false};
     std::uint8_t _lowBandwidthActiveCount{0};

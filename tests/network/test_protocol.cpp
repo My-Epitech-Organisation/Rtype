@@ -233,7 +233,7 @@ TEST_F(PayloadTest, PayloadSizesMatchRFC) {
     EXPECT_EQ(sizeof(EntitySpawnPayload), 14u);
     EXPECT_EQ(sizeof(EntityMovePayload), 16u);
     EXPECT_EQ(sizeof(EntityDestroyPayload), 4u);
-    EXPECT_EQ(sizeof(InputPayload), 1u);
+    EXPECT_EQ(sizeof(InputPayload), 2u);
     EXPECT_EQ(sizeof(UpdatePosPayload), 8u);
 }
 
@@ -293,7 +293,7 @@ TEST_F(PayloadTest, UpdateStatePayloadState) {
 
 TEST_F(PayloadTest, GameOverPayloadStructure) {
     GameOverPayload gameOver;
-    EXPECT_EQ(sizeof(GameOverPayload), sizeof(std::uint32_t));
+    EXPECT_EQ(sizeof(GameOverPayload), 8u);
 
     gameOver.finalScore = 12345;
     EXPECT_EQ(gameOver.finalScore, 12345u);

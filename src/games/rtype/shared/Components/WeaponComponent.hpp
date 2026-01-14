@@ -156,6 +156,27 @@ inline constexpr WeaponConfig HeavyBullet{
     0.0F     // spreadAngle
 };
 
+/**
+ * @brief Continuous laser beam - hold to fire, DPS damage
+ *
+ * Special weapon that creates a continuous beam while fire is held.
+ * Deals damage per second to all enemies it touches.
+ * Has max duration (3s) and cooldown after release (2s).
+ */
+inline constexpr WeaponConfig ContinuousLaser{
+    ProjectileType::ContinuousLaser,
+    50,      // damage (DPS - damage per second)
+    0.0F,    // speed (unused - beam doesn't move)
+    2.0F,    // cooldown (after release)
+    3.0F,    // lifetime (max duration)
+    800.0F,  // hitbox width (beam length)
+    16.0F,   // hitbox height (beam width)
+    true,    // piercing (hits all enemies in path)
+    999,     // maxHits (unlimited)
+    1,       // projectileCount
+    0.0F     // spreadAngle
+};
+
 }  // namespace WeaponPresets
 
 /**

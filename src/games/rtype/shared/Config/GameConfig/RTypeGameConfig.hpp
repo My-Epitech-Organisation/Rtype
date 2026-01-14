@@ -148,6 +148,8 @@ struct TexturesConfig {
     std::string rapidFire;
     std::string damageBoost;
     std::string extraLife;
+    std::string laserUpgrade;
+    std::string laserBeam;
 
     bool operator==(const TexturesConfig&) const = default;
 };
@@ -213,6 +215,21 @@ struct ServerConfig {
 };
 
 /**
+ * @brief Laser weapon configuration
+ */
+struct LaserConfig {
+    float damagePerSecond = 50.0F;  ///< DPS damage
+    float startupDelay = 0.56F;     ///< Delay before damage activates (seconds)
+    float maxDuration = 3.0F;       ///< Maximum fire duration (seconds)
+    float cooldownDuration = 2.0F;  ///< Cooldown after release (seconds)
+    float hitboxWidth = 614.0F;     ///< Beam hitbox width (pixels)
+    float hitboxHeight = 50.0F;     ///< Beam hitbox height (pixels)
+    float offsetX = 340.0F;         ///< Offset from player position (pixels)
+
+    bool operator==(const LaserConfig&) const = default;
+};
+
+/**
  * @brief Gameplay configuration section
  */
 struct GameplayConfig {
@@ -222,6 +239,8 @@ struct GameplayConfig {
     float playerSpeed = 260.0F;
     float enemySpeedMultiplier = 1.0F;
     bool friendlyFire = false;
+
+    LaserConfig laser;  ///< Laser weapon settings
 
     bool operator==(const GameplayConfig&) const = default;
 };

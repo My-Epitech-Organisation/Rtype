@@ -23,7 +23,9 @@ enum class EntityType : uint8_t {
     Enemy,        // Enemy entity
     Projectile,   // Projectile (bullet, missile, etc.)
     Pickup,       // Collectible item (power-up, etc.)
-    Obstacle      // Static or moving obstacle
+    Obstacle,     // Static or moving obstacle
+    LaserBeam,    // Continuous laser beam weapon
+    ForcePod      // Force Pod companion entity
 };
 
 }  // namespace rtype::games::rtype::shared

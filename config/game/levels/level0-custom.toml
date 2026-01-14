@@ -1,0 +1,25 @@
+# =============================================================================
+# R-Type Level Configuration
+# =============================================================================
+
+[level]
+id = "level0-custom"
+name = "Core Breach"
+background = "MeteorInside"
+level_music = "BattleMusic"
+scroll_speed = 50.0
+boss = "boss_1"
+next_level = "level1-custom.toml"
+
+# -----------------------------------------------------------------------------
+# Wave 1
+# -----------------------------------------------------------------------------
+[[wave]]
+number = 1
+spawn_delay = 1
+
+[[wave.spawn]]
+enemy = "basic"
+delay = 0
+count = 1
+

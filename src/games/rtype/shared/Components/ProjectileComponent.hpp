@@ -16,14 +16,15 @@ namespace rtype::games::rtype::shared {
  * @brief Different types of projectiles with unique behaviors
  */
 enum class ProjectileType : uint8_t {
-    BasicBullet = 0,   ///< Standard player shot
-    ChargedShot = 1,   ///< Charged powerful shot
-    Missile = 2,       ///< Homing missile
-    LaserBeam = 3,     ///< Piercing laser
-    SpreadShot = 4,    ///< Multiple projectiles
-    EnemyBullet = 50,  ///< Standard enemy shot
-    HeavyBullet = 51,  ///< Heavy damage shot
-    BossBullet = 52,   ///< Boss projectiles
+    BasicBullet = 0,      ///< Standard player shot
+    ChargedShot = 1,      ///< Charged powerful shot
+    Missile = 2,          ///< Homing missile
+    LaserBeam = 3,        ///< Piercing laser (fast projectile)
+    SpreadShot = 4,       ///< Multiple projectiles
+    ContinuousLaser = 5,  ///< Continuous beam weapon (hold to fire)
+    EnemyBullet = 50,     ///< Standard enemy shot
+    HeavyBullet = 51,     ///< Heavy damage shot
+    BossBullet = 52,      ///< Boss projectiles
 };
 
 /**

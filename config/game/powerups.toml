@@ -121,3 +121,16 @@ color = [255, 255, 255, 255]
 
 hitbox_width = 32.0
 hitbox_height = 32.0
+
+[[powerup]]
+id = "laser_upgrade"
+name = "Laser Upgrade"
+sprite_sheet = "assets/img/laser_upgrade.png"
+
+effect = "weapon_upgrade"
+value = 7  # LaserUpgrade type
+duration = 0.0  # Permanent unlock
+color = [0, 255, 255, 255]  # Cyan
+
+hitbox_width = 32.0
+hitbox_height = 32.0

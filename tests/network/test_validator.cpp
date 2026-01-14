@@ -45,7 +45,7 @@ TEST(ValidatorPacketSize, Checks) {
 }
 
 TEST(ValidatorPayloadSize, FixedAndVariable) {
-    // fixed-size: C_INPUT expects InputPayload (1 byte)
+    // fixed-size: C_INPUT expects InputPayload (2 bytes)
     auto res = Validator::validatePayloadSize(OpCode::C_INPUT, sizeof(InputPayload));
     EXPECT_TRUE(res.isOk());
     res = Validator::validatePayloadSize(OpCode::C_INPUT, 0);
@@ -102,7 +102,9 @@ TEST(ValidatorValidatePacket, Pipeline) {
     auto headerBytes = ByteOrderSpec::serializeToNetwork(h);
 
     std::vector<std::uint8_t> raw(headerBytes.begin(), headerBytes.end());
-    raw.push_back(InputMask::kShoot);
+    // InputPayload is 2 bytes (uint16_t)
+    raw.push_back(InputMask::kShoot);  // low byte
+    raw.push_back(0x00);  // high byte
 
     auto result = Validator::validatePacket(std::span<const std::uint8_t>(raw), false);
     EXPECT_TRUE(result.isOk());

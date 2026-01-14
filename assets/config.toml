@@ -8,7 +8,7 @@ GameOver = "audio/gongGameOver.mp3"
 [SFX]
 HoverButton = "audio/hoverButton.mp3"
 ClickButton = "audio/clickButton.mp3"
-Laser = "audio/laserSound.mp3"
+Laser = "audio/laserSfx.mp3"
 PlayerDeath = "audio/playerDeath.mp3"
 PlayerSpawn = "audio/playerSpawn.mp3"
 EnemyDeath = "audio/enemyDeath.mp3"
@@ -47,6 +47,8 @@ Shield = "img/shield.png"
 RapidFire = "img/rapid_fire.png"
 DamageBoost = "img/damage_boost.png"
 ExtraLife = "img/extra_life.png"
+LaserUpgrade = "img/laser_upgrade.png"
+LaserBeam = "img/laser_beam.png"
 
 # Background assets
 Background = "img/bgMainMenu.png"
@@ -78,3 +80,22 @@ TubeMetal = "img/tubeMetal.png"
 [Fonts]
 MainFont = "fonts/Orbitron-VariableFont_wght.ttf"
 TitleFont = "fonts/Audiowide-Regular.ttf"
+
+# Gameplay configuration
+[Gameplay]
+Difficulty = "normal"
+StartingLives = 3
+Waves = 10
+PlayerSpeed = 260.0
+EnemySpeedMultiplier = 1.0
+FriendlyFire = false
+
+# Laser weapon configuration
+[Gameplay.Laser]
+DamagePerSecond = 50.0
+StartupDelay = 0.56
+MaxDuration = 3.0
+CooldownDuration = 2.0
+HitboxWidth = 614.0
+HitboxHeight = 50.0
+OffsetX = 340.0

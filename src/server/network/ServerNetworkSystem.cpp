@@ -475,9 +475,10 @@ void ServerNetworkSystem::broadcastGameState(NetworkServer::GameState state) {
     }
 }
 
-void ServerNetworkSystem::broadcastGameOver(std::uint32_t finalScore) {
+void ServerNetworkSystem::broadcastGameOver(std::uint32_t finalScore,
+                                            bool isVictory) {
     if (server_) {
-        server_->sendGameOver(finalScore);
+        server_->sendGameOver(finalScore, isVictory);
     }
 }
 

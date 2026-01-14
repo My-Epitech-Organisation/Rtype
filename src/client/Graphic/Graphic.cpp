@@ -529,6 +529,10 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.damageBoost);
     manager->textureManager->load("extra_life",
                                   config.assets.textures.extraLife);
+    manager->textureManager->load("laser_upgrade",
+                                  config.assets.textures.laserUpgrade);
+    manager->textureManager->load("laser_beam",
+                                  config.assets.textures.laserBeam);
 
     manager->textureManager->load(
         "projectile1", config.assets.textures.wallTexture.engrenage1);
@@ -615,6 +619,7 @@ Graphic::Graphic(
                 "./plugins/display.dll");
     } catch (std::exception& e) {
         LOG_FATAL("Error while loading plugins/display.dll" << e.what());
+        throw;
     }
 #else
     try {
@@ -623,6 +628,7 @@ Graphic::Graphic(
                 "./plugins/display.so");
     } catch (std::exception& e) {
         LOG_FATAL("Error while loading plugins/display.so " << e.what());
+        throw;
     }
 #endif
     try {
@@ -632,6 +638,7 @@ Graphic::Graphic(
                              "R-Type - Epitech 2025", false);
     } catch (std::exception& e) {
         LOG_FATAL("Error while init display lib" << e.what());
+        throw;
     }
 
     this->_keybinds->initialize(*this->_display);

@@ -13,6 +13,7 @@ add_library(rtype_game_server_systems OBJECT
     Boss/BossPhaseSystem.cpp
     Boss/BossAttackSystem.cpp
     Boss/WeakPointSystem.cpp
+    LaserBeam/LaserBeamSystem.cpp
 )
 
 target_include_directories(rtype_game_server_systems PUBLIC
