@@ -179,23 +179,27 @@ void BossPhaseSystem::updateBossMovement(ECS::Registry& registry,
 
         boss.movementTimer += deltaTime;
 
-        float horizontalAmplitude = 250.0F;
-        float verticalAmplitude = boss.amplitude * 1.5F;
-        float freqX = boss.frequency * 0.6F;
-        float freqY = boss.frequency * 1.2F;
+        float horizontalAmplitude = 200.0F;
+        float verticalAmplitude = boss.amplitude * 2.0F;
+        float freqX = boss.frequency * 0.8F;
+        float freqY = boss.frequency * 1.5F;
 
         float targetX = boss.baseX + horizontalAmplitude *
                                          std::sin(freqX * boss.movementTimer);
-        float targetY = boss.baseY + verticalAmplitude *
-                                         std::sin(freqY * boss.movementTimer);
+        float targetY =
+            boss.baseY + verticalAmplitude *
+                             std::sin(freqY * boss.movementTimer) *
+                             std::cos(freqX * boss.movementTimer * 0.5F);
 
-        float minX = 1280.0F * 0.5F;
+        float minX = 1280.0F * 0.55F;
         if (targetX < minX) {
             targetX = minX;
         }
 
-        velocity.vx = (targetX - transform.x) * 3.0F * speedMult;
-        velocity.vy = (targetY - transform.y) * 3.0F * speedMult;
+        velocity.vx = (targetX - transform.x) * 4.0F * speedMult;
+        velocity.vy = (targetY - transform.y) * 4.0F * speedMult;
+
+        boss.recordPosition(transform.x, transform.y);
     });
 }
 
