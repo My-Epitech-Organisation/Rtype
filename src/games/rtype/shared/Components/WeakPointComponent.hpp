@@ -57,6 +57,8 @@ struct WeakPointComponent {
     float localOffsetX = 0.0F;
     float localOffsetY = 0.0F;
     float localRotation = 0.0F;
+
+    int32_t segmentIndex = -1;
     int32_t bonusScore = 500;
     int32_t damageToParent = 0;
     float damageMultiplier = 1.0F;
