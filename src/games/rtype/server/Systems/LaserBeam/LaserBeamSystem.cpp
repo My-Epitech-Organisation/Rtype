@@ -90,14 +90,13 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
                 if (registry.hasComponent<NetworkIdComponent>(existingBeam)) {
                     const auto& netId =
                         registry.getComponent<NetworkIdComponent>(existingBeam);
-                    emitBeamSpawn(netId.networkId, pos.x + _config.offsetX, pos.y,
-                                  playerNetworkId);
+                    emitBeamSpawn(netId.networkId, pos.x + _config.offsetX,
+                                  pos.y, playerNetworkId);
                 }
             }
-            LOG_DEBUG_CAT(
-                ::rtype::LogCategory::GameEngine,
-                "[LaserBeamSystem] Reactivated laser beam for player="
-                    << playerNetworkId);
+            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                          "[LaserBeamSystem] Reactivated laser beam for player="
+                              << playerNetworkId);
         }
         return;
     }
@@ -135,7 +134,7 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
     dmgComp.startupDelay = _config.startupDelay;
     dmgComp.activeTime = 0.0F;
     registry.emplaceComponent<shared::DamageOnContactComponent>(beamEntity,
-                                                                 dmgComp);
+                                                                dmgComp);
 
     // Assign network ID
     uint32_t beamNetworkId = _nextBeamNetworkId++;
@@ -153,13 +152,12 @@ void LaserBeamSystem::startLaser(ECS::Registry& registry,
 
 void LaserBeamSystem::stopLaser(ECS::Registry& registry,
                                 uint32_t playerNetworkId) {
-    auto view = registry.view<LaserBeamTag, LaserBeamComponent,
-                              NetworkIdComponent>();
+    auto view =
+        registry.view<LaserBeamTag, LaserBeamComponent, NetworkIdComponent>();
 
-    view.each([this, playerNetworkId](ECS::Entity /*entity*/,
-                                      const LaserBeamTag&,
-                                      LaserBeamComponent& beam,
-                                      const NetworkIdComponent& netId) {
+    view.each([this, playerNetworkId](
+                  ECS::Entity /*entity*/, const LaserBeamTag&,
+                  LaserBeamComponent& beam, const NetworkIdComponent& netId) {
         if (beam.ownerNetworkId == playerNetworkId && beam.isActive()) {
             beam.stopFiring();
             emitBeamDestroy(netId.networkId);
@@ -173,17 +171,17 @@ void LaserBeamSystem::stopLaser(ECS::Registry& registry,
 
 void LaserBeamSystem::updateActiveBeams(ECS::Registry& registry,
                                         float deltaTime) {
-    auto view = registry.view<LaserBeamTag, LaserBeamComponent,
-                              NetworkIdComponent>();
+    auto view =
+        registry.view<LaserBeamTag, LaserBeamComponent, NetworkIdComponent>();
 
-    view.each([this, &registry, deltaTime](ECS::Entity entity,
-                                           const LaserBeamTag&,
-                                           LaserBeamComponent& beam,
-                                           const NetworkIdComponent& netId) {
+    view.each([this, &registry, deltaTime](
+                  ECS::Entity entity, const LaserBeamTag&,
+                  LaserBeamComponent& beam, const NetworkIdComponent& netId) {
         bool wasActive = beam.isActive();
         bool forceStop = beam.update(deltaTime);
 
-        // Synchronize activeTime with DamageOnContactComponent for startup delay
+        // Synchronize activeTime with DamageOnContactComponent for startup
+        // delay
         if (registry.hasComponent<shared::DamageOnContactComponent>(entity)) {
             auto& dmgComp =
                 registry.getComponent<shared::DamageOnContactComponent>(entity);
@@ -202,8 +200,8 @@ void LaserBeamSystem::updateActiveBeams(ECS::Registry& registry,
 }
 
 void LaserBeamSystem::updateBeamPositions(ECS::Registry& registry) {
-    auto beamView = registry.view<LaserBeamTag, LaserBeamComponent,
-                                  TransformComponent>();
+    auto beamView =
+        registry.view<LaserBeamTag, LaserBeamComponent, TransformComponent>();
 
     beamView.each([this, &registry](ECS::Entity /*beamEntity*/,
                                     const LaserBeamTag&,
