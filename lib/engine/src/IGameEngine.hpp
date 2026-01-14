@@ -32,7 +32,6 @@ enum class GameEventType : uint8_t {
     WeakPointDestroyed,
     LevelComplete,
     ScoreChanged
-    LevelComplete
 };
 
 /**
