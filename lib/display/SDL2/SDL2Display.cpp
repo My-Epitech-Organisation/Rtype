@@ -78,6 +78,8 @@ void SDL2Display::open(unsigned int width, unsigned int height, const std::strin
 
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
+    SDL_StartTextInput();
+
     _isOpen = true;
     _lastFrameTime = SDL_GetTicks();
 }
