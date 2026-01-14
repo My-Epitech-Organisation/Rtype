@@ -183,6 +183,8 @@ void Graphic::_initializeSystems() {
         ::rtype::games::rtype::client::PlayerAnimationSystem>();
     this->_animationSystem =
         std::make_unique<::rtype::games::rtype::client::AnimationSystem>();
+    this->_bossSerpentAnimationSystem = std::make_unique<
+        ::rtype::games::rtype::client::BossSerpentAnimationSystem>();
     this->_chaserRotationSystem =
         std::make_unique<::rtype::games::rtype::client::ChaserRotationSystem>();
     this->_chaserExplosionSystem = std::make_unique<
@@ -258,6 +260,13 @@ void Graphic::_initializeSystems() {
                                               reg, _currentDeltaTime);
                                       },
                                       {"reset_triggers"});
+
+    this->_systemScheduler->addSystem("boss_serpent_animation",
+                                      [this](ECS::Registry& reg) {
+                                          _bossSerpentAnimationSystem->update(
+                                              reg, _currentDeltaTime);
+                                      },
+                                      {"animation"});
 
     this->_systemScheduler->addSystem("chaser_rotation",
                                       [this](ECS::Registry& reg) {
@@ -418,6 +427,8 @@ void Graphic::_initializeCommonAssets() {
                                   config.assets.textures.EnemyPatrol);
     manager->textureManager->load("bdos_enemy_wave",
                                   config.assets.textures.EnemyWave);
+    manager->textureManager->load("boss_serpent",
+                                  config.assets.textures.BossSerpent);
     manager->textureManager->load("projectile_player_laser",
                                   config.assets.textures.missileLaser);
     manager->textureManager->load("charged_shot",
@@ -613,6 +624,7 @@ Graphic::~Graphic() {
     _playerPowerUpVisualSystem.reset();
     _chaserExplosionSystem.reset();
     _chaserRotationSystem.reset();
+    _bossSerpentAnimationSystem.reset();
     _animationSystem.reset();
     _playerAnimationSystem.reset();
     _colorTintSystem.reset();
