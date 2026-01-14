@@ -58,9 +58,8 @@ std::uint8_t RtypeInputHandler::getInputMask(
 
         auto keyShoot = keybinds->getKeyBinding(GameAction::SHOOT);
         auto keyCharge = keybinds->getKeyBinding(GameAction::CHARGE_SHOT);
-        const bool chargeConflictsWithShoot = keyShoot.has_value() &&
-                                              keyCharge.has_value() &&
-                                              *keyShoot == *keyCharge;
+        const bool chargeConflictsWithShoot =
+            bindingsConflict(keyShoot, keyCharge);
 
         if (keyShoot.has_value() && !chargeConflictsWithShoot &&
             pressedKeys_.contains(*keyShoot)) {
@@ -102,9 +101,8 @@ std::uint8_t RtypeInputHandler::getInputMask(
             auto chargeBtn =
                 keybinds->getJoyButtonBinding(GameAction::CHARGE_SHOT);
 
-            const bool chargeConflictsWithShoot = shootBtn.has_value() &&
-                                                  chargeBtn.has_value() &&
-                                                  *shootBtn == *chargeBtn;
+            const bool chargeConflictsWithShoot =
+                bindingsConflict(shootBtn, chargeBtn);
 
             unsigned int shootBtnNum = shootBtn.has_value() ? *shootBtn : 0;
 
