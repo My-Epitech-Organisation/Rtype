@@ -8,8 +8,10 @@
 #pragma once
 
 #include <cstdint>
+#include <deque>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace rtype::games::rtype::shared {
@@ -105,6 +107,59 @@ struct BossComponent {
     float baseY = 0.0F;
     float amplitude = 150.0F;
     float frequency = 0.5F;
+
+    static constexpr std::size_t MAX_POSITION_HISTORY = 300;
+    static constexpr float SEGMENT_SPACING = 50.0F;
+    static constexpr float MIN_RECORD_DISTANCE = 5.0F;
+    std::deque<std::pair<float, float>> positionHistory;
+
+    /**
+     * @brief Record current position in history for serpent movement
+     * Only records if moved at least MIN_RECORD_DISTANCE from last position
+     * @param x Current X position
+     * @param y Current Y position
+     */
+    void recordPosition(float x, float y) {
+        if (!positionHistory.empty()) {
+            float dx = x - positionHistory.front().first;
+            float dy = y - positionHistory.front().second;
+            float distSq = dx * dx + dy * dy;
+            if (distSq < MIN_RECORD_DISTANCE * MIN_RECORD_DISTANCE) {
+                return;
+            }
+        }
+        positionHistory.push_front({x, y});
+        if (positionHistory.size() > MAX_POSITION_HISTORY) {
+            positionHistory.pop_back();
+        }
+    }
+
+    /**
+     * @brief Get position for a segment at given index (0 = head)
+     * @param segmentIndex Index of the segment (0 = closest to head)
+     * @return Position pair, or head position if history too short
+     */
+    [[nodiscard]] std::pair<float, float> getSegmentPosition(
+        std::size_t segmentIndex) const noexcept {
+        if (segmentIndex == 0) {
+            if (!positionHistory.empty()) {
+                return positionHistory.front();
+            }
+            return {baseX, baseY};
+        }
+        std::size_t historyIndex = segmentIndex * 7;
+        if (historyIndex < positionHistory.size()) {
+            return positionHistory[historyIndex];
+        }
+        if (!positionHistory.empty()) {
+            auto lastPos = positionHistory.back();
+            float extraOffset =
+                static_cast<float>(segmentIndex) * SEGMENT_SPACING * 0.5F;
+            return {lastPos.first - extraOffset, lastPos.second};
+        }
+        return {baseX - static_cast<float>(segmentIndex) * SEGMENT_SPACING,
+                baseY};
+    }
 
     /**
      * @brief Get the current phase configuration
