@@ -316,6 +316,11 @@ class NetworkClient {
     void removeConnectedCallback(CallbackId id);
 
     /**
+     * @brief Clear all connected callbacks (call from destructors)
+     */
+    void clearConnectedCallbacks();
+
+    /**
      * @brief Register callback for disconnection (graceful or unexpected)
      * @param callback Function receiving the disconnect reason
      */

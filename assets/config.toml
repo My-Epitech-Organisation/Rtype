@@ -15,6 +15,8 @@ EnemyDeath = "audio/enemyDeath.mp3"
 EnemySpawn = "audio/enemySpawn.mp3"
 ForcePodLaunch = "audio/laserSound.mp3"
 ForcePodReturn = "audio/laserSound.mp3"
+ChargedShot = "audio/laserSound.mp3"
+ChargedShotMax = "audio/laserSound.mp3"
 
 # Textures Réferences
 [Textures]
@@ -50,6 +52,7 @@ Planet3 = "img/planet3.png"
 AstroVessel = "img/astroVessel.png"
 # Projectile assets
 MissileLaser = "img/missileLaser.gif"
+ChargedShot = "img/charged_shot.png"
 # Trap
 Engrenage1 = "img/Engrenage1.png"
 Engrenage2 = "img/Engrenage2.png"

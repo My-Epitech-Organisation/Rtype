@@ -283,6 +283,9 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.textures.missileLaser =
         "assets/" + _parser.getString(table, "Textures", "MissileLaser",
                                       defaults.assets.textures.missileLaser);
+    auto chargedShotValue = _parser.getString(
+        table, "Textures", "ChargedShot", defaults.assets.textures.chargedShot);
+    config.assets.textures.chargedShot = "assets/" + chargedShotValue;
     config.assets.textures.forcePod =
         "assets/" + _parser.getString(table, "Textures", "ForcePod",
                                       defaults.assets.textures.forcePod);
@@ -399,6 +402,12 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.sfx.forcePodReturn =
         "assets/" + _parser.getString(table, "SFX", "ForcePodReturn",
                                       defaults.assets.sfx.forcePodReturn);
+    config.assets.sfx.chargedShot =
+        "assets/" + _parser.getString(table, "SFX", "ChargedShot",
+                                      defaults.assets.sfx.chargedShot);
+    config.assets.sfx.chargedShotMax =
+        "assets/" + _parser.getString(table, "SFX", "ChargedShotMax",
+                                      defaults.assets.sfx.chargedShotMax);
 
     return config;
 }

@@ -35,6 +35,12 @@ add_library(rtype_game_client_systems STATIC
     ForcePodVisualSystem.hpp
     EnemyHealthBarSystem.cpp
     EnemyHealthBarSystem.hpp
+    ChargeInputSystem.cpp
+    ChargeInputSystem.hpp
+    ChargeVisualSystem.cpp
+    ChargeVisualSystem.hpp
+    ChargedProjectileAnimationSystem.cpp
+    ChargedProjectileAnimationSystem.hpp
 )
 
 target_link_libraries(rtype_game_client_systems

@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "../AllComponents.hpp"
+#include "../Components/ColorTintComponent.hpp"
 #include "../Components/RotationComponent.hpp"
 #include "../shared/Components/BoundingBoxComponent.hpp"
 #include "../shared/Components/Tags.hpp"
@@ -39,6 +40,11 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
 
     auto& img = registry.getComponent<Image>(entity);
     const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
+    display::Color color = img.color;
+    if (registry.hasComponent<ColorTint>(entity)) {
+        const auto& tint = registry.getComponent<ColorTint>(entity);
+        color = display::Color(tint.r, tint.g, tint.b, tint.a);
+    }
 
     display::Vector2f scale = {1.0f, 1.0f};
     if (registry.hasComponent<Size>(entity)) {
@@ -59,8 +65,6 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
         const auto& rot = registry.getComponent<Rotation>(entity);
         rotation = rot.angle;
         hasRotation = true;
-        LOG_DEBUG("[RenderSystem] Entity "
-                  << entity.id << " has rotation=" << rotation << "°");
     } else if (registry.hasComponent<rs::ProjectileTag>(entity) &&
                registry.hasComponent<rs::VelocityComponent>(entity)) {
         const auto& vel = registry.getComponent<rs::VelocityComponent>(entity);
@@ -80,8 +84,8 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
         position.y -= (texRect.rect.height * scale.y) / 2.0f;
     }
 
-    this->_display->drawSprite(img.textureName, position, rect, scale,
-                               img.color, rotation);
+    this->_display->drawSprite(img.textureName, position, rect, scale, color,
+                               rotation);
 }
 
 void RenderSystem::_renderRectangles(ECS::Registry& registry,

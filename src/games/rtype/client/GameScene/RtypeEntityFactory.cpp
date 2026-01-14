@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "../../shared/Components/BoundingBoxComponent.hpp"
+#include "../../shared/Components/ChargedProjectileComponent.hpp"
 #include "../../shared/Components/EnemyTypeComponent.hpp"
 #include "../../shared/Components/ForcePodComponent.hpp"
 #include "../../shared/Components/HealthComponent.hpp"
@@ -121,7 +122,7 @@ RtypeEntityFactory::createNetworkEntityFactory(
                 break;
 
             case ::rtype::network::EntityType::Missile:
-                setupMissileEntity(reg, assetsManager, entity);
+                setupMissileEntity(reg, assetsManager, entity, event.subType);
                 break;
 
             case ::rtype::network::EntityType::Pickup:
@@ -223,8 +224,12 @@ void RtypeEntityFactory::setupPlayerEntity(
     reg.emplaceComponent<PlayerSoundComponent>(
         entity, assetsManager->soundManager->get("player_spawn"),
         assetsManager->soundManager->get("player_death"));
-    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(assetsManager->soundManager->get("player_spawn"));
+    if (reg.hasSingleton<std::shared_ptr<AudioLib>>()) {
+        auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+        if (lib) {
+            lib->playSFX(assetsManager->soundManager->get("player_spawn"));
+        }
+    }
 }
 
 void RtypeEntityFactory::setupBydosEntity(
@@ -371,18 +376,40 @@ void RtypeEntityFactory::setupBydosEntity(
     reg.emplaceComponent<EnemySoundComponent>(
         entity, assetsManager->soundManager->get("bydos_spawn"),
         assetsManager->soundManager->get("bydos_death"));
-    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(assetsManager->soundManager->get("bydos_spawn"));
+    if (reg.hasSingleton<std::shared_ptr<AudioLib>>()) {
+        auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+        if (lib) {
+            lib->playSFX(assetsManager->soundManager->get("bydos_spawn"));
+        }
+    }
 }
 
 void RtypeEntityFactory::setupMissileEntity(
     ECS::Registry& reg, std::shared_ptr<AssetManager> assetsManager,
-    ECS::Entity entity) {
-    LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
-                  "[RtypeEntityFactory] Adding Missile components");
+    ECS::Entity entity, uint8_t encodedSubType) {
+    shared::ProjectileType projectileType =
+        static_cast<shared::ProjectileType>(encodedSubType & 0x3F);
+    uint8_t chargeLevel = (encodedSubType >> 6) & 0x03;
+
+    LOG_INFO("[RtypeEntityFactory] Adding Missile components, encodedSubType=0x"
+             << std::hex << static_cast<int>(encodedSubType)
+             << " projectileType=" << std::dec
+             << static_cast<int>(projectileType) << " chargeLevel="
+             << static_cast<int>(chargeLevel) << " (ChargedShot="
+             << static_cast<int>(shared::ProjectileType::ChargedShot) << ")");
 
     auto& configRegistry = shared::EntityConfigRegistry::getInstance();
-    auto projectileConfigOpt = configRegistry.getProjectile("basic_bullet");
+
+    std::string configName = "basic_bullet";
+    if (projectileType == shared::ProjectileType::ChargedShot) {
+        configName = "charged_shot";
+        LOG_INFO(
+            "[RtypeEntityFactory] *** CREATING CHARGED SHOT PROJECTILE *** "
+            "level="
+            << static_cast<int>(chargeLevel));
+    }
+
+    auto projectileConfigOpt = configRegistry.getProjectile(configName);
 
     float hitboxWidth = 33.0f;
     float hitboxHeight = 34.0f;
@@ -396,10 +423,52 @@ void RtypeEntityFactory::setupMissileEntity(
             "[RtypeEntityFactory] Could not load projectile config, using "
             "fallback values");
     }
-    reg.emplaceComponent<Image>(entity, "projectile_player_laser");
-    reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
-                                      std::pair<int, int>({33, 34}));
-    reg.emplaceComponent<Size>(entity, 1.75f, 1.75f);
+    if (projectileType == shared::ProjectileType::ChargedShot) {
+        reg.emplaceComponent<Image>(entity, "charged_shot");
+        reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({6, 168}),
+                                          std::pair<int, int>({37, 33}));
+        float sizeMultiplier = 1.5f;
+        shared::ChargeLevel level = shared::ChargeLevel::Level1;
+        switch (chargeLevel) {
+            case 1:
+                sizeMultiplier = 1.5f;
+                level = shared::ChargeLevel::Level1;
+                hitboxWidth = 24.0f;
+                hitboxHeight = 24.0f;
+                break;
+            case 2:
+                sizeMultiplier = 2.0f;
+                level = shared::ChargeLevel::Level2;
+                hitboxWidth = 32.0f;
+                hitboxHeight = 32.0f;
+                break;
+            case 3:
+                sizeMultiplier = 2.5f;
+                level = shared::ChargeLevel::Level3;
+                hitboxWidth = 48.0f;
+                hitboxHeight = 48.0f;
+                break;
+            default:
+                sizeMultiplier = 1.5f;
+                level = shared::ChargeLevel::Level1;
+                hitboxWidth = 24.0f;
+                hitboxHeight = 24.0f;
+                break;
+        }
+        reg.emplaceComponent<Size>(entity, sizeMultiplier, sizeMultiplier);
+        LOG_INFO("[RtypeEntityFactory] Charged shot size multiplier: "
+                 << sizeMultiplier);
+        reg.emplaceComponent<shared::ChargedProjectileComponent>(entity, level);
+        LOG_INFO(
+            "[RtypeEntityFactory] Added ChargedProjectileComponent for "
+            "animation, level="
+            << static_cast<int>(level));
+    } else {
+        reg.emplaceComponent<Image>(entity, "projectile_player_laser");
+        reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
+                                          std::pair<int, int>({33, 34}));
+        reg.emplaceComponent<Size>(entity, 1.75f, 1.75f);
+    }
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, hitboxWidth, hitboxHeight);
     reg.emplaceComponent<shared::ProjectileTag>(entity);
@@ -407,8 +476,16 @@ void RtypeEntityFactory::setupMissileEntity(
         entity, ::rtype::display::Vector2f{0, 0},
         ::rtype::display::Vector2f{hitboxWidth, hitboxHeight});
     reg.emplaceComponent<Animation>(entity, 4, 0.1, false);
-    reg.getComponent<BoxingComponent>(entity).outlineColor = {0, 220, 180, 255};
-    reg.getComponent<BoxingComponent>(entity).fillColor = {0, 220, 180, 35};
+    if (projectileType == shared::ProjectileType::ChargedShot) {
+        reg.getComponent<BoxingComponent>(entity).outlineColor = {255, 200, 50,
+                                                                  255};
+        reg.getComponent<BoxingComponent>(entity).fillColor = {255, 200, 50,
+                                                               80};
+    } else {
+        reg.getComponent<BoxingComponent>(entity).outlineColor = {0, 220, 180,
+                                                                  255};
+        reg.getComponent<BoxingComponent>(entity).fillColor = {0, 220, 180, 35};
+    }
     reg.emplaceComponent<ZIndex>(entity, 1);
     reg.emplaceComponent<shared::LifetimeComponent>(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
@@ -423,8 +500,12 @@ void RtypeEntityFactory::setupMissileEntity(
                 "[RtypeEntityFactory] Added 180° rotation to enemy projectile");
         }
     }
-    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    lib->playSFX(assetsManager->soundManager->get("laser_sfx"));
+    if (reg.hasSingleton<std::shared_ptr<AudioLib>>()) {
+        auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
+        if (lib) {
+            lib->playSFX(assetsManager->soundManager->get("laser_sfx"));
+        }
+    }
 
     if (reg.hasComponent<shared::TransformComponent>(entity)) {
         const auto& pos = reg.getComponent<shared::TransformComponent>(entity);

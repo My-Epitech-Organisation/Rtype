@@ -79,9 +79,9 @@ class ClientNetworkSystem {
                         std::shared_ptr<NetworkClient> client);
 
     /**
-     * @brief Destructor
+     * @brief Destructor - unregisters all callbacks from NetworkClient
      */
-    ~ClientNetworkSystem() = default;
+    ~ClientNetworkSystem();
 
     ClientNetworkSystem(const ClientNetworkSystem&) = delete;
     ClientNetworkSystem& operator=(const ClientNetworkSystem&) = delete;
