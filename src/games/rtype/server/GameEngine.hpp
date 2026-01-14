@@ -175,9 +175,7 @@ class GameEngine : public engine::AGameEngine {
      * @brief Get the laser beam system
      * @return Pointer to LaserBeamSystem
      */
-    LaserBeamSystem* getLaserBeamSystem() {
-        return _laserBeamSystem.get();
-    }
+    LaserBeamSystem* getLaserBeamSystem() { return _laserBeamSystem.get(); }
 
     /**
      * @brief Set laser weapon configuration
