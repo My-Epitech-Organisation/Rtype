@@ -515,6 +515,62 @@ void LevelCreatorScene::saveToToml() {
         return;
     }
 
+    if (this->_waves.empty()) {
+        LOG_ERROR_CAT(rtype::LogCategory::UI,
+                      "No waves defined, cannot save level configuration.");
+        if (_statusMessageEntity != ECS::Entity(0) &&
+            _registry->isAlive(_statusMessageEntity)) {
+            _registry->killEntity(_statusMessageEntity);
+        }
+
+        float startX = kLevelSectionPosLeft;
+        _statusMessageEntity = EntityFactory::createStaticText(
+            _registry, _assetsManager,
+            "You must define at least one wave before saving.", "main_font",
+            {startX, 810.f}, 20.f);
+
+        try {
+            auto& textComp =
+                _registry->getComponent<rtype::games::rtype::client::Text>(
+                    _statusMessageEntity);
+            textComp.color = rtype::display::Color::Red();
+        } catch (const std::exception&) {
+        }
+        _listEntity.push_back(_statusMessageEntity);
+        return;
+    }
+
+    for (auto s: this->_waves) {
+        if (s.spawns.empty() && s.powerups.empty()) {
+            LOG_ERROR_CAT(rtype::LogCategory::UI,
+                          "Wave " + std::to_string(s.number) +
+                              " has no spawns or power-ups, cannot save "
+                              "level configuration.");
+            if (_statusMessageEntity != ECS::Entity(0) &&
+                _registry->isAlive(_statusMessageEntity)) {
+                _registry->killEntity(_statusMessageEntity);
+            }
+
+            float startX = kLevelSectionPosLeft;
+            _statusMessageEntity = EntityFactory::createStaticText(
+                _registry, _assetsManager,
+                "Wave " + std::to_string(s.number) +
+                    " has no spawns or power-ups, cannot save level "
+                    "configuration.",
+                "main_font", {startX, 810.f}, 20.f);
+
+            try {
+                auto& textComp =
+                    _registry->getComponent<rtype::games::rtype::client::Text>(
+                        _statusMessageEntity);
+                textComp.color = rtype::display::Color::Red();
+            } catch (const std::exception&) {
+            }
+            _listEntity.push_back(_statusMessageEntity);
+            return;
+        }
+    }
+
     auto filename = "config/game/levels/" + lvlId + ".toml";
 
     std::ofstream file(filename);
