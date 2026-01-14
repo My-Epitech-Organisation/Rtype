@@ -726,26 +726,23 @@ void RtypeEntityFactory::setupBossEntity(
                  "[RtypeEntityFactory] Creating Boss entity type="
                      << static_cast<int>(bossType));
 
-    // Boss head entity - uses the serpent head sprite
-    // Use boss_serpent sprite sheet (bdosTextureChaser.gif - 576x430)
-    reg.emplaceComponent<Image>(entity, "boss_serpent");
+    reg.emplaceComponent<Image>(entity, BossSerpentVisual::TEXTURE_HEAD);
 
-    // Initial texture rect - first head frame (top-left of sprite sheet)
-    // Try position (0,0) with 64x64 to get the first sprite
-    reg.emplaceComponent<TextureRect>(entity, std::pair<int, int>({0, 0}),
-                                      std::pair<int, int>({64, 64}));
+    reg.emplaceComponent<TextureRect>(
+        entity, std::pair<int, int>({0, 0}),
+        std::pair<int, int>(
+            {BossSerpentVisual::FRAME_WIDTH, BossSerpentVisual::FRAME_HEIGHT}));
 
-    // Scale up for better visibility
-    reg.emplaceComponent<Size>(entity, 2.0f, 2.0f);
+    reg.emplaceComponent<Size>(entity, -0.85f, 0.85f);
 
-    // Add the serpent visual component for direction-based animation
     BossSerpentVisual visual;
     visual.state = BossSerpentState::MOVE;
-    visual.spawnComplete = true;
+    visual.partType = BossSerpentPartType::HEAD;
+    visual.isAttacking = false;
     reg.emplaceComponent<BossSerpentVisual>(entity, visual);
 
-    float hitboxWidth = 64.0F;
-    float hitboxHeight = 64.0F;
+    float hitboxWidth = BossSerpentVisual::FRAME_WIDTH * 0.85f;
+    float hitboxHeight = BossSerpentVisual::FRAME_HEIGHT * 0.85f;
 
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, hitboxWidth, hitboxHeight);
@@ -763,6 +760,8 @@ void RtypeEntityFactory::setupBossEntity(
     reg.emplaceComponent<shared::EnemyTag>(entity);
     reg.emplaceComponent<shared::BossTag>(entity);
 
+    reg.emplaceComponent<Rotation>(entity, 0.0f);
+
     LOG_INFO_CAT(::rtype::LogCategory::ECS,
                  "[RtypeEntityFactory] Boss Serpent head entity created");
 }
@@ -774,59 +773,49 @@ void RtypeEntityFactory::setupBossPartEntity(
                  "[RtypeEntityFactory] Creating Boss Part entity type="
                      << static_cast<int>(partType));
 
-    // Use boss_serpent sprite sheet
-    reg.emplaceComponent<Image>(entity, "boss_serpent");
-
-    float hitboxWidth = 48.0F;
-    float hitboxHeight = 48.0F;
-    float scale = 1.5f;
-
-    // Body segments - use sprites from lower part of sheet
-    // Sprite sheet is 576x430, body segments around Y=192-300
-    int spriteX = 0;
-    int spriteY = BossSerpentVisual::BODY_ROW_Y;
-    int spriteW = BossSerpentVisual::BODY_FRAME_WIDTH;
-    int spriteH = BossSerpentVisual::BODY_FRAME_HEIGHT;
-    int segmentVariant = 0;
+    const char* textureName = BossSerpentVisual::TEXTURE_BODY;
+    BossSerpentPartType serpentPartType = BossSerpentPartType::BODY;
+    float scale = 0.75f;
 
     switch (partType) {
-        case 1:  // Head type (if needed as separate entity)
-            spriteX = 0;
-            spriteY = 0;
-            spriteW = 64;
-            spriteH = 64;
-            hitboxWidth = 64.0F;
-            hitboxHeight = 64.0F;
-            scale = 2.0f;
+        case 1:
+            textureName = BossSerpentVisual::TEXTURE_HEAD;
+            serpentPartType = BossSerpentPartType::HEAD;
+            scale = 0.8f;
             break;
-        case 2:  // Tail
-            segmentVariant = 3;
-            spriteX = segmentVariant * spriteW;
-            spriteY = BossSerpentVisual::BODY_ROW_Y;
-            hitboxWidth = 40.0F;
-            hitboxHeight = 40.0F;
-            scale = 1.8f;
+        case 2:
+            textureName = BossSerpentVisual::TEXTURE_TAIL;
+            serpentPartType = BossSerpentPartType::TAIL;
+            scale = 0.7f;
             break;
-        case 3:  // Core/Body segments
+        case 3:
+            textureName = BossSerpentVisual::TEXTURE_BODY;
+            serpentPartType = BossSerpentPartType::BODY;
+            scale = 0.75f;
+            break;
         default:
-            segmentVariant = static_cast<int>(entity.id % 4);
-            spriteX = segmentVariant * spriteW;
-            spriteY = BossSerpentVisual::BODY_ROW_Y;
-            hitboxWidth = 48.0F;
-            hitboxHeight = 48.0F;
-            scale = 1.6f;
+            textureName = BossSerpentVisual::TEXTURE_BODY;
+            serpentPartType = BossSerpentPartType::BODY;
+            scale = 0.7f;
             break;
     }
 
-    reg.emplaceComponent<TextureRect>(entity,
-                                      std::pair<int, int>({spriteX, spriteY}),
-                                      std::pair<int, int>({spriteW, spriteH}));
-    reg.emplaceComponent<Size>(entity, scale, scale);
+    reg.emplaceComponent<Image>(entity, textureName);
 
-    // Add body visual component for potential animation
+    reg.emplaceComponent<TextureRect>(
+        entity, std::pair<int, int>({0, 0}),
+        std::pair<int, int>(
+            {BossSerpentVisual::FRAME_WIDTH, BossSerpentVisual::FRAME_HEIGHT}));
+    float xScale = (serpentPartType == BossSerpentPartType::TAIL) ? scale : -scale;
+    reg.emplaceComponent<Size>(entity, xScale, scale);
+
     BossSerpentBodyVisual bodyVisual;
-    bodyVisual.segmentIndex = segmentVariant;
+    bodyVisual.partType = serpentPartType;
+    bodyVisual.segmentIndex = static_cast<int>(entity.id % 10);
     reg.emplaceComponent<BossSerpentBodyVisual>(entity, bodyVisual);
+
+    float hitboxWidth = BossSerpentVisual::FRAME_WIDTH * scale;
+    float hitboxHeight = BossSerpentVisual::FRAME_HEIGHT * scale;
 
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, hitboxWidth, hitboxHeight);
@@ -838,14 +827,16 @@ void RtypeEntityFactory::setupBossPartEntity(
     reg.getComponent<BoxingComponent>(entity).fillColor =
         ::rtype::display::Color{200, 150, 100, 40};
 
-    reg.emplaceComponent<shared::HealthComponent>(entity, 500, 500);
-    reg.emplaceComponent<ZIndex>(entity, 4);  // Body segments behind head
+    reg.emplaceComponent<shared::HealthComponent>(entity, 400, 400);
+    reg.emplaceComponent<ZIndex>(entity, 4);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<shared::WeakPointTag>(entity);
 
+    reg.emplaceComponent<Rotation>(entity, 0.0f);
+
     LOG_INFO_CAT(::rtype::LogCategory::ECS,
-                 "[RtypeEntityFactory] Boss body segment created (variant "
-                     << segmentVariant << ")");
+                 "[RtypeEntityFactory] Boss segment created (type="
+                     << static_cast<int>(partType) << ")");
 }
 
 }  // namespace rtype::games::rtype::client
