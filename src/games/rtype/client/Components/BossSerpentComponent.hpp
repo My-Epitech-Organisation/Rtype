@@ -3,6 +3,12 @@
 ** r-type
 ** File description:
 ** BossSerpentComponent.hpp - Client-side boss serpent visual state
+**
+** Sprite sheets (each 677x369, 5 frames of 135x369):
+** - serpend_head.png: Head idle/movement animation
+** - serpent_attack.png: Head attack animation
+** - serpent_body.png: Body segment animation
+** - serpent_tail.png: Tail animation
 */
 
 #ifndef SRC_GAMES_RTYPE_CLIENT_COMPONENTS_BOSSSERPENTCOMPONENT_HPP_
@@ -10,151 +16,162 @@
 
 #include <cmath>
 #include <cstdint>
+#include <string>
 
 /**
  * @enum BossSerpentState
  * @brief Visual states for boss serpent animation
  */
 enum class BossSerpentState : uint8_t {
-    SPAWN = 0,   ///< Spawn animation (egg/shell)
-    IDLE = 1,    ///< Idle state
-    MOVE = 2,    ///< Moving state (head rotation based on direction)
-    ATTACK = 3,  ///< Attack animation (stretch)
-    DIE = 4      ///< Death animation
+    IDLE = 0,    ///< Idle state (using head sprite)
+    MOVE = 1,    ///< Moving state (using head sprite with animation)
+    ATTACK = 2,  ///< Attack animation (using attack sprite)
+    DIE = 3      ///< Death animation
+};
+
+/**
+ * @enum BossSerpentPartType
+ * @brief Type of serpent body part for texture selection
+ */
+enum class BossSerpentPartType : uint8_t {
+    HEAD = 0,
+    BODY = 1,
+    TAIL = 2
 };
 
 /**
  * @struct BossSerpentVisual
- * @brief Component for boss serpent head visual state
+ * @brief Component for boss serpent visual state
  *
- * Manages the visual state machine for the serpent boss head.
- * - Head has 16 directional frames (0-15) for rotation
- * - Attack has 8 frames
- * - Spawn/Death use shell animation
+ * All 4 sprite sheets are 677x369 with 5 frames each.
+ * Frame size: 135x369 pixels (677/5 ≈ 135.4, using 135)
+ *
+ * Texture names:
+ * - "boss_serpent_head" for head idle/movement
+ * - "boss_serpent_attack" for attack animation
+ * - "boss_serpent_body" for body segments
+ * - "boss_serpent_tail" for tail segment
  */
 struct BossSerpentVisual {
-    BossSerpentState state = BossSerpentState::MOVE;  // Start in MOVE state
-
-    // Direction index (0-15) for 16-direction head sprites
-    int directionIndex = 0;
-
-    // Previous position for direction calculation
-    float prevX = 0.0f;
-    float prevY = 0.0f;
+    BossSerpentState state = BossSerpentState::MOVE;
+    BossSerpentPartType partType = BossSerpentPartType::HEAD;
 
     // Animation timing
     float animationTimer = 0.0f;
     int currentFrame = 0;
 
+    // Previous position for direction calculation
+    float prevX = 0.0f;
+    float prevY = 0.0f;
+
     // State flags
-    bool spawnComplete = true;  // Skip spawn animation for now
+    bool isAttacking = false;
     bool isDying = false;
 
-    // Sprite sheet: bdosTextureChaser.gif = 576x430 pixels
-    // Analyzing the sheet structure:
-    // - Image is 576 wide, likely 8 frames of 72px or 9 frames of 64px
-    // - Using 64x64 head frames, 9 per row
+    // Sprite sheet constants (all sheets have same dimensions)
+    static constexpr int SHEET_WIDTH = 677;
+    static constexpr int SHEET_HEIGHT = 369;
+    static constexpr int FRAME_COUNT = 5;
+    static constexpr int FRAME_WIDTH = 135;   // 677 / 5 = 135.4, using 135
+    static constexpr int FRAME_HEIGHT = 369;
 
-    // Row 0-1: 16 directional head frames (64x64 each, 9 per row)
-    static constexpr int HEAD_FRAME_WIDTH = 64;
-    static constexpr int HEAD_FRAME_HEIGHT = 64;
-    static constexpr int HEAD_FRAMES_PER_ROW = 9;
-    static constexpr int HEAD_DIRECTION_COUNT = 16;
+    // Animation speed (seconds per frame)
+    static constexpr float ANIMATION_SPEED = 0.1f;
 
-    // Row 2: Attack animation (wider frames)
-    static constexpr int ATTACK_FRAME_WIDTH = 72;
-    static constexpr int ATTACK_FRAME_HEIGHT = 64;
-    static constexpr int ATTACK_FRAME_COUNT = 8;
-    static constexpr int ATTACK_ROW_Y = 128;
-
-    // Row 3-4: Body segments (smaller, ~48x48 or 36x36)
-    static constexpr int BODY_FRAME_WIDTH = 36;
-    static constexpr int BODY_FRAME_HEIGHT = 36;
-    static constexpr int BODY_ROW_Y = 192;
-
-    // Bottom rows: Shell/spawn animation
-    static constexpr int SHELL_FRAME_WIDTH = 48;
-    static constexpr int SHELL_FRAME_HEIGHT = 48;
-    static constexpr int SHELL_ROW_Y = 300;
-    static constexpr int SHELL_FRAME_COUNT = 10;
+    // Texture names
+    static constexpr const char* TEXTURE_HEAD = "boss_serpent_head";
+    static constexpr const char* TEXTURE_ATTACK = "boss_serpent_attack";
+    static constexpr const char* TEXTURE_BODY = "boss_serpent_body";
+    static constexpr const char* TEXTURE_TAIL = "boss_serpent_tail";
 
     /**
-     * @brief Calculate direction index (0-15) from velocity
-     * @param vx Velocity X
-     * @param vy Velocity Y
-     * @return Direction index 0-15 (0 = right, going counter-clockwise)
+     * @brief Get the appropriate texture name based on state and part type
      */
-    static int calculateDirectionIndex(float vx, float vy) {
-        if (vx == 0.0f && vy == 0.0f) {
-            return 0;
+    [[nodiscard]] const char* getTextureName() const {
+        if (partType == BossSerpentPartType::HEAD) {
+            return isAttacking ? TEXTURE_ATTACK : TEXTURE_HEAD;
+        } else if (partType == BossSerpentPartType::TAIL) {
+            return TEXTURE_TAIL;
         }
+        return TEXTURE_BODY;
+    }
 
-        float angle = std::atan2(vy, vx);
+    /**
+     * @brief Get texture rect for current animation frame
+     * @param x Output X position in sprite sheet
+     * @param y Output Y position in sprite sheet
+     * @param w Output frame width
+     * @param h Output frame height
+     */
+    void getTextureRect(int& x, int& y, int& w, int& h) const {
+        x = currentFrame * FRAME_WIDTH;
+        y = 0;
+        w = FRAME_WIDTH;
+        h = FRAME_HEIGHT;
+    }
 
-        float degrees = angle * 180.0f / 3.14159265f;
-        if (degrees < 0) {
-            degrees += 360.0f;
+    /**
+     * @brief Advance animation frame
+     * @param deltaTime Time elapsed since last update
+     */
+    void updateAnimation(float deltaTime) {
+        animationTimer += deltaTime;
+        if (animationTimer >= ANIMATION_SPEED) {
+            animationTimer -= ANIMATION_SPEED;
+            currentFrame = (currentFrame + 1) % FRAME_COUNT;
         }
-
-        int index = static_cast<int>((degrees + 11.25f) / 22.5f) % 16;
-        return index;
     }
 
     /**
-     * @brief Get texture rect for head based on direction
+     * @brief Reset animation to first frame
      */
-    void getHeadRect(int& x, int& y, int& w, int& h) const {
-        int row = directionIndex / HEAD_FRAMES_PER_ROW;
-        int col = directionIndex % HEAD_FRAMES_PER_ROW;
-        x = col * HEAD_FRAME_WIDTH;
-        y = row * HEAD_FRAME_HEIGHT;
-        w = HEAD_FRAME_WIDTH;
-        h = HEAD_FRAME_HEIGHT;
-    }
-
-    /**
-     * @brief Get texture rect for attack animation
-     */
-    void getAttackRect(int& x, int& y, int& w, int& h) const {
-        x = currentFrame * ATTACK_FRAME_WIDTH;
-        y = ATTACK_ROW_Y;
-        w = ATTACK_FRAME_WIDTH;
-        h = ATTACK_FRAME_HEIGHT;
-    }
-
-    /**
-     * @brief Get texture rect for body segment
-     * @param segmentIndex Which body segment (for variation)
-     */
-    static void getBodyRect(int segmentIndex, int& x, int& y, int& w, int& h) {
-        int col = segmentIndex % 8;
-        int row = segmentIndex / 8;
-        x = col * BODY_FRAME_WIDTH;
-        y = BODY_ROW_Y + row * BODY_FRAME_HEIGHT;
-        w = BODY_FRAME_WIDTH;
-        h = BODY_FRAME_HEIGHT;
-    }
-
-    /**
-     * @brief Get texture rect for spawn/death shell animation
-     */
-    void getShellRect(int& x, int& y, int& w, int& h) const {
-        x = currentFrame * SHELL_FRAME_WIDTH;
-        y = SHELL_ROW_Y;
-        w = SHELL_FRAME_WIDTH;
-        h = SHELL_FRAME_HEIGHT;
+    void resetAnimation() {
+        currentFrame = 0;
+        animationTimer = 0.0f;
     }
 };
 
 /**
  * @struct BossSerpentBodyVisual
- * @brief Component for boss serpent body segment visuals
+ * @brief Component for boss serpent body/tail segment visuals
  */
 struct BossSerpentBodyVisual {
-    int segmentIndex = 0;
+    BossSerpentPartType partType = BossSerpentPartType::BODY;
+    int segmentIndex = 0;  // Index in the serpent body chain
 
-    void getRect(int& x, int& y, int& w, int& h) const {
-        BossSerpentVisual::getBodyRect(segmentIndex, x, y, w, h);
+    // Animation state
+    float animationTimer = 0.0f;
+    int currentFrame = 0;
+
+    /**
+     * @brief Get the texture name for this segment
+     */
+    [[nodiscard]] const char* getTextureName() const {
+        return (partType == BossSerpentPartType::TAIL)
+                   ? BossSerpentVisual::TEXTURE_TAIL
+                   : BossSerpentVisual::TEXTURE_BODY;
+    }
+
+    /**
+     * @brief Get texture rect for current frame
+     */
+    void getTextureRect(int& x, int& y, int& w, int& h) const {
+        x = currentFrame * BossSerpentVisual::FRAME_WIDTH;
+        y = 0;
+        w = BossSerpentVisual::FRAME_WIDTH;
+        h = BossSerpentVisual::FRAME_HEIGHT;
+    }
+
+    /**
+     * @brief Update animation
+     */
+    void updateAnimation(float deltaTime) {
+        animationTimer += deltaTime;
+        if (animationTimer >= BossSerpentVisual::ANIMATION_SPEED) {
+            animationTimer -= BossSerpentVisual::ANIMATION_SPEED;
+            currentFrame =
+                (currentFrame + 1) % BossSerpentVisual::FRAME_COUNT;
+        }
     }
 };
 
