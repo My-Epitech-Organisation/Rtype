@@ -262,18 +262,23 @@ void SDL2SnakeRenderer::renderText(const std::string& text, int x, int y,
             switch (c) {
                 case 'S': {
                     drawRect(charX, y, 6, 3);
+                    break;
                 }
                 case 'c': {
                     drawRect(charX + 2, y, 4, 12);
+                    break;
                 }
                 case 'o': {
                     drawRect(charX + 1, y, 4, 12);
+                    break;
                 }
                 case 'r': {
                     drawRect(charX, y, 3, 12);
+                    break;
                 }
                 case 'e': {
                     drawRect(charX + 1, y, 4, 12);
+                    break;
                 }
             }
         }
