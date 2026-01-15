@@ -26,7 +26,9 @@ protected:
     std::string getBackgroundName() override { return _backgroundName; };
     void unloadEntitiesBackground() override {
         for (auto s: this->_listEntities) {
-            this->_registry->killEntity(s);
+            if (this->_registry && this->_registry->isAlive(s)) {
+                this->_registry->killEntity(s);
+            }
         }
         this->_listEntities.clear();
     };
@@ -34,7 +36,9 @@ protected:
     ABackground(std::shared_ptr<ECS::Registry> registry, std::shared_ptr<AssetManager> assetManager, const std::string &backgroundName) : _registry(std::move(registry)), _assetManager(std::move(assetManager)), _backgroundName(backgroundName) {};
     ~ABackground() override {
         for (auto s: this->_listEntities) {
-            this->_registry->killEntity(s);
+            if (this->_registry && this->_registry->isAlive(s)) {
+                this->_registry->killEntity(s);
+            }
         }
     };
 };
