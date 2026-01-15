@@ -310,12 +310,10 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
     }
 
     ActivePowerUpComponent* activePtr = nullptr;
+    bool wasShieldActive = false;
     if (registry.hasComponent<ActivePowerUpComponent>(player)) {
         auto& existing = registry.getComponent<ActivePowerUpComponent>(player);
-        if (existing.shieldActive &&
-            registry.hasComponent<shared::InvincibleTag>(player)) {
-            registry.removeComponent<shared::InvincibleTag>(player);
-        }
+        wasShieldActive = existing.shieldActive;
         if (existing.hasOriginalCooldown &&
             registry.hasComponent<shared::ShootCooldownComponent>(player)) {
             auto& cd =
@@ -327,6 +325,12 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
     } else {
         activePtr = &registry.emplaceComponent<ActivePowerUpComponent>(
             player, ActivePowerUpComponent{});
+    }
+
+    if (wasShieldActive &&
+        registry.hasComponent<shared::InvincibleTag>(player) &&
+        powerUp.type != shared::PowerUpType::Shield) {
+        registry.removeComponent<shared::InvincibleTag>(player);
     }
 
     auto& active = *activePtr;
@@ -506,16 +510,22 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
     }
 
     int32_t damage = 15;
-    bool destroyObstacle = false;
+    bool destroyObstacleOnContact = false;
     if (registry.hasComponent<DamageOnContactComponent>(obstacle)) {
         const auto& dmgComp =
             registry.getComponent<DamageOnContactComponent>(obstacle);
         damage = dmgComp.damage;
-        destroyObstacle = dmgComp.destroySelf;
+        destroyObstacleOnContact = dmgComp.destroySelf;
     }
 
     if (otherIsPlayer) {
+        // Check for invincibility/godmode - player takes no damage if invincible
         if (registry.hasComponent<shared::InvincibleTag>(other)) {
+            // Still destroy obstacle if it should self-destruct on contact
+            if (destroyObstacleOnContact) {
+                cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle,
+                                                               DestroyTag{});
+            }
             return;
         }
         if (registry.hasComponent<HealthComponent>(other)) {
@@ -542,12 +552,30 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
         } else {
             cmdBuffer.emplaceComponentDeferred<DestroyTag>(other, DestroyTag{});
         }
+        // Destroy obstacle on player contact if configured
+        if (destroyObstacleOnContact) {
+            cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle,
+                                                           DestroyTag{});
+        }
     } else {
-        cmdBuffer.emplaceComponentDeferred<DestroyTag>(other, DestroyTag{});
-    }
+        // Other entity is a projectile - check if it's a player projectile
+        bool isPlayerProjectile = false;
+        if (registry.hasComponent<PlayerProjectileTag>(other)) {
+            isPlayerProjectile = true;
+        } else if (registry.hasComponent<ProjectileComponent>(other)) {
+            const auto& projComp =
+                registry.getComponent<ProjectileComponent>(other);
+            isPlayerProjectile = (projComp.owner == ProjectileOwner::Player);
+        }
 
-    if (destroyObstacle) {
-        cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle, DestroyTag{});
+        // Destroy the projectile
+        cmdBuffer.emplaceComponentDeferred<DestroyTag>(other, DestroyTag{});
+
+        // Player projectiles destroy obstacles
+        if (isPlayerProjectile) {
+            cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle,
+                                                           DestroyTag{});
+        }
     }
 }
 

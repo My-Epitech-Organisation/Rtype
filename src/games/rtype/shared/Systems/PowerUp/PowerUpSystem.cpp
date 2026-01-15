@@ -23,7 +23,6 @@ void PowerUpSystem::update(ECS::Registry& registry, float deltaTime) {
         if (active.remainingTime > 0.0F) {
             return;
         }
-
         if (active.shieldActive &&
             registry.hasComponent<InvincibleTag>(entity)) {
             registry.removeComponent<InvincibleTag>(entity);

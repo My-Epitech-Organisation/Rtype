@@ -695,6 +695,12 @@ void DataDrivenSpawnerSystem::spawnPowerUpFromConfig(
                 type = shared::PowerUpType::LaserUpgrade;
                 duration = 0.0F;
                 magnitude = 1.0F;
+            } else if (powerupConfig.id == "double_damage") {
+                type = shared::PowerUpType::DoubleDamage;
+                magnitude = 1.0F;
+            } else if (powerupConfig.id == "rapid_fire") {
+                type = shared::PowerUpType::RapidFire;
+                magnitude = 0.5F;
             } else {
                 type = shared::PowerUpType::RapidFire;
             }
