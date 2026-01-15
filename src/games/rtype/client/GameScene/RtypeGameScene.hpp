@@ -138,6 +138,8 @@ class RtypeGameScene : public AGameScene {
     std::optional<ECS::Entity> _healthBarFillEntity;
     std::optional<ECS::Entity> _healthTextEntity;
     std::optional<ECS::Entity> _pingTextEntity;
+    std::optional<ECS::Entity> _powerUpIconEntity;
+    std::optional<ECS::Entity> _powerUpTextEntity;
     std::optional<std::uint32_t> _localPlayerId;
     std::optional<ECS::Entity> _localPlayerEntity;
     int _lastKnownLives{0};
@@ -166,6 +168,7 @@ class RtypeGameScene : public AGameScene {
     void triggerDamageFlash(int damageAmount);
     void resetHudColors();
     void spawnDamagePopup(int damage);
+    void updatePowerUpIndicator(float deltaTime);
 
     void setupDisconnectCallback();
     void showDisconnectModal(network::DisconnectReason reason);
