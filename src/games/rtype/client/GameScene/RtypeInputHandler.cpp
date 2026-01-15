@@ -180,16 +180,7 @@ bool RtypeInputHandler::handleKeyReleasedEvent(
 void RtypeInputHandler::updateKeyState(const ::rtype::display::Event& event) {
     if (event.type == ::rtype::display::EventType::KeyPressed) {
         pressedKeys_.insert(event.key.code);
-        // Debug: Log Tab key specifically (Key::Tab = 60)
-        if (static_cast<int>(event.key.code) == 60) {
-            LOG_INFO("[InputHandler] Tab key ADDED to pressedKeys_, size="
-                     << pressedKeys_.size());
-        }
     } else if (event.type == ::rtype::display::EventType::KeyReleased) {
-        // Debug: Log Tab key specifically
-        if (static_cast<int>(event.key.code) == 60) {
-            LOG_INFO("[InputHandler] Tab key REMOVED from pressedKeys_");
-        }
         pressedKeys_.erase(event.key.code);
     } else if (event.type ==
                ::rtype::display::EventType::JoystickButtonPressed) {
