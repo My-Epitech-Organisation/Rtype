@@ -450,6 +450,12 @@ bool ServerApp::initialize() {
             handleAdminCommand(userId, commandType, param, clientIp);
         });
 
+    _networkServer->setGameStateChecker([this]() {
+        return _stateManager && (_stateManager->isPlaying() ||
+                                 _stateManager->isPaused() ||
+                                 _stateManager->isGameOver());
+    });
+
     std::string gameId = _gameConfig && _gameConfig->isInitialized()
                              ? _gameConfig->getGameId()
                              : "rtype";
