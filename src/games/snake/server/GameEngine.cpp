@@ -361,7 +361,7 @@ void SnakeGameEngine::update(float deltaTime) {
     int foodCount = 0;
     std::vector<ECS::Entity> orphanedFood;
     foodCheckView.each([&foodCount, &orphanedFood](ECS::Entity foodId,
-                                                    FoodComponent& /*food*/) {
+                                                   FoodComponent& /*food*/) {
         foodCount++;
         if (foodCount > 2) {
             orphanedFood.push_back(foodId);

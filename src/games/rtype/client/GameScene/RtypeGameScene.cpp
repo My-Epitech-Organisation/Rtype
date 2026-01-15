@@ -121,29 +121,39 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
     constexpr float kGameSpawnBaseY = 150.0f;
     constexpr float kGameSpawnYOffset = 100.0f;
 
-    this->_registry->view<rs::PlayerIdComponent>()
-        .each([this, &playerCount](auto playerEntt, auto& id) {
-            playerCount++;
-            if (this->_registry->hasComponent<rs::TransformComponent>(playerEntt)) {
-                auto& transform = this->_registry->getComponent<rs::TransformComponent>(playerEntt);
-                transform.x = kGameSpawnX;
-                transform.y = kGameSpawnBaseY + (static_cast<float>(id.playerId - 1) * kGameSpawnYOffset);
-                LOG_INFO("[RtypeGameScene] Repositioned player " << id.playerId
-                          << " to game spawn (" << transform.x << ", " << transform.y << ")");
-            }
-            if (this->_registry->hasComponent<HiddenComponent>(playerEntt)) {
-                this->_registry->getComponent<HiddenComponent>(playerEntt).isHidden = false;
-            }
-            if (!this->_registry->hasComponent<GameTag>(playerEntt)) {
-                this->_registry->emplaceComponent<GameTag>(playerEntt);
-                LOG_DEBUG("[RtypeGameScene] Added GameTag to player " << id.playerId);
-            }
-            if (this->_registry->hasComponent<LobbyTag>(playerEntt)) {
-                this->_registry->removeComponent<LobbyTag>(playerEntt);
-                LOG_DEBUG("[RtypeGameScene] Removed LobbyTag from player " << id.playerId);
-            }
-        });
-    LOG_INFO("[RtypeGameScene] Prepared " << playerCount << " player entities for game");
+    this->_registry->view<rs::PlayerIdComponent>().each([this, &playerCount](
+                                                            auto playerEntt,
+                                                            auto& id) {
+        playerCount++;
+        if (this->_registry->hasComponent<rs::TransformComponent>(playerEntt)) {
+            auto& transform =
+                this->_registry->getComponent<rs::TransformComponent>(
+                    playerEntt);
+            transform.x = kGameSpawnX;
+            transform.y =
+                kGameSpawnBaseY +
+                (static_cast<float>(id.playerId - 1) * kGameSpawnYOffset);
+            LOG_INFO("[RtypeGameScene] Repositioned player "
+                     << id.playerId << " to game spawn (" << transform.x << ", "
+                     << transform.y << ")");
+        }
+        if (this->_registry->hasComponent<HiddenComponent>(playerEntt)) {
+            this->_registry->getComponent<HiddenComponent>(playerEntt)
+                .isHidden = false;
+        }
+        if (!this->_registry->hasComponent<GameTag>(playerEntt)) {
+            this->_registry->emplaceComponent<GameTag>(playerEntt);
+            LOG_DEBUG("[RtypeGameScene] Added GameTag to player "
+                      << id.playerId);
+        }
+        if (this->_registry->hasComponent<LobbyTag>(playerEntt)) {
+            this->_registry->removeComponent<LobbyTag>(playerEntt);
+            LOG_DEBUG("[RtypeGameScene] Removed LobbyTag from player "
+                      << id.playerId);
+        }
+    });
+    LOG_INFO("[RtypeGameScene] Prepared " << playerCount
+                                          << " player entities for game");
 
     auto bgEntities = EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "", nullptr);
@@ -1168,20 +1178,22 @@ void RtypeGameScene::cleanupDisconnectModal() {
 }
 
 void RtypeGameScene::cleanupBeforeMainMenu() {
-    LOG_INFO("[RtypeGameScene] Cleaning up all game state before returning to main menu");
+    LOG_INFO(
+        "[RtypeGameScene] Cleaning up all game state before returning to main "
+        "menu");
 
     std::vector<ECS::Entity> gameEntitiesToDestroy;
-    _registry->view<GameTag>().each(
-        [&](ECS::Entity entity, GameTag& /*tag*/) {
-            gameEntitiesToDestroy.push_back(entity);
-        });
+    _registry->view<GameTag>().each([&](ECS::Entity entity, GameTag& /*tag*/) {
+        gameEntitiesToDestroy.push_back(entity);
+    });
 
     for (const auto& entity : gameEntitiesToDestroy) {
         if (_registry->isAlive(entity)) {
             _registry->killEntity(entity);
         }
     }
-    LOG_INFO("[RtypeGameScene] Destroyed " << gameEntitiesToDestroy.size() << " game entities");
+    LOG_INFO("[RtypeGameScene] Destroyed " << gameEntitiesToDestroy.size()
+                                           << " game entities");
 
     std::vector<ECS::Entity> lobbyEntitiesToDestroy;
     _registry->view<LobbyTag>().each(
@@ -1194,7 +1206,8 @@ void RtypeGameScene::cleanupBeforeMainMenu() {
             _registry->killEntity(entity);
         }
     }
-    LOG_INFO("[RtypeGameScene] Destroyed " << lobbyEntitiesToDestroy.size() << " lobby entities");
+    LOG_INFO("[RtypeGameScene] Destroyed " << lobbyEntitiesToDestroy.size()
+                                           << " lobby entities");
 
     std::vector<ECS::Entity> pauseEntitiesToDestroy;
     _registry->view<PauseMenuTag>().each(
@@ -1207,7 +1220,8 @@ void RtypeGameScene::cleanupBeforeMainMenu() {
             _registry->killEntity(entity);
         }
     }
-    LOG_INFO("[RtypeGameScene] Destroyed " << pauseEntitiesToDestroy.size() << " pause menu entities");
+    LOG_INFO("[RtypeGameScene] Destroyed " << pauseEntitiesToDestroy.size()
+                                           << " pause menu entities");
 
     if (_networkSystem) {
         LOG_INFO("[RtypeGameScene] Resetting network system");

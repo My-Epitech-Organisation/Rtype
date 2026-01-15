@@ -521,7 +521,8 @@ class NetworkServer {
     /**
      * @brief Set a callback to check if the game is currently running
      * Used to prevent joins during active gameplay
-     * @param callback Function returning true if game is in Playing/Paused state
+     * @param callback Function returning true if game is in Playing/Paused
+     * state
      */
     using GameStateCheckCallback = std::function<bool()>;
     void setGameStateChecker(GameStateCheckCallback callback) {

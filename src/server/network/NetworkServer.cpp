@@ -977,9 +977,11 @@ void NetworkServer::handleJoinLobby(const network::Header& header,
 
     if (_gameStateChecker && _gameStateChecker()) {
         LOG_INFO("[NetworkServer] Client userId="
-                 << client->userId << " attempted to join but game is already running - disconnecting");
+                 << client->userId
+                 << " attempted to join but game is already running - "
+                    "disconnecting");
         disconnectClient(client->userId,
-                        network::DisconnectReason::RemoteRequest);
+                         network::DisconnectReason::RemoteRequest);
         return;
     }
 

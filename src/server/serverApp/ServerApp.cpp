@@ -451,9 +451,9 @@ bool ServerApp::initialize() {
         });
 
     _networkServer->setGameStateChecker([this]() {
-        return _stateManager && (_stateManager->isPlaying() ||
-                                 _stateManager->isPaused() ||
-                                 _stateManager->isGameOver());
+        return _stateManager &&
+               (_stateManager->isPlaying() || _stateManager->isPaused() ||
+                _stateManager->isGameOver());
     });
 
     std::string gameId = _gameConfig && _gameConfig->isInitialized()

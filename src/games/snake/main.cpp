@@ -260,7 +260,8 @@ static int runApplication(IDisplay* display) {  // NOLINT(readability/fn_size)
                         });
 
                     netClient->onJoinLobbyResponse(
-                        [&](bool accepted, uint8_t reason, [[maybe_unused]] const std::string& levelName) {
+                        [&](bool accepted, uint8_t reason,
+                            [[maybe_unused]] const std::string& levelName) {
                             if (accepted) {
                                 joinedLobby = true;
                                 mode = AppMode::MultiplayerLobby;

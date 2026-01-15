@@ -1015,14 +1015,17 @@ Lobby::~Lobby() {
 
     if (this->_registry) {
         if (!_transitioningToGame) {
-            LOG_INFO("[Lobby] Destroying all lobby entities including players (going to main menu)...");
+            LOG_INFO(
+                "[Lobby] Destroying all lobby entities including players "
+                "(going to main menu)...");
 
             std::vector<ECS::Entity> playerEntitiesToDestroy;
             this->_registry
                 ->view<rtype::games::rtype::shared::PlayerIdComponent>()
                 .each([&playerEntitiesToDestroy](auto playerEntt, auto& id) {
                     playerEntitiesToDestroy.push_back(playerEntt);
-                    LOG_INFO("[Lobby] Marking player " << id.playerId << " entity for destruction");
+                    LOG_INFO("[Lobby] Marking player "
+                             << id.playerId << " entity for destruction");
                 });
 
             for (const auto& entity : playerEntitiesToDestroy) {
@@ -1030,9 +1033,11 @@ Lobby::~Lobby() {
                     this->_registry->killEntity(entity);
                 }
             }
-            LOG_INFO("[Lobby] Destroyed " << playerEntitiesToDestroy.size() << " player entities");
+            LOG_INFO("[Lobby] Destroyed " << playerEntitiesToDestroy.size()
+                                          << " player entities");
         } else {
-            LOG_INFO("[Lobby] Preserving player entities for game scene transition");
+            LOG_INFO(
+                "[Lobby] Preserving player entities for game scene transition");
         }
     }
 
