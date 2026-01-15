@@ -60,7 +60,7 @@ void BossSerpentAnimationSystem::update(ECS::Registry& registry, float dt) {
                         float diff = targetAngle - rot.angle;
                         while (diff > 180.0f) diff -= 360.0f;
                         while (diff < -180.0f) diff += 360.0f;
-                        rot.angle += diff * 0.15f;
+                        rot.angle += diff * 0.35f;
                     }
                 }
                 posData.prevX = transform.x;
@@ -105,7 +105,7 @@ void BossSerpentAnimationSystem::update(ECS::Registry& registry, float dt) {
                         float diff = targetAngle - rot.angle;
                         while (diff > 180.0f) diff -= 360.0f;
                         while (diff < -180.0f) diff += 360.0f;
-                        rot.angle += diff * 0.12f;
+                        rot.angle += diff * 0.30f;
                     }
                 }
 
