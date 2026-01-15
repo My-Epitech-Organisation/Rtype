@@ -524,6 +524,10 @@ void MainMenuScene::_updateStatus(const std::string& message,
 }
 
 void MainMenuScene::update(float dt) {
+    if (this->_audio) {
+        this->_audio->update();
+    }
+
     if (_networkClient && !_networkClient->isConnected()) {
         _networkClient->poll();
     }
