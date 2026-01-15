@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "games/rtype/server/RTypeGameConfig.hpp"
 
@@ -21,7 +22,9 @@ using namespace rtype::games::rtype::server;
 class ServerRTypeGameConfigTest : public ::testing::Test {
    protected:
     void SetUp() override {
-        testDir = fs::temp_directory_path() / "rtype_test_config";
+        auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+        auto unique = std::to_string(std::chrono::duration_cast<std::chrono::nanoseconds>(now).count());
+        testDir = fs::temp_directory_path() / ("rtype_test_config-" + unique);
         configDir = testDir / "config" / "server";
         gameDir = testDir / "config" / "game";
         savesDir = testDir / "saves";
@@ -58,7 +61,7 @@ player_speed = 300.0
 enemy_speed_multiplier = 1.0
 
 [paths]
-saves_path = ")" << savesDir.string() << R"("
+saves_path = ")" << savesDir.generic_string() << R"("
 )";
         config.close();
     }
@@ -267,13 +270,21 @@ TEST_F(ServerRTypeGameConfigTest, SaveGameWithoutInitialization) {
 // Test saveGame with initialization
 TEST_F(ServerRTypeGameConfigTest, SaveGameWithInitialization) {
     RTypeGameConfig config;
-    config.initialize(configDir.string());
+    ASSERT_TRUE(config.initialize(configDir.string()));
     
     std::vector<uint8_t> data = {1, 2, 3, 4};
     bool result = config.saveGame("test_slot", data);
-    // saveGame may return false if save path doesn't exist or format is wrong
-    // Just verify it doesn't crash
-    (void)result;
+    // saveGame currently constructs a default RTypeGameState which may be invalid;
+    // assert consistency between return value and what saveExists() reports instead
+    EXPECT_EQ(result, config.saveExists("test_slot"));
+}
+
+// Test config path uses forward slashes to be TOML-safe on Windows
+TEST_F(ServerRTypeGameConfigTest, ConfigPathIsForwardSlashed) {
+    std::ifstream cfgFile(configDir / "config.toml");
+    ASSERT_TRUE(cfgFile.good());
+    std::string contents((std::istreambuf_iterator<char>(cfgFile)), std::istreambuf_iterator<char>());
+    EXPECT_EQ(contents.find('\\'), std::string::npos);
 }
 
 // Test loadGame without initialization
