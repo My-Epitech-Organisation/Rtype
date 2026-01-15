@@ -16,6 +16,8 @@
 #include "../../../include/rtype/display/IDisplay.hpp"
 #include "../../../lib/common/src/DLLoader/DLLoader.hpp"
 #include "../../games/rtype/client/GraphicsConstants.hpp"
+#include "../../games/rtype/client/Systems/BossAnimationSystem.hpp"
+#include "../../games/rtype/client/Systems/BossSerpentAnimationSystem.hpp"
 #include "../../games/rtype/client/Systems/BoxingSystem.hpp"
 #include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
 #include "../../games/rtype/client/Systems/ChargeInputSystem.hpp"
@@ -155,6 +157,10 @@ class Graphic {
         _playerAnimationSystem;
     std::unique_ptr<::rtype::games::rtype::client::AnimationSystem>
         _animationSystem;
+    std::unique_ptr<::rtype::games::rtype::client::BossSerpentAnimationSystem>
+        _bossSerpentAnimationSystem;
+    std::unique_ptr<::rtype::games::rtype::client::BossAnimationSystem>
+        _bossAnimationSystem;
     std::unique_ptr<::rtype::games::rtype::client::ChaserRotationSystem>
         _chaserRotationSystem;
     std::unique_ptr<::rtype::games::rtype::client::ChaserExplosionSystem>

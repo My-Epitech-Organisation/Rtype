@@ -26,7 +26,12 @@ enum class GameEventType : uint8_t {
     EntityHealthChanged,
     PowerUpApplied,
     GameOver,
-    LevelComplete
+    BossPhaseChanged,
+    BossDefeated,
+    BossAttack,
+    WeakPointDestroyed,
+    LevelComplete,
+    ScoreChanged
 };
 
 /**
@@ -48,6 +53,12 @@ struct GameEvent {
     int32_t healthMax{0};
     int32_t damage{0};
     float duration{0.0F};
+    uint8_t bossPhase{0};
+    uint8_t bossPhaseCount{0};
+    float attackAngle{0.0F};
+    float attackProgress{0.0F};
+    uint32_t parentNetworkId{0};
+    int32_t score{0};
 };
 
 /**

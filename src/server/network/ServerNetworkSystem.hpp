@@ -334,6 +334,10 @@ class ServerNetworkSystem {
 
     std::atomic<bool> lowBandwidthModeActive_{false};
     std::atomic<std::uint32_t> lowBandwidthClientCount_{0};
+
+    /// Debug log counters (reset on resetState)
+    int debugNotFoundLogCount_{0};
+    int debugBossPartUpdateLogCount_{0};
 };
 
 }  // namespace rtype::server

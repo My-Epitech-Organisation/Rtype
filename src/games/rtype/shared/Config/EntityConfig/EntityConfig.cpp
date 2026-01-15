@@ -50,11 +50,6 @@ PowerUpConfig::EffectType stringToEffect(const std::string& str) {
     return PowerUpConfig::EffectType::Health;
 }
 
-/**
- * @brief Try to find a file in multiple locations
- * @param filepath Relative path to search for
- * @return First existing path, or original if none found
- */
 std::string findConfigPath(const std::string& filepath) {
     namespace fs = std::filesystem;
 
@@ -69,6 +64,81 @@ std::string findConfigPath(const std::string& filepath) {
     }
 
     return filepath;
+}
+
+BossSpriteConfig parseSpriteConfig(const toml::table* tbl,
+                                   const std::string& prefix) {
+    BossSpriteConfig sprite;
+    if (!tbl) return sprite;
+    sprite.textureName = (*tbl)[prefix + "_texture"].value_or("");
+    sprite.frameWidth = (*tbl)[prefix + "_frame_width"].value_or(64);
+    sprite.frameHeight = (*tbl)[prefix + "_frame_height"].value_or(64);
+    sprite.frameCount = (*tbl)[prefix + "_frame_count"].value_or(1);
+    sprite.frameDuration = (*tbl)[prefix + "_frame_duration"].value_or(0.1F);
+    sprite.loop = (*tbl)[prefix + "_loop"].value_or(true);
+    sprite.spriteOffsetX = (*tbl)[prefix + "_offset_x"].value_or(0);
+    return sprite;
+}
+
+BossPartAnimationConfig parsePartAnimation(const toml::table* tbl) {
+    BossPartAnimationConfig part;
+    if (!tbl) return part;
+    part.partId = (*tbl)["part_id"].value_or("");
+    part.partType = (*tbl)["part_type"].value_or("body");
+    part.idleSprite = parseSpriteConfig(tbl, "idle");
+    part.moveSprite = parseSpriteConfig(tbl, "move");
+    part.attackSprite = parseSpriteConfig(tbl, "attack");
+    part.deathSprite = parseSpriteConfig(tbl, "death");
+    if (part.idleSprite.textureName.empty() &&
+        !part.moveSprite.textureName.empty()) {
+        part.idleSprite = part.moveSprite;
+    }
+    part.scaleX = (*tbl)["scale_x"].value_or(1.0F);
+    part.scaleY = (*tbl)["scale_y"].value_or(1.0F);
+    part.enableRotation = (*tbl)["enable_rotation"].value_or(true);
+    part.rotationSmoothing = (*tbl)["rotation_smoothing"].value_or(0.15F);
+    part.rotationOffset = (*tbl)["rotation_offset"].value_or(0.0F);
+    return part;
+}
+
+BossAnimationConfig parseAnimationConfig(const toml::table* animTbl) {
+    BossAnimationConfig animConfig;
+    if (!animTbl) return animConfig;
+    animConfig.bossId = (*animTbl)["boss_id"].value_or("");
+    if (auto* headTbl = (*animTbl)["head"].as_table()) {
+        animConfig.headAnimation = parsePartAnimation(headTbl);
+        animConfig.headAnimation.partType = "head";
+    }
+    if (auto* bodyTbl = (*animTbl)["body"].as_table()) {
+        animConfig.bodyAnimation = parsePartAnimation(bodyTbl);
+        animConfig.bodyAnimation.partType = "body";
+    }
+    if (auto* tailTbl = (*animTbl)["tail"].as_table()) {
+        animConfig.tailAnimation = parsePartAnimation(tailTbl);
+        animConfig.tailAnimation.partType = "tail";
+    }
+    if (auto* moveTbl = (*animTbl)["movement"].as_table()) {
+        animConfig.movement.amplitude =
+            (*moveTbl)["amplitude"].value_or(150.0F);
+        animConfig.movement.frequency = (*moveTbl)["frequency"].value_or(0.5F);
+        animConfig.movement.horizontalAmplitude =
+            (*moveTbl)["horizontal_amplitude"].value_or(100.0F);
+        animConfig.movement.verticalAmplitude =
+            (*moveTbl)["vertical_amplitude"].value_or(200.0F);
+        animConfig.movement.enablePositionHistory =
+            (*moveTbl)["enable_position_history"].value_or(false);
+        animConfig.movement.maxPositionHistory =
+            (*moveTbl)["max_position_history"].value_or(500);
+        animConfig.movement.minRecordDistance =
+            (*moveTbl)["min_record_distance"].value_or(3.0F);
+        animConfig.movement.segmentSpacing =
+            (*moveTbl)["segment_spacing"].value_or(100.0F);
+    }
+    animConfig.spawnOffsetX = (*animTbl)["spawn_offset_x"].value_or(-200.0F);
+    animConfig.spawnOffsetY = (*animTbl)["spawn_offset_y"].value_or(0.0F);
+    animConfig.useRelativeSpawn =
+        (*animTbl)["use_relative_spawn"].value_or(true);
+    return animConfig;
 }
 
 }  // namespace
@@ -160,6 +230,95 @@ bool EntityConfigRegistry::loadEnemies(const std::string& filepath) {
                                 colorArray->get(3)->value<int64_t>().value_or(
                                     255));
                         }
+                    }
+
+                    config.isBoss = (*enemyTbl)["is_boss"].value_or(false);
+                    config.bossType = (*enemyTbl)["boss_type"].value_or("");
+                    config.levelCompleteTrigger =
+                        (*enemyTbl)["level_complete_trigger"].value_or(true);
+                    config.phaseTransitionDuration =
+                        (*enemyTbl)["phase_transition_duration"].value_or(1.0F);
+                    config.invulnerabilityDuration =
+                        (*enemyTbl)["invulnerability_duration"].value_or(1.0F);
+
+                    if (auto* phases = (*enemyTbl)["phase"].as_array()) {
+                        for (const auto& phaseElem : *phases) {
+                            if (auto* phaseTbl = phaseElem.as_table()) {
+                                BossPhaseConfig phase;
+                                phase.healthThreshold =
+                                    (*phaseTbl)["health_threshold"].value_or(
+                                        1.0F);
+                                phase.name =
+                                    (*phaseTbl)["name"].value_or("Phase");
+                                phase.primaryPattern =
+                                    (*phaseTbl)["primary_pattern"].value_or("");
+                                phase.secondaryPattern =
+                                    (*phaseTbl)["secondary_pattern"].value_or(
+                                        "");
+                                phase.speedMultiplier =
+                                    (*phaseTbl)["speed_multiplier"].value_or(
+                                        1.0F);
+                                phase.attackSpeedMultiplier =
+                                    (*phaseTbl)["attack_speed_multiplier"]
+                                        .value_or(1.0F);
+                                phase.damageMultiplier =
+                                    (*phaseTbl)["damage_multiplier"].value_or(
+                                        1.0F);
+                                if (auto* col = (*phaseTbl)["color"].as_array();
+                                    col && col->size() >= 3) {
+                                    phase.colorR = static_cast<uint8_t>(
+                                        col->get(0)->value<int64_t>().value_or(
+                                            255));
+                                    phase.colorG = static_cast<uint8_t>(
+                                        col->get(1)->value<int64_t>().value_or(
+                                            255));
+                                    phase.colorB = static_cast<uint8_t>(
+                                        col->get(2)->value<int64_t>().value_or(
+                                            255));
+                                }
+                                config.phases.push_back(std::move(phase));
+                            }
+                        }
+                    }
+
+                    if (auto* weakPoints =
+                            (*enemyTbl)["weak_point"].as_array()) {
+                        for (const auto& wpElem : *weakPoints) {
+                            if (auto* wpTbl = wpElem.as_table()) {
+                                WeakPointConfig wp;
+                                wp.id = (*wpTbl)["id"].value_or("");
+                                wp.type = (*wpTbl)["type"].value_or("generic");
+                                wp.offsetX =
+                                    (*wpTbl)["offset_x"].value_or(0.0F);
+                                wp.offsetY =
+                                    (*wpTbl)["offset_y"].value_or(0.0F);
+                                wp.health = (*wpTbl)["health"].value_or(100);
+                                wp.hitboxWidth =
+                                    (*wpTbl)["hitbox_width"].value_or(32.0F);
+                                wp.hitboxHeight =
+                                    (*wpTbl)["hitbox_height"].value_or(32.0F);
+                                wp.bonusScore =
+                                    (*wpTbl)["bonus_score"].value_or(500);
+                                wp.damageToParent =
+                                    (*wpTbl)["damage_to_parent"].value_or(0);
+                                wp.critical =
+                                    (*wpTbl)["critical"].value_or(false);
+                                wp.disablesAttack =
+                                    (*wpTbl)["disables_attack"].value_or("");
+                                wp.segmentIndex =
+                                    (*wpTbl)["segment_index"].value_or(-1);
+                                if (auto* animTbl =
+                                        (*wpTbl)["animation"].as_table()) {
+                                    wp.animation = parsePartAnimation(animTbl);
+                                }
+                                config.weakPoints.push_back(std::move(wp));
+                            }
+                        }
+                    }
+
+                    if (auto* animTbl = (*enemyTbl)["animation"].as_table()) {
+                        config.animationConfig = parseAnimationConfig(animTbl);
+                        config.animationConfig.bossId = config.id;
                     }
 
                     if (config.isValid()) {

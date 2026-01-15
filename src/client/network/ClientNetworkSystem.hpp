@@ -222,6 +222,10 @@ class ClientNetworkSystem {
     std::unordered_map<std::uint32_t, ECS::Entity> pendingPlayerSpawns_;
 
     bool disconnectedHandled_{false};
+
+    /// Debug log counters (reset on system reset)
+    int debugNotFoundLogCount_{0};
+    int debugBossPartLogCount_{0};
 };
 
 }  // namespace rtype::client

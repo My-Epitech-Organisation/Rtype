@@ -22,6 +22,11 @@
 #include "Components/PowerUpComponent.hpp"
 #include "Components/PowerUpTypeComponent.hpp"
 
+// Boss Components
+#include "Components/BossComponent.hpp"
+#include "Components/BossPatternComponent.hpp"
+#include "Components/WeakPointComponent.hpp"
+
 // Entity Types and Tags
 #include "Components/EntityType.hpp"
 #include "Components/Tags.hpp"

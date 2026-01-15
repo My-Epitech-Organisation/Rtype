@@ -29,13 +29,15 @@ enum class GameState : std::uint8_t {
  * @brief Entity type enumeration for S_ENTITY_SPAWN payload
  */
 enum class EntityType : std::uint8_t {
-    Player = 0,     ///< Player spaceship
-    Bydos = 1,      ///< Enemy (Bydos)
-    Missile = 2,    ///< Projectile
-    Pickup = 3,     ///< Collectible / power-up
-    Obstacle = 4,   ///< Static or moving obstacle
-    ForcePod = 5,   ///< Force Pod companion
-    LaserBeam = 6   ///< Continuous laser beam weapon
+    Player = 0,    ///< Player spaceship
+    Bydos = 1,     ///< Enemy (Bydos)
+    Missile = 2,   ///< Projectile
+    Pickup = 3,    ///< Collectible / power-up
+    Obstacle = 4,  ///< Static or moving obstacle
+    ForcePod = 5,  ///< Force Pod companion
+    LaserBeam = 6,   ///< Continuous laser beam weapon
+    Boss = 7,      ///< Boss entity
+    BossPart = 8   ///< Boss weak point / body part
 };
 
 /**
