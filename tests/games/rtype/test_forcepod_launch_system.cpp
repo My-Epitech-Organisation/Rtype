@@ -302,8 +302,9 @@ TEST_F(ForcePodLaunchSystemTest, CheckReattachmentNoOwnerPlayer) {
     // Should not crash
     system->update(*registry, 0.016F);
 
+    // Pod without owner becomes orphan
     const auto& forcePodComp = registry->getComponent<ForcePodComponent>(forcePod);
-    EXPECT_EQ(forcePodComp.state, ForcePodState::Detached);
+    EXPECT_EQ(forcePodComp.state, ForcePodState::Orphan);
 }
 
 TEST_F(ForcePodLaunchSystemTest, CheckReattachmentDifferentOwner) {
@@ -313,7 +314,7 @@ TEST_F(ForcePodLaunchSystemTest, CheckReattachmentDifferentOwner) {
 
     system->update(*registry, 0.016F);
 
-    // Should NOT reattach to wrong player
+    // Pod with non-existent owner becomes orphan
     const auto& forcePodComp = registry->getComponent<ForcePodComponent>(forcePod);
-    EXPECT_EQ(forcePodComp.state, ForcePodState::Returning);
+    EXPECT_EQ(forcePodComp.state, ForcePodState::Orphan);
 }
