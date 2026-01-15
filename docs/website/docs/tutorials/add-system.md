@@ -22,6 +22,9 @@ This tutorial shows the steps to add a new System (server or client), register i
 2. Inherit from `rtype::engine::ASystem` and implement `update`:
 
 ```cpp
+#include "engine/src/ASystem.hpp"
+#include "ecs/src/Registry.hpp"
+
 class HealthRegenSystem : public ::rtype::engine::ASystem {
 public:
     HealthRegenSystem();

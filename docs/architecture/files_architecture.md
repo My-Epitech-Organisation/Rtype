@@ -13,12 +13,14 @@ r-type/
 ├── cmake/
 ├── external/
 ├── include/
+├── lib/                # Core libraries (ECS, network, common, display, audio, background)
 ├── src/
 ├── assets/
 ├── config/
 ├── docs/
 ├── scripts/
 ├── tests/
+├── executable/        # Pre-built executables and runtime assets
 └── .github/
 ```
 
@@ -40,6 +42,22 @@ r-type/
 * **`external/`** *(optional)*
   Scripts or pinned external configs (e.g. Conan profiles, patched CMake modules).
   We do **not** vendor full third-party libraries’ source code here – only thin integration helpers.
+
+* **`lib/`**
+  **Core reusable libraries** organized by functionality:
+
+  ```text
+  lib/
+    audio/              # Audio system (ALevelMusic, battleMusic, chillMusic, etc.)
+    background/         # Background effects (AsteroidsSpace, BlackHole, Labs, etc.)
+    common/             # Shared utilities (ArgParser, Config, DLLoader, Logger, SafeQueue)
+    display/            # Display abstraction (SFML/SDL2 backends)
+    ecs/                # Entity Component System implementation
+    engine/             # Game engine core
+    network/            # Network stack (UDP, packets, serialization, protocol)
+  ```
+
+  Each library has its own `CMakeLists.txt` and `src/` directory.
 
 * **`include/`**
   **Public interface headers only** (abstract base classes, pure interfaces).
@@ -102,18 +120,21 @@ r-type/
 
   ```text
   docs/
-    README.md               # human-friendly readme, project overview
-    files_architecture.md   # this document
+    README.md                   # documentation overview
+    DOCUMENTATION_GUIDE.md      # how to write and generate docs
+    DEPENDENCY_MANAGEMENT.md    # vcpkg + CPM dependency strategy
+    stress_test_summary.md      # server stress test results
+    Doxyfile                    # Doxygen configuration
     architecture/
-      overview.md           # high-level diagrams, module descriptions
-      engine.md             # engine / ECS design details
-      network.md            # network architecture & netcode
-    protocol/
-      rtype_protocol.md     # “mini-RFC” of the network protocol
-    gameplay/
-      design_doc.md         # gameplay & level design
-    accessibility/
-      accessibility.md      # features & decisions for accessibility
+      files_architecture.md     # this document
+      ecs/                      # ECS technical documentation
+    RFC/
+      RFC_RTGP_v1.4.3.md        # network protocol specification
+    technical/
+      ArgParser.md              # command line parser documentation
+      Logger.md                 # logging system documentation
+      EntityConfig_Usage.md     # entity configuration usage
+    website/                    # Docusaurus documentation website
   ```
 
 * **`scripts/`**
@@ -131,21 +152,26 @@ r-type/
 * **`tests/`**
   Unit and integration tests, organized by module.
 
-  **Note**: Tests use relative paths to include implementation headers from `src/`:
+  **Note**: Tests link against library targets and use include directories:
 
   ```text
   tests/
     CMakeLists.txt
     ecs/
-      test_registry.cpp        # Includes "../../src/engine/ecs/Registry.hpp"
+      test_registry.cpp        # Tests for lib/ecs/
+      CMakeLists.txt
+    common/
+      test_logger.cpp          # Tests for lib/common/
       CMakeLists.txt
     network/
-      test_serialization.cpp   # Includes "../../src/network/Serializer.hpp"
+      test_serialization.cpp   # Tests for lib/network/
       CMakeLists.txt
     games/
       rtype/
-        test_spawning.cpp      # Includes relative paths to components
+        test_spawning.cpp      # Game-specific tests
         CMakeLists.txt
+    integration/
+      test_client_server.cpp   # Integration tests
   ```
 
 * **`.github/workflows/`**
@@ -168,7 +194,7 @@ This project follows modern C++ best practices for header organization:
 * **No implementation details** - these are pure interfaces
 * Stable API that external code can depend on
 
-### Implementation Headers (`src/`)
+### Implementation Headers (`lib/` and `src/`)
 
 * **Co-located with `.cpp` files** for better cohesion
 * Files like `Entity.hpp`, `Registry.hpp`, `UdpSocket.hpp`, `Packet.hpp`
@@ -185,95 +211,182 @@ This project follows modern C++ best practices for header organization:
 ### Example
 
 ```text
-include/rtype/engine/IRegistry.hpp    # Public interface
-src/engine/ecs/Registry.hpp           # Implementation header (co-located)
-src/engine/ecs/Registry.cpp           # Implementation
+include/rtype/engine/IRegistry.hpp    # Public interface (abstract)
+lib/ecs/src/core/Registry/Registry.hpp  # Implementation header (co-located)
+lib/ecs/src/core/Registry/RegistryEntity.cpp  # Implementation
 ```
 
 ---
 
-## 2. Source code layout (`src/`)
+## 2. Source code layout (`src/` and `lib/`)
+
+The project separates reusable libraries (`lib/`) from game-specific code (`src/`):
 
 ```text
+lib/
+├── audio/              # Audio/music system
+├── background/         # Background rendering effects
+├── common/             # Shared utilities
+│   └── src/
+│       ├── ArgParser/  # Command line parsing
+│       ├── Config/     # Configuration loading (TOML)
+│       ├── DLLoader/   # Dynamic library loading
+│       ├── Logger/     # Logging system
+│       └── SafeQueue/  # Thread-safe queue
+├── display/            # Display abstraction layer
+│   ├── Clock/          # Timing utilities
+│   ├── SDL2/           # SDL2 backend
+│   └── SFML/           # SFML backend
+├── ecs/                # Entity Component System
+│   └── src/
+│       ├── core/       # Entity, Registry, CommandBuffer, Prefab, Relationship
+│       ├── serialization/
+│       ├── signal/     # SignalDispatcher
+│       ├── storage/    # SparseSet, ISparseSet, TagSparseSet
+│       ├── system/     # SystemScheduler
+│       ├── traits/     # ComponentTraits
+│       └── view/       # View, ParallelView, Group, ExcludeView
+├── engine/             # Game engine core
+└── network/            # Network stack
+    └── src/
+        ├── compression/    # LZ4 compression
+        ├── connection/     # Connection management
+        ├── core/           # Core network types
+        ├── protocol/       # OpCodes, Payloads, Validator
+        ├── reliability/    # Reliable UDP layer
+        └── transport/      # Transport abstraction
+
 src/
-├── engine/
-├── network/
 ├── games/
-│   └── rtype/
+│   ├── rtype/          # R-Type game module
+│   │   ├── shared/     # Shared components & systems
+│   │   ├── server/     # Server-side game logic
+│   │   └── client/     # Client-side rendering & input
+│   └── snake/          # Snake game module (additional game)
 │       ├── shared/
 │       ├── server/
 │       └── client/
-├── server/
-└── client/
+├── server/             # Server executable
+└── client/             # Client executable
 ```
 
-### 2.1. `src/engine/` – core engine & ECS (lowest level)
+### 2.1. `lib/ecs/` – Entity Component System (lowest level)
 
-This directory implements the **engine core** and ECS.
-
-**Header placement strategy**: Implementation headers (`.hpp` files with corresponding `.cpp`)
-are **co-located** with their source files for better cohesion. Only abstract interfaces
-are exposed in `include/rtype/engine/`.
+The ECS library provides high-performance entity management with sparse set storage.
 
 ```text
-src/engine/
-  ecs/
-    Entity.hpp          # Implementation header (co-located)
-    Entity.cpp
-    Registry.hpp        # Implementation header (co-located)
-    Registry.cpp
-    CMakeLists.txt
+lib/ecs/src/
+  ECS.hpp               # Main include file
   core/
-    Time.hpp            # Implementation header (co-located)
-    Time.cpp
-    Logger.cpp
-    Config.cpp
-    CMakeLists.txt
+    Entity.hpp          # Entity identifier with generational indices
+    Registry/           # Registry implementation (split across files)
+      Registry.hpp      # Main interface and declarations
+      RegistryEntity.cpp    # Entity lifecycle implementation
+      RegistryComponent.inl # Component management (template)
+      RegistrySingleton.inl # Singleton resources (template)
+      RegistryView.inl      # View creation (template)
+    CommandBuffer.hpp   # Deferred ECS operations
+    Prefab.hpp          # Entity templates
+    Relationship.hpp    # Parent-child hierarchies
+  storage/
+    ISparseSet.hpp      # Sparse set interface
+    SparseSet.hpp       # Generic component storage
+    TagSparseSet.hpp    # Zero-size tag components
+  view/
+    View.hpp            # Standard component queries
+    ParallelView.hpp    # Multi-threaded iteration
+    Group.hpp           # Cached entity collections
+    ExcludeView.hpp     # Exclusion filtering
+  system/
+    SystemScheduler.hpp # Dependency-based system execution
+  signal/
+    SignalDispatcher.hpp # Component lifecycle events
+  serialization/        # Save/load ECS state
+  traits/
+    ComponentTraits.hpp # Component type analysis
 ```
 
-* Compiled into library: **`rtype_engine`**.
+* Compiled into library: **`rtype_ecs`**.
 * Responsibilities:
+  * `Entity` identifiers with generational indices
+  * `Registry` for entity/component management
+  * `View`/`ParallelView` for efficient iteration
+  * Signal/observer pattern support
+  * Prefab templates and relationships
+* **Does not know anything about R-Type**, networking, or rendering.
 
-  * `Entity`/`Component`/`System` primitives.
-  * Engine loop helpers, time management.
-  * Logging, config loading, basic utilities.
-* **Does not know anything about R-Type**, networking, or rendering libraries.
+> Dependency rule: `rtype_ecs` is the **base layer** – nothing inside `lib/ecs/` depends on other project modules.
 
-> Dependency rule: `rtype_engine` is the **base layer** – nothing inside `src/engine/` depends on other project modules.
+### 2.1.1. `lib/common/` – Shared Utilities
+
+```text
+lib/common/src/
+  ArgParser/            # Command line argument parser
+    ArgParser.hpp
+    Option.hpp
+    ParseResult.hpp
+    NumberParser.hpp
+  Config/               # TOML configuration loading
+  DLLoader/             # Dynamic library loading (plugins)
+  Logger/               # Thread-safe logging system
+    Logger.hpp
+    LogLevel.hpp
+    Macros.hpp
+    FileWriter.hpp
+    Timestamp.hpp
+    ColorFormatter.hpp
+  SafeQueue/            # Thread-safe queue
+  Types.hpp             # Common type definitions
+```
+
+* Compiled into library: **`rtype_common`** (header-only interface).
+* Responsibilities:
+  * Argument parsing, configuration loading
+  * Logging infrastructure
+  * Thread-safe utilities
 
 ---
 
-### 2.2. `src/network/` – shared network library
+### 2.2. `lib/network/` – Network Library
 
-**Header placement**: Implementation headers co-located with `.cpp` files.
+The network library implements the RTGP protocol over UDP with reliability.
 
 ```text
-src/network/
-  UdpSocket.hpp         # Implementation header (co-located)
+lib/network/src/
+  UdpSocket.hpp         # UDP socket wrapper
   UdpSocket.cpp
-  Packet.hpp            # Implementation header (co-located)
+  Packet.hpp            # Packet structure
   Packet.cpp
-  Serializer.hpp        # Implementation header (co-located)
+  Serializer.hpp        # Binary serialization
   Serializer.cpp
-  CMakeLists.txt
+  Protocol.hpp          # Protocol definitions
+  compression/          # LZ4 compression support
+  connection/           # Connection state management
+  core/                 # Core types and constants
+  protocol/
+    OpCode.hpp          # Operation codes
+    Payloads.hpp        # Payload structures
+    Validator.hpp       # Packet validation
+  reliability/          # Reliable UDP layer (RUDP)
+  transport/            # Transport abstraction
 ```
 
 * Compiled into library: **`rtype_network`**.
 * Responsibilities:
-
-  * UDP socket wrappers (and optional TCP if justified).
-  * Packet structure, (de)serialization of messages.
-  * Definition of message types (e.g. `PlayerInput`, `EntitySpawn`, `EntityUpdate`, etc.).
+  * UDP socket wrappers with asio
+  * Binary packet serialization/deserialization
+  * RTGP protocol implementation (see [RFC_RTGP_v1.4.3](../RFC/RFC_RTGP_v1.4.3.md))
+  * LZ4 compression for large payloads
+  * Reliable delivery layer with ACK/retransmission
 * **Depends on**:
-
-  * `rtype_engine` (for logging, maybe time, basic types).
+  * `rtype_common` (for logging, types)
+  * External: asio, lz4
 * Used by:
+  * `r-type_server` (server executable)
+  * `r-type_client` (client executable)
+  * Game-specific logic in `games/rtype/{shared,server,client}`
 
-  * `r-type_server` (server executable).
-  * `r-type_client` (client executable).
-  * Game-specific logic in `games/rtype/{shared,server,client}`.
-
-> Dependency rule: network is **above engine**, but **below game logic**.
+> Dependency rule: network is **above common/ecs**, but **below game logic**.
 
 ---
 
@@ -469,11 +582,16 @@ Typical targets:
 
 * **Libraries**
 
-  * `rtype_engine`        ← `src/engine/`
-  * `rtype_network`       ← `src/network/`
-  * `rtype_game_shared`  ← `src/games/rtype/shared/`
-  * `rtype_game_server`  ← `src/games/rtype/server/`
-  * `rtype_game_client`  ← `src/games/rtype/client/`
+  * `rtype_ecs`           ← `lib/ecs/`
+  * `rtype_common`        ← `lib/common/`
+  * `rtype_network`       ← `lib/network/`
+  * `rtype_display`       ← `lib/display/`
+  * `rtype_audio`         ← `lib/audio/`
+  * `rtype_background`    ← `lib/background/`
+  * `rtype_engine`        ← `lib/engine/`
+  * `rtype_game_shared`   ← `src/games/rtype/shared/`
+  * `rtype_game_server`   ← `src/games/rtype/server/`
+  * `rtype_game_client`   ← `src/games/rtype/client/`
 
 * **Executables**
 
@@ -493,43 +611,49 @@ Typical targets:
 From **lowest** to **highest** layer:
 
 ```text
-rtype_engine         rtype_engine       # core ECS & engine utilities
-   ▲                     ▲
-   │                     │
-rtype_network        rtype_network      # network helpers, packets, messages
-   ▲                     ▲
-   │                     │
-rtype_game_shared    rtype_game_shared  # shared game components & systems
-   ▲                     ▲
-   │                     │
-rtype_game_server    rtype_game_client
-   ▲                     ▲
-   │                     │
-r-type_server        r-type_client
+rtype_ecs + rtype_common              # core ECS & utilities (base)
+           ▲
+           │
+rtype_network + rtype_display         # network & display libraries
+           ▲
+           │
+  rtype_game_shared                   # shared game components
+       ▲         ▲
+       │         │
+rtype_game_server  rtype_game_client  # game-specific logic
+       ▲         ▲
+       │         │
+ r-type_server   r-type_client        # executables
 ```
 
 #### Summary:
 
-* `rtype_engine`
+* `rtype_ecs`
+  ↳ No internal dependency on other project targets.
+
+* `rtype_common`
   ↳ No internal dependency on other project targets.
 
 * `rtype_network`
-  ↳ Depends **only** on `rtype_engine`.
+  ↳ Depends on `rtype_common` (for logging).
+
+* `rtype_display`
+  ↳ Depends on `rtype_common`.
 
 * `rtype_game_shared`
-  ↳ Depends **only** on `rtype_engine`.
+  ↳ Depends on `rtype_ecs`, `rtype_common`.
 
 * `rtype_game_server`
-  ↳ Depends on `rtype_engine`, `rtype_network`, `rtype_game_shared`.
+  ↳ Depends on `rtype_ecs`, `rtype_network`, `rtype_game_shared`.
 
 * `rtype_game_client`
-  ↳ Depends on `rtype_engine`, `rtype_network`, `rtype_game_shared`.
+  ↳ Depends on `rtype_ecs`, `rtype_network`, `rtype_display`, `rtype_game_shared`.
 
 * `r-type_server`
-  ↳ Depends on `rtype_engine`, `rtype_network`, `rtype_game_shared`, `rtype_game_server`.
+  ↳ Depends on `rtype_ecs`, `rtype_network`, `rtype_game_shared`, `rtype_game_server`.
 
 * `r-type_client`
-  ↳ Depends on `rtype_engine`, `rtype_network`, `rtype_game_shared`, `rtype_game_client`.
+  ↳ Depends on `rtype_ecs`, `rtype_network`, `rtype_display`, `rtype_game_shared`, `rtype_game_client`.
 
 > Rule of thumb: **no cyclic dependencies**. Higher-level modules may depend on lower-level ones, but never the opposite.
 
@@ -539,22 +663,28 @@ r-type_server        r-type_client
 
 When adding new functionality, use these questions:
 
-1. **Is this generic engine/ECS functionality (no game-specific logic)?**
-   → Put it in `src/engine/` + `include/rtype/engine/`.
+1. **Is this generic ECS functionality (entities, components, views)?**
+   → Put it in `lib/ecs/src/`.
 
-2. **Is this low-level networking code or serialization logic reused by client & server?**
-   → Put it in `src/network/` + `include/rtype/network/`.
+2. **Is this a reusable utility (logging, config, arg parsing)?**
+   → Put it in `lib/common/src/`.
 
-3. **Is this a component or system that exists on both client & server (Transform, Velocity…)?**
+3. **Is this low-level networking code or protocol logic?**
+   → Put it in `lib/network/src/`.
+
+4. **Is this display/rendering abstraction (not game-specific)?**
+   → Put it in `lib/display/`.
+
+5. **Is this a component or system that exists on both client & server (Transform, Velocity…)?**
    → Put it in `src/games/rtype/shared/`.
 
-4. **Is this authoritative gameplay logic (scoring, collisions, wave spawning)?**
+6. **Is this authoritative gameplay logic (scoring, collisions, wave spawning)?**
    → Put it in `src/games/rtype/server/`.
 
-5. **Is this rendering, input, UI, or sound logic used only on the client?**
+7. **Is this rendering, input, UI, or sound logic used only on the client?**
    → Put it in `src/games/rtype/client/`.
 
-6. **Is this about bootstrapping the process (CLI args, main loop, config loading)?**
+8. **Is this about bootstrapping the process (CLI args, main loop, config loading)?**
    → Put it in `src/server/` or `src/client/`.
 
 ---
@@ -563,17 +693,22 @@ When adding new functionality, use these questions:
 
 * **Tests** for a module should live in `tests/<module>/` and link against the corresponding target:
 
-  * `tests/ecs/` → tests for `rtype_engine`.
+  * `tests/ecs/` → tests for `rtype_ecs`.
+  * `tests/common/` → tests for `rtype_common` (Logger, ArgParser).
   * `tests/network/` → tests for `rtype_network`.
-  * `tests/games/rtype/` → tests for `rtype_*`.
+  * `tests/games/rtype/` → tests for game-specific code.
+  * `tests/integration/` → integration tests for client-server flows.
 
 * **Architecture documentation** provides more details on design:
 
-  * `docs/architecture/overview.md`
-  * `docs/architecture/engine.md`
-  * `docs/architecture/network.md`
+  * `docs/architecture/ecs/` – ECS technical documentation
+  * `docs/technical/` – Technical component docs (Logger, ArgParser)
 
 * The **network protocol** is documented in:
+
+  * `docs/RFC/RFC_RTGP_v1.4.3.md`
+
+This document (`docs/architecture/files_architecture.md`) should be the first step to understand **where things live**; the other docs then explain **how they work**.
 
   * `docs/protocol/rtype_protocol.md`
 

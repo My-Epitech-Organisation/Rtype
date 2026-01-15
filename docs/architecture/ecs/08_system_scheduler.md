@@ -204,7 +204,7 @@ scheduler.addSystem("render", render_system, {"camera"});
 ## Complete Example
 
 ```cpp
-#include "ECS/ECS.hpp"
+#include "ecs/src/ECS.hpp"
 #include "ECS/System/SystemScheduler.hpp"
 
 // Define systems

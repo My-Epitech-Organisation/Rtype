@@ -112,9 +112,25 @@ Asset files contain **game resources**:
 
 ```
 assets/
-├── textures/    # Sprites, backgrounds
+├── img/         # Sprites, backgrounds
 ├── audio/       # Music, sound effects
-└── fonts/       # UI fonts
+├── fonts/       # UI fonts
+└── shaders/     # GLSL fragment shaders
+```
+
+## Library Structure
+
+The engine libraries are located in the `lib/` directory:
+
+```
+lib/
+├── ecs/         # Entity Component System core
+├── common/      # Shared utilities (Logger, ArgParser, Serializer)
+├── network/     # Network socket abstraction
+├── display/     # Graphics rendering with SFML
+├── audio/       # Sound system with SDL2
+├── background/  # Parallax scrolling backgrounds
+└── engine/      # Game engine abstraction layer
 ```
 
 ## Dependency Flow
@@ -168,9 +184,13 @@ The architecture maps to CMake build targets:
 |--------|------|-------------|
 | `r-type_server` | Executable | Server application |
 | `r-type_client` | Executable | Client application |
-| `rtype_ecs` | Static Library | ECS engine core |
-| `rtype_network` | Static Library | Network socket layer |
-| `rtype_common` | Static Library | Shared protocol/structs |
+| `rtype_ecs` | Static Library | ECS engine core (`lib/ecs/`) |
+| `rtype_network` | Static Library | Network socket layer (`lib/network/`) |
+| `rtype_common` | Static Library | Shared utilities & protocol (`lib/common/`) |
+| `rtype_display` | Static Library | Graphics rendering (`lib/display/`) |
+| `rtype_audio` | Static Library | Sound system (`lib/audio/`) |
+| `rtype_background` | Static Library | Parallax backgrounds (`lib/background/`) |
+| `rtype_engine` | Static Library | Game engine abstraction (`lib/engine/`) |
 
 ## Communication Flow
 

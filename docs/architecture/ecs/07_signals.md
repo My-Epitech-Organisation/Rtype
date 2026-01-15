@@ -23,7 +23,7 @@ The **Signal System** provides an event-driven mechanism for responding to compo
 ## Basic Usage
 
 ```cpp
-#include "ECS/ECS.hpp"
+#include "ecs/src/ECS.hpp"
 
 struct Health { int hp; };
 
