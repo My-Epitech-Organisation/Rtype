@@ -427,29 +427,28 @@ jobs:
           cp -v build/src/client/*.exe build/dist/client/
 
           echo "Staging Display plugin to plugins/"
-          if ls build/lib/display/SFML/*.dll >/dev/null 2>&1; then
-            cp -v build/lib/display/SFML/*.dll build/dist/client/plugins/
-            echo "✅ Copied display DLL(s) to plugins/"
-          else
+          if ! ls build/lib/display/SFML/*.dll >/dev/null 2>&1; then
             echo "❌ Error: Display DLL not found at build/lib/display/SFML/"
             exit 1
           fi
+          cp -v build/lib/display/SFML/*.dll build/dist/client/plugins/
+          echo "✅ Copied display DLL(s) to plugins/"
 
           echo "Staging Background plugins to plugins/background/"
-          if ls build/lib/background/**/*.dll >/dev/null 2>&1; then
-            cp -v build/lib/background/**/*.dll build/dist/client/plugins/background/
-            echo "✅ Copied background DLL(s) to plugins/background/"
-          else
-            echo "⚠️  Warning: No background DLLs found - this may be expected if not used"
+          if ! ls build/lib/background/**/*.dll >/dev/null 2>&1; then
+            echo "❌ Error: Background DLL not found at build/lib/background/"
+            exit 1
           fi
+          cp -v build/lib/background/**/*.dll build/dist/client/plugins/background/
+          echo "✅ Copied background DLL(s) to plugins/background/"
 
           echo "Staging Audio/Music plugins to plugins/music/"
-          if ls build/lib/audio/**/*.dll >/dev/null 2>&1; then
-            cp -v build/lib/audio/**/*.dll build/dist/client/plugins/music/
-            echo "✅ Copied audio DLL(s) to plugins/music/"
-          else
-            echo "⚠️  Warning: No audio DLLs found - this may be expected if not used"
+          if ! ls build/lib/audio/**/*.dll >/dev/null 2>&1; then
+            echo "❌ Error: Audio DLL not found at build/lib/audio/"
+            exit 1
           fi
+          cp -v build/lib/audio/**/*.dll build/dist/client/plugins/music/
+          echo "✅ Copied audio DLL(s) to plugins/music/"
 
           echo "Staging vcpkg runtime dependencies to root"
           if ! ls build/vcpkg_installed/x64-windows/bin/*.dll >/dev/null 2>&1; then
@@ -503,29 +502,28 @@ jobs:
           fi
 
           echo "Staging Display plugin to plugins/"
-          if ls build/lib/display/SFML/*.so >/dev/null 2>&1; then
-            cp -v build/lib/display/SFML/*.so build/dist/client/plugins/display.so
-            echo "✅ Copied display .so to plugins/"
-          else
+          if ! ls build/lib/display/SFML/*.so >/dev/null 2>&1; then
             echo "❌ Error: Display .so not found at build/lib/display/SFML/"
             exit 1
           fi
+          cp -v build/lib/display/SFML/*.so build/dist/client/plugins/display.so
+          echo "✅ Copied display .so to plugins/"
 
           echo "Staging Background plugins to plugins/background/"
-          if ls build/lib/background/**/*.so >/dev/null 2>&1; then
-            cp -v build/lib/background/**/*.so build/dist/client/plugins/background/
-            echo "✅ Copied background .so(s) to plugins/background/"
-          else
-            echo "⚠️  Warning: No background .so files found - this may be expected if not used"
+          if ! ls build/lib/background/**/*.so >/dev/null 2>&1; then
+            echo "❌ Error: Background .so not found at build/lib/background/"
+            exit 1
           fi
+          cp -v build/lib/background/**/*.so build/dist/client/plugins/background/
+          echo "✅ Copied background .so(s) to plugins/background/"
 
           echo "Staging Audio/Music plugins to plugins/music/"
-          if ls build/lib/audio/**/*.so >/dev/null 2>&1; then
-            cp -v build/lib/audio/**/*.so build/dist/client/plugins/music/
-            echo "✅ Copied audio .so(s) to plugins/music/"
-          else
-            echo "⚠️  Warning: No audio .so files found - this may be expected if not used"
+          if ! ls build/lib/audio/**/*.so >/dev/null 2>&1; then
+            echo "❌ Error: Audio .so not found at build/lib/audio/"
+            exit 1
           fi
+          cp -v build/lib/audio/**/*.so build/dist/client/plugins/music/
+          echo "✅ Copied audio .so(s) to plugins/music/"
 
           echo "✅ Client dist contents:" && find build/dist/client -type f
 
