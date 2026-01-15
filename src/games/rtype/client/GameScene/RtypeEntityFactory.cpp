@@ -498,15 +498,25 @@ void RtypeEntityFactory::setupMissileEntity(
     reg.emplaceComponent<GameTag>(entity);
 
     bool isEnemyProjectile = false;
-    if (reg.hasComponent<shared::VelocityComponent>(entity)) {
+    if (reg.hasComponent<shared::ProjectileComponent>(entity)) {
+        const auto& proj =
+            reg.getComponent<shared::ProjectileComponent>(entity);
+        isEnemyProjectile = (proj.owner == shared::ProjectileOwner::Enemy);
+        if (isEnemyProjectile) {
+            reg.emplaceComponent<Rotation>(entity, 180.0f);
+            LOG_DEBUG(
+                "[RtypeEntityFactory] Marked as enemy projectile via "
+                "ProjectileComponent.owner");
+        }
+    } else if (reg.hasComponent<shared::VelocityComponent>(entity)) {
         const auto& vel = reg.getComponent<shared::VelocityComponent>(entity);
         LOG_DEBUG("[RtypeEntityFactory] Projectile velocity: vx="
                   << vel.vx << " vy=" << vel.vy);
         if (vel.vx < 0.0f) {
-            isEnemyProjectile = true;
             reg.emplaceComponent<Rotation>(entity, 180.0f);
             LOG_DEBUG(
-                "[RtypeEntityFactory] Added 180° rotation to enemy projectile");
+                "[RtypeEntityFactory] Added 180° rotation to projectile based "
+                "on velocity (fallback)");
         }
     }
 
