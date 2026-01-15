@@ -46,7 +46,7 @@ SpawnerSystem::SpawnerSystem(EventEmitter emitter, SpawnerConfig config)
                              config.obstacleMaxInterval),
       _powerUpSpawnTimeDist(config.powerUpMinInterval,
                             config.powerUpMaxInterval),
-      _powerUpTypeDist(1, static_cast<int>(shared::PowerUpType::HealthBoost)) {
+      _powerUpTypeDist(1, static_cast<int>(shared::PowerUpType::LaserUpgrade)) {
     generateNextSpawnTime();
     generateNextObstacleSpawnTime();
     generateNextPowerUpSpawnTime();
@@ -333,6 +333,18 @@ void SpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
         case shared::PowerUpType::HealthBoost:
             powerUpId = "health_small";
             variant = shared::PowerUpVariant::HealthBoost;
+            break;
+        case shared::PowerUpType::ForcePod:
+            powerUpId = "force_pod";
+            variant = shared::PowerUpVariant::ForcePod;
+            power.duration = 0.0F;
+            power.magnitude = 1.0F;
+            break;
+        case shared::PowerUpType::LaserUpgrade:
+            powerUpId = "laser_upgrade";
+            variant = shared::PowerUpVariant::LaserUpgrade;
+            power.duration = 0.0F;
+            power.magnitude = 1.0F;
             break;
         default:
             powerUpId = "health_small";

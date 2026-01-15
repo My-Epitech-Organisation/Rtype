@@ -68,7 +68,7 @@ DataDrivenSpawnerSystem::DataDrivenSpawnerSystem(EventEmitter emitter,
                              config.obstacleMaxInterval),
       _powerUpSpawnTimeDist(config.powerUpMinInterval,
                             config.powerUpMaxInterval),
-      _powerUpTypeDist(1, static_cast<int>(shared::PowerUpType::HealthBoost)) {
+      _powerUpTypeDist(1, static_cast<int>(shared::PowerUpType::LaserUpgrade)) {
     _waveManager.setWaitForClear(config.waitForClear);
     _waveManager.setWaveTransitionDelay(config.waveTransitionDelay);
     _waveManager.setStartDelay(config.startDelay);
@@ -617,6 +617,11 @@ void DataDrivenSpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
             duration = 0.0F;
             magnitude = 1.0F;
             variant = shared::PowerUpVariant::ForcePod;
+            break;
+        case shared::PowerUpType::LaserUpgrade:
+            duration = 0.0F;
+            magnitude = 1.0F;
+            variant = shared::PowerUpVariant::LaserUpgrade;
             break;
         default:
             variant = shared::PowerUpVariant::HealthBoost;
