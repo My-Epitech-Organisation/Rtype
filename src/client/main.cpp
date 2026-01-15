@@ -120,23 +120,12 @@ auto main(int argc, char** argv) -> int {
             logger.setColorEnabled(false);
         }
 
-        const auto logFile =
-            rtype::Logger::generateLogFilename("client_session");
-        if (logger.setLogFile(logFile, false)) {
-            LOG_INFO_CAT(rtype::LogCategory::Main,
-                         "[Main] Logging to file: " << logFile.string());
-        } else {
-            LOG_WARNING_CAT(
-                rtype::LogCategory::Main,
-                "[Main] Failed to open log file: " << logFile.string());
-        }
-
         std::vector<std::filesystem::path> dirs = {
             "config",        "config/game", "config/game/levels",
             "config/client", "saves",       "logs"};
         for (auto const& d : dirs) {
             std::error_code ec;
-            if (std::filesystem::exists(d)) {
+            if (std::filesystem::exists(d, ec)) {
                 LOG_DEBUG_CAT(rtype::LogCategory::Main,
                               "[Main] Directory exists: " << d.string());
             } else if (std::filesystem::create_directories(d, ec)) {
@@ -148,6 +137,17 @@ auto main(int argc, char** argv) -> int {
                                     << d.string() << " (" << ec.message()
                                     << ")");
             }
+        }
+
+        const auto logFile =
+            rtype::Logger::generateLogFilename("client_session");
+        if (logger.setLogFile(logFile, false)) {
+            LOG_INFO_CAT(rtype::LogCategory::Main,
+                         "[Main] Logging to file: " << logFile.string());
+        } else {
+            LOG_WARNING_CAT(
+                rtype::LogCategory::Main,
+                "[Main] Failed to open log file: " << logFile.string());
         }
 
         LOG_INFO_CAT(rtype::LogCategory::Main,
