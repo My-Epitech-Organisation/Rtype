@@ -506,10 +506,11 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
         return;
     }
 
-    uint64_t collisionPairId =
-        (static_cast<uint64_t>(obstacle.id) << 32) | static_cast<uint64_t>(other.id);
+    uint64_t collisionPairId = (static_cast<uint64_t>(obstacle.id) << 32) |
+                               static_cast<uint64_t>(other.id);
 
-    if (_obstacleCollidedThisFrame.find(collisionPairId) != _obstacleCollidedThisFrame.end()) {
+    if (_obstacleCollidedThisFrame.find(collisionPairId) !=
+        _obstacleCollidedThisFrame.end()) {
         return;
     }
     _obstacleCollidedThisFrame.insert(collisionPairId);
