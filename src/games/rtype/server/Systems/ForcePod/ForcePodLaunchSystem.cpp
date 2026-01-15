@@ -152,6 +152,9 @@ void ForcePodLaunchSystem::updateReturningPods(ECS::Registry& registry,
         });
 
         if (!playerFound) {
+            forcePod.makeOrphan();
+            vel.vx = 0.0F;
+            vel.vy = 0.0F;
             return;
         }
 
@@ -180,7 +183,8 @@ void ForcePodLaunchSystem::checkReattachment(ECS::Registry& registry) {
                                    ForcePodComponent& forcePod,
                                    const TransformComponent& podTransform,
                                    const ForcePodTag&) {
-        if (forcePod.state == ForcePodState::Attached) {
+        if (forcePod.state == ForcePodState::Attached ||
+            forcePod.state == ForcePodState::Orphan) {
             return;
         }
 
@@ -188,6 +192,7 @@ void ForcePodLaunchSystem::checkReattachment(ECS::Registry& registry) {
             registry.view<NetworkIdComponent, TransformComponent, PlayerTag>();
         bool reattached = false;
         bool autoRecall = false;
+        bool ownerExists = false;
 
         playerView.each([&](ECS::Entity, const NetworkIdComponent& netId,
                             const TransformComponent& playerTransform,
@@ -196,6 +201,7 @@ void ForcePodLaunchSystem::checkReattachment(ECS::Registry& registry) {
                 return;
             }
 
+            ownerExists = true;
             float dx = playerTransform.x - podTransform.x;
             float dy = playerTransform.y - podTransform.y;
             float distance = std::sqrt(dx * dx + dy * dy);
@@ -215,6 +221,17 @@ void ForcePodLaunchSystem::checkReattachment(ECS::Registry& registry) {
                 autoRecall = true;
             }
         });
+
+        if (!ownerExists) {
+            forcePod.makeOrphan();
+            if (registry.hasComponent<VelocityComponent>(forcePodEntity)) {
+                auto& vel =
+                    registry.getComponent<VelocityComponent>(forcePodEntity);
+                vel.vx = 0.0F;
+                vel.vy = 0.0F;
+            }
+            return;
+        }
 
         if (autoRecall && !reattached) {
             forcePod.state = ForcePodState::Returning;

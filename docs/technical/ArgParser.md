@@ -18,7 +18,7 @@ The `ArgParser` is a lightweight, header-only command line argument parsing libr
 ## File Structure
 
 ```
-src/common/ArgParser/
+lib/common/src/ArgParser/
 ├── ArgParser.hpp      # Main parser class
 ├── Option.hpp         # Option and PositionalArg structures
 ├── ParseResult.hpp    # Result enumeration
@@ -227,9 +227,9 @@ ArgParser& flag(std::string_view shortOpt, std::string_view longOpt, ...);
 ## Dependencies
 
 - C++20 (for `std::format`, `contains()`, etc.)
-- Logger system (`../Logger/Macros.hpp`)
+- Logger system (`Logger/Macros.hpp`)
 
 ## Related Documentation
 
 - [Logger Technical Documentation](./Logger.md)
-- [Server Architecture](../architecture/files_architecture.md)
+- [Architecture Overview](../architecture/files_architecture.md)

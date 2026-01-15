@@ -244,6 +244,28 @@ uint32_t ProjectileSpawnerSystem::spawnChargedProjectile(
         ProjectileOwner::Player, playerNetworkId, encodedSubType);
 }
 
+uint32_t ProjectileSpawnerSystem::spawnBossProjectile(ECS::Registry& registry,
+                                                      float x, float y,
+                                                      float vx, float vy,
+                                                      int32_t damage,
+                                                      uint32_t ownerNetworkId) {
+    WeaponConfig bossConfig;
+    bossConfig.projectileType = shared::ProjectileType::EnemyBullet;
+    bossConfig.damage = damage;
+    bossConfig.speed = std::sqrt(vx * vx + vy * vy);
+    bossConfig.cooldown = 0.0F;
+    bossConfig.lifetime = 5.0F;
+    bossConfig.hitboxWidth = 16.0F;
+    bossConfig.hitboxHeight = 16.0F;
+    bossConfig.piercing = false;
+    bossConfig.maxHits = 1;
+    bossConfig.projectileCount = 1;
+    bossConfig.spreadAngle = 0.0F;
+
+    return spawnProjectileWithConfig(registry, x, y, vx, vy, bossConfig,
+                                     ProjectileOwner::Enemy, ownerNetworkId);
+}
+
 uint32_t ProjectileSpawnerSystem::spawnProjectileWithConfig(
     ECS::Registry& registry, float x, float y, float vx, float vy,
     const WeaponConfig& config, ProjectileOwner owner, uint32_t ownerNetworkId,

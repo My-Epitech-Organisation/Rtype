@@ -29,6 +29,7 @@
 #include "games/rtype/shared/Components/PowerUpComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
+#include "games/rtype/shared/Components/WeakPointComponent.hpp"
 
 namespace rtype::client {
 
@@ -209,6 +210,8 @@ void ClientNetworkSystem::reset() {
     pendingPlayerSpawns_.clear();
     lastKnownHealth_.clear();
     disconnectedHandled_ = false;
+    debugNotFoundLogCount_ = 0;
+    debugBossPartLogCount_ = 0;
 
     LOG_DEBUG_CAT(rtype::LogCategory::Network,
                   "[ClientNetworkSystem] Network system state reset complete");
@@ -297,6 +300,13 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
 void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
     auto it = networkIdToEntity_.find(event.entityId);
     if (it == networkIdToEntity_.end()) {
+        if (debugNotFoundLogCount_ < 100) {
+            LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                          "[ClientNetworkSystem] handleEntityMove: networkId="
+                              << event.entityId << " NOT FOUND in map (size="
+                              << networkIdToEntity_.size() << ")");
+            debugNotFoundLogCount_++;
+        }
         return;
     }
 
@@ -331,6 +341,18 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
 
     if (registry_->hasComponent<Transform>(entity)) {
         auto& pos = registry_->getComponent<Transform>(entity);
+
+        if (debugBossPartLogCount_ < 60 &&
+            registry_->hasComponent<rtype::games::rtype::shared::WeakPointTag>(
+                entity)) {
+            LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                          "[ClientNetworkSystem] BossPart move: netId="
+                              << event.entityId << " entity=" << entity.id
+                              << " pos (" << pos.x << "," << pos.y << ") -> ("
+                              << event.x << "," << event.y << ")");
+            debugBossPartLogCount_++;
+        }
+
         pos.x = event.x;
         pos.y = event.y;
     }

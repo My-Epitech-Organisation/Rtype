@@ -28,13 +28,13 @@
 #include "Systems/TextInputSystem.hpp"
 
 /** @brief Width (pixels) for a standard level UI section. */
-constexpr float kLevelSectionWidth = 700.f;
+constexpr float kLevelSectionWidth = 650.f;
 /** @brief Height (pixels) for a standard level UI section. */
-constexpr float kLevelSectionHeight = 600.f;
+constexpr float kLevelSectionHeight = 550.f;
 /** @brief Default left X position (pixels) for level sections on screen. */
-constexpr float kLevelSectionPosLeft = 50.f;
+constexpr float kLevelSectionPosLeft = 40.f;
 /** @brief Default top Y position (pixels) for level sections on screen. */
-constexpr float kLevelSectionPosTop = 200.f;
+constexpr float kLevelSectionPosTop = 180.f;
 /** @brief Maximum number of waves allowed in the level editor. */
 constexpr int kMaxWaves = 10;
 

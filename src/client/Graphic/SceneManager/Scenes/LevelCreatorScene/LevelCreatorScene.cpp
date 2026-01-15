@@ -145,11 +145,19 @@ LevelCreatorScene::LevelCreatorScene(
 
     this->_musicLevelIteratorCurrent = this->_libMusicLevels.begin();
 
-    this->_musicLevelId = this->_musicLevelIteratorCurrent->first;
+    if (!this->_libMusicLevels.empty()) {
+        this->_musicLevelId = this->_musicLevelIteratorCurrent->first;
+    } else {
+        this->_musicLevelId = "No Music Plugin";
+    }
 
     this->_bgIteratorCurrent = _libBackgrounds.begin();
 
-    this->_bgPluginName = this->_bgIteratorCurrent->first;
+    if (!this->_libBackgrounds.empty()) {
+        this->_bgPluginName = this->_bgIteratorCurrent->first;
+    } else {
+        this->_bgPluginName = "No Background Plugin";
+    }
 
     float startX = kLevelSectionPosLeft;
     float startY = kLevelSectionPosTop;
@@ -158,15 +166,15 @@ LevelCreatorScene::LevelCreatorScene(
                   {startX, startY, kLevelSectionWidth, kLevelSectionHeight});
 
     float labelX = startX + 25;
-    float inputX = startX + 250;
-    float inputW = 400;
-    float gapY = 50.f;
-    float currentY = 100.f;
+    float inputX = startX + 200;
+    float inputW = 450;
+    float gapY = 45.f;
+    float currentY = 80.f;
 
     addElementToSection(
         "settings",
         EntityFactory::createStaticText(_registry, _assetsManager,
-                                        "ID:", "main_font", {labelX, 0}, 24.f),
+                                        "ID:", "main_font", {labelX, 0}, 18.f),
         currentY);
     _levelIdInput =
         EntityFactory::createTextInput(_registry, _assetsManager, {inputX, 0},
@@ -177,7 +185,7 @@ LevelCreatorScene::LevelCreatorScene(
     addElementToSection(
         "settings",
         EntityFactory::createStaticText(
-            _registry, _assetsManager, "Name:", "main_font", {labelX, 0}, 24.f),
+            _registry, _assetsManager, "Name:", "main_font", {labelX, 0}, 18.f),
         currentY);
     _levelNameInput =
         EntityFactory::createTextInput(_registry, _assetsManager, {inputX, 0},
@@ -188,16 +196,16 @@ LevelCreatorScene::LevelCreatorScene(
     addElementToSection("settings",
                         EntityFactory::createStaticText(
                             _registry, _assetsManager,
-                            "Background:", "main_font", {labelX, 0}, 24.f),
+                            "Background:", "main_font", {labelX, 0}, 18.f),
                         currentY);
     _levelBackgroundBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text("main_font",
-                                          rtype::display::Color::White(), 20,
+                                          rtype::display::Color::White(), 16,
                                           this->_bgPluginName),
         rtype::games::rtype::shared::TransformComponent(inputX, 0),
         rtype::games::rtype::client::Rectangle(
-            {120, 40}, rtype::display::Color(0, 180, 0, 255),
+            {180, 35}, rtype::display::Color(0, 180, 0, 255),
             rtype::display::Color(0, 135, 0, 255)),
         this->_assetsManager, std::function<void()>([this]() {
             if (this->_libBackgrounds.empty()) return;
@@ -222,7 +230,7 @@ LevelCreatorScene::LevelCreatorScene(
     addElementToSection("settings",
                         EntityFactory::createStaticText(
                             _registry, _assetsManager,
-                            "Scroll Speed:", "main_font", {labelX, 0}, 24.f),
+                            "Scroll Speed:", "main_font", {labelX, 0}, 18.f),
                         currentY);
     _scrollSpeedInput =
         EntityFactory::createTextInput(_registry, _assetsManager, {inputX, 0},
@@ -233,7 +241,7 @@ LevelCreatorScene::LevelCreatorScene(
     addElementToSection(
         "settings",
         EntityFactory::createStaticText(
-            _registry, _assetsManager, "Boss:", "main_font", {labelX, 0}, 24.f),
+            _registry, _assetsManager, "Boss:", "main_font", {labelX, 0}, 18.f),
         currentY);
     _bossInput = EntityFactory::createTextInput(_registry, _assetsManager,
                                                 {inputX, 0}, {inputW, 40},
@@ -244,17 +252,17 @@ LevelCreatorScene::LevelCreatorScene(
     addElementToSection("settings",
                         EntityFactory::createStaticText(
                             _registry, _assetsManager,
-                            "Next Level:", "main_font", {labelX, 0}, 24.f),
+                            "Next Level:", "main_font", {labelX, 0}, 18.f),
                         currentY);
 
     _btnNextLevel = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text("main_font",
-                                          rtype::display::Color::White(), 20,
+                                          rtype::display::Color::White(), 16,
                                           this->_nextLevelId),
         rtype::games::rtype::shared::TransformComponent(inputX, 0),
         rtype::games::rtype::client::Rectangle(
-            {120, 40}, rtype::display::Color(0, 180, 0, 255),
+            {180, 35}, rtype::display::Color(0, 180, 0, 255),
             rtype::display::Color(0, 135, 0, 255)),
         this->_assetsManager, std::function<void()>([this]() {
             if (this->_listNextLevel.empty()) return;
@@ -280,17 +288,17 @@ LevelCreatorScene::LevelCreatorScene(
     addElementToSection("settings",
                         EntityFactory::createStaticText(
                             _registry, _assetsManager,
-                            "Music Level:", "main_font", {labelX, 0}, 24.f),
+                            "Music Level:", "main_font", {labelX, 0}, 18.f),
                         currentY);
 
     _btnMusicLevel = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text("main_font",
-                                          rtype::display::Color::White(), 20,
+                                          rtype::display::Color::White(), 16,
                                           this->_musicLevelId),
         rtype::games::rtype::shared::TransformComponent(inputX, 0),
         rtype::games::rtype::client::Rectangle(
-            {120, 40}, rtype::display::Color(0, 180, 0, 255),
+            {180, 35}, rtype::display::Color(0, 180, 0, 255),
             rtype::display::Color(0, 135, 0, 255)),
         this->_assetsManager, std::function<void()>([this]() {
             if (this->_libMusicLevels.empty()) return;
@@ -313,15 +321,15 @@ LevelCreatorScene::LevelCreatorScene(
         }));
 
     addElementToSection("settings", _btnMusicLevel, currentY);
-    currentY += 80.f;
+    currentY += 60.f;
 
     auto btnAdd = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font", rtype::display::Color::White(), 20, "Add Wave"),
-        rtype::games::rtype::shared::TransformComponent(startX + 40, 0),
+            "main_font", rtype::display::Color::White(), 16, "Add Wave"),
+        rtype::games::rtype::shared::TransformComponent(startX + 30, 0),
         rtype::games::rtype::client::Rectangle(
-            {120, 40}, rtype::display::Color(0, 180, 0, 255),
+            {110, 35}, rtype::display::Color(0, 180, 0, 255),
             rtype::display::Color(0, 135, 0, 255)),
         this->_assetsManager,
         std::function<void()>([this]() { this->addWave(); }));
@@ -332,10 +340,10 @@ LevelCreatorScene::LevelCreatorScene(
     auto btnPrev = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font", rtype::display::Color::White(), 20, "< Prev"),
-        rtype::games::rtype::shared::TransformComponent(startX + 180, 0),
+            "main_font", rtype::display::Color::White(), 14, "< Prev"),
+        rtype::games::rtype::shared::TransformComponent(startX + 155, 0),
         rtype::games::rtype::client::Rectangle(
-            {80, 40}, rtype::display::Color(100, 100, 100, 255),
+            {70, 35}, rtype::display::Color(100, 100, 100, 255),
             rtype::display::Color(150, 150, 150, 255)),
         this->_assetsManager, std::function<void()>([this]() {
             if (_currentWaveIndex > 0) switchWave(_currentWaveIndex - 1);
@@ -347,10 +355,10 @@ LevelCreatorScene::LevelCreatorScene(
     auto btnNext = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font", rtype::display::Color::White(), 20, "Next >"),
-        rtype::games::rtype::shared::TransformComponent(startX + 280, 0),
+            "main_font", rtype::display::Color::White(), 14, "Next >"),
+        rtype::games::rtype::shared::TransformComponent(startX + 235, 0),
         rtype::games::rtype::client::Rectangle(
-            {80, 40}, rtype::display::Color(100, 100, 100, 255),
+            {70, 35}, rtype::display::Color(100, 100, 100, 255),
             rtype::display::Color(150, 150, 150, 255)),
         this->_assetsManager, std::function<void()>([this]() {
             if (_currentWaveIndex < static_cast<int>(_waves.size()) - 1)
@@ -363,9 +371,9 @@ LevelCreatorScene::LevelCreatorScene(
     _listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font", rtype::display::Color::White(), 24, "GENERATE TOML"),
+            "main_font", rtype::display::Color::White(), 18, "GENERATE TOML"),
         rtype::games::rtype::shared::TransformComponent(startX, 840),
-        rtype::games::rtype::client::Rectangle({250, 60},
+        rtype::games::rtype::client::Rectangle({200, 45},
                                                rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
         this->_assetsManager,
@@ -374,9 +382,9 @@ LevelCreatorScene::LevelCreatorScene(
     _listEntity.push_back(EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font", rtype::display::Color::White(), 20, "Back"),
-        rtype::games::rtype::shared::TransformComponent(startX, 920),
-        rtype::games::rtype::client::Rectangle({250, 60},
+            "main_font", rtype::display::Color::White(), 16, "Back"),
+        rtype::games::rtype::shared::TransformComponent(startX, 900),
+        rtype::games::rtype::client::Rectangle({200, 40},
                                                rtype::display::Color::Blue(),
                                                rtype::display::Color::Red()),
         this->_assetsManager, std::function<void()>([this]() {
@@ -999,7 +1007,7 @@ void LevelCreatorScene::refreshWaveUI() {
 
     addToWave(EntityFactory::createStaticText(_registry, _assetsManager,
                                               "Spawn Delay (s):", "main_font",
-                                              {contentX, 0}, 24.f),
+                                              {contentX, 0}, 18.f),
               contentY);
 
     wave.spawnDelayInputVal = EntityFactory::createTextInput(
@@ -1011,16 +1019,16 @@ void LevelCreatorScene::refreshWaveUI() {
 
     addToWave(
         EntityFactory::createStaticText(_registry, _assetsManager, "Enemies",
-                                        "main_font", {contentX, 0}, 28.f),
+                                        "main_font", {contentX, 0}, 22.f),
         contentY);
 
     auto addSpawnBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font", rtype::display::Color::White(), 20, "+ Add Enemy"),
-        rtype::games::rtype::shared::TransformComponent(contentX + 150, 0),
+            "main_font", rtype::display::Color::White(), 14, "+ Add Enemy"),
+        rtype::games::rtype::shared::TransformComponent(contentX + 120, 0),
         rtype::games::rtype::client::Rectangle(
-            {140, 35}, rtype::display::Color(0, 180, 0, 255),
+            {120, 30}, rtype::display::Color(0, 180, 0, 255),
             rtype::display::Color(0, 135, 0, 255)),
         this->_assetsManager, std::function<void()>([this, waveIdx]() {
             if (waveIdx < static_cast<int>(this->_waves.size())) {
@@ -1038,15 +1046,15 @@ void LevelCreatorScene::refreshWaveUI() {
     float col3 = contentX + 500;
 
     addToWave(EntityFactory::createStaticText(_registry, _assetsManager, "Type",
-                                              "main_font", {col1, 0}, 20.f),
+                                              "main_font", {col1, 0}, 16.f),
               contentY);
     addToWave(
         EntityFactory::createStaticText(_registry, _assetsManager, "Wait (s)",
-                                        "main_font", {col2, 0}, 20.f),
+                                        "main_font", {col2, 0}, 16.f),
         contentY);
     addToWave(
         EntityFactory::createStaticText(_registry, _assetsManager, "Count",
-                                        "main_font", {col3, 0}, 20.f),
+                                        "main_font", {col3, 0}, 16.f),
         contentY);
 
     contentY += 30.f;
@@ -1055,10 +1063,10 @@ void LevelCreatorScene::refreshWaveUI() {
         auto enemyBtn = EntityFactory::createButton(
             this->_registry,
             rtype::games::rtype::client::Text(
-                "main_font", rtype::display::Color::White(), 18, spawn.enemy),
+                "main_font", rtype::display::Color::White(), 14, spawn.enemy),
             rtype::games::rtype::shared::TransformComponent(col1, 0),
             rtype::games::rtype::client::Rectangle(
-                {300, 35}, rtype::display::Color(50, 50, 200, 255),
+                {280, 30}, rtype::display::Color(50, 50, 200, 255),
                 rtype::display::Color(70, 70, 220, 255)),
             this->_assetsManager,
             std::function<void()>([this, waveIdx, spawnIdx]() {
@@ -1074,32 +1082,32 @@ void LevelCreatorScene::refreshWaveUI() {
         addToWave(enemyBtn, contentY);
 
         spawn.delayInputVal = EntityFactory::createTextInput(
-            _registry, _assetsManager, {col2, 0}, {120, 35}, "0.0",
+            _registry, _assetsManager, {col2, 0}, {100, 30}, "0.0",
             floatToString(spawn.delay), 10, true);
         addToWave(spawn.delayInputVal, contentY);
 
         spawn.countInputVal = EntityFactory::createTextInput(
-            _registry, _assetsManager, {col3, 0}, {120, 35}, "1",
+            _registry, _assetsManager, {col3, 0}, {100, 30}, "1",
             std::to_string(spawn.count), 10, true);
         addToWave(spawn.countInputVal, contentY);
 
-        contentY += 45.f;
+        contentY += 40.f;
         spawnIdx++;
     }
 
-    contentY += 30.f;
+    contentY += 25.f;
     addToWave(
         EntityFactory::createStaticText(_registry, _assetsManager, "Powerups",
-                                        "main_font", {contentX, 0}, 28.f),
+                                        "main_font", {contentX, 0}, 22.f),
         contentY);
 
     auto addPuBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
-            "main_font", rtype::display::Color::White(), 20, "+ Add Powerup"),
-        rtype::games::rtype::shared::TransformComponent(contentX + 160, 0),
+            "main_font", rtype::display::Color::White(), 14, "+ Add Powerup"),
+        rtype::games::rtype::shared::TransformComponent(contentX + 130, 0),
         rtype::games::rtype::client::Rectangle(
-            {160, 35}, rtype::display::Color(0, 180, 0, 255),
+            {130, 30}, rtype::display::Color(0, 180, 0, 255),
             rtype::display::Color(0, 135, 0, 255)),
         this->_assetsManager, std::function<void()>([this, waveIdx]() {
             if (waveIdx < static_cast<int>(this->_waves.size())) {
@@ -1113,15 +1121,15 @@ void LevelCreatorScene::refreshWaveUI() {
     contentY += 50.f;
 
     addToWave(EntityFactory::createStaticText(_registry, _assetsManager, "Type",
-                                              "main_font", {col1, 0}, 20.f),
+                                              "main_font", {col1, 0}, 16.f),
               contentY);
     addToWave(
         EntityFactory::createStaticText(_registry, _assetsManager, "Wait (s)",
-                                        "main_font", {col2, 0}, 20.f),
+                                        "main_font", {col2, 0}, 16.f),
         contentY);
     addToWave(
         EntityFactory::createStaticText(_registry, _assetsManager, "Y Pos",
-                                        "main_font", {col3, 0}, 20.f),
+                                        "main_font", {col3, 0}, 16.f),
         contentY);
 
     contentY += 30.f;
@@ -1130,10 +1138,10 @@ void LevelCreatorScene::refreshWaveUI() {
         auto idBtn = EntityFactory::createButton(
             this->_registry,
             rtype::games::rtype::client::Text(
-                "main_font", rtype::display::Color::White(), 18, pu.id),
+                "main_font", rtype::display::Color::White(), 14, pu.id),
             rtype::games::rtype::shared::TransformComponent(col1, 0),
             rtype::games::rtype::client::Rectangle(
-                {300, 35}, rtype::display::Color(200, 50, 50, 255),
+                {280, 30}, rtype::display::Color(200, 50, 50, 255),
                 rtype::display::Color(220, 70, 70, 255)),
             this->_assetsManager,
             std::function<void()>([this, waveIdx, puIdx]() {
@@ -1149,16 +1157,16 @@ void LevelCreatorScene::refreshWaveUI() {
         addToWave(idBtn, contentY);
 
         pu.delayInputVal = EntityFactory::createTextInput(
-            _registry, _assetsManager, {col2, 0}, {120, 35}, "4",
+            _registry, _assetsManager, {col2, 0}, {100, 30}, "4",
             floatToString(pu.delay), 10, true);
         addToWave(pu.delayInputVal, contentY);
 
         pu.yInputVal = EntityFactory::createTextInput(
-            _registry, _assetsManager, {col3, 0}, {120, 35}, "500",
+            _registry, _assetsManager, {col3, 0}, {100, 30}, "500",
             floatToString(pu.y), 10, true);
         addToWave(pu.yInputVal, contentY);
 
-        contentY += 45.f;
+        contentY += 40.f;
         puIdx++;
     }
 

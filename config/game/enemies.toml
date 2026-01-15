@@ -138,8 +138,524 @@ can_shoot = true
 fire_rate = 0.3
 projectile_type = "heavy_bullet"
 
+# =============================================================================
+# BOSS DEFINITIONS
+# =============================================================================
+
 # -----------------------------------------------------------------------------
-# Boss - Level 1 Boss
+# Boss Serpent - Level 1 Boss (3 Phases)
+# A serpentine boss with a destructible head weak point.
+# Phase 1 (Normal): Spread fan attacks, moderate speed
+# Phase 2 (Fast): Circular shots + faster movement at 50% HP
+# Phase 3 (Desperate): Laser sweeps + minion spawns at 25% HP
+# -----------------------------------------------------------------------------
+[[enemy]]
+id = "boss_serpent"
+name = "Serpent Guardian"
+sprite_sheet = "assets/sprites/enemies/boss_serpent.png"
+
+health = 3000
+damage = 50
+score_value = 10000
+
+behavior = "patrol"
+speed = 80.0
+
+hitbox_width = 100.0
+hitbox_height = 120.0
+
+can_shoot = false
+fire_rate = 0.0
+
+is_boss = true
+boss_type = "serpent"
+level_complete_trigger = true
+phase_transition_duration = 1.5
+invulnerability_duration = 1.0
+
+[enemy.animation]
+boss_id = "boss_serpent"
+spawn_offset_x = -200.0
+spawn_offset_y = 0.0
+use_relative_spawn = true
+
+[enemy.animation.head]
+part_id = "serpent_head"
+part_type = "head"
+move_texture = "boss_serpent_head"
+attack_texture = "boss_serpent_attack"
+move_frame_width = 135
+move_frame_height = 369
+move_frame_count = 5
+move_frame_duration = 0.1
+move_loop = true
+attack_frame_width = 135
+attack_frame_height = 369
+attack_frame_count = 5
+attack_frame_duration = 0.1
+attack_loop = true
+scale_x = -0.85
+scale_y = 0.85
+enable_rotation = true
+rotation_smoothing = 0.15
+rotation_offset = 0.0
+
+[enemy.animation.body]
+part_id = "serpent_body"
+part_type = "body"
+move_texture = "boss_serpent_body"
+move_frame_width = 135
+move_frame_height = 369
+move_frame_count = 5
+move_frame_duration = 0.1
+move_loop = true
+scale_x = -0.75
+scale_y = 0.75
+enable_rotation = true
+rotation_smoothing = 0.12
+rotation_offset = 0.0
+
+[enemy.animation.tail]
+part_id = "serpent_tail"
+part_type = "tail"
+move_texture = "boss_serpent_tail"
+move_frame_width = 135
+move_frame_height = 369
+move_frame_count = 5
+move_frame_duration = 0.1
+move_loop = true
+scale_x = 0.7
+scale_y = 0.7
+enable_rotation = true
+rotation_smoothing = 0.12
+rotation_offset = 0.0
+
+[enemy.animation.movement]
+amplitude = 200.0
+frequency = 0.7
+horizontal_amplitude = 100.0
+vertical_amplitude = 200.0
+enable_position_history = true
+max_position_history = 500
+min_record_distance = 3.0
+segment_spacing = 100.0
+
+[[enemy.phase]]
+health_threshold = 1.0
+name = "Normal"
+primary_pattern = "spread_fan"
+speed_multiplier = 1.0
+attack_speed_multiplier = 1.0
+damage_multiplier = 1.0
+color = [255, 255, 255]
+
+[[enemy.phase]]
+health_threshold = 0.5
+name = "Enraged"
+primary_pattern = "circular_shot"
+secondary_pattern = "spread_fan"
+speed_multiplier = 1.5
+attack_speed_multiplier = 1.3
+damage_multiplier = 1.2
+color = [255, 200, 100]
+
+[[enemy.phase]]
+health_threshold = 0.25
+name = "Desperate"
+primary_pattern = "laser_sweep"
+secondary_pattern = "minion_spawn"
+speed_multiplier = 2.0
+attack_speed_multiplier = 1.5
+damage_multiplier = 1.5
+color = [255, 100, 100]
+
+# Serpent body segments - arranged in a snake-like chain from head to tail
+# segment_index determines the order: 1 = first body segment behind head, etc.
+# Note: The boss entity itself is the head, so weak points start with body segments
+[[enemy.weak_point]]
+id = "serpent_body_0"
+type = "core"
+offset_x = -100.0
+offset_y = 0.0
+health = 400
+hitbox_width = 90.0
+hitbox_height = 100.0
+bonus_score = 500
+damage_to_parent = 100
+segment_index = 1
+
+[enemy.weak_point.animation]
+part_id = "serpent_body_seg_0"
+part_type = "body"
+move_texture = "boss_serpent_body"
+move_frame_width = 135
+move_frame_height = 369
+move_frame_count = 5
+move_frame_duration = 0.1
+move_loop = true
+scale_x = -0.75
+scale_y = 0.75
+enable_rotation = true
+rotation_smoothing = 0.12
+rotation_offset = 0.0
+
+[[enemy.weak_point]]
+id = "serpent_body_1"
+type = "core"
+offset_x = -180.0
+offset_y = 15.0
+health = 400
+hitbox_width = 90.0
+hitbox_height = 100.0
+bonus_score = 500
+damage_to_parent = 100
+segment_index = 2
+
+[enemy.weak_point.animation]
+part_id = "serpent_body_seg_1"
+part_type = "body"
+move_texture = "boss_serpent_body"
+move_frame_width = 135
+move_frame_height = 369
+move_frame_count = 5
+move_frame_duration = 0.1
+move_loop = true
+scale_x = -0.75
+scale_y = 0.75
+enable_rotation = true
+rotation_smoothing = 0.12
+rotation_offset = 0.0
+
+[[enemy.weak_point]]
+id = "serpent_body_2"
+type = "core"
+offset_x = -260.0
+offset_y = -10.0
+health = 400
+hitbox_width = 85.0
+hitbox_height = 95.0
+bonus_score = 500
+damage_to_parent = 100
+segment_index = 3
+
+[enemy.weak_point.animation]
+part_id = "serpent_body_seg_2"
+part_type = "body"
+move_texture = "boss_serpent_body"
+move_frame_width = 135
+move_frame_height = 369
+move_frame_count = 5
+move_frame_duration = 0.1
+move_loop = true
+scale_x = -0.72
+scale_y = 0.72
+enable_rotation = true
+rotation_smoothing = 0.12
+rotation_offset = 0.0
+
+[[enemy.weak_point]]
+id = "serpent_body_3"
+type = "core"
+offset_x = -340.0
+offset_y = 20.0
+health = 400
+hitbox_width = 80.0
+hitbox_height = 90.0
+bonus_score = 500
+damage_to_parent = 100
+segment_index = 4
+
+[enemy.weak_point.animation]
+part_id = "serpent_body_seg_3"
+part_type = "body"
+move_texture = "boss_serpent_body"
+move_frame_width = 135
+move_frame_height = 369
+move_frame_count = 5
+move_frame_duration = 0.1
+move_loop = true
+scale_x = -0.70
+scale_y = 0.70
+enable_rotation = true
+rotation_smoothing = 0.12
+rotation_offset = 0.0
+
+[[enemy.weak_point]]
+id = "serpent_tail"
+type = "tail"
+offset_x = -420.0
+offset_y = 5.0
+health = 300
+hitbox_width = 75.0
+hitbox_height = 85.0
+bonus_score = 1000
+damage_to_parent = 200
+disables_attack = "tail_sweep"
+segment_index = 5
+
+[enemy.weak_point.animation]
+part_id = "serpent_tail_part"
+part_type = "tail"
+move_texture = "boss_serpent_tail"
+move_frame_width = 135
+move_frame_height = 369
+move_frame_count = 5
+move_frame_duration = 0.1
+move_loop = true
+scale_x = 0.7
+scale_y = 0.7
+enable_rotation = true
+rotation_smoothing = 0.12
+rotation_offset = 0.0
+
+# -----------------------------------------------------------------------------
+# Boss Scorpion - Level 2 Boss (Multi-segment tail)
+# A scorpion boss with destructible tail segments.
+# Tail segments can be destroyed to disable laser attacks.
+# Core phase triggers when tail is destroyed.
+# -----------------------------------------------------------------------------
+[[enemy]]
+id = "boss_scorpion"
+name = "Scorpion Overlord"
+sprite_sheet = "assets/sprites/enemies/boss_scorpion.png"
+
+health = 4000
+damage = 60
+score_value = 15000
+
+behavior = "patrol"
+speed = 60.0
+
+hitbox_width = 100.0
+hitbox_height = 80.0
+
+can_shoot = false
+fire_rate = 0.0
+
+is_boss = true
+boss_type = "scorpion"
+level_complete_trigger = true
+phase_transition_duration = 2.0
+invulnerability_duration = 1.5
+
+[enemy.animation]
+boss_id = "boss_scorpion"
+spawn_offset_x = -200.0
+spawn_offset_y = 0.0
+use_relative_spawn = true
+
+[enemy.animation.head]
+part_id = "scorpion_body"
+part_type = "head"
+move_texture = "boss_scorpion_body"
+attack_texture = "boss_scorpion_body"
+move_frame_width = 168
+move_frame_height = 369
+move_frame_count = 4
+move_frame_duration = 0.15
+move_loop = true
+move_offset_x = 12
+attack_frame_width = 168
+attack_frame_height = 369
+attack_frame_count = 4
+attack_frame_duration = 0.1
+attack_loop = true
+scale_x = 0.7
+scale_y = 0.7
+enable_rotation = false
+rotation_smoothing = 0.1
+rotation_offset = 0.0
+
+[enemy.animation.body]
+part_id = "scorpion_claws"
+part_type = "body"
+move_texture = "boss_scorpion_claws"
+move_frame_width = 140
+move_frame_height = 369
+move_frame_count = 3
+move_frame_duration = 0.2
+move_loop = true
+move_offset_x = 141
+scale_x = -0.6
+scale_y = 0.6
+enable_rotation = false
+rotation_smoothing = 0.1
+rotation_offset = 0.0
+
+[enemy.animation.tail]
+part_id = "scorpion_stinger"
+part_type = "tail"
+move_texture = "boss_scorpion_stinger"
+move_frame_width = 110
+move_frame_height = 369
+move_frame_count = 4
+move_frame_duration = 0.12
+move_loop = true
+move_offset_x = 142
+scale_x = -0.7
+scale_y = 0.7
+enable_rotation = false
+rotation_smoothing = 0.15
+rotation_offset = 0.0
+
+[enemy.animation.movement]
+amplitude = 80.0
+frequency = 0.3
+horizontal_amplitude = 50.0
+vertical_amplitude = 100.0
+enable_position_history = false
+max_position_history = 100
+min_record_distance = 5.0
+segment_spacing = 50.0
+
+[[enemy.phase]]
+health_threshold = 1.0
+name = "Armored"
+primary_pattern = "spread_fan"
+secondary_pattern = "tail_sweep"
+speed_multiplier = 1.0
+attack_speed_multiplier = 1.0
+damage_multiplier = 1.0
+color = [255, 255, 255]
+
+[[enemy.phase]]
+health_threshold = 0.6
+name = "Aggressive"
+primary_pattern = "laser_sweep"
+secondary_pattern = "circular_shot"
+speed_multiplier = 1.3
+attack_speed_multiplier = 1.2
+damage_multiplier = 1.3
+color = [255, 180, 50]
+
+[[enemy.phase]]
+health_threshold = 0.3
+name = "Berserk"
+primary_pattern = "minion_spawn"
+secondary_pattern = "circular_shot"
+speed_multiplier = 1.8
+attack_speed_multiplier = 1.8
+damage_multiplier = 1.5
+color = [255, 50, 50]
+
+[[enemy.weak_point]]
+id = "scorpion_claws"
+type = "claws"
+offset_x = -50.0
+offset_y = 40.0
+health = 500
+hitbox_width = 80.0
+hitbox_height = 70.0
+bonus_score = 800
+damage_to_parent = 150
+segment_index = -1
+
+[enemy.weak_point.animation]
+part_id = "scorpion_claws_part"
+part_type = "body"
+move_texture = "boss_scorpion_claws"
+move_frame_width = 140
+move_frame_height = 369
+move_frame_count = 3
+move_frame_duration = 0.15
+move_loop = true
+move_offset_x = 141
+scale_x = 0.5
+scale_y = 0.5
+enable_rotation = false
+rotation_smoothing = 0.1
+rotation_offset = 0.0
+
+[[enemy.weak_point]]
+id = "scorpion_tail_1"
+type = "tail"
+offset_x = 50.0
+offset_y = -30.0
+health = 400
+hitbox_width = 70.0
+hitbox_height = 80.0
+bonus_score = 1000
+damage_to_parent = 200
+segment_index = -2
+
+[enemy.weak_point.animation]
+part_id = "scorpion_tail_segment_1"
+part_type = "tail"
+move_texture = "boss_scorpion_tail"
+move_frame_width = 141
+move_frame_height = 369
+move_frame_count = 3
+move_frame_duration = 0.12
+move_loop = true
+move_offset_x = 164
+scale_x = -0.5
+scale_y = 0.5
+enable_rotation = false
+rotation_smoothing = 0.15
+rotation_offset = 0.0
+
+[[enemy.weak_point]]
+id = "scorpion_stinger"
+type = "stinger"
+offset_x = 100.0
+offset_y = -70.0
+health = 600
+hitbox_width = 70.0
+hitbox_height = 90.0
+bonus_score = 1500
+damage_to_parent = 300
+disables_attack = "laser_sweep"
+critical = true
+segment_index = -3
+
+[enemy.weak_point.animation]
+part_id = "scorpion_stinger_part"
+part_type = "tail"
+move_texture = "boss_scorpion_stinger"
+move_frame_width = 110
+move_frame_height = 369
+move_frame_count = 4
+move_frame_duration = 0.15
+move_loop = true
+move_offset_x = 142
+scale_x = -0.55
+scale_y = 0.55
+enable_rotation = false
+rotation_smoothing = 0.12
+rotation_offset = 45.0
+
+[[enemy.weak_point]]
+id = "scorpion_cannon"
+type = "cannon"
+offset_x = -25.0
+offset_y = -50.0
+health = 600
+hitbox_width = 80.0
+hitbox_height = 70.0
+bonus_score = 1500
+damage_to_parent = 300
+disables_attack = "cannon_fire"
+critical = true
+segment_index = -4
+
+[enemy.weak_point.animation]
+part_id = "scorpion_cannon_part"
+part_type = "body"
+move_texture = "boss_scorpion_cannon"
+move_frame_width = 186
+move_frame_height = 369
+move_frame_count = 3
+move_frame_duration = 0.2
+move_loop = true
+move_offset_x = 73
+scale_x = -0.5
+scale_y = 0.5
+enable_rotation = false
+rotation_smoothing = 0.1
+rotation_offset = 0.0
+
+# -----------------------------------------------------------------------------
+# Boss - Legacy Level 1 Boss (kept for compatibility)
 # -----------------------------------------------------------------------------
 [[enemy]]
 id = "boss_1"
@@ -149,7 +665,6 @@ sprite_sheet = "assets/sprites/enemies/boss_1.png"
 health = 2000
 damage = 50
 score_value = 5000
-
 
 behavior = "patrol"
 speed = 60.0

@@ -274,12 +274,13 @@ TEST(BoundingBoxComponentTest, SetCustomSize) {
 // =============================================================================
 
 TEST(EntityTypeTest, EnumValues) {
-    EXPECT_EQ(static_cast<uint8_t>(EntityType::Unknown), 0);
-    EXPECT_EQ(static_cast<uint8_t>(EntityType::Player), 1);
-    EXPECT_EQ(static_cast<uint8_t>(EntityType::Enemy), 2);
-    EXPECT_EQ(static_cast<uint8_t>(EntityType::Projectile), 3);
-    EXPECT_EQ(static_cast<uint8_t>(EntityType::Pickup), 4);
-    EXPECT_EQ(static_cast<uint8_t>(EntityType::Obstacle), 5);
+    // EntityType enum starts with Player=0 (Unknown and Player share value 0)
+    EXPECT_EQ(static_cast<uint8_t>(EntityType::Player), 0);
+    EXPECT_EQ(static_cast<uint8_t>(EntityType::Enemy), 1);
+    EXPECT_EQ(static_cast<uint8_t>(EntityType::Projectile), 2);
+    EXPECT_EQ(static_cast<uint8_t>(EntityType::Pickup), 3);
+    EXPECT_EQ(static_cast<uint8_t>(EntityType::Obstacle), 4);
+    EXPECT_EQ(static_cast<uint8_t>(EntityType::ForcePod), 5);
 }
 
 // =============================================================================

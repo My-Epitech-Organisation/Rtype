@@ -31,31 +31,40 @@ void ForcePodAttachmentSystem::updateAttachedPods(ECS::Registry& registry) {
                                  TransformComponent, NetworkIdComponent>();
 
     podView.each([&registry, this](ECS::Entity podEntity, const ForcePodTag&,
-                                   const ForcePodComponent& forcePod,
+                                   ForcePodComponent& forcePod,
                                    TransformComponent& podTransform,
                                    const NetworkIdComponent& podNetId) {
+        if (forcePod.state == ForcePodState::Orphan) {
+            return;
+        }
+
         if (_launchSystem && forcePod.ownerNetworkId != 0) {
             _launchSystem->setForcePodForPlayer(forcePod.ownerNetworkId,
                                                 podEntity);
         }
-
-        if (forcePod.state != ForcePodState::Attached) {
-            return;
-        }
-
+        bool ownerExists = false;
         auto playerView =
             registry.view<PlayerTag, NetworkIdComponent, TransformComponent>();
 
-        playerView.each([&forcePod, &podTransform](
+        playerView.each([&forcePod, &podTransform, &ownerExists](
                             ECS::Entity /*playerEntity*/, const PlayerTag&,
                             const NetworkIdComponent& networkId,
                             const TransformComponent& playerTransform) {
             if (networkId.networkId == forcePod.ownerNetworkId) {
-                podTransform.x = playerTransform.x + forcePod.offsetX;
-                podTransform.y = playerTransform.y + forcePod.offsetY;
-                podTransform.rotation = playerTransform.rotation;
+                ownerExists = true;
+                if (forcePod.state == ForcePodState::Attached) {
+                    podTransform.x = playerTransform.x + forcePod.offsetX;
+                    podTransform.y = playerTransform.y + forcePod.offsetY;
+                    podTransform.rotation = playerTransform.rotation;
+                }
             }
         });
+        if (!ownerExists && forcePod.ownerNetworkId != 0) {
+            forcePod.makeOrphan();
+            if (_launchSystem) {
+                _launchSystem->removeForcePodForPlayer(forcePod.ownerNetworkId);
+            }
+        }
     });
 }
 

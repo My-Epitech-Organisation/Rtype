@@ -107,17 +107,24 @@ Game logic is implemented in the `src/games/rtype/` directory:
 ## Directory Structure
 
 ```
+lib/                      # Core engine libraries
+├── ecs/                  # Entity Component System
+│   └── src/              # Registry, Entity, View
+├── common/               # Shared utilities & protocol
+│   └── src/              # Logger, ArgParser, Serializer
+├── network/              # Network layer
+│   └── src/              # UdpSocket, Packet
+├── display/              # Graphics rendering
+├── audio/                # Sound system
+├── background/           # Parallax backgrounds
+└── engine/               # Game engine abstraction
 src/
-├── engine/          # Core engine components
-│   ├── core/        # Time, utilities
-│   └── ecs/         # ECS implementation
-├── network/         # Network layer
-├── games/rtype/     # R-Type game implementation
-│   ├── client/      # Client-side systems
-│   ├── server/      # Server-side systems
-│   └── shared/      # Shared components
-├── client/          # Client application entry
-└── server/          # Server application entry
+├── games/rtype/          # R-Type game implementation
+│   ├── client/           # Client-side systems
+│   ├── server/           # Server-side systems
+│   └── shared/           # Shared components
+├── client/               # Client application entry
+└── server/               # Server application entry
 ```
 
 ## Next Steps

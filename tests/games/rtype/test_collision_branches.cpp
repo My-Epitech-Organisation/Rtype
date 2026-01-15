@@ -277,6 +277,7 @@ TEST_F(CollisionBranchFixture, ObstacleDestroysItself) {
     registry->emplaceComponent<shared::TransformComponent>(projectile, 100.0F, 100.0F, 0.0F);
     registry->emplaceComponent<shared::BoundingBoxComponent>(projectile, 10.0F, 10.0F);
     registry->emplaceComponent<shared::ProjectileTag>(projectile);
+    registry->emplaceComponent<shared::PlayerProjectileTag>(projectile);
 
     auto obstacle = registry->spawnEntity();
     registry->emplaceComponent<shared::TransformComponent>(obstacle, 105.0F, 100.0F, 0.0F);
