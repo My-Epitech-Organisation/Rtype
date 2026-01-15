@@ -76,7 +76,7 @@ ServerNetworkSystem::ServerNetworkSystem(
             });
 
         server_->onClientInput(
-            [this](std::uint32_t userId, std::uint8_t input) {
+            [this](std::uint32_t userId, std::uint16_t input) {
                 handleClientInput(userId, input);
             });
 
@@ -651,7 +651,7 @@ void ServerNetworkSystem::finalizeDisconnection(std::uint32_t userId) {
 }
 
 void ServerNetworkSystem::handleClientInput(std::uint32_t userId,
-                                            std::uint8_t inputMask) {
+                                            std::uint16_t inputMask) {
     if (!inputHandler_) {
         return;
     }
