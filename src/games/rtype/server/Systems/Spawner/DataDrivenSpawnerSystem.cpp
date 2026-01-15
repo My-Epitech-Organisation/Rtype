@@ -68,7 +68,7 @@ DataDrivenSpawnerSystem::DataDrivenSpawnerSystem(EventEmitter emitter,
                              config.obstacleMaxInterval),
       _powerUpSpawnTimeDist(config.powerUpMinInterval,
                             config.powerUpMaxInterval),
-      _powerUpTypeDist(1, static_cast<int>(shared::PowerUpType::HealthBoost)) {
+      _powerUpTypeDist(1, static_cast<int>(shared::PowerUpType::LaserUpgrade)) {
     _waveManager.setWaitForClear(config.waitForClear);
     _waveManager.setWaveTransitionDelay(config.waveTransitionDelay);
     _waveManager.setStartDelay(config.startDelay);
@@ -248,8 +248,10 @@ void DataDrivenSpawnerSystem::spawnEnemy(ECS::Registry& registry,
                                                enemyConfig.health);
     registry.emplaceComponent<BoundingBoxComponent>(
         enemy, enemyConfig.hitboxWidth, enemyConfig.hitboxHeight);
-    registry.emplaceComponent<DamageOnContactComponent>(
-        enemy, enemyConfig.damage, true);
+    DamageOnContactComponent enemyDmg{};
+    enemyDmg.damage = enemyConfig.damage;
+    enemyDmg.destroySelf = true;
+    registry.emplaceComponent<DamageOnContactComponent>(enemy, enemyDmg);
 
     if (enemyConfig.canShoot) {
         float shootCooldown =
@@ -555,8 +557,10 @@ void DataDrivenSpawnerSystem::spawnObstacle(ECS::Registry& registry) {
                                                  -_config.obstacleSpeed, 0.0F);
     registry.emplaceComponent<BoundingBoxComponent>(
         obstacle, _config.obstacleWidth, _config.obstacleHeight);
-    registry.emplaceComponent<DamageOnContactComponent>(
-        obstacle, _config.obstacleDamage, true);
+    DamageOnContactComponent obstacleDmg{};
+    obstacleDmg.damage = _config.obstacleDamage;
+    obstacleDmg.destroySelf = true;
+    registry.emplaceComponent<DamageOnContactComponent>(obstacle, obstacleDmg);
     registry.emplaceComponent<shared::ObstacleTag>(obstacle);
 
     uint32_t networkId = _nextNetworkId++;
@@ -613,6 +617,11 @@ void DataDrivenSpawnerSystem::spawnPowerUp(ECS::Registry& registry) {
             duration = 0.0F;
             magnitude = 1.0F;
             variant = shared::PowerUpVariant::ForcePod;
+            break;
+        case shared::PowerUpType::LaserUpgrade:
+            duration = 0.0F;
+            magnitude = 1.0F;
+            variant = shared::PowerUpVariant::LaserUpgrade;
             break;
         default:
             variant = shared::PowerUpVariant::HealthBoost;

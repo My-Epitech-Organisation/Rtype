@@ -72,9 +72,14 @@ std::uint16_t RtypeInputHandler::getInputMask(
         }
 
         auto keyChangeAmmo = keybinds->getKeyBinding(GameAction::CHANGE_AMMO);
-        if (keyChangeAmmo.has_value() &&
-            pressedKeys_.contains(*keyChangeAmmo)) {
-            inputMask |= ::rtype::network::InputMask::kWeaponSwitch;
+        if (keyChangeAmmo.has_value()) {
+            bool isPressed = pressedKeys_.contains(*keyChangeAmmo);
+            if (isPressed) {
+                LOG_INFO("[InputHandler] CHANGE_AMMO key ("
+                         << static_cast<int>(*keyChangeAmmo)
+                         << ") is pressed, setting kWeaponSwitch flag");
+                inputMask |= ::rtype::network::InputMask::kWeaponSwitch;
+            }
         }
     } else {
         std::optional<unsigned int> jid;
