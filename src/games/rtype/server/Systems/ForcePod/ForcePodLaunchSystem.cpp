@@ -183,7 +183,6 @@ void ForcePodLaunchSystem::checkReattachment(ECS::Registry& registry) {
                                    ForcePodComponent& forcePod,
                                    const TransformComponent& podTransform,
                                    const ForcePodTag&) {
-        // Skip attached and orphan pods
         if (forcePod.state == ForcePodState::Attached ||
             forcePod.state == ForcePodState::Orphan) {
             return;
@@ -223,7 +222,6 @@ void ForcePodLaunchSystem::checkReattachment(ECS::Registry& registry) {
             }
         });
 
-        // If owner doesn't exist, make pod orphan
         if (!ownerExists) {
             forcePod.makeOrphan();
             if (registry.hasComponent<VelocityComponent>(forcePodEntity)) {
