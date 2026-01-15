@@ -236,7 +236,26 @@ void ServerNetworkSystem::updateEntityPosition(std::uint32_t networkId, float x,
                                                float y, float vx, float vy) {
     auto it = networkedEntities_.find(networkId);
     if (it == networkedEntities_.end()) {
+        if (debugNotFoundLogCount_ < 50) {
+            LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                          "[ServerNetwork] updateEntityPosition: networkId="
+                              << networkId
+                              << " NOT FOUND in networkedEntities_ (size="
+                              << networkedEntities_.size() << ")");
+            debugNotFoundLogCount_++;
+        }
         return;
+    }
+
+    if ((it->second.type == EntityType::BossPart ||
+         it->second.type == EntityType::Boss) &&
+        debugBossPartUpdateLogCount_ < 30) {
+        LOG_DEBUG_CAT(::rtype::LogCategory::Network,
+                      "[ServerNetwork] BossPart/Boss update: networkId="
+                          << networkId << " pos=(" << x << "," << y << ")"
+                          << " oldPos=(" << it->second.lastX << ","
+                          << it->second.lastY << ")");
+        debugBossPartUpdateLogCount_++;
     }
 
     it->second.lastX = x;
@@ -323,7 +342,9 @@ void ServerNetworkSystem::broadcastEntityUpdates() {
         float posThreshold = playerPosDelta;
         float velThreshold = playerVelDelta;
         if (info.type == EntityType::Bydos ||
-            info.type == EntityType::Obstacle) {
+            info.type == EntityType::Obstacle ||
+            info.type == EntityType::Boss ||
+            info.type == EntityType::BossPart) {
             updateInterval = enemyInterval;
             posThreshold = enemyPosDelta;
             velThreshold = enemyVelDelta;
@@ -398,6 +419,16 @@ void ServerNetworkSystem::broadcastEntitySpawn(std::uint32_t networkId,
     info.dirty = false;
 
     networkedEntities_[networkId] = info;
+    if (type == EntityType::BossPart || type == EntityType::Boss) {
+        LOG_INFO_CAT(::rtype::LogCategory::Network,
+                     "[ServerNetwork] Registered "
+                         << (type == EntityType::Boss ? "Boss" : "BossPart")
+                         << " networkId=" << networkId
+                         << " subType=" << static_cast<int>(subType) << " pos=("
+                         << x << "," << y << ")"
+                         << " entity=" << info.entity.id);
+    }
+
     if (server_) {
         server_->spawnEntity(networkId, type, subType, x, y);
 
@@ -460,6 +491,9 @@ void ServerNetworkSystem::resetState() {
 
     lowBandwidthClientCount_.store(0, std::memory_order_release);
     lowBandwidthModeActive_.store(false, std::memory_order_release);
+
+    debugNotFoundLogCount_ = 0;
+    debugBossPartUpdateLogCount_ = 0;
 }
 
 void ServerNetworkSystem::update() {

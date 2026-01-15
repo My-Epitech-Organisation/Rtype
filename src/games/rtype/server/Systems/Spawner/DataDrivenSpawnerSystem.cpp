@@ -37,6 +37,26 @@ using shared::TransformComponent;
 using shared::VelocityComponent;
 constexpr int32_t KBOSS_HEALTH_THRESHOLD = 500;
 
+namespace {
+shared::AttackPatternConfig createPatternFromType(
+    shared::BossAttackPattern pattern) {
+    switch (pattern) {
+        case shared::BossAttackPattern::CircularShot:
+            return shared::AttackPatternConfig::createCircularShot();
+        case shared::BossAttackPattern::SpreadFan:
+            return shared::AttackPatternConfig::createSpreadFan();
+        case shared::BossAttackPattern::LaserSweep:
+            return shared::AttackPatternConfig::createLaserSweep();
+        case shared::BossAttackPattern::MinionSpawn:
+            return shared::AttackPatternConfig::createMinionSpawn();
+        case shared::BossAttackPattern::TailSweep:
+            return shared::AttackPatternConfig::createTailSweep();
+        default:
+            return shared::AttackPatternConfig{};
+    }
+}
+}  // namespace
+
 DataDrivenSpawnerSystem::DataDrivenSpawnerSystem(EventEmitter emitter,
                                                  DataDrivenSpawnerConfig config)
     : ASystem("DataDrivenSpawnerSystem"),
@@ -272,13 +292,180 @@ void DataDrivenSpawnerSystem::spawnBoss(ECS::Registry& registry,
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                  "[DataDrivenSpawner] Spawning boss: " << bossId);
 
-    SpawnRequest bossRequest;
-    bossRequest.enemyId = bossId;
-    bossRequest.x = _config.screenWidth - 200.0F;
-    bossRequest.y = _config.screenHeight / 2.0F;
-    bossRequest.count = 1;
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    auto enemyConfigOpt = configRegistry.getEnemy(bossId);
+    if (!enemyConfigOpt.has_value()) {
+        LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                      "[DataDrivenSpawner] Boss config not found: " << bossId);
+        return;
+    }
 
-    spawnEnemy(registry, bossRequest);
+    const auto& bossConfig = enemyConfigOpt.value().get();
+    ECS::Entity boss = registry.spawnEntity();
+
+    float spawnX = _config.screenWidth - 200.0F;
+    float spawnY = _config.screenHeight / 2.0F;
+
+    registry.emplaceComponent<TransformComponent>(boss, spawnX, spawnY, 0.0F);
+    registry.emplaceComponent<VelocityComponent>(boss, 0.0F, 0.0F);
+    registry.emplaceComponent<HealthComponent>(boss, bossConfig.health,
+                                               bossConfig.health);
+    registry.emplaceComponent<BoundingBoxComponent>(
+        boss, bossConfig.hitboxWidth, bossConfig.hitboxHeight);
+    registry.emplaceComponent<DamageOnContactComponent>(boss, bossConfig.damage,
+                                                        true);
+
+    if (bossConfig.canShoot) {
+        float shootCooldown =
+            (bossConfig.fireRate > 0) ? (1.0F / bossConfig.fireRate) : 0.3F;
+        registry.emplaceComponent<shared::ShootCooldownComponent>(
+            boss, shootCooldown);
+    }
+
+    uint32_t networkId = _nextNetworkId++;
+    registry.emplaceComponent<NetworkIdComponent>(boss, networkId);
+    registry.emplaceComponent<EnemyTag>(boss);
+    registry.emplaceComponent<BydosSlaveTag>(boss);
+
+    auto variant = EnemyTypeComponent::stringToVariant(bossId);
+    registry.emplaceComponent<EnemyTypeComponent>(boss, variant, bossId);
+
+    shared::BossComponent bossComp;
+    bossComp.bossId = bossId;
+    bossComp.bossType = shared::stringToBossType(bossConfig.bossType);
+    bossComp.phaseTransitionDuration = bossConfig.phaseTransitionDuration;
+    bossComp.scoreValue = bossConfig.scoreValue;
+    bossComp.levelCompleteTrigger = bossConfig.levelCompleteTrigger;
+    bossComp.baseX = spawnX;
+    bossComp.baseY = spawnY;
+
+    const auto& movementConfig = bossConfig.animationConfig.movement;
+    bossComp.amplitude = movementConfig.amplitude;
+    bossComp.frequency = movementConfig.frequency;
+
+    for (const auto& phaseConfig : bossConfig.phases) {
+        shared::BossPhase phase;
+        phase.healthThreshold = phaseConfig.healthThreshold;
+        phase.phaseName = phaseConfig.name;
+        phase.primaryPattern =
+            shared::stringToBossAttackPattern(phaseConfig.primaryPattern);
+        phase.secondaryPattern =
+            shared::stringToBossAttackPattern(phaseConfig.secondaryPattern);
+        phase.speedMultiplier = phaseConfig.speedMultiplier;
+        phase.attackSpeedMultiplier = phaseConfig.attackSpeedMultiplier;
+        phase.damageMultiplier = phaseConfig.damageMultiplier;
+        phase.colorR = phaseConfig.colorR;
+        phase.colorG = phaseConfig.colorG;
+        phase.colorB = phaseConfig.colorB;
+        bossComp.phases.push_back(std::move(phase));
+    }
+
+    registry.emplaceComponent<shared::BossComponent>(boss, std::move(bossComp));
+    registry.emplaceComponent<shared::BossTag>(boss);
+
+    shared::BossPatternComponent patternComp;
+    patternComp.enabled = true;
+    patternComp.cyclical = true;
+    if (!bossConfig.phases.empty()) {
+        const auto& firstPhase = bossConfig.phases[0];
+        auto primaryPattern =
+            shared::stringToBossAttackPattern(firstPhase.primaryPattern);
+        if (primaryPattern != shared::BossAttackPattern::None) {
+            patternComp.patternQueue.push_back(
+                createPatternFromType(primaryPattern));
+        }
+        auto secondaryPattern =
+            shared::stringToBossAttackPattern(firstPhase.secondaryPattern);
+        if (secondaryPattern != shared::BossAttackPattern::None) {
+            patternComp.patternQueue.push_back(
+                createPatternFromType(secondaryPattern));
+        }
+    }
+    registry.emplaceComponent<shared::BossPatternComponent>(
+        boss, std::move(patternComp));
+
+    for (const auto& wpConfig : bossConfig.weakPoints) {
+        ECS::Entity weakPoint = registry.spawnEntity();
+        float wpX = spawnX + wpConfig.offsetX;
+        float wpY = spawnY + wpConfig.offsetY;
+
+        registry.emplaceComponent<TransformComponent>(weakPoint, wpX, wpY,
+                                                      0.0F);
+        registry.emplaceComponent<VelocityComponent>(weakPoint, 0.0F, 0.0F);
+        registry.emplaceComponent<HealthComponent>(weakPoint, wpConfig.health,
+                                                   wpConfig.health);
+        registry.emplaceComponent<BoundingBoxComponent>(
+            weakPoint, wpConfig.hitboxWidth, wpConfig.hitboxHeight);
+
+        shared::WeakPointComponent wpComp;
+        wpComp.parentBossEntity = boss;
+        wpComp.parentBossNetworkId = networkId;
+        wpComp.weakPointId = wpConfig.id;
+        wpComp.type = shared::stringToWeakPointType(wpConfig.type);
+        wpComp.localOffsetX = wpConfig.offsetX;
+        wpComp.localOffsetY = wpConfig.offsetY;
+        wpComp.bonusScore = wpConfig.bonusScore;
+        wpComp.damageToParent = wpConfig.damageToParent;
+        wpComp.critical = wpConfig.critical;
+        wpComp.segmentIndex = wpConfig.segmentIndex;
+        if (!wpConfig.disablesAttack.empty()) {
+            wpComp.disablesBossAttack = true;
+            wpComp.disabledAttackPattern = wpConfig.disablesAttack;
+        }
+        registry.emplaceComponent<shared::WeakPointComponent>(
+            weakPoint, std::move(wpComp));
+        registry.emplaceComponent<shared::WeakPointTag>(weakPoint);
+        registry.emplaceComponent<shared::EnemyTag>(
+            weakPoint);  // For collision detection
+
+        uint32_t wpNetworkId = _nextNetworkId++;
+        registry.emplaceComponent<NetworkIdComponent>(weakPoint, wpNetworkId);
+
+        engine::GameEvent wpEvent{};
+        wpEvent.type = engine::GameEventType::EntitySpawned;
+        wpEvent.entityNetworkId = wpNetworkId;
+        wpEvent.x = wpX;
+        wpEvent.y = wpY;
+        wpEvent.rotation = 0.0F;
+        wpEvent.entityType = static_cast<uint8_t>(EntityType::BossPart);
+        if (wpComp.segmentIndex >= 0) {
+            wpEvent.subType = static_cast<uint8_t>(wpComp.segmentIndex);
+        } else {
+            wpEvent.subType =
+                static_cast<uint8_t>(100 + std::abs(wpComp.segmentIndex));
+        }
+        wpEvent.parentNetworkId = networkId;
+        _emitEvent(wpEvent);
+
+        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                      "[DataDrivenSpawner] Spawned weak point '"
+                          << wpConfig.id << "' for boss " << bossId);
+    }
+
+    _enemyCount++;
+
+    engine::GameEvent event{};
+    event.type = engine::GameEventType::EntitySpawned;
+    event.entityNetworkId = networkId;
+    event.x = spawnX;
+    event.y = spawnY;
+    event.rotation = 0.0F;
+    event.entityType = static_cast<uint8_t>(EntityType::Boss);
+    event.subType = static_cast<uint8_t>(bossComp.bossType);
+    _emitEvent(event);
+
+    engine::GameEvent bossEvent{};
+    bossEvent.type = engine::GameEventType::BossPhaseChanged;
+    bossEvent.entityNetworkId = networkId;
+    bossEvent.bossPhase = 0;
+    bossEvent.bossPhaseCount = static_cast<uint8_t>(bossConfig.phases.size());
+    _emitEvent(bossEvent);
+
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[DataDrivenSpawner] Boss '"
+                     << bossId << "' spawned with " << bossConfig.phases.size()
+                     << " phases and " << bossConfig.weakPoints.size()
+                     << " weak points");
 }
 
 void DataDrivenSpawnerSystem::updateFallbackSpawning(ECS::Registry& registry,

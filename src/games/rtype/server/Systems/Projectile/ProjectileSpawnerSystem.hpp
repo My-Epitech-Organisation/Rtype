@@ -98,6 +98,21 @@ class ProjectileSpawnerSystem : public ::rtype::engine::ASystem {
                                     float playerY, uint8_t chargeLevel);
 
     /**
+     * @brief Spawn a boss projectile with custom velocity and damage
+     * @param registry ECS registry
+     * @param x Spawn X position
+     * @param y Spawn Y position
+     * @param vx Velocity X
+     * @param vy Velocity Y
+     * @param damage Projectile damage
+     * @param ownerNetworkId Network ID of the boss
+     * @return Network ID of spawned projectile
+     */
+    uint32_t spawnBossProjectile(ECS::Registry& registry, float x, float y,
+                                 float vx, float vy, int32_t damage,
+                                 uint32_t ownerNetworkId);
+
+    /**
      * @brief Get current projectile count
      * @return Number of active projectiles tracked
      */

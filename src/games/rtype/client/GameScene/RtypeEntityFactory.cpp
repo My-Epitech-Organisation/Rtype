@@ -7,10 +7,12 @@
 
 #include "RtypeEntityFactory.hpp"
 
+#include <cmath>
 #include <memory>
 #include <random>
 #include <utility>
 
+#include "../../shared/Components/BossComponent.hpp"
 #include "../../shared/Components/BoundingBoxComponent.hpp"
 #include "../../shared/Components/ChargedProjectileComponent.hpp"
 #include "../../shared/Components/EnemyTypeComponent.hpp"
@@ -21,9 +23,12 @@
 #include "../../shared/Components/PlayerIdComponent.hpp"
 #include "../../shared/Components/PowerUpTypeComponent.hpp"
 #include "../../shared/Components/Tags.hpp"
+#include "../../shared/Components/WeakPointComponent.hpp"
 #include "../../shared/Config/EntityConfig/EntityConfig.hpp"
 #include "../../shared/Config/GameConfig/RTypeGameConfig.hpp"
 #include "../Components/AnnimationComponent.hpp"
+#include "../Components/BossSerpentComponent.hpp"
+#include "../Components/BossVisualComponent.hpp"
 #include "../Components/ChaserExplosionComponent.hpp"
 #include "../Components/ColorTintComponent.hpp"
 #include "../Components/ForcePodVisualComponent.hpp"
@@ -138,6 +143,14 @@ RtypeEntityFactory::createNetworkEntityFactory(
 
             case ::rtype::network::EntityType::ForcePod:
                 setupForcePodEntity(reg, assetsManager, entity);
+                break;
+
+            case ::rtype::network::EntityType::Boss:
+                setupBossEntity(reg, assetsManager, entity, event.subType);
+                break;
+
+            case ::rtype::network::EntityType::BossPart:
+                setupBossPartEntity(reg, assetsManager, entity, event.subType);
                 break;
 
             case ::rtype::network::EntityType::LaserBeam:
@@ -300,9 +313,6 @@ void RtypeEntityFactory::setupBydosEntity(
             reg.emplaceComponent<TextureRect>(entity,
                                               std::pair<int, int>({0, 0}),
                                               std::pair<int, int>({113, 369}));
-            // 6 frames total: frame 1 = normal, frames 2-6 = explosion sequence
-            // oneTime=true so it doesn't loop, but we manually control when it
-            // starts
             reg.emplaceComponent<Animation>(entity, 6, 0.12f, true);
             reg.emplaceComponent<Size>(entity, 0.6f, 0.6f);
             reg.emplaceComponent<Rotation>(entity, 0.0f);
@@ -712,6 +722,274 @@ void RtypeEntityFactory::setupForcePodEntity(
     LOG_DEBUG_CAT(
         ::rtype::LogCategory::ECS,
         "[RtypeEntityFactory] Force Pod entity created with animation");
+}
+
+void RtypeEntityFactory::setupBossEntity(
+    ECS::Registry& reg, std::shared_ptr<AssetManager> /*assetsManager*/,
+    ECS::Entity entity, uint8_t bossType) {
+    LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                 "[RtypeEntityFactory] Creating Boss entity type="
+                     << static_cast<int>(bossType));
+
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    std::string bossId;
+
+    switch (static_cast<shared::BossType>(bossType)) {
+        case shared::BossType::Serpent:
+            bossId = "boss_serpent";
+            break;
+        case shared::BossType::Scorpion:
+            bossId = "boss_scorpion";
+            break;
+        case shared::BossType::Battleship:
+            bossId = "boss_battleship";
+            break;
+        case shared::BossType::Hive:
+            bossId = "boss_hive";
+            break;
+        default:
+            bossId = "boss_serpent";
+            break;
+    }
+
+    auto enemyConfigOpt = configRegistry.getEnemy(bossId);
+
+    BossVisualComponent visual;
+    visual.bossTypeId = bossId;
+    visual.partType = BossPartType::HEAD;
+    visual.state = BossVisualState::MOVE;
+
+    float hitboxWidth = 100.0F;
+    float hitboxHeight = 280.0F;
+    int32_t health = 3000;
+
+    if (enemyConfigOpt.has_value()) {
+        const auto& bossConfig = enemyConfigOpt.value().get();
+        const auto& animConfig = bossConfig.animationConfig;
+
+        hitboxWidth = bossConfig.hitboxWidth;
+        hitboxHeight = bossConfig.hitboxHeight;
+        health = bossConfig.health;
+
+        if (!animConfig.headAnimation.moveSprite.textureName.empty()) {
+            visual.moveTexture =
+                animConfig.headAnimation.moveSprite.textureName;
+            visual.idleTexture =
+                animConfig.headAnimation.idleSprite.textureName;
+            visual.attackTexture =
+                animConfig.headAnimation.attackSprite.textureName;
+            visual.deathTexture =
+                animConfig.headAnimation.deathSprite.textureName;
+            visual.frameWidth = animConfig.headAnimation.moveSprite.frameWidth;
+            visual.frameHeight =
+                animConfig.headAnimation.moveSprite.frameHeight;
+            visual.frameCount = animConfig.headAnimation.moveSprite.frameCount;
+            visual.frameDuration =
+                animConfig.headAnimation.moveSprite.frameDuration;
+            visual.loop = animConfig.headAnimation.moveSprite.loop;
+            visual.spriteOffsetX =
+                animConfig.headAnimation.moveSprite.spriteOffsetX;
+            visual.scaleX = animConfig.headAnimation.scaleX;
+            visual.scaleY = animConfig.headAnimation.scaleY;
+            visual.enableRotation = animConfig.headAnimation.enableRotation;
+            visual.rotationSmoothing =
+                animConfig.headAnimation.rotationSmoothing;
+            visual.rotationOffset = animConfig.headAnimation.rotationOffset;
+        } else {
+            visual.moveTexture = "boss_serpent_head";
+            visual.attackTexture = "boss_serpent_attack";
+            visual.frameWidth = 135;
+            visual.frameHeight = 369;
+            visual.frameCount = 5;
+            visual.frameDuration = 0.1F;
+            visual.scaleX = -0.85F;
+            visual.scaleY = 0.85F;
+        }
+    } else {
+        visual.moveTexture = "boss_serpent_head";
+        visual.attackTexture = "boss_serpent_attack";
+        visual.frameWidth = 135;
+        visual.frameHeight = 369;
+        visual.frameCount = 5;
+        visual.frameDuration = 0.1F;
+        visual.scaleX = -0.85F;
+        visual.scaleY = 0.85F;
+    }
+
+    if (visual.idleTexture.empty()) {
+        visual.idleTexture = visual.moveTexture;
+    }
+
+    reg.emplaceComponent<Image>(entity, visual.moveTexture);
+    reg.emplaceComponent<TextureRect>(
+        entity, std::pair<int, int>({0, 0}),
+        std::pair<int, int>({visual.frameWidth, visual.frameHeight}));
+    reg.emplaceComponent<Size>(entity, visual.scaleX, visual.scaleY);
+    reg.emplaceComponent<BossVisualComponent>(entity, visual);
+    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+        entity, hitboxWidth, hitboxHeight);
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0.0F, 0.0F},
+        ::rtype::display::Vector2f{hitboxWidth, hitboxHeight});
+    reg.getComponent<BoxingComponent>(entity).outlineColor =
+        ::rtype::display::Color{255, 100, 50, 200};
+    reg.getComponent<BoxingComponent>(entity).fillColor =
+        ::rtype::display::Color{255, 100, 50, 40};
+
+    reg.emplaceComponent<shared::HealthComponent>(entity, health, health);
+    reg.emplaceComponent<ZIndex>(entity, 5);
+    reg.emplaceComponent<GameTag>(entity);
+    reg.emplaceComponent<shared::EnemyTag>(entity);
+    reg.emplaceComponent<shared::BossTag>(entity);
+
+    if (visual.enableRotation) {
+        reg.emplaceComponent<Rotation>(entity, 0.0F);
+    }
+
+    LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                 "[RtypeEntityFactory] Boss entity created: " << bossId);
+}
+
+void RtypeEntityFactory::setupBossPartEntity(
+    ECS::Registry& reg, std::shared_ptr<AssetManager> /*assetsManager*/,
+    ECS::Entity entity, uint8_t segmentIndex) {
+    int32_t decodedSegmentIndex = static_cast<int32_t>(segmentIndex);
+    if (segmentIndex >= 100) {
+        decodedSegmentIndex = -(static_cast<int32_t>(segmentIndex) - 100);
+    }
+
+    LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                 "[RtypeEntityFactory] Creating Boss Part entity segmentIndex="
+                     << static_cast<int>(segmentIndex)
+                     << " (decoded=" << decodedSegmentIndex << ")");
+
+    BossVisualComponent visual;
+    visual.state = BossVisualState::MOVE;
+    visual.segmentIndex = decodedSegmentIndex;
+
+    auto& configRegistry = shared::EntityConfigRegistry::getInstance();
+    bool foundConfig = false;
+
+    float configHitboxW = 0.0F;
+    float configHitboxH = 0.0F;
+    int32_t configHealth = 400;
+
+    for (const auto& [bossId, bossConfig] : configRegistry.getAllEnemies()) {
+        if (!bossConfig.isBoss) continue;
+
+        for (const auto& wpConfig : bossConfig.weakPoints) {
+            if (wpConfig.segmentIndex == decodedSegmentIndex) {
+                const auto& partAnim = wpConfig.animation;
+
+                if (!partAnim.moveSprite.textureName.empty()) {
+                    visual.bossTypeId = bossId;
+                    visual.customPartId = wpConfig.id;
+                    visual.moveTexture = partAnim.moveSprite.textureName;
+                    visual.idleTexture = partAnim.idleSprite.textureName;
+                    visual.attackTexture = partAnim.attackSprite.textureName;
+                    visual.deathTexture = partAnim.deathSprite.textureName;
+                    visual.frameWidth = partAnim.moveSprite.frameWidth;
+                    visual.frameHeight = partAnim.moveSprite.frameHeight;
+                    visual.frameCount = partAnim.moveSprite.frameCount;
+                    visual.frameDuration = partAnim.moveSprite.frameDuration;
+                    visual.loop = partAnim.moveSprite.loop;
+                    visual.spriteOffsetX = partAnim.moveSprite.spriteOffsetX;
+                    visual.scaleX = partAnim.scaleX;
+                    visual.scaleY = partAnim.scaleY;
+                    visual.enableRotation = partAnim.enableRotation;
+                    visual.rotationSmoothing = partAnim.rotationSmoothing;
+                    visual.rotationOffset = partAnim.rotationOffset;
+
+                    configHitboxW = wpConfig.hitboxWidth;
+                    configHitboxH = wpConfig.hitboxHeight;
+                    configHealth = wpConfig.health;
+
+                    if (partAnim.partType == "head") {
+                        visual.partType = BossPartType::HEAD;
+                    } else if (partAnim.partType == "tail") {
+                        visual.partType = BossPartType::TAIL;
+                    } else if (partAnim.partType == "body") {
+                        visual.partType = BossPartType::BODY;
+                    } else {
+                        visual.partType = BossPartType::CUSTOM;
+                    }
+
+                    if (visual.idleTexture.empty()) {
+                        visual.idleTexture = visual.moveTexture;
+                    }
+                    foundConfig = true;
+                    break;
+                }
+            }
+        }
+
+        if (foundConfig) break;
+    }
+
+    if (!foundConfig) {
+        LOG_WARNING_CAT(::rtype::LogCategory::ECS,
+                        "[RtypeEntityFactory] No config found for segmentIndex="
+                            << static_cast<int>(segmentIndex)
+                            << ", using defaults");
+        visual.moveTexture = "boss_serpent_body";
+        visual.idleTexture = visual.moveTexture;
+        visual.frameWidth = 135;
+        visual.frameHeight = 369;
+        visual.frameCount = 5;
+        visual.frameDuration = 0.1F;
+        visual.scaleX = -0.75F;
+        visual.scaleY = 0.75F;
+        visual.partType = BossPartType::BODY;
+    } else {
+        LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                     "[RtypeEntityFactory] Config found for segmentIndex="
+                         << decodedSegmentIndex
+                         << " texture=" << visual.moveTexture
+                         << " frameCount=" << visual.frameCount << " hitbox=("
+                         << configHitboxW << "x" << configHitboxH << ")"
+                         << " rotation=" << visual.enableRotation);
+    }
+
+    reg.emplaceComponent<Image>(entity, visual.moveTexture);
+    reg.emplaceComponent<TextureRect>(
+        entity, std::pair<int, int>({0, 0}),
+        std::pair<int, int>({visual.frameWidth, visual.frameHeight}));
+    reg.emplaceComponent<Size>(entity, visual.scaleX, visual.scaleY);
+    reg.emplaceComponent<BossVisualComponent>(entity, visual);
+
+    float hitboxW = configHitboxW;
+    float hitboxH = configHitboxH;
+    if (hitboxW <= 0.0F || hitboxH <= 0.0F) {
+        hitboxW = visual.frameWidth * std::abs(visual.scaleX);
+        hitboxH = visual.frameHeight * std::abs(visual.scaleY);
+    }
+
+    reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
+        entity, hitboxW, hitboxH);
+    reg.emplaceComponent<BoxingComponent>(
+        entity, ::rtype::display::Vector2f{0.0F, 0.0F},
+        ::rtype::display::Vector2f{hitboxW, hitboxH});
+    reg.getComponent<BoxingComponent>(entity).outlineColor =
+        ::rtype::display::Color{200, 150, 100, 200};
+    reg.getComponent<BoxingComponent>(entity).fillColor =
+        ::rtype::display::Color{200, 150, 100, 40};
+
+    reg.emplaceComponent<shared::HealthComponent>(entity, configHealth,
+                                                  configHealth);
+    reg.emplaceComponent<ZIndex>(entity, 4);
+    reg.emplaceComponent<GameTag>(entity);
+    reg.emplaceComponent<shared::WeakPointTag>(entity);
+
+    if (visual.enableRotation) {
+        reg.emplaceComponent<Rotation>(entity, visual.rotationOffset);
+    } else if (std::abs(visual.rotationOffset) > 0.01F) {
+        reg.emplaceComponent<Rotation>(entity, visual.rotationOffset);
+    }
+
+    LOG_INFO_CAT(::rtype::LogCategory::ECS,
+                 "[RtypeEntityFactory] Boss segment created (segmentIndex="
+                     << decodedSegmentIndex << " hitbox=" << hitboxW << "x"
+                     << hitboxH << ")");
 }
 
 void RtypeEntityFactory::setupLaserBeamEntity(

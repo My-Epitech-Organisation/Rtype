@@ -113,6 +113,21 @@ class RtypeEntityFactory {
                                     ECS::Entity entity);
 
     /**
+     * @brief Create a Boss entity with visual components
+     *
+     * @param registry ECS registry
+     * @param assetsManager Asset manager
+     * @param entity Entity to configure
+     * @param bossType Type of boss (serpent, scorpion, etc.)
+     */
+    static void setupBossEntity(ECS::Registry& registry,
+                                std::shared_ptr<AssetManager> assetsManager,
+                                ECS::Entity entity, uint8_t bossType);
+
+    static void setupBossPartEntity(ECS::Registry& registry,
+                                    std::shared_ptr<AssetManager> assetsManager,
+                                    ECS::Entity entity, uint8_t segmentIndex);
+    /**
      * @brief Create a Laser Beam entity with all components
      *
      * @param registry ECS registry
