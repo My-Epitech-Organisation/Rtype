@@ -236,6 +236,27 @@ else()
     gtest_discover_tests(test_collision_branches)
 endif()
 
+# Collision coverage tests (laser, force pod, orphan pod pickup, etc.)
+add_executable(test_collision_coverage test_collision_coverage.cpp)
+
+target_link_libraries(test_collision_coverage PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_collision_coverage PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_collision_coverage WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_collision_coverage)
+endif()
+
 # EntityConfig branch coverage tests
 add_executable(test_entityconfig_branches test_entityconfig_branches.cpp)
 
@@ -627,4 +648,48 @@ if(WIN32 OR MSVC)
     gtest_discover_tests(test_rtype_coverage WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_rtype_coverage)
+endif()
+
+# Server-side RTypeGameConfig tests
+add_executable(test_server_rtypegameconfig test_server_rtypegameconfig.cpp)
+
+target_link_libraries(test_server_rtypegameconfig PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    common
+    GTest::gtest_main
+)
+
+target_include_directories(test_server_rtypegameconfig PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_server_rtypegameconfig WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_server_rtypegameconfig)
+endif()
+
+# BossAttackSystem coverage tests
+add_executable(test_boss_attack_system_coverage test_boss_attack_system_coverage.cpp)
+
+target_link_libraries(test_boss_attack_system_coverage PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    common
+    GTest::gtest_main
+)
+
+target_include_directories(test_boss_attack_system_coverage PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_boss_attack_system_coverage WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_boss_attack_system_coverage)
 endif()
