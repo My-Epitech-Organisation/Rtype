@@ -95,3 +95,11 @@ target_link_libraries(r-type_server PRIVATE
     rtype_server_core
     httplib::httplib
 )
+
+add_custom_command(TARGET r-type_server POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:r-type_server> ${CMAKE_BINARY_DIR}/$<TARGET_FILE_NAME:r-type_server>
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/config
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/config ${CMAKE_BINARY_DIR}/config
+    COMMENT "Copying r-type_server and config/ to ${CMAKE_BINARY_DIR}"
+)

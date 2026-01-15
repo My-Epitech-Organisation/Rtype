@@ -88,6 +88,17 @@ add_dependencies(r-type_client
     rtype-graphic-music-exploreMusic
 )
 
+add_custom_command(TARGET r-type_client POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:r-type_client> ${CMAKE_BINARY_DIR}/$<TARGET_FILE_NAME:r-type_client>
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/assets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets ${CMAKE_BINARY_DIR}/assets
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/config
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/config ${CMAKE_BINARY_DIR}/config
+    COMMENT "Copying r-type_client, assets/ and config/ to ${CMAKE_BINARY_DIR}"
+)
+
+
 if(NOT EXISTS ${CMAKE_BINARY_DIR}/assets)
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E copy_directory
