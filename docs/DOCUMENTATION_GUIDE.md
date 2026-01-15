@@ -92,7 +92,7 @@ Your content here...
 
 #### Adding API Documentation
 
-Add Doxygen comments to C++ headers:
+Add Doxygen comments to C++ headers in `lib/` or `src/`:
 
 ```cpp
 /**

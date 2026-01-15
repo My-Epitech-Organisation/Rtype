@@ -6,14 +6,25 @@ This folder contains the complete documentation setup for the R-Type project, in
 
 ```
 docs/
-├── website/          # Docusaurus documentation site
-│   ├── docs/         # Markdown documentation files
-│   ├── blog/         # Blog posts
-│   ├── src/          # React components and pages
-│   └── static/       # Static assets (includes Doxygen output)
-├── Doxyfile          # Doxygen configuration
-├── generate-docs.sh  # Script to build all documentation
-└── doxygen/          # Generated Doxygen output (git-ignored)
+├── README.md                   # This file
+├── DOCUMENTATION_GUIDE.md      # How to write and generate docs
+├── DEPENDENCY_MANAGEMENT.md    # vcpkg + CPM dependency strategy
+├── stress_test_summary.md      # Server stress test results
+├── Doxyfile                    # Doxygen configuration
+├── architecture/               # Architecture documentation
+│   ├── files_architecture.md   # Repository layout and module structure
+│   └── ecs/                    # ECS technical documentation
+├── RFC/                        # Protocol specifications
+│   └── RFC_RTGP_v1.4.3.md      # R-Type Game Protocol specification
+├── technical/                  # Technical component documentation
+│   ├── ArgParser.md            # Command line parser
+│   ├── Logger.md               # Logging system
+│   └── EntityConfig_Usage.md   # Entity configuration usage
+└── website/                    # Docusaurus documentation site
+    ├── docs/                   # Markdown documentation files
+    ├── blog/                   # Blog posts
+    ├── src/                    # React components and pages
+    └── static/                 # Static assets (includes Doxygen output)
 ```
 
 ## Quick Start

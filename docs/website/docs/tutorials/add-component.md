@@ -21,11 +21,11 @@ Components are pure data structures that hold state. They don't contain logic - 
 
 ## 🎯 Step 1: Define the Component
 
-Components live in `include/rtype/common/components/` or game-specific directories.
+Components live in `lib/common/src/components/` or game-specific directories like `src/games/rtype/shared/components/`.
 
 ### Example: Create a Shield Component
 
-Create `include/rtype/common/components/ShieldComponent.hpp`:
+Create `lib/common/src/components/ShieldComponent.hpp`:
 
 ```cpp
 #ifndef RTYPE_COMMON_COMPONENTS_SHIELDCOMPONENT_HPP_
@@ -113,7 +113,7 @@ Components must be registered with the ECS registry before use.
 Edit `src/games/rtype/server/GameEngine.cpp` (or client equivalent):
 
 ```cpp
-#include "rtype/common/components/ShieldComponent.hpp"
+#include "common/src/components/ShieldComponent.hpp"
 
 void GameEngine::initialize() {
     // Register all components
@@ -138,8 +138,8 @@ Create `src/games/rtype/server/Systems/ShieldSystem.hpp`:
 #ifndef RTYPE_SERVER_SYSTEMS_SHIELDSYSTEM_HPP_
 #define RTYPE_SERVER_SYSTEMS_SHIELDSYSTEM_HPP_
 
-#include "rtype/engine/ASystem.hpp"
-#include "rtype/ecs/Registry.hpp"
+#include "engine/src/ASystem.hpp"
+#include "ecs/src/Registry.hpp"
 
 namespace rtype::server {
 
@@ -162,7 +162,7 @@ Create `src/games/rtype/server/Systems/ShieldSystem.cpp`:
 
 ```cpp
 #include "ShieldSystem.hpp"
-#include "rtype/common/components/ShieldComponent.hpp"
+#include "common/src/components/ShieldComponent.hpp"
 #include <algorithm>
 
 namespace rtype::server {
@@ -208,7 +208,7 @@ void ShieldSystem::update(ECS::Registry& registry, float dt) {
 ### Adding Components to Entities
 
 ```cpp
-#include "rtype/common/components/ShieldComponent.hpp"
+#include "common/src/components/ShieldComponent.hpp"
 
 // Create entity with shield
 auto player = registry.spawnEntity();
@@ -311,8 +311,8 @@ Create `tests/common/test_shield_component.cpp`:
 
 ```cpp
 #include <gtest/gtest.h>
-#include "rtype/ecs/Registry.hpp"
-#include "rtype/common/components/ShieldComponent.hpp"
+#include "ecs/src/Registry.hpp"
+#include "common/src/components/ShieldComponent.hpp"
 
 TEST(ShieldComponentTest, DefaultConstruction) {
     rtype::component::Shield shield;

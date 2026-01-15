@@ -7,7 +7,7 @@
 ## Basic Usage
 
 ```cpp
-#include "ECS/ECS.hpp"
+#include "ecs/src/ECS.hpp"
 #include <thread>
 
 // Parallel iteration over components

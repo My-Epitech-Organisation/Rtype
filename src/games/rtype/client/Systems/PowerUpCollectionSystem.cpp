@@ -79,10 +79,8 @@ void PowerUpCollectionSystem::update(ECS::Registry& registry, float /*dt*/) {
                 << playerId.playerId << " collected power-up: " << displayName
                 << " (remainingTime=" << activePowerUp.remainingTime << ")");
 
-            if (activePowerUp.remainingTime > 0.0f) {
-                pendingPopups.push_back(
-                    {transform.x + 20.f, transform.y, displayName, color});
-            }
+            pendingPopups.push_back(
+                {transform.x + 20.f, transform.y, displayName, color});
         }
         _lastPowerUpState[playerId.playerId] = {activePowerUp.type,
                                                 activePowerUp.remainingTime};
@@ -99,15 +97,15 @@ std::string PowerUpCollectionSystem::getPowerUpDisplayName(
     rs::PowerUpType type) const {
     switch (type) {
         case rs::PowerUpType::SpeedBoost:
-            return "+Speed";
+            return "+50% Speed";
         case rs::PowerUpType::Shield:
-            return "+Shield";
+            return "Shield ON";
         case rs::PowerUpType::RapidFire:
-            return "+Rapid Fire";
+            return "+50% Fire Rate";
         case rs::PowerUpType::DoubleDamage:
-            return "+Double Damage";
+            return "x2 Damage";
         case rs::PowerUpType::HealthBoost:
-            return "+Health";
+            return "+HP";
         case rs::PowerUpType::ForcePod:
             return "+Force Pod";
         default:

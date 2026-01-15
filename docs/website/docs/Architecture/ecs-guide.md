@@ -17,7 +17,7 @@ The Entity Component System (ECS) is an architectural pattern that separates dat
 ## Creating Entities
 
 ```cpp
-#include "rtype/ecs.hpp"
+#include "ecs/src/ECS.hpp"
 
 using namespace ECS;
 

@@ -128,9 +128,9 @@ void Lobby::update(float dt) {
                     constexpr float spriteScale = 4.0f;
                     constexpr float scaledSpriteSize =
                         spritePixelSize * spriteScale;
-                    constexpr float halfSize = scaledSpriteSize;
+                    constexpr float halfSize = scaledSpriteSize / 2.0f;
 
-                    float posX = myCenterX - halfSize;
+                    float posX = myCenterX - halfSize + 10.0f;
                     float posY = kBoxCenterY - halfSize;
 
                     LOG_INFO("[Lobby] Positioning player "
@@ -214,6 +214,21 @@ void Lobby::pollEvents(const rtype::display::Event& e) {
     if (_textInputSystem) {
         _textInputSystem->handleEvent(*_registry, e);
     }
+    if (e.type == rtype::display::EventType::KeyPressed &&
+        e.key.code == rtype::display::Key::Return) {
+        if (_registry->hasComponent<rtype::games::rtype::client::TextInput>(
+                _chatInputEntity)) {
+            auto& input =
+                _registry->getComponent<rtype::games::rtype::client::TextInput>(
+                    _chatInputEntity);
+            if (!input.content.empty()) {
+                if (this->_networkClient->sendChat(input.content)) {
+                    input.content = "";
+                    input.cursorPosition = 0;
+                }
+            }
+        }
+    }
 }
 
 void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
@@ -239,9 +254,12 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
     auto playerLabel = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager,
         "Player " + std::to_string(userId), "main_font",
-        ::rtype::display::Vector2<float>(myCenterX - 60, kBoxTopY + 20), 36);
+        ::rtype::display::Vector2<float>(myCenterX, kBoxTopY + 20), 36);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         playerLabel, 3);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(
+            playerLabel);
     if (this->_registry->hasComponent<rtype::games::rtype::client::Text>(
             playerLabel)) {
         auto& text =
@@ -255,9 +273,12 @@ void Lobby::_createPlayerInfoMenu(uint32_t userId, int index) {
 
     auto readyIndicator = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "WAITING...", "main_font",
-        ::rtype::display::Vector2<float>(myCenterX - 80, kBoxTopY + 70), 28);
+        ::rtype::display::Vector2<float>(myCenterX, kBoxTopY + 70), 28);
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
         readyIndicator, 3);
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(
+            readyIndicator);
     if (this->_registry->hasComponent<rtype::games::rtype::client::Text>(
             readyIndicator)) {
         auto& text =

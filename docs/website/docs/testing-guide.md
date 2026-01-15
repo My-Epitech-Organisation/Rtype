@@ -107,7 +107,7 @@ ctest --test-dir build -R "Network"
 
 ```cpp
 #include <gtest/gtest.h>
-#include "rtype/common/components/Position.hpp"
+#include "common/src/components/Position.hpp"
 
 // Test fixture (optional, for setup/teardown)
 class PositionTest : public ::testing::Test {
@@ -142,8 +142,8 @@ TEST_F(PositionTest, CustomPosition) {
 
 ```cpp
 #include <gtest/gtest.h>
-#include "rtype/ecs/Registry.hpp"
-#include "rtype/common/components/Health.hpp"
+#include "ecs/src/Registry.hpp"
+#include "common/src/components/Health.hpp"
 
 class HealthComponentTest : public ::testing::Test {
 protected:
@@ -195,8 +195,8 @@ TEST_F(HealthComponentTest, RemoveWhenDead) {
 ```cpp
 #include <gtest/gtest.h>
 #include "src/games/rtype/server/Systems/MovementSystem.hpp"
-#include "rtype/common/components/Position.hpp"
-#include "rtype/common/components/Velocity.hpp"
+#include "common/src/components/Position.hpp"
+#include "common/src/components/Velocity.hpp"
 
 class MovementSystemTest : public ::testing::Test {
 protected:
@@ -371,7 +371,7 @@ TEST(NetworkSyncTest, EntityPositionSynced) {
 
 ```cpp
 #include <gmock/gmock.h>
-#include "rtype/common/Logger.hpp"
+#include "common/src/Logger.hpp"
 
 class MockLogger : public rtype::Logger {
 public:
@@ -432,7 +432,7 @@ TEST(NetworkTest, SendsPacket) {
 
 ```cpp
 #include <benchmark/benchmark.h>
-#include "rtype/ecs/Registry.hpp"
+#include "ecs/src/Registry.hpp"
 
 static void BM_EntityCreation(benchmark::State& state) {
     ECS::Registry registry;
@@ -673,6 +673,6 @@ See `.github/workflows/tests.yml` for CI configuration.
 
 - [Contributing Guide](./contributing.md)
 - [ECS Architecture](./Architecture/ecs-guide.md)
-- [Network Protocol](./protocol/RFC_RTGP_v1.2.0.md)
+- [Network Protocol](./protocol/RFC_RTGP_v1.4.3.md)
 
 **Happy testing! ✅**

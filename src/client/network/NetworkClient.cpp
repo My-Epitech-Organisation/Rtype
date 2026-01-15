@@ -669,7 +669,13 @@ void NetworkClient::dispatchCallbacks() {
     }
 
     while (!toDispatch.empty()) {
-        toDispatch.front()();
+        try {
+            toDispatch.front()();
+        } catch (const std::exception& e) {
+            LOG_ERROR("[NetworkClient] Exception in callback: " << e.what());
+        } catch (...) {
+            LOG_ERROR("[NetworkClient] Unknown exception in callback");
+        }
         toDispatch.pop();
     }
 }

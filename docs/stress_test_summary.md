@@ -4,6 +4,7 @@ Overview
 --------
 - Purpose: realistic, reproducible stress testing for the R‑Type server using RTGP (UDP-like protocol with a small reliable layer).
 - Tool: `scripts/stress_test.py` — asyncio-based UDP client orchestrator that can spawn many lightweight clients, simulate inputs, and stress reliable/unreliable channels.
+- Protocol: See [RFC_RTGP_v1.4.3](RFC/RFC_RTGP_v1.4.3.md) for protocol details.
 
 Key changes in the stress tester
 --------------------------------

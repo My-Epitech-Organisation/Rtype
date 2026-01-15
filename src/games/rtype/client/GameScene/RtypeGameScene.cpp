@@ -17,7 +17,9 @@
 #include "AllComponents.hpp"
 #include "Components/ChargeShotVisualComponent.hpp"
 #include "Components/CountdownComponent.hpp"
+#include "Components/PowerUpComponent.hpp"
 #include "Components/TagComponent.hpp"
+#include "Components/Tags.hpp"
 #include "Components/TextComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
 #include "Graphic/EntityFactory/EntityFactory.hpp"
@@ -182,6 +184,7 @@ void RtypeGameScene::update() {
     updateDamageVignette(dt);
     updatePingDisplay();
     updateLevelAnnounce(dt);
+    updatePowerUpIndicator(dt);
 
     if (_isDisconnected) {
         if (_networkSystem) {
@@ -602,6 +605,101 @@ void RtypeGameScene::updatePingDisplay() {
         } else {
             text.color = ::rtype::display::Color(220, 90, 90, 255);
         }
+    }
+}
+
+void RtypeGameScene::updatePowerUpIndicator(float deltaTime) {
+    if (!_localPlayerEntity.has_value() ||
+        !_registry->isAlive(*_localPlayerEntity)) {
+        return;
+    }
+
+    const float indicatorX = 250.f;
+    const float indicatorY = 22.f;
+
+    bool hasActivePowerUp = _registry->hasComponent<rs::ActivePowerUpComponent>(
+        *_localPlayerEntity);
+    if (hasActivePowerUp) {
+        auto& activePowerUpMut =
+            _registry->getComponent<rs::ActivePowerUpComponent>(
+                *_localPlayerEntity);
+        if (activePowerUpMut.remainingTime > 0.0f) {
+            activePowerUpMut.remainingTime -= deltaTime;
+            if (activePowerUpMut.remainingTime < 0.0f) {
+                activePowerUpMut.remainingTime = 0.0f;
+            }
+        }
+    }
+
+    if (!hasActivePowerUp ||
+        _registry->getComponent<rs::ActivePowerUpComponent>(*_localPlayerEntity)
+                .type == rs::PowerUpType::None) {
+        if (_powerUpTextEntity.has_value() &&
+            _registry->isAlive(*_powerUpTextEntity)) {
+            _registry->emplaceComponent<rs::DestroyTag>(*_powerUpTextEntity);
+            _powerUpTextEntity.reset();
+        }
+        return;
+    }
+
+    const auto& activePowerUp =
+        _registry->getComponent<rs::ActivePowerUpComponent>(
+            *_localPlayerEntity);
+
+    std::string powerUpSymbol;
+    ::rtype::display::Color powerUpColor;
+    switch (activePowerUp.type) {
+        case rs::PowerUpType::SpeedBoost:
+            powerUpSymbol = "[SPD]";
+            powerUpColor = ::rtype::display::Color(255, 255, 0);
+            break;
+        case rs::PowerUpType::Shield:
+            powerUpSymbol = "[SHD]";
+            powerUpColor = ::rtype::display::Color(100, 200, 255);
+            break;
+        case rs::PowerUpType::RapidFire:
+            powerUpSymbol = "[RPD]";
+            powerUpColor = ::rtype::display::Color(0, 255, 255);
+            break;
+        case rs::PowerUpType::DoubleDamage:
+            powerUpSymbol = "[DMG]";
+            powerUpColor = ::rtype::display::Color(255, 128, 0);
+            break;
+        case rs::PowerUpType::HealthBoost:
+            powerUpSymbol = "[HP+]";
+            powerUpColor = ::rtype::display::Color(0, 255, 0);
+            break;
+        case rs::PowerUpType::ForcePod:
+            powerUpSymbol = "[POD]";
+            powerUpColor = ::rtype::display::Color(255, 0, 255);
+            break;
+        case rs::PowerUpType::LaserUpgrade:
+            powerUpSymbol = "[LAS]";
+            powerUpColor = ::rtype::display::Color(255, 100, 100);
+            break;
+        default:
+            powerUpSymbol = "[PWR]";
+            powerUpColor = ::rtype::display::Color::White();
+            break;
+    }
+
+    int remainingSecs = static_cast<int>(activePowerUp.remainingTime);
+    std::string displayText =
+        powerUpSymbol + " " + std::to_string(remainingSecs) + "s";
+
+    if (!_powerUpTextEntity.has_value() ||
+        !_registry->isAlive(*_powerUpTextEntity)) {
+        _powerUpTextEntity = EntityFactory::createStaticText(
+            _registry, _assetsManager, displayText, "title_font",
+            ::rtype::display::Vector2f{indicatorX, indicatorY}, 18.f);
+        _registry->emplaceComponent<ZIndex>(*_powerUpTextEntity,
+                                            GraphicsConfig::ZINDEX_UI + 2);
+        _registry->emplaceComponent<HudTag>(*_powerUpTextEntity);
+        _registry->emplaceComponent<GameTag>(*_powerUpTextEntity);
+    } else {
+        auto& text = _registry->getComponent<Text>(*_powerUpTextEntity);
+        text.textContent = displayText;
+        text.color = powerUpColor;
     }
 }
 
@@ -1153,8 +1251,9 @@ void RtypeGameScene::setupLevelAnnounceCallback() {
     if (_networkClient) {
         LOG_INFO_CAT(::rtype::LogCategory::UI,
                      "[RtypeGameScene] Setting up level announce callback");
-        _networkClient->onLevelAnnounce(
-            [this](const ::rtype::client::LevelAnnounceEvent& event) {
+        _networkClient->onLevelAnnounce([this](const ::rtype::client::
+                                                   LevelAnnounceEvent& event) {
+            try {
                 LOG_INFO_CAT(
                     ::rtype::LogCategory::UI,
                     "[RtypeGameScene] Level announce callback triggered: "
@@ -1173,7 +1272,17 @@ void RtypeGameScene::setupLevelAnnounceCallback() {
                                      << event.levelMusic);
                     _setLevelMusic(event.levelMusic);
                 }
-            });
+            } catch (const std::exception& e) {
+                LOG_ERROR_CAT(
+                    ::rtype::LogCategory::UI,
+                    "[RtypeGameScene] Exception in level announce callback: "
+                        << e.what());
+            } catch (...) {
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              "[RtypeGameScene] Unknown exception in level "
+                              "announce callback");
+            }
+        });
     }
 }
 
