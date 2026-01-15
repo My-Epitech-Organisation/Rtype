@@ -506,6 +506,20 @@ void RtypeEntityFactory::setupMissileEntity(
     reg.emplaceComponent<shared::LifetimeComponent>(
         entity, GraphicsConfig::LIFETIME_PROJECTILE);
     reg.emplaceComponent<GameTag>(entity);
+
+    bool isEnemyProjectile =
+        static_cast<uint8_t>(projectileType) >= 50 ||
+        (reg.hasComponent<shared::VelocityComponent>(entity) &&
+         reg.getComponent<shared::VelocityComponent>(entity).vx < 0.0f);
+
+    if (projectileType != shared::ProjectileType::ChargedShot) {
+        if (isEnemyProjectile) {
+            reg.emplaceComponent<ColorTint>(entity, 255, 80, 80, 255);
+        } else {
+            reg.emplaceComponent<ColorTint>(entity, 100, 180, 255, 255);
+        }
+    }
+
     if (reg.hasComponent<shared::VelocityComponent>(entity)) {
         const auto& vel = reg.getComponent<shared::VelocityComponent>(entity);
         LOG_DEBUG("[RtypeEntityFactory] Projectile velocity: vx="
@@ -703,6 +717,7 @@ void RtypeEntityFactory::setupForcePodEntity(
         std::pair<int, int>({frameWidth, frameHeight}));
     reg.emplaceComponent<Animation>(entity, frameCount, 0.08f, false);
     reg.emplaceComponent<Size>(entity, 2.0, 2.0);
+    reg.emplaceComponent<Rotation>(entity, 0.0f);
 
     reg.emplaceComponent<::rtype::games::rtype::shared::BoundingBoxComponent>(
         entity, 32.0f, 32.0f);
@@ -713,8 +728,11 @@ void RtypeEntityFactory::setupForcePodEntity(
         ::rtype::display::Color{100, 200, 255, 255};
     reg.getComponent<BoxingComponent>(entity).fillColor =
         ::rtype::display::Color{100, 200, 255, 40};
+    reg.emplaceComponent<shared::ForcePodComponent>(
+        entity, shared::ForcePodState::Attached, 0.0f, 0.0f, 0);
 
     reg.emplaceComponent<ForcePodVisual>(entity);
+    reg.emplaceComponent<ColorTint>(entity, 255, 255, 255, 255);
     reg.emplaceComponent<ZIndex>(entity, 1);
     reg.emplaceComponent<GameTag>(entity);
     reg.emplaceComponent<shared::ForcePodTag>(entity);
