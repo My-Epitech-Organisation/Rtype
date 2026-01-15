@@ -428,8 +428,8 @@ jobs:
 
           echo "Staging Display plugin to plugins/"
           if ls build/lib/display/SFML/*.dll >/dev/null 2>&1; then
-            cp -v build/lib/display/SFML/*.dll build/dist/client/plugins/display.dll
-            echo "✅ Copied display DLL to plugins/"
+            cp -v build/lib/display/SFML/*.dll build/dist/client/plugins/
+            echo "✅ Copied display DLL(s) to plugins/"
           else
             echo "❌ Error: Display DLL not found at build/lib/display/SFML/"
             exit 1
