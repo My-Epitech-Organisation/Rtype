@@ -199,6 +199,7 @@ void Lobby::update(float dt) {
 
         if (_countdownTimer <= -0.5f) {
             try {
+                _transitioningToGame = true;
                 this->_switchToScene(SceneManager::Scene::IN_GAME);
             } catch (SceneNotFound& e) {
                 LOG_ERROR(std::string("Error switching to Game Scene: ") +
@@ -746,6 +747,7 @@ Lobby::Lobby(std::shared_ptr<ECS::Registry> ecs,
                         "[Lobby] Server indicates game is now Running - "
                         "switching to game scene");
                     _countdownActive = false;
+                    _transitioningToGame = true;
                     this->_switchToScene(SceneManager::Scene::IN_GAME);
                 }
             } catch (const std::exception& e) {
@@ -1012,32 +1014,26 @@ Lobby::~Lobby() {
     }
 
     if (this->_registry) {
-        LOG_INFO("[Lobby] Resetting player positions for game scene...");
-        this->_registry
-            ->view<rtype::games::rtype::shared::PlayerIdComponent,
-                   rtype::games::rtype::shared::TransformComponent>()
-            .each([this](auto playerEntt, auto& id, auto& pos) {
-                pos.x = 100.0f;
-                pos.y = 150.0f + ((id.playerId - 1) * 100.0f);
-                LOG_INFO("[Lobby] Reset player "
-                         << id.playerId << " position to (" << pos.x << ", "
-                         << pos.y << ")");
+        if (!_transitioningToGame) {
+            LOG_INFO("[Lobby] Destroying all lobby entities including players (going to main menu)...");
 
-                if (!this->_registry
-                         ->hasComponent<rtype::games::rtype::client::GameTag>(
-                             playerEntt)) {
-                    this->_registry->emplaceComponent<
-                        rtype::games::rtype::client::GameTag>(playerEntt);
-                    LOG_DEBUG("[Lobby] Re-added GameTag to player "
-                              << id.playerId << " for in-game scene rendering");
+            std::vector<ECS::Entity> playerEntitiesToDestroy;
+            this->_registry
+                ->view<rtype::games::rtype::shared::PlayerIdComponent>()
+                .each([&playerEntitiesToDestroy](auto playerEntt, auto& id) {
+                    playerEntitiesToDestroy.push_back(playerEntt);
+                    LOG_INFO("[Lobby] Marking player " << id.playerId << " entity for destruction");
+                });
+
+            for (const auto& entity : playerEntitiesToDestroy) {
+                if (this->_registry->isAlive(entity)) {
+                    this->_registry->killEntity(entity);
                 }
-                if (this->_registry
-                        ->hasComponent<rtype::games::rtype::client::LobbyTag>(
-                            playerEntt)) {
-                    this->_registry->removeComponent<
-                        rtype::games::rtype::client::LobbyTag>(playerEntt);
-                }
-            });
+            }
+            LOG_INFO("[Lobby] Destroyed " << playerEntitiesToDestroy.size() << " player entities");
+        } else {
+            LOG_INFO("[Lobby] Preserving player entities for game scene transition");
+        }
     }
 
     for (auto chatHistoryEnt : _chatHistoryEntities) {
