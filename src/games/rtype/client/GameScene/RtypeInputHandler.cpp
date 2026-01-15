@@ -72,9 +72,14 @@ std::uint16_t RtypeInputHandler::getInputMask(
         }
 
         auto keyChangeAmmo = keybinds->getKeyBinding(GameAction::CHANGE_AMMO);
-        if (keyChangeAmmo.has_value() &&
-            pressedKeys_.contains(*keyChangeAmmo)) {
-            inputMask |= ::rtype::network::InputMask::kWeaponSwitch;
+        if (keyChangeAmmo.has_value()) {
+            bool isPressed = pressedKeys_.contains(*keyChangeAmmo);
+            if (isPressed) {
+                LOG_INFO("[InputHandler] CHANGE_AMMO key ("
+                         << static_cast<int>(*keyChangeAmmo)
+                         << ") is pressed, setting kWeaponSwitch flag");
+                inputMask |= ::rtype::network::InputMask::kWeaponSwitch;
+            }
         }
     } else {
         std::optional<unsigned int> jid;
@@ -175,7 +180,16 @@ bool RtypeInputHandler::handleKeyReleasedEvent(
 void RtypeInputHandler::updateKeyState(const ::rtype::display::Event& event) {
     if (event.type == ::rtype::display::EventType::KeyPressed) {
         pressedKeys_.insert(event.key.code);
+        // Debug: Log Tab key specifically (Key::Tab = 60)
+        if (static_cast<int>(event.key.code) == 60) {
+            LOG_INFO("[InputHandler] Tab key ADDED to pressedKeys_, size="
+                     << pressedKeys_.size());
+        }
     } else if (event.type == ::rtype::display::EventType::KeyReleased) {
+        // Debug: Log Tab key specifically
+        if (static_cast<int>(event.key.code) == 60) {
+            LOG_INFO("[InputHandler] Tab key REMOVED from pressedKeys_");
+        }
         pressedKeys_.erase(event.key.code);
     } else if (event.type ==
                ::rtype::display::EventType::JoystickButtonPressed) {
