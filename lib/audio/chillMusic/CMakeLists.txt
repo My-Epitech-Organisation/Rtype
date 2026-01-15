@@ -13,3 +13,9 @@ target_include_directories(rtype-graphic-music-chillMusic PUBLIC
 )
 
 target_link_libraries(rtype-graphic-music-chillMusic PRIVATE ecs)
+
+add_custom_command(TARGET rtype-graphic-music-chillMusic POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/plugins/music
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:rtype-graphic-music-chillMusic> ${CMAKE_BINARY_DIR}/plugins/music/$<TARGET_FILE_NAME:rtype-graphic-music-chillMusic>
+    COMMENT "Copying rtype-graphic-music-chillMusic to ${CMAKE_BINARY_DIR}/plugins/music"
+)

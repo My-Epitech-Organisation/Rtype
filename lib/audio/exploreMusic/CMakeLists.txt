@@ -13,3 +13,9 @@ target_include_directories(rtype-graphic-music-exploreMusic PUBLIC
 )
 
 target_link_libraries(rtype-graphic-music-exploreMusic PRIVATE ecs)
+
+add_custom_command(TARGET rtype-graphic-music-exploreMusic POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/plugins/music
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:rtype-graphic-music-exploreMusic> ${CMAKE_BINARY_DIR}/plugins/music/$<TARGET_FILE_NAME:rtype-graphic-music-exploreMusic>
+    COMMENT "Copying rtype-graphic-music-exploreMusic to ${CMAKE_BINARY_DIR}/plugins/music"
+)

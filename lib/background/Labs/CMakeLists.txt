@@ -11,3 +11,9 @@ target_include_directories(rtype-graphic-background-labs PUBLIC
 )
 
 target_link_libraries(rtype-graphic-background-labs PRIVATE ecs)
+
+add_custom_command(TARGET rtype-graphic-background-labs POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/plugins/background
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:rtype-graphic-background-labs> ${CMAKE_BINARY_DIR}/plugins/background/$<TARGET_FILE_NAME:rtype-graphic-background-labs>
+    COMMENT "Copying rtype-graphic-background-labs to ${CMAKE_BINARY_DIR}/plugins/background"
+)

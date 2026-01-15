@@ -30,3 +30,9 @@ target_link_libraries(rtype-display-sfml
         SFML::System
         SDL2::SDL2
 )
+
+add_custom_command(TARGET rtype-display-sfml POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/plugins
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:rtype-display-sfml> ${CMAKE_BINARY_DIR}/plugins/display.so
+    COMMENT "Copying rtype-display-sfml to ${CMAKE_BINARY_DIR}/plugins/display.so"
+)
