@@ -1017,7 +1017,7 @@ Lobby::~Lobby() {
         if (!_transitioningToGame) {
             LOG_INFO(
                 "[Lobby] Destroying all lobby entities including players "
-                "(going to main menu)...");
+                "(transitioning to main menu)...");
 
             std::vector<ECS::Entity> playerEntitiesToDestroy;
             this->_registry
