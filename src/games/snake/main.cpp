@@ -139,9 +139,7 @@ static int runApplication(IDisplay* display) {  // NOLINT(readability/fn_size)
     bool running = true;
     bool showGameOver = false;
     bool announcedGameOver = false;
-    float countdownTimer = 0.0f;  // For displaying countdown during game start
-    int frameCount = 0;
-    auto lastFpsTime = lastTime;
+    float countdownTimer = 0.0f;
     float accumulator = 0.0f;
     const float FRAME_TIME = 0.0166f;
 
@@ -262,7 +260,7 @@ static int runApplication(IDisplay* display) {  // NOLINT(readability/fn_size)
                         });
 
                     netClient->onJoinLobbyResponse(
-                        [&](bool accepted, uint8_t reason) {
+                        [&](bool accepted, uint8_t reason, [[maybe_unused]] const std::string& levelName) {
                             if (accepted) {
                                 joinedLobby = true;
                                 mode = AppMode::MultiplayerLobby;
@@ -743,16 +741,6 @@ static int runApplication(IDisplay* display) {  // NOLINT(readability/fn_size)
 
         if (showGameOver) {
             continue;
-        }
-
-        frameCount++;
-        auto fpsDelta =
-            std::chrono::duration<float>(currentTime - lastFpsTime).count();
-        if (fpsDelta >= 1.0f) {
-            std::cout << "FPS: " << frameCount
-                      << "  |  Score: " << gameState.score << "\n";
-            frameCount = 0;
-            lastFpsTime = currentTime;
         }
     }
 
