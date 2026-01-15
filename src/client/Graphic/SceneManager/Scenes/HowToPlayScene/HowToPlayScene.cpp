@@ -152,18 +152,20 @@ void HowToPlayScene::_initLayout() {
 
             int frameWidth;
             int frameHeight;
+            constexpr int numFrames = 4;
 
             if (powerups[i].textureId == "force_pod") {
                 frameWidth = 16;
                 frameHeight = 16;
             } else {
-                constexpr int numFrames = 4;
                 frameWidth = static_cast<int>(texSize.x) / numFrames;
                 frameHeight = static_cast<int>(texSize.y);
             }
+            int frameOffsetX =
+                (powerups[i].textureId == "laser_upgrade") ? frameWidth * 2 : 0;
             this->_registry
                 ->emplaceComponent<rtype::games::rtype::client::TextureRect>(
-                    icon, std::pair<int, int>{0, 0},
+                    icon, std::pair<int, int>{frameOffsetX, 0},
                     std::pair<int, int>{frameWidth, frameHeight});
             float scale = targetIconSize / static_cast<float>(frameWidth);
             this->_registry
