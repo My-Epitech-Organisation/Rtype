@@ -384,6 +384,13 @@ engine::ProcessedEvent GameEngine::processEvent(
         case engine::GameEventType::LevelComplete:
             result.valid = true;
             break;
+        case engine::GameEventType::BossPhaseChanged:
+        case engine::GameEventType::BossDefeated:
+        case engine::GameEventType::BossAttack:
+        case engine::GameEventType::WeakPointDestroyed:
+        case engine::GameEventType::ScoreChanged:
+            result.valid = false;
+            break;
         case engine::GameEventType::EntitySpawned: {
             ECS::Entity foundEntity{0};
             bool found = false;
