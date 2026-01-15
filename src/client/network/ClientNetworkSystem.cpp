@@ -20,12 +20,14 @@
 #include "client/Graphic/AudioLib/AudioLib.hpp"
 #include "games/rtype/client/Components/BoxingComponent.hpp"
 #include "games/rtype/client/Components/ImageComponent.hpp"
+#include "games/rtype/client/Components/HiddenComponent.hpp"
 #include "games/rtype/client/Components/LaserBeamAnimationComponent.hpp"
 #include "games/rtype/client/Components/RectangleComponent.hpp"
 #include "games/rtype/client/Components/TagComponent.hpp"
 #include "games/rtype/client/Components/ZIndexComponent.hpp"
 #include "games/rtype/client/GameScene/VisualCueFactory.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
+#include "games/rtype/shared/Components/PlayerIdComponent.hpp"
 #include "games/rtype/shared/Components/PowerUpComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
@@ -247,10 +249,38 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
     auto existingIt = networkIdToEntity_.find(event.entityId);
     if (existingIt != networkIdToEntity_.end()) {
         if (registry_->isAlive(existingIt->second)) {
-            LOG_DEBUG_CAT(
-                rtype::LogCategory::Network,
-                "[ClientNetworkSystem] Entity already exists and is alive, "
-                "skipping");
+            LOG_INFO("[ClientNetworkSystem] Entity already exists (id="
+                << event.entityId << "), updating position and ensuring visible");
+
+            ECS::Entity existingEntity = existingIt->second;
+
+            if (registry_->hasComponent<Transform>(existingEntity)) {
+                auto& pos = registry_->getComponent<Transform>(existingEntity);
+                LOG_INFO("[ClientNetworkSystem] Updating position from ("
+                    << pos.x << "," << pos.y << ") to (" << event.x << "," << event.y << ")");
+                pos.x = event.x;
+                pos.y = event.y;
+            }
+
+            if (registry_->hasComponent<games::rtype::client::HiddenComponent>(existingEntity)) {
+                auto& hidden = registry_->getComponent<games::rtype::client::HiddenComponent>(existingEntity);
+                if (hidden.isHidden) {
+                    hidden.isHidden = false;
+                    LOG_INFO("[ClientNetworkSystem] Unhiding existing entity on spawn");
+                }
+            } else {
+                LOG_INFO("[ClientNetworkSystem] Entity has no HiddenComponent");
+            }
+
+            if (event.type == network::EntityType::Player) {
+                if (localUserId_.has_value() && event.entityId == *localUserId_) {
+                    localPlayerEntity_ = existingEntity;
+                    LOG_INFO("[ClientNetworkSystem] Existing entity is our local player!");
+                    if (onLocalPlayerAssignedCallback_) {
+                        onLocalPlayerAssignedCallback_(*localUserId_, existingEntity);
+                    }
+                }
+            }
             return;
         } else {
             LOG_DEBUG_CAT(
@@ -336,6 +366,15 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
             vel.vx = event.vx;
             vel.vy = event.vy;
         }
+        if (registry_->hasComponent<games::rtype::client::HiddenComponent>(entity)) {
+            auto& hidden =
+                registry_->getComponent<games::rtype::client::HiddenComponent>(entity);
+            if (hidden.isHidden) {
+                hidden.isHidden = false;
+                LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                              "[ClientNetworkSystem] Unhiding local player entity after receiving position");
+            }
+        }
         return;
     }
 
@@ -355,6 +394,16 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
 
         pos.x = event.x;
         pos.y = event.y;
+
+        if (registry_->hasComponent<games::rtype::shared::PlayerIdComponent>(entity) &&
+            registry_->hasComponent<games::rtype::client::HiddenComponent>(entity)) {
+            auto& hidden = registry_->getComponent<games::rtype::client::HiddenComponent>(entity);
+            if (hidden.isHidden) {
+                hidden.isHidden = false;
+                LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                              "[ClientNetworkSystem] Unhiding player entity after receiving position from server");
+            }
+        }
     }
 
     if (registry_->hasComponent<Velocity>(entity)) {
