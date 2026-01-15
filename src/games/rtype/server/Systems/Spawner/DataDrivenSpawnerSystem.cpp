@@ -228,8 +228,10 @@ void DataDrivenSpawnerSystem::spawnEnemy(ECS::Registry& registry,
                                                enemyConfig.health);
     registry.emplaceComponent<BoundingBoxComponent>(
         enemy, enemyConfig.hitboxWidth, enemyConfig.hitboxHeight);
-    registry.emplaceComponent<DamageOnContactComponent>(
-        enemy, enemyConfig.damage, true);
+    DamageOnContactComponent enemyDmg{};
+    enemyDmg.damage = enemyConfig.damage;
+    enemyDmg.destroySelf = true;
+    registry.emplaceComponent<DamageOnContactComponent>(enemy, enemyDmg);
 
     if (enemyConfig.canShoot) {
         float shootCooldown =
@@ -368,8 +370,10 @@ void DataDrivenSpawnerSystem::spawnObstacle(ECS::Registry& registry) {
                                                  -_config.obstacleSpeed, 0.0F);
     registry.emplaceComponent<BoundingBoxComponent>(
         obstacle, _config.obstacleWidth, _config.obstacleHeight);
-    registry.emplaceComponent<DamageOnContactComponent>(
-        obstacle, _config.obstacleDamage, true);
+    DamageOnContactComponent obstacleDmg{};
+    obstacleDmg.damage = _config.obstacleDamage;
+    obstacleDmg.destroySelf = true;
+    registry.emplaceComponent<DamageOnContactComponent>(obstacle, obstacleDmg);
     registry.emplaceComponent<shared::ObstacleTag>(obstacle);
 
     uint32_t networkId = _nextNetworkId++;
