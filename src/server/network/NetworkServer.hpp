@@ -518,6 +518,16 @@ class NetworkServer {
         std::function<void(std::uint32_t userId, bool lowBandwidth)>;
     void onBandwidthModeChanged(BandwidthModeCallback callback);
 
+    /**
+     * @brief Set a callback to check if the game is currently running
+     * Used to prevent joins during active gameplay
+     * @param callback Function returning true if game is in Playing/Paused state
+     */
+    using GameStateCheckCallback = std::function<bool()>;
+    void setGameStateChecker(GameStateCheckCallback callback) {
+        _gameStateChecker = callback;
+    }
+
    private:
     /**
      * @brief Client connection state
@@ -657,11 +667,13 @@ class NetworkServer {
         onAdminCommandCallback_;
     std::function<void(std::uint32_t, bool)> onBandwidthModeChangedCallback_;
 
+    std::weak_ptr<BanManager> banManager_;
+
+    GameStateCheckCallback _gameStateChecker;
+
     mutable std::mutex clientsMutex_;
 
     std::shared_ptr<ServerMetrics> _metrics{nullptr};
-
-    std::weak_ptr<BanManager> banManager_;
 
     struct PacketStats {
         std::uint64_t count{0};

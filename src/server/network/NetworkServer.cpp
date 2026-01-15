@@ -975,6 +975,14 @@ void NetworkServer::handleJoinLobby(const network::Header& header,
         return;
     }
 
+    if (_gameStateChecker && _gameStateChecker()) {
+        LOG_INFO("[NetworkServer] Client userId="
+                 << client->userId << " attempted to join but game is already running - disconnecting");
+        disconnectClient(client->userId,
+                        network::DisconnectReason::RemoteRequest);
+        return;
+    }
+
     if (config_.expectedLobbyCode.empty() ||
         config_.expectedLobbyCode == code) {
         client->joined = true;
@@ -985,6 +993,9 @@ void NetworkServer::handleJoinLobby(const network::Header& header,
                     std::min(config_.levelId.size(), resp.levelName.size()));
         LOG_INFO("[NetworkServer] Client userId="
                  << client->userId << " joined lobby successfully");
+
+        auto allConnectedClients = getConnectedClients();
+        sendUserList(client->userId, allConnectedClients);
     } else {
         resp.accepted = 0;
         resp.reason = 1;
