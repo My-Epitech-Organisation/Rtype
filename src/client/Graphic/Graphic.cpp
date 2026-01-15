@@ -96,21 +96,29 @@ void Graphic::_update() {
     this->_systemScheduler->runSystem("parallax");
 
     if (!isPaused) {
-        this->_systemScheduler->runSystem("color_tint");
-        this->_systemScheduler->runSystem("player_animation");
-        this->_systemScheduler->runSystem("chaser_rotation");
-        this->_systemScheduler->runSystem("chaser_explosion");
-        this->_systemScheduler->runSystem("animation");
-        this->_systemScheduler->runSystem("boss_serpent_animation");
-        this->_systemScheduler->runSystem("boss_animation");
-        this->_systemScheduler->runSystem("charged_projectile_animation");
-        this->_systemScheduler->runSystem("powerup_visuals");
-        this->_systemScheduler->runSystem("projectile");
-        this->_systemScheduler->runSystem("charge_input");
-        this->_systemScheduler->runSystem("charge_visual");
-        this->_systemScheduler->runSystem("forcepod_visual");
-        this->_systemScheduler->runSystem("powerup_collection");
-        this->_systemScheduler->runSystem("enemy_health_bars");
+        try {
+            this->_systemScheduler->runSystem("color_tint");
+            this->_systemScheduler->runSystem("player_animation");
+            this->_systemScheduler->runSystem("chaser_rotation");
+            this->_systemScheduler->runSystem("chaser_explosion");
+            this->_systemScheduler->runSystem("animation");
+            this->_systemScheduler->runSystem("boss_serpent_animation");
+            this->_systemScheduler->runSystem("boss_animation");
+            this->_systemScheduler->runSystem("charged_projectile_animation");
+            this->_systemScheduler->runSystem("powerup_visuals");
+            this->_systemScheduler->runSystem("projectile");
+            this->_systemScheduler->runSystem("charge_input");
+            this->_systemScheduler->runSystem("charge_visual");
+            this->_systemScheduler->runSystem("forcepod_visual");
+            this->_systemScheduler->runSystem("powerup_collection");
+            this->_systemScheduler->runSystem("enemy_health_bars");
+        } catch (const std::exception& e) {
+            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                          "[Graphic] Exception in game systems: " << e.what());
+        } catch (...) {
+            LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
+                          "[Graphic] Unknown exception in game systems");
+        }
     }
 
     this->_systemScheduler->runSystem("lifetime");
