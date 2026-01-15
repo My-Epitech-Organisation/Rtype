@@ -535,10 +535,7 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
     }
 
     if (otherIsPlayer) {
-        // Check for invincibility/godmode - player takes no damage if
-        // invincible
         if (registry.hasComponent<shared::InvincibleTag>(other)) {
-            // Still destroy obstacle if it should self-destruct on contact
             if (destroyObstacleOnContact) {
                 cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle,
                                                                DestroyTag{});
@@ -569,13 +566,11 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
         } else {
             cmdBuffer.emplaceComponentDeferred<DestroyTag>(other, DestroyTag{});
         }
-        // Destroy obstacle on player contact if configured
         if (destroyObstacleOnContact) {
             cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle,
                                                            DestroyTag{});
         }
     } else {
-        // Other entity is a projectile - check if it's a player projectile
         bool isPlayerProjectile = false;
         if (registry.hasComponent<PlayerProjectileTag>(other)) {
             isPlayerProjectile = true;
@@ -584,11 +579,7 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
                 registry.getComponent<ProjectileComponent>(other);
             isPlayerProjectile = (projComp.owner == ProjectileOwner::Player);
         }
-
-        // Destroy the projectile
         cmdBuffer.emplaceComponentDeferred<DestroyTag>(other, DestroyTag{});
-
-        // Player projectiles destroy obstacles
         if (isPlayerProjectile) {
             cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle,
                                                            DestroyTag{});
@@ -725,19 +716,16 @@ void CollisionSystem::handleOrphanForcePodPickup(ECS::Registry& registry,
                                                  ECS::CommandBuffer& cmdBuffer,
                                                  ECS::Entity forcePod,
                                                  ECS::Entity player) {
-    // Check if the pod is actually orphan
     if (!registry.hasComponent<ForcePodComponent>(forcePod)) {
         return;
     }
 
     auto& podComp = registry.getComponent<ForcePodComponent>(forcePod);
 
-    // Only allow pickup of orphan pods
     if (podComp.state != ForcePodState::Orphan) {
         return;
     }
 
-    // Get player network ID
     if (!registry.hasComponent<NetworkIdComponent>(player)) {
         return;
     }
@@ -748,7 +736,6 @@ void CollisionSystem::handleOrphanForcePodPickup(ECS::Registry& registry,
                                          << " picking up orphan Force Pod "
                                          << forcePod.id);
 
-    // Count existing pods for this player to determine offset
     int existingPodCount = 0;
     auto podView = registry.view<ForcePodTag, ForcePodComponent>();
     podView.each([&existingPodCount, &playerNetId](
@@ -760,7 +747,6 @@ void CollisionSystem::handleOrphanForcePodPickup(ECS::Registry& registry,
         }
     });
 
-    // Calculate offset based on pod count
     const float distance = 60.0F;
     const std::vector<std::pair<float, float>> positions = {
         {0.0F, -distance},
@@ -783,12 +769,10 @@ void CollisionSystem::handleOrphanForcePodPickup(ECS::Registry& registry,
         offsetY = distance * std::sin(angle);
     }
 
-    // Adopt the pod
     podComp.adopt(playerNetId.networkId);
     podComp.offsetX = offsetX;
     podComp.offsetY = offsetY;
 
-    // Reset velocity if it has one
     if (registry.hasComponent<shared::VelocityComponent>(forcePod)) {
         auto& vel = registry.getComponent<shared::VelocityComponent>(forcePod);
         vel.vx = 0.0F;
