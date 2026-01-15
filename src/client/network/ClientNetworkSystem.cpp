@@ -249,17 +249,17 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
     auto existingIt = networkIdToEntity_.find(event.entityId);
     if (existingIt != networkIdToEntity_.end()) {
         if (registry_->isAlive(existingIt->second)) {
-            LOG_INFO("[ClientNetworkSystem] Entity already exists (id="
-                     << event.entityId
-                     << "), updating position and ensuring visible");
+            LOG_DEBUG("[ClientNetworkSystem] Entity already exists (id="
+                      << event.entityId
+                      << "), updating position and ensuring visible");
 
             ECS::Entity existingEntity = existingIt->second;
 
             if (registry_->hasComponent<Transform>(existingEntity)) {
                 auto& pos = registry_->getComponent<Transform>(existingEntity);
-                LOG_INFO("[ClientNetworkSystem] Updating position from ("
-                         << pos.x << "," << pos.y << ") to (" << event.x << ","
-                         << event.y << ")");
+                LOG_DEBUG("[ClientNetworkSystem] Updating position from ("
+                          << pos.x << "," << pos.y << ") to (" << event.x << ","
+                          << event.y << ")");
                 pos.x = event.x;
                 pos.y = event.y;
             }
@@ -272,19 +272,19 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
                             existingEntity);
                 if (hidden.isHidden) {
                     hidden.isHidden = false;
-                    LOG_INFO(
+                    LOG_DEBUG(
                         "[ClientNetworkSystem] Unhiding existing entity on "
                         "spawn");
                 }
             } else {
-                LOG_INFO("[ClientNetworkSystem] Entity has no HiddenComponent");
+                LOG_DEBUG("[ClientNetworkSystem] Entity has no HiddenComponent");
             }
 
             if (event.type == network::EntityType::Player) {
                 if (localUserId_.has_value() &&
                     event.entityId == *localUserId_) {
                     localPlayerEntity_ = existingEntity;
-                    LOG_INFO(
+                    LOG_DEBUG(
                         "[ClientNetworkSystem] Existing entity is our local "
                         "player!");
                     if (onLocalPlayerAssignedCallback_) {
