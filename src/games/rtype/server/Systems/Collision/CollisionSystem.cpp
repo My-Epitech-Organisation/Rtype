@@ -103,8 +103,10 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         bool bIsEnemy = registry.hasComponent<EnemyTag>(entityB);
         bool aIsForcePod = registry.hasComponent<ForcePodTag>(entityA);
         bool bIsForcePod = registry.hasComponent<ForcePodTag>(entityB);
-        bool aIsPlayer = registry.hasComponent<PlayerTag>(entityA) && !aIsForcePod;
-        bool bIsPlayer = registry.hasComponent<PlayerTag>(entityB) && !bIsForcePod;
+        bool aIsPlayer =
+            registry.hasComponent<PlayerTag>(entityA) && !aIsForcePod;
+        bool bIsPlayer =
+            registry.hasComponent<PlayerTag>(entityB) && !bIsForcePod;
         bool aIsPickup = registry.hasComponent<PickupTag>(entityA);
         bool bIsPickup = registry.hasComponent<PickupTag>(entityB);
         bool aIsObstacle = registry.hasComponent<ObstacleTag>(entityA);
