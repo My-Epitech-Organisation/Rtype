@@ -1251,40 +1251,38 @@ void RtypeGameScene::setupLevelAnnounceCallback() {
     if (_networkClient) {
         LOG_INFO_CAT(::rtype::LogCategory::UI,
                      "[RtypeGameScene] Setting up level announce callback");
-        _networkClient->onLevelAnnounce(
-            [this](const ::rtype::client::LevelAnnounceEvent& event) {
-                try {
-                    LOG_INFO_CAT(
-                        ::rtype::LogCategory::UI,
-                        "[RtypeGameScene] Level announce callback triggered: "
-                            << event.levelName << " background: "
-                            << event.background
-                            << " music: " << event.levelMusic);
-                    showLevelAnnounce(event.levelName);
-                    if (_setBackground && !event.background.empty()) {
-                        LOG_INFO_CAT(::rtype::LogCategory::UI,
-                                     "[RtypeGameScene] Setting background to: "
-                                         << event.background);
-                        _setBackground(event.background);
-                    }
-                    if (_setLevelMusic && !event.levelMusic.empty()) {
-                        LOG_INFO_CAT(
-                            ::rtype::LogCategory::UI,
-                            "[RtypeGameScene] Setting level music to: "
-                                << event.levelMusic);
-                        _setLevelMusic(event.levelMusic);
-                    }
-                } catch (const std::exception& e) {
-                    LOG_ERROR_CAT(
-                        ::rtype::LogCategory::UI,
-                        "[RtypeGameScene] Exception in level announce callback: "
-                            << e.what());
-                } catch (...) {
-                    LOG_ERROR_CAT(::rtype::LogCategory::UI,
-                                  "[RtypeGameScene] Unknown exception in level "
-                                  "announce callback");
+        _networkClient->onLevelAnnounce([this](const ::rtype::client::
+                                                   LevelAnnounceEvent& event) {
+            try {
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::UI,
+                    "[RtypeGameScene] Level announce callback triggered: "
+                        << event.levelName << " background: "
+                        << event.background << " music: " << event.levelMusic);
+                showLevelAnnounce(event.levelName);
+                if (_setBackground && !event.background.empty()) {
+                    LOG_INFO_CAT(::rtype::LogCategory::UI,
+                                 "[RtypeGameScene] Setting background to: "
+                                     << event.background);
+                    _setBackground(event.background);
                 }
-            });
+                if (_setLevelMusic && !event.levelMusic.empty()) {
+                    LOG_INFO_CAT(::rtype::LogCategory::UI,
+                                 "[RtypeGameScene] Setting level music to: "
+                                     << event.levelMusic);
+                    _setLevelMusic(event.levelMusic);
+                }
+            } catch (const std::exception& e) {
+                LOG_ERROR_CAT(
+                    ::rtype::LogCategory::UI,
+                    "[RtypeGameScene] Exception in level announce callback: "
+                        << e.what());
+            } catch (...) {
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              "[RtypeGameScene] Unknown exception in level "
+                              "announce callback");
+            }
+        });
     }
 }
 
