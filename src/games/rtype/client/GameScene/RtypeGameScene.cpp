@@ -183,6 +183,13 @@ void RtypeGameScene::update() {
     updatePingDisplay();
     updateLevelAnnounce(dt);
 
+    if (_registry->hasSingleton<std::shared_ptr<AudioLib>>()) {
+        auto audioLib = _registry->getSingleton<std::shared_ptr<AudioLib>>();
+        if (audioLib) {
+            audioLib->update();
+        }
+    }
+
     if (_isDisconnected) {
         if (_networkSystem) {
             _networkSystem->update();
