@@ -12,6 +12,7 @@
 #include <ctime>
 #include <iostream>
 #include <random>
+#include <vector>
 
 #include "../shared/Components.hpp"
 
@@ -358,10 +359,20 @@ void SnakeGameEngine::update(float deltaTime) {
 
     auto foodCheckView = _registry->view<FoodComponent>();
     int foodCount = 0;
-    foodCheckView.each([&foodCount](ECS::Entity /*id*/,
-                                    FoodComponent& /*food*/) { foodCount++; });
+    std::vector<ECS::Entity> orphanedFood;
+    foodCheckView.each([&foodCount, &orphanedFood](ECS::Entity foodId,
+                                                    FoodComponent& /*food*/) {
+        foodCount++;
+        if (foodCount > 2) {
+            orphanedFood.push_back(foodId);
+        }
+    });
 
-    if (foodCount == 0) {
+    for (auto foodId : orphanedFood) {
+        _registry->killEntity(foodId);
+    }
+
+    if (foodCount - orphanedFood.size() == 0) {
         spawnFood();
     }
 
