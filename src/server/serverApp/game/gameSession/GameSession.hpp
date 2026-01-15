@@ -156,7 +156,7 @@ class GameSession {
      * @param inputMask The input bitmask
      * @param entity The player entity (if known)
      */
-    void handleClientInput(std::uint32_t userId, std::uint8_t inputMask,
+    void handleClientInput(std::uint32_t userId, std::uint16_t inputMask,
                            std::optional<ECS::Entity> entity);
 
     /**
