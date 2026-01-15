@@ -358,21 +358,19 @@ void SnakeGameEngine::update(float deltaTime) {
     }
 
     auto foodCheckView = _registry->view<FoodComponent>();
-    int foodCount = 0;
-    std::vector<ECS::Entity> orphanedFood;
-    foodCheckView.each([&foodCount, &orphanedFood](ECS::Entity foodId,
-                                                   FoodComponent& /*food*/) {
-        foodCount++;
-        if (foodCount > 2) {
-            orphanedFood.push_back(foodId);
-        }
+    std::vector<ECS::Entity> foods;
+    foodCheckView.each([&foods](ECS::Entity foodId, FoodComponent& /*food*/) {
+        foods.push_back(foodId);
     });
 
-    for (auto foodId : orphanedFood) {
-        _registry->killEntity(foodId);
+    const std::size_t maxFood = 2u;
+    if (foods.size() > maxFood) {
+        for (std::size_t i = maxFood; i < foods.size(); ++i) {
+            _registry->killEntity(foods[i]);
+        }
     }
 
-    if (foodCount - orphanedFood.size() == 0) {
+    if (foods.empty()) {
         spawnFood();
     }
 
