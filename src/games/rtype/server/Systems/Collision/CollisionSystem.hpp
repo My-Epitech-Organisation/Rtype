@@ -93,6 +93,17 @@ class CollisionSystem : public ::rtype::engine::ASystem {
                                    ECS::Entity laser, ECS::Entity enemy,
                                    float deltaTime);
 
+    /**
+     * @brief Handle player picking up an orphan Force Pod
+     * @param registry ECS registry
+     * @param cmdBuffer Command buffer
+     * @param forcePod The orphan Force Pod entity
+     * @param player The player entity
+     */
+    void handleOrphanForcePodPickup(ECS::Registry& registry,
+                                    ECS::CommandBuffer& cmdBuffer,
+                                    ECS::Entity forcePod, ECS::Entity player);
+
     EventEmitter _emitEvent;
     std::unique_ptr<shared::QuadTreeSystem> _quadTreeSystem;
 
