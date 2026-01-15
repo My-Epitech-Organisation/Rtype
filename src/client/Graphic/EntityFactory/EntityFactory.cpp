@@ -163,3 +163,17 @@ ECS::Entity EntityFactory::createTextInput(
     registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entity, 1);
     return entity;
 }
+
+ECS::Entity EntityFactory::createStaticImage(
+    std::shared_ptr<ECS::Registry> registry, std::string_view textureId,
+    const ::rtype::display::Vector2f& position, float scale) {
+    auto entity = registry->spawnEntity();
+    registry->emplaceComponent<rtype::games::rtype::client::Image>(
+        entity, std::string(textureId));
+    registry->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
+        entity, position.x, position.y);
+    registry->emplaceComponent<rtype::games::rtype::client::Size>(entity, scale,
+                                                                  scale);
+    registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(entity, 2);
+    return entity;
+}

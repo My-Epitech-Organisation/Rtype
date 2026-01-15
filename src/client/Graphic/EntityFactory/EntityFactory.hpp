@@ -113,6 +113,19 @@ ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
                              std::string_view title, std::string_view fontId,
                              const ::rtype::display::Vector2f& position,
                              float size);
+
+/**
+ * @brief Create a static image/sprite entity for UI display
+ * @param registry ECS registry
+ * @param textureId ID of the texture (must be pre-loaded in TextureManager)
+ * @param position Position of the image
+ * @param scale Scale of the image (1.0 = original size)
+ * @return Created entity
+ */
+ECS::Entity createStaticImage(std::shared_ptr<ECS::Registry> registry,
+                              std::string_view textureId,
+                              const ::rtype::display::Vector2f& position,
+                              float scale = 1.0f);
 };  // namespace EntityFactory
 
 #endif  // SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_
