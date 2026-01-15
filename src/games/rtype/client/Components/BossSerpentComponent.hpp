@@ -23,10 +23,10 @@
  * @brief Visual states for boss serpent animation
  */
 enum class BossSerpentState : uint8_t {
-    IDLE = 0,    ///< Idle state (using head sprite)
-    MOVE = 1,    ///< Moving state (using head sprite with animation)
-    ATTACK = 2,  ///< Attack animation (using attack sprite)
-    DIE = 3      ///< Death animation
+    IDLE = 0,
+    MOVE = 1,
+    ATTACK = 2,
+    DIE = 3
 };
 
 /**
@@ -51,30 +51,18 @@ enum class BossSerpentPartType : uint8_t { HEAD = 0, BODY = 1, TAIL = 2 };
 struct BossSerpentVisual {
     BossSerpentState state = BossSerpentState::MOVE;
     BossSerpentPartType partType = BossSerpentPartType::HEAD;
-
-    // Animation timing
     float animationTimer = 0.0f;
     int currentFrame = 0;
-
-    // Previous position for direction calculation
     float prevX = 0.0f;
     float prevY = 0.0f;
-
-    // State flags
     bool isAttacking = false;
     bool isDying = false;
-
-    // Sprite sheet constants (all sheets have same dimensions)
     static constexpr int SHEET_WIDTH = 677;
     static constexpr int SHEET_HEIGHT = 369;
     static constexpr int FRAME_COUNT = 5;
-    static constexpr int FRAME_WIDTH = 135;  // 677 / 5 = 135.4, using 135
+    static constexpr int FRAME_WIDTH = 135;
     static constexpr int FRAME_HEIGHT = 369;
-
-    // Animation speed (seconds per frame)
     static constexpr float ANIMATION_SPEED = 0.1f;
-
-    // Texture names
     static constexpr const char* TEXTURE_HEAD = "boss_serpent_head";
     static constexpr const char* TEXTURE_ATTACK = "boss_serpent_attack";
     static constexpr const char* TEXTURE_BODY = "boss_serpent_body";
@@ -112,9 +100,7 @@ struct BossSerpentVisual {
  */
 struct BossSerpentBodyVisual {
     BossSerpentPartType partType = BossSerpentPartType::BODY;
-    int segmentIndex = 0;  // Index in the serpent body chain
-
-    // Animation state
+    int segmentIndex = 0;
     float animationTimer = 0.0f;
     int currentFrame = 0;
 
