@@ -63,6 +63,7 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
     ECS::CommandBuffer cmdBuffer(std::ref(registry));
 
     _laserDamagedThisFrame.clear();
+    _obstacleCollidedThisFrame.clear();
 
     for (const auto& pair : collisionPairs) {
         ECS::Entity entityA = pair.entityA;
@@ -505,13 +506,19 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
         return;
     }
 
+    uint64_t collisionPairId =
+        (static_cast<uint64_t>(obstacle.id) << 32) | static_cast<uint64_t>(other.id);
+
+    if (_obstacleCollidedThisFrame.find(collisionPairId) != _obstacleCollidedThisFrame.end()) {
+        return;
+    }
+    _obstacleCollidedThisFrame.insert(collisionPairId);
+
     int32_t damage = 15;
-    bool destroyObstacle = false;
     if (registry.hasComponent<DamageOnContactComponent>(obstacle)) {
         const auto& dmgComp =
             registry.getComponent<DamageOnContactComponent>(obstacle);
         damage = dmgComp.damage;
-        destroyObstacle = dmgComp.destroySelf;
     }
 
     if (otherIsPlayer) {
@@ -542,11 +549,9 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
         } else {
             cmdBuffer.emplaceComponentDeferred<DestroyTag>(other, DestroyTag{});
         }
+        cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle, DestroyTag{});
     } else {
         cmdBuffer.emplaceComponentDeferred<DestroyTag>(other, DestroyTag{});
-    }
-
-    if (destroyObstacle) {
         cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle, DestroyTag{});
     }
 }

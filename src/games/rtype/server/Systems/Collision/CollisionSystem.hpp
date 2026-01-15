@@ -98,6 +98,9 @@ class CollisionSystem : public ::rtype::engine::ASystem {
 
     /// Tracks laser-enemy pairs damaged this frame to prevent double hits
     std::unordered_set<uint64_t> _laserDamagedThisFrame;
+
+    /// Tracks obstacle-entity pairs that have collided to prevent repeated damage
+    std::unordered_set<uint64_t> _obstacleCollidedThisFrame;
 };
 
 }  // namespace rtype::games::rtype::server
