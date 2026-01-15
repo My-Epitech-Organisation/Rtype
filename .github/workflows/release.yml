@@ -237,6 +237,17 @@ jobs:
             echo "✅ Packaged assets"
           fi
 
+          # Package config folder
+          if [ -d "config" ]; then
+            mkdir -p release-packages-temp/config
+            cp -r config/* release-packages-temp/config/
+            cd release-packages-temp
+            zip -r ../release-packages/r-type_config.zip config/
+            cd ..
+            rm -rf release-packages-temp
+            echo "✅ Packaged config"
+          fi
+
           echo ""
           echo "Release packages created:"
           ls -lh release-packages/
