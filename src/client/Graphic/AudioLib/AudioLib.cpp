@@ -41,17 +41,18 @@ void AudioLib::play() const {
 }
 
 void AudioLib::cleanupStoppedSounds() {
-    this->_sounds.remove_if(
-        [](const SoundInstance& instance) {
-            return instance.sound->getStatus() == rtype::display::ISound::Status::Stopped;
-        });
+    this->_sounds.remove_if([](const SoundInstance& instance) {
+        return instance.sound->getStatus() ==
+               rtype::display::ISound::Status::Stopped;
+    });
 }
 
 void AudioLib::playSFX(std::shared_ptr<rtype::display::ISoundBuffer> sfx) {
     this->playSFX(sfx, "");
 }
 
-void AudioLib::playSFX(std::shared_ptr<rtype::display::ISoundBuffer> sfx, const std::string& soundId) {
+void AudioLib::playSFX(std::shared_ptr<rtype::display::ISoundBuffer> sfx,
+                       const std::string& soundId) {
     if (!sfx) {
         return;
     }
@@ -76,9 +77,7 @@ void AudioLib::loadMusic(std::shared_ptr<::rtype::display::IMusic> music) {
     this->_currentMusic->setVolume(this->_volumeMusic);
 }
 
-void AudioLib::update() {
-    cleanupStoppedSounds();
-}
+void AudioLib::update() { cleanupStoppedSounds(); }
 
 AudioLib::~AudioLib() {
     if (this->_currentMusic) this->_currentMusic->stop();

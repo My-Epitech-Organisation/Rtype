@@ -44,7 +44,8 @@ class AudioLib {
     void play() const;
 
     void playSFX(std::shared_ptr<rtype::display::ISoundBuffer> sfx);
-    void playSFX(std::shared_ptr<rtype::display::ISoundBuffer> sfx, const std::string& soundId);
+    void playSFX(std::shared_ptr<rtype::display::ISoundBuffer> sfx,
+                 const std::string& soundId);
 
     void update();
 
