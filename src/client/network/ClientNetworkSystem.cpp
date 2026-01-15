@@ -277,7 +277,8 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
                         "spawn");
                 }
             } else {
-                LOG_DEBUG("[ClientNetworkSystem] Entity has no HiddenComponent");
+                LOG_DEBUG(
+                    "[ClientNetworkSystem] Entity has no HiddenComponent");
             }
 
             if (event.type == network::EntityType::Player) {
