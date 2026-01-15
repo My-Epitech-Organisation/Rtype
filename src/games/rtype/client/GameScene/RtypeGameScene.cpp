@@ -617,8 +617,8 @@ void RtypeGameScene::updatePowerUpIndicator(float deltaTime) {
     const float indicatorX = 250.f;
     const float indicatorY = 22.f;
 
-    bool hasActivePowerUp =
-        _registry->hasComponent<rs::ActivePowerUpComponent>(*_localPlayerEntity);
+    bool hasActivePowerUp = _registry->hasComponent<rs::ActivePowerUpComponent>(
+        *_localPlayerEntity);
     if (hasActivePowerUp) {
         auto& activePowerUpMut =
             _registry->getComponent<rs::ActivePowerUpComponent>(
@@ -643,7 +643,8 @@ void RtypeGameScene::updatePowerUpIndicator(float deltaTime) {
     }
 
     const auto& activePowerUp =
-        _registry->getComponent<rs::ActivePowerUpComponent>(*_localPlayerEntity);
+        _registry->getComponent<rs::ActivePowerUpComponent>(
+            *_localPlayerEntity);
 
     std::string powerUpSymbol;
     ::rtype::display::Color powerUpColor;

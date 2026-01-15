@@ -219,9 +219,8 @@ void Lobby::pollEvents(const rtype::display::Event& e) {
         if (_registry->hasComponent<rtype::games::rtype::client::TextInput>(
                 _chatInputEntity)) {
             auto& input =
-                _registry
-                    ->getComponent<rtype::games::rtype::client::TextInput>(
-                        _chatInputEntity);
+                _registry->getComponent<rtype::games::rtype::client::TextInput>(
+                    _chatInputEntity);
             if (!input.content.empty()) {
                 if (this->_networkClient->sendChat(input.content)) {
                     input.content = "";

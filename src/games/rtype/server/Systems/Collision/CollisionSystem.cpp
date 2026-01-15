@@ -519,7 +519,8 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
     }
 
     if (otherIsPlayer) {
-        // Check for invincibility/godmode - player takes no damage if invincible
+        // Check for invincibility/godmode - player takes no damage if
+        // invincible
         if (registry.hasComponent<shared::InvincibleTag>(other)) {
             // Still destroy obstacle if it should self-destruct on contact
             if (destroyObstacleOnContact) {
