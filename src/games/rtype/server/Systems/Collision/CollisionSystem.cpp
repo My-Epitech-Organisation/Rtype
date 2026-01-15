@@ -24,8 +24,6 @@
 
 namespace rtype::games::rtype::server {
 
-// Compile-time assertion: Entity IDs must fit in 32 bits for collision pair
-// hashing
 static_assert(sizeof(ECS::Entity::id) == sizeof(std::uint32_t),
               "Entity ID must be 32-bit for collision pair ID generation");
 
