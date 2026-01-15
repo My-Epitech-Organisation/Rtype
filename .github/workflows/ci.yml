@@ -412,7 +412,7 @@ jobs:
             -DUSE_SFML=ON
 
       - name: Build
-        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-asteroidsSpace rtype-graphic-background-lobby rtype-graphic-background-labs rtype-graphic-background-spatialStation rtype-graphic-background-meteorInside rtype-graphic-background-blackHole rtype-graphic-music-chillMusic rtype-graphic-music-battleMusic rtype-graphic-music-exploreMusic
+        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server
 
       - name: Prepare Windows dist (exe + DLLs only)
         if: matrix.os == 'windows-latest'
@@ -433,18 +433,18 @@ jobs:
           cp -v build/lib/display/**/*.dll build/dist/client/plugins/
           cp -v build/lib/display/SFML/*.dll build/dist/client/plugins/display.dll 2>/dev/null || true
           echo "Staging Background lib"
-          if ! ls build/lib/background/**/*.dll >/dev/null 2>&1; then
+          if ! ls build/plugins/background/*.dll >/dev/null 2>&1; then
             echo "Error: No background lib found"
             exit 1
           fi
-          cp -v build/lib/background/**/*.dll build/dist/client/plugins/background/
+          cp -v build/plugins/background/*.dll build/dist/client/plugins/background/
 
-          echo "Staging Audio lib"
-          if ! ls build/lib/audio/**/*.dll >/dev/null 2>&1; then
-            echo "Error: No audio lib found"
+          echo "Staging music lib"
+          if ! ls build/plugins/music/*.dll >/dev/null 2>&1; then
+            echo "Error: No music lib found"
             exit 1
           fi
-          cp -v build/lib/audio/**/*.dll build/dist/client/plugins/music/
+          cp -v build/plugins/music/*.dll build/dist/client/plugins/music/
 
           if ! ls build/vcpkg_installed/x64-windows/bin/*.dll >/dev/null 2>&1; then
             echo "Error: No DLLs found for client"
@@ -489,8 +489,8 @@ jobs:
           cp build/src/client/r-type_client build/dist/client/
           cp -r build/lib/display/**/*.so build/dist/client/plugins 2>/dev/null || true
           cp -r build/lib/display/SFML/*.so build/dist/client/plugins/display.so 2>/dev/null || true
-          cp -r build/lib/background/**/*.so build/dist/client/plugins/background 2>/dev/null || true
-          cp -r build/lib/audio/**/*.so build/dist/client/plugins/music 2>/dev/null || true
+          cp -r build/plugins/background/*.so build/dist/client/plugins/background 2>/dev/null || true
+          cp -r build/plugins/music/*.so build/dist/client/plugins/music 2>/dev/null || true
 
       - name: Upload Client Artifact (Linux)
         if: matrix.os == 'ubuntu-latest'

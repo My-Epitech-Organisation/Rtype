@@ -75,6 +75,18 @@ target_link_libraries(rtype-graphic
     engine
     rtype_game_client_systems
 )
+add_dependencies(r-type_client
+    rtype-display-sfml
+    rtype-graphic-background-asteroidsSpace
+    rtype-graphic-background-lobby
+    rtype-graphic-background-labs
+    rtype-graphic-background-spatialStation
+    rtype-graphic-background-meteorInside
+    rtype-graphic-background-blackHole
+    rtype-graphic-music-chillMusic
+    rtype-graphic-music-battleMusic
+    rtype-graphic-music-exploreMusic
+)
 
 if(NOT EXISTS ${CMAKE_BINARY_DIR}/assets)
     execute_process(
