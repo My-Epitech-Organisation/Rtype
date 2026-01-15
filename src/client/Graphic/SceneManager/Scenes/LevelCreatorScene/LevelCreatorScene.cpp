@@ -145,11 +145,19 @@ LevelCreatorScene::LevelCreatorScene(
 
     this->_musicLevelIteratorCurrent = this->_libMusicLevels.begin();
 
-    this->_musicLevelId = this->_musicLevelIteratorCurrent->first;
+    if (!this->_libMusicLevels.empty()) {
+        this->_musicLevelId = this->_musicLevelIteratorCurrent->first;
+    } else {
+        this->_musicLevelId = "No Music Plugin";
+    }
 
     this->_bgIteratorCurrent = _libBackgrounds.begin();
 
-    this->_bgPluginName = this->_bgIteratorCurrent->first;
+    if (!this->_libBackgrounds.empty()) {
+        this->_bgPluginName = this->_bgIteratorCurrent->first;
+    } else {
+        this->_bgPluginName = "No Background Plugin";
+    }
 
     float startX = kLevelSectionPosLeft;
     float startY = kLevelSectionPosTop;
