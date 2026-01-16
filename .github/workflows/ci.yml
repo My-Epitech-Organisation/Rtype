@@ -566,6 +566,8 @@ jobs:
       contents: write
       pull-requests: write
     secrets: inherit
+    with:
+      source_run_id: ${{ github.run_id }}
 
   mirror:
     name: "🪞 Push to Epitech Mirror"
