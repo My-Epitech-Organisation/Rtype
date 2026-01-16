@@ -38,9 +38,9 @@ class NetworkClient;
  */
 class DevConsole {
    public:
-    static constexpr std::size_t kMaxHistoryLines = 50;
+    static constexpr std::size_t kMaxHistoryLines = 100;
     static constexpr std::size_t kMaxInputLength = 256;
-    static constexpr float kConsoleHeightRatio = 0.4f;
+    static constexpr float kConsoleHeightRatio = 0.6f;
 
     // Visual constants
     static constexpr unsigned int kFontSize = 16;
@@ -163,6 +163,7 @@ class DevConsole {
     struct OutputLine {
         std::string text;
         bool isError{false};
+        bool isInput{false};
     };
 
     void executeCurrentInput();
@@ -218,6 +219,23 @@ class DevConsole {
     int cachedFPS_{0};
     std::uint32_t cachedPing_{0};
     std::size_t cachedEntityCount_{0};
+
+    // World position overlay
+    float cachedPlayerX_{0.f};
+    float cachedPlayerY_{0.f};
+
+    // Lagometer data
+    std::deque<std::uint32_t> pingHistory_;
+    static constexpr std::size_t kPingHistorySize = 10;
+    float cachedJitter_{0.f};
+
+    // Active power-ups (proc) data
+    struct CachedProc {
+        std::string name;
+        float remainingTime{0.f};
+        float multiplier{1.f};
+    };
+    std::vector<CachedProc> cachedProcs_;
 };
 
 }  // namespace rtype::client

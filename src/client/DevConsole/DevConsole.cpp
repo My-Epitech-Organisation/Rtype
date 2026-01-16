@@ -10,9 +10,19 @@
 #include <algorithm>
 #include <cctype>
 #include <chrono>
+#include <cmath>
 #include <ctime>
 #include <iomanip>
+#include <numeric>
 #include <sstream>
+
+#ifdef __linux__
+#include <fstream>
+#endif
+#ifdef _WIN32
+#include <windows.h>
+#include <psapi.h>
+#endif
 
 #include <rtype/ecs.hpp>
 
@@ -21,6 +31,8 @@
 #include "Graphic/AudioLib/AudioLib.hpp"
 #include "Graphic/KeyboardActions.hpp"
 #include "Logger/Macros.hpp"
+#include "games/rtype/shared/Components/NetworkIdComponent.hpp"
+#include "games/rtype/shared/Components/PowerUpComponent.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "network/NetworkClient.hpp"
 #include "protocol/Payloads.hpp"
@@ -28,6 +40,46 @@
 namespace rtype::client {
 
 namespace {
+
+// System metrics for resource monitoring
+struct SystemMetrics {
+    float cpuPercent{0.0f};
+    std::size_t memoryMB{0};
+    bool cpuAvailable{false};
+    bool memAvailable{false};
+};
+
+SystemMetrics getSystemMetrics() {
+    SystemMetrics m;
+#ifdef __linux__
+    std::ifstream status("/proc/self/status");
+    std::string line;
+    while (std::getline(status, line)) {
+        if (line.rfind("VmRSS:", 0) == 0) {
+            // "VmRSS:     12345 kB"
+            try {
+                std::size_t kb = std::stoul(line.substr(6));
+                m.memoryMB = kb / 1024;
+                m.memAvailable = true;
+            } catch (...) {
+                // Parsing failed
+            }
+            break;
+        }
+    }
+    // CPU calculation requires sampling over time - skip for simplicity
+    m.cpuAvailable = false;
+#elif defined(_WIN32)
+    PROCESS_MEMORY_COUNTERS pmc;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+        m.memoryMB = pmc.WorkingSetSize / (1024 * 1024);
+        m.memAvailable = true;
+    }
+    m.cpuAvailable = false;  // Complex on Windows
+#endif
+    return m;
+}
+
 constexpr rtype::display::Color kConsoleBgColor{0, 0, 0, 200};
 constexpr rtype::display::Color kConsoleTextColor{0, 255, 0, 255};
 constexpr rtype::display::Color kConsoleErrorColor{255, 80, 80, 255};
@@ -82,6 +134,10 @@ DevConsole::DevConsole(std::shared_ptr<rtype::display::IDisplay> display,
     cvars_["cl_show_entities"] = "0";
     cvars_["net_graph"] = "0";
     cvars_["god_mode"] = "0";
+    cvars_["cl_show_position"] = "0";
+    cvars_["cl_show_resources"] = "0";
+    cvars_["cl_show_lagometer"] = "0";
+    cvars_["cl_show_proc"] = "0";
 
     print(
         "Developer Console initialized. Press F1 to toggle. Type 'help' for "
@@ -231,6 +287,89 @@ void DevConsole::update(float dt) {
 
         if (networkClient_ != nullptr && networkClient_->isConnected()) {
             cachedPing_ = networkClient_->latencyMs();
+
+            // Update ping history for jitter calculation
+            pingHistory_.push_back(cachedPing_);
+            if (pingHistory_.size() > kPingHistorySize) {
+                pingHistory_.pop_front();
+            }
+
+            // Calculate jitter (standard deviation of ping)
+            if (pingHistory_.size() >= 2) {
+                float sum = std::accumulate(pingHistory_.begin(),
+                                            pingHistory_.end(), 0.0f);
+                float mean = sum / static_cast<float>(pingHistory_.size());
+                float variance = 0.0f;
+                for (auto ping : pingHistory_) {
+                    float diff = static_cast<float>(ping) - mean;
+                    variance += diff * diff;
+                }
+                variance /= static_cast<float>(pingHistory_.size());
+                cachedJitter_ = std::sqrt(variance);
+            }
+
+            // Cache player position and active power-ups
+            if (registry_ != nullptr) {
+                auto userId = networkClient_->userId();
+                cachedProcs_.clear();
+
+                auto view = registry_->view<
+                    rtype::games::rtype::shared::TransformComponent,
+                    rtype::games::rtype::shared::NetworkIdComponent>();
+                view.each([&](ECS::Entity e,
+                              const rtype::games::rtype::shared::
+                                  TransformComponent& t,
+                              const rtype::games::rtype::shared::
+                                  NetworkIdComponent& n) {
+                    if (n.networkId == userId) {
+                        cachedPlayerX_ = t.x;
+                        cachedPlayerY_ = t.y;
+
+                        // Check for active power-ups
+                        if (registry_->hasComponent<rtype::games::rtype::shared::
+                                                        ActivePowerUpComponent>(
+                                e)) {
+                            const auto& proc =
+                                registry_->getComponent<rtype::games::rtype::
+                                                            shared::
+                                                                ActivePowerUpComponent>(
+                                    e);
+                            if (proc.type !=
+                                rtype::games::rtype::shared::PowerUpType::None) {
+                                CachedProc cp;
+                                switch (proc.type) {
+                                    case rtype::games::rtype::shared::
+                                        PowerUpType::SpeedBoost:
+                                        cp.name = "Speed";
+                                        cp.multiplier = proc.speedMultiplier;
+                                        break;
+                                    case rtype::games::rtype::shared::
+                                        PowerUpType::Shield:
+                                        cp.name = "Shield";
+                                        cp.multiplier = 1.f;
+                                        break;
+                                    case rtype::games::rtype::shared::
+                                        PowerUpType::RapidFire:
+                                        cp.name = "RapidFire";
+                                        cp.multiplier = proc.fireRateMultiplier;
+                                        break;
+                                    case rtype::games::rtype::shared::
+                                        PowerUpType::DoubleDamage:
+                                        cp.name = "Damage";
+                                        cp.multiplier = proc.damageMultiplier;
+                                        break;
+                                    default:
+                                        cp.name = "Buff";
+                                        cp.multiplier = 1.f;
+                                        break;
+                                }
+                                cp.remainingTime = proc.remainingTime;
+                                cachedProcs_.push_back(cp);
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         if (registry_ != nullptr) {
@@ -320,8 +459,12 @@ void DevConsole::renderOutput() {
 
     float y = outputAreaTop;
     for (const auto* line : linesToDraw) {
-        rtype::display::Color color =
-            line->isError ? kConsoleErrorColor : kConsoleTextColor;
+        rtype::display::Color color = kConsoleTextColor;
+        if (line->isError) {
+            color = kConsoleErrorColor;
+        } else if (line->isInput) {
+            color = kConsolePromptColor;  // Cyan for input lines
+        }
 
         display_->drawText(line->text, std::string(kFontName),
                            {kTextPadding, y}, kFontSize, color);
@@ -383,6 +526,62 @@ void DevConsole::renderOverlays() {
         lines.push_back("Entities: " + std::to_string(cachedEntityCount_));
     }
 
+    // World Position overlay
+    if (getCvar("cl_show_position") == "1" &&
+        (cachedPlayerX_ != 0.f || cachedPlayerY_ != 0.f)) {
+        std::ostringstream oss;
+        oss << "Pos: X=" << std::fixed << std::setprecision(1) << cachedPlayerX_
+            << " Y=" << cachedPlayerY_;
+        lines.push_back(oss.str());
+    }
+
+    // Resources overlay
+    if (getCvar("cl_show_resources") == "1") {
+        auto metrics = getSystemMetrics();
+        if (metrics.memAvailable) {
+            std::string line = "RAM: " + std::to_string(metrics.memoryMB) + " MB";
+            if (metrics.cpuAvailable) {
+                line = "CPU: " +
+                       std::to_string(static_cast<int>(metrics.cpuPercent)) +
+                       "% | " + line;
+            }
+            lines.push_back(line);
+        } else {
+            lines.push_back("Resources: N/A (Linux/Windows only)");
+        }
+    }
+
+    // Lagometer overlay
+    if (getCvar("cl_show_lagometer") == "1" && networkClient_ != nullptr &&
+        networkClient_->isConnected()) {
+        std::ostringstream oss;
+        oss << "Ping: " << cachedPing_ << "ms | Jitter: "
+            << static_cast<char>(0xB1)  // ± symbol
+            << static_cast<int>(cachedJitter_) << "ms";
+        lines.push_back(oss.str());
+    }
+
+    // Active power-ups (proc) overlay
+    if (getCvar("cl_show_proc") == "1") {
+        if (cachedProcs_.empty()) {
+            lines.push_back("Procs: None");
+        } else {
+            for (const auto& proc : cachedProcs_) {
+                std::ostringstream oss;
+                oss << proc.name;
+                if (proc.multiplier != 1.f) {
+                    oss << " x" << std::fixed << std::setprecision(1)
+                        << proc.multiplier;
+                }
+                if (proc.remainingTime > 0.f) {
+                    oss << " (" << std::fixed << std::setprecision(1)
+                        << proc.remainingTime << "s)";
+                }
+                lines.push_back(oss.str());
+            }
+        }
+    }
+
     for (const auto& line : lines) {
         auto bounds = display_->getTextBounds(line, std::string(kFontName),
                                               kOverlayFontSize);
@@ -425,7 +624,13 @@ void DevConsole::execute(const std::string& commandLine) {
         }
     }
 
-    print(std::string(kPrompt) + commandLine);
+    // Print input line with special flag for coloring
+    std::string timestamp = getTimestamp();
+    outputHistory_.push_back(
+        {timestamp + std::string(kPrompt) + commandLine, false, true});
+    if (outputHistory_.size() > kMaxHistoryLines) {
+        outputHistory_.pop_front();
+    }
 
     auto args = parseArgs(commandLine);
     if (args.empty()) {
@@ -726,6 +931,41 @@ void DevConsole::registerDefaultCommands() {
 
             return newVal == "1" ? "Hitboxes ON" : "Hitboxes OFF";
         });
+
+    registerCommand("position", "Toggle player position display",
+                    [this](const std::vector<std::string>&) -> std::string {
+                        std::string current = getCvar("cl_show_position");
+                        std::string newVal = (current == "1") ? "0" : "1";
+                        setCvar("cl_show_position", newVal);
+                        return newVal == "1" ? "Position display ON"
+                                             : "Position display OFF";
+                    });
+
+    registerCommand("resources", "Toggle CPU/RAM usage display",
+                    [this](const std::vector<std::string>&) -> std::string {
+                        std::string current = getCvar("cl_show_resources");
+                        std::string newVal = (current == "1") ? "0" : "1";
+                        setCvar("cl_show_resources", newVal);
+                        return newVal == "1" ? "Resources display ON"
+                                             : "Resources display OFF";
+                    });
+
+    registerCommand("lagometer", "Toggle network lagometer (ping + jitter)",
+                    [this](const std::vector<std::string>&) -> std::string {
+                        std::string current = getCvar("cl_show_lagometer");
+                        std::string newVal = (current == "1") ? "0" : "1";
+                        setCvar("cl_show_lagometer", newVal);
+                        return newVal == "1" ? "Lagometer ON" : "Lagometer OFF";
+                    });
+
+    registerCommand("proc", "Toggle active power-ups display",
+                    [this](const std::vector<std::string>&) -> std::string {
+                        std::string current = getCvar("cl_show_proc");
+                        std::string newVal = (current == "1") ? "0" : "1";
+                        setCvar("cl_show_proc", newVal);
+                        return newVal == "1" ? "Proc display ON"
+                                             : "Proc display OFF";
+                    });
 }
 
 }  // namespace rtype::client
