@@ -8,6 +8,7 @@
 #ifndef SRC_CLIENT_DEVCONSOLE_DEVCONSOLE_HPP_
 #define SRC_CLIENT_DEVCONSOLE_DEVCONSOLE_HPP_
 
+#include <chrono>
 #include <cstdint>
 #include <deque>
 #include <functional>
@@ -228,6 +229,16 @@ class DevConsole {
     std::deque<std::uint32_t> pingHistory_;
     static constexpr std::size_t kPingHistorySize = 10;
     float cachedJitter_{0.f};
+
+    // CPU sampling (Linux only)
+    struct CPUSample {
+        unsigned long utime{0};
+        unsigned long stime{0};
+        std::chrono::steady_clock::time_point timestamp;
+        bool valid{false};
+    };
+    CPUSample lastCpuSample_;
+    float cachedCpuPercent_{0.0f};
 
     // Active power-ups (proc) data
     struct CachedProc {

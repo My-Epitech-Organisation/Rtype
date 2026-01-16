@@ -18,6 +18,8 @@
 
 #ifdef __linux__
 #include <fstream>
+#include <string>
+#include <unistd.h>
 #endif
 #ifdef _WIN32
 #include <windows.h>
@@ -41,6 +43,41 @@ namespace rtype::client {
 
 namespace {
 
+#ifdef __linux__
+// Read process CPU times from /proc/self/stat
+// Returns (utime, stime) in clock ticks
+std::pair<unsigned long, unsigned long> readProcStat() {
+    std::ifstream stat("/proc/self/stat");
+    if (!stat.is_open()) {
+        return {0, 0};
+    }
+
+    std::string line;
+    std::getline(stat, line);
+
+    // Find the end of (comm) - the process name can contain spaces
+    auto commEnd = line.rfind(')');
+    if (commEnd == std::string::npos || commEnd + 2 >= line.size()) {
+        return {0, 0};
+    }
+
+    // Parse fields after (comm)
+    std::istringstream iss(line.substr(commEnd + 2));
+    std::string field;
+
+    // Skip fields 3-13 to get to utime (field 14)
+    for (int i = 3; i <= 13; ++i) {
+        iss >> field;
+    }
+
+    unsigned long utime = 0;
+    unsigned long stime = 0;
+    iss >> utime >> stime;  // Fields 14 and 15
+
+    return {utime, stime};
+}
+#endif
+
 // System metrics for resource monitoring
 struct SystemMetrics {
     float cpuPercent{0.0f};
@@ -49,7 +86,7 @@ struct SystemMetrics {
     bool memAvailable{false};
 };
 
-SystemMetrics getSystemMetrics() {
+SystemMetrics getSystemMetrics(float cachedCpuPercent) {
     SystemMetrics m;
 #ifdef __linux__
     std::ifstream status("/proc/self/status");
@@ -67,8 +104,9 @@ SystemMetrics getSystemMetrics() {
             break;
         }
     }
-    // CPU calculation requires sampling over time - skip for simplicity
-    m.cpuAvailable = false;
+    // Use pre-calculated CPU percentage from sampling
+    m.cpuPercent = cachedCpuPercent;
+    m.cpuAvailable = true;
 #elif defined(_WIN32)
     PROCESS_MEMORY_COUNTERS pmc;
     if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
@@ -76,6 +114,9 @@ SystemMetrics getSystemMetrics() {
         m.memAvailable = true;
     }
     m.cpuAvailable = false;  // Complex on Windows
+    (void)cachedCpuPercent;  // Unused on Windows
+#else
+    (void)cachedCpuPercent;  // Unused on other platforms
 #endif
     return m;
 }
@@ -376,6 +417,40 @@ void DevConsole::update(float dt) {
             cachedEntityCount_ = registry_->countComponents<
                 rtype::games::rtype::shared::TransformComponent>();
         }
+
+#ifdef __linux__
+        // CPU sampling - calculate percentage from clock tick delta
+        auto [utime, stime] = readProcStat();
+        auto now = std::chrono::steady_clock::now();
+
+        if (lastCpuSample_.valid && (utime > 0 || stime > 0)) {
+            auto elapsed = std::chrono::duration<float>(
+                               now - lastCpuSample_.timestamp)
+                               .count();
+
+            if (elapsed > 0.001f) {  // Avoid division by zero
+                unsigned long ticksDelta =
+                    (utime + stime) -
+                    (lastCpuSample_.utime + lastCpuSample_.stime);
+
+                static const long clockTicks = sysconf(_SC_CLK_TCK);
+                static const long numCores = sysconf(_SC_NPROCESSORS_ONLN);
+                float rawPercent =
+                    (static_cast<float>(ticksDelta) /
+                     static_cast<float>(clockTicks) / elapsed) *
+                    100.0f;
+
+                // Normalize by number of cores to get 0-100% range
+                cachedCpuPercent_ = rawPercent / static_cast<float>(numCores > 0 ? numCores : 1);
+                cachedCpuPercent_ = std::clamp(cachedCpuPercent_, 0.0f, 100.0f);
+            }
+        }
+
+        lastCpuSample_.utime = utime;
+        lastCpuSample_.stime = stime;
+        lastCpuSample_.timestamp = now;
+        lastCpuSample_.valid = true;
+#endif
     }
 
     if (!visible_) {
@@ -537,7 +612,7 @@ void DevConsole::renderOverlays() {
 
     // Resources overlay
     if (getCvar("cl_show_resources") == "1") {
-        auto metrics = getSystemMetrics();
+        auto metrics = getSystemMetrics(cachedCpuPercent_);
         if (metrics.memAvailable) {
             std::string line = "RAM: " + std::to_string(metrics.memoryMB) + " MB";
             if (metrics.cpuAvailable) {
