@@ -23,8 +23,10 @@
 #include <string>
 #endif
 #ifdef _WIN32
+// clang-format off
 #include <windows.h>
 #include <psapi.h>
+// clang-format on
 #endif
 
 #include <rtype/ecs.hpp>
