@@ -239,7 +239,6 @@ class DevConsole {
     };
     CPUSample lastCpuSample_;
     float cachedCpuPercent_{0.0f};
-
 };
 
 }  // namespace rtype::client

@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "../Systems/ClientDestroySystem.hpp"
 #include "../Systems/LaserBeamAnimationSystem.hpp"
 #include "../lib/display/Clock/Clock.hpp"
 #include "AudioLib/AudioLib.hpp"
@@ -22,7 +23,6 @@
 #include "games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "games/rtype/shared/Systems/Movements/MovementSystem.hpp"
 #include "rtype/display/DisplayTypes.hpp"
-#include "../Systems/ClientDestroySystem.hpp"
 
 namespace rtype::games::rtype::client {
 

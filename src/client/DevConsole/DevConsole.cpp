@@ -17,13 +17,14 @@
 #include <sstream>
 
 #ifdef __linux__
+#include <unistd.h>
+
 #include <fstream>
 #include <string>
-#include <unistd.h>
 #endif
 #ifdef _WIN32
-#include <windows.h>
 #include <psapi.h>
+#include <windows.h>
 #endif
 
 #include <rtype/ecs.hpp>
@@ -344,16 +345,17 @@ void DevConsole::update(float dt) {
                 auto view = registry_->view<
                     rtype::games::rtype::shared::TransformComponent,
                     rtype::games::rtype::shared::NetworkIdComponent>();
-                view.each([&](ECS::Entity,
-                              const rtype::games::rtype::shared::
-                                  TransformComponent& t,
-                              const rtype::games::rtype::shared::
-                                  NetworkIdComponent& n) {
-                    if (n.networkId == userId) {
-                        cachedPlayerX_ = t.x;
-                        cachedPlayerY_ = t.y;
-                    }
-                });
+                view.each(
+                    [&](ECS::Entity,
+                        const rtype::games::rtype::shared::TransformComponent&
+                            t,
+                        const rtype::games::rtype::shared::NetworkIdComponent&
+                            n) {
+                        if (n.networkId == userId) {
+                            cachedPlayerX_ = t.x;
+                            cachedPlayerY_ = t.y;
+                        }
+                    });
             }
         }
 
@@ -367,9 +369,9 @@ void DevConsole::update(float dt) {
         auto now = std::chrono::steady_clock::now();
 
         if (lastCpuSample_.valid && (utime > 0 || stime > 0)) {
-            auto elapsed = std::chrono::duration<float>(
-                               now - lastCpuSample_.timestamp)
-                               .count();
+            auto elapsed =
+                std::chrono::duration<float>(now - lastCpuSample_.timestamp)
+                    .count();
 
             if (elapsed > 0.001f) {  // Avoid division by zero
                 unsigned long ticksDelta =
@@ -378,12 +380,13 @@ void DevConsole::update(float dt) {
 
                 static const long clockTicks = sysconf(_SC_CLK_TCK);
                 static const long numCores = sysconf(_SC_NPROCESSORS_ONLN);
-                float rawPercent =
-                    (static_cast<float>(ticksDelta) /
-                     static_cast<float>(clockTicks) / elapsed) *
-                    100.0f;
+                float rawPercent = (static_cast<float>(ticksDelta) /
+                                    static_cast<float>(clockTicks) / elapsed) *
+                                   100.0f;
 
-                cachedCpuPercent_ = rawPercent / static_cast<float>(numCores > 0 ? numCores : 1);
+                cachedCpuPercent_ =
+                    rawPercent /
+                    static_cast<float>(numCores > 0 ? numCores : 1);
                 cachedCpuPercent_ = std::clamp(cachedCpuPercent_, 0.0f, 100.0f);
             }
         }
@@ -554,7 +557,8 @@ void DevConsole::renderOverlays() {
     if (getCvar("cl_show_resources") == "1") {
         auto metrics = getSystemMetrics(cachedCpuPercent_);
         if (metrics.memAvailable) {
-            std::string line = "RAM: " + std::to_string(metrics.memoryMB) + " MB";
+            std::string line =
+                "RAM: " + std::to_string(metrics.memoryMB) + " MB";
             if (metrics.cpuAvailable) {
                 line = "CPU: " +
                        std::to_string(static_cast<int>(metrics.cpuPercent)) +
@@ -569,8 +573,8 @@ void DevConsole::renderOverlays() {
     if (getCvar("cl_show_lagometer") == "1" && networkClient_ != nullptr &&
         networkClient_->isConnected()) {
         std::ostringstream oss;
-        oss << "Ping: " << cachedPing_ << "ms | Jitter: "
-            << static_cast<char>(0xB1)  // ± symbol
+        oss << "Ping: " << cachedPing_
+            << "ms | Jitter: " << static_cast<char>(0xB1)  // ± symbol
             << static_cast<int>(cachedJitter_) << "ms";
         lines.push_back(oss.str());
     }
