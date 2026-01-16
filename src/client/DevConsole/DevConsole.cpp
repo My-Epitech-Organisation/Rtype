@@ -354,6 +354,7 @@ void DevConsole::update(float dt) {
                         if (n.networkId == userId) {
                             cachedPlayerX_ = t.x;
                             cachedPlayerY_ = t.y;
+                            hasPlayerPosition_ = true;
                         }
                     });
             }
@@ -546,8 +547,7 @@ void DevConsole::renderOverlays() {
         lines.push_back("Entities: " + std::to_string(cachedEntityCount_));
     }
 
-    if (getCvar("cl_show_position") == "1" &&
-        (cachedPlayerX_ != 0.f || cachedPlayerY_ != 0.f)) {
+    if (getCvar("cl_show_position") == "1" && hasPlayerPosition_) {
         std::ostringstream oss;
         oss << "Pos: X=" << std::fixed << std::setprecision(1) << cachedPlayerX_
             << " Y=" << cachedPlayerY_;

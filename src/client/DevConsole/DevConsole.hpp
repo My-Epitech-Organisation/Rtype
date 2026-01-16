@@ -224,6 +224,7 @@ class DevConsole {
     // World position overlay
     float cachedPlayerX_{0.f};
     float cachedPlayerY_{0.f};
+    bool hasPlayerPosition_{false};
 
     // Lagometer data
     std::deque<std::uint32_t> pingHistory_;
