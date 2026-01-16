@@ -380,7 +380,8 @@ void DevConsole::update(float dt) {
                     (lastCpuSample_.utime + lastCpuSample_.stime);
 
                 static const std::int64_t clockTicks = sysconf(_SC_CLK_TCK);
-                static const std::int64_t numCores = sysconf(_SC_NPROCESSORS_ONLN);
+                static const std::int64_t numCores =
+                    sysconf(_SC_NPROCESSORS_ONLN);
                 float rawPercent = (static_cast<float>(ticksDelta) /
                                     static_cast<float>(clockTicks) / elapsed) *
                                    100.0f;
