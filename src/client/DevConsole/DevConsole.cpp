@@ -43,8 +43,6 @@ namespace rtype::client {
 namespace {
 
 #ifdef __linux__
-// Read process CPU times from /proc/self/stat
-// Returns (utime, stime) in clock ticks
 std::pair<unsigned long, unsigned long> readProcStat() {
     std::ifstream stat("/proc/self/stat");
     if (!stat.is_open()) {
@@ -54,30 +52,26 @@ std::pair<unsigned long, unsigned long> readProcStat() {
     std::string line;
     std::getline(stat, line);
 
-    // Find the end of (comm) - the process name can contain spaces
     auto commEnd = line.rfind(')');
     if (commEnd == std::string::npos || commEnd + 2 >= line.size()) {
         return {0, 0};
     }
 
-    // Parse fields after (comm)
     std::istringstream iss(line.substr(commEnd + 2));
     std::string field;
 
-    // Skip fields 3-13 to get to utime (field 14)
     for (int i = 3; i <= 13; ++i) {
         iss >> field;
     }
 
     unsigned long utime = 0;
     unsigned long stime = 0;
-    iss >> utime >> stime;  // Fields 14 and 15
+    iss >> utime >> stime;
 
     return {utime, stime};
 }
 #endif
 
-// System metrics for resource monitoring
 struct SystemMetrics {
     float cpuPercent{0.0f};
     std::size_t memoryMB{0};
@@ -92,7 +86,6 @@ SystemMetrics getSystemMetrics(float cachedCpuPercent) {
     std::string line;
     while (std::getline(status, line)) {
         if (line.rfind("VmRSS:", 0) == 0) {
-            // "VmRSS:     12345 kB"
             try {
                 std::size_t kb = std::stoul(line.substr(6));
                 m.memoryMB = kb / 1024;
@@ -327,13 +320,11 @@ void DevConsole::update(float dt) {
         if (networkClient_ != nullptr && networkClient_->isConnected()) {
             cachedPing_ = networkClient_->latencyMs();
 
-            // Update ping history for jitter calculation
             pingHistory_.push_back(cachedPing_);
             if (pingHistory_.size() > kPingHistorySize) {
                 pingHistory_.pop_front();
             }
 
-            // Calculate jitter (standard deviation of ping)
             if (pingHistory_.size() >= 2) {
                 float sum = std::accumulate(pingHistory_.begin(),
                                             pingHistory_.end(), 0.0f);
@@ -347,7 +338,6 @@ void DevConsole::update(float dt) {
                 cachedJitter_ = std::sqrt(variance);
             }
 
-            // Cache player position
             if (registry_ != nullptr) {
                 auto userId = networkClient_->userId();
 
@@ -373,7 +363,6 @@ void DevConsole::update(float dt) {
         }
 
 #ifdef __linux__
-        // CPU sampling - calculate percentage from clock tick delta
         auto [utime, stime] = readProcStat();
         auto now = std::chrono::steady_clock::now();
 
@@ -394,7 +383,6 @@ void DevConsole::update(float dt) {
                      static_cast<float>(clockTicks) / elapsed) *
                     100.0f;
 
-                // Normalize by number of cores to get 0-100% range
                 cachedCpuPercent_ = rawPercent / static_cast<float>(numCores > 0 ? numCores : 1);
                 cachedCpuPercent_ = std::clamp(cachedCpuPercent_, 0.0f, 100.0f);
             }
@@ -492,7 +480,7 @@ void DevConsole::renderOutput() {
         if (line->isError) {
             color = kConsoleErrorColor;
         } else if (line->isInput) {
-            color = kConsolePromptColor;  // Cyan for input lines
+            color = kConsolePromptColor;
         }
 
         display_->drawText(line->text, std::string(kFontName),
@@ -555,7 +543,6 @@ void DevConsole::renderOverlays() {
         lines.push_back("Entities: " + std::to_string(cachedEntityCount_));
     }
 
-    // World Position overlay
     if (getCvar("cl_show_position") == "1" &&
         (cachedPlayerX_ != 0.f || cachedPlayerY_ != 0.f)) {
         std::ostringstream oss;
@@ -564,7 +551,6 @@ void DevConsole::renderOverlays() {
         lines.push_back(oss.str());
     }
 
-    // Resources overlay
     if (getCvar("cl_show_resources") == "1") {
         auto metrics = getSystemMetrics(cachedCpuPercent_);
         if (metrics.memAvailable) {
@@ -580,7 +566,6 @@ void DevConsole::renderOverlays() {
         }
     }
 
-    // Lagometer overlay
     if (getCvar("cl_show_lagometer") == "1" && networkClient_ != nullptr &&
         networkClient_->isConnected()) {
         std::ostringstream oss;
@@ -632,7 +617,6 @@ void DevConsole::execute(const std::string& commandLine) {
         }
     }
 
-    // Print input line with special flag for coloring
     std::string timestamp = getTimestamp();
     outputHistory_.push_back(
         {timestamp + std::string(kPrompt) + commandLine, false, true});
