@@ -24,6 +24,9 @@
 #endif
 #ifdef _WIN32
 // clang-format off
+#ifndef NOMINMAX
+#define NOMINMAX  // Prevent windows.h from defining min/max macros
+#endif
 #include <windows.h>
 #include <psapi.h>
 // clang-format on
