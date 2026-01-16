@@ -43,7 +43,8 @@ jobs:
           else
             echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
             echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
-            echo "run_id=" >> $GITHUB_OUTPUT
+            # Use the current run when triggered directly or via workflow_call so we fetch artifacts from this run
+            echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Checkout code
