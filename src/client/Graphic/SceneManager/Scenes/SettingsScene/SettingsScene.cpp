@@ -563,7 +563,12 @@ void SettingsScene::pollEvents(const ::rtype::display::Event& e) {
     }
 }
 
-void SettingsScene::update(float dt) { (void)dt; }
+void SettingsScene::update(float dt) {
+    (void)dt;
+    if (this->_audio) {
+        this->_audio->update();
+    }
+}
 
 void SettingsScene::render(std::shared_ptr<rtype::display::IDisplay> window) {
     (void)window;

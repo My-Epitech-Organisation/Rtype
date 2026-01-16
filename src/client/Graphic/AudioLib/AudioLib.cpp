@@ -40,11 +40,24 @@ void AudioLib::play() const {
     this->_currentMusic->play();
 }
 
-void AudioLib::playSFX(std::shared_ptr<rtype::display::ISoundBuffer> sfx) {
+void AudioLib::cleanupStoppedSounds() {
     this->_sounds.remove_if(
-        [](const std::shared_ptr<::rtype::display::ISound>& s) {
-            return s->getStatus() == rtype::display::ISound::Status::Stopped;
+        [](const std::shared_ptr<rtype::display::ISound>& sound) {
+            return sound->getStatus() ==
+                   rtype::display::ISound::Status::Stopped;
         });
+}
+
+void AudioLib::playSFX(std::shared_ptr<rtype::display::ISoundBuffer> sfx) {
+    if (!sfx) {
+        return;
+    }
+
+    cleanupStoppedSounds();
+
+    if (this->_sounds.size() >= MAX_CONCURRENT_SOUNDS) {
+        return;
+    }
 
     auto sound = _display->createSound(sfx);
     if (sound) {
@@ -59,6 +72,8 @@ void AudioLib::loadMusic(std::shared_ptr<::rtype::display::IMusic> music) {
     this->_currentMusic = music;
     this->_currentMusic->setVolume(this->_volumeMusic);
 }
+
+void AudioLib::update() { cleanupStoppedSounds(); }
 
 AudioLib::~AudioLib() {
     if (this->_currentMusic) this->_currentMusic->stop();

@@ -24,6 +24,26 @@
 
 namespace rtype::games::rtype::server {
 
+static_assert(sizeof(ECS::Entity::id) == sizeof(std::uint32_t),
+              "Entity ID must be 32-bit for collision pair ID generation");
+
+/**
+ * @brief Generate a unique 64-bit collision pair ID from two entity IDs
+ * @details Uses bit-shifting to combine two 32-bit entity IDs into a single
+ * 64-bit value. The smaller ID is placed in the upper 32 bits to ensure
+ * consistent ordering.
+ * @param a First entity
+ * @param b Second entity
+ * @return Unique 64-bit collision pair identifier
+ */
+[[nodiscard]] inline constexpr std::uint64_t makeCollisionPairId(
+    ECS::Entity a, ECS::Entity b) noexcept {
+    const std::uint32_t id1 = std::min(a.id, b.id);
+    const std::uint32_t id2 = std::max(a.id, b.id);
+    return (static_cast<std::uint64_t>(id1) << 32) |
+           static_cast<std::uint64_t>(id2);
+}
+
 using shared::ActivePowerUpComponent;
 using shared::BoundingBoxComponent;
 using shared::CollisionPair;
@@ -66,6 +86,7 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
     ECS::CommandBuffer cmdBuffer(std::ref(registry));
 
     _laserDamagedThisFrame.clear();
+    _obstacleCollidedThisFrame.clear();
 
     for (const auto& pair : collisionPairs) {
         ECS::Entity entityA = pair.entityA;
@@ -524,6 +545,14 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
         registry.hasComponent<DestroyTag>(other)) {
         return;
     }
+
+    const std::uint64_t collisionPairId = makeCollisionPairId(obstacle, other);
+
+    if (_obstacleCollidedThisFrame.find(collisionPairId) !=
+        _obstacleCollidedThisFrame.end()) {
+        return;
+    }
+    _obstacleCollidedThisFrame.insert(collisionPairId);
 
     int32_t damage = 15;
     bool destroyObstacleOnContact = false;

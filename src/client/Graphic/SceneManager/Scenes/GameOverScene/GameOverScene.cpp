@@ -46,7 +46,12 @@ GameOverScene::GameOverScene(
 
 void GameOverScene::pollEvents(const rtype::display::Event& e) { (void)e; }
 
-void GameOverScene::update(float dt) { (void)dt; }
+void GameOverScene::update(float dt) {
+    (void)dt;
+    if (this->_audio) {
+        this->_audio->update();
+    }
+}
 
 void GameOverScene::render(std::shared_ptr<rtype::display::IDisplay> window) {
     (void)window;

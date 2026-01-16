@@ -173,6 +173,7 @@ class RtypeGameScene : public AGameScene {
     void setupDisconnectCallback();
     void showDisconnectModal(network::DisconnectReason reason);
     void cleanupDisconnectModal();
+    void cleanupBeforeMainMenu();
     std::string getDisconnectMessage(network::DisconnectReason reason) const;
     std::optional<ECS::Entity> _disconnectOverlayEntity;
     std::optional<ECS::Entity> _disconnectPanelEntity;

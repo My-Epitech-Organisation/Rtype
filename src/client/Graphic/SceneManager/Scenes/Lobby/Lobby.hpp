@@ -55,6 +55,8 @@ class Lobby : public AScene {
     rtype::client::NetworkClient::CallbackId _entityDestroyCallbackId = 0;
     bool _hasEntityDestroyCallback = false;
 
+    bool _transitioningToGame = false;
+
     void _initInfoMenu();
 
     void _initChat();

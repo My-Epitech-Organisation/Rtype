@@ -287,6 +287,12 @@ void GameSession::processGameEvents() {
         switch (processed.type) {
             case engine::GameEventType::LevelComplete:
                 break;
+            case engine::GameEventType::BossPhaseChanged:
+            case engine::GameEventType::BossDefeated:
+            case engine::GameEventType::BossAttack:
+            case engine::GameEventType::WeakPointDestroyed:
+            case engine::GameEventType::ScoreChanged:
+                break;
             case engine::GameEventType::EntitySpawned: {
                 network::EntityType networkType =
                     static_cast<network::EntityType>(
