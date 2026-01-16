@@ -53,9 +53,16 @@ jobs:
           else
             echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
             echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
-            # Fallback: use current run ID (manual dispatch)
-            echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
+            # For manual dispatch: find the latest successful CI run on the same branch
+            LATEST_CI_RUN=$(gh run list --repo "${{ github.repository }}" --workflow ci.yml --branch "${{ github.ref_name }}" --status success --json databaseId --limit 1 -q '.[0].databaseId')
+            if [ -z "$LATEST_CI_RUN" ]; then
+              echo "❌ Error: No successful CI runs found on branch '${{ github.ref_name }}'. Please run the CI workflow first."
+              exit 1
+            fi
+            echo "run_id=$LATEST_CI_RUN" >> $GITHUB_OUTPUT
           fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout code
         uses: actions/checkout@v4
