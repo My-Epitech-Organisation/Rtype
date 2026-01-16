@@ -34,7 +34,6 @@
 #include "Graphic/KeyboardActions.hpp"
 #include "Logger/Macros.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
-#include "games/rtype/shared/Components/PowerUpComponent.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "network/NetworkClient.hpp"
 #include "protocol/Payloads.hpp"
@@ -178,7 +177,6 @@ DevConsole::DevConsole(std::shared_ptr<rtype::display::IDisplay> display,
     cvars_["cl_show_position"] = "0";
     cvars_["cl_show_resources"] = "0";
     cvars_["cl_show_lagometer"] = "0";
-    cvars_["cl_show_proc"] = "0";
 
     print(
         "Developer Console initialized. Press F1 to toggle. Type 'help' for "
@@ -349,15 +347,14 @@ void DevConsole::update(float dt) {
                 cachedJitter_ = std::sqrt(variance);
             }
 
-            // Cache player position and active power-ups
+            // Cache player position
             if (registry_ != nullptr) {
                 auto userId = networkClient_->userId();
-                cachedProcs_.clear();
 
                 auto view = registry_->view<
                     rtype::games::rtype::shared::TransformComponent,
                     rtype::games::rtype::shared::NetworkIdComponent>();
-                view.each([&](ECS::Entity e,
+                view.each([&](ECS::Entity,
                               const rtype::games::rtype::shared::
                                   TransformComponent& t,
                               const rtype::games::rtype::shared::
@@ -365,49 +362,6 @@ void DevConsole::update(float dt) {
                     if (n.networkId == userId) {
                         cachedPlayerX_ = t.x;
                         cachedPlayerY_ = t.y;
-
-                        // Check for active power-ups
-                        if (registry_->hasComponent<rtype::games::rtype::shared::
-                                                        ActivePowerUpComponent>(
-                                e)) {
-                            const auto& proc =
-                                registry_->getComponent<rtype::games::rtype::
-                                                            shared::
-                                                                ActivePowerUpComponent>(
-                                    e);
-                            if (proc.type !=
-                                rtype::games::rtype::shared::PowerUpType::None) {
-                                CachedProc cp;
-                                switch (proc.type) {
-                                    case rtype::games::rtype::shared::
-                                        PowerUpType::SpeedBoost:
-                                        cp.name = "Speed";
-                                        cp.multiplier = proc.speedMultiplier;
-                                        break;
-                                    case rtype::games::rtype::shared::
-                                        PowerUpType::Shield:
-                                        cp.name = "Shield";
-                                        cp.multiplier = 1.f;
-                                        break;
-                                    case rtype::games::rtype::shared::
-                                        PowerUpType::RapidFire:
-                                        cp.name = "RapidFire";
-                                        cp.multiplier = proc.fireRateMultiplier;
-                                        break;
-                                    case rtype::games::rtype::shared::
-                                        PowerUpType::DoubleDamage:
-                                        cp.name = "Damage";
-                                        cp.multiplier = proc.damageMultiplier;
-                                        break;
-                                    default:
-                                        cp.name = "Buff";
-                                        cp.multiplier = 1.f;
-                                        break;
-                                }
-                                cp.remainingTime = proc.remainingTime;
-                                cachedProcs_.push_back(cp);
-                            }
-                        }
                     }
                 });
             }
@@ -634,27 +588,6 @@ void DevConsole::renderOverlays() {
             << static_cast<char>(0xB1)  // ± symbol
             << static_cast<int>(cachedJitter_) << "ms";
         lines.push_back(oss.str());
-    }
-
-    // Active power-ups (proc) overlay
-    if (getCvar("cl_show_proc") == "1") {
-        if (cachedProcs_.empty()) {
-            lines.push_back("Procs: None");
-        } else {
-            for (const auto& proc : cachedProcs_) {
-                std::ostringstream oss;
-                oss << proc.name;
-                if (proc.multiplier != 1.f) {
-                    oss << " x" << std::fixed << std::setprecision(1)
-                        << proc.multiplier;
-                }
-                if (proc.remainingTime > 0.f) {
-                    oss << " (" << std::fixed << std::setprecision(1)
-                        << proc.remainingTime << "s)";
-                }
-                lines.push_back(oss.str());
-            }
-        }
     }
 
     for (const auto& line : lines) {
@@ -1031,15 +964,6 @@ void DevConsole::registerDefaultCommands() {
                         std::string newVal = (current == "1") ? "0" : "1";
                         setCvar("cl_show_lagometer", newVal);
                         return newVal == "1" ? "Lagometer ON" : "Lagometer OFF";
-                    });
-
-    registerCommand("proc", "Toggle active power-ups display",
-                    [this](const std::vector<std::string>&) -> std::string {
-                        std::string current = getCvar("cl_show_proc");
-                        std::string newVal = (current == "1") ? "0" : "1";
-                        setCvar("cl_show_proc", newVal);
-                        return newVal == "1" ? "Proc display ON"
-                                             : "Proc display OFF";
                     });
 }
 

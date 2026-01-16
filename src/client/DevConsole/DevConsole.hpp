@@ -240,13 +240,6 @@ class DevConsole {
     CPUSample lastCpuSample_;
     float cachedCpuPercent_{0.0f};
 
-    // Active power-ups (proc) data
-    struct CachedProc {
-        std::string name;
-        float remainingTime{0.f};
-        float multiplier{1.f};
-    };
-    std::vector<CachedProc> cachedProcs_;
 };
 
 }  // namespace rtype::client
