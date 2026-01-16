@@ -44,7 +44,7 @@ namespace rtype::client {
 namespace {
 
 #ifdef __linux__
-std::pair<unsigned long, unsigned long> readProcStat() {
+std::pair<std::uint64_t, std::uint64_t> readProcStat() {
     std::ifstream stat("/proc/self/stat");
     if (!stat.is_open()) {
         return {0, 0};
@@ -65,8 +65,8 @@ std::pair<unsigned long, unsigned long> readProcStat() {
         iss >> field;
     }
 
-    unsigned long utime = 0;
-    unsigned long stime = 0;
+    std::uint64_t utime = 0;
+    std::uint64_t stime = 0;
     iss >> utime >> stime;
 
     return {utime, stime};
@@ -375,12 +375,12 @@ void DevConsole::update(float dt) {
                     .count();
 
             if (elapsed > 0.001f) {  // Avoid division by zero
-                unsigned long ticksDelta =
+                std::uint64_t ticksDelta =
                     (utime + stime) -
                     (lastCpuSample_.utime + lastCpuSample_.stime);
 
-                static const long clockTicks = sysconf(_SC_CLK_TCK);
-                static const long numCores = sysconf(_SC_NPROCESSORS_ONLN);
+                static const std::int64_t clockTicks = sysconf(_SC_CLK_TCK);
+                static const std::int64_t numCores = sysconf(_SC_NPROCESSORS_ONLN);
                 float rawPercent = (static_cast<float>(ticksDelta) /
                                     static_cast<float>(clockTicks) / elapsed) *
                                    100.0f;

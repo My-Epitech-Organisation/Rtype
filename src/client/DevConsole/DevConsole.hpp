@@ -233,8 +233,8 @@ class DevConsole {
 
     // CPU sampling (Linux only)
     struct CPUSample {
-        unsigned long utime{0};
-        unsigned long stime{0};
+        std::uint64_t utime{0};
+        std::uint64_t stime{0};
         std::chrono::steady_clock::time_point timestamp;
         bool valid{false};
     };
