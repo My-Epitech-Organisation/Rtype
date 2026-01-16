@@ -12,7 +12,6 @@
 
 #include <rtype/engine.hpp>
 
-#include "../../shared/Components/LifetimeComponent.hpp"
 #include "../../shared/Components/Tags.hpp"
 #include "Logger/Macros.hpp"
 

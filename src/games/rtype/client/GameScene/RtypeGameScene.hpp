@@ -15,10 +15,12 @@
 #include <utility>
 #include <vector>
 
+#include "../Systems/ClientDestroySystem.hpp"
 #include "../Systems/LaserBeamAnimationSystem.hpp"
 #include "../lib/display/Clock/Clock.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Graphic/SceneManager/Scenes/GameScene/AGameScene.hpp"
+#include "games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "games/rtype/shared/Systems/Movements/MovementSystem.hpp"
 #include "rtype/display/DisplayTypes.hpp"
 
@@ -191,6 +193,9 @@ class RtypeGameScene : public AGameScene {
     std::unique_ptr<::rtype::games::rtype::shared::MovementSystem>
         _movementSystem;
     std::unique_ptr<LaserBeamAnimationSystem> _laserBeamAnimationSystem;
+    std::unique_ptr<::rtype::games::rtype::shared::LifetimeSystem>
+        _lifetimeSystem;
+    std::unique_ptr<ClientDestroySystem> _clientDestroySystem;
 
     bool _lowBandwidthMode{false};
     std::uint8_t _lowBandwidthActiveCount{0};

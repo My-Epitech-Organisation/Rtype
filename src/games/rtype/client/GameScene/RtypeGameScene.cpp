@@ -56,7 +56,10 @@ RtypeGameScene::RtypeGameScene(
                  std::move(networkClient), std::move(networkSystem)),
       _movementSystem(
           std::make_unique<::rtype::games::rtype::shared::MovementSystem>()),
-      _laserBeamAnimationSystem(std::make_unique<LaserBeamAnimationSystem>()) {
+      _laserBeamAnimationSystem(std::make_unique<LaserBeamAnimationSystem>()),
+      _lifetimeSystem(
+          std::make_unique<::rtype::games::rtype::shared::LifetimeSystem>()),
+      _clientDestroySystem(std::make_unique<ClientDestroySystem>()) {
     if (_networkClient) {
         auto registry = _registry;
         auto switchToScene = _switchToScene;
@@ -266,6 +269,14 @@ void RtypeGameScene::update() {
 
     if (_laserBeamAnimationSystem && _registry) {
         _laserBeamAnimationSystem->update(*_registry, dt);
+    }
+
+    if (_lifetimeSystem && _registry) {
+        _lifetimeSystem->update(*_registry, dt);
+    }
+
+    if (_clientDestroySystem && _registry) {
+        _clientDestroySystem->update(*_registry, dt);
     }
 
     bool isPaused = false;

@@ -10,9 +10,27 @@
 #include <algorithm>
 #include <cctype>
 #include <chrono>
+#include <cmath>
 #include <ctime>
 #include <iomanip>
+#include <numeric>
 #include <sstream>
+
+#ifdef __linux__
+#include <unistd.h>
+
+#include <fstream>
+#include <string>
+#endif
+#ifdef _WIN32
+// clang-format off
+#ifndef NOMINMAX
+#define NOMINMAX  // Prevent windows.h from defining min/max macros
+#endif
+#include <windows.h>
+#include <psapi.h>
+// clang-format on
+#endif
 
 #include <rtype/ecs.hpp>
 
@@ -21,6 +39,7 @@
 #include "Graphic/AudioLib/AudioLib.hpp"
 #include "Graphic/KeyboardActions.hpp"
 #include "Logger/Macros.hpp"
+#include "games/rtype/shared/Components/NetworkIdComponent.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
 #include "network/NetworkClient.hpp"
 #include "protocol/Payloads.hpp"
@@ -28,6 +47,78 @@
 namespace rtype::client {
 
 namespace {
+
+#ifdef __linux__
+std::pair<std::uint64_t, std::uint64_t> readProcStat() {
+    std::ifstream stat("/proc/self/stat");
+    if (!stat.is_open()) {
+        return {0, 0};
+    }
+
+    std::string line;
+    std::getline(stat, line);
+
+    auto commEnd = line.rfind(')');
+    if (commEnd == std::string::npos || commEnd + 2 >= line.size()) {
+        return {0, 0};
+    }
+
+    std::istringstream iss(line.substr(commEnd + 2));
+    std::string field;
+
+    for (int i = 3; i <= 13; ++i) {
+        iss >> field;
+    }
+
+    std::uint64_t utime = 0;
+    std::uint64_t stime = 0;
+    iss >> utime >> stime;
+
+    return {utime, stime};
+}
+#endif
+
+struct SystemMetrics {
+    float cpuPercent{0.0f};
+    std::size_t memoryMB{0};
+    bool cpuAvailable{false};
+    bool memAvailable{false};
+};
+
+SystemMetrics getSystemMetrics(float cachedCpuPercent) {
+    SystemMetrics m;
+#ifdef __linux__
+    std::ifstream status("/proc/self/status");
+    std::string line;
+    while (std::getline(status, line)) {
+        if (line.rfind("VmRSS:", 0) == 0) {
+            try {
+                std::size_t kb = std::stoul(line.substr(6));
+                m.memoryMB = kb / 1024;
+                m.memAvailable = true;
+            } catch (...) {
+                // Parsing failed
+            }
+            break;
+        }
+    }
+    // Use pre-calculated CPU percentage from sampling
+    m.cpuPercent = cachedCpuPercent;
+    m.cpuAvailable = true;
+#elif defined(_WIN32)
+    PROCESS_MEMORY_COUNTERS pmc;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+        m.memoryMB = pmc.WorkingSetSize / (1024 * 1024);
+        m.memAvailable = true;
+    }
+    m.cpuAvailable = false;  // Complex on Windows
+    (void)cachedCpuPercent;  // Unused on Windows
+#else
+    (void)cachedCpuPercent;  // Unused on other platforms
+#endif
+    return m;
+}
+
 constexpr rtype::display::Color kConsoleBgColor{0, 0, 0, 200};
 constexpr rtype::display::Color kConsoleTextColor{0, 255, 0, 255};
 constexpr rtype::display::Color kConsoleErrorColor{255, 80, 80, 255};
@@ -82,6 +173,9 @@ DevConsole::DevConsole(std::shared_ptr<rtype::display::IDisplay> display,
     cvars_["cl_show_entities"] = "0";
     cvars_["net_graph"] = "0";
     cvars_["god_mode"] = "0";
+    cvars_["cl_show_position"] = "0";
+    cvars_["cl_show_resources"] = "0";
+    cvars_["cl_show_lagometer"] = "0";
 
     print(
         "Developer Console initialized. Press F1 to toggle. Type 'help' for "
@@ -231,12 +325,84 @@ void DevConsole::update(float dt) {
 
         if (networkClient_ != nullptr && networkClient_->isConnected()) {
             cachedPing_ = networkClient_->latencyMs();
+
+            pingHistory_.push_back(cachedPing_);
+            if (pingHistory_.size() > kPingHistorySize) {
+                pingHistory_.pop_front();
+            }
+
+            if (pingHistory_.size() >= 2) {
+                float sum = std::accumulate(pingHistory_.begin(),
+                                            pingHistory_.end(), 0.0f);
+                float mean = sum / static_cast<float>(pingHistory_.size());
+                float variance = 0.0f;
+                for (auto ping : pingHistory_) {
+                    float diff = static_cast<float>(ping) - mean;
+                    variance += diff * diff;
+                }
+                variance /= static_cast<float>(pingHistory_.size());
+                cachedJitter_ = std::sqrt(variance);
+            }
+
+            if (registry_ != nullptr) {
+                auto userId = networkClient_->userId();
+
+                auto view = registry_->view<
+                    rtype::games::rtype::shared::TransformComponent,
+                    rtype::games::rtype::shared::NetworkIdComponent>();
+                view.each(
+                    [&](ECS::Entity,
+                        const rtype::games::rtype::shared::TransformComponent&
+                            t,
+                        const rtype::games::rtype::shared::NetworkIdComponent&
+                            n) {
+                        if (n.networkId == userId) {
+                            cachedPlayerX_ = t.x;
+                            cachedPlayerY_ = t.y;
+                            hasPlayerPosition_ = true;
+                        }
+                    });
+            }
         }
 
         if (registry_ != nullptr) {
             cachedEntityCount_ = registry_->countComponents<
                 rtype::games::rtype::shared::TransformComponent>();
         }
+
+#ifdef __linux__
+        auto [utime, stime] = readProcStat();
+        auto now = std::chrono::steady_clock::now();
+
+        if (lastCpuSample_.valid && (utime > 0 || stime > 0)) {
+            auto elapsed =
+                std::chrono::duration<float>(now - lastCpuSample_.timestamp)
+                    .count();
+
+            if (elapsed > 0.001f) {  // Avoid division by zero
+                std::uint64_t ticksDelta =
+                    (utime + stime) -
+                    (lastCpuSample_.utime + lastCpuSample_.stime);
+
+                static const std::int64_t clockTicks = sysconf(_SC_CLK_TCK);
+                static const std::int64_t numCores =
+                    sysconf(_SC_NPROCESSORS_ONLN);
+                float rawPercent = (static_cast<float>(ticksDelta) /
+                                    static_cast<float>(clockTicks) / elapsed) *
+                                   100.0f;
+
+                cachedCpuPercent_ =
+                    rawPercent /
+                    static_cast<float>(numCores > 0 ? numCores : 1);
+                cachedCpuPercent_ = std::clamp(cachedCpuPercent_, 0.0f, 100.0f);
+            }
+        }
+
+        lastCpuSample_.utime = utime;
+        lastCpuSample_.stime = stime;
+        lastCpuSample_.timestamp = now;
+        lastCpuSample_.valid = true;
+#endif
     }
 
     if (!visible_) {
@@ -320,8 +486,12 @@ void DevConsole::renderOutput() {
 
     float y = outputAreaTop;
     for (const auto* line : linesToDraw) {
-        rtype::display::Color color =
-            line->isError ? kConsoleErrorColor : kConsoleTextColor;
+        rtype::display::Color color = kConsoleTextColor;
+        if (line->isError) {
+            color = kConsoleErrorColor;
+        } else if (line->isInput) {
+            color = kConsolePromptColor;
+        }
 
         display_->drawText(line->text, std::string(kFontName),
                            {kTextPadding, y}, kFontSize, color);
@@ -383,6 +553,38 @@ void DevConsole::renderOverlays() {
         lines.push_back("Entities: " + std::to_string(cachedEntityCount_));
     }
 
+    if (getCvar("cl_show_position") == "1" && hasPlayerPosition_) {
+        std::ostringstream oss;
+        oss << "Pos: X=" << std::fixed << std::setprecision(1) << cachedPlayerX_
+            << " Y=" << cachedPlayerY_;
+        lines.push_back(oss.str());
+    }
+
+    if (getCvar("cl_show_resources") == "1") {
+        auto metrics = getSystemMetrics(cachedCpuPercent_);
+        if (metrics.memAvailable) {
+            std::string line =
+                "RAM: " + std::to_string(metrics.memoryMB) + " MB";
+            if (metrics.cpuAvailable) {
+                line = "CPU: " +
+                       std::to_string(static_cast<int>(metrics.cpuPercent)) +
+                       "% | " + line;
+            }
+            lines.push_back(line);
+        } else {
+            lines.push_back("Resources: N/A (Linux/Windows only)");
+        }
+    }
+
+    if (getCvar("cl_show_lagometer") == "1" && networkClient_ != nullptr &&
+        networkClient_->isConnected()) {
+        std::ostringstream oss;
+        oss << "Ping: " << cachedPing_
+            << "ms | Jitter: " << static_cast<char>(0xB1)  // ± symbol
+            << static_cast<int>(cachedJitter_) << "ms";
+        lines.push_back(oss.str());
+    }
+
     for (const auto& line : lines) {
         auto bounds = display_->getTextBounds(line, std::string(kFontName),
                                               kOverlayFontSize);
@@ -425,7 +627,12 @@ void DevConsole::execute(const std::string& commandLine) {
         }
     }
 
-    print(std::string(kPrompt) + commandLine);
+    std::string timestamp = getTimestamp();
+    outputHistory_.push_back(
+        {timestamp + std::string(kPrompt) + commandLine, false, true});
+    if (outputHistory_.size() > kMaxHistoryLines) {
+        outputHistory_.pop_front();
+    }
 
     auto args = parseArgs(commandLine);
     if (args.empty()) {
@@ -726,6 +933,32 @@ void DevConsole::registerDefaultCommands() {
 
             return newVal == "1" ? "Hitboxes ON" : "Hitboxes OFF";
         });
+
+    registerCommand("position", "Toggle player position display",
+                    [this](const std::vector<std::string>&) -> std::string {
+                        std::string current = getCvar("cl_show_position");
+                        std::string newVal = (current == "1") ? "0" : "1";
+                        setCvar("cl_show_position", newVal);
+                        return newVal == "1" ? "Position display ON"
+                                             : "Position display OFF";
+                    });
+
+    registerCommand("resources", "Toggle CPU/RAM usage display",
+                    [this](const std::vector<std::string>&) -> std::string {
+                        std::string current = getCvar("cl_show_resources");
+                        std::string newVal = (current == "1") ? "0" : "1";
+                        setCvar("cl_show_resources", newVal);
+                        return newVal == "1" ? "Resources display ON"
+                                             : "Resources display OFF";
+                    });
+
+    registerCommand("lagometer", "Toggle network lagometer (ping + jitter)",
+                    [this](const std::vector<std::string>&) -> std::string {
+                        std::string current = getCvar("cl_show_lagometer");
+                        std::string newVal = (current == "1") ? "0" : "1";
+                        setCvar("cl_show_lagometer", newVal);
+                        return newVal == "1" ? "Lagometer ON" : "Lagometer OFF";
+                    });
 }
 
 }  // namespace rtype::client
