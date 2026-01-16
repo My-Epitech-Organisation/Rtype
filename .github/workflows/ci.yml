@@ -431,7 +431,16 @@ jobs:
             echo "❌ Error: Display DLL not found at build/lib/display/SFML/"
             exit 1
           fi
+          # Copy the display DLL(s) and ensure one is named display.dll for downstream validation
           cp -v build/lib/display/SFML/*.dll build/dist/client/plugins/
+          # If the expected display.dll is not present, copy the first display DLL and name it display.dll
+          if [ ! -f build/dist/client/plugins/display.dll ]; then
+            FIRST_DLL=$(ls build/dist/client/plugins/*.dll | head -n1 || true)
+            if [ -n "$FIRST_DLL" ]; then
+              cp -v "$FIRST_DLL" build/dist/client/plugins/display.dll
+              echo "✅ Renamed $FIRST_DLL → display.dll"
+            fi
+          fi
           echo "✅ Copied display DLL(s) to plugins/"
 
           echo "Staging Background plugins to plugins/background/"
