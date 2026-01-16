@@ -33,6 +33,7 @@
 #include "games/rtype/client/GameOverState.hpp"
 #include "games/rtype/client/PauseState.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
+#include "games/rtype/shared/Components/PlayerIdComponent.hpp"
 
 namespace rs = ::rtype::games::rtype::shared;
 
@@ -114,6 +115,46 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
                   "[RtypeGameScene] Initialize called");
     std::vector<ECS::Entity> entities;
 
+    LOG_INFO("[RtypeGameScene] Checking for player entities to reposition...");
+    int playerCount = 0;
+    constexpr float kGameSpawnX = 100.0f;
+    constexpr float kGameSpawnBaseY = 150.0f;
+    constexpr float kGameSpawnYOffset = 100.0f;
+
+    this->_registry->view<rs::PlayerIdComponent>().each([this, &playerCount](
+                                                            auto playerEntt,
+                                                            auto& id) {
+        playerCount++;
+        if (this->_registry->hasComponent<rs::TransformComponent>(playerEntt)) {
+            auto& transform =
+                this->_registry->getComponent<rs::TransformComponent>(
+                    playerEntt);
+            transform.x = kGameSpawnX;
+            transform.y =
+                kGameSpawnBaseY +
+                (static_cast<float>(id.playerId - 1) * kGameSpawnYOffset);
+            LOG_INFO("[RtypeGameScene] Repositioned player "
+                     << id.playerId << " to game spawn (" << transform.x << ", "
+                     << transform.y << ")");
+        }
+        if (this->_registry->hasComponent<HiddenComponent>(playerEntt)) {
+            this->_registry->getComponent<HiddenComponent>(playerEntt)
+                .isHidden = false;
+        }
+        if (!this->_registry->hasComponent<GameTag>(playerEntt)) {
+            this->_registry->emplaceComponent<GameTag>(playerEntt);
+            LOG_DEBUG("[RtypeGameScene] Added GameTag to player "
+                      << id.playerId);
+        }
+        if (this->_registry->hasComponent<LobbyTag>(playerEntt)) {
+            this->_registry->removeComponent<LobbyTag>(playerEntt);
+            LOG_DEBUG("[RtypeGameScene] Removed LobbyTag from player "
+                      << id.playerId);
+        }
+    });
+    LOG_INFO("[RtypeGameScene] Prepared " << playerCount
+                                          << " player entities for game");
+
     auto bgEntities = EntityFactory::createBackground(
         this->_registry, this->_assetsManager, "", nullptr);
     entities.insert(entities.end(), bgEntities.begin(), bgEntities.end());
@@ -185,6 +226,13 @@ void RtypeGameScene::update() {
     updatePingDisplay();
     updateLevelAnnounce(dt);
     updatePowerUpIndicator(dt);
+
+    if (_registry->hasSingleton<std::shared_ptr<AudioLib>>()) {
+        auto audioLib = _registry->getSingleton<std::shared_ptr<AudioLib>>();
+        if (audioLib) {
+            audioLib->update();
+        }
+    }
 
     if (_isDisconnected) {
         if (_networkSystem) {
@@ -1101,6 +1149,7 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     std::function<void()> buttonCallback = [this]() {
         LOG_INFO("[RtypeGameScene] Returning to main menu after disconnect");
         cleanupDisconnectModal();
+        cleanupBeforeMainMenu();
         _switchToScene(SceneManager::MAIN_MENU);
     };
 
@@ -1126,6 +1175,70 @@ void RtypeGameScene::cleanupDisconnectModal() {
     destroyEntity(_disconnectMessageEntity);
     destroyEntity(_disconnectButtonEntity);
     _isDisconnected = false;
+}
+
+void RtypeGameScene::cleanupBeforeMainMenu() {
+    LOG_INFO(
+        "[RtypeGameScene] Cleaning up all game state before returning to main "
+        "menu");
+
+    std::vector<ECS::Entity> gameEntitiesToDestroy;
+    _registry->view<GameTag>().each([&](ECS::Entity entity, GameTag& /*tag*/) {
+        gameEntitiesToDestroy.push_back(entity);
+    });
+
+    for (const auto& entity : gameEntitiesToDestroy) {
+        if (_registry->isAlive(entity)) {
+            _registry->killEntity(entity);
+        }
+    }
+    LOG_INFO("[RtypeGameScene] Destroyed " << gameEntitiesToDestroy.size()
+                                           << " game entities");
+
+    std::vector<ECS::Entity> lobbyEntitiesToDestroy;
+    _registry->view<LobbyTag>().each(
+        [&](ECS::Entity entity, LobbyTag& /*tag*/) {
+            lobbyEntitiesToDestroy.push_back(entity);
+        });
+
+    for (const auto& entity : lobbyEntitiesToDestroy) {
+        if (_registry->isAlive(entity)) {
+            _registry->killEntity(entity);
+        }
+    }
+    LOG_INFO("[RtypeGameScene] Destroyed " << lobbyEntitiesToDestroy.size()
+                                           << " lobby entities");
+
+    std::vector<ECS::Entity> pauseEntitiesToDestroy;
+    _registry->view<PauseMenuTag>().each(
+        [&](ECS::Entity entity, PauseMenuTag& /*tag*/) {
+            pauseEntitiesToDestroy.push_back(entity);
+        });
+
+    for (const auto& entity : pauseEntitiesToDestroy) {
+        if (_registry->isAlive(entity)) {
+            _registry->killEntity(entity);
+        }
+    }
+    LOG_INFO("[RtypeGameScene] Destroyed " << pauseEntitiesToDestroy.size()
+                                           << " pause menu entities");
+
+    if (_networkSystem) {
+        LOG_INFO("[RtypeGameScene] Resetting network system");
+        _networkSystem->reset();
+    }
+
+    if (_networkClient) {
+        LOG_INFO("[RtypeGameScene] Clearing network client callbacks");
+        _networkClient->onLevelAnnounce(nullptr);
+        _networkClient->onGameStart(nullptr);
+        _networkClient->onGameOver(nullptr);
+        _networkClient->onBandwidthModeChanged(nullptr);
+    }
+
+    _isDisconnected = false;
+
+    LOG_INFO("[RtypeGameScene] Cleanup complete, ready for main menu");
 }
 
 std::string RtypeGameScene::getDisconnectMessage(

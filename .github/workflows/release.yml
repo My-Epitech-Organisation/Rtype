@@ -182,13 +182,57 @@ jobs:
             echo "✅ Found Windows server"
           fi
 
+          # Validate plugins are present
+          echo ""
+          echo "Validating plugins structure..."
+
+          if [ ! -f "artifacts/linux-client/plugins/display.so" ]; then
+            echo "❌ Missing Linux display plugin (expected: artifacts/linux-client/plugins/display.so)"
+            MISSING=1
+          else
+            echo "✅ Found Linux display plugin"
+          fi
+
+          if [ ! -f "artifacts/windows-client/plugins/display.dll" ]; then
+            echo "❌ Missing Windows display plugin (expected: artifacts/windows-client/plugins/display.dll)"
+            MISSING=1
+          else
+            echo "✅ Found Windows display plugin"
+          fi
+
+          if [ -d "artifacts/linux-client/plugins/background" ] && [ "$(ls -A artifacts/linux-client/plugins/background)" ]; then
+            echo "✅ Found Linux background plugins: $(ls artifacts/linux-client/plugins/background)"
+          else
+            echo "⚠️  Warning: No Linux background plugins found (may be expected)"
+          fi
+
+          if [ -d "artifacts/windows-client/plugins/background" ] && [ "$(ls -A artifacts/windows-client/plugins/background)" ]; then
+            echo "✅ Found Windows background plugins: $(ls artifacts/windows-client/plugins/background)"
+          else
+            echo "⚠️  Warning: No Windows background plugins found (may be expected)"
+          fi
+
+          if [ -d "artifacts/linux-client/plugins/music" ] && [ "$(ls -A artifacts/linux-client/plugins/music)" ]; then
+            echo "✅ Found Linux music plugins: $(ls artifacts/linux-client/plugins/music)"
+          else
+            echo "⚠️  Warning: No Linux music plugins found (may be expected)"
+          fi
+
+          if [ -d "artifacts/windows-client/plugins/music" ] && [ "$(ls -A artifacts/windows-client/plugins/music)" ]; then
+            echo "✅ Found Windows music plugins: $(ls artifacts/windows-client/plugins/music)"
+          else
+            echo "⚠️  Warning: No Windows music plugins found (may be expected)"
+          fi
+
           if [ "$MISSING" -ne 0 ]; then
+            echo ""
             echo "❌ One or more required artifacts are missing. This likely means the CI workflow failed to build or upload artifacts."
             echo "Please check the CI workflow run for this branch to ensure all builds completed successfully."
             exit 1
           fi
 
-          echo "✅ All required artifacts are present"
+          echo ""
+          echo "✅ All required artifacts are present with correct plugin structure"
 
       - name: Prepare release assets
         run: |
@@ -196,61 +240,72 @@ jobs:
 
           # Package Linux client
           if [ -d "artifacts/linux-client" ]; then
+            echo "📦 Packaging Linux client with structure:"
+            find artifacts/linux-client -type f | head -20
             cd artifacts/linux-client
             zip -r ../../release-packages/r-type_client-linux.zip .
             cd ../..
-            echo "✅ Packaged Linux client"
+            echo "✅ Packaged Linux client → release-packages/r-type_client-linux.zip"
           fi
 
           # Package Windows client
           if [ -d "artifacts/windows-client" ]; then
+            echo "📦 Packaging Windows client with structure:"
+            find artifacts/windows-client -type f | head -20
             cd artifacts/windows-client
             zip -r ../../release-packages/r-type_client-windows.zip .
             cd ../..
-            echo "✅ Packaged Windows client"
+            echo "✅ Packaged Windows client → release-packages/r-type_client-windows.zip"
           fi
 
           # Package Linux server
           if [ -d "artifacts/linux-server" ]; then
+            echo "📦 Packaging Linux server"
             cd artifacts/linux-server
             zip -r ../../release-packages/r-type_server-linux.zip .
             cd ../..
-            echo "✅ Packaged Linux server"
+            echo "✅ Packaged Linux server → release-packages/r-type_server-linux.zip"
           fi
 
           # Package Windows server
           if [ -d "artifacts/windows-server" ]; then
+            echo "📦 Packaging Windows server"
             cd artifacts/windows-server
             zip -r ../../release-packages/r-type_server-windows.zip .
             cd ../..
-            echo "✅ Packaged Windows server"
+            echo "✅ Packaged Windows server → release-packages/r-type_server-windows.zip"
           fi
 
           # Package assets folder
           if [ -d "assets" ]; then
+            echo "📦 Packaging game assets"
             mkdir -p release-packages-temp/assets
             cp -r assets/* release-packages-temp/assets/
             cd release-packages-temp
             zip -r ../release-packages/r-type_assets.zip assets/
             cd ..
             rm -rf release-packages-temp
-            echo "✅ Packaged assets"
+            echo "✅ Packaged assets → release-packages/r-type_assets.zip"
           fi
 
           # Package config folder
           if [ -d "config" ]; then
+            echo "📦 Packaging configuration files"
             mkdir -p release-packages-temp/config
             cp -r config/* release-packages-temp/config/
             cd release-packages-temp
             zip -r ../release-packages/r-type_config.zip config/
             cd ..
             rm -rf release-packages-temp
-            echo "✅ Packaged config"
+            echo "✅ Packaged config → release-packages/r-type_config.zip"
           fi
 
           echo ""
-          echo "Release packages created:"
+          echo "📋 Release packages created:"
           ls -lh release-packages/
+          echo ""
+          echo "📋 Client archive contents (first 20 files):"
+          unzip -l release-packages/r-type_client-windows.zip | head -25
 
       - name: Check for new commits since last release
         id: check_commits

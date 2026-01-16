@@ -227,7 +227,13 @@ if [ "$INCREMENTAL_BUILD" = false ] && [ -d "$BUILD_DIR" ]; then
 fi
 
 if [ ! -d "$BUILD_DIR" ]; then
-    cmake --preset "$CMAKE_PRESET"
+    CMAKE_ARGS=""
+    if [ "$BUILD_SNAKE" = true ]; then
+        CMAKE_ARGS="-DBUILD_SNAKE=ON -DBUILD_TESTS=OFF"
+    elif [ "$BUILD_TESTS" = true ]; then
+        CMAKE_ARGS="-DBUILD_TESTS=ON"
+    fi
+    cmake --preset "$CMAKE_PRESET" $CMAKE_ARGS
     echo "✓ CMake configuration complete"
 else
     echo "✓ Using existing build configuration (incremental build)"

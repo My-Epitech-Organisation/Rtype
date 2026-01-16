@@ -150,6 +150,21 @@ void ServerApp::onUpdate(float deltaTime) {
             _serverLoop ? _serverLoop->getTickOverruns() : 0;
 
         _metrics->addSnapshot(snapshot);
+
+        // BANDWIDTH DEBUG OUTPUT
+        // uint64_t totalBytesSent =
+        // _metrics->bytesSent.load(std::memory_order_relaxed); uint64_t
+        // avgBytesSentPerSec = totalBytesSent / (_metrics->getUptimeSeconds() >
+        // 0 ? _metrics->getUptimeSeconds() : 1);
+
+        // LOG_INFO_CAT(::rtype::LogCategory::Network,
+        //              "[BANDWIDTH] Uptime: " << _metrics->getUptimeSeconds()
+        //              << "s | " "Players: " << playerCount << " | " "Total
+        //              sent: " << totalBytesSent << " bytes | " "Avg: " <<
+        //              avgBytesSentPerSec << " B/s | " "Packets sent: " <<
+        //              snapshot.packetsSent << " | " "Packets received: " <<
+        //              snapshot.packetsReceived << " | " "Packet loss: " <<
+        //              snapshot.packetLossPercent << "%");
     }
 
     _stateManager->update(deltaTime);
@@ -434,6 +449,12 @@ bool ServerApp::initialize() {
                std::uint8_t param, const std::string& clientIp) {
             handleAdminCommand(userId, commandType, param, clientIp);
         });
+
+    _networkServer->setGameStateChecker([this]() {
+        return _stateManager &&
+               (_stateManager->isPlaying() || _stateManager->isPaused() ||
+                _stateManager->isGameOver());
+    });
 
     std::string gameId = _gameConfig && _gameConfig->isInitialized()
                              ? _gameConfig->getGameId()

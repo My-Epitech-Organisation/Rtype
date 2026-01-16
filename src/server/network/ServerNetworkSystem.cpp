@@ -46,14 +46,14 @@ static constexpr float PROJECTILE_VELOCITY_DELTA = 80.0F;
 // LOW BANDWIDTH MODE - Reduced rates for constrained connections (~5 KB/s)
 // ============================================================================
 namespace LowBandwidthMode {
-static constexpr std::uint32_t PLAYER_UPDATE_INTERVAL = 3;
-static constexpr std::uint32_t ENEMY_UPDATE_INTERVAL = 120;
-static constexpr std::uint32_t PROJECTILE_UPDATE_INTERVAL = 240;
+static constexpr std::uint32_t PLAYER_UPDATE_INTERVAL = 6;
+static constexpr std::uint32_t ENEMY_UPDATE_INTERVAL = 180;
+static constexpr std::uint32_t PROJECTILE_UPDATE_INTERVAL = 360;
 static constexpr float PLAYER_POSITION_DELTA = 40.0F;
 static constexpr float PLAYER_VELOCITY_DELTA = 80.0F;
-static constexpr float ENEMY_POSITION_DELTA = 120.0F;
+static constexpr float ENEMY_POSITION_DELTA = 200.0F;
 static constexpr float ENEMY_VELOCITY_DELTA = 200.0F;
-static constexpr float PROJECTILE_POSITION_DELTA = 150.0F;
+static constexpr float PROJECTILE_POSITION_DELTA = 300.0F;
 static constexpr float PROJECTILE_VELOCITY_DELTA = 250.0F;
 }  // namespace LowBandwidthMode
 

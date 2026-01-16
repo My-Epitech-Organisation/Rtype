@@ -527,10 +527,12 @@ void RtypeEntityFactory::setupMissileEntity(
         if (vel.vx < 0.0f) {
             reg.emplaceComponent<Rotation>(entity, 180.0f);
             LOG_DEBUG(
-                "[RtypeEntityFactory] Added 180° rotation to enemy projectile");
+                "[RtypeEntityFactory] Added 180° rotation to projectile based "
+                "on velocity (fallback)");
         }
     }
-    if (reg.hasSingleton<std::shared_ptr<AudioLib>>()) {
+
+    if (!isEnemyProjectile && reg.hasSingleton<std::shared_ptr<AudioLib>>()) {
         auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
         if (lib) {
             lib->playSFX(assetsManager->soundManager->get("laser_sfx"));
@@ -1039,11 +1041,6 @@ void RtypeEntityFactory::setupLaserBeamEntity(
     reg.emplaceComponent<shared::LaserBeamTag>(entity);
     reg.emplaceComponent<ZIndex>(entity, 2);
     reg.emplaceComponent<GameTag>(entity);
-
-    auto lib = reg.getSingleton<std::shared_ptr<AudioLib>>();
-    if (lib && assetsManager && assetsManager->soundManager) {
-        lib->playSFX(assetsManager->soundManager->get("laser_sfx"));
-    }
 
     LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
                   "[RtypeEntityFactory] LaserBeam entity created with "

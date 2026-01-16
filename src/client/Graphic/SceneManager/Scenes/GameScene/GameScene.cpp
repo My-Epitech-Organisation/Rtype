@@ -20,6 +20,10 @@
 #include "games/rtype/client/PauseState.hpp"
 
 void GameScene::update(float dt) {
+    if (this->_audio) {
+        this->_audio->update();
+    }
+
     if (_gameScene) {
         _gameScene->update();
     }

@@ -9,6 +9,7 @@
 #define SRC_CLIENT_GRAPHIC_AUDIOLIB_AUDIOLIB_HPP_
 
 #include <list>
+#include <string>
 
 #include "rtype/display/IDisplay.hpp"
 
@@ -22,6 +23,10 @@ class AudioLib {
 
     std::list<std::shared_ptr<::rtype::display::ISound>> _sounds;
 
+    static constexpr int MAX_CONCURRENT_SOUNDS = 16;
+
+    void cleanupStoppedSounds();
+
    public:
     void setLoop(const bool& loop) const;
     void setMusicVolume(const float& volume);
@@ -34,6 +39,8 @@ class AudioLib {
     void play() const;
 
     void playSFX(std::shared_ptr<rtype::display::ISoundBuffer> sfx);
+
+    void update();
 
     void loadMusic(std::shared_ptr<::rtype::display::IMusic> music);
 
