@@ -18,13 +18,6 @@ void ClientDestroySystem::update(ECS::Registry& registry, float /*deltaTime*/) {
     destroyView.each([&toDestroy](auto entity, const shared::DestroyTag&) {
         toDestroy.push_back(entity);
     });
-    auto lifetimeView = registry.view<shared::LifetimeComponent>();
-    lifetimeView.each(
-        [&toDestroy](auto entity, const shared::LifetimeComponent& life) {
-            if (life.remainingTime <= 0.0F) {
-                toDestroy.push_back(entity);
-            }
-        });
 
     if (!toDestroy.empty()) {
         LOG_DEBUG_CAT(::rtype::LogCategory::ECS,
