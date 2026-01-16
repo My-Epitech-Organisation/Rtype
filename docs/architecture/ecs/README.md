@@ -32,7 +32,7 @@ Welcome to the R-Type Entity Component System (ECS) technical documentation.
 ## Quick Start
 
 ```cpp
-#include "ECS/ECS.hpp"
+#include "ecs/src/ECS.hpp"
 
 // Define components
 struct Position { float x, y; };
@@ -88,8 +88,9 @@ The R-Type ECS is a high-performance implementation featuring:
 ## Project Structure
 
 ```
-src/ECS/
-├── Core/
+lib/ecs/src/
+├── ECS.hpp                     # Main include file
+├── core/
 │   ├── Entity.hpp              # Entity identifier with generational indices
 │   ├── Registry/               # Registry implementation (split across files)
 │   │   ├── Registry.hpp        # Main interface and declarations
@@ -98,25 +99,28 @@ src/ECS/
 │   │   ├── RegistrySingleton.inl   # Singleton resources (template)
 │   │   └── RegistryView.inl        # View creation (template)
 │   ├── CommandBuffer.hpp       # Deferred ECS operations
+│   ├── CommandBuffer.cpp
 │   ├── Prefab.hpp              # Entity templates
-│   └── Relationship.hpp        # Parent-child hierarchies
-├── Storage/
+│   ├── Prefab.cpp
+│   ├── Relationship.hpp        # Parent-child hierarchies
+│   └── Relationship.cpp
+├── storage/
 │   ├── ISparseSet.hpp          # Sparse set interface
 │   ├── SparseSet.hpp           # Generic component storage
 │   └── TagSparseSet.hpp        # Zero-size tag components
-├── View/
+├── view/
 │   ├── View.hpp                # Standard component queries
 │   ├── ParallelView.hpp        # Multi-threaded iteration
 │   ├── Group.hpp               # Cached entity collections
 │   └── ExcludeView.hpp         # Exclusion filtering
-├── System/
+├── system/
 │   └── SystemScheduler.hpp     # Dependency-based system execution
-├── Signal/
+├── signal/
 │   └── SignalDispatcher.hpp    # Component lifecycle events
-├── Serialization/
+├── serialization/
 │   └── Serialization.hpp       # Save/load ECS state
-├── Traits/
+├── traits/
 │   └── ComponentTraits.hpp     # Component type analysis
-└── Utils/
+└── utils/
     └── Benchmark.hpp           # Performance measurement
 ```

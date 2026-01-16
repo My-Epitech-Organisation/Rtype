@@ -324,18 +324,18 @@ TEST(MyTest, LogsCorrectly) {
 
 ## Integration with Build System
 
-The Logger is part of the `common` library:
+The Logger is part of the `rtype_common` library:
 
 ```cmake
 # lib/common/CMakeLists.txt
-add_library(common INTERFACE)
-target_include_directories(common INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_library(rtype_common INTERFACE)
+target_include_directories(rtype_common INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 ```
 
 Usage in other targets:
 
 ```cmake
-target_link_libraries(my_target PRIVATE common)
+target_link_libraries(my_target PRIVATE rtype_common)
 ```
 
 ## Command-Line Flags
@@ -385,8 +385,7 @@ target_link_libraries(my_target PRIVATE common)
 ## Related Documentation
 
 - [ArgParser Documentation](ArgParser.md)
-- [Testing Guide](../website/docs/testing-guide.md)
-- [Server Architecture](architecture/)
+- [Architecture Overview](../architecture/files_architecture.md)
 
 ## Future Enhancements
 
@@ -401,7 +400,7 @@ Potential improvements for consideration:
 
 ## Changelog
 
-### Current Version (2025-12-18)
+### Current Version (2026-01-15)
 - ✅ Added FATAL log level
 - ✅ Implemented ANSI color support
 - ✅ Auto-generated timestamped filenames

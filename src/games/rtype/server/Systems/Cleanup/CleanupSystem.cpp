@@ -51,6 +51,15 @@ void CleanupSystem::update(ECS::Registry& registry, float /*deltaTime*/) {
                                   const shared::PlayerTag&,
                                   shared::HealthComponent& health,
                                   const shared::NetworkIdComponent& netId) {
+                    if (registry.hasComponent<shared::InvincibleTag>(
+                            playerEntity)) {
+                        LOG_DEBUG_CAT(
+                            ::rtype::LogCategory::GameEngine,
+                            "[CleanupSystem] Skipping damage for invincible "
+                            "player "
+                                << netId.networkId);
+                        return;
+                    }
                     int32_t oldHealth = health.current;
                     health.current -= 30;
                     if (health.current < 0) {

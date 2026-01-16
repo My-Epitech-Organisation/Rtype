@@ -17,9 +17,15 @@
 #include "Components/BoundingBoxComponent.hpp"
 #include "Components/DamageOnContactComponent.hpp"
 #include "Components/EnemyTypeComponent.hpp"
+#include "Components/ForcePodComponent.hpp"
 #include "Components/HealthComponent.hpp"
 #include "Components/PowerUpComponent.hpp"
 #include "Components/PowerUpTypeComponent.hpp"
+
+// Boss Components
+#include "Components/BossComponent.hpp"
+#include "Components/BossPatternComponent.hpp"
+#include "Components/WeakPointComponent.hpp"
 
 // Entity Types and Tags
 #include "Components/EntityType.hpp"

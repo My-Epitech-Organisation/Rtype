@@ -38,9 +38,18 @@ enum class WaveState {
  */
 struct SpawnRequest {
     std::string enemyId;
-    std::optional<float> x;  ///< X position (nullopt = random on right edge)
-    std::optional<float> y;  ///< Y position (nullopt = random)
+    std::optional<float> x;
+    std::optional<float> y;
     int32_t count = 1;
+
+    [[nodiscard]] bool hasFixedX() const noexcept { return x.has_value(); }
+    [[nodiscard]] bool hasFixedY() const noexcept { return y.has_value(); }
+};
+
+struct PowerUpSpawnRequest {
+    std::string powerUpId;
+    std::optional<float> x;
+    std::optional<float> y;
 
     [[nodiscard]] bool hasFixedX() const noexcept { return x.has_value(); }
     [[nodiscard]] bool hasFixedY() const noexcept { return y.has_value(); }
@@ -120,6 +129,9 @@ class WaveManager {
     [[nodiscard]] std::vector<SpawnRequest> update(float deltaTime,
                                                    std::size_t aliveEnemyCount);
 
+    [[nodiscard]] std::vector<PowerUpSpawnRequest> getPowerUpSpawns(
+        float deltaTime);
+
     /**
      * @brief Get current wave state
      * @return Current state of the wave manager
@@ -185,6 +197,32 @@ class WaveManager {
     }
 
     /**
+     * @brief Get the next level ID (if any)
+     * @return Optional next level ID
+     */
+    [[nodiscard]] std::optional<std::string> getNextLevel() const noexcept {
+        return _levelConfig ? _levelConfig->nextLevel : std::nullopt;
+    }
+
+    /**
+     * @brief Get the background path/name for the level
+     * @return Background name or empty string if not loaded
+     */
+    [[nodiscard]] const std::string& getBackground() const noexcept {
+        static const std::string empty;
+        return _levelConfig ? _levelConfig->backgroundPath : empty;
+    }
+
+    /**
+     * @brief Get the level music name for the level
+     * @return Level music name or empty string if not loaded
+     */
+    [[nodiscard]] const std::string& getLevelMusic() const noexcept {
+        static const std::string empty;
+        return _levelConfig ? _levelConfig->levelMusic : empty;
+    }
+
+    /**
      * @brief Get last error message
      * @return Error message from last failed operation
      */
@@ -206,6 +244,8 @@ class WaveManager {
         _waveTransitionDelay = delay;
     }
 
+    void setStartDelay(float delay) noexcept { _startDelay = delay; }
+
    private:
     /**
      * @struct PendingSpawn
@@ -218,11 +258,18 @@ class WaveManager {
         bool started = false;
     };
 
+    struct PendingPowerUp {
+        shared::WaveConfig::PowerUpEntry entry;
+        float remainingDelay = 0.0F;
+        bool spawned = false;
+    };
+
     void advanceToNextWave();
     void prepareCurrentWave();
 
     std::optional<shared::LevelConfig> _levelConfig;
     std::vector<PendingSpawn> _pendingSpawns;
+    std::vector<PendingPowerUp> _pendingPowerUps;
 
     WaveState _state = WaveState::NotStarted;
     std::size_t _currentWaveIndex = 0;
@@ -231,6 +278,7 @@ class WaveManager {
     float _waveTransitionDelay = 2.0F;
     bool _waitForClear = true;
     std::string _lastError;
+    float _startDelay = 0.0f;
 };
 
 }  // namespace rtype::games::rtype::server

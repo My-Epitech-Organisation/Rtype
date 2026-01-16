@@ -12,3 +12,7 @@ target_link_libraries(rtype-graphic-entity-factory
     rtype_game_shared
     rtype_game_client
 )
+
+target_include_directories(rtype-graphic-entity-factory PUBLIC
+        ${CMAKE_SOURCE_DIR}
+)

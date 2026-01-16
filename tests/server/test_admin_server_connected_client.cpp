@@ -315,13 +315,13 @@ TEST(AdminServerAuthBranches, Unauthorized_NoAuth_Returns401) {
 
     auto res = cli.Get("/api/metrics");
     ASSERT_NE(res, nullptr);
-    // Localhost-only mode allows the request but without a ServerApp the endpoint returns 500
-    EXPECT_EQ(res->status, 500);
+    // Without credentials the request should be unauthorized (401)
+    EXPECT_EQ(res->status, 401);
 
     res = cli.Post("/api/ban", {}, "{\"ip\": \"1.2.3.4\"}", "application/json");
     ASSERT_NE(res, nullptr);
-    // Ban by IP with no ServerApp/LobbyManager returns success (200) even if it had no effect
-    EXPECT_EQ(res->status, 200);
+    // Without credentials posting should be unauthorized
+    EXPECT_EQ(res->status, 401);
 
     admin.stop();
 }

@@ -8,21 +8,48 @@ GameOver = "audio/gongGameOver.mp3"
 [SFX]
 HoverButton = "audio/hoverButton.mp3"
 ClickButton = "audio/clickButton.mp3"
-Laser = "audio/laserSound.mp3"
+Laser = "audio/shoot.mp3"
 PlayerDeath = "audio/playerDeath.mp3"
 PlayerSpawn = "audio/playerSpawn.mp3"
 EnemyDeath = "audio/enemyDeath.mp3"
 EnemySpawn = "audio/enemySpawn.mp3"
+ForcePodLaunch = "audio/laserSound.mp3"
+ForcePodReturn = "audio/laserSound.mp3"
+ChargedShot = "audio/laserSound.mp3"
+ChargedShotMax = "audio/laserSound.mp3"
 
 # Textures Réferences
 [Textures]
 Player = "img/playerTexture.gif"
 EnemyNormal = "img/bdosTextureNormal.gif"
-EnemyChaser = "img/bdosTextureChaser.gif"
+EnemyChaser = "img/chaser.png"
 EnemyHeavy = "img/bdosTextureHeavy.gif"
 EnemyPatrol = "img/bdosTexturePatrol.gif"
 EnemyShooter = "img/bdosTextureShooter.gif"
 EnemyWave = "img/bdosTextureWave.gif"
+BossSerpentHead = "img/serpent_head.png"
+BossSerpentAttack = "img/serpent_attack.png"
+BossSerpentBody = "img/serpent_body.png"
+BossSerpentTail = "img/serpent_tail.png"
+BossScorpionBody = "img/scorpion_body.png"
+BossScorpionClaws = "img/scorpion_claws.png"
+BossScorpionTail = "img/scorpion_tail.png"
+BossScorpionStinger = "img/scorpion_stinger.png"
+BossScorpionCannon = "img/scorpion_cannon.png"
+ForcePod = "img/forcepod.gif"
+
+# Power-ups
+HealthSmall = "img/health_small.png"
+HealthLarge = "img/health_large.png"
+SpeedBoost = "img/speed_boost.png"
+WeaponUpgrade = "img/weapon_upgrade.png"
+Shield = "img/shield.png"
+RapidFire = "img/rapid_fire.png"
+DamageBoost = "img/damage_boost.png"
+ExtraLife = "img/extra_life.png"
+LaserUpgrade = "img/laser_upgrade.png"
+LaserBeam = "img/laser_beam.png"
+
 # Background assets
 Background = "img/bgMainMenu.png"
 Sun = "img/sun.png"
@@ -36,6 +63,7 @@ Planet3 = "img/planet3.png"
 AstroVessel = "img/astroVessel.png"
 # Projectile assets
 MissileLaser = "img/missileLaser.gif"
+ChargedShot = "img/charged_shot.png"
 # Trap
 Engrenage1 = "img/Engrenage1.png"
 Engrenage2 = "img/Engrenage2.png"
@@ -52,3 +80,22 @@ TubeMetal = "img/tubeMetal.png"
 [Fonts]
 MainFont = "fonts/Orbitron-VariableFont_wght.ttf"
 TitleFont = "fonts/Audiowide-Regular.ttf"
+
+# Gameplay configuration
+[Gameplay]
+Difficulty = "normal"
+StartingLives = 3
+Waves = 10
+PlayerSpeed = 260.0
+EnemySpeedMultiplier = 1.0
+FriendlyFire = false
+
+# Laser weapon configuration
+[Gameplay.Laser]
+DamagePerSecond = 50.0
+StartupDelay = 0.56
+MaxDuration = 3.0
+CooldownDuration = 2.0
+HitboxWidth = 614.0
+HitboxHeight = 50.0
+OffsetX = 340.0

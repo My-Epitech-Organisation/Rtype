@@ -1,3 +1,6 @@
+# Include client tests subdirectory
+add_subdirectory(client)
+
 add_executable(test_spawning test_spawning.cpp)
 
 target_link_libraries(test_spawning PRIVATE
@@ -46,6 +49,46 @@ if(WIN32 OR MSVC)
     gtest_discover_tests(test_components WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_components)
+endif()
+
+# Boss component tests (BossComponent, WeakPointComponent, BossPatternComponent, etc.)
+add_executable(test_boss_components test_boss_components.cpp)
+
+target_link_libraries(test_boss_components PRIVATE
+    rtype_game_shared
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_boss_components PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_boss_components WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_boss_components)
+endif()
+
+# Cooldown component tests (ShootCooldownComponent, ChargeComponent)
+add_executable(test_cooldown_component test_cooldown_component.cpp)
+
+target_link_libraries(test_cooldown_component PRIVATE
+    rtype_game_shared
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_cooldown_component PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_cooldown_component WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_cooldown_component)
 endif()
 
 # AI Behavior tests
@@ -193,6 +236,27 @@ else()
     gtest_discover_tests(test_collision_branches)
 endif()
 
+# Collision coverage tests (laser, force pod, orphan pod pickup, etc.)
+add_executable(test_collision_coverage test_collision_coverage.cpp)
+
+target_link_libraries(test_collision_coverage PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_collision_coverage PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_collision_coverage WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_collision_coverage)
+endif()
+
 # EntityConfig branch coverage tests
 add_executable(test_entityconfig_branches test_entityconfig_branches.cpp)
 
@@ -210,6 +274,26 @@ if(WIN32 OR MSVC)
     gtest_discover_tests(test_entityconfig_branches WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_entityconfig_branches)
+endif()
+
+# PrefabLoader tests
+add_executable(test_prefab_loader test_prefab_loader.cpp)
+
+target_link_libraries(test_prefab_loader PRIVATE
+    rtype_game_shared
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_prefab_loader PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_prefab_loader WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_prefab_loader)
 endif()
 
 # Engine base class tests (AGameEngine, ASystem)
@@ -400,6 +484,30 @@ if(WIN32 OR MSVC)
 else()
     gtest_discover_tests(test_powerup_system)
 endif()
+
+# EnemyHealthBarSystem tests
+add_executable(test_enemy_health_bar_system client/test_enemy_health_bar_system.cpp)
+
+target_link_libraries(test_enemy_health_bar_system PRIVATE
+    rtype_game_client_systems
+    rtype_game_shared
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_enemy_health_bar_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/client
+    ${CMAKE_SOURCE_DIR}/src/games/rtype/shared
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_enemy_health_bar_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_enemy_health_bar_system)
+endif()
+
 # FileOperations tests (from shared/config/save_manager subdirectory)
 add_executable(test_file_operations shared/config/save_manager/test_file_operations.cpp)
 
@@ -417,4 +525,171 @@ if(WIN32 OR MSVC)
     gtest_discover_tests(test_file_operations WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 else()
     gtest_discover_tests(test_file_operations)
+endif()
+
+# ForcePodLaunchSystem tests
+add_executable(test_forcepod_launch_system test_forcepod_launch_system.cpp)
+
+target_link_libraries(test_forcepod_launch_system PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_forcepod_launch_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_forcepod_launch_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_forcepod_launch_system)
+endif()
+
+# ForcePodShootingSystem tests
+add_executable(test_forcepod_shooting_system test_forcepod_shooting_system.cpp)
+
+target_link_libraries(test_forcepod_shooting_system PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_forcepod_shooting_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_forcepod_shooting_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_forcepod_shooting_system)
+endif()
+
+# LaserBeamSystem tests
+add_executable(test_laser_beam_system test_laser_beam_system.cpp)
+
+target_link_libraries(test_laser_beam_system PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_laser_beam_system PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_laser_beam_system WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_laser_beam_system)
+endif()
+
+# PowerUpTypeComponent tests
+add_executable(test_powerup_type_component test_powerup_type_component.cpp)
+
+target_link_libraries(test_powerup_type_component PRIVATE
+    rtype_game_shared
+    GTest::gtest_main
+)
+
+target_include_directories(test_powerup_type_component PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_powerup_type_component WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_powerup_type_component)
+endif()
+
+# Boss systems tests (BossPhaseSystem, BossAttackSystem, WeakPointSystem)
+add_executable(test_boss_systems test_boss_systems.cpp)
+
+target_link_libraries(test_boss_systems PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_boss_systems PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_boss_systems WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_boss_systems)
+endif()
+
+# Additional RType coverage tests
+add_executable(test_rtype_coverage test_rtype_coverage.cpp)
+
+target_link_libraries(test_rtype_coverage PRIVATE
+    rtype_game_shared
+    engine
+    GTest::gtest_main
+)
+
+target_include_directories(test_rtype_coverage PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_rtype_coverage WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_rtype_coverage)
+endif()
+
+# Server-side RTypeGameConfig tests
+add_executable(test_server_rtypegameconfig test_server_rtypegameconfig.cpp)
+
+target_link_libraries(test_server_rtypegameconfig PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    common
+    GTest::gtest_main
+)
+
+target_include_directories(test_server_rtypegameconfig PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_server_rtypegameconfig WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_server_rtypegameconfig)
+endif()
+
+# BossAttackSystem coverage tests
+add_executable(test_boss_attack_system_coverage test_boss_attack_system_coverage.cpp)
+
+target_link_libraries(test_boss_attack_system_coverage PRIVATE
+    rtype_game_shared
+    rtype_game_server
+    engine
+    common
+    GTest::gtest_main
+)
+
+target_include_directories(test_boss_attack_system_coverage PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+if(WIN32 OR MSVC)
+    gtest_discover_tests(test_boss_attack_system_coverage WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+else()
+    gtest_discover_tests(test_boss_attack_system_coverage)
 endif()

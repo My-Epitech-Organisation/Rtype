@@ -6,24 +6,29 @@
 [level]
 id = "level_1"
 name = "Space Station"
-background = "assets/backgrounds/space_station.png"
+background = "Labs"
 scroll_speed = 50.0
-boss = "boss_1"
+boss = "boss_serpent"
+next_level = "level_2.toml"
+level_music = "ChillMusic"
 
 # -----------------------------------------------------------------------------
-# Wave 1 - Introduction (Basic enemies only)
+# Wave 1 - Empty wave to trigger boss immediately
 # -----------------------------------------------------------------------------
 [[wave]]
 number = 1
-spawn_delay = 0.8
+spawn_delay = 0.1
 
-[[wave.spawn]]
-enemy = "basic"
-delay = 0.0
-count = 1
+[[wave.powerup]]
+id = "force_pod"
+delay = 2.0
+
+[[wave.powerup]]
+id = "laser_upgrade"
+delay = 3.0
 
 # -----------------------------------------------------------------------------
-# Wave 2 - Wave enemies
+# Wave 2 - Wave enemies with Force Pod
 # -----------------------------------------------------------------------------
 [[wave]]
 number = 2
@@ -34,8 +39,13 @@ enemy = "wave"
 delay = 0.0
 count = 3
 
+[[wave.powerup]]
+id = "force_pod"
+delay = 3.0
+y = 540.0
+
 # -----------------------------------------------------------------------------
-# Wave 3 - Mixed enemies with first shooter
+# Wave 3 - Mixed enemies with shield
 # -----------------------------------------------------------------------------
 [[wave]]
 number = 3
@@ -46,9 +56,17 @@ enemy = "basic"
 delay = 0.0
 count = 2
 
+[[wave.powerup]]
+id = "shield"
+delay = 1.5
+
+[[wave.powerup]]
+id = "laser_upgrade"
+delay = 3.0
+y = 400.0
 
 # -----------------------------------------------------------------------------
-# Wave 4 - Chasers introduced
+# Wave 4 - Chasers with rapid fire
 # -----------------------------------------------------------------------------
 [[wave]]
 number = 4
@@ -59,8 +77,12 @@ enemy = "chaser"
 delay = 0.0
 count = 2
 
+[[wave.powerup]]
+id = "rapid_fire"
+delay = 2.0
+
 # -----------------------------------------------------------------------------
-# Wave 5 - Pre-boss wave (challenging)
+# Wave 5 - Pre-boss wave (challenging) with double damage
 # -----------------------------------------------------------------------------
 [[wave]]
 number = 5
@@ -71,3 +93,6 @@ enemy = "heavy"
 delay = 0.0
 count = 1
 
+[[wave.powerup]]
+id = "double_damage"
+delay = 1.0

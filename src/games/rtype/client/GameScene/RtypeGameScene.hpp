@@ -15,9 +15,13 @@
 #include <utility>
 #include <vector>
 
+#include "../Systems/ClientDestroySystem.hpp"
+#include "../Systems/LaserBeamAnimationSystem.hpp"
 #include "../lib/display/Clock/Clock.hpp"
 #include "AudioLib/AudioLib.hpp"
 #include "Graphic/SceneManager/Scenes/GameScene/AGameScene.hpp"
+#include "games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
+#include "games/rtype/shared/Systems/Movements/MovementSystem.hpp"
 #include "rtype/display/DisplayTypes.hpp"
 
 namespace rtype::games::rtype::client {
@@ -43,6 +47,8 @@ class RtypeGameScene : public AGameScene {
         std::shared_ptr<::rtype::display::IDisplay> display,
         std::shared_ptr<KeyboardActions> keybinds,
         std::function<void(const SceneManager::Scene&)> switchToScene,
+        std::function<void(const std::string&)> setBackground,
+        std::function<void(const std::string&)> setLevelMusic,
         std::shared_ptr<::rtype::client::NetworkClient> networkClient,
         std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem,
         std::shared_ptr<AudioLib> audioLib = nullptr);
@@ -80,7 +86,7 @@ class RtypeGameScene : public AGameScene {
      * @brief Get current input mask for R-Type controls
      * @return Input mask
      */
-    [[nodiscard]] std::uint8_t getInputMask() const override;
+    [[nodiscard]] std::uint16_t getInputMask() const override;
 
     /**
      * @brief Set up the entity factory for R-Type entities
@@ -97,6 +103,23 @@ class RtypeGameScene : public AGameScene {
      * @brief Initialize the HUD with lives display text
      */
     void setupHud();
+
+    /**
+     * @brief Setup the level announcement callback
+     */
+    void setupLevelAnnounceCallback();
+
+    /**
+     * @brief Show the level announcement
+     * @param levelName The name of the level
+     */
+    void showLevelAnnounce(const std::string& levelName);
+
+    /**
+     * @brief Update the level announcement visual
+     * @param dt Delta time
+     */
+    void updateLevelAnnounce(float dt);
 
     /**
      * @brief Update the lives display text with current health values
@@ -117,6 +140,8 @@ class RtypeGameScene : public AGameScene {
     std::optional<ECS::Entity> _healthBarFillEntity;
     std::optional<ECS::Entity> _healthTextEntity;
     std::optional<ECS::Entity> _pingTextEntity;
+    std::optional<ECS::Entity> _powerUpIconEntity;
+    std::optional<ECS::Entity> _powerUpTextEntity;
     std::optional<std::uint32_t> _localPlayerId;
     std::optional<ECS::Entity> _localPlayerEntity;
     int _lastKnownLives{0};
@@ -145,10 +170,12 @@ class RtypeGameScene : public AGameScene {
     void triggerDamageFlash(int damageAmount);
     void resetHudColors();
     void spawnDamagePopup(int damage);
+    void updatePowerUpIndicator(float deltaTime);
 
     void setupDisconnectCallback();
     void showDisconnectModal(network::DisconnectReason reason);
     void cleanupDisconnectModal();
+    void cleanupBeforeMainMenu();
     std::string getDisconnectMessage(network::DisconnectReason reason) const;
     std::optional<ECS::Entity> _disconnectOverlayEntity;
     std::optional<ECS::Entity> _disconnectPanelEntity;
@@ -156,6 +183,30 @@ class RtypeGameScene : public AGameScene {
     std::optional<ECS::Entity> _disconnectMessageEntity;
     std::optional<ECS::Entity> _disconnectButtonEntity;
     bool _isDisconnected{false};
+
+    // Level Announcement
+    std::optional<ECS::Entity> _levelAnnounceTextEntity;
+    std::optional<ECS::Entity> _levelAnnounceBgEntity;
+    float _levelAnnounceTimer = 0.0f;
+    bool _isFirstLevelAnnounce = true;
+
+    std::unique_ptr<::rtype::games::rtype::shared::MovementSystem>
+        _movementSystem;
+    std::unique_ptr<LaserBeamAnimationSystem> _laserBeamAnimationSystem;
+    std::unique_ptr<::rtype::games::rtype::shared::LifetimeSystem>
+        _lifetimeSystem;
+    std::unique_ptr<ClientDestroySystem> _clientDestroySystem;
+
+    bool _lowBandwidthMode{false};
+    std::uint8_t _lowBandwidthActiveCount{0};
+    std::optional<ECS::Entity> _bandwidthIndicatorEntity;
+    std::optional<ECS::Entity> _bandwidthNotificationEntity;
+    float _bandwidthNotificationTimer{0.0F};
+    void toggleLowBandwidthMode();
+    void updateBandwidthIndicator();
+    void showBandwidthNotification(std::uint32_t userId, bool enabled,
+                                   std::uint8_t activeCount);
+    void setupBandwidthModeCallback();
 };
 }  // namespace rtype::games::rtype::client
 

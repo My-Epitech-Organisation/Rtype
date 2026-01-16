@@ -98,12 +98,16 @@ struct is_rfc_type<ConnectPayload> : std::true_type {};
 template <>
 struct is_rfc_type<DisconnectPayload> : std::true_type {};
 template <>
+struct is_rfc_type<ChatPayload> : std::true_type {};
+template <>
 struct is_rfc_type<PingPayload> : std::true_type {};
 template <>
 struct is_rfc_type<PongPayload> : std::true_type {};
 
 template <>
 struct is_rfc_type<EntityMoveBatchHeader> : std::true_type {};
+template <>
+struct is_rfc_type<EntityMoveBatchEntry> : std::true_type {};
 template <>
 struct is_rfc_type<LobbyReadyPayload> : std::true_type {};
 template <>
@@ -246,6 +250,7 @@ fromNetwork(const T& data) noexcept {
     const EntityMovePayload& p) noexcept {
     EntityMovePayload result;
     result.entityId = ByteOrder::toNetwork(p.entityId);
+    result.serverTick = ByteOrder::toNetwork(p.serverTick);
     result.posX = ByteOrder::toNetwork(p.posX);
     result.posY = ByteOrder::toNetwork(p.posY);
     result.velX = ByteOrder::toNetwork(p.velX);
@@ -257,6 +262,7 @@ fromNetwork(const T& data) noexcept {
     const EntityMovePayload& p) noexcept {
     EntityMovePayload result;
     result.entityId = ByteOrder::fromNetwork(p.entityId);
+    result.serverTick = ByteOrder::fromNetwork(p.serverTick);
     result.posX = ByteOrder::fromNetwork(p.posX);
     result.posY = ByteOrder::fromNetwork(p.posY);
     result.velX = ByteOrder::fromNetwork(p.velX);
@@ -326,6 +332,7 @@ fromNetwork(const T& data) noexcept {
     const GameOverPayload& p) noexcept {
     GameOverPayload result;
     result.finalScore = ByteOrder::toNetwork(p.finalScore);
+    result.isVictory = p.isVictory;
     return result;
 }
 
@@ -333,6 +340,7 @@ fromNetwork(const T& data) noexcept {
     const GameOverPayload& p) noexcept {
     GameOverPayload result;
     result.finalScore = ByteOrder::fromNetwork(p.finalScore);
+    result.isVictory = p.isVictory;
     return result;
 }
 
@@ -378,11 +386,38 @@ fromNetwork(const T& data) noexcept {
 
 [[nodiscard]] inline EntityMoveBatchHeader toNetwork(
     const EntityMoveBatchHeader& p) noexcept {
-    return p;  // Single byte, no conversion needed
+    EntityMoveBatchHeader result;
+    result.count = p.count;  // Single byte, no conversion
+    result.serverTick = ByteOrder::toNetwork(p.serverTick);
+    return result;
 }
 [[nodiscard]] inline EntityMoveBatchHeader fromNetwork(
     const EntityMoveBatchHeader& p) noexcept {
-    return p;  // Single byte, no conversion needed
+    EntityMoveBatchHeader result;
+    result.count = p.count;
+    result.serverTick = ByteOrder::fromNetwork(p.serverTick);
+    return result;
+}
+
+[[nodiscard]] inline EntityMoveBatchEntry toNetwork(
+    const EntityMoveBatchEntry& p) noexcept {
+    EntityMoveBatchEntry result;
+    result.entityId = ByteOrder::toNetwork(p.entityId);
+    result.posX = ByteOrder::toNetwork(p.posX);
+    result.posY = ByteOrder::toNetwork(p.posY);
+    result.velX = ByteOrder::toNetwork(p.velX);
+    result.velY = ByteOrder::toNetwork(p.velY);
+    return result;
+}
+[[nodiscard]] inline EntityMoveBatchEntry fromNetwork(
+    const EntityMoveBatchEntry& p) noexcept {
+    EntityMoveBatchEntry result;
+    result.entityId = ByteOrder::fromNetwork(p.entityId);
+    result.posX = ByteOrder::fromNetwork(p.posX);
+    result.posY = ByteOrder::fromNetwork(p.posY);
+    result.velX = ByteOrder::fromNetwork(p.velX);
+    result.velY = ByteOrder::fromNetwork(p.velY);
+    return result;
 }
 
 [[nodiscard]] inline LobbyReadyPayload toNetwork(const LobbyReadyPayload& p) noexcept {
@@ -431,6 +466,20 @@ fromNetwork(const T& data) noexcept {
     PlayerReadyStatePayload result;
     result.userId = ByteOrder::fromNetwork(p.userId);
     result.isReady = p.isReady;
+    return result;
+}
+
+[[nodiscard]] inline ChatPayload toNetwork(const ChatPayload& p) noexcept {
+    ChatPayload result;
+    result.userId = ByteOrder::toNetwork(p.userId);
+    std::memcpy(result.message, p.message, sizeof(result.message));
+    return result;
+}
+
+[[nodiscard]] inline ChatPayload fromNetwork(const ChatPayload& p) noexcept {
+    ChatPayload result;
+    result.userId = ByteOrder::fromNetwork(p.userId);
+    std::memcpy(result.message, p.message, sizeof(result.message));
     return result;
 }
 

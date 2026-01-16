@@ -23,10 +23,30 @@ add_library(rtype_game_client_systems STATIC
     PowerUpCollectionSystem.hpp
     AnimationSystem.cpp
     AnimationSystem.hpp
+    BossSerpentAnimationSystem.cpp
+    BossSerpentAnimationSystem.hpp
+    BossAnimationSystem.cpp
+    BossAnimationSystem.hpp
+    ChaserRotationSystem.cpp
+    ChaserRotationSystem.hpp
+    ChaserExplosionSystem.cpp
+    ChaserExplosionSystem.hpp
     ClientDestroySystem.cpp
     ClientDestroySystem.hpp
     ShaderRenderSystem.cpp
     ShaderRenderSystem.hpp
+    ForcePodVisualSystem.cpp
+    ForcePodVisualSystem.hpp
+    EnemyHealthBarSystem.cpp
+    EnemyHealthBarSystem.hpp
+    LaserBeamAnimationSystem.cpp
+    LaserBeamAnimationSystem.hpp
+    ChargeInputSystem.cpp
+    ChargeInputSystem.hpp
+    ChargeVisualSystem.cpp
+    ChargeVisualSystem.hpp
+    ChargedProjectileAnimationSystem.cpp
+    ChargedProjectileAnimationSystem.hpp
 )
 
 target_link_libraries(rtype_game_client_systems

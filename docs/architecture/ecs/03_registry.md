@@ -16,7 +16,7 @@ The **Registry** is the central coordinator of the ECS, managing entities, compo
 ## Basic Usage
 
 ```cpp
-#include "ECS/ECS.hpp"
+#include "ecs/src/ECS.hpp"
 
 ECS::Registry registry;
 
@@ -415,7 +415,7 @@ cmd.flush(); // Apply changes after iteration
 ## Complete Example
 
 ```cpp
-#include "ECS/ECS.hpp"
+#include "ecs/src/ECS.hpp"
 #include <iostream>
 
 struct Position { float x, y; };

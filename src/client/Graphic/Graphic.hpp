@@ -16,11 +16,18 @@
 #include "../../../include/rtype/display/IDisplay.hpp"
 #include "../../../lib/common/src/DLLoader/DLLoader.hpp"
 #include "../../games/rtype/client/GraphicsConstants.hpp"
+#include "../../games/rtype/client/Systems/BossAnimationSystem.hpp"
+#include "../../games/rtype/client/Systems/BossSerpentAnimationSystem.hpp"
 #include "../../games/rtype/client/Systems/BoxingSystem.hpp"
 #include "../../games/rtype/client/Systems/ButtonUpdateSystem.hpp"
+#include "../../games/rtype/client/Systems/ChargeInputSystem.hpp"
+#include "../../games/rtype/client/Systems/ChargeVisualSystem.hpp"
+#include "../../games/rtype/client/Systems/ChargedProjectileAnimationSystem.hpp"
 #include "../../games/rtype/client/Systems/ClientDestroySystem.hpp"
 #include "../../games/rtype/client/Systems/ColorTintSystem.hpp"
+#include "../../games/rtype/client/Systems/EnemyHealthBarSystem.hpp"
 #include "../../games/rtype/client/Systems/EventSystem.hpp"
+#include "../../games/rtype/client/Systems/ForcePodVisualSystem.hpp"
 #include "../../games/rtype/client/Systems/ParallaxScrolling.hpp"
 #include "../../games/rtype/client/Systems/PlayerAnimationSystem.hpp"
 #include "../../games/rtype/client/Systems/PlayerPowerUpVisualSystem.hpp"
@@ -30,6 +37,7 @@
 #include "../../games/rtype/client/Systems/ShaderRenderSystem.hpp"
 #include "../../games/rtype/shared/Systems/Lifetime/LifetimeSystem.hpp"
 #include "../../games/rtype/shared/Systems/Projectile/ProjectileSystem.hpp"
+#include "../DevConsole/DevConsole.hpp"
 #include "../network/ClientNetworkSystem.hpp"
 #include "../network/NetworkClient.hpp"
 #include "Accessibility.hpp"
@@ -38,6 +46,13 @@
 #include "KeyboardActions.hpp"
 #include "SceneManager/SceneManager.hpp"
 #include "Systems/AnimationSystem.hpp"
+#include "lib/audio/ILevelMusic.hpp"
+#include "lib/background/IBackground.hpp"
+
+namespace rtype::games::rtype::client {
+class ChaserRotationSystem;
+class ChaserExplosionSystem;
+}  // namespace rtype::games::rtype::client
 
 /**
  * @brief Main graphics class managing the game window and rendering pipeline.
@@ -85,6 +100,12 @@ class Graphic {
     std::unique_ptr<rtype::common::DLLoader<rtype::display::IDisplay>>
         _displayLoader;
 
+    std::vector<std::unique_ptr<rtype::common::DLLoader<IBackground>>>
+        _backgroundLoaders;
+
+    std::vector<std::unique_ptr<rtype::common::DLLoader<ILevelMusic>>>
+        _audioLevelLoaders;
+
     /// @brief Display interface loaded from DLL
     std::shared_ptr<rtype::display::IDisplay> _display;
 
@@ -123,6 +144,9 @@ class Graphic {
     /// @brief System scheduler for ordered system execution
     std::unique_ptr<ECS::SystemScheduler> _systemScheduler;
 
+    /// @brief Developer console (F1 to toggle, accessible from all scenes)
+    std::unique_ptr<rtype::client::DevConsole> _devConsole;
+
     // ========================================================================
     // ECS Systems (unique ownership, registered with scheduler)
     // ========================================================================
@@ -133,6 +157,14 @@ class Graphic {
         _playerAnimationSystem;
     std::unique_ptr<::rtype::games::rtype::client::AnimationSystem>
         _animationSystem;
+    std::unique_ptr<::rtype::games::rtype::client::BossSerpentAnimationSystem>
+        _bossSerpentAnimationSystem;
+    std::unique_ptr<::rtype::games::rtype::client::BossAnimationSystem>
+        _bossAnimationSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ChaserRotationSystem>
+        _chaserRotationSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ChaserExplosionSystem>
+        _chaserExplosionSystem;
     std::unique_ptr<::rtype::games::rtype::client::PlayerPowerUpVisualSystem>
         _playerPowerUpVisualSystem;
     std::unique_ptr<::rtype::games::rtype::client::PowerUpCollectionSystem>
@@ -154,6 +186,17 @@ class Graphic {
         _clientDestroySystem;
     std::unique_ptr<::rtype::games::rtype::client::ShaderRenderSystem>
         _shaderRenderSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ForcePodVisualSystem>
+        _forcePodVisualSystem;
+    std::unique_ptr<::rtype::games::rtype::client::EnemyHealthBarSystem>
+        _enemyHealthBarSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ChargeInputSystem>
+        _chargeInputSystem;
+    std::unique_ptr<::rtype::games::rtype::client::ChargeVisualSystem>
+        _chargeVisualSystem;
+    std::unique_ptr<
+        ::rtype::games::rtype::client::ChargedProjectileAnimationSystem>
+        _chargedProjectileAnimationSystem;
 
     // ========================================================================
     // Runtime state
@@ -189,6 +232,12 @@ class Graphic {
 
     /// @brief Initialize and register all systems with the scheduler
     void _initializeSystems();
+
+    /// @brief Load all backgrounds plugins (Lobby, AsteroidsSpace ...)
+    void _loadBackgrounds();
+
+    /// @brief Load all music plugins (ChillMusic, etc.)
+    void _loadMusicLevels();
 
     /// @brief Initialize all common assets (textures, sound, fonts)
     void _initializeCommonAssets();

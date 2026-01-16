@@ -43,6 +43,18 @@ struct PickupTag {};
  */
 struct ObstacleTag {};
 
+/**
+ * @struct ForcePodTag
+ * @brief Tag component to mark an entity as a Force Pod
+ */
+struct ForcePodTag {};
+
+/**
+ * @struct LaserBeamTag
+ * @brief Tag component to mark an entity as an active laser beam
+ */
+struct LaserBeamTag {};
+
 // =============================================================================
 // Enemy Type Tags
 // =============================================================================

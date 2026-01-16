@@ -49,7 +49,7 @@ install_package() {
     local pkg_apt="$1"
     local pkg_dnf="$2"
     local pm=$(detect_package_manager)
-    
+
     case $pm in
         apt)
             sudo apt-get update && sudo apt-get install -y "$pkg_apt"
@@ -90,6 +90,13 @@ echo ">>> Configuring build with coverage..."
 if [[ -d "$BUILD_DIR" && -f "$BUILD_DIR/CMakeCache.txt" && -f "$BUILD_DIR/build.ninja" ]]; then
     echo ">>> Using cached build directory..."
     cd "$BUILD_DIR"
+
+    PKGCONFIG_DEBUG_DIR="$BUILD_DIR/vcpkg_installed/x64-linux/debug/lib/pkgconfig"
+    if [[ -d "$PKGCONFIG_DEBUG_DIR" ]]; then
+        export PKG_CONFIG_PATH="$PKGCONFIG_DEBUG_DIR:${PKG_CONFIG_PATH:-}"
+        echo ">>> Refreshing CMake configuration to pick up vcpkg debug pkg-config libs..."
+        cmake .
+    fi
 else
     # Clean up any partial build
     rm -rf "$BUILD_DIR"
@@ -111,6 +118,13 @@ else
         fi
         CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=$PROJECT_ROOT/external/vcpkg/scripts/buildsystems/vcpkg.cmake"
         CMAKE_ARGS="$CMAKE_ARGS -DUSE_SFML=ON"
+
+        # Ensure pkg-config uses the vcpkg debug pkgconfig directory so linker can
+        # find debug libs (e.g., libSDL2d.a) during coverage builds
+        PKGCONFIG_DEBUG_DIR="$BUILD_DIR/vcpkg_installed/x64-linux/debug/lib/pkgconfig"
+        if [[ -d "$PKGCONFIG_DEBUG_DIR" ]]; then
+            export PKG_CONFIG_PATH="$PKGCONFIG_DEBUG_DIR:${PKG_CONFIG_PATH:-}"
+        fi
     elif [[ -d "$PROJECT_ROOT/external/vcpkg" ]]; then
         echo ">>> Using vcpkg submodule..."
         # Ensure submodule is initialized
@@ -124,9 +138,21 @@ else
             "$PROJECT_ROOT/external/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
         fi
         CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=$PROJECT_ROOT/external/vcpkg/scripts/buildsystems/vcpkg.cmake -DUSE_SFML=ON"
+
+        # Export vcpkg pkg-config debug dir when using submodule to help linker find debug libs
+        PKGCONFIG_DEBUG_DIR="$PROJECT_ROOT/external/vcpkg/installed/x64-linux/debug/lib/pkgconfig"
+        if [[ -d "$PKGCONFIG_DEBUG_DIR" ]]; then
+            export PKG_CONFIG_PATH="$PKGCONFIG_DEBUG_DIR:${PKG_CONFIG_PATH:-}"
+        fi
     elif [[ -n "$VCPKG_ROOT" ]]; then
         echo ">>> Using VCPKG_ROOT: $VCPKG_ROOT"
         CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DUSE_SFML=ON"
+
+        # Export vcpkg pkg-config debug dir when VCPKG_ROOT is set
+        PKGCONFIG_DEBUG_DIR="$VCPKG_ROOT/installed/x64-linux/debug/lib/pkgconfig"
+        if [[ -d "$PKGCONFIG_DEBUG_DIR" ]]; then
+            export PKG_CONFIG_PATH="$PKGCONFIG_DEBUG_DIR:${PKG_CONFIG_PATH:-}"
+        fi
     else
         echo "Error: Could not find vcpkg installation"
         echo "Please either:"
@@ -185,8 +211,18 @@ if $GENERATE_HTML; then
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/src/games/snake/*' \
+        '*/lib/display/SDL2/*' \
+        '*/src/server/shared/AdminServer.*' \
         '*/serverApp.cpp' \
+        '*/ServerApp.cpp' \
         '*/NetworkClient.cpp' \
+        '*/NetworkServer.cpp' \
+        '*/AdminServer.cpp' \
+        '*/LobbyDiscoveryServer.cpp' \
+        '*/DataDrivenSpawnerSystem.cpp' \
+        '*/PrefabLoader.cpp' \
+        '*/TomlParser.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
     if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then
@@ -313,8 +349,18 @@ else
         '*/cmake/*' \
         '*/tools/*' \
         '*/saves/*' \
+        '*/src/games/snake/*' \
+        '*/lib/display/SDL2/*' \
+        '*/src/server/shared/AdminServer.*' \
         '*/serverApp.cpp' \
+        '*/ServerApp.cpp' \
         '*/NetworkClient.cpp' \
+        '*/NetworkServer.cpp' \
+        '*/AdminServer.cpp' \
+        '*/LobbyDiscoveryServer.cpp' \
+        '*/DataDrivenSpawnerSystem.cpp' \
+        '*/PrefabLoader.cpp' \
+        '*/TomlParser.cpp' \
         --output-file "$COVERAGE_DIR/coverage.info" \
         $LCOV_OPTS || true
     if [[ ! -s "$COVERAGE_DIR/coverage.info" ]]; then

@@ -7,7 +7,11 @@
 
 #include "Registry.hpp"
 
+#include <iostream>
+
 namespace ECS {
+
+Registry::~Registry() {}
 
 // ========================================================================
 // ENTITY LIFECYCLE

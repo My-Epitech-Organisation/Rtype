@@ -29,25 +29,37 @@ enum class GameState : std::uint8_t {
  * @brief Entity type enumeration for S_ENTITY_SPAWN payload
  */
 enum class EntityType : std::uint8_t {
-    Player = 0,   ///< Player spaceship
-    Bydos = 1,    ///< Enemy (Bydos)
-    Missile = 2,  ///< Projectile
-    Pickup = 3,   ///< Collectible / power-up
-    Obstacle = 4  ///< Static or moving obstacle
+    Player = 0,    ///< Player spaceship
+    Bydos = 1,     ///< Enemy (Bydos)
+    Missile = 2,   ///< Projectile
+    Pickup = 3,    ///< Collectible / power-up
+    Obstacle = 4,  ///< Static or moving obstacle
+    ForcePod = 5,  ///< Force Pod companion
+    LaserBeam = 6,   ///< Continuous laser beam weapon
+    Boss = 7,      ///< Boss entity
+    BossPart = 8   ///< Boss weak point / body part
 };
 
 /**
  * @brief Input mask flags for C_INPUT payload
  *
  * Can be combined with bitwise OR for simultaneous inputs.
+ * Bits 6-7 encode charge level for charged shots.
  */
 namespace InputMask {
-inline constexpr std::uint8_t kNone = 0x00;
-inline constexpr std::uint8_t kUp = 0x01;
-inline constexpr std::uint8_t kDown = 0x02;
-inline constexpr std::uint8_t kLeft = 0x04;
-inline constexpr std::uint8_t kRight = 0x08;
-inline constexpr std::uint8_t kShoot = 0x10;
+inline constexpr std::uint16_t kNone = 0x00;
+inline constexpr std::uint16_t kUp = 0x01;
+inline constexpr std::uint16_t kDown = 0x02;
+inline constexpr std::uint16_t kLeft = 0x04;
+inline constexpr std::uint16_t kRight = 0x08;
+inline constexpr std::uint16_t kShoot = 0x10;
+inline constexpr std::uint16_t kForcePod = 0x20;
+inline constexpr std::uint16_t kChargeShot = 0x40;
+inline constexpr std::uint16_t kChargeLevelMask = 0xC0;
+inline constexpr std::uint16_t kChargeLevel1 = 0x40;
+inline constexpr std::uint16_t kChargeLevel2 = 0x80;
+inline constexpr std::uint16_t kChargeLevel3 = 0xC0;
+inline constexpr std::uint16_t kWeaponSwitch = 0x100;
 }  // namespace InputMask
 
 #pragma pack(push, 1)
@@ -119,6 +131,8 @@ struct UpdateStatePayload {
  */
 struct GameOverPayload {
     std::uint32_t finalScore{0};
+    std::uint8_t isVictory{0};  ///< 1 if player won (completed all levels), 0 if defeated
+    std::uint8_t padding[3]{0, 0, 0};  ///< Padding for alignment
 };
 
 /**
@@ -138,6 +152,7 @@ struct LobbyInfo {
     std::uint8_t playerCount;
     std::uint8_t maxPlayers;
     std::uint8_t isActive;
+    std::array<char, 16> levelName;
 };
 
 /**
@@ -156,7 +171,7 @@ struct LobbyListHeader {
  * Limited by payload size: (kMaxPayloadSize - 1) / sizeof(LobbyInfo)
  * = (1384 - 1) / 11 = 125 lobbies (well above our max of 16)
  */
-inline constexpr std::size_t kMaxLobbiesInResponse = 125;
+inline constexpr std::size_t kMaxLobbiesInResponse = 50;
 
 /**
  * @brief Payload for S_ENTITY_SPAWN (0x10)
@@ -180,23 +195,41 @@ struct EntitySpawnPayload {
  *
  * Regular position/velocity update for an entity.
  * Unreliable - lost packets are corrected by next update.
+ *
+ * Uses fixed-point quantization to reduce bandwidth and a server tick to
+ * allow client-side interpolation.
  */
 struct EntityMovePayload {
-    std::uint32_t entityId;
-    float posX;
-    float posY;
-    float velX;
-    float velY;
+    std::uint32_t entityId;   ///< Network entity id
+    std::uint32_t serverTick; ///< Monotonic server tick for interpolation
+    std::int16_t posX;        ///< Quantized position X (fixed-point)
+    std::int16_t posY;        ///< Quantized position Y (fixed-point)
+    std::int16_t velX;        ///< Quantized velocity X (fixed-point)
+    std::int16_t velY;        ///< Quantized velocity Y (fixed-point)
 };
 
 /**
  * @brief Header for S_ENTITY_MOVE_BATCH (0x15)
  *
- * Variable-length payload: count + array of EntityMovePayload entries.
- * The full payload size is: 1 + (count * 20) bytes.
+ * Variable-length payload: header (5 bytes) + array of EntityMoveBatchEntry.
+ * The full payload size is: 5 + (count * 12) bytes.
  */
 struct EntityMoveBatchHeader {
-    std::uint8_t count;  ///< Number of entity updates in this batch (1-69)
+    std::uint8_t count;       ///< Number of entity updates in this batch (1-115)
+    std::uint32_t serverTick; ///< Shared server tick for all entries
+};
+
+/**
+ * @brief Compact entry for batched entity moves (no serverTick - shared in header)
+ *
+ * 12 bytes per entity vs 16 bytes in EntityMovePayload = 25% savings
+ */
+struct EntityMoveBatchEntry {
+    std::uint32_t entityId;   ///< Network entity id
+    std::int16_t posX;        ///< Quantized position X (fixed-point)
+    std::int16_t posY;        ///< Quantized position Y (fixed-point)
+    std::int16_t velX;        ///< Quantized velocity X (fixed-point)
+    std::int16_t velY;        ///< Quantized velocity Y (fixed-point)
 };
 
 /**
@@ -216,15 +249,17 @@ struct JoinLobbyPayload {
 struct JoinLobbyResponsePayload {
     std::uint8_t accepted;      ///< 1 = accepted, 0 = rejected
     std::uint8_t reason;        ///< Reason code (0 = success, 1 = invalid code, 2 = lobby full)
+    std::array<char, 16> levelName;
 };
 
 /**
  * @brief Maximum entities per batch packet
  *
- * Limited by payload size: (kMaxPayloadSize - 1) / sizeof(EntityMovePayload)
- * = (1384 - 1) / 20 = 69 entities
+ * Limited by payload size: (kMaxPayloadSize - 5) / sizeof(EntityMoveBatchEntry)
+ * = (1384 - 5) / 12 = 114 entities
  */
-inline constexpr std::size_t kMaxEntitiesPerBatch = 69;
+// Payload size: 5 byte header + N * 12 bytes (EntityMoveBatchEntry)
+inline constexpr std::size_t kMaxEntitiesPerBatch = 114;
 
 /**
  * @brief Payload for S_ENTITY_DESTROY (0x12)
@@ -258,12 +293,23 @@ struct PowerUpEventPayload {
 };
 
 /**
+ * @brief Payload for S_LEVEL_ANNOUNCE (0x18)
+ *
+ * Server announces name of new level for visual notification.
+ */
+struct LevelAnnouncePayload {
+    std::array<char, 32> levelName;
+    std::array<char, 32> background;
+    std::array<char, 32> levelMusic;
+};
+
+/**
  * @brief Payload for C_INPUT (0x20)
  *
  * Client sends current input state to server.
  */
 struct InputPayload {
-    std::uint8_t inputMask;
+    std::uint16_t inputMask;
 
     [[nodiscard]] constexpr bool isUp() const noexcept {
         return (inputMask & InputMask::kUp) != 0;
@@ -279,6 +325,19 @@ struct InputPayload {
     }
     [[nodiscard]] constexpr bool isShoot() const noexcept {
         return (inputMask & InputMask::kShoot) != 0;
+    }
+    [[nodiscard]] constexpr bool isChargeShot() const noexcept {
+        return (inputMask & InputMask::kChargeLevelMask) != 0;
+    }
+    /**
+     * @brief Get charge level (0 = none, 1-3 = charge levels)
+     */
+    [[nodiscard]] constexpr std::uint8_t getChargeLevel() const noexcept {
+        std::uint16_t bits = inputMask & InputMask::kChargeLevelMask;
+        if (bits == InputMask::kChargeLevel3) return 3;
+        if (bits == InputMask::kChargeLevel2) return 2;
+        if (bits == InputMask::kChargeLevel1) return 1;
+        return 0;
     }
 };
 
@@ -329,6 +388,69 @@ struct PlayerReadyStatePayload {
     std::uint8_t isReady;
 };
 
+/**
+ * @brief Bandwidth mode enumeration for C_SET_BANDWIDTH_MODE
+ */
+enum class BandwidthMode : std::uint8_t {
+    Normal = 0,  ///< Full update rate (60Hz players, ~2Hz enemies)
+    Low = 1,     ///< Reduced update rate (~20Hz players, ~0.5Hz enemies)
+};
+
+/**
+ * @brief Payload for C_SET_BANDWIDTH_MODE (0x16)
+ * @note Reliable - client requests bandwidth mode preference
+ */
+struct BandwidthModePayload {
+    std::uint8_t mode;  ///< BandwidthMode value
+};
+
+/**
+ * @brief Payload for S_BANDWIDTH_MODE_CHANGED (0x17)
+ * @note Reliable - server broadcasts bandwidth mode change to all clients
+ */
+struct BandwidthModeChangedPayload {
+    std::uint32_t userId;  ///< User who changed the mode
+    std::uint8_t mode;     ///< BandwidthMode value (0=Normal, 1=Low)
+    std::uint8_t activeCount;  ///< Number of clients with low bandwidth enabled
+};
+
+/**
+ * @brief Payload for C_CHAT and S_CHAT (0x30/0x31)
+ */
+struct ChatPayload {
+    std::uint32_t userId; // 0 for system messages or sender id
+    char message[256];
+};
+
+/**
+ * @brief Admin command types for C_ADMIN_COMMAND (0xD0)
+ */
+enum class AdminCommandType : std::uint8_t {
+    GodMode = 0x01,  ///< Toggle invincibility
+};
+
+/**
+ * @brief Payload for C_ADMIN_COMMAND (0xD0)
+ *
+ * Client requests admin action (validated server-side for localhost only).
+ */
+struct AdminCommandPayload {
+    std::uint8_t commandType;  ///< AdminCommandType
+    std::uint8_t param;        ///< 0 = off, 1 = on, 2 = toggle
+};
+
+/**
+ * @brief Payload for S_ADMIN_RESPONSE (0xD1)
+ *
+ * Server responds to admin command with success/failure and message.
+ */
+struct AdminResponsePayload {
+    std::uint8_t commandType;  ///< AdminCommandType echoed back
+    std::uint8_t success;      ///< 0 = failed, 1 = success
+    std::uint8_t newState;     ///< Resulting state (0 = off, 1 = on)
+    char message[61];          ///< Response message (max 60 chars + null)
+};
+
 #pragma pack(pop)
 
 static_assert(sizeof(ConnectPayload) == 1,
@@ -347,6 +469,10 @@ static_assert(sizeof(PongPayload) == 1,
               "returns 0 bytes");
 static_assert(sizeof(LobbyReadyPayload) == 1,
               "LobbyReadyPayload must be 1 byte (uint8_t)");
+static_assert(sizeof(BandwidthModePayload) == 1,
+              "BandwidthModePayload must be 1 byte (uint8_t)");
+static_assert(sizeof(BandwidthModeChangedPayload) == 6,
+              "BandwidthModeChangedPayload must be 6 bytes (4+1+1)");
 
 static_assert(sizeof(AcceptPayload) == 4,
               "AcceptPayload must be 4 bytes (uint32_t)");
@@ -354,35 +480,43 @@ static_assert(sizeof(GetUsersResponseHeader) == 1,
               "GetUsersResponseHeader must be 1 byte");
 static_assert(sizeof(UpdateStatePayload) == 1,
               "UpdateStatePayload must be 1 byte");
-static_assert(sizeof(GameOverPayload) == 4,
-              "GameOverPayload must be 4 bytes (uint32_t)");
+static_assert(sizeof(GameOverPayload) == 8,
+              "GameOverPayload must be 8 bytes (uint32_t + uint8_t + padding)");
 static_assert(sizeof(EntitySpawnPayload) == 14,
               "EntitySpawnPayload must be 14 bytes (4+1+1+4+4)");
-static_assert(sizeof(EntityMovePayload) == 20,
-              "EntityMovePayload must be 20 bytes (4+4+4+4+4)");
-static_assert(sizeof(EntityMoveBatchHeader) == 1,
-              "EntityMoveBatchHeader must be 1 byte");
+static_assert(sizeof(EntityMovePayload) == 16,
+              "EntityMovePayload must be 16 bytes (4+4+2+2+2+2)");
+static_assert(sizeof(EntityMoveBatchHeader) == 5,
+              "EntityMoveBatchHeader must be 5 bytes (1+4)");
+static_assert(sizeof(EntityMoveBatchEntry) == 12,
+              "EntityMoveBatchEntry must be 12 bytes (4+2+2+2+2)");
 static_assert(sizeof(EntityDestroyPayload) == 4,
               "EntityDestroyPayload must be 4 bytes");
 static_assert(sizeof(EntityHealthPayload) == 12,
               "EntityHealthPayload must be 12 bytes (4+4+4)");
 static_assert(sizeof(PowerUpEventPayload) == 9,
               "PowerUpEventPayload must be 9 bytes (4+1+4)");
-static_assert(sizeof(InputPayload) == 1, "InputPayload must be 1 byte");
+static_assert(sizeof(InputPayload) == 2, "InputPayload must be 2 bytes");
 static_assert(sizeof(UpdatePosPayload) == 8,
               "UpdatePosPayload must be 8 bytes (4+4)");
 static_assert(sizeof(GameStartPayload) == 4,
               "GameStartPayload must be 4 bytes (float)");
 static_assert(sizeof(PlayerReadyStatePayload) == 5,
               "PlayerReadyStatePayload must be 5 bytes (4+1)");
-static_assert(sizeof(LobbyInfo) == 11,
-              "LobbyInfo must be 11 bytes (6+2+1+1+1)");
+static_assert(sizeof(LobbyInfo) == 27,
+              "LobbyInfo must be 27 bytes (6+2+1+1+1+16)");
 static_assert(sizeof(LobbyListHeader) == 1,
               "LobbyListHeader must be 1 byte");
 static_assert(sizeof(JoinLobbyPayload) == 6,
               "JoinLobbyPayload must be 6 bytes (char[6])");
-static_assert(sizeof(JoinLobbyResponsePayload) == 2,
-              "JoinLobbyResponsePayload must be 2 bytes (uint8_t+uint8_t)");
+static_assert(sizeof(JoinLobbyResponsePayload) == 18,
+              "JoinLobbyResponsePayload must be 18 bytes (uint8_t+uint8_t+char[16])");
+static_assert(sizeof(ChatPayload) == 260,
+              "ChatPayload must be 260 bytes (4+256)");
+static_assert(sizeof(AdminCommandPayload) == 2,
+              "AdminCommandPayload must be 2 bytes (1+1)");
+static_assert(sizeof(AdminResponsePayload) == 64,
+              "AdminResponsePayload must be 64 bytes (1+1+1+61)");
 
 static_assert(std::is_trivially_copyable_v<AcceptPayload>);
 static_assert(std::is_trivially_copyable_v<UpdateStatePayload>);
@@ -398,6 +532,9 @@ static_assert(std::is_trivially_copyable_v<UpdatePosPayload>);
 static_assert(std::is_trivially_copyable_v<LobbyReadyPayload>);
 static_assert(std::is_trivially_copyable_v<GameStartPayload>);
 static_assert(std::is_trivially_copyable_v<PlayerReadyStatePayload>);
+static_assert(std::is_trivially_copyable_v<ChatPayload>);
+static_assert(std::is_trivially_copyable_v<AdminCommandPayload>);
+static_assert(std::is_trivially_copyable_v<AdminResponsePayload>);
 
 static_assert(std::is_standard_layout_v<AcceptPayload>);
 static_assert(std::is_standard_layout_v<UpdateStatePayload>);
@@ -413,6 +550,9 @@ static_assert(std::is_standard_layout_v<UpdatePosPayload>);
 static_assert(std::is_standard_layout_v<LobbyReadyPayload>);
 static_assert(std::is_standard_layout_v<GameStartPayload>);
 static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
+static_assert(std::is_standard_layout_v<ChatPayload>);
+static_assert(std::is_standard_layout_v<AdminCommandPayload>);
+static_assert(std::is_standard_layout_v<AdminResponsePayload>);
 
 /**
  * @brief Get the expected payload size for a given OpCode
@@ -433,6 +573,8 @@ static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
 
         case OpCode::S_ACCEPT:
             return sizeof(AcceptPayload);
+        case OpCode::S_LEVEL_ANNOUNCE:
+            return sizeof(LevelAnnouncePayload);
         case OpCode::R_GET_USERS:
             return 0;
         case OpCode::S_UPDATE_STATE:
@@ -458,6 +600,10 @@ static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
             return sizeof(EntityMovePayload);
         case OpCode::S_ENTITY_MOVE_BATCH:
             return 0;  // Variable-length payload
+        case OpCode::C_SET_BANDWIDTH_MODE:
+            return sizeof(BandwidthModePayload);
+        case OpCode::S_BANDWIDTH_MODE_CHANGED:
+            return sizeof(BandwidthModeChangedPayload);
         case OpCode::S_ENTITY_DESTROY:
             return sizeof(EntityDestroyPayload);
         case OpCode::S_ENTITY_HEALTH:
@@ -465,12 +611,21 @@ static_assert(std::is_standard_layout_v<PlayerReadyStatePayload>);
         case OpCode::S_POWERUP_EVENT:
             return sizeof(PowerUpEventPayload);
 
+        case OpCode::C_CHAT:
+        case OpCode::S_CHAT:
+            return sizeof(ChatPayload);
+
         case OpCode::C_INPUT:
             return sizeof(InputPayload);
         case OpCode::S_UPDATE_POS:
             return sizeof(UpdatePosPayload);
         case OpCode::DISCONNECT:
             return sizeof(DisconnectPayload);
+
+        case OpCode::C_ADMIN_COMMAND:
+            return sizeof(AdminCommandPayload);
+        case OpCode::S_ADMIN_RESPONSE:
+            return sizeof(AdminResponsePayload);
     }
     return 0;
 }

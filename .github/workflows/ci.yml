@@ -412,43 +412,76 @@ jobs:
             -DUSE_SFML=ON
 
       - name: Build
-        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml
+        run: cmake --build --preset ${{ matrix.preset }} --target r-type_client r-type_server rtype-display-sfml rtype-graphic-background-asteroidsSpace rtype-graphic-background-lobby rtype-graphic-background-labs rtype-graphic-background-spatialStation rtype-graphic-background-meteorInside rtype-graphic-background-blackHole rtype-graphic-music-chillMusic rtype-graphic-music-battleMusic rtype-graphic-music-exploreMusic
 
       - name: Prepare Windows dist (exe + DLLs only)
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          mkdir -p build/dist/client build/dist/server
-          echo "Staging Windows client + DLLs"
+          mkdir -p build/dist/client/plugins/background build/dist/client/plugins/music build/dist/server
+          echo "Staging Windows client executable"
           if ! ls build/src/client/*.exe >/dev/null 2>&1; then
             echo "Error: No client executable found"
             exit 1
           fi
           cp -v build/src/client/*.exe build/dist/client/
-          echo "Staging Display lib"
-          if ! ls build/lib/display/**/*.dll >/dev/null 2>&1; then
-            echo "Error: No display lib found"
+
+          echo "Staging Display plugin to plugins/"
+          if ! ls build/lib/display/SFML/*.dll >/dev/null 2>&1; then
+            echo "❌ Error: Display DLL not found at build/lib/display/SFML/"
             exit 1
           fi
-          cp -v build/lib/display/**/*.dll build/dist/client/
+          # Copy the display DLL(s) and ensure one is named display.dll for downstream validation
+          cp -v build/lib/display/SFML/*.dll build/dist/client/plugins/
+          # If the expected display.dll is not present, copy the first display DLL and name it display.dll
+          if [ ! -f build/dist/client/plugins/display.dll ]; then
+            FIRST_DLL=$(ls build/dist/client/plugins/*.dll | head -n1 || true)
+            if [ -n "$FIRST_DLL" ]; then
+              cp -v "$FIRST_DLL" build/dist/client/plugins/display.dll
+              echo "✅ Renamed $FIRST_DLL → display.dll"
+            fi
+          fi
+          echo "✅ Copied display DLL(s) to plugins/"
+
+          echo "Staging Background plugins to plugins/background/"
+          if ! ls build/lib/background/**/*.dll >/dev/null 2>&1; then
+            echo "❌ Error: Background DLL not found at build/lib/background/"
+            exit 1
+          fi
+          cp -v build/lib/background/**/*.dll build/dist/client/plugins/background/
+          echo "✅ Copied background DLL(s) to plugins/background/"
+
+          echo "Staging Audio/Music plugins to plugins/music/"
+          if ! ls build/lib/audio/**/*.dll >/dev/null 2>&1; then
+            echo "❌ Error: Audio DLL not found at build/lib/audio/"
+            exit 1
+          fi
+          cp -v build/lib/audio/**/*.dll build/dist/client/plugins/music/
+          echo "✅ Copied audio DLL(s) to plugins/music/"
+
+          echo "Staging vcpkg runtime dependencies to root"
           if ! ls build/vcpkg_installed/x64-windows/bin/*.dll >/dev/null 2>&1; then
-            echo "Error: No DLLs found for client"
+            echo "Error: No vcpkg DLLs found for client"
             exit 1
           fi
           cp -v build/vcpkg_installed/x64-windows/bin/*.dll build/dist/client/
-          echo "Client dist contents:" && ls -la build/dist/client/ || true
-          echo "Staging Windows server + DLLs"
+          echo "✅ Client dist contents:" && find build/dist/client -type f | head -20
+
+          echo ""
+          echo "Staging Windows server executable"
           if ! ls build/src/server/*.exe >/dev/null 2>&1; then
             echo "Error: No server executable found"
             exit 1
           fi
           cp -v build/src/server/*.exe build/dist/server/
+
+          echo "Staging server vcpkg dependencies"
           if ! ls build/vcpkg_installed/x64-windows/bin/*.dll >/dev/null 2>&1; then
-            echo "Error: No DLLs found for server"
+            echo "Error: No vcpkg DLLs found for server"
             exit 1
           fi
           cp -v build/vcpkg_installed/x64-windows/bin/*.dll build/dist/server/
-          echo "Server dist contents:" && ls -la build/dist/server/ || true
+          echo "✅ Server dist contents:" && ls -la build/dist/server/
 
       - name: Upload Client Artifact (Windows)
         if: matrix.os == 'windows-latest'
@@ -470,9 +503,38 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
-          mkdir -p build/dist/client
-          cp build/src/client/r-type_client build/dist/client/
-          cp -r build/lib/display/**/*.so build/dist/client/ 2>/dev/null || true
+          mkdir -p build/dist/client/plugins/background build/dist/client/plugins/music
+          echo "Staging Linux client executable"
+          if ! cp build/src/client/r-type_client build/dist/client/; then
+            echo "Error: Failed to copy client executable"
+            exit 1
+          fi
+
+          echo "Staging Display plugin to plugins/"
+          if ! ls build/lib/display/SFML/*.so >/dev/null 2>&1; then
+            echo "❌ Error: Display .so not found at build/lib/display/SFML/"
+            exit 1
+          fi
+          cp -v build/lib/display/SFML/*.so build/dist/client/plugins/display.so
+          echo "✅ Copied display .so to plugins/"
+
+          echo "Staging Background plugins to plugins/background/"
+          if ! ls build/lib/background/**/*.so >/dev/null 2>&1; then
+            echo "❌ Error: Background .so not found at build/lib/background/"
+            exit 1
+          fi
+          cp -v build/lib/background/**/*.so build/dist/client/plugins/background/
+          echo "✅ Copied background .so(s) to plugins/background/"
+
+          echo "Staging Audio/Music plugins to plugins/music/"
+          if ! ls build/lib/audio/**/*.so >/dev/null 2>&1; then
+            echo "❌ Error: Audio .so not found at build/lib/audio/"
+            exit 1
+          fi
+          cp -v build/lib/audio/**/*.so build/dist/client/plugins/music/
+          echo "✅ Copied audio .so(s) to plugins/music/"
+
+          echo "✅ Client dist contents:" && find build/dist/client -type f
 
       - name: Upload Client Artifact (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -495,6 +557,17 @@ jobs:
         run: |
           echo "### 🔨 Build Results (${{ matrix.os }})" >> $GITHUB_STEP_SUMMARY
           echo "✅ Built using cached dependencies" >> $GITHUB_STEP_SUMMARY
+
+  call-release:
+    needs: [build, test]
+    if: always() && needs.build.result == 'success' && needs.test.result == 'success' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    uses: ./.github/workflows/release.yml
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets: inherit
+    with:
+      source_run_id: ${{ github.run_id }}
 
   mirror:
     name: "🪞 Push to Epitech Mirror"

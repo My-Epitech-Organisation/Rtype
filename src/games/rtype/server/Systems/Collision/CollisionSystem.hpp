@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <memory>
+#include <unordered_set>
 #include <utility>
 
 #include <rtype/engine.hpp>
@@ -78,8 +80,39 @@ class CollisionSystem : public ::rtype::engine::ASystem {
                                  ECS::Entity obstacle, ECS::Entity other,
                                  bool otherIsPlayer);
 
+    /**
+     * @brief Handle collision between a laser beam and an enemy
+     * @param registry ECS registry
+     * @param cmdBuffer Command buffer
+     * @param laser The laser beam entity
+     * @param enemy The enemy entity
+     * @param deltaTime Frame delta time for DPS calculation
+     */
+    void handleLaserEnemyCollision(ECS::Registry& registry,
+                                   ECS::CommandBuffer& cmdBuffer,
+                                   ECS::Entity laser, ECS::Entity enemy,
+                                   float deltaTime);
+
+    /**
+     * @brief Handle player picking up an orphan Force Pod
+     * @param registry ECS registry
+     * @param cmdBuffer Command buffer
+     * @param forcePod The orphan Force Pod entity
+     * @param player The player entity
+     */
+    void handleOrphanForcePodPickup(ECS::Registry& registry,
+                                    ECS::CommandBuffer& cmdBuffer,
+                                    ECS::Entity forcePod, ECS::Entity player);
+
     EventEmitter _emitEvent;
     std::unique_ptr<shared::QuadTreeSystem> _quadTreeSystem;
+
+    /// Tracks laser-enemy pairs damaged this frame to prevent double hits
+    std::unordered_set<uint64_t> _laserDamagedThisFrame;
+
+    /// Tracks obstacle-entity pairs that have collided to prevent repeated
+    /// damage
+    std::unordered_set<uint64_t> _obstacleCollidedThisFrame;
 };
 
 }  // namespace rtype::games::rtype::server

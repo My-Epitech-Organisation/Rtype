@@ -75,6 +75,18 @@ class MainMenuScene : public AScene {
     void _updateStatus(const std::string& message,
                        ::rtype::display::Color color);
 
+    /**
+     * @brief Add an entity to the connection section
+     * @param entity Entity to add
+     */
+    void _addEntityToConnectSection(ECS::Entity entity);
+
+    /**
+     * @brief Add multiple entities to the connection section
+     * @param entity Vector of entities to add
+     */
+    void _addEntityToConnectSection(std::vector<ECS::Entity> entity);
+
    public:
     void update(float dt) override;
     void render(std::shared_ptr<::rtype::display::IDisplay> window) override;
@@ -84,6 +96,7 @@ class MainMenuScene : public AScene {
         std::shared_ptr<ECS::Registry> ecs,
         std::shared_ptr<AssetManager> textureManager,
         std::shared_ptr<::rtype::display::IDisplay> window,
+        std::function<void(const std::string&)> setBackground,
         std::function<void(const SceneManager::Scene&)> switchToScene,
         std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,
         std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem =

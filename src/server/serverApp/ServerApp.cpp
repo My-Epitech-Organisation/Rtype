@@ -8,10 +8,13 @@
 #include "ServerApp.hpp"
 
 #include <algorithm>
+#include <filesystem>
 #include <memory>
 #include <span>
 #include <string>
 
+#include "games/rtype/server/GameEngine.hpp"
+#include "games/rtype/server/RTypeGameConfig.hpp"
 #include "games/rtype/shared/Components/EntityType.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
@@ -43,6 +46,13 @@ ServerApp::ServerApp(uint16_t port, size_t maxPlayers, uint32_t tickRate,
 void ServerApp::setLobbyCode(const std::string& code) {
     if (_networkServer) {
         _networkServer->setExpectedLobbyCode(code);
+    }
+}
+
+void ServerApp::broadcastMessage(const std::string& message) {
+    if (_networkServer) {
+        // userId 0 is reserved for system messages
+        _networkServer->broadcastChat(0, message);
     }
 }
 
@@ -140,6 +150,21 @@ void ServerApp::onUpdate(float deltaTime) {
             _serverLoop ? _serverLoop->getTickOverruns() : 0;
 
         _metrics->addSnapshot(snapshot);
+
+        // BANDWIDTH DEBUG OUTPUT
+        // uint64_t totalBytesSent =
+        // _metrics->bytesSent.load(std::memory_order_relaxed); uint64_t
+        // avgBytesSentPerSec = totalBytesSent / (_metrics->getUptimeSeconds() >
+        // 0 ? _metrics->getUptimeSeconds() : 1);
+
+        // LOG_INFO_CAT(::rtype::LogCategory::Network,
+        //              "[BANDWIDTH] Uptime: " << _metrics->getUptimeSeconds()
+        //              << "s | " "Players: " << playerCount << " | " "Total
+        //              sent: " << totalBytesSent << " bytes | " "Avg: " <<
+        //              avgBytesSentPerSec << " B/s | " "Packets sent: " <<
+        //              snapshot.packetsSent << " | " "Packets received: " <<
+        //              snapshot.packetsReceived << " | " "Packet loss: " <<
+        //              snapshot.packetLossPercent << "%");
     }
 
     _stateManager->update(deltaTime);
@@ -265,22 +290,48 @@ void ServerApp::setLobbyManager(LobbyManager* lobbyManager) {
     }
 }
 
+bool ServerApp::changeLevel(const std::string& levelId, bool force) {
+    if (isPlaying() && !force) {
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[Server] Cannot change level while game is running");
+        return false;
+    }
+
+    std::filesystem::path path(levelId);
+    std::string cleanId = path.stem().string();
+
+    if (!force) {
+        _initialLevel = cleanId;
+    }
+
+    if (_networkServer) {
+        _networkServer->setLevelId(cleanId);
+        _networkServer->broadcastLevelInfo();
+    }
+
+    if (_gameEngine) {
+        std::string levelPath = "config/game/levels/" + cleanId + ".toml";
+        if (!_gameEngine->loadLevelFromFile(levelPath)) {
+            LOG_ERROR_CAT(
+                ::rtype::LogCategory::GameEngine,
+                "[Server] Failed to load level '" << levelPath << "'");
+            return false;
+        }
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[Server] Level changed to: " << cleanId);
+    }
+    return true;
+}
+
 bool ServerApp::isRunning() const noexcept {
     return !_shutdownFlag->load(std::memory_order_acquire);
 }
 
 size_t ServerApp::getConnectedClientCount() const noexcept {
-    if (_networkServer) {
-        return _networkServer->getClientCount();
-    }
     return _clientManager.getConnectedClientCount();
 }
 
 std::vector<ClientId> ServerApp::getConnectedClientIds() const {
-    if (_networkServer) {
-        auto users = _networkServer->getConnectedClients();
-        return std::vector<ClientId>(users.begin(), users.end());
-    }
     return _clientManager.getConnectedClientIds();
 }
 
@@ -307,17 +358,47 @@ bool ServerApp::initialize() {
                       "[Server] Failed to create game engine");
         return false;
     }
+
+    // Pass laser configuration to game engine before initialization
+    if (_gameConfig) {
+        auto* rtypeEngine =
+            dynamic_cast<games::rtype::server::GameEngine*>(_gameEngine.get());
+        auto* rtypeConfig =
+            dynamic_cast<games::rtype::server::RTypeGameConfig*>(
+                _gameConfig.get());
+        if (rtypeEngine && rtypeConfig) {
+            rtypeEngine->setLaserConfig(
+                rtypeConfig->getRTypeConfig().gameplay.laser);
+        }
+    }
+
     if (!_gameEngine->initialize()) {
         LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
                       "[Server] Failed to initialize game engine");
         return false;
     }
+
+    if (!_initialLevel.empty()) {
+        std::string levelPath = "config/game/levels/" + _initialLevel + ".toml";
+        if (!_gameEngine->loadLevelFromFile(levelPath)) {
+            LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                            "[Server] Failed to load level '"
+                                << levelPath << "' - using default/fallback");
+        } else {
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "[Server] Level loaded: " << _initialLevel);
+        }
+    }
+
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                  "[Server] Game engine initialized");
 
     NetworkServer::Config netConfig;
     netConfig.clientTimeout =
         std::chrono::milliseconds(_clientTimeoutSeconds * 1000);
+    netConfig.reliabilityConfig.retransmitTimeout =
+        std::chrono::milliseconds(1000);
+    netConfig.reliabilityConfig.maxRetries = 15;
     _networkServer = std::make_shared<NetworkServer>(netConfig);
     _networkServer->setMetrics(_metrics);
 
@@ -363,6 +444,18 @@ bool ServerApp::initialize() {
         }
     });
 
+    _networkServer->onAdminCommand(
+        [this](std::uint32_t userId, std::uint8_t commandType,
+               std::uint8_t param, const std::string& clientIp) {
+            handleAdminCommand(userId, commandType, param, clientIp);
+        });
+
+    _networkServer->setGameStateChecker([this]() {
+        return _stateManager &&
+               (_stateManager->isPlaying() || _stateManager->isPaused() ||
+                _stateManager->isGameOver());
+    });
+
     std::string gameId = _gameConfig && _gameConfig->isInitialized()
                              ? _gameConfig->getGameId()
                              : "rtype";
@@ -404,8 +497,63 @@ bool ServerApp::initialize() {
             }
             return _entitySpawner->handlePlayerShoot(*entityOpt, networkId);
         });
+
+    _inputHandler->setChargedShotCallback([this](std::uint32_t networkId,
+                                                 float x, float y,
+                                                 std::uint8_t chargeLevel) {
+        if (!_gameEngine) {
+            return 0u;
+        }
+        auto* rtypeEngine =
+            dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                _gameEngine.get());
+        if (!rtypeEngine) {
+            return 0u;
+        }
+        return rtypeEngine->spawnChargedProjectile(networkId, x, y,
+                                                   chargeLevel);
+    });
+
+    _inputHandler->setForcePodLaunchCallback(
+        [this](std::uint32_t playerNetworkId) {
+            if (!_gameEngine) {
+                return;
+            }
+            auto* rtypeEngine =
+                dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                    _gameEngine.get());
+            if (!rtypeEngine) {
+                return;
+            }
+            auto* launchSystem = rtypeEngine->getForcePodLaunchSystem();
+            if (launchSystem) {
+                launchSystem->handleForcePodInput(rtypeEngine->getRegistry(),
+                                                  playerNetworkId);
+            }
+        });
+
+    _inputHandler->setLaserInputCallback([this](ECS::Entity playerEntity,
+                                                std::uint32_t playerNetworkId,
+                                                bool isFiring) {
+        if (!_gameEngine) {
+            return;
+        }
+        auto* rtypeEngine =
+            dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                _gameEngine.get());
+        if (!rtypeEngine) {
+            return;
+        }
+        auto* laserSystem = rtypeEngine->getLaserBeamSystem();
+        if (laserSystem) {
+            laserSystem->handleLaserInput(rtypeEngine->getRegistry(),
+                                          playerEntity, playerNetworkId,
+                                          isFiring);
+        }
+    });
+
     _networkSystem->setInputHandler([this](std::uint32_t userId,
-                                           std::uint8_t inputMask,
+                                           std::uint16_t inputMask,
                                            std::optional<ECS::Entity> entity) {
         _inputHandler->handleInput(userId, inputMask, entity);
     });
@@ -414,16 +562,6 @@ bool ServerApp::initialize() {
         [this](GameState oldState, GameState newState) {
             handleStateChange(oldState, newState);
         });
-
-    _gameEngine->setEventCallback([this](const engine::GameEvent& event) {
-        if (_verbose) {
-            LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
-                          "[Server] Game event: type="
-                              << static_cast<int>(event.type)
-                              << " entityId=" << event.entityNetworkId);
-        }
-        onGameEvent(event);
-    });
 
     if (!rtype::server::isUdpPortAvailable(static_cast<uint16_t>(_port))) {
         LOG_ERROR_CAT(::rtype::LogCategory::GameEngine,
@@ -554,6 +692,54 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
             if (_networkSystem) {
                 _networkSystem->broadcastGameStart();
             }
+
+            {
+                std::string levelName;
+                std::string background;
+                std::string levelMusic;
+
+                if (_gameEngine) {
+                    auto* rtypeEngine =
+                        dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                            _gameEngine.get());
+                    if (rtypeEngine && rtypeEngine->getDataDrivenSpawner()) {
+                        levelName = rtypeEngine->getDataDrivenSpawner()
+                                        ->getWaveManager()
+                                        .getLevelName();
+                        background = rtypeEngine->getDataDrivenSpawner()
+                                         ->getWaveManager()
+                                         .getBackground();
+                        levelMusic = rtypeEngine->getDataDrivenSpawner()
+                                         ->getWaveManager()
+                                         .getLevelMusic();
+                        LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                                      "[Server] Level name from WaveManager: '"
+                                          << levelName << "' background: '"
+                                          << background << "' music: '"
+                                          << levelMusic << "'");
+                    }
+                }
+
+                if (levelName.empty() && !_initialLevel.empty()) {
+                    levelName = _initialLevel;
+                    LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
+                                  "[Server] Using _initialLevel as fallback: '"
+                                      << levelName << "'");
+                }
+
+                if (!levelName.empty() && _networkServer) {
+                    LOG_INFO_CAT(
+                        ::rtype::LogCategory::GameEngine,
+                        "[Server] Broadcasting initial level announce: "
+                            << levelName << " background: " << background
+                            << " music: " << levelMusic);
+                    _networkServer->broadcastLevelAnnounce(
+                        levelName, background, levelMusic);
+                } else {
+                    LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                                    "[Server] No level name to broadcast");
+                }
+            }
             break;
         case GameState::Paused:
             LOG_INFO_CAT(
@@ -572,19 +758,31 @@ void ServerApp::handleStateChange(GameState oldState, GameState newState) {
         case GameState::GameOver:
             LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                          "[Server] *** GAME OVER *** Final score=" << _score);
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "[Server] Victory Status: "
+                             << (_isVictory ? "VICTORY" : "DEFEAT"));
+
+            if (!_isVictory) {
+                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                             "[Server] Sending DEFEAT packet to all clients");
+            } else {
+                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                             "[Server] Sending VICTORY packet to all clients");
+            }
+
             if (_networkSystem) {
                 LOG_INFO_CAT(
                     ::rtype::LogCategory::GameEngine,
                     "[Server] Broadcasting GameOver via NetworkSystem");
                 _networkSystem->broadcastGameState(
                     NetworkServer::GameState::GameOver);
-                _networkSystem->broadcastGameOver(_score);
+                _networkSystem->broadcastGameOver(_score, _isVictory);
             } else if (_networkServer) {
                 LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
                              "[Server] Sending GameOver via NetworkServer");
                 _networkServer->updateGameState(
                     NetworkServer::GameState::GameOver);
-                _networkServer->sendGameOver(_score);
+                _networkServer->sendGameOver(_score, _isVictory);
             }
             resetToLobby();
             break;
@@ -689,7 +887,15 @@ void ServerApp::checkGameOverCondition() {
     }
 
     LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
-                 "[Server] All players defeated - ending game");
+                 "[Server] DEBUG: checkGameOverCondition triggered");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Alive players count: 0");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] All players defeated - ending game (DEFEAT)");
+    LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                 "[Server] Setting isVictory = false and shutting down engine");
+
+    _isVictory = false;
 
     if (_gameEngine && _gameEngine->isRunning()) {
         _gameEngine->shutdown();
@@ -714,12 +920,27 @@ void ServerApp::resetToLobby() {
     }
 
     _score = 0;
+    _isVictory = false;
 
     if (_gameEngine) {
         if (_gameEngine->isRunning()) {
             _gameEngine->shutdown();
         }
         _gameEngine->initialize();
+
+        if (_initialLevel.empty()) {
+            _initialLevel = "level_1";
+        }
+
+        std::string levelPath = "config/game/levels/" + _initialLevel + ".toml";
+        if (!_gameEngine->loadLevelFromFile(levelPath)) {
+            LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                            "[Server] Failed to reload level '"
+                                << levelPath << "' during lobby reset");
+        } else {
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "[Server] Level reset to: " << _initialLevel);
+        }
     }
     if (_stateManager) {
         _stateManager->reset();
@@ -743,24 +964,134 @@ void ServerApp::resetToLobby() {
 
 std::size_t ServerApp::countAlivePlayers() {
     if (!_registry) {
+        LOG_WARNING_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[ServerApp] countAlivePlayers: _registry is null! Returning 0.");
         return 0;
     }
 
     std::size_t aliveCount = 0;
+    std::size_t totalPlayers = 0;
     auto view = _registry->view<games::rtype::shared::PlayerTag,
                                 games::rtype::shared::HealthComponent>();
 
-    view.each([this, &aliveCount](
+    view.each([this, &aliveCount, &totalPlayers](
                   ECS::Entity entity, const games::rtype::shared::PlayerTag&,
                   const games::rtype::shared::HealthComponent& health) {
         bool markedForDestroy =
             _registry->hasComponent<games::rtype::shared::DestroyTag>(entity);
-        if (health.isAlive() && !markedForDestroy) {
+        totalPlayers++;
+
+        bool isAlive = health.isAlive();
+        if (isAlive && !markedForDestroy) {
             ++aliveCount;
+        } else {
+            // Only log why we think this player is dead if we are about to
+            // return 0 total alive
         }
     });
 
+    if (aliveCount == 0) {
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::GameEngine,
+            "[ServerApp] countAlivePlayers returned 0. Detailed scan:");
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "  - Registry p: " << _registry.get());
+
+        view.each([this](ECS::Entity entity,
+                         const games::rtype::shared::PlayerTag&,
+                         const games::rtype::shared::HealthComponent& health) {
+            bool markedForDestroy =
+                _registry->hasComponent<games::rtype::shared::DestroyTag>(
+                    entity);
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "  - Player Entity "
+                             << entity.id << ": Health=" << health.current
+                             << "/" << health.max
+                             << " Alive=" << health.isAlive()
+                             << " DestroyTag=" << markedForDestroy);
+        });
+
+        if (totalPlayers == 0) {
+            LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                         "  - NO PlayerTag entities found in registry!");
+            _registry->view<games::rtype::shared::PlayerTag>().each(
+                [](auto entity, auto&) {
+                    LOG_INFO_CAT(
+                        ::rtype::LogCategory::GameEngine,
+                        "  - Found entity "
+                            << entity.id
+                            << " with PlayerTag but MISSING HealthComponent??");
+                });
+        }
+    }
+
     return aliveCount;
+}
+
+void ServerApp::handleAdminCommand(std::uint32_t userId,
+                                   std::uint8_t commandType, std::uint8_t param,
+                                   const std::string& clientIp) {
+    // Validate localhost - only allow admin commands from the same machine
+    bool isLocalhost = (clientIp == "127.0.0.1" || clientIp == "::1" ||
+                        clientIp.rfind("127.", 0) == 0);
+
+    if (!isLocalhost) {
+        LOG_WARNING_CAT(::rtype::LogCategory::GameEngine,
+                        "[Server] Admin command rejected: "
+                            << clientIp << " is not localhost");
+        _networkServer->sendAdminResponse(
+            userId, commandType, false, 0,
+            "Admin commands only available from localhost");
+        return;
+    }
+
+    switch (static_cast<network::AdminCommandType>(commandType)) {
+        case network::AdminCommandType::GodMode: {
+            auto entityOpt = _networkSystem->findEntityByNetworkId(userId);
+            if (!entityOpt.has_value()) {
+                _networkServer->sendAdminResponse(userId, commandType, false, 0,
+                                                  "Player entity not found");
+                return;
+            }
+
+            ECS::Entity playerEntity = entityOpt.value();
+            bool hasGodMode =
+                _registry->hasComponent<games::rtype::shared::InvincibleTag>(
+                    playerEntity);
+            bool newState;
+
+            if (param == 2) {
+                newState = !hasGodMode;
+            } else {
+                newState = (param == 1);
+            }
+
+            if (newState && !hasGodMode) {
+                _registry
+                    ->emplaceComponent<games::rtype::shared::InvincibleTag>(
+                        playerEntity);
+                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                             "[Server] God mode ENABLED for userId=" << userId);
+            } else if (!newState && hasGodMode) {
+                _registry->removeComponent<games::rtype::shared::InvincibleTag>(
+                    playerEntity);
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::GameEngine,
+                    "[Server] God mode DISABLED for userId=" << userId);
+            }
+
+            std::string msg =
+                newState ? "God mode enabled" : "God mode disabled";
+            _networkServer->sendAdminResponse(userId, commandType, true,
+                                              newState ? 1 : 0, msg);
+            break;
+        }
+        default:
+            _networkServer->sendAdminResponse(userId, commandType, false, 0,
+                                              "Unknown command type");
+            break;
+    }
 }
 
 void ServerApp::onGameEvent(const engine::GameEvent& event) {
@@ -769,11 +1100,90 @@ void ServerApp::onGameEvent(const engine::GameEvent& event) {
     }
 
     if (event.type == engine::GameEventType::GameOver) {
+        auto* rtypeEngine =
+            dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                _gameEngine.get());
+
+        if (rtypeEngine) {
+            auto nextLevel =
+                rtypeEngine->getDataDrivenSpawner()->getNextLevel();
+
+            if (nextLevel && !nextLevel->empty()) {
+                LOG_WARNING_CAT(
+                    ::rtype::LogCategory::GameEngine,
+                    "[ServerApp] Ignoring GameOver event because next level '"
+                        << *nextLevel << "' is available");
+                return;
+            }
+        }
+
         LOG_INFO_CAT(
             ::rtype::LogCategory::GameEngine,
-            "[ServerApp] GameOver event received, transitioning to GameOver "
-            "state");
+            "[ServerApp] GameOver event received (VICTORY), transitioning to "
+            "GameOver state");
+        _isVictory = true;
         _stateManager->transitionTo(GameState::GameOver);
+        return;
+    }
+
+    if (event.type == engine::GameEventType::LevelComplete) {
+        LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                     "[ServerApp] LevelComplete event received");
+
+        auto* rtypeEngine =
+            dynamic_cast<rtype::games::rtype::server::GameEngine*>(
+                _gameEngine.get());
+        if (rtypeEngine) {
+            auto nextLevel =
+                rtypeEngine->getDataDrivenSpawner()->getNextLevel();
+
+            if (nextLevel) {
+                LOG_INFO_CAT(::rtype::LogCategory::GameEngine,
+                             "[ServerApp] Raw next_level found in config: '"
+                                 << *nextLevel << "'");
+            } else {
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::GameEngine,
+                    "[ServerApp] No next_level found in configuration");
+            }
+
+            if (nextLevel && !nextLevel->empty()) {
+                std::string nextId = *nextLevel;
+                std::filesystem::path path(nextId);
+                std::string cleanId = path.stem().string();
+
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::GameEngine,
+                    "[ServerApp] Transitioning to next level: " << cleanId);
+
+                changeLevel(cleanId, true);
+                rtypeEngine->startLevel();
+
+                auto levelName = rtypeEngine->getDataDrivenSpawner()
+                                     ->getWaveManager()
+                                     .getLevelName();
+                auto background = rtypeEngine->getDataDrivenSpawner()
+                                      ->getWaveManager()
+                                      .getBackground();
+                auto levelMusic = rtypeEngine->getDataDrivenSpawner()
+                                      ->getWaveManager()
+                                      .getLevelMusic();
+                if (levelName.empty()) {
+                    levelName = cleanId;
+                }
+
+                if (_networkServer) {
+                    _networkServer->broadcastLevelAnnounce(
+                        levelName, background, levelMusic);
+                }
+            } else {
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::GameEngine,
+                    "[ServerApp] No next level, ending game (VICTORY)");
+                _isVictory = true;
+                _stateManager->transitionTo(GameState::GameOver);
+            }
+        }
         return;
     }
 

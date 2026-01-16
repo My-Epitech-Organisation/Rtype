@@ -542,5 +542,32 @@ TEST_F(DataDrivenSpawnerTest, GettersBeforeLoading) {
     EXPECT_EQ(spawner.getCurrentWave(), 1);
 }
 
+TEST_F(DataDrivenSpawnerTest, DecrementEnemyCountAtZero) {
+    auto eventEmitter = [](const engine::GameEvent&) {};
+
+    DataDrivenSpawnerConfig config{};
+    config.screenWidth = 1920.0F;
+    config.screenHeight = 1080.0F;
+    config.spawnMargin = 50.0F;
+    config.maxEnemies = 100;
+
+    DataDrivenSpawnerSystem spawner(eventEmitter, config);
+
+    // Should start at 0
+    EXPECT_EQ(spawner.getEnemyCount(), 0);
+    
+    // Decrement when already 0 - should stay at 0
+    spawner.decrementEnemyCount();
+    EXPECT_EQ(spawner.getEnemyCount(), 0);
+    
+    // Increment then decrement to verify it works
+    spawner.incrementEnemyCount();
+    EXPECT_EQ(spawner.getEnemyCount(), 1);
+    spawner.decrementEnemyCount();
+    EXPECT_EQ(spawner.getEnemyCount(), 0);
+    spawner.decrementEnemyCount();
+    EXPECT_EQ(spawner.getEnemyCount(), 0);
+}
+
 }  // namespace
 }  // namespace rtype::games::rtype::server

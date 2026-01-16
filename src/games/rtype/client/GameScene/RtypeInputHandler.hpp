@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -18,6 +19,20 @@
 #include "Graphic/KeyboardActions.hpp"
 
 namespace rtype::games::rtype::client {
+
+/**
+ * @brief Check if two optional bindings conflict (are equal and both present)
+ * @tparam T The type of the binding (Key, unsigned int, etc.)
+ * @param binding1 First optional binding
+ * @param binding2 Second optional binding
+ * @return true if both bindings are present and equal, false otherwise
+ */
+template <typename T>
+inline bool bindingsConflict(const std::optional<T>& binding1,
+                             const std::optional<T>& binding2) {
+    return binding1.has_value() && binding2.has_value() &&
+           *binding1 == *binding2;
+}
 
 /**
  * @brief Handles R-Type specific input processing
@@ -30,7 +45,8 @@ class RtypeInputHandler {
      * @param keybinds Keyboard bindings
      * @return Input mask representing current inputs
      */
-    static std::uint8_t getInputMask(std::shared_ptr<KeyboardActions> keybinds);
+    static std::uint16_t getInputMask(
+        std::shared_ptr<KeyboardActions> keybinds);
 
     /**
      * @brief Handle key released events

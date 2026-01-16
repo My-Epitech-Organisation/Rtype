@@ -26,10 +26,11 @@ SettingsScene::SettingsScene(
     std::shared_ptr<AssetManager> textureManager,
     std::shared_ptr<rtype::display::IDisplay> window,
     std::shared_ptr<KeyboardActions> keybinds, std::shared_ptr<AudioLib> audio,
+    std::function<void(const std::string&)> setBackground,
     std::function<void(const SceneManager::Scene&)> switchToScene)
     : AScene(ecs, textureManager, window, audio), _keybinds(keybinds) {
     this->_listEntity = (EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "Settings"));
+        this->_registry, this->_assetsManager, "Settings", nullptr));
 
     this->_initKeybindSection();
     this->_initAudioSection();
@@ -70,14 +71,16 @@ SettingsScene::SettingsScene(
 
 void SettingsScene::_initKeybindSection() {
     std::vector<GameAction> actions = {
-        GameAction::MOVE_UP,    GameAction::MOVE_DOWN, GameAction::MOVE_LEFT,
-        GameAction::MOVE_RIGHT, GameAction::SHOOT,     GameAction::CHANGE_AMMO,
-        GameAction::PAUSE};
+        GameAction::MOVE_UP,   GameAction::MOVE_DOWN,
+        GameAction::MOVE_LEFT, GameAction::MOVE_RIGHT,
+        GameAction::SHOOT,     GameAction::CHARGE_SHOT,
+        GameAction::FORCE_POD, GameAction::CHANGE_AMMO,
+        GameAction::PAUSE,     GameAction::TOGGLE_LOW_BANDWIDTH};
 
     float sectionX = 50;
-    float sectionY = 225;
-    float sectionW = 600;
-    float sectionH = 600;
+    float sectionY = 180;
+    float sectionW = 550;
+    float sectionH = 680;
     std::vector<ECS::Entity> sectionEntities = EntityFactory::createSection(
         this->_registry, this->_assetsManager, "Input Bindings",
         rtype::display::Rect<float>(sectionX, sectionY, sectionW, sectionH));
@@ -87,8 +90,8 @@ void SettingsScene::_initKeybindSection() {
     this->_listEntity.insert(this->_listEntity.end(), sectionEntities.begin(),
                              sectionEntities.end());
 
-    float y = sectionY + 100;
-    float x = sectionX + 50;
+    float y = sectionY + 80;
+    float x = sectionX + 25;
 
     for (auto action : actions) {
         std::string textStr = SettingsSceneUtils::actionToString(action) + ": ";
@@ -96,10 +99,10 @@ void SettingsScene::_initKeybindSection() {
         auto btn = EntityFactory::createButton(
             this->_registry,
             rtype::games::rtype::client::Text(
-                "main_font", rtype::display::Color::White(), 24, textStr),
+                "main_font", rtype::display::Color::White(), 18, textStr),
             rtype::games::rtype::shared::TransformComponent(x, y),
             rtype::games::rtype::client::Rectangle(
-                {500, 50}, rtype::display::Color::Blue(),
+                {500, 45}, rtype::display::Color::Blue(),
                 rtype::display::Color::Red()),
             this->_assetsManager, std::function<void()>([this, action]() {
                 if (this->_actionToRebind.has_value()) return;
@@ -114,6 +117,8 @@ void SettingsScene::_initKeybindSection() {
 
                 if (mode == InputMode::Keyboard ||
                     action == GameAction::SHOOT ||
+                    action == GameAction::CHARGE_SHOT ||
+                    action == GameAction::FORCE_POD ||
                     action == GameAction::PAUSE ||
                     action == GameAction::CHANGE_AMMO ||
                     action == GameAction::MOVE_UP ||
@@ -143,7 +148,7 @@ void SettingsScene::_initKeybindSection() {
         this->_actionButtons[action] = btn;
         this->_keybindSectionEntities.push_back(btn);
         this->_listEntity.push_back(btn);
-        y += 65;
+        y += 55;
     }
 
     this->_refreshKeybindSection();
@@ -153,9 +158,11 @@ void SettingsScene::_refreshKeybindSection() {
     InputMode mode = this->_keybinds->getInputMode();
 
     std::vector<GameAction> actions = {
-        GameAction::MOVE_UP,    GameAction::MOVE_DOWN, GameAction::MOVE_LEFT,
-        GameAction::MOVE_RIGHT, GameAction::SHOOT,     GameAction::CHANGE_AMMO,
-        GameAction::PAUSE};
+        GameAction::MOVE_UP,   GameAction::MOVE_DOWN,
+        GameAction::MOVE_LEFT, GameAction::MOVE_RIGHT,
+        GameAction::SHOOT,     GameAction::CHARGE_SHOT,
+        GameAction::FORCE_POD, GameAction::CHANGE_AMMO,
+        GameAction::PAUSE,     GameAction::TOGGLE_LOW_BANDWIDTH};
 
     for (auto action : actions) {
         if (this->_actionButtons.find(action) == this->_actionButtons.end())
@@ -556,7 +563,12 @@ void SettingsScene::pollEvents(const ::rtype::display::Event& e) {
     }
 }
 
-void SettingsScene::update(float dt) { (void)dt; }
+void SettingsScene::update(float dt) {
+    (void)dt;
+    if (this->_audio) {
+        this->_audio->update();
+    }
+}
 
 void SettingsScene::render(std::shared_ptr<rtype::display::IDisplay> window) {
     (void)window;

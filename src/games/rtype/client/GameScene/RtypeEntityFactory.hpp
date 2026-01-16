@@ -14,6 +14,7 @@
 #include "../../../../client/network/ClientNetworkSystem.hpp"
 #include "Components/EnemyTypeComponent.hpp"
 #include "ECS.hpp"
+#include "games/rtype/shared/Components/ProjectileComponent.hpp"
 
 namespace rtype::games::rtype::client {
 
@@ -65,21 +66,28 @@ class RtypeEntityFactory {
      * @brief Create a missile entity with all components
      *
      * @param reg ECS registry
+     * @param assetsManager Asset manager
      * @param entity Entity to configure
+     * @param encodedSubType Encoded subtype (bits 0-5: ProjectileType, bits
+     * 6-7: ChargeLevel for charged shots)
      */
     static void setupMissileEntity(ECS::Registry& reg,
                                    std::shared_ptr<AssetManager> assetsManager,
-                                   ECS::Entity entity);
+                                   ECS::Entity entity,
+                                   uint8_t encodedSubType = 0);
     /**
      * @brief Create a pickup entity with all components
      *
      * @param registry ECS registry
+     * @param assetsManager Asset manager for loading textures
      * @param entity Entity to configure
      * @param networkId Network identifier for the entity
      * @param subType Power-up variant type
      */
-    static void setupPickupEntity(ECS::Registry& registry, ECS::Entity entity,
-                                  std::uint32_t networkId, uint8_t subType);
+    static void setupPickupEntity(ECS::Registry& registry,
+                                  std::shared_ptr<AssetManager> assetsManager,
+                                  ECS::Entity entity, std::uint32_t networkId,
+                                  uint8_t subType);
     /**
      * @brief Create an obstacle entity with all components
      *
@@ -92,6 +100,44 @@ class RtypeEntityFactory {
                                     std::shared_ptr<AssetManager> assetsManager,
                                     ECS::Entity entity,
                                     std::uint32_t networkId);
+
+    /**
+     * @brief Create a Force Pod entity with all components
+     *
+     * @param registry ECS registry
+     * @param assetsManager Asset manager
+     * @param entity Entity to configure
+     */
+    static void setupForcePodEntity(ECS::Registry& registry,
+                                    std::shared_ptr<AssetManager> assetsManager,
+                                    ECS::Entity entity);
+
+    /**
+     * @brief Create a Boss entity with visual components
+     *
+     * @param registry ECS registry
+     * @param assetsManager Asset manager
+     * @param entity Entity to configure
+     * @param bossType Type of boss (serpent, scorpion, etc.)
+     */
+    static void setupBossEntity(ECS::Registry& registry,
+                                std::shared_ptr<AssetManager> assetsManager,
+                                ECS::Entity entity, uint8_t bossType);
+
+    static void setupBossPartEntity(ECS::Registry& registry,
+                                    std::shared_ptr<AssetManager> assetsManager,
+                                    ECS::Entity entity, uint8_t segmentIndex);
+    /**
+     * @brief Create a Laser Beam entity with all components
+     *
+     * @param registry ECS registry
+     * @param assetsManager Asset manager
+     * @param entity Entity to configure
+     * @param ownerUserId User ID of the player who fired the laser
+     */
+    static void setupLaserBeamEntity(
+        ECS::Registry& registry, std::shared_ptr<AssetManager> assetsManager,
+        ECS::Entity entity, std::uint32_t ownerUserId);
 };
 
 }  // namespace rtype::games::rtype::client

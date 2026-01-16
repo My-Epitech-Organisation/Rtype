@@ -21,7 +21,9 @@ enum class PowerUpType : uint8_t {
     Shield,
     RapidFire,
     DoubleDamage,
-    HealthBoost
+    HealthBoost,
+    ForcePod,
+    LaserUpgrade  ///< Unlocks continuous laser weapon slot
 };
 
 /**

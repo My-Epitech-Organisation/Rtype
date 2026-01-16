@@ -3,5 +3,7 @@
   "move_down": "Down",
   "move_left": "Left",
   "move_right": "Right",
-  "fire": "Space"
+  "fire": "Space",
+  "toggle_low_bandwidth": "F9",
+  "toggle_console": "F1"
 }

@@ -24,6 +24,8 @@ enum class PowerUpVariant : uint8_t {
     HealthBoost = 4,
     WeaponUpgrade = 5,
     ExtraLife = 6,
+    ForcePod = 7,
+    LaserUpgrade = 8,
     Unknown = 255
 };
 
@@ -46,6 +48,8 @@ struct PowerUpTypeComponent {
             return PowerUpVariant::HealthBoost;
         if (id == "weapon_upgrade") return PowerUpVariant::WeaponUpgrade;
         if (id == "extra_life") return PowerUpVariant::ExtraLife;
+        if (id == "force_pod") return PowerUpVariant::ForcePod;
+        if (id == "laser_upgrade") return PowerUpVariant::LaserUpgrade;
         return PowerUpVariant::Unknown;
     }
 
@@ -68,6 +72,10 @@ struct PowerUpTypeComponent {
                 return "weapon_upgrade";
             case PowerUpVariant::ExtraLife:
                 return "extra_life";
+            case PowerUpVariant::ForcePod:
+                return "force_pod";
+            case PowerUpVariant::LaserUpgrade:
+                return "laser_upgrade";
             default:
                 return "health_small";
         }

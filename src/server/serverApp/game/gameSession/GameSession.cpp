@@ -110,7 +110,7 @@ void GameSession::handleClientDisconnected(std::uint32_t userId) {
 }
 
 void GameSession::handleClientInput(std::uint32_t userId,
-                                    std::uint8_t inputMask,
+                                    std::uint16_t inputMask,
                                     std::optional<ECS::Entity> entity) {
     if (_state == GameState::WaitingForPlayers || _state == GameState::Paused) {
         if (_readyPlayers.find(userId) == _readyPlayers.end()) {
@@ -285,6 +285,14 @@ void GameSession::processGameEvents() {
         }
 
         switch (processed.type) {
+            case engine::GameEventType::LevelComplete:
+                break;
+            case engine::GameEventType::BossPhaseChanged:
+            case engine::GameEventType::BossDefeated:
+            case engine::GameEventType::BossAttack:
+            case engine::GameEventType::WeakPointDestroyed:
+            case engine::GameEventType::ScoreChanged:
+                break;
             case engine::GameEventType::EntitySpawned: {
                 network::EntityType networkType =
                     static_cast<network::EntityType>(

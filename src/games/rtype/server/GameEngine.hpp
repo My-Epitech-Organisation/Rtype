@@ -17,6 +17,10 @@
 
 #include "../shared/Config/PrefabLoader.hpp"
 #include "../shared/Systems/Systems.hpp"
+#include "Systems/ForcePod/ForcePodAttachmentSystem.hpp"
+#include "Systems/ForcePod/ForcePodLaunchSystem.hpp"
+#include "Systems/ForcePod/ForcePodShootingSystem.hpp"
+#include "Systems/LaserBeam/LaserBeamSystem.hpp"
 #include "Systems/Spawner/DataDrivenSpawnerSystem.hpp"
 #include "Systems/Systems.hpp"
 
@@ -92,18 +96,11 @@ class GameEngine : public engine::AGameEngine {
         override;
 
     /**
-     * @brief Load a level for data-driven wave spawning
-     * @param levelId Level identifier (e.g., "level_1")
-     * @return true if level loaded successfully
-     */
-    bool loadLevel(const std::string& levelId);
-
-    /**
      * @brief Load a level from file path
-     * @param filepath Path to level TOML file
+     * @param filepath Path to level configuration file
      * @return true if level loaded successfully
      */
-    bool loadLevelFromFile(const std::string& filepath);
+    bool loadLevelFromFile(const std::string& filepath) override;
 
     /**
      * @brief Start the loaded level
@@ -137,6 +134,17 @@ class GameEngine : public engine::AGameEngine {
                              float playerY);
 
     /**
+     * @brief Spawn a charged projectile for a player
+     * @param playerNetworkId Network ID of the player shooting
+     * @param playerX Player X position
+     * @param playerY Player Y position
+     * @param chargeLevel Charge level (1-3)
+     * @return Network ID of the spawned projectile (0 if failed)
+     */
+    uint32_t spawnChargedProjectile(uint32_t playerNetworkId, float playerX,
+                                    float playerY, uint8_t chargeLevel);
+
+    /**
      * @brief Get the ECS registry
      * @return Reference to the ECS registry
      */
@@ -152,11 +160,34 @@ class GameEngine : public engine::AGameEngine {
     }
 
     /**
+     * @brief Get Force Pod launch system
+     * @return Pointer to ForcePodLaunchSystem
+     */
+    ForcePodLaunchSystem* getForcePodLaunchSystem() {
+        return _forcePodLaunchSystem.get();
+    }
+
+    /**
      * @brief Get the data-driven spawner (for wave management)
      * @return Pointer to DataDrivenSpawnerSystem
      */
     DataDrivenSpawnerSystem* getDataDrivenSpawner() {
         return _dataDrivenSpawnerSystem.get();
+    }
+
+    /**
+     * @brief Get the laser beam system
+     * @return Pointer to LaserBeamSystem
+     */
+    LaserBeamSystem* getLaserBeamSystem() { return _laserBeamSystem.get(); }
+
+    /**
+     * @brief Set laser weapon configuration
+     * @param config Laser configuration from TOML
+     * @note Must be called before initialize()
+     */
+    void setLaserConfig(const game::config::LaserConfig& config) {
+        _laserConfig = config;
     }
 
    private:
@@ -176,6 +207,7 @@ class GameEngine : public engine::AGameEngine {
 
     bool _running = false;
     bool _useDataDrivenSpawner = true;
+    game::config::LaserConfig _laserConfig;  ///< Laser weapon settings
 
     std::unique_ptr<SpawnerSystem> _spawnerSystem;
     std::unique_ptr<DataDrivenSpawnerSystem> _dataDrivenSpawnerSystem;
@@ -188,6 +220,13 @@ class GameEngine : public engine::AGameEngine {
     std::unique_ptr<CollisionSystem> _collisionSystem;
     std::unique_ptr<CleanupSystem> _cleanupSystem;
     std::unique_ptr<DestroySystem> _destroySystem;
+    std::unique_ptr<ForcePodAttachmentSystem> _forcePodAttachmentSystem;
+    std::unique_ptr<ForcePodLaunchSystem> _forcePodLaunchSystem;
+    std::unique_ptr<ForcePodShootingSystem> _forcePodShootingSystem;
+    std::unique_ptr<BossPhaseSystem> _bossPhaseSystem;
+    std::unique_ptr<BossAttackSystem> _bossAttackSystem;
+    std::unique_ptr<WeakPointSystem> _weakPointSystem;
+    std::unique_ptr<LaserBeamSystem> _laserBeamSystem;
 
     EventCallback _eventCallback;
     std::vector<engine::GameEvent> _pendingEvents;

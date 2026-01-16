@@ -74,7 +74,7 @@ class ServerNetworkSystem {
      * @param entity The client's player entity (if registered)
      */
     using InputHandler =
-        std::function<void(std::uint32_t userId, std::uint8_t inputMask,
+        std::function<void(std::uint32_t userId, std::uint16_t inputMask,
                            std::optional<ECS::Entity> entity)>;
 
     /**
@@ -243,8 +243,10 @@ class ServerNetworkSystem {
 
     /**
      * @brief Broadcast final score when the game ends
+     * @param finalScore The final game score
+     * @param isVictory True if player won, false if defeated
      */
-    void broadcastGameOver(std::uint32_t finalScore);
+    void broadcastGameOver(std::uint32_t finalScore, bool isVictory = false);
 
     /**
      * @brief Reset all tracked network state
@@ -290,7 +292,8 @@ class ServerNetworkSystem {
                                   network::DisconnectReason reason);
     void processExpiredGracePeriods();
     void finalizeDisconnection(std::uint32_t userId);
-    void handleClientInput(std::uint32_t userId, std::uint8_t inputMask);
+    void handleClientInput(std::uint32_t userId, std::uint16_t inputMask);
+    void handleClientChat(std::uint32_t userId, const std::string& message);
     void handleGetUsersRequest(std::uint32_t userId);
 
     struct NetworkedEntity {
@@ -302,6 +305,11 @@ class ServerNetworkSystem {
         float lastVx{0};
         float lastVy{0};
         bool dirty{false};
+        float lastSentX{0};
+        float lastSentY{0};
+        float lastSentVx{0};
+        float lastSentVy{0};
+        std::uint32_t ticksSinceLastSend{0};
     };
 
     std::shared_ptr<ECS::Registry> registry_;
@@ -323,6 +331,13 @@ class ServerNetworkSystem {
     };
     std::unordered_map<std::uint32_t, PendingDisconnection>
         pendingDisconnections_;
+
+    std::atomic<bool> lowBandwidthModeActive_{false};
+    std::atomic<std::uint32_t> lowBandwidthClientCount_{0};
+
+    /// Debug log counters (reset on resetState)
+    int debugNotFoundLogCount_{0};
+    int debugBossPartUpdateLogCount_{0};
 };
 
 }  // namespace rtype::server

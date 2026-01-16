@@ -6,6 +6,9 @@ add_library(engine STATIC
     src/GameEngineFactory.cpp
 )
 
+# Enable Position Independent Code (PIC) to allow linking into shared libraries
+set_property(TARGET engine PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 target_sources(engine PRIVATE
     src/GameEngineFactory.hpp
     src/IGameEngine.hpp

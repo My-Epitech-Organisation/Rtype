@@ -27,11 +27,11 @@ std::unordered_map<unsigned int,
 std::unordered_map<unsigned int, std::unordered_set<unsigned int>>
     RtypeInputHandler::joystickButtons_;
 
-std::uint8_t RtypeInputHandler::getInputMask(
+std::uint16_t RtypeInputHandler::getInputMask(
     std::shared_ptr<KeyboardActions> keybinds) {
     ControllerRumble::update();
 
-    std::uint8_t inputMask = ::rtype::network::InputMask::kNone;
+    std::uint16_t inputMask = ::rtype::network::InputMask::kNone;
 
     InputMode mode = keybinds->getInputMode();
 
@@ -57,8 +57,29 @@ std::uint8_t RtypeInputHandler::getInputMask(
         }
 
         auto keyShoot = keybinds->getKeyBinding(GameAction::SHOOT);
-        if (keyShoot.has_value() && pressedKeys_.contains(*keyShoot)) {
+        auto keyCharge = keybinds->getKeyBinding(GameAction::CHARGE_SHOT);
+        const bool chargeConflictsWithShoot =
+            bindingsConflict(keyShoot, keyCharge);
+
+        if (keyShoot.has_value() && !chargeConflictsWithShoot &&
+            pressedKeys_.contains(*keyShoot)) {
             inputMask |= ::rtype::network::InputMask::kShoot;
+        }
+
+        auto keyForcePod = keybinds->getKeyBinding(GameAction::FORCE_POD);
+        if (keyForcePod.has_value() && pressedKeys_.contains(*keyForcePod)) {
+            inputMask |= ::rtype::network::InputMask::kForcePod;
+        }
+
+        auto keyChangeAmmo = keybinds->getKeyBinding(GameAction::CHANGE_AMMO);
+        if (keyChangeAmmo.has_value()) {
+            bool isPressed = pressedKeys_.contains(*keyChangeAmmo);
+            if (isPressed) {
+                LOG_INFO("[InputHandler] CHANGE_AMMO key ("
+                         << static_cast<int>(*keyChangeAmmo)
+                         << ") is pressed, setting kWeaponSwitch flag");
+                inputMask |= ::rtype::network::InputMask::kWeaponSwitch;
+            }
         }
     } else {
         std::optional<unsigned int> jid;
@@ -88,12 +109,25 @@ std::uint8_t RtypeInputHandler::getInputMask(
             if (x > deadZone) inputMask |= ::rtype::network::InputMask::kRight;
 
             auto shootBtn = keybinds->getJoyButtonBinding(GameAction::SHOOT);
+            auto chargeBtn =
+                keybinds->getJoyButtonBinding(GameAction::CHARGE_SHOT);
+
+            const bool chargeConflictsWithShoot =
+                bindingsConflict(shootBtn, chargeBtn);
+
             unsigned int shootBtnNum = shootBtn.has_value() ? *shootBtn : 0;
 
             bool shootPressed = joystickButtons_[*jid].contains(shootBtnNum);
 
-            if (shootPressed) {
+            if (shootPressed && !chargeConflictsWithShoot) {
                 inputMask |= ::rtype::network::InputMask::kShoot;
+            }
+
+            auto changeAmmoBtn =
+                keybinds->getJoyButtonBinding(GameAction::CHANGE_AMMO);
+            if (changeAmmoBtn.has_value() &&
+                joystickButtons_[*jid].contains(*changeAmmoBtn)) {
+                inputMask |= ::rtype::network::InputMask::kWeaponSwitch;
             }
 
             static std::map<unsigned int, bool> lastShootStates;

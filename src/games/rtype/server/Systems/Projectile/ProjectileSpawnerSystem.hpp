@@ -85,6 +85,34 @@ class ProjectileSpawnerSystem : public ::rtype::engine::ASystem {
                                   float enemyY, float targetX, float targetY);
 
     /**
+     * @brief Spawn a charged shot projectile from a player
+     * @param registry ECS registry
+     * @param playerNetworkId The player's network ID
+     * @param playerX Player X position
+     * @param playerY Player Y position
+     * @param chargeLevel Charge level (1-3)
+     * @return Network ID of spawned projectile
+     */
+    uint32_t spawnChargedProjectile(ECS::Registry& registry,
+                                    uint32_t playerNetworkId, float playerX,
+                                    float playerY, uint8_t chargeLevel);
+
+    /**
+     * @brief Spawn a boss projectile with custom velocity and damage
+     * @param registry ECS registry
+     * @param x Spawn X position
+     * @param y Spawn Y position
+     * @param vx Velocity X
+     * @param vy Velocity Y
+     * @param damage Projectile damage
+     * @param ownerNetworkId Network ID of the boss
+     * @return Network ID of spawned projectile
+     */
+    uint32_t spawnBossProjectile(ECS::Registry& registry, float x, float y,
+                                 float vx, float vy, int32_t damage,
+                                 uint32_t ownerNetworkId);
+
+    /**
      * @brief Get current projectile count
      * @return Number of active projectiles tracked
      */
@@ -110,13 +138,16 @@ class ProjectileSpawnerSystem : public ::rtype::engine::ASystem {
      * @param config Weapon configuration
      * @param owner Owner type (Player/Enemy)
      * @param ownerNetworkId Network ID of owner
+     * @param subTypeOverride Optional override for subType (used for charged
+     * shots with level encoding)
      * @return Network ID of spawned projectile
      */
     uint32_t spawnProjectileWithConfig(ECS::Registry& registry, float x,
                                        float y, float vx, float vy,
                                        const shared::WeaponConfig& config,
                                        shared::ProjectileOwner owner,
-                                       uint32_t ownerNetworkId);
+                                       uint32_t ownerNetworkId,
+                                       uint8_t subTypeOverride = 0);
 
     EventEmitter _emitEvent;
     ProjectileSpawnConfig _config;

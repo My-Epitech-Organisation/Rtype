@@ -13,29 +13,19 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
+#include "AAssetManager.hpp"
 #include "rtype/display/IDisplay.hpp"
 
-class TextureManager {
-   private:
-    rtype::display::IDisplay* _display;
-
+class TextureManager : public AAssetManager<::rtype::display::ITexture> {
    public:
     explicit TextureManager(rtype::display::IDisplay* display)
-        : _display(display) {}
+        : AAssetManager<::rtype::display::ITexture>(display, "Texture") {}
     TextureManager(const TextureManager&) = delete;
     TextureManager& operator=(const TextureManager&) = delete;
 
-    void load(const std::string& id, const std::string& filePath);
-
-    std::shared_ptr<::rtype::display::ITexture> get(const std::string& id);
-
-    /**
-     * @brief Check if a texture is loaded
-     * @param id The texture identifier
-     * @return true if the texture is loaded, false otherwise
-     */
-    bool isLoaded(const std::string& id) const;
+    void load(const std::string& id, const std::string& filePath) override;
 };
 
 #endif  // SRC_CLIENT_GRAPHIC_ASSETMANAGER_TEXTUREMANAGER_HPP_

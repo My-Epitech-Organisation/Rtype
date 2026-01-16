@@ -9,6 +9,7 @@
 #include "AdminServer.hpp"
 
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 
@@ -16,6 +17,7 @@
 #include <rtype/common.hpp>
 
 #include "httplib.h"
+#include "main.hpp"
 #include "server/lobby/Lobby.hpp"
 #include "server/lobby/LobbyManager.hpp"
 #include "server/serverApp/ServerApp.hpp"
@@ -31,7 +33,21 @@ AdminServer::AdminServer(const Config& config, ServerApp* serverApp,
     : _config(config),
       _serverApp(serverApp),
       _lobbyManager(lobbyManager),
-      _httpServer(nullptr) {}
+      _httpServer(nullptr) {
+    generateCredentials();
+    static std::function<std::string(size_t)> makeToken = [](size_t length) {
+        static const char alpha[] =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        static thread_local std::random_device rd;
+        static thread_local std::mt19937 rng(rd());
+        std::uniform_int_distribution<size_t> dist(0, std::strlen(alpha) - 1);
+        std::string out;
+        out.reserve(length);
+        for (size_t i = 0; i < length; ++i) out.push_back(alpha[dist(rng)]);
+        return out;
+    };
+    _config.sessionToken = makeToken(24);
+}
 
 AdminServer::~AdminServer() {
     stop();
@@ -103,6 +119,58 @@ bool AdminServer::isRunning() const noexcept {
            static_cast<Server*>(_httpServer)->is_running();
 }
 
+void AdminServer::generateCredentials() {
+    constexpr char upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    constexpr char lower[] = "abcdefghijklmnopqrstuvwxyz";
+    constexpr char digits[] = "0123456789";
+    constexpr char special[] = "!@#$%^&*()-_+=";
+
+    auto pick = [](const char* s) -> char {
+        size_t len = std::strlen(s);
+        static thread_local std::random_device rd;
+        static thread_local std::mt19937 rng(rd());
+        std::uniform_int_distribution<size_t> dist(0, len - 1);
+        return s[dist(rng)];
+    };
+
+    auto make = [&](size_t length) {
+        std::string out;
+        out.reserve(length);
+        out.push_back(pick(upper));
+        out.push_back(pick(lower));
+        out.push_back(pick(digits));
+        out.push_back(pick(special));
+
+        static const char allChars[] =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$"
+            "%^&*()-_+=";
+        std::uniform_int_distribution<size_t> dist(0,
+                                                   std::strlen(allChars) - 1);
+        static thread_local std::random_device rd;
+        static thread_local std::mt19937 rng(rd());
+        while (out.size() < length) {
+            out.push_back(allChars[dist(rng)]);
+        }
+
+        std::shuffle(out.begin(), out.end(), rng);
+        return out;
+    };
+
+    _adminUser = make(12);
+    _adminPass = make(16);
+
+    if (_adminUser == _adminPass) {
+        _adminPass = make(16);
+        if (_adminUser == _adminPass) {
+            _adminPass[0] = (_adminPass[0] == 'X') ? 'Y' : 'X';
+        }
+    }
+
+    LOG_INFO_CAT(::rtype::LogCategory::Network,
+                 "[AdminServer] Generated admin credentials: user='"
+                     << _adminUser << "' pass='" << _adminPass << "'");
+}
+
 void AdminServer::runServer() noexcept {
     if (_httpServer) {
         const char* bindAddr = _config.localhostOnly ? "127.0.0.1" : "0.0.0.0";
@@ -116,22 +184,129 @@ void AdminServer::runServer() noexcept {
     }
 }
 
-bool authenticateRequest(const AdminServer::Config& config,
-                         const Request& req) {
-    const auto& remote_addr = req.remote_addr;
-    bool localhost = remote_addr == "127.0.0.1" || remote_addr == "localhost" ||
-                     remote_addr == "::1";
+static std::string file_base64Decode(const std::string& input) {
+    static const std::string base64_chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789+/";
 
-    if (config.localhostOnly) {
-        return localhost;
+    auto is_base64 = [](unsigned char c) -> bool {
+        return (isalnum(c) || (c == '+') || (c == '/'));
+    };
+
+    std::string ret;
+    int in_len = static_cast<int>(input.size());
+    int i = 0;
+    int in_ = 0;
+    unsigned char char_array_4[4], char_array_3[3];
+
+    while (in_len-- && (input[in_] != '=') && is_base64(input[in_])) {
+        char_array_4[i++] = input[in_];
+        in_++;
+        if (i == 4) {
+            for (i = 0; i < 4; i++)
+                char_array_4[i] = static_cast<unsigned char>(
+                    base64_chars.find(char_array_4[i]));
+
+            char_array_3[0] =
+                (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+            char_array_3[1] = ((char_array_4[1] & 0xf) << 4) +
+                              ((char_array_4[2] & 0x3c) >> 2);
+            char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+            for (i = 0; (i < 3); i++) ret += char_array_3[i];
+            i = 0;
+        }
     }
+
+    if (i) {
+        int j;
+        for (j = i; j < 4; j++) char_array_4[j] = 0;
+        for (j = 0; j < 4; j++)
+            char_array_4[j] =
+                static_cast<unsigned char>(base64_chars.find(char_array_4[j]));
+        char_array_3[0] =
+            (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+        char_array_3[1] =
+            ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+        char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+        for (j = 0; (j < i - 1); j++) ret += char_array_3[j];
+    }
+
+    return ret;
+}
+
+static std::string file_urlDecode(const std::string& s) {
+    std::string out;
+    out.reserve(s.size());
+    for (size_t i = 0; i < s.size(); ++i) {
+        char c = s[i];
+        if (c == '+') {
+            out.push_back(' ');
+        } else if (c == '%' && i + 2 < s.size()) {
+            char hi = s[i + 1];
+            char lo = s[i + 2];
+            auto fromHex = [](char ch) -> int {
+                if (ch >= '0' && ch <= '9') return ch - '0';
+                if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
+                if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
+                return -1;
+            };
+            int hiV = fromHex(hi);
+            int loV = fromHex(lo);
+            if (hiV >= 0 && loV >= 0) {
+                out.push_back(static_cast<char>((hiV << 4) | loV));
+                i += 2;
+            } else {
+                out.push_back(c);
+            }
+        } else {
+            out.push_back(c);
+        }
+    }
+    return out;
+}
+
+bool authenticateRequest(const AdminServer::Config& config, const Request& req,
+                         const std::string& adminUser,
+                         const std::string& adminPass) {
+    const auto& remote_addr = req.remote_addr;
+    bool localhost = remote_addr.empty() || remote_addr == "localhost" ||
+                     remote_addr.find("127.0.0.1") != std::string::npos ||
+                     remote_addr.find("::1") != std::string::npos;
+
+    (void)localhost;
 
     if (!config.token.empty()) {
         const auto& auth = req.get_header_value("Authorization");
-        return (!auth.empty() && auth == ("Bearer " + config.token));
+        if (!auth.empty() && auth == ("Bearer " + config.token)) return true;
     }
 
-    return true;
+    const auto cookie = req.get_header_value("Cookie");
+    if (!cookie.empty() && !config.sessionToken.empty()) {
+        std::string key = std::string("admin_auth=") + config.sessionToken;
+        if (cookie.find(key) != std::string::npos) return true;
+    }
+
+    const auto auth = req.get_header_value("Authorization");
+    if (!auth.empty()) {
+        constexpr const char* kBasicPrefix = "Basic ";
+        if (auth.rfind(kBasicPrefix, 0) == 0) {
+            std::string payload = auth.substr(std::strlen(kBasicPrefix));
+            std::string decoded = file_base64Decode(payload);
+            if (!decoded.empty()) {
+                auto pos = decoded.find(':');
+                if (pos != std::string::npos) {
+                    std::string user = decoded.substr(0, pos);
+                    std::string pass = decoded.substr(pos + 1);
+                    return (user == adminUser && pass == adminPass);
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
@@ -145,8 +320,66 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
 
     registerBanRoutes(server);
 
+    server->Post("/api/message/send", [this](const Request& req,
+                                             Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+
+        std::string message;
+        std::string target = "all";
+        try {
+            auto j = json::parse(req.body);
+            if (!j.contains("message") || !j["message"].is_string()) {
+                res.set_content(
+                    R"({"success":false,"error":"Missing or invalid 'message'"})",
+                    "application/json");
+                res.status = 400;
+                return;
+            }
+            message = j["message"].get<std::string>();
+            if (j.contains("target") && j["target"].is_string()) {
+                target = j["target"].get<std::string>();
+            }
+        } catch (const json::parse_error&) {
+            res.set_content(R"({"success":false,"error":"Malformed JSON"})",
+                            "application/json");
+            res.status = 400;
+            return;
+        }
+
+        if (message.length() > 75) {
+            message = message.substr(0, 75);
+        }
+
+        if (_lobbyManager) {
+            if (target != "all" && !target.empty()) {
+                auto* lobby = _lobbyManager->findLobbyByCode(target);
+                if (lobby) {
+                    if (auto* sa = lobby->getServerApp()) {
+                        sa->broadcastMessage(message);
+                    }
+                }
+            } else {
+                auto lobbies = _lobbyManager->getAllLobbies();
+                for (auto* lobby : lobbies) {
+                    if (auto* sa = lobby->getServerApp()) {
+                        sa->broadcastMessage(message);
+                    }
+                }
+            }
+        } else if (_serverApp) {
+            _serverApp->broadcastMessage(message);
+        }
+
+        res.set_content(R"({"success":true})", "application/json");
+        res.status = 200;
+    });
+
     server->Post("/api/unban", [this](const Request& req, Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -207,7 +440,7 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
 
     server->Post("/api/lobby/create", [this](const Request& req,
                                              Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -249,9 +482,61 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
         }
     });
 
+    server->Post("/api/lobby/:code/level", [this](const Request& req,
+                                                  Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+
+        std::string levelId;
+        try {
+            auto j = json::parse(req.body);
+            if (j.contains("level") && j["level"].is_string()) {
+                levelId = j["level"].get<std::string>();
+            }
+        } catch (...) {
+            res.set_content(R"({"error":"Invalid JSON"})", "application/json");
+            res.status = 400;
+            return;
+        }
+
+        if (levelId.empty()) {
+            res.set_content(R"({"error":"Missing level ID"})",
+                            "application/json");
+            res.status = 400;
+            return;
+        }
+
+        auto lobbyCode = req.path_params.at("code");
+        if (_lobbyManager) {
+            auto* lobby = _lobbyManager->findLobbyByCode(lobbyCode);
+            if (lobby) {
+                if (lobby->changeLevel(levelId)) {
+                    res.set_content(R"({"success":true})", "application/json");
+                    res.status = 200;
+                } else {
+                    res.set_content(
+                        R"JSON({"error":"Failed to change level (game running?)"})JSON",
+                        "application/json");
+                    res.status = 409;
+                }
+            } else {
+                res.set_content(R"({"error":"Lobby not found"})",
+                                "application/json");
+                res.status = 404;
+            }
+        } else {
+            res.set_content(R"({"error":"Lobby manager not available"})",
+                            "application/json");
+            res.status = 500;
+        }
+    });
+
     server->Post("/api/lobby/:code/delete", [this](const Request& req,
                                                    Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -264,12 +549,45 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
             res.status = 500;
             return;
         }
+
+        bool force = false;
+        try {
+            if (req.has_param("force") && req.get_param_value("force") == "1") {
+                force = true;
+            }
+        } catch (...) {
+        }
+
+        auto lobbies = _lobbyManager->getAllLobbies();
+        if (lobbies.size() == 1 && lobbies[0] &&
+            lobbies[0]->getCode() == lobbyCode && !force) {
+            res.set_content(
+                R"({"success":false,"error":"Cannot delete the last instance without force; this will shutdown the server"})",
+                "application/json");
+            res.status = 409;  // Conflict
+            return;
+        }
+
+        if (lobbies.size() == 1 && lobbies[0] &&
+            lobbies[0]->getCode() == lobbyCode && force) {
+            LOG_INFO_CAT(::rtype::LogCategory::Network,
+                         "[AdminServer] Forced delete of last lobby requested; "
+                         "initiating graceful shutdown (lobby preserved)");
+            ServerSignals::shutdown()->store(true);
+            res.set_content(
+                R"({"success":true,"message":"Shutdown requested; last lobby preserved"})",
+                "application/json");
+            res.status = 200;
+            return;
+        }
+
         LOG_INFO(
             std::string("[AdminServer] Lobby delete requested for code: [") +
-            lobbyCode + "]");
+                lobbyCode + "] (force="
+            << (force ? "1" : "0") << ")");
         bool deleted = _lobbyManager->deleteLobby(lobbyCode);
         if (deleted) {
-            res.set_content(R"({\"success\":true})", "application/json");
+            res.set_content(R"({"success":true})", "application/json");
             res.status = 200;
         } else {
             res.set_content(
@@ -283,7 +601,7 @@ void AdminServer::setupRoutes() {  // NOLINT(readability/fn_size)
 void AdminServer::registerMetricsRoutes(void* serverPtr) {
     auto* server = static_cast<Server*>(serverPtr);
     server->Get("/api/metrics", [this](const Request& req, Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -301,7 +619,7 @@ void AdminServer::registerMetricsRoutes(void* serverPtr) {
 
     server->Post("/api/metrics/reset", [this](const Request& req,
                                               Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -311,6 +629,56 @@ void AdminServer::registerMetricsRoutes(void* serverPtr) {
         }
         res.set_content(R"({"success":true})", "application/json");
         res.status = 200;
+    });
+
+    server->Post("/api/shutdown", [this](const Request& req, Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+        ServerSignals::shutdown()->store(true);
+        res.set_content(R"({"success":true,"message":"Shutdown requested"})",
+                        "application/json");
+        res.status = 200;
+    });
+
+    server->Post("/api/clear_shutdown", [this](const Request& req,
+                                               Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+        bool removed = false;
+        try {
+            std::error_code ec;
+            removed =
+                std::filesystem::remove("saves/admin_shutdown.request", ec);
+            if (ec) {
+                res.set_content(
+                    R"({"success":false,"error":"Failed to remove sentinel"})",
+                    "application/json");
+                res.status = 500;
+                return;
+            }
+        } catch (...) {
+            res.set_content(R"({"success":false,"error":"Internal error"})",
+                            "application/json");
+            res.status = 500;
+            return;
+        }
+        if (removed) {
+            res.set_content(
+                R"({"success":true,"message":"Shutdown sentinel cleared"})",
+                "application/json");
+            res.status = 200;
+        } else {
+            res.set_content(
+                R"({"success":false,"error":"Sentinel not present"})",
+                "application/json");
+            res.status = 404;
+        }
     });
 }
 
@@ -418,7 +786,115 @@ std::string AdminServer::buildMetricsJson() const {
 
 void AdminServer::registerAdminPageRoutes(void* serverPtr) {
     auto* server = static_cast<Server*>(serverPtr);
+
+    server->Get("/admin/login", [this](const Request& req, Response& res) {
+        std::string errorMsg;
+        try {
+            if (req.has_param("error") && req.get_param_value("error") == "1") {
+                errorMsg = "Invalid username or password.";
+            }
+        } catch (...) {
+        }
+
+        std::ostringstream s;
+        s << R"(<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Admin Login</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; background: #f5f7fb; color: #222; }
+    .login { max-width: 380px; margin: 6vh auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 6px 18px rgba(12,18,26,0.08); }
+    h1 { margin: 0 0 12px 0; font-size: 20px; }
+    label { display:block; margin: 8px 0 2px 0; font-size: 13px; }
+    input[type=text], input[type=password] { width:100%; padding:10px; border:1px solid #dfe6ef; border-radius:4px; box-sizing:border-box; }
+    .submit { margin-top: 14px; background:#2b90ff; color:white; border:none; padding:10px 14px; border-radius:4px; cursor:pointer; }
+    .submit:hover { background:#1a74d1; }
+    .msg { margin: 12px 0; padding: 10px; border-radius: 4px; background: #fff4f4; color: #9a1d1d; border:1px solid #f2c0c0; }
+    .hint { margin-top:12px; font-size:12px; color:#555; }
+  </style>
+</head>
+<body>
+  <div class="login">
+    <h1>Admin Login</h1>
+)";
+        if (!errorMsg.empty()) {
+            s << "    <div class=\"msg\">" << errorMsg << "</div>\n";
+        }
+        s << R"(    <form action="/admin/login" method="post">
+      <label>Username</label>
+      <input type="text" name="username" placeholder="admin username" required>
+      <label>Password</label>
+      <input type="password" name="password" placeholder="admin password" required>
+      <input class="submit" type="submit" value="Login">
+    </form>
+    <div class="hint">Credentials are generated when the server starts and printed once to the server console; they are case-sensitive.</div>
+  </div>
+</body>
+</html>)";
+
+        res.set_content(s.str(), "text/html");
+        res.status = 200;
+    });
+
+    server->Post("/admin/login", [this](const Request& req, Response& res) {
+        auto parse = [](const std::string& s) {
+            std::unordered_map<std::string, std::string> m;
+            size_t pos = 0;
+            while (pos < s.size()) {
+                auto eq = s.find('=', pos);
+                if (eq == std::string::npos) break;
+                auto key = s.substr(pos, eq - pos);
+                auto amp = s.find('&', eq + 1);
+                auto val = s.substr(eq + 1, (amp == std::string::npos)
+                                                ? std::string::npos
+                                                : amp - (eq + 1));
+                m[file_urlDecode(key)] = file_urlDecode(val);
+                if (amp == std::string::npos) break;
+                pos = amp + 1;
+            }
+            return m;
+        };
+
+        auto params = parse(req.body);
+        const auto itU = params.find("username");
+        const auto itP = params.find("password");
+        if (itU == params.end() || itP == params.end()) {
+            res.set_content("Missing username or password", "text/plain");
+            res.status = 400;
+            return;
+        }
+
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::Network,
+            "[AdminServer] Login attempt for user='" << itU->second << "'");
+
+        if (itU->second == _adminUser && itP->second == _adminPass) {
+            std::string cookie = std::string("admin_auth=") +
+                                 _config.sessionToken + "; HttpOnly; Path=/";
+            res.set_header("Set-Cookie", cookie);
+            res.status = 302;
+            res.set_header("Location", "/admin");
+            LOG_INFO_CAT(::rtype::LogCategory::Network,
+                         "[AdminServer] Admin login successful for user='"
+                             << itU->second << "'");
+            return;
+        }
+
+        LOG_INFO_CAT(::rtype::LogCategory::Network,
+                     "[AdminServer] Admin login failed for user='"
+                         << itU->second << "'");
+        res.status = 302;
+        res.set_header("Location", "/admin/login?error=1");
+    });
+
     server->Get("/admin", [this](const Request& req, Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.status = 302;
+            res.set_header("Location", "/admin/login");
+            return;
+        }
+
         std::ifstream file("assets/admin.html");
         if (file.is_open()) {
             std::string content((std::istreambuf_iterator<char>(file)),
@@ -434,8 +910,60 @@ void AdminServer::registerAdminPageRoutes(void* serverPtr) {
 
 void AdminServer::registerLobbyRoutes(void* serverPtr) {
     auto* server = static_cast<Server*>(serverPtr);
+
+    server->Get("/api/game/levels", [this](const Request& req, Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+
+        std::vector<std::string> levels;
+        if (_lobbyManager) {
+            levels = _lobbyManager->getAvailableLevels();
+        }
+
+        json j;
+        j["levels"] = levels;
+        res.set_content(j.dump(), "application/json");
+        res.status = 200;
+    });
+
+    server->Post("/api/lobbies", [this](const Request& req, Response& res) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
+            res.set_content(R"({"error":"Unauthorized"})", "application/json");
+            res.status = 401;
+            return;
+        }
+
+        try {
+            auto j = json::parse(req.body);
+            bool isPrivate = j.value("isPrivate", true);
+            std::string levelId = j.value("level", "");
+
+            std::string code;
+            if (_lobbyManager) {
+                code = _lobbyManager->createLobby(isPrivate, levelId);
+            }
+
+            if (!code.empty()) {
+                json resp;
+                resp["code"] = code;
+                res.set_content(resp.dump(), "application/json");
+                res.status = 200;
+            } else {
+                res.set_content(R"({"error":"Failed to create lobby"})",
+                                "application/json");
+                res.status = 500;
+            }
+        } catch (...) {
+            res.set_content(R"({"error":"Invalid JSON"})", "application/json");
+            res.status = 400;
+        }
+    });
+
     server->Get("/api/lobbies", [this](const Request& req, Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -460,6 +988,7 @@ void AdminServer::registerLobbyRoutes(void* serverPtr) {
                     << R"("active":)" << (lobby.isActive ? "true" : "false")
                     << ","
                     << R"("isPublic":)" << (isPublic ? "true" : "false") << ","
+                    << R"("level":")" << lobby.levelId << R"(",)"
                     << R"("difficulty":"Normal")"
                     << "}";
             }
@@ -472,7 +1001,7 @@ void AdminServer::registerLobbyRoutes(void* serverPtr) {
 
     server->Get("/api/lobbies/:code/players", [this](const Request& req,
                                                      Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -517,7 +1046,7 @@ void AdminServer::registerLobbyRoutes(void* serverPtr) {
     });
 
     server->Get("/api/players", [this](const Request& req, Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -568,7 +1097,7 @@ void AdminServer::registerLobbyRoutes(void* serverPtr) {
 void AdminServer::registerBanRoutes(void* serverPtr) {
     auto* server = static_cast<Server*>(serverPtr);
     server->Get("/api/bans", [this](const Request& req, Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -599,7 +1128,7 @@ void AdminServer::registerBanRoutes(void* serverPtr) {
 
     server->Post("/api/kick/:clientId", [this](const Request& req,
                                                Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;
@@ -638,7 +1167,7 @@ void AdminServer::registerBanRoutes(void* serverPtr) {
     });
 
     server->Post("/api/ban", [this, server](const Request& req, Response& res) {
-        if (!authenticateRequest(_config, req)) {
+        if (!authenticateRequest(_config, req, _adminUser, _adminPass)) {
             res.set_content(R"({"error":"Unauthorized"})", "application/json");
             res.status = 401;
             return;

@@ -78,18 +78,29 @@ cmake --build build
 
 CPM fallback includes configurations for:
 
-| Package | Version | Source |
-|---------|---------|--------|
-| asio | 1.28.0+ | GitHub (chriskohlhoff/asio) |
-| tomlplusplus | 3.4.0+ | GitHub (marzer/tomlplusplus) |
-| SFML | 3.0.2+ | GitHub (SFML/SFML) |
-| SDL2 | 2.32.4 | GitHub (libsdl-org/SDL) |
-| zlib | 1.3.1+ | GitHub (madler/zlib) |
-| libpng | 1.6.51+ | GitHub (glennrp/libpng) |
-| bzip2 | 1.0.8+ | GitLab (bzip2/bzip2) |
-| brotli | 1.2.0+ | GitHub (google/brotli) |
+| Package | Version | Source | Purpose |
+|---------|---------|--------|----------|
+| asio | 1.28.0+ | GitHub (chriskohlhoff/asio) | Async networking |
+| tomlplusplus | 3.4.0+ | GitHub (marzer/tomlplusplus) | Configuration parsing |
+| SFML | 3.0.2+ | GitHub (SFML/SFML) | Graphics, audio, window |
+| SDL2 | 2.32.4 | GitHub (libsdl-org/SDL) | Alternative graphics backend |
+| SDL2-ttf | 2.24.0+ | GitHub | Font rendering (SDL2) |
+| SDL2-image | 2.8.8+ | GitHub | Image loading (SDL2) |
+| zlib | 1.3.1+ | GitHub (madler/zlib) | Compression |
+| libpng | 1.6.51+ | GitHub (glennrp/libpng) | PNG image support |
+| bzip2 | 1.0.8+ | GitLab (bzip2/bzip2) | Compression |
+| brotli | 1.2.0+ | GitHub (google/brotli) | Compression |
+| lz4 | 1.9.4+ | GitHub (lz4/lz4) | Fast compression (network) |
+| cpp-httplib | 0.14.0+ | GitHub | HTTP server (admin panel) |
+| nlohmann-json | 3.11.2+ | GitHub | JSON parsing |
+| freetype | 2.13.3+ | FreeType project | Font rendering |
+| libflac | 1.5.0+ | Xiph.org | Audio codec |
+| libogg | 1.3.6+ | Xiph.org | Audio container |
+| libvorbis | 1.3.7+ | Xiph.org | Audio codec |
+| miniaudio | 0.11.23+ | GitHub | Audio playback |
+| stb | 2024-07-29+ | GitHub | Image loading utilities |
 
-All other dependencies (threads, etc.) are system-provided or optional.
+All other dependencies (threads, OpenGL, etc.) are system-provided or optional.
 
 ---
 

@@ -25,6 +25,7 @@
 #include "Components/ZIndexComponent.hpp"
 #include "ECS.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
+#include "lib/background/IBackground.hpp"
 
 namespace EntityFactory {
 template <typename... Args>
@@ -78,7 +79,8 @@ ECS::Entity createTextInput(std::shared_ptr<ECS::Registry> registry,
 
 std::vector<ECS::Entity> createBackground(
     std::shared_ptr<ECS::Registry> registry,
-    std::shared_ptr<AssetManager> assetManager, std::string_view PageName);
+    std::shared_ptr<AssetManager> assetManager, std::string_view PageName,
+    std::unique_ptr<IBackground> backgroundLib);
 
 ECS::Entity createLobbyPlayer(std::shared_ptr<ECS::Registry> registry,
                               std::shared_ptr<AssetManager> assetManager,
@@ -111,6 +113,19 @@ ECS::Entity createStaticText(std::shared_ptr<ECS::Registry> registry,
                              std::string_view title, std::string_view fontId,
                              const ::rtype::display::Vector2f& position,
                              float size);
+
+/**
+ * @brief Create a static image/sprite entity for UI display
+ * @param registry ECS registry
+ * @param textureId ID of the texture (must be pre-loaded in TextureManager)
+ * @param position Position of the image
+ * @param scale Scale of the image (1.0 = original size)
+ * @return Created entity
+ */
+ECS::Entity createStaticImage(std::shared_ptr<ECS::Registry> registry,
+                              std::string_view textureId,
+                              const ::rtype::display::Vector2f& position,
+                              float scale = 1.0f);
 };  // namespace EntityFactory
 
 #endif  // SRC_CLIENT_GRAPHIC_ENTITYFACTORY_ENTITYFACTORY_HPP_

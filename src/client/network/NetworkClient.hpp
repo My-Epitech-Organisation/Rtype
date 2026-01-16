@@ -48,6 +48,7 @@ struct EntitySpawnEvent {
  */
 struct EntityMoveEvent {
     std::uint32_t entityId;
+    std::uint32_t serverTick;
     float x;
     float y;
     float vx;
@@ -85,6 +86,7 @@ struct LobbyInfo {
     std::uint8_t playerCount;
     std::uint8_t maxPlayers;
     bool isActive;
+    std::string levelName;
 };
 
 /**
@@ -106,6 +108,16 @@ struct GameStateEvent {
  */
 struct GameOverEvent {
     std::uint32_t finalScore;
+    bool isVictory{false};
+};
+
+/**
+ * @brief Event data for level announcement
+ */
+struct LevelAnnounceEvent {
+    std::string levelName;
+    std::string background;
+    std::string levelMusic;
 };
 
 /**
@@ -241,7 +253,15 @@ class NetworkClient {
      * InputMask::kShoot)
      * @return true if sent, false if not connected
      */
-    bool sendInput(std::uint8_t inputMask);
+    bool sendInput(std::uint16_t inputMask);
+
+    /**
+     * @brief Send a chat message to the lobby
+     *
+     * @param message Text message to broadcast
+     * @return true if sent, false if msg too long or not connected
+     */
+    bool sendChat(const std::string& message);
 
     /**
      * @brief Send a ping to the server
@@ -259,6 +279,16 @@ class NetworkClient {
      * @return true if sent, false if not connected
      */
     bool sendReady(bool isReady);
+
+    /**
+     * @brief Request low bandwidth mode from server
+     *
+     * Sends C_SET_BANDWIDTH_MODE packet. When enabled, server will send
+     * entity updates at reduced rates to save bandwidth.
+     * @param enable true for low bandwidth mode, false for normal
+     * @return true if sent, false if not connected
+     */
+    bool setLowBandwidthMode(bool enable);
 
     /**
      * @brief Request lobby list from discovery server
@@ -286,6 +316,11 @@ class NetworkClient {
     void removeConnectedCallback(CallbackId id);
 
     /**
+     * @brief Clear all connected callbacks (call from destructors)
+     */
+    void clearConnectedCallbacks();
+
+    /**
      * @brief Register callback for disconnection (graceful or unexpected)
      * @param callback Function receiving the disconnect reason
      */
@@ -293,6 +328,11 @@ class NetworkClient {
     CallbackId addDisconnectedCallback(
         std::function<void(DisconnectReason)> callback);
     void removeDisconnectedCallback(CallbackId id);
+
+    /**
+     * @brief Clear all disconnect callbacks (call from scene destructors)
+     */
+    void clearDisconnectedCallbacks();
 
     /**
      * @brief Register callback for entity spawn events
@@ -313,10 +353,30 @@ class NetworkClient {
     void onEntityMoveBatch(std::function<void(EntityMoveBatchEvent)> callback);
 
     /**
-     * @brief Register callback for entity destruction
+     * @brief Register callback for entity destruction (convenience wrapper)
      * @param callback Function receiving the destroyed entity ID
+     * @note Prefer using addEntityDestroyCallback/removeEntityDestroyCallback
+     * to manage lifetime explicitly.
      */
     void onEntityDestroy(std::function<void(std::uint32_t entityId)> callback);
+
+    /**
+     * @brief Add entity destroy callback and return identifier for removal
+     * @param callback Function receiving the destroyed entity ID
+     */
+    CallbackId addEntityDestroyCallback(
+        std::function<void(std::uint32_t entityId)> callback);
+
+    /**
+     * @brief Remove previously added entity destroy callback
+     * @param id Identifier returned by addEntityDestroyCallback
+     */
+    void removeEntityDestroyCallback(CallbackId id);
+
+    /**
+     * @brief Clear all entity-destroy callbacks
+     */
+    void clearEntityDestroyCallbacks();
 
     /**
      * @brief Register callback for entity health updates
@@ -345,6 +405,8 @@ class NetworkClient {
      */
     void onGameStateChange(std::function<void(GameStateEvent)> callback);
     void onGameOver(std::function<void(GameOverEvent)> callback);
+    void onChatReceived(
+        std::function<void(std::uint32_t, std::string)> callback);
 
     /**
      * @brief Register callback for game start countdown
@@ -360,10 +422,25 @@ class NetworkClient {
         std::function<void(std::uint32_t userId, bool isReady)> callback);
 
     /**
+     * @brief Register callback for bandwidth mode changes broadcast by server
+     * @param callback Function receiving userId, lowBandwidthEnabled, and
+     * activeCount
+     */
+    void onBandwidthModeChanged(
+        std::function<void(std::uint32_t userId, bool lowBandwidth,
+                           std::uint8_t activeCount)>
+            callback);
+
+    /**
      * @brief Register callback for lobby list response
      * @param callback Function receiving the list of available lobbies
      */
     void onLobbyListReceived(std::function<void(LobbyListEvent)> callback);
+
+    /**
+     * @brief Register callback for level announcement
+     */
+    void onLevelAnnounce(std::function<void(LevelAnnounceEvent)> callback);
 
     /**
      * @brief Send the lobby join code to the server (must be used after
@@ -374,9 +451,31 @@ class NetworkClient {
 
     /**
      * @brief Register callback for join lobby response
-     * @param callback Function receiving (accepted, reason)
+     * @param callback Function receiving (accepted, reason, levelName)
      */
-    void onJoinLobbyResponse(std::function<void(bool, uint8_t)> callback);
+    void onJoinLobbyResponse(
+        std::function<void(bool, uint8_t, const std::string&)> callback);
+
+    /**
+     * @brief Send an admin command to the server
+     *
+     * Admin commands are only accepted when running on localhost.
+     *
+     * @param commandType AdminCommandType (GodMode, etc.)
+     * @param param 0=off, 1=on, 2=toggle
+     * @return true if sent, false if not connected
+     */
+    bool sendAdminCommand(std::uint8_t commandType, std::uint8_t param);
+
+    /**
+     * @brief Register callback for admin command responses
+     * @param callback Function receiving (commandType, success, newState,
+     * message)
+     */
+    void onAdminResponse(
+        std::function<void(std::uint8_t cmdType, bool success, bool newState,
+                           const std::string& message)>
+            callback);
 
     /**
      * @brief Process network events and dispatch callbacks
@@ -392,6 +491,12 @@ class NetworkClient {
      * Callbacks are executed on the calling thread.
      */
     void poll();
+
+    /**
+     * @brief Clear all pending callbacks in the queue
+     * @note Call before scene destruction to prevent stale callbacks
+     */
+    void clearPendingCallbacks();
 
     // Test helpers (use from unit tests only)
     void test_dispatchCallbacks();
@@ -434,12 +539,20 @@ class NetworkClient {
                          const network::Buffer& payload);
     void handlePlayerReadyState(const network::Header& header,
                                 const network::Buffer& payload);
+    void handleBandwidthModeChanged(const network::Header& header,
+                                    const network::Buffer& payload);
     void handleLobbyList(const network::Header& header,
                          const network::Buffer& payload);
     void handleJoinLobbyResponse(const network::Header& header,
                                  const network::Buffer& payload);
+    void handleChat(const network::Header& header,
+                    const network::Buffer& payload);
     void handlePong(const network::Header& header,
                     const network::Buffer& payload);
+    void handleLevelAnnounce(const network::Header& header,
+                             const network::Buffer& payload);
+    void handleAdminResponse(const network::Header& header,
+                             const network::Buffer& payload);
 
     void flushOutgoing();
 
@@ -481,11 +594,20 @@ class NetworkClient {
     std::function<void(float, float)> onPositionCorrectionCallback_;
     std::function<void(GameStateEvent)> onGameStateChangeCallback_;
     std::function<void(GameOverEvent)> onGameOverCallback_;
+    std::function<void(std::uint32_t, std::string)> onChatReceivedCallback_;
     std::function<void(float)> onGameStartCallback_;
     std::function<void(std::uint32_t, bool)> onPlayerReadyStateChangedCallback_;
     std::function<void(PowerUpEvent)> onPowerUpCallback_;
     std::function<void(LobbyListEvent)> onLobbyListReceivedCallback_;
-    std::function<void(bool, uint8_t)> onJoinLobbyResponseCallback_;
+    std::function<void(LevelAnnounceEvent)> onLevelAnnounceCallback_;
+    std::optional<LevelAnnounceEvent>
+        pendingLevelAnnounce_;  // Store last announcement for late subscribers
+    std::function<void(bool, uint8_t, const std::string&)>
+        onJoinLobbyResponseCallback_;
+    std::function<void(std::uint8_t, bool, bool, const std::string&)>
+        onAdminResponseCallback_;
+    std::function<void(std::uint32_t, bool, std::uint8_t)>
+        onBandwidthModeChangedCallback_;
 
     std::thread networkThread_;
     std::atomic<bool> networkThreadRunning_{false};

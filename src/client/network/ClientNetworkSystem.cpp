@@ -7,6 +7,9 @@
 
 #include "ClientNetworkSystem.hpp"
 
+#include <algorithm>
+#include <chrono>
+#include <cmath>
 #include <memory>
 #include <utility>
 
@@ -16,26 +19,81 @@
 #include "Logger/Macros.hpp"
 #include "client/Graphic/AudioLib/AudioLib.hpp"
 #include "games/rtype/client/Components/BoxingComponent.hpp"
+#include "games/rtype/client/Components/HiddenComponent.hpp"
 #include "games/rtype/client/Components/ImageComponent.hpp"
+#include "games/rtype/client/Components/LaserBeamAnimationComponent.hpp"
 #include "games/rtype/client/Components/RectangleComponent.hpp"
 #include "games/rtype/client/Components/TagComponent.hpp"
 #include "games/rtype/client/Components/ZIndexComponent.hpp"
 #include "games/rtype/client/GameScene/VisualCueFactory.hpp"
 #include "games/rtype/shared/Components/NetworkIdComponent.hpp"
+#include "games/rtype/shared/Components/PlayerIdComponent.hpp"
 #include "games/rtype/shared/Components/PowerUpComponent.hpp"
 #include "games/rtype/shared/Components/Tags.hpp"
 #include "games/rtype/shared/Components/TransformComponent.hpp"
+#include "games/rtype/shared/Components/WeakPointComponent.hpp"
 
 namespace rtype::client {
 
 using Transform = rtype::games::rtype::shared::TransformComponent;
 using Velocity = rtype::games::rtype::shared::VelocityComponent;
+using Clock = std::chrono::steady_clock;
+
+namespace {
+
+double nowSeconds() {
+    return std::chrono::duration_cast<std::chrono::duration<double>>(
+               Clock::now().time_since_epoch())
+        .count();
+}
+
+void updateProjectileVisuals(ECS::Registry& registry, ECS::Entity entity) {
+    if (!registry.hasComponent<Velocity>(entity) ||
+        !registry.hasComponent<games::rtype::shared::ProjectileTag>(entity) ||
+        !registry.hasComponent<games::rtype::client::Image>(entity)) {
+        return;
+    }
+
+    const auto& vel = registry.getComponent<Velocity>(entity);
+    auto& img = registry.getComponent<games::rtype::client::Image>(entity);
+    const bool isEnemyShot = vel.vx < 0.0F;
+    img.color = (isEnemyShot ? rtype::display::Color(255, 80, 80, 255)
+                             : rtype::display::Color(80, 255, 240, 255));
+
+    if (registry.hasComponent<games::rtype::client::BoxingComponent>(entity)) {
+        auto& box =
+            registry.getComponent<games::rtype::client::BoxingComponent>(
+                entity);
+        box.outlineColor = isEnemyShot
+                               ? rtype::display::Color(255, 80, 80, 255)
+                               : rtype::display::Color(0, 220, 180, 255);
+        box.fillColor = isEnemyShot ? rtype::display::Color(255, 80, 80, 40)
+                                    : rtype::display::Color(0, 220, 180, 35);
+    }
+}
+
+}  // namespace
 
 ClientNetworkSystem::ClientNetworkSystem(
     std::shared_ptr<ECS::Registry> registry,
     std::shared_ptr<NetworkClient> client)
     : registry_(std::move(registry)), client_(std::move(client)) {
     registerCallbacks();
+}
+
+ClientNetworkSystem::~ClientNetworkSystem() {
+    if (client_) {
+        client_->clearPendingCallbacks();
+        client_->clearConnectedCallbacks();
+        client_->clearDisconnectedCallbacks();
+        client_->onEntitySpawn(nullptr);
+        client_->onEntityMove(nullptr);
+        client_->onEntityMoveBatch(nullptr);
+        client_->clearEntityDestroyCallbacks();
+        client_->onEntityHealth(nullptr);
+        client_->onPowerUpEvent(nullptr);
+        client_->onPositionCorrection(nullptr);
+    }
 }
 
 void ClientNetworkSystem::registerCallbacks() {
@@ -113,7 +171,7 @@ void ClientNetworkSystem::onHealthUpdate(
 
 void ClientNetworkSystem::update() { client_->poll(); }
 
-void ClientNetworkSystem::sendInput(std::uint8_t inputMask) {
+void ClientNetworkSystem::sendInput(std::uint16_t inputMask) {
     client_->sendInput(inputMask);
 }
 
@@ -154,10 +212,8 @@ void ClientNetworkSystem::reset() {
     pendingPlayerSpawns_.clear();
     lastKnownHealth_.clear();
     disconnectedHandled_ = false;
-
-    onLocalPlayerAssignedCallback_ = nullptr;
-    onHealthUpdateCallback_ = nullptr;
-    onDisconnectCallback_ = nullptr;
+    debugNotFoundLogCount_ = 0;
+    debugBossPartLogCount_ = 0;
 
     LOG_DEBUG_CAT(rtype::LogCategory::Network,
                   "[ClientNetworkSystem] Network system state reset complete");
@@ -173,13 +229,71 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
                       (localUserId_.has_value() ? std::to_string(*localUserId_)
                                                 : "none"));
 
+    if (event.type == network::EntityType::LaserBeam) {
+        using LaserAnim = games::rtype::client::LaserBeamAnimationComponent;
+        std::vector<ECS::Entity> toDestroy;
+        registry_->view<LaserAnim>().each(
+            [&toDestroy](ECS::Entity entity, const LaserAnim& anim) {
+                if (anim.pendingDestroy) {
+                    toDestroy.push_back(entity);
+                }
+            });
+        for (auto entity : toDestroy) {
+            registry_->killEntity(entity);
+            LOG_DEBUG_CAT(
+                rtype::LogCategory::Network,
+                "[ClientNetworkSystem] Cleaned up old laser beam entity");
+        }
+    }
+
     auto existingIt = networkIdToEntity_.find(event.entityId);
     if (existingIt != networkIdToEntity_.end()) {
         if (registry_->isAlive(existingIt->second)) {
-            LOG_DEBUG_CAT(
-                rtype::LogCategory::Network,
-                "[ClientNetworkSystem] Entity already exists and is alive, "
-                "skipping");
+            LOG_DEBUG("[ClientNetworkSystem] Entity already exists (id="
+                      << event.entityId
+                      << "), updating position and ensuring visible");
+
+            ECS::Entity existingEntity = existingIt->second;
+
+            if (registry_->hasComponent<Transform>(existingEntity)) {
+                auto& pos = registry_->getComponent<Transform>(existingEntity);
+                LOG_DEBUG("[ClientNetworkSystem] Updating position from ("
+                          << pos.x << "," << pos.y << ") to (" << event.x << ","
+                          << event.y << ")");
+                pos.x = event.x;
+                pos.y = event.y;
+            }
+
+            if (registry_->hasComponent<games::rtype::client::HiddenComponent>(
+                    existingEntity)) {
+                auto& hidden =
+                    registry_
+                        ->getComponent<games::rtype::client::HiddenComponent>(
+                            existingEntity);
+                if (hidden.isHidden) {
+                    hidden.isHidden = false;
+                    LOG_DEBUG(
+                        "[ClientNetworkSystem] Unhiding existing entity on "
+                        "spawn");
+                }
+            } else {
+                LOG_DEBUG(
+                    "[ClientNetworkSystem] Entity has no HiddenComponent");
+            }
+
+            if (event.type == network::EntityType::Player) {
+                if (localUserId_.has_value() &&
+                    event.entityId == *localUserId_) {
+                    localPlayerEntity_ = existingEntity;
+                    LOG_DEBUG(
+                        "[ClientNetworkSystem] Existing entity is our local "
+                        "player!");
+                    if (onLocalPlayerAssignedCallback_) {
+                        onLocalPlayerAssignedCallback_(*localUserId_,
+                                                       existingEntity);
+                    }
+                }
+            }
             return;
         } else {
             LOG_DEBUG_CAT(
@@ -229,6 +343,13 @@ void ClientNetworkSystem::handleEntitySpawn(const EntitySpawnEvent& event) {
 void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
     auto it = networkIdToEntity_.find(event.entityId);
     if (it == networkIdToEntity_.end()) {
+        if (debugNotFoundLogCount_ < 100) {
+            LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                          "[ClientNetworkSystem] handleEntityMove: networkId="
+                              << event.entityId << " NOT FOUND in map (size="
+                              << networkIdToEntity_.size() << ")");
+            debugNotFoundLogCount_++;
+        }
         return;
     }
 
@@ -244,42 +365,75 @@ void ClientNetworkSystem::handleEntityMove(const EntityMoveEvent& event) {
         return;
     }
 
+    const bool isLocalPlayer =
+        localPlayerEntity_.has_value() && *localPlayerEntity_ == entity;
+
+    if (isLocalPlayer) {
+        if (registry_->hasComponent<Transform>(entity)) {
+            auto& pos = registry_->getComponent<Transform>(entity);
+            pos.x = event.x;
+            pos.y = event.y;
+        }
+        if (registry_->hasComponent<Velocity>(entity)) {
+            auto& vel = registry_->getComponent<Velocity>(entity);
+            vel.vx = event.vx;
+            vel.vy = event.vy;
+        }
+        if (registry_->hasComponent<games::rtype::client::HiddenComponent>(
+                entity)) {
+            auto& hidden =
+                registry_->getComponent<games::rtype::client::HiddenComponent>(
+                    entity);
+            if (hidden.isHidden) {
+                hidden.isHidden = false;
+                LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                              "[ClientNetworkSystem] Unhiding local player "
+                              "entity after receiving position");
+            }
+        }
+        return;
+    }
+
     if (registry_->hasComponent<Transform>(entity)) {
         auto& pos = registry_->getComponent<Transform>(entity);
+
+        if (debugBossPartLogCount_ < 60 &&
+            registry_->hasComponent<rtype::games::rtype::shared::WeakPointTag>(
+                entity)) {
+            LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                          "[ClientNetworkSystem] BossPart move: netId="
+                              << event.entityId << " entity=" << entity.id
+                              << " pos (" << pos.x << "," << pos.y << ") -> ("
+                              << event.x << "," << event.y << ")");
+            debugBossPartLogCount_++;
+        }
+
         pos.x = event.x;
         pos.y = event.y;
+
+        if (registry_->hasComponent<games::rtype::shared::PlayerIdComponent>(
+                entity) &&
+            registry_->hasComponent<games::rtype::client::HiddenComponent>(
+                entity)) {
+            auto& hidden =
+                registry_->getComponent<games::rtype::client::HiddenComponent>(
+                    entity);
+            if (hidden.isHidden) {
+                hidden.isHidden = false;
+                LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                              "[ClientNetworkSystem] Unhiding player entity "
+                              "after receiving position from server");
+            }
+        }
     }
 
     if (registry_->hasComponent<Velocity>(entity)) {
         auto& vel = registry_->getComponent<Velocity>(entity);
         vel.vx = event.vx;
         vel.vy = event.vy;
-
-        if (registry_->hasComponent<games::rtype::shared::ProjectileTag>(
-                entity) &&
-            registry_->hasComponent<games::rtype::client::Image>(entity)) {
-            auto& img =
-                registry_->getComponent<games::rtype::client::Image>(entity);
-            const bool isEnemyShot = vel.vx < 0.0F;
-            img.color =
-                (isEnemyShot ? rtype::display::Color(255, 80, 80, 255)
-                             : rtype::display::Color(80, 255, 240, 255));
-
-            if (registry_->hasComponent<games::rtype::client::BoxingComponent>(
-                    entity)) {
-                auto& box =
-                    registry_
-                        ->getComponent<games::rtype::client::BoxingComponent>(
-                            entity);
-                box.outlineColor =
-                    isEnemyShot ? rtype::display::Color(255, 80, 80, 255)
-                                : rtype::display::Color(0, 220, 180, 255);
-                box.fillColor = isEnemyShot
-                                    ? rtype::display::Color(255, 80, 80, 40)
-                                    : rtype::display::Color(0, 220, 180, 35);
-            }
-        }
     }
+
+    updateProjectileVisuals(*registry_, entity);
 }
 
 void ClientNetworkSystem::_playDeathSound(ECS::Entity entity) {
@@ -326,6 +480,20 @@ void ClientNetworkSystem::handleEntityDestroy(std::uint32_t entityId) {
     ECS::Entity entity = it->second;
 
     if (registry_->isAlive(entity)) {
+        using LaserAnim = games::rtype::client::LaserBeamAnimationComponent;
+        if (registry_->hasComponent<LaserAnim>(entity)) {
+            auto& anim = registry_->getComponent<LaserAnim>(entity);
+            if (!anim.pendingDestroy) {
+                anim.pendingDestroy = true;
+                LOG_DEBUG_CAT(
+                    rtype::LogCategory::Network,
+                    "[ClientNetworkSystem] Laser beam end animation triggered");
+            }
+            this->networkIdToEntity_.erase(it);
+            lastKnownHealth_.erase(entityId);
+            return;
+        }
+
         _playDeathSound(entity);
         registry_->killEntity(entity);
         LOG_DEBUG_CAT(rtype::LogCategory::Network,
@@ -421,8 +589,28 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
         games::rtype::client::VisualCueFactory::createFlash(
             *registry_, {pos.x, pos.y}, rtype::display::Color(255, 80, 80, 255),
             70.f, 0.25f, 12);
-    }
+        bool isLocalPlayer =
+            localUserId_.has_value() && event.entityId == *localUserId_;
+        bool hasEnemyTag =
+            registry_->hasComponent<rtype::games::rtype::shared::EnemyTag>(
+                entity);
 
+        LOG_INFO("[ClientNetworkSystem] Health change: entityId="
+                 << event.entityId << " isLocalPlayer=" << isLocalPlayer
+                 << " hasEnemyTag=" << hasEnemyTag
+                 << " previousHealth=" << previousHealth.value()
+                 << " currentHealth=" << event.current);
+
+        if (!isLocalPlayer && hasEnemyTag) {
+            int32_t damageAmount = previousHealth.value() - event.current;
+            LOG_INFO("[ClientNetworkSystem] Creating damage popup for enemy "
+                     << event.entityId << " damage=" << damageAmount
+                     << " at position (" << pos.x << ", " << pos.y << ")");
+            games::rtype::client::VisualCueFactory::createDamagePopup(
+                *registry_, {pos.x, pos.y}, damageAmount, "title_font",
+                rtype::display::Color(255, 200, 0, 255));
+        }
+    }
     lastKnownHealth_[event.entityId] = {event.current, event.max};
 
     if (onHealthUpdateCallback_ && localUserId_.has_value() &&
@@ -436,19 +624,29 @@ void ClientNetworkSystem::handleEntityHealth(const EntityHealthEvent& event) {
 }
 
 void ClientNetworkSystem::handlePowerUpEvent(const PowerUpEvent& event) {
+    LOG_INFO("[ClientNetworkSystem] *** RECEIVED POWERUP EVENT ***: playerId="
+             << event.playerId
+             << " type=" << static_cast<int>(event.powerUpType)
+             << " duration=" << event.duration);
+
     auto it = networkIdToEntity_.find(event.playerId);
     if (it == networkIdToEntity_.end()) {
+        LOG_WARNING("[ClientNetworkSystem] PowerUp event for unknown player: "
+                    << event.playerId);
         return;
     }
 
     ECS::Entity entity = it->second;
     if (!registry_->isAlive(entity)) {
+        LOG_WARNING("[ClientNetworkSystem] PowerUp event for dead entity");
         return;
     }
 
     const auto powerUpType =
         static_cast<rtype::games::rtype::shared::PowerUpType>(
             event.powerUpType);
+
+    LOG_INFO("[ClientNetworkSystem] Applying powerup to entity " << entity.id);
 
     auto& active =
         registry_->hasComponent<
@@ -466,6 +664,10 @@ void ClientNetworkSystem::handlePowerUpEvent(const PowerUpEvent& event) {
     active.shieldActive =
         powerUpType == rtype::games::rtype::shared::PowerUpType::Shield;
     active.hasOriginalCooldown = false;
+
+    LOG_INFO("[ClientNetworkSystem] ActivePowerUpComponent set: type="
+             << static_cast<int>(active.type)
+             << " remainingTime=" << active.remainingTime);
 
     if (registry_
             ->hasComponent<rtype::games::rtype::shared::TransformComponent>(

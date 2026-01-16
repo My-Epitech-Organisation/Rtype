@@ -15,8 +15,11 @@
 #include <vector>
 
 #include "AllComponents.hpp"
+#include "Components/ChargeShotVisualComponent.hpp"
 #include "Components/CountdownComponent.hpp"
+#include "Components/PowerUpComponent.hpp"
 #include "Components/TagComponent.hpp"
+#include "Components/Tags.hpp"
 #include "Components/TextComponent.hpp"
 #include "Components/ZIndexComponent.hpp"
 #include "Graphic/EntityFactory/EntityFactory.hpp"
@@ -30,6 +33,7 @@
 #include "games/rtype/client/GameOverState.hpp"
 #include "games/rtype/client/PauseState.hpp"
 #include "games/rtype/shared/Components/HealthComponent.hpp"
+#include "games/rtype/shared/Components/PlayerIdComponent.hpp"
 
 namespace rs = ::rtype::games::rtype::shared;
 
@@ -41,12 +45,21 @@ RtypeGameScene::RtypeGameScene(
     std::shared_ptr<::rtype::display::IDisplay> display,
     std::shared_ptr<KeyboardActions> keybinds,
     std::function<void(const SceneManager::Scene&)> switchToScene,
+    std::function<void(const std::string&)> setBackground,
+    std::function<void(const std::string&)> setLevelMusic,
     std::shared_ptr<::rtype::client::NetworkClient> networkClient,
     std::shared_ptr<::rtype::client::ClientNetworkSystem> networkSystem,
     std::shared_ptr<AudioLib> audioLib)
     : AGameScene(std::move(registry), std::move(assetsManager), display,
                  std::move(keybinds), std::move(switchToScene),
-                 std::move(networkClient), std::move(networkSystem)) {
+                 std::move(setBackground), std::move(setLevelMusic),
+                 std::move(networkClient), std::move(networkSystem)),
+      _movementSystem(
+          std::make_unique<::rtype::games::rtype::shared::MovementSystem>()),
+      _laserBeamAnimationSystem(std::make_unique<LaserBeamAnimationSystem>()),
+      _lifetimeSystem(
+          std::make_unique<::rtype::games::rtype::shared::LifetimeSystem>()),
+      _clientDestroySystem(std::make_unique<ClientDestroySystem>()) {
     if (_networkClient) {
         auto registry = _registry;
         auto switchToScene = _switchToScene;
@@ -59,12 +72,12 @@ RtypeGameScene::RtypeGameScene(
                         registry->setSingleton<
                             ::rtype::games::rtype::client::GameOverState>(
                             ::rtype::games::rtype::client::GameOverState{
-                                event.finalScore});
+                                event.finalScore, event.isVictory});
                     } else {
-                        registry
-                            ->getSingleton<
-                                ::rtype::games::rtype::client::GameOverState>()
-                            .finalScore = event.finalScore;
+                        auto& state = registry->getSingleton<
+                            ::rtype::games::rtype::client::GameOverState>();
+                        state.finalScore = event.finalScore;
+                        state.isVictory = event.isVictory;
                     }
                 }
                 if (switchToScene) {
@@ -80,6 +93,19 @@ RtypeGameScene::~RtypeGameScene() {
 
     _isDisconnected = true;
 
+    if (_networkClient) {
+        _networkClient->clearPendingCallbacks();
+        _networkClient->onGameOver(nullptr);
+        _networkClient->onEntityMove(nullptr);
+        _networkClient->onEntityMoveBatch(nullptr);
+        _networkClient->onEntityHealth(nullptr);
+        _networkClient->clearDisconnectedCallbacks();
+        _networkClient->onGameStateChange(nullptr);
+    }
+    if (_bandwidthIndicatorEntity.has_value()) {
+        _registry->killEntity(*this->_bandwidthIndicatorEntity);
+    }
+
     clearDamageVignette();
     _vignetteEntities.clear();
     _vignetteAlpha = 0.0F;
@@ -92,13 +118,54 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
                   "[RtypeGameScene] Initialize called");
     std::vector<ECS::Entity> entities;
 
-    auto bgEntities = EntityFactory::createBackground(this->_registry,
-                                                      this->_assetsManager, "");
+    LOG_INFO("[RtypeGameScene] Checking for player entities to reposition...");
+    int playerCount = 0;
+    constexpr float kGameSpawnX = 100.0f;
+    constexpr float kGameSpawnBaseY = 150.0f;
+    constexpr float kGameSpawnYOffset = 100.0f;
+
+    this->_registry->view<rs::PlayerIdComponent>().each([this, &playerCount](
+                                                            auto playerEntt,
+                                                            auto& id) {
+        playerCount++;
+        if (this->_registry->hasComponent<rs::TransformComponent>(playerEntt)) {
+            auto& transform =
+                this->_registry->getComponent<rs::TransformComponent>(
+                    playerEntt);
+            transform.x = kGameSpawnX;
+            transform.y =
+                kGameSpawnBaseY +
+                (static_cast<float>(id.playerId - 1) * kGameSpawnYOffset);
+            LOG_INFO("[RtypeGameScene] Repositioned player "
+                     << id.playerId << " to game spawn (" << transform.x << ", "
+                     << transform.y << ")");
+        }
+        if (this->_registry->hasComponent<HiddenComponent>(playerEntt)) {
+            this->_registry->getComponent<HiddenComponent>(playerEntt)
+                .isHidden = false;
+        }
+        if (!this->_registry->hasComponent<GameTag>(playerEntt)) {
+            this->_registry->emplaceComponent<GameTag>(playerEntt);
+            LOG_DEBUG("[RtypeGameScene] Added GameTag to player "
+                      << id.playerId);
+        }
+        if (this->_registry->hasComponent<LobbyTag>(playerEntt)) {
+            this->_registry->removeComponent<LobbyTag>(playerEntt);
+            LOG_DEBUG("[RtypeGameScene] Removed LobbyTag from player "
+                      << id.playerId);
+        }
+    });
+    LOG_INFO("[RtypeGameScene] Prepared " << playerCount
+                                          << " player entities for game");
+
+    auto bgEntities = EntityFactory::createBackground(
+        this->_registry, this->_assetsManager, "", nullptr);
     entities.insert(entities.end(), bgEntities.begin(), bgEntities.end());
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[RtypeGameScene] Background created with "
                       << bgEntities.size() << " entities");
     if (_networkSystem) {
+        _networkSystem->registerCallbacks();
         LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                       "[RtypeGameScene] Setting up local player callback");
         setupLocalPlayerCallback();
@@ -125,7 +192,10 @@ std::vector<ECS::Entity> RtypeGameScene::initialize() {
         "[RtypeGameScene] _registry is " << (_registry ? "valid" : "NULL"));
     LOG_DEBUG_CAT(::rtype::LogCategory::UI, "[RtypeGameScene] Setting up HUD");
     setupHud();
+    setupLevelAnnounceCallback();
     setupDamageVignette();
+    updateBandwidthIndicator();
+    setupBandwidthModeCallback();
     LOG_DEBUG_CAT(::rtype::LogCategory::UI,
                   "[RtypeGameScene] HUD setup complete");
     auto pauseEntities = RtypePauseMenu::createPauseMenu(
@@ -157,6 +227,15 @@ void RtypeGameScene::update() {
 
     updateDamageVignette(dt);
     updatePingDisplay();
+    updateLevelAnnounce(dt);
+    updatePowerUpIndicator(dt);
+
+    if (_registry->hasSingleton<std::shared_ptr<AudioLib>>()) {
+        auto audioLib = _registry->getSingleton<std::shared_ptr<AudioLib>>();
+        if (audioLib) {
+            audioLib->update();
+        }
+    }
 
     if (_isDisconnected) {
         if (_networkSystem) {
@@ -172,8 +251,32 @@ void RtypeGameScene::update() {
         }
     }
 
-    if (_networkSystem) {
-        _networkSystem->update();
+    if (_bandwidthNotificationTimer > 0.0F) {
+        _bandwidthNotificationTimer =
+            std::max(0.0F, _bandwidthNotificationTimer - dt);
+        if (_bandwidthNotificationTimer == 0.0F) {
+            if (_bandwidthNotificationEntity.has_value() &&
+                _registry->isAlive(*_bandwidthNotificationEntity)) {
+                _registry->killEntity(*_bandwidthNotificationEntity);
+                _bandwidthNotificationEntity.reset();
+            }
+        }
+    }
+
+    if (_movementSystem && _registry) {
+        _movementSystem->update(*_registry, dt);
+    }
+
+    if (_laserBeamAnimationSystem && _registry) {
+        _laserBeamAnimationSystem->update(*_registry, dt);
+    }
+
+    if (_lifetimeSystem && _registry) {
+        _lifetimeSystem->update(*_registry, dt);
+    }
+
+    if (_clientDestroySystem && _registry) {
+        _clientDestroySystem->update(*_registry, dt);
     }
 
     bool isPaused = false;
@@ -185,19 +288,19 @@ void RtypeGameScene::update() {
         return;
     }
 
-    std::uint8_t inputMask = getInputMask();
+    std::uint16_t inputMask = getInputMask();
 
     if (_networkSystem && _networkSystem->isConnected()) {
         bool shouldSend = false;
 
-        constexpr std::uint8_t kMovementMask =
+        constexpr std::uint16_t kMovementMask =
             ::rtype::network::InputMask::kUp |
             ::rtype::network::InputMask::kDown |
             ::rtype::network::InputMask::kLeft |
             ::rtype::network::InputMask::kRight;
 
-        std::uint8_t currentMovement = inputMask & kMovementMask;
-        std::uint8_t lastMovement = _lastInputMask & kMovementMask;
+        std::uint16_t currentMovement = inputMask & kMovementMask;
+        std::uint16_t lastMovement = _lastInputMask & kMovementMask;
 
         if (currentMovement != lastMovement) {
             shouldSend = true;
@@ -207,6 +310,11 @@ void RtypeGameScene::update() {
             (inputMask & ::rtype::network::InputMask::kShoot) != 0;
         bool wasShootingLast =
             (_lastInputMask & ::rtype::network::InputMask::kShoot) != 0;
+        bool isChargedShotNow =
+            (inputMask & ::rtype::network::InputMask::kChargeLevelMask) != 0;
+        bool wasChargedShotLast =
+            (_lastInputMask & ::rtype::network::InputMask::kChargeLevelMask) !=
+            0;
 
         if (isShootingNow) {
             if (!wasShootingLast) {
@@ -220,9 +328,42 @@ void RtypeGameScene::update() {
         } else if (wasShootingLast) {
             shouldSend = true;
         }
+        if (isChargedShotNow && !wasChargedShotLast) {
+            LOG_INFO("[RtypeGameScene] *** SENDING CHARGED SHOT *** mask=0x"
+                     << std::hex << static_cast<int>(inputMask));
+            shouldSend = true;
+        }
+
+        bool isWeaponSwitchNow =
+            (inputMask & ::rtype::network::InputMask::kWeaponSwitch) != 0;
+        bool wasWeaponSwitchLast =
+            (_lastInputMask & ::rtype::network::InputMask::kWeaponSwitch) != 0;
+        if (isWeaponSwitchNow != wasWeaponSwitchLast) {
+            shouldSend = true;
+        }
+
+        bool isForcePodNow =
+            (inputMask & ::rtype::network::InputMask::kForcePod) != 0;
+        bool wasForcePodLast =
+            (_lastInputMask & ::rtype::network::InputMask::kForcePod) != 0;
+        if (isForcePodNow != wasForcePodLast) {
+            shouldSend = true;
+        }
 
         if (shouldSend) {
             _networkSystem->sendInput(inputMask);
+            if (_registry && _registry->hasSingleton<ChargeShotInputState>()) {
+                auto& chargeState =
+                    _registry->getSingleton<ChargeShotInputState>();
+                if (chargeState.shouldFireShot) {
+                    chargeState.shouldFireShot = false;
+                    chargeState.releasedChargeLevel =
+                        ::rtype::games::rtype::shared::ChargeLevel::None;
+                    LOG_DEBUG_CAT(::rtype::LogCategory::Input,
+                                  "[RtypeGameScene] Reset shouldFireShot flag "
+                                  "after sending input");
+                }
+            }
         }
         _lastInputMask = inputMask;
     }
@@ -233,18 +374,111 @@ void RtypeGameScene::render(::rtype::display::IDisplay& display) {
 }
 
 void RtypeGameScene::pollEvents(const ::rtype::display::Event& event) {
+    if (event.type == ::rtype::display::EventType::KeyPressed) {
+        LOG_INFO("[RtypeGameScene] Key pressed: "
+                 << static_cast<int>(event.key.code));
+    }
     if (event.type == ::rtype::display::EventType::KeyPressed ||
         event.type == ::rtype::display::EventType::KeyReleased) {
         RtypeInputHandler::updateKeyState(event);
+    }
+    if (event.type == ::rtype::display::EventType::KeyPressed) {
+        auto toggleKey =
+            _keybinds->getKeyBinding(GameAction::TOGGLE_LOW_BANDWIDTH);
+        if (toggleKey.has_value() && event.key.code == *toggleKey) {
+            toggleLowBandwidthMode();
+        }
     }
     if (event.type == ::rtype::display::EventType::KeyReleased ||
         event.type == ::rtype::display::EventType::JoystickButtonReleased) {
         RtypeInputHandler::handleKeyReleasedEvent(event, _keybinds, _registry);
     }
+    auto chargeShotKey = _keybinds->getKeyBinding(GameAction::CHARGE_SHOT);
+    if (event.type == ::rtype::display::EventType::KeyPressed &&
+        chargeShotKey.has_value() && event.key.code == *chargeShotKey) {
+        LOG_INFO("[RtypeGameScene] *** CHARGE SHOT KEY PRESSED ***");
+        if (!_registry->hasSingleton<ChargeShotInputState>()) {
+            _registry->setSingleton<ChargeShotInputState>();
+        }
+        _registry->getSingleton<ChargeShotInputState>().isPressed = true;
+    }
+    if (event.type == ::rtype::display::EventType::KeyReleased &&
+        chargeShotKey.has_value() && event.key.code == *chargeShotKey) {
+        LOG_INFO("[RtypeGameScene] *** CHARGE SHOT KEY RELEASED ***");
+        if (_registry->hasSingleton<ChargeShotInputState>()) {
+            _registry->getSingleton<ChargeShotInputState>().isPressed = false;
+        }
+    }
+    auto chargeShotBtn =
+        _keybinds->getJoyButtonBinding(GameAction::CHARGE_SHOT);
+    if (event.type == ::rtype::display::EventType::JoystickButtonPressed &&
+        chargeShotBtn.has_value() &&
+        event.joystickButton.button == *chargeShotBtn) {
+        LOG_INFO(
+            "[RtypeGameScene] *** CHARGE SHOT JOYSTICK BUTTON PRESSED ***");
+        if (!_registry->hasSingleton<ChargeShotInputState>()) {
+            _registry->setSingleton<ChargeShotInputState>();
+        }
+        _registry->getSingleton<ChargeShotInputState>().isPressed = true;
+    }
+    if (event.type == ::rtype::display::EventType::JoystickButtonReleased &&
+        chargeShotBtn.has_value() &&
+        event.joystickButton.button == *chargeShotBtn) {
+        LOG_INFO(
+            "[RtypeGameScene] *** CHARGE SHOT JOYSTICK BUTTON RELEASED ***");
+        if (_registry->hasSingleton<ChargeShotInputState>()) {
+            _registry->getSingleton<ChargeShotInputState>().isPressed = false;
+        }
+    }
+    if (event.type == ::rtype::display::EventType::MouseButtonPressed &&
+        event.mouseButton.button == ::rtype::display::MouseButton::Right) {
+        LOG_INFO("[RtypeGameScene] *** CHARGE SHOT MOUSE RIGHT PRESSED ***");
+        if (!_registry->hasSingleton<ChargeShotInputState>()) {
+            _registry->setSingleton<ChargeShotInputState>();
+        }
+        _registry->getSingleton<ChargeShotInputState>().isPressed = true;
+    }
+    if (event.type == ::rtype::display::EventType::MouseButtonReleased &&
+        event.mouseButton.button == ::rtype::display::MouseButton::Right) {
+        LOG_INFO("[RtypeGameScene] *** CHARGE SHOT MOUSE RIGHT RELEASED ***");
+        if (_registry->hasSingleton<ChargeShotInputState>()) {
+            _registry->getSingleton<ChargeShotInputState>().isPressed = false;
+        }
+    }
 }
 
-std::uint8_t RtypeGameScene::getInputMask() const {
-    return RtypeInputHandler::getInputMask(_keybinds);
+std::uint16_t RtypeGameScene::getInputMask() const {
+    std::uint16_t mask = RtypeInputHandler::getInputMask(_keybinds);
+    if (_registry && _registry->hasSingleton<ChargeShotInputState>()) {
+        auto& chargeState = _registry->getSingleton<ChargeShotInputState>();
+        if (chargeState.isPressed && !chargeState.shouldFireShot) {
+            mask &= ~::rtype::network::InputMask::kShoot;
+        }
+        if (chargeState.shouldFireShot) {
+            mask &= ~(::rtype::network::InputMask::kShoot |
+                      ::rtype::network::InputMask::kChargeLevelMask);
+            switch (chargeState.releasedChargeLevel) {
+                case ::rtype::games::rtype::shared::ChargeLevel::Level1:
+                    mask |= ::rtype::network::InputMask::kChargeLevel1;
+                    break;
+                case ::rtype::games::rtype::shared::ChargeLevel::Level2:
+                    mask |= ::rtype::network::InputMask::kChargeLevel2;
+                    break;
+                case ::rtype::games::rtype::shared::ChargeLevel::Level3:
+                    mask |= ::rtype::network::InputMask::kChargeLevel3;
+                    break;
+                default:
+                    mask |= ::rtype::network::InputMask::kShoot;
+                    break;
+            }
+            LOG_DEBUG_CAT(
+                ::rtype::LogCategory::Input,
+                "[RtypeGameScene] Charged shot released at level "
+                    << static_cast<int>(chargeState.releasedChargeLevel)
+                    << ", mask=0x" << std::hex << static_cast<int>(mask));
+        }
+    }
+    return mask;
 }
 
 void RtypeGameScene::setupEntityFactory() {
@@ -261,8 +495,21 @@ void RtypeGameScene::setupLocalPlayerCallback() {
         [this, registry](std::uint32_t userId, ECS::Entity entity) {
             if (registry->isAlive(entity)) {
                 registry->emplaceComponent<ControllableTag>(entity);
+                if (!registry->hasComponent<rs::ChargeComponent>(entity)) {
+                    registry->emplaceComponent<rs::ChargeComponent>(entity);
+                }
+                if (!registry->hasComponent<ChargeShotVisual>(entity)) {
+                    registry->emplaceComponent<ChargeShotVisual>(entity);
+                }
+                if (!registry->hasComponent<ChargeBarUI>(entity)) {
+                    registry->emplaceComponent<ChargeBarUI>(entity);
+                }
+                if (!registry->hasComponent<ColorTint>(entity)) {
+                    registry->emplaceComponent<ColorTint>(entity);
+                }
                 LOG_DEBUG_CAT(::rtype::LogCategory::UI,
-                              "[RtypeGameScene] Local player entity assigned");
+                              "[RtypeGameScene] Local player entity assigned "
+                              "with charge visual components");
             }
             _localPlayerEntity = entity;
             _localPlayerId = userId;
@@ -309,7 +556,7 @@ void RtypeGameScene::setupHud() {
     _healthBarFillEntity = fill;
 
     auto hpText = EntityFactory::createStaticText(
-        _registry, _assetsManager, "HP: --/--", "title_font",
+        _registry, _assetsManager, "HP: 100/100", "title_font",
         ::rtype::display::Vector2f{barPos.x + barWidth / 2.0f,
                                    barPos.y + barHeight / 2.0f},
         20.f);
@@ -417,6 +664,101 @@ void RtypeGameScene::updatePingDisplay() {
         } else {
             text.color = ::rtype::display::Color(220, 90, 90, 255);
         }
+    }
+}
+
+void RtypeGameScene::updatePowerUpIndicator(float deltaTime) {
+    if (!_localPlayerEntity.has_value() ||
+        !_registry->isAlive(*_localPlayerEntity)) {
+        return;
+    }
+
+    const float indicatorX = 250.f;
+    const float indicatorY = 22.f;
+
+    bool hasActivePowerUp = _registry->hasComponent<rs::ActivePowerUpComponent>(
+        *_localPlayerEntity);
+    if (hasActivePowerUp) {
+        auto& activePowerUpMut =
+            _registry->getComponent<rs::ActivePowerUpComponent>(
+                *_localPlayerEntity);
+        if (activePowerUpMut.remainingTime > 0.0f) {
+            activePowerUpMut.remainingTime -= deltaTime;
+            if (activePowerUpMut.remainingTime < 0.0f) {
+                activePowerUpMut.remainingTime = 0.0f;
+            }
+        }
+    }
+
+    if (!hasActivePowerUp ||
+        _registry->getComponent<rs::ActivePowerUpComponent>(*_localPlayerEntity)
+                .type == rs::PowerUpType::None) {
+        if (_powerUpTextEntity.has_value() &&
+            _registry->isAlive(*_powerUpTextEntity)) {
+            _registry->emplaceComponent<rs::DestroyTag>(*_powerUpTextEntity);
+            _powerUpTextEntity.reset();
+        }
+        return;
+    }
+
+    const auto& activePowerUp =
+        _registry->getComponent<rs::ActivePowerUpComponent>(
+            *_localPlayerEntity);
+
+    std::string powerUpSymbol;
+    ::rtype::display::Color powerUpColor;
+    switch (activePowerUp.type) {
+        case rs::PowerUpType::SpeedBoost:
+            powerUpSymbol = "[SPD]";
+            powerUpColor = ::rtype::display::Color(255, 255, 0);
+            break;
+        case rs::PowerUpType::Shield:
+            powerUpSymbol = "[SHD]";
+            powerUpColor = ::rtype::display::Color(100, 200, 255);
+            break;
+        case rs::PowerUpType::RapidFire:
+            powerUpSymbol = "[RPD]";
+            powerUpColor = ::rtype::display::Color(0, 255, 255);
+            break;
+        case rs::PowerUpType::DoubleDamage:
+            powerUpSymbol = "[DMG]";
+            powerUpColor = ::rtype::display::Color(255, 128, 0);
+            break;
+        case rs::PowerUpType::HealthBoost:
+            powerUpSymbol = "[HP+]";
+            powerUpColor = ::rtype::display::Color(0, 255, 0);
+            break;
+        case rs::PowerUpType::ForcePod:
+            powerUpSymbol = "[POD]";
+            powerUpColor = ::rtype::display::Color(255, 0, 255);
+            break;
+        case rs::PowerUpType::LaserUpgrade:
+            powerUpSymbol = "[LAS]";
+            powerUpColor = ::rtype::display::Color(255, 100, 100);
+            break;
+        default:
+            powerUpSymbol = "[PWR]";
+            powerUpColor = ::rtype::display::Color::White();
+            break;
+    }
+
+    int remainingSecs = static_cast<int>(activePowerUp.remainingTime);
+    std::string displayText =
+        powerUpSymbol + " " + std::to_string(remainingSecs) + "s";
+
+    if (!_powerUpTextEntity.has_value() ||
+        !_registry->isAlive(*_powerUpTextEntity)) {
+        _powerUpTextEntity = EntityFactory::createStaticText(
+            _registry, _assetsManager, displayText, "title_font",
+            ::rtype::display::Vector2f{indicatorX, indicatorY}, 18.f);
+        _registry->emplaceComponent<ZIndex>(*_powerUpTextEntity,
+                                            GraphicsConfig::ZINDEX_UI + 2);
+        _registry->emplaceComponent<HudTag>(*_powerUpTextEntity);
+        _registry->emplaceComponent<GameTag>(*_powerUpTextEntity);
+    } else {
+        auto& text = _registry->getComponent<Text>(*_powerUpTextEntity);
+        text.textContent = displayText;
+        text.color = powerUpColor;
     }
 }
 
@@ -818,6 +1160,7 @@ void RtypeGameScene::showDisconnectModal(network::DisconnectReason reason) {
     std::function<void()> buttonCallback = [this]() {
         LOG_INFO("[RtypeGameScene] Returning to main menu after disconnect");
         cleanupDisconnectModal();
+        cleanupBeforeMainMenu();
         _switchToScene(SceneManager::MAIN_MENU);
     };
 
@@ -845,6 +1188,70 @@ void RtypeGameScene::cleanupDisconnectModal() {
     _isDisconnected = false;
 }
 
+void RtypeGameScene::cleanupBeforeMainMenu() {
+    LOG_INFO(
+        "[RtypeGameScene] Cleaning up all game state before returning to main "
+        "menu");
+
+    std::vector<ECS::Entity> gameEntitiesToDestroy;
+    _registry->view<GameTag>().each([&](ECS::Entity entity, GameTag& /*tag*/) {
+        gameEntitiesToDestroy.push_back(entity);
+    });
+
+    for (const auto& entity : gameEntitiesToDestroy) {
+        if (_registry->isAlive(entity)) {
+            _registry->killEntity(entity);
+        }
+    }
+    LOG_INFO("[RtypeGameScene] Destroyed " << gameEntitiesToDestroy.size()
+                                           << " game entities");
+
+    std::vector<ECS::Entity> lobbyEntitiesToDestroy;
+    _registry->view<LobbyTag>().each(
+        [&](ECS::Entity entity, LobbyTag& /*tag*/) {
+            lobbyEntitiesToDestroy.push_back(entity);
+        });
+
+    for (const auto& entity : lobbyEntitiesToDestroy) {
+        if (_registry->isAlive(entity)) {
+            _registry->killEntity(entity);
+        }
+    }
+    LOG_INFO("[RtypeGameScene] Destroyed " << lobbyEntitiesToDestroy.size()
+                                           << " lobby entities");
+
+    std::vector<ECS::Entity> pauseEntitiesToDestroy;
+    _registry->view<PauseMenuTag>().each(
+        [&](ECS::Entity entity, PauseMenuTag& /*tag*/) {
+            pauseEntitiesToDestroy.push_back(entity);
+        });
+
+    for (const auto& entity : pauseEntitiesToDestroy) {
+        if (_registry->isAlive(entity)) {
+            _registry->killEntity(entity);
+        }
+    }
+    LOG_INFO("[RtypeGameScene] Destroyed " << pauseEntitiesToDestroy.size()
+                                           << " pause menu entities");
+
+    if (_networkSystem) {
+        LOG_INFO("[RtypeGameScene] Resetting network system");
+        _networkSystem->reset();
+    }
+
+    if (_networkClient) {
+        LOG_INFO("[RtypeGameScene] Clearing network client callbacks");
+        _networkClient->onLevelAnnounce(nullptr);
+        _networkClient->onGameStart(nullptr);
+        _networkClient->onGameOver(nullptr);
+        _networkClient->onBandwidthModeChanged(nullptr);
+    }
+
+    _isDisconnected = false;
+
+    LOG_INFO("[RtypeGameScene] Cleanup complete, ready for main menu");
+}
+
 std::string RtypeGameScene::getDisconnectMessage(
     network::DisconnectReason reason) const {
     switch (reason) {
@@ -864,6 +1271,226 @@ std::string RtypeGameScene::getDisconnectMessage(
             return "You have been banned from this server.";
         default:
             return "Connection lost for unknown reason.";
+    }
+}
+
+void RtypeGameScene::toggleLowBandwidthMode() {
+    _lowBandwidthMode = !_lowBandwidthMode;
+    if (_networkClient) {
+        _networkClient->setLowBandwidthMode(_lowBandwidthMode);
+        LOG_INFO_CAT(::rtype::LogCategory::Network,
+                     "[RtypeGameScene] Low bandwidth mode "
+                         << (_lowBandwidthMode ? "ENABLED" : "DISABLED")
+                         << " (F9 toggled)");
+    }
+    updateBandwidthIndicator();
+}
+
+void RtypeGameScene::updateBandwidthIndicator() {
+    if (_bandwidthIndicatorEntity.has_value() &&
+        _registry->isAlive(*_bandwidthIndicatorEntity)) {
+        _registry->killEntity(*_bandwidthIndicatorEntity);
+    }
+
+    auto windowSize = _display->getWindowSize();
+    float xPos = 10.0F;
+    float yPos = static_cast<float>(windowSize.y) - 30.0F;
+
+    auto indicator = _registry->spawnEntity();
+
+    if (_lowBandwidthMode) {
+        _registry->emplaceComponent<rs::TransformComponent>(indicator, xPos,
+                                                            yPos);
+        _registry->emplaceComponent<Text>(indicator, "title_font",
+                                          ::rtype::display::Color(255, 180, 0),
+                                          20, "LOW BANDWIDTH [F9]");
+    } else {
+        _registry->emplaceComponent<rs::TransformComponent>(indicator, xPos,
+                                                            yPos + 6.0F);
+        _registry->emplaceComponent<Text>(
+            indicator, "title_font", ::rtype::display::Color(128, 128, 128), 14,
+            "F9: Low Bandwidth");
+    }
+
+    _registry->emplaceComponent<ZIndex>(indicator,
+                                        GraphicsConfig::ZINDEX_UI + 1);
+    _registry->emplaceComponent<StaticTextTag>(indicator);
+    _registry->emplaceComponent<GameTag>(indicator);
+
+    _bandwidthIndicatorEntity = indicator;
+}
+
+void RtypeGameScene::showBandwidthNotification(std::uint32_t userId,
+                                               bool enabled,
+                                               std::uint8_t activeCount) {
+    _lowBandwidthActiveCount = activeCount;
+
+    if (_localPlayerId.has_value() && userId == *_localPlayerId) {
+        return;
+    }
+
+    if (_bandwidthNotificationEntity.has_value() &&
+        _registry->isAlive(*_bandwidthNotificationEntity)) {
+        _registry->killEntity(*_bandwidthNotificationEntity);
+    }
+
+    auto windowSize = _display->getWindowSize();
+    float xPos = static_cast<float>(windowSize.x) / 2.0F - 150.0F;
+    float yPos = 60.0F;
+
+    auto notification = _registry->spawnEntity();
+    _registry->emplaceComponent<rs::TransformComponent>(notification, xPos,
+                                                        yPos);
+
+    std::string message = enabled ? "Player " + std::to_string(userId) +
+                                        " enabled low bandwidth mode"
+                                  : "Player " + std::to_string(userId) +
+                                        " disabled low bandwidth mode";
+
+    auto color = enabled ? ::rtype::display::Color(255, 200, 50)
+                         : ::rtype::display::Color(100, 200, 100);
+
+    _registry->emplaceComponent<Text>(notification, "title_font", color, 16,
+                                      message);
+    _registry->emplaceComponent<ZIndex>(notification,
+                                        GraphicsConfig::ZINDEX_UI + 2);
+    _registry->emplaceComponent<StaticTextTag>(notification);
+    _registry->emplaceComponent<GameTag>(notification);
+
+    _bandwidthNotificationEntity = notification;
+    _bandwidthNotificationTimer = 3.0F;
+}
+
+void RtypeGameScene::setupBandwidthModeCallback() {
+    if (_networkClient) {
+        _networkClient->onBandwidthModeChanged(
+            [this](std::uint32_t userId, bool lowBandwidth,
+                   std::uint8_t activeCount) {
+                showBandwidthNotification(userId, lowBandwidth, activeCount);
+            });
+    }
+}
+
+void RtypeGameScene::setupLevelAnnounceCallback() {
+    if (_networkClient) {
+        LOG_INFO_CAT(::rtype::LogCategory::UI,
+                     "[RtypeGameScene] Setting up level announce callback");
+        _networkClient->onLevelAnnounce([this](const ::rtype::client::
+                                                   LevelAnnounceEvent& event) {
+            try {
+                LOG_INFO_CAT(
+                    ::rtype::LogCategory::UI,
+                    "[RtypeGameScene] Level announce callback triggered: "
+                        << event.levelName << " background: "
+                        << event.background << " music: " << event.levelMusic);
+                showLevelAnnounce(event.levelName);
+                if (_setBackground && !event.background.empty()) {
+                    LOG_INFO_CAT(::rtype::LogCategory::UI,
+                                 "[RtypeGameScene] Setting background to: "
+                                     << event.background);
+                    _setBackground(event.background);
+                }
+                if (_setLevelMusic && !event.levelMusic.empty()) {
+                    LOG_INFO_CAT(::rtype::LogCategory::UI,
+                                 "[RtypeGameScene] Setting level music to: "
+                                     << event.levelMusic);
+                    _setLevelMusic(event.levelMusic);
+                }
+            } catch (const std::exception& e) {
+                LOG_ERROR_CAT(
+                    ::rtype::LogCategory::UI,
+                    "[RtypeGameScene] Exception in level announce callback: "
+                        << e.what());
+            } catch (...) {
+                LOG_ERROR_CAT(::rtype::LogCategory::UI,
+                              "[RtypeGameScene] Unknown exception in level "
+                              "announce callback");
+            }
+        });
+    }
+}
+
+void RtypeGameScene::showLevelAnnounce(const std::string& levelName) {
+    LOG_INFO_CAT(
+        ::rtype::LogCategory::UI,
+        "[RtypeGameScene] showLevelAnnounce called with: " << levelName);
+
+    if (_levelAnnounceBgEntity.has_value() &&
+        _registry->isAlive(*_levelAnnounceBgEntity)) {
+        _registry->killEntity(*_levelAnnounceBgEntity);
+    }
+    if (_levelAnnounceTextEntity.has_value() &&
+        _registry->isAlive(*_levelAnnounceTextEntity)) {
+        _registry->killEntity(*_levelAnnounceTextEntity);
+    }
+
+    auto windowSize = _display->getWindowSize();
+
+    auto bg = EntityFactory::createRectangle(
+        _registry,
+        ::rtype::display::Vector2i(static_cast<int>(windowSize.x),
+                                   static_cast<int>(windowSize.y)),
+        ::rtype::display::Color(0, 0, 0, 175),
+        ::rtype::display::Vector2f(0.0f, 0.0f));
+
+    std::string displayTxt = "LEVEL: " + levelName;
+    float estimatedWidth = static_cast<float>(displayTxt.length()) * 20.0f;
+    float txtX = (static_cast<float>(windowSize.x) - estimatedWidth) / 2.0f;
+
+    float centerX = static_cast<float>(windowSize.x) / 2.0f - 150.0f;
+
+    auto txt = EntityFactory::createStaticText(
+        _registry, _assetsManager, displayTxt, "title_font",
+        ::rtype::display::Vector2f(
+            centerX, static_cast<float>(windowSize.y) / 2.0f - 20.0f),
+        40.f);
+
+    _registry->emplaceComponent<ZIndex>(bg, GraphicsConfig::ZINDEX_UI + 5);
+    _registry->emplaceComponent<ZIndex>(txt, GraphicsConfig::ZINDEX_UI + 6);
+
+    _levelAnnounceBgEntity = bg;
+    _levelAnnounceTextEntity = txt;
+    _levelAnnounceTimer = 3.0f;
+
+    if (!_isFirstLevelAnnounce) {
+        VisualCueFactory::createConfetti(*_registry,
+                                         static_cast<float>(windowSize.x),
+                                         static_cast<float>(windowSize.y), 150);
+
+        LOG_INFO_CAT(::rtype::LogCategory::UI,
+                     "[RtypeGameScene] Level transition confetti triggered "
+                     "(150 particles)");
+    } else {
+        LOG_INFO_CAT(
+            ::rtype::LogCategory::UI,
+            "[RtypeGameScene] First level announce - skipping confetti");
+    }
+
+    _isFirstLevelAnnounce = false;
+
+    LOG_INFO_CAT(::rtype::LogCategory::UI,
+                 "[RtypeGameScene] Level announce displayed for 3 seconds");
+}
+
+void RtypeGameScene::updateLevelAnnounce(float dt) {
+    if (_levelAnnounceTimer > 0.0f) {
+        _levelAnnounceTimer -= dt;
+        if (_levelAnnounceTimer <= 0.0f) {
+            _levelAnnounceTimer = 0.0f;
+            LOG_INFO_CAT(::rtype::LogCategory::UI,
+                         "[RtypeGameScene] Level announce destroyed after "
+                         "timer elapsed");
+            if (_levelAnnounceBgEntity.has_value() &&
+                _registry->isAlive(*_levelAnnounceBgEntity)) {
+                _registry->killEntity(*_levelAnnounceBgEntity);
+                _levelAnnounceBgEntity.reset();
+            }
+            if (_levelAnnounceTextEntity.has_value() &&
+                _registry->isAlive(*_levelAnnounceTextEntity)) {
+                _registry->killEntity(*_levelAnnounceTextEntity);
+                _levelAnnounceTextEntity.reset();
+            }
+        }
     }
 }
 

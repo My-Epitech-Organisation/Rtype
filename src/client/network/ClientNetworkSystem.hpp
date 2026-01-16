@@ -79,9 +79,9 @@ class ClientNetworkSystem {
                         std::shared_ptr<NetworkClient> client);
 
     /**
-     * @brief Destructor
+     * @brief Destructor - unregisters all callbacks from NetworkClient
      */
-    ~ClientNetworkSystem() = default;
+    ~ClientNetworkSystem();
 
     ClientNetworkSystem(const ClientNetworkSystem&) = delete;
     ClientNetworkSystem& operator=(const ClientNetworkSystem&) = delete;
@@ -144,7 +144,7 @@ class ClientNetworkSystem {
      *
      * @param inputMask Combined input flags
      */
-    void sendInput(std::uint8_t inputMask);
+    void sendInput(std::uint16_t inputMask);
 
     /**
      * @brief Get the local player's entity (if connected and spawned)
@@ -222,6 +222,10 @@ class ClientNetworkSystem {
     std::unordered_map<std::uint32_t, ECS::Entity> pendingPlayerSpawns_;
 
     bool disconnectedHandled_{false};
+
+    /// Debug log counters (reset on system reset)
+    int debugNotFoundLogCount_{0};
+    int debugBossPartLogCount_{0};
 };
 
 }  // namespace rtype::client

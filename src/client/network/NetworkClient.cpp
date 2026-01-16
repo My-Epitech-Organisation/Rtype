@@ -24,6 +24,16 @@
 
 namespace rtype::client {
 
+namespace {
+constexpr float kPosQuantScale = 16.0f;
+constexpr float kVelQuantScale = 16.0f;
+constexpr int kLevelNameMaxSize = 16;
+
+inline float dequantize(std::int16_t v, float scale) {
+    return static_cast<float>(v) / scale;
+}
+}  // namespace
+
 NetworkClient::NetworkClient(const Config& config)
     : config_(config),
       ioContext_(),
@@ -87,8 +97,6 @@ NetworkClient::NetworkClient(const Config& config)
     networkThread_ = std::thread([this]() { networkThreadLoop(); });
 }
 
-// Testable constructor: allows injecting a mock socket and optionally disabling
-// the background network thread to keep tests deterministic.
 NetworkClient::NetworkClient(const Config& config,
                              std::unique_ptr<network::IAsyncSocket> socket,
                              bool startNetworkThread)
@@ -167,7 +175,6 @@ NetworkClient::~NetworkClient() {
         socket_->cancel();
         ioContext_.poll();
     }
-
     ioContext_.stop();
     networkThreadRunning_.store(false, std::memory_order_release);
     if (networkThread_.joinable()) {
@@ -258,7 +265,7 @@ std::uint32_t NetworkClient::latencyMs() const noexcept {
     return connection_.latencyMs();
 }
 
-bool NetworkClient::sendInput(std::uint8_t inputMask) {
+bool NetworkClient::sendInput(std::uint16_t inputMask) {
     if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
         return false;
     }
@@ -269,6 +276,35 @@ bool NetworkClient::sendInput(std::uint8_t inputMask) {
     auto serialized = network::Serializer::serializeForNetwork(payload);
 
     auto result = connection_.buildPacket(network::OpCode::C_INPUT, serialized);
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    return true;
+}
+
+bool NetworkClient::sendChat(const std::string& message) {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    if (message.size() >= 256) {
+        return false;
+    }
+
+    network::ChatPayload payload;
+    std::memset(&payload, 0, sizeof(payload));
+    std::memset(&payload.message, 0, sizeof(payload.message));
+    std::strncpy(payload.message, message.c_str(), 255);
+    payload.message[255] = '\0';
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    auto result = connection_.buildPacket(network::OpCode::C_CHAT, serialized);
     if (!result) {
         return false;
     }
@@ -315,6 +351,35 @@ bool NetworkClient::sendReady(bool isReady) {
     socket_->asyncSendTo(
         result.value().data, *serverEndpoint_,
         [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    return true;
+}
+
+bool NetworkClient::setLowBandwidthMode(bool enable) {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    network::BandwidthModePayload payload;
+    payload.mode =
+        enable ? static_cast<std::uint8_t>(network::BandwidthMode::Low)
+               : static_cast<std::uint8_t>(network::BandwidthMode::Normal);
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    auto result = connection_.buildPacket(network::OpCode::C_SET_BANDWIDTH_MODE,
+                                          serialized);
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    LOG_INFO_CAT(rtype::LogCategory::Network,
+                 "[NetworkClient] Requested bandwidth mode: "
+                     << (enable ? "LOW" : "NORMAL"));
 
     return true;
 }
@@ -383,6 +448,8 @@ void NetworkClient::removeConnectedCallback(CallbackId id) {
     }
 }
 
+void NetworkClient::clearConnectedCallbacks() { onConnectedCallbacks_.clear(); }
+
 void NetworkClient::onDisconnected(
     std::function<void(DisconnectReason)> callback) {
     onDisconnectedCallbacks_.push_back(std::move(callback));
@@ -398,6 +465,10 @@ void NetworkClient::removeDisconnectedCallback(CallbackId id) {
     if (id < onDisconnectedCallbacks_.size()) {
         onDisconnectedCallbacks_[id] = nullptr;
     }
+}
+
+void NetworkClient::clearDisconnectedCallbacks() {
+    onDisconnectedCallbacks_.clear();
 }
 
 void NetworkClient::onEntitySpawn(
@@ -417,7 +488,24 @@ void NetworkClient::onEntityMoveBatch(
 
 void NetworkClient::onEntityDestroy(
     std::function<void(std::uint32_t entityId)> callback) {
+    // Convenience wrapper: keep existing behavior but return value is ignored
+    (void)addEntityDestroyCallback(std::move(callback));
+}
+
+NetworkClient::CallbackId NetworkClient::addEntityDestroyCallback(
+    std::function<void(std::uint32_t entityId)> callback) {
     onEntityDestroyCallbacks_.push_back(std::move(callback));
+    return onEntityDestroyCallbacks_.size() - 1;
+}
+
+void NetworkClient::removeEntityDestroyCallback(CallbackId id) {
+    if (id < onEntityDestroyCallbacks_.size()) {
+        onEntityDestroyCallbacks_[id] = nullptr;
+    }
+}
+
+void NetworkClient::clearEntityDestroyCallbacks() {
+    onEntityDestroyCallbacks_.clear();
 }
 
 void NetworkClient::onEntityHealth(
@@ -455,7 +543,7 @@ bool NetworkClient::sendJoinLobby(const std::string& code) {
 }
 
 void NetworkClient::onJoinLobbyResponse(
-    std::function<void(bool, uint8_t)> callback) {
+    std::function<void(bool, uint8_t, const std::string&)> callback) {
     onJoinLobbyResponseCallback_ = std::move(callback);
 }
 
@@ -473,6 +561,11 @@ void NetworkClient::onGameOver(std::function<void(GameOverEvent)> callback) {
     onGameOverCallback_ = std::move(callback);
 }
 
+void NetworkClient::onChatReceived(
+    std::function<void(std::uint32_t, std::string)> callback) {
+    onChatReceivedCallback_ = std::move(callback);
+}
+
 void NetworkClient::onGameStart(std::function<void(float)> callback) {
     onGameStartCallback_ = std::move(callback);
 }
@@ -482,9 +575,73 @@ void NetworkClient::onPlayerReadyStateChanged(
     onPlayerReadyStateChangedCallback_ = std::move(callback);
 }
 
+void NetworkClient::onBandwidthModeChanged(
+    std::function<void(std::uint32_t userId, bool lowBandwidth,
+                       std::uint8_t activeCount)>
+        callback) {
+    onBandwidthModeChangedCallback_ = std::move(callback);
+}
+
 void NetworkClient::onLobbyListReceived(
     std::function<void(LobbyListEvent)> callback) {
     onLobbyListReceivedCallback_ = std::move(callback);
+}
+
+void NetworkClient::onLevelAnnounce(
+    std::function<void(LevelAnnounceEvent)> callback) {
+    onLevelAnnounceCallback_ = std::move(callback);
+
+    if (!onLevelAnnounceCallback_) {
+        pendingLevelAnnounce_.reset();
+        return;
+    }
+
+    if (pendingLevelAnnounce_) {
+        LOG_INFO_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] Replaying pending level announce immediately: "
+                << pendingLevelAnnounce_->levelName);
+        auto event = *pendingLevelAnnounce_;
+        pendingLevelAnnounce_.reset();
+        onLevelAnnounceCallback_(event);
+    }
+}
+
+bool NetworkClient::sendAdminCommand(std::uint8_t commandType,
+                                     std::uint8_t param) {
+    if (!isConnected() || !serverEndpoint_.has_value() || !socket_->isOpen()) {
+        return false;
+    }
+
+    network::AdminCommandPayload payload;
+    payload.commandType = commandType;
+    payload.param = param;
+
+    auto serialized = network::Serializer::serializeForNetwork(payload);
+
+    auto result =
+        connection_.buildPacket(network::OpCode::C_ADMIN_COMMAND, serialized);
+    if (!result) {
+        return false;
+    }
+
+    socket_->asyncSendTo(
+        result.value().data, *serverEndpoint_,
+        [](network::Result<std::size_t> sendResult) { (void)sendResult; });
+
+    LOG_INFO_CAT(rtype::LogCategory::Network,
+                 "[NetworkClient] Sent admin command: type="
+                     << static_cast<int>(commandType)
+                     << " param=" << static_cast<int>(param));
+
+    return true;
+}
+
+void NetworkClient::onAdminResponse(
+    std::function<void(std::uint8_t cmdType, bool success, bool newState,
+                       const std::string& message)>
+        callback) {
+    onAdminResponseCallback_ = std::move(callback);
 }
 
 void NetworkClient::poll() {
@@ -512,7 +669,13 @@ void NetworkClient::dispatchCallbacks() {
     }
 
     while (!toDispatch.empty()) {
-        toDispatch.front()();
+        try {
+            toDispatch.front()();
+        } catch (const std::exception& e) {
+            LOG_ERROR("[NetworkClient] Exception in callback: " << e.what());
+        } catch (...) {
+            LOG_ERROR("[NetworkClient] Unknown exception in callback");
+        }
         toDispatch.pop();
     }
 }
@@ -538,6 +701,12 @@ void NetworkClient::test_handlePong(const network::Header& header,
 void NetworkClient::queueCallback(std::function<void()> callback) {
     std::lock_guard<std::mutex> lock(callbackMutex_);
     callbackQueue_.push(std::move(callback));
+}
+
+void NetworkClient::clearPendingCallbacks() {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
+    std::queue<std::function<void()>> empty;
+    std::swap(callbackQueue_, empty);
 }
 
 void NetworkClient::startReceive() {
@@ -613,11 +782,17 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
 
     if (network::isReliable(opcode)) {
         LOG_DEBUG_CAT(rtype::LogCategory::Network,
-                      "[NetworkClient] Received reliable packet: opcode="
-                          << static_cast<int>(opcode) << " seqId="
-                          << header.seqId << " flags=0x" << std::hex
-                          << static_cast<int>(header.flags) << std::dec);
+                      "[NetworkClient] Received reliable packet: opcode=0x"
+                          << std::hex << static_cast<int>(opcode) << std::dec
+                          << " seqId=" << header.seqId << " flags=0x"
+                          << std::hex << static_cast<int>(header.flags)
+                          << std::dec);
         sendAck(header.seqId);
+    } else if (opcode != network::OpCode::S_ENTITY_MOVE_BATCH &&
+               opcode != network::OpCode::S_ENTITY_MOVE) {
+        LOG_DEBUG_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Received unreliable packet: opcode=0x"
+                          << std::hex << static_cast<int>(opcode) << std::dec);
     }
 
     switch (opcode) {
@@ -665,6 +840,10 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
             handlePlayerReadyState(header, payload);
             break;
 
+        case network::OpCode::S_BANDWIDTH_MODE_CHANGED:
+            handleBandwidthModeChanged(header, payload);
+            break;
+
         case network::OpCode::S_JOIN_LOBBY_RESPONSE:
             handleJoinLobbyResponse(header, payload);
             break;
@@ -673,8 +852,20 @@ void NetworkClient::processIncomingPacket(const network::Buffer& data,
             handleLobbyList(header, payload);
             break;
 
+        case network::OpCode::S_LEVEL_ANNOUNCE:
+            handleLevelAnnounce(header, payload);
+            break;
+
+        case network::OpCode::S_CHAT:
+            handleChat(header, payload);
+            break;
+
         case network::OpCode::PONG:
             handlePong(header, payload);
+            break;
+
+        case network::OpCode::S_ADMIN_RESPONSE:
+            handleAdminResponse(header, payload);
             break;
 
         case network::OpCode::DISCONNECT: {
@@ -775,10 +966,11 @@ void NetworkClient::handleEntityMove(const network::Header& header,
 
         EntityMoveEvent event;
         event.entityId = deserialized.entityId;
-        event.x = deserialized.posX;
-        event.y = deserialized.posY;
-        event.vx = deserialized.velX;
-        event.vy = deserialized.velY;
+        event.serverTick = deserialized.serverTick;
+        event.x = dequantize(deserialized.posX, kPosQuantScale);
+        event.y = dequantize(deserialized.posY, kPosQuantScale);
+        event.vx = dequantize(deserialized.velX, kVelQuantScale);
+        event.vy = dequantize(deserialized.velY, kVelQuantScale);
 
         queueCallback([this, event]() {
             if (onEntityMoveCallback_) {
@@ -794,17 +986,23 @@ void NetworkClient::handleEntityMoveBatch(const network::Header& header,
                                           const network::Buffer& payload) {
     (void)header;
 
-    if (payload.size() < 1) {
+    constexpr std::size_t headerSize = sizeof(network::EntityMoveBatchHeader);
+    if (payload.size() < headerSize) {
         return;
     }
 
-    std::uint8_t count = payload[0];
+    auto batchHeader = network::Serializer::deserializeFromNetwork<
+        network::EntityMoveBatchHeader>(std::span(payload.data(), headerSize));
+
+    std::uint8_t count = batchHeader.count;
+    std::uint32_t serverTick = batchHeader.serverTick;
+
     if (count == 0 || count > network::kMaxEntitiesPerBatch) {
         return;
     }
 
-    constexpr std::size_t entrySize = sizeof(network::EntityMovePayload);
-    if (payload.size() < 1 + count * entrySize) {
+    constexpr std::size_t entrySize = sizeof(network::EntityMoveBatchEntry);
+    if (payload.size() < headerSize + count * entrySize) {
         return;
     }
 
@@ -813,17 +1011,18 @@ void NetworkClient::handleEntityMoveBatch(const network::Header& header,
         batchEvent.entities.reserve(count);
 
         for (std::uint8_t i = 0; i < count; ++i) {
-            std::size_t offset = 1 + i * entrySize;
+            std::size_t offset = headerSize + i * entrySize;
             auto entry = network::Serializer::deserializeFromNetwork<
-                network::EntityMovePayload>(
+                network::EntityMoveBatchEntry>(
                 std::span(payload.data() + offset, entrySize));
 
             EntityMoveEvent event;
             event.entityId = entry.entityId;
-            event.x = entry.posX;
-            event.y = entry.posY;
-            event.vx = entry.velX;
-            event.vy = entry.velY;
+            event.serverTick = serverTick;  // Shared from header
+            event.x = dequantize(entry.posX, kPosQuantScale);
+            event.y = dequantize(entry.posY, kPosQuantScale);
+            event.vx = dequantize(entry.velX, kVelQuantScale);
+            event.vy = dequantize(entry.velY, kVelQuantScale);
             batchEvent.entities.push_back(event);
         }
 
@@ -997,7 +1196,8 @@ void NetworkClient::handleGameOver(const network::Header& header,
         auto deserialized = network::Serializer::deserializeFromNetwork<
             network::GameOverPayload>(payload);
 
-        GameOverEvent event{deserialized.finalScore};
+        GameOverEvent event{deserialized.finalScore,
+                            deserialized.isVictory != 0};
 
         queueCallback([this, event]() {
             if (onGameOverCallback_) {
@@ -1058,6 +1258,36 @@ void NetworkClient::handlePlayerReadyState(const network::Header& header,
     }
 }
 
+void NetworkClient::handleBandwidthModeChanged(const network::Header& header,
+                                               const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::BandwidthModeChangedPayload)) {
+        return;
+    }
+
+    try {
+        auto deserialized = network::Serializer::deserializeFromNetwork<
+            network::BandwidthModeChangedPayload>(payload);
+
+        uint32_t userId =
+            network::ByteOrderSpec::fromNetwork(deserialized.userId);
+        bool lowBandwidth =
+            (deserialized.mode ==
+             static_cast<std::uint8_t>(network::BandwidthMode::Low));
+        std::uint8_t activeCount = deserialized.activeCount;
+
+        queueCallback([this, userId, lowBandwidth, activeCount]() {
+            if (onBandwidthModeChangedCallback_) {
+                onBandwidthModeChangedCallback_(userId, lowBandwidth,
+                                                activeCount);
+            }
+        });
+    } catch (...) {
+        // Invalid payload, ignore
+    }
+}
+
 void NetworkClient::handleJoinLobbyResponse(const network::Header& header,
                                             const network::Buffer& payload) {
     (void)header;
@@ -1070,13 +1300,94 @@ void NetworkClient::handleJoinLobbyResponse(const network::Header& header,
         auto resp = network::Serializer::deserializeFromNetwork<
             network::JoinLobbyResponsePayload>(payload);
 
-        queueCallback([this, resp]() {
+        std::string levelName(
+            resp.levelName.data(),
+            strnlen(resp.levelName.data(), kLevelNameMaxSize));
+
+        queueCallback([this, resp, levelName]() {
             if (onJoinLobbyResponseCallback_) {
-                onJoinLobbyResponseCallback_(resp.accepted == 1, resp.reason);
+                onJoinLobbyResponseCallback_(resp.accepted == 1, resp.reason,
+                                             levelName);
             }
         });
     } catch (...) {
         // Invalid payload, ignore
+    }
+}
+
+void NetworkClient::handleChat(const network::Header& header,
+                               const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::ChatPayload)) {
+        return;
+    }
+
+    try {
+        auto msg =
+            network::Serializer::deserializeFromNetwork<network::ChatPayload>(
+                payload);
+
+        std::string messageText(msg.message, strnlen(msg.message, 256));
+
+        queueCallback(
+            [this, userId = msg.userId, message = std::move(messageText)]() {
+                if (onChatReceivedCallback_) {
+                    onChatReceivedCallback_(userId, message);
+                }
+            });
+    } catch (...) {
+        // Invalid payload
+    }
+}
+
+void NetworkClient::handleLevelAnnounce(const network::Header& header,
+                                        const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::LevelAnnouncePayload)) {
+        LOG_WARNING_CAT(rtype::LogCategory::Network,
+                        "[NetworkClient] LevelAnnounce payload too small");
+        return;
+    }
+
+    try {
+        auto msg = network::Serializer::deserializeFromNetwork<
+            network::LevelAnnouncePayload>(payload);
+
+        std::string levelName(msg.levelName.data(),
+                              strnlen(msg.levelName.data(), 32));
+        std::string background(msg.background.data(),
+                               strnlen(msg.background.data(), 32));
+        std::string levelMusic(msg.levelMusic.data(),
+                               strnlen(msg.levelMusic.data(), 32));
+
+        LOG_INFO_CAT(rtype::LogCategory::Network,
+                     "[NetworkClient] Received S_LEVEL_ANNOUNCE: '"
+                         << levelName << "' background: '" << background
+                         << "' music: '" << levelMusic << "'");
+
+        LevelAnnounceEvent event{levelName, background, levelMusic};
+
+        pendingLevelAnnounce_ = event;
+
+        queueCallback([this, event]() {
+            if (onLevelAnnounceCallback_) {
+                LOG_INFO_CAT(
+                    rtype::LogCategory::Network,
+                    "[NetworkClient] Delivering level announce to callback");
+                onLevelAnnounceCallback_(event);
+                pendingLevelAnnounce_.reset();
+            } else {
+                LOG_INFO_CAT(rtype::LogCategory::Network,
+                             "[NetworkClient] No callback yet, keeping pending "
+                             "announce");
+            }
+        });
+    } catch (...) {
+        LOG_ERROR_CAT(
+            rtype::LogCategory::Network,
+            "[NetworkClient] Failed to deserialize LevelAnnouncePayload");
     }
 }
 
@@ -1109,7 +1420,7 @@ void NetworkClient::handleLobbyList(const network::Header& header,
         LobbyListEvent event;
         event.lobbies.reserve(lobbyCount);
 
-        constexpr std::size_t kLobbyInfoSize = 11;
+        constexpr std::size_t kLobbyInfoSize = 27;
 
         for (std::uint8_t i = 0;
              i < lobbyCount && offset + kLobbyInfoSize <= payload.size(); ++i) {
@@ -1129,6 +1440,12 @@ void NetworkClient::handleLobbyList(const network::Header& header,
             info.maxPlayers = payload[offset++];
 
             info.isActive = (payload[offset++] != 0);
+
+            info.levelName.assign(
+                reinterpret_cast<const char*>(payload.data() + offset),
+                strnlen(reinterpret_cast<const char*>(payload.data() + offset),
+                        16));
+            offset += 16;
 
             event.lobbies.push_back(std::move(info));
         }
@@ -1154,6 +1471,42 @@ void NetworkClient::handlePong(const network::Header& header,
     LOG_DEBUG("[NetworkClient] Received PONG from server - connection alive");
 }
 
+void NetworkClient::handleAdminResponse(const network::Header& header,
+                                        const network::Buffer& payload) {
+    (void)header;
+
+    if (payload.size() < sizeof(network::AdminResponsePayload)) {
+        return;
+    }
+
+    try {
+        auto response = network::Serializer::deserializeFromNetwork<
+            network::AdminResponsePayload>(payload);
+
+        std::string message(
+            response.message,
+            strnlen(response.message, sizeof(response.message)));
+
+        LOG_INFO_CAT(rtype::LogCategory::Network,
+                     "[NetworkClient] Admin response: cmdType="
+                         << static_cast<int>(response.commandType)
+                         << " success=" << static_cast<int>(response.success)
+                         << " newState=" << static_cast<int>(response.newState)
+                         << " msg=" << message);
+
+        queueCallback([this, response, message]() {
+            if (onAdminResponseCallback_) {
+                onAdminResponseCallback_(response.commandType,
+                                         response.success == 1,
+                                         response.newState == 1, message);
+            }
+        });
+    } catch (...) {
+        LOG_ERROR_CAT(rtype::LogCategory::Network,
+                      "[NetworkClient] Failed to parse admin response");
+    }
+}
+
 void NetworkClient::flushOutgoing() {
     if (!serverEndpoint_.has_value() || !socket_->isOpen()) {
         return;
@@ -1165,12 +1518,20 @@ void NetworkClient::flushOutgoing() {
             network::Header hdr;
             std::memcpy(&hdr, pkt.data.data(), network::kHeaderSize);
             auto opcode = static_cast<network::OpCode>(hdr.opcode);
+            auto seq = network::ByteOrderSpec::fromNetwork(hdr.seqId);
             if (opcode == network::OpCode::PING && connection_.isConnected()) {
-                auto seq = network::ByteOrderSpec::fromNetwork(hdr.seqId);
                 auto ack = network::ByteOrderSpec::fromNetwork(hdr.ackId);
                 LOG_DEBUG("[NetworkClient] Sending PING keepalive seqId="
                           << seq << " ack=" << ack
                           << " missedPongs=" << connection_.missedPingCount());
+            }
+            if (pkt.isReliable) {
+                LOG_INFO(
+                    "[NetworkClient] flushOutgoing: reliable packet opcode=0x"
+                    << std::hex << static_cast<int>(hdr.opcode) << std::dec
+                    << " seqId=" << seq << " size=" << pkt.data.size() << " to "
+                    << serverEndpoint_->address << ":"
+                    << serverEndpoint_->port);
             }
         }
         socket_->asyncSendTo(pkt.data, *serverEndpoint_,

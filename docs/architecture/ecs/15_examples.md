@@ -5,7 +5,7 @@
 ### 1. Simple Shooter Game
 
 ```cpp
-#include "ECS/ECS.hpp"
+#include "ecs/src/ECS.hpp"
 #include <iostream>
 #include <cmath>
 
@@ -118,7 +118,7 @@ int main() {
 ### 2. Particle System
 
 ```cpp
-#include "ECS/ECS.hpp"
+#include "ecs/src/ECS.hpp"
 #include <random>
 
 struct Particle {
@@ -184,7 +184,7 @@ int main() {
 ### 3. Transform Hierarchy
 
 ```cpp
-#include "ECS/ECS.hpp"
+#include "ecs/src/ECS.hpp"
 #include "ECS/Core/Relationship.hpp"
 
 struct Transform {
@@ -268,7 +268,7 @@ int main() {
 ### 4. Entity Pooling
 
 ```cpp
-#include "ECS/ECS.hpp"
+#include "ecs/src/ECS.hpp"
 
 struct Inactive {}; // Tag for pooled entities
 
@@ -349,7 +349,7 @@ int main() {
 ### 5. Spatial Partitioning
 
 ```cpp
-#include "ECS/ECS.hpp"
+#include "ecs/src/ECS.hpp"
 #include <unordered_map>
 #include <vector>
 

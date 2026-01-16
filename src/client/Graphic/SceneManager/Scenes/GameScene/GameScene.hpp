@@ -40,7 +40,12 @@ class GameScene : public AScene {
     std::unique_ptr<IGameScene> _gameScene;
 
     /// @brief Last input mask sent to server (to avoid flooding)
-    std::uint8_t _lastInputMask = 0;
+    std::uint16_t _lastInputMask = 0;
+
+    // Level Announcement
+    std::vector<ECS::Entity> _announcementEntities;
+    float _announcementTimer = 0.0f;
+    static constexpr float ANNOUNCEMENT_DURATION = 3.0f;
 
    public:
     void update(float dt) override;
@@ -64,6 +69,7 @@ class GameScene : public AScene {
         std::shared_ptr<AssetManager> textureManager,
         std::shared_ptr<rtype::display::IDisplay> window,
         std::shared_ptr<KeyboardActions> keybinds,
+        std::function<void(const std::string&)> setBackground,
         std::function<void(const SceneManager::Scene&)> switchToScene,
         std::unique_ptr<IGameScene> gameScene,
         std::shared_ptr<rtype::client::NetworkClient> networkClient = nullptr,

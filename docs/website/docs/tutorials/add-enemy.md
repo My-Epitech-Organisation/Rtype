@@ -239,7 +239,7 @@ For complex behaviors not covered by presets, create a custom system.
 #ifndef RTYPE_SERVER_SYSTEMS_DRONEBEHAVIORSYSTEM_HPP_
 #define RTYPE_SERVER_SYSTEMS_DRONEBEHAVIORSYSTEM_HPP_
 
-#include "rtype/engine/ASystem.hpp"
+#include "engine/src/ASystem.hpp"
 
 namespace rtype::server {
 
@@ -258,9 +258,9 @@ public:
 
 ```cpp
 #include "DroneBehaviorSystem.hpp"
-#include "rtype/common/components/Position.hpp"
-#include "rtype/common/components/Velocity.hpp"
-#include "rtype/common/components/EnemyTag.hpp"
+#include "common/src/components/Position.hpp"
+#include "common/src/components/Velocity.hpp"
+#include "common/src/components/EnemyTag.hpp"
 
 namespace rtype::server {
 
@@ -589,7 +589,7 @@ Create test file `tests/games/test_enemy_drone.cpp`:
 
 ```cpp
 #include <gtest/gtest.h>
-#include "rtype/ecs/Registry.hpp"
+#include "ecs/src/Registry.hpp"
 #include "config/EnemyLoader.hpp"
 
 TEST(EnemyTest, DroneLoadsCorrectly) {

@@ -6,6 +6,9 @@ add_library(common STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Logger/Logger.cpp
 )
 
+# Enable Position Independent Code (PIC) to allow linking into shared libraries
+set_property(TARGET common PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 target_include_directories(common PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Logger
@@ -27,6 +30,9 @@ rtype_find_tomlplusplus()
 add_library(rtype_toml_parser STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Config/TomlParser.cpp
 )
+
+# Enable Position Independent Code (PIC) to allow linking into shared libraries
+set_property(TARGET rtype_toml_parser PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(rtype_toml_parser PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src

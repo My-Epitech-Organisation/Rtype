@@ -45,6 +45,9 @@ bool Lobby::start() {
             shutdownFlagPtr_, 10, false, banManager_);
 
         serverApp_->setLobbyCode(code_);
+        if (!config_.levelId.empty()) {
+            serverApp_->setLevel(config_.levelId);
+        }
         if (lobbyManager_) {
             serverApp_->setLobbyManager(lobbyManager_);
         }
@@ -100,6 +103,17 @@ void Lobby::stop() {
 }
 
 bool Lobby::isRunning() const { return running_; }
+
+bool Lobby::changeLevel(const std::string& levelId) {
+    if (!serverApp_) {
+        return false;
+    }
+    if (serverApp_->changeLevel(levelId)) {
+        config_.levelId = levelId;
+        return true;
+    }
+    return false;
+}
 
 std::uint32_t Lobby::getPlayerCount() const {
     if (!serverApp_) {

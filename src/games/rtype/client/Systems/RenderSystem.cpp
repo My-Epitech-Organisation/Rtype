@@ -11,6 +11,9 @@
 #include <vector>
 
 #include "../AllComponents.hpp"
+#include "../Components/ColorTintComponent.hpp"
+#include "../Components/RotationComponent.hpp"
+#include "../shared/Components/BoundingBoxComponent.hpp"
 #include "../shared/Components/Tags.hpp"
 #include "ECS.hpp"
 #include "Logger/Macros.hpp"
@@ -37,6 +40,11 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
 
     auto& img = registry.getComponent<Image>(entity);
     const auto& pos = registry.getComponent<rs::TransformComponent>(entity);
+    display::Color color = img.color;
+    if (registry.hasComponent<ColorTint>(entity)) {
+        const auto& tint = registry.getComponent<ColorTint>(entity);
+        color = display::Color(tint.r, tint.g, tint.b, tint.a);
+    }
 
     display::Vector2f scale = {1.0f, 1.0f};
     if (registry.hasComponent<Size>(entity)) {
@@ -50,11 +58,34 @@ void RenderSystem::_renderImages(ECS::Registry& registry, ECS::Entity entity) {
         rect = texture.rect;
     }
 
+    float rotation = -999.0f;
+    bool hasRotation = false;
+
+    if (registry.hasComponent<Rotation>(entity)) {
+        const auto& rot = registry.getComponent<Rotation>(entity);
+        rotation = rot.angle;
+        hasRotation = true;
+    } else if (registry.hasComponent<rs::ProjectileTag>(entity) &&
+               registry.hasComponent<rs::VelocityComponent>(entity)) {
+        const auto& vel = registry.getComponent<rs::VelocityComponent>(entity);
+        if (vel.vx < 0.0f) {
+            rotation = 180.0f;
+            hasRotation = true;
+        }
+    }
+
     display::Vector2f position = {static_cast<float>(pos.x),
                                   static_cast<float>(pos.y)};
+    if (!hasRotation &&
+        registry.hasComponent<rs::BoundingBoxComponent>(entity) &&
+        registry.hasComponent<TextureRect>(entity)) {
+        const auto& texRect = registry.getComponent<TextureRect>(entity);
+        position.x -= (texRect.rect.width * scale.x) / 2.0f;
+        position.y -= (texRect.rect.height * scale.y) / 2.0f;
+    }
 
-    this->_display->drawSprite(img.textureName, position, rect, scale,
-                               img.color);
+    this->_display->drawSprite(img.textureName, position, rect, scale, color,
+                               rotation);
 }
 
 void RenderSystem::_renderRectangles(ECS::Registry& registry,
@@ -70,7 +101,13 @@ void RenderSystem::_renderRectangles(ECS::Registry& registry,
 
     display::Vector2f position = {static_cast<float>(pos.x),
                                   static_cast<float>(pos.y)};
+
     display::Vector2f size = {rectData.size.first, rectData.size.second};
+
+    if (registry.hasComponent<CenteredRectangleTag>(entity)) {
+        position.x -= size.x / 2.0f;
+        position.y -= size.y / 2.0f;
+    }
 
     this->_display->drawRectangle(position, size, rectData.currentColor,
                                   rectData.outlineColor,
@@ -187,6 +224,11 @@ void RenderSystem::_renderButtons(ECS::Registry& registry, ECS::Entity entity) {
     display::Vector2f position = {static_cast<float>(pos.x),
                                   static_cast<float>(pos.y)};
     display::Vector2f size = {rectData.size.first, rectData.size.second};
+
+    if (registry.hasComponent<CenteredBtnTag>(entity)) {
+        position.x -= size.x / 2.0f;
+        position.y -= size.y / 2.0f;
+    }
 
     this->_display->drawRectangle(position, size, rectData.currentColor,
                                   rectData.outlineColor,

@@ -23,15 +23,18 @@
 #include "SceneManager/SceneException.hpp"
 #include "Scenes/Lobby/Lobby.hpp"
 
-static constexpr float kConnectionPanelX = 610.f;
-static constexpr float kConnectionPanelY = 350.f;
+static constexpr float kConnectionPanelX = 1920.f / 2;
+static constexpr float kConnectionPanelY = 1080.f / 2;
+static constexpr float kConnectionPanelInputStartInputY = 110.f;
+static constexpr float kConnectionPanelInputOffsetY = 65.f;
 static constexpr float kConnectionPanelWidth = 680.f;
 static constexpr float kConnectionPanelHeight = 480.f;
 static constexpr float kInputWidth = 300.f;
 static constexpr float kInputHeight = 40.f;
-static constexpr float kInputOffsetX = 180.f;
-static constexpr std::string kIp = "127.0.0.1";
+static constexpr float kInputOffsetX = 220.f;
+static const char kIp[] = "127.0.0.1";
 static constexpr std::uint16_t kPort = 4242;
+static const char kCodeLobby[] = "ABC123";
 
 void MainMenuScene::_createAstroneerVessel() {
     auto astroneerVessel = this->_registry->spawnEntity();
@@ -39,9 +42,9 @@ void MainMenuScene::_createAstroneerVessel() {
         astroneerVessel, "astro_vessel");
     this->_registry
         ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
-            astroneerVessel, 1900, 1060);
+            astroneerVessel, 1900.f, 1060.f);
     this->_registry->emplaceComponent<rtype::games::rtype::client::Size>(
-        astroneerVessel, 0.3, 0.3);
+        astroneerVessel, 0.3f, 0.3f);
     this->_registry
         ->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(
             astroneerVessel, -135.f, -75.f);
@@ -66,16 +69,39 @@ void MainMenuScene::_createFakePlayer() {
                 std::pair<int, int>({33, 17}));
         this->_registry
             ->emplaceComponent<rtype::games::rtype::shared::TransformComponent>(
-                fakePlayer, (-10 * (distrib150(gen) + 50)),
-                72 * (distrib15(gen) % 15));
+                fakePlayer, static_cast<float>(-10 * (distrib150(gen) + 50)),
+                static_cast<float>(72 * (distrib15(gen) % 15)));
         this->_registry->emplaceComponent<rtype::games::rtype::client::Size>(
-            fakePlayer, 2.2, 2.2);
+            fakePlayer, 2.2f, 2.2f);
         this->_registry
             ->emplaceComponent<rtype::games::rtype::shared::VelocityComponent>(
-                fakePlayer, (distrib150(gen) % 150) + 75, 0.f);
+                fakePlayer, static_cast<float>((distrib150(gen) % 150) + 75),
+                0.f);
         this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
             fakePlayer, 0);
         this->_listEntity.push_back(fakePlayer);
+    }
+}
+
+void MainMenuScene::_addEntityToConnectSection(ECS::Entity entity) {
+    if (this->_registry
+            ->hasComponent<rtype::games::rtype::shared::TransformComponent>(
+                entity)) {
+        auto& transform =
+            this->_registry
+                ->getComponent<rtype::games::rtype::shared::TransformComponent>(
+                    entity);
+        transform.x -= kConnectionPanelWidth / 2;
+        transform.y -= kConnectionPanelHeight / 2;
+    }
+    this->_registry
+        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(entity);
+}
+
+void MainMenuScene::_addEntityToConnectSection(
+    std::vector<ECS::Entity> entities) {
+    for (auto& entity : entities) {
+        this->_addEntityToConnectSection(entity);
     }
 }
 
@@ -89,96 +115,91 @@ void MainMenuScene::_createConnectionPanel(
 
     for (auto& s : panelEntities) {
         if (this->_registry
-                ->hasComponent<rtype::games::rtype::client::Rectangle>(s))
+                ->hasComponent<rtype::games::rtype::client::Rectangle>(s)) {
             this->_registry
                 ->emplaceComponent<rtype::games::rtype::client::ZIndex>(s, 10);
+            this->_registry->emplaceComponent<
+                rtype::games::rtype::client::CenteredRectangleTag>(s);
+        }
     }
     auto connectText = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Connect to Server",
         "title_font",
-        rtype::display::Vector2<float>(kConnectionPanelX + 40.f,
-                                       kConnectionPanelY + 40.f),
+        rtype::display::Vector2<float>(
+            kConnectionPanelX + (kConnectionPanelWidth / 2),
+            kConnectionPanelY + 40.f),
         32);
     this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+        ->emplaceComponent<rtype::games::rtype::client::CenteredTextTag>(
             connectText);
+    this->_addEntityToConnectSection(connectText);
     panelEntities.push_back(connectText);
+    auto inputY = kConnectionPanelY + kConnectionPanelInputStartInputY;
     auto ipText = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "IP:", "main_font",
         rtype::display::Vector2<float>(kConnectionPanelX + 40.f,
-                                       kConnectionPanelY + 105.f),
+                                       inputY + kInputHeight / 4),
         24);
-    this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(ipText);
+    this->_addEntityToConnectSection(ipText);
     panelEntities.push_back(ipText);
     this->_ipInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
-        rtype::display::Vector2<float>(kConnectionPanelX + 120.f,
-                                       kConnectionPanelY + 85.f),
-        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "127.0.0.1",
-        "127.0.0.1", 15, false);
-    this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
-            this->_ipInputEntity);
+        rtype::display::Vector2<float>(kConnectionPanelX + kInputOffsetX,
+                                       inputY),
+        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "IP", kIp,
+        15, false);
+    this->_addEntityToConnectSection(this->_ipInputEntity);
     panelEntities.push_back(this->_ipInputEntity);
+    inputY += kConnectionPanelInputOffsetY;
     auto portText = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Port:", "main_font",
         rtype::display::Vector2<float>(kConnectionPanelX + 40.f,
-                                       kConnectionPanelY + 165.f),
+                                       inputY + kInputHeight / 4),
         24);
-    this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
-            portText);
+    this->_addEntityToConnectSection(portText);
     panelEntities.push_back(portText);
     this->_portInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
-        rtype::display::Vector2<float>(kConnectionPanelX + 120.f,
-                                       kConnectionPanelY + 145.f),
-        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "4242",
-        "4242", 5, true);
-    this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
-            this->_portInputEntity);
+        rtype::display::Vector2<float>(kConnectionPanelX + kInputOffsetX,
+                                       inputY),
+        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "Port",
+        std::to_string(kPort), 5, true);
+    this->_addEntityToConnectSection(this->_portInputEntity);
     panelEntities.push_back(this->_portInputEntity);
 
+    inputY += kConnectionPanelInputOffsetY;
     auto lobbyCodeText = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "Lobby Code:", "main_font",
-        rtype::display::Vector2<float>(
-            kConnectionPanelX + kInputOffsetX / 2,
-            kConnectionPanelY + 210.f + kInputHeight / 2),
-        20);
-    this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
-            lobbyCodeText);
+        rtype::display::Vector2<float>(kConnectionPanelX + 40.f,
+                                       inputY + kInputHeight / 4),
+        24);
+    this->_addEntityToConnectSection(lobbyCodeText);
     panelEntities.push_back(lobbyCodeText);
 
     this->_lobbyCodeInputEntity = EntityFactory::createTextInput(
         this->_registry, this->_assetsManager,
         rtype::display::Vector2<float>(kConnectionPanelX + kInputOffsetX,
-                                       kConnectionPanelY + 210.f),
-        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "", "ABCXYZ",
-        6, false);
-    this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
-            this->_lobbyCodeInputEntity);
+                                       inputY),
+        rtype::display::Vector2<float>(kInputWidth, kInputHeight), "Code Lobby",
+        kCodeLobby, 6, false);
+    this->_addEntityToConnectSection(this->_lobbyCodeInputEntity);
     panelEntities.push_back(this->_lobbyCodeInputEntity);
 
     this->_statusEntity = EntityFactory::createStaticText(
         this->_registry, this->_assetsManager, "", "main_font",
         rtype::display::Vector2<float>(
-            kConnectionPanelX + kInputOffsetX / 2,
+            kConnectionPanelX + 90,
             kConnectionPanelY + 265.f + kInputHeight / 2),
         18);
-    this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
-            this->_statusEntity);
+    this->_addEntityToConnectSection(this->_statusEntity);
     panelEntities.push_back(this->_statusEntity);
     auto connectBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             "main_font", rtype::display::Color::White(), 28, "Connect"),
         rtype::games::rtype::shared::TransformComponent(
-            kConnectionPanelX + 15.f, kConnectionPanelY + 275.f),
+            kConnectionPanelX - 117.5f + kConnectionPanelWidth / 2,
+            kConnectionPanelY + 380.f),
         rtype::games::rtype::client::Rectangle(
             {200, 60}, rtype::display::Color(0, 150, 0, 255),
             rtype::display::Color(0, 200, 0, 255)),
@@ -186,15 +207,17 @@ void MainMenuScene::_createConnectionPanel(
             this->_onConnectClicked(switchToScene);
         }));
     this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+        ->emplaceComponent<rtype::games::rtype::client::CenteredBtnTag>(
             connectBtn);
+    this->_addEntityToConnectSection(connectBtn);
     panelEntities.push_back(connectBtn);
     auto closeBtn = EntityFactory::createButton(
         this->_registry,
         rtype::games::rtype::client::Text(
             "main_font", rtype::display::Color::White(), 26, "Close"),
         rtype::games::rtype::shared::TransformComponent(
-            kConnectionPanelX + 235.f, kConnectionPanelY + 275.f),
+            kConnectionPanelX + 117.5f + kConnectionPanelWidth / 2,
+            kConnectionPanelY + 380.f),
         rtype::games::rtype::client::Rectangle(
             {200, 60}, rtype::display::Color(150, 0, 0),
             rtype::display::Color(200, 0, 0)),
@@ -202,8 +225,9 @@ void MainMenuScene::_createConnectionPanel(
             this->_connectPopUpVisible = false;
         }));
     this->_registry
-        ->emplaceComponent<rtype::games::rtype::client::SectionItemTag>(
+        ->emplaceComponent<rtype::games::rtype::client::CenteredBtnTag>(
             closeBtn);
+    this->_addEntityToConnectSection(closeBtn);
     panelEntities.push_back(closeBtn);
     for (auto& s : panelEntities) {
         if (!this->_registry->hasComponent<rtype::games::rtype::client::ZIndex>(
@@ -241,7 +265,7 @@ void MainMenuScene::_createConnectionPanel(
         rtype::display::Color(0, 0, 0, 150));
 
     this->_registry->emplaceComponent<rtype::games::rtype::client::ZIndex>(
-        popUpBg, 10);
+        popUpBg, 9);
     this->_registry
         ->emplaceComponent<rtype::games::rtype::client::ConnectMenuTag>(
             popUpBg);
@@ -500,6 +524,10 @@ void MainMenuScene::_updateStatus(const std::string& message,
 }
 
 void MainMenuScene::update(float dt) {
+    if (this->_audio) {
+        this->_audio->update();
+    }
+
     if (_networkClient && !_networkClient->isConnected()) {
         _networkClient->poll();
     }
@@ -539,6 +567,7 @@ MainMenuScene::MainMenuScene(
     std::shared_ptr<ECS::Registry> ecs,
     std::shared_ptr<AssetManager> assetsManager,
     std::shared_ptr<rtype::display::IDisplay> window,
+    std::function<void(const std::string&)> setBackground,
     std::function<void(const SceneManager::Scene&)> switchToScene,
     std::shared_ptr<rtype::client::NetworkClient> networkClient,
     std::shared_ptr<rtype::client::ClientNetworkSystem> networkSystem,
@@ -550,7 +579,8 @@ MainMenuScene::MainMenuScene(
           std::make_shared<rtype::games::rtype::client::TextInputSystem>(
               window)) {
     this->_listEntity = (EntityFactory::createBackground(
-        this->_registry, this->_assetsManager, "R-TYPE"));
+        this->_registry, this->_assetsManager, "R-TYPE", nullptr));
+    setBackground("LOBBY");
     this->_createAstroneerVessel();
     this->_createFakePlayer();
     this->_createConnectionPanel(switchToScene);

@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # RTGP (R-Type Game Protocol) — Cheatsheet
 
-This quick cheatsheet summarises the binary protocol used by the R-Type client & server (RTGP). For a formal specification, see `docs/RFC/RFC_RTGP_v1.2.0.md`.
+This quick cheatsheet summarises the binary protocol used by the R-Type client & server (RTGP). For a formal specification, see `docs/RFC/RFC_RTGP_v1.4.3.md`.
 
 ## Packet Overview
 
@@ -68,4 +68,4 @@ For the full opcode list and payload structures, see:
 
 ---
 
-🔗 See the RFC for full details and security considerations: `docs/RFC/RFC_RTGP_v1.2.0.md`.
+🔗 See the RFC for full details and security considerations: `docs/RFC/RFC_RTGP_v1.4.3.md`.

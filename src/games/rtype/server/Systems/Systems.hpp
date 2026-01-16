@@ -9,10 +9,14 @@
 
 #include <rtype/engine.hpp>
 
+#include "Boss/BossAttackSystem.hpp"
+#include "Boss/BossPhaseSystem.hpp"
+#include "Boss/WeakPointSystem.hpp"
 #include "Cleanup/CleanupSystem.hpp"
 #include "Collision/CollisionSystem.hpp"
 #include "Destroy/DestroySystem.hpp"
 #include "EnemyShooting/EnemyShootingSystem.hpp"
+#include "ForcePod/ForcePodAttachmentSystem.hpp"
 #include "Projectile/ProjectileSpawnerSystem.hpp"
 #include "Spawner/SpawnerSystem.hpp"
 #include "WaveManager/WaveManager.hpp"

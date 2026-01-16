@@ -3,6 +3,7 @@
 #include <chrono>
 #include <memory>
 #include <thread>
+#include <random>
 
 #include "server/serverApp/ServerApp.hpp"
 
@@ -19,6 +20,12 @@ protected:
         rtype::games::rtype::server::registerRTypeGameEngine();
         rtype::games::rtype::server::registerRTypeEntitySpawner();
         shutdownFlag_ = std::make_shared<std::atomic<bool>>(false);
+        
+        // Use a random port in the ephemeral range to avoid conflicts
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(49152, 65535);
+        testPort_ = dis(gen);
     }
 
     void TearDown() override {
@@ -26,10 +33,11 @@ protected:
     }
 
     std::shared_ptr<std::atomic<bool>> shutdownFlag_;
+    int testPort_;
 };
 
 TEST_F(ServerAppExtraTest, Run_StartupAndShutdown_NoExceptions) {
-    ServerApp server(4242, 2, 60, shutdownFlag_, 10, false);
+    ServerApp server(testPort_, 2, 60, shutdownFlag_, 10, false);
 
     std::thread serverThread([&]() {
         // run() is blocking - will exit when shutdownFlag is set
@@ -49,7 +57,7 @@ TEST_F(ServerAppExtraTest, Run_StartupAndShutdown_NoExceptions) {
 }
 
 TEST_F(ServerAppExtraTest, StartStopNetworkThread_ThreadLifecycle) {
-    ServerApp server(4242, 2, 60, shutdownFlag_, 10, false);
+    ServerApp server(testPort_, 2, 60, shutdownFlag_, 10, false);
 
     // Start the run in the background so it spawns the network thread
     std::thread serverThread([&]() {

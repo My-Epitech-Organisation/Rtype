@@ -147,16 +147,28 @@ bool SFMLDisplay::isFullscreen() const {
     return this->_windowIsFullscreen;
 }
 
-void SFMLDisplay::drawSprite(const std::string& textureName, const Vector2f& position, const IntRect& rect, const Vector2f& scale, const Color& color) {
+void SFMLDisplay::drawSprite(const std::string& textureName, const Vector2f& position, const IntRect& rect, const Vector2f& scale, const Color& color, float rotation) {
     if (!this->_renderTarget || _textures.find(textureName) == _textures.end()) return;
 
     sf::Sprite sprite(_textures[textureName]->getSFMLTexture());
     if (rect.width > 0 && rect.height > 0) {
         sprite.setTextureRect(sf::IntRect({rect.left, rect.top}, {rect.width, rect.height}));
     }
-    sprite.setPosition({position.x, position.y});
+    bool hasRotationComponent = (rotation != -999.0f);
+    sf::Vector2f adjustedPosition = {position.x, position.y};
+    if (hasRotationComponent) {
+        sf::FloatRect bounds = sprite.getLocalBounds();
+        sprite.setOrigin({bounds.size.x / 2.0f, bounds.size.y / 2.0f});
+    }
+
+    sprite.setPosition(adjustedPosition);
     sprite.setScale({scale.x, scale.y});
     sprite.setColor(sf::Color(color.r, color.g, color.b, color.a));
+
+    if (hasRotationComponent) {
+        sprite.setRotation(sf::degrees(rotation));
+    }
+
     this->_renderTarget->draw(sprite);
 }
 
@@ -167,7 +179,7 @@ void SFMLDisplay::drawText(const std::string& text, const std::string& fontName,
     sfText.setString(text);
     sfText.setCharacterSize(size);
     sfText.setFillColor(sf::Color(color.r, color.g, color.b, color.a));
-    
+
     sf::FloatRect bounds = sfText.getLocalBounds();
     sfText.setOrigin({bounds.position.x, bounds.position.y});
     sfText.setPosition({position.x, position.y});
@@ -223,6 +235,14 @@ void SFMLDisplay::resetView() {
         _view = _window->getDefaultView();
         _renderTarget->setView(_view);
     }
+}
+
+Vector2f SFMLDisplay::mapPixelToCoords(const Vector2i& pixelPos) const {
+    if (_window) {
+        sf::Vector2f coords = _window->mapPixelToCoords({pixelPos.x, pixelPos.y}, _view);
+        return {coords.x, coords.y};
+    }
+    return {static_cast<float>(pixelPos.x), static_cast<float>(pixelPos.y)};
 }
 
 Vector2i SFMLDisplay::getWindowSize() const {
@@ -355,11 +375,21 @@ void SFMLDisplay::drawRenderTexture(const std::string& textureName, const std::s
     }
 }
 
+void SFMLDisplay::setClipboardText(const std::string &text) {
+    sf::Clipboard::setString(text);
+}
+
+std::string SFMLDisplay::getClipboardText() const {
+    return sf::Clipboard::getString();
+}
+
 Key SFMLDisplay::_translateKey(sf::Keyboard::Key key) {
     if (key >= sf::Keyboard::Key::A && key <= sf::Keyboard::Key::Z)
         return static_cast<Key>(static_cast<int>(Key::A) + (static_cast<int>(key) - static_cast<int>(sf::Keyboard::Key::A)));
     if (key >= sf::Keyboard::Key::Num0 && key <= sf::Keyboard::Key::Num9)
         return static_cast<Key>(static_cast<int>(Key::Num0) + (static_cast<int>(key) - static_cast<int>(sf::Keyboard::Key::Num0)));
+    if (key >= sf::Keyboard::Key::F1 && key <= sf::Keyboard::Key::F15)
+        return static_cast<Key>(static_cast<int>(Key::F1) + (static_cast<int>(key) - static_cast<int>(sf::Keyboard::Key::F1)));
 
     switch (key) {
         case sf::Keyboard::Key::Escape: return Key::Escape;

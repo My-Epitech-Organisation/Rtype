@@ -181,6 +181,28 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.gameplay.friendlyFire = _parser.getValue<bool>(
         table, "gameplay", "friendlyFire", defaults.gameplay.friendlyFire);
 
+    // Laser weapon configuration (nested under gameplay)
+    config.gameplay.laser.damagePerSecond = static_cast<float>(
+        _parser.getValue<double>(table, "gameplay.laser", "damagePerSecond",
+                                 defaults.gameplay.laser.damagePerSecond));
+    config.gameplay.laser.startupDelay = static_cast<float>(
+        _parser.getValue<double>(table, "gameplay.laser", "startupDelay",
+                                 defaults.gameplay.laser.startupDelay));
+    config.gameplay.laser.maxDuration = static_cast<float>(
+        _parser.getValue<double>(table, "gameplay.laser", "maxDuration",
+                                 defaults.gameplay.laser.maxDuration));
+    config.gameplay.laser.cooldownDuration = static_cast<float>(
+        _parser.getValue<double>(table, "gameplay.laser", "cooldownDuration",
+                                 defaults.gameplay.laser.cooldownDuration));
+    config.gameplay.laser.hitboxWidth = static_cast<float>(
+        _parser.getValue<double>(table, "gameplay.laser", "hitboxWidth",
+                                 defaults.gameplay.laser.hitboxWidth));
+    config.gameplay.laser.hitboxHeight = static_cast<float>(
+        _parser.getValue<double>(table, "gameplay.laser", "hitboxHeight",
+                                 defaults.gameplay.laser.hitboxHeight));
+    config.gameplay.laser.offsetX = static_cast<float>(_parser.getValue<double>(
+        table, "gameplay.laser", "offsetX", defaults.gameplay.laser.offsetX));
+
     // Input section
     config.input.moveUp =
         _parser.getString(table, "input", "moveUp", defaults.input.moveUp);
@@ -280,9 +302,81 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.textures.EnemyWave =
         "assets/" + _parser.getString(table, "Textures", "EnemyWave",
                                       defaults.assets.textures.EnemyWave);
+    config.assets.textures.BossSerpentHead =
+        "assets/" + _parser.getString(table, "Textures", "BossSerpentHead",
+                                      defaults.assets.textures.BossSerpentHead);
+    config.assets.textures.BossSerpentAttack =
+        "assets/" +
+        _parser.getString(table, "Textures", "BossSerpentAttack",
+                          defaults.assets.textures.BossSerpentAttack);
+    config.assets.textures.BossSerpentBody =
+        "assets/" + _parser.getString(table, "Textures", "BossSerpentBody",
+                                      defaults.assets.textures.BossSerpentBody);
+    config.assets.textures.BossSerpentTail =
+        "assets/" + _parser.getString(table, "Textures", "BossSerpentTail",
+                                      defaults.assets.textures.BossSerpentTail);
+    config.assets.textures.BossScorpionBody =
+        "assets/" +
+        _parser.getString(table, "Textures", "BossScorpionBody",
+                          defaults.assets.textures.BossScorpionBody);
+    config.assets.textures.BossScorpionClaws =
+        "assets/" +
+        _parser.getString(table, "Textures", "BossScorpionClaws",
+                          defaults.assets.textures.BossScorpionClaws);
+    config.assets.textures.BossScorpionTail =
+        "assets/" +
+        _parser.getString(table, "Textures", "BossScorpionTail",
+                          defaults.assets.textures.BossScorpionTail);
+    config.assets.textures.BossScorpionStinger =
+        "assets/" +
+        _parser.getString(table, "Textures", "BossScorpionStinger",
+                          defaults.assets.textures.BossScorpionStinger);
+    config.assets.textures.BossScorpionCannon =
+        "assets/" +
+        _parser.getString(table, "Textures", "BossScorpionCannon",
+                          defaults.assets.textures.BossScorpionCannon);
     config.assets.textures.missileLaser =
         "assets/" + _parser.getString(table, "Textures", "MissileLaser",
                                       defaults.assets.textures.missileLaser);
+    auto chargedShotValue = _parser.getString(
+        table, "Textures", "ChargedShot", defaults.assets.textures.chargedShot);
+    config.assets.textures.chargedShot = "assets/" + chargedShotValue;
+    config.assets.textures.forcePod =
+        "assets/" + _parser.getString(table, "Textures", "ForcePod",
+                                      defaults.assets.textures.forcePod);
+
+    // Power-ups textures
+    config.assets.textures.healthSmall =
+        "assets/" + _parser.getString(table, "Textures", "HealthSmall",
+                                      defaults.assets.textures.healthSmall);
+    config.assets.textures.healthLarge =
+        "assets/" + _parser.getString(table, "Textures", "HealthLarge",
+                                      defaults.assets.textures.healthLarge);
+    config.assets.textures.speedBoost =
+        "assets/" + _parser.getString(table, "Textures", "SpeedBoost",
+                                      defaults.assets.textures.speedBoost);
+    config.assets.textures.weaponUpgrade =
+        "assets/" + _parser.getString(table, "Textures", "WeaponUpgrade",
+                                      defaults.assets.textures.weaponUpgrade);
+    config.assets.textures.shield =
+        "assets/" + _parser.getString(table, "Textures", "Shield",
+                                      defaults.assets.textures.shield);
+    config.assets.textures.rapidFire =
+        "assets/" + _parser.getString(table, "Textures", "RapidFire",
+                                      defaults.assets.textures.rapidFire);
+    config.assets.textures.damageBoost =
+        "assets/" + _parser.getString(table, "Textures", "DamageBoost",
+                                      defaults.assets.textures.damageBoost);
+    config.assets.textures.extraLife =
+        "assets/" + _parser.getString(table, "Textures", "ExtraLife",
+                                      defaults.assets.textures.extraLife);
+    config.assets.textures.laserUpgrade =
+        "assets/" + _parser.getString(table, "Textures", "LaserUpgrade",
+                                      defaults.assets.textures.laserUpgrade);
+    config.assets.textures.laserBeam =
+        "assets/" + _parser.getString(table, "Textures", "LaserBeam",
+                                      defaults.assets.textures.laserBeam);
+
     // Wall - Textures
     config.assets.textures.wallTexture.engrenage1 =
         "assets/" +
@@ -363,6 +457,18 @@ RTypeGameConfig RTypeConfigParser::parseFromTable(const toml::table& table) {
     config.assets.sfx.enemyDeath =
         "assets/" + _parser.getString(table, "SFX", "EnemyDeath",
                                       defaults.assets.sfx.enemyDeath);
+    config.assets.sfx.forcePodLaunch =
+        "assets/" + _parser.getString(table, "SFX", "ForcePodLaunch",
+                                      defaults.assets.sfx.forcePodLaunch);
+    config.assets.sfx.forcePodReturn =
+        "assets/" + _parser.getString(table, "SFX", "ForcePodReturn",
+                                      defaults.assets.sfx.forcePodReturn);
+    config.assets.sfx.chargedShot =
+        "assets/" + _parser.getString(table, "SFX", "ChargedShot",
+                                      defaults.assets.sfx.chargedShot);
+    config.assets.sfx.chargedShotMax =
+        "assets/" + _parser.getString(table, "SFX", "ChargedShotMax",
+                                      defaults.assets.sfx.chargedShotMax);
 
     return config;
 }
@@ -411,6 +517,16 @@ std::string RTypeConfigParser::serializeToToml(const RTypeGameConfig& config) {
        << "\n";
     ss << "friendlyFire = " << (config.gameplay.friendlyFire ? "true" : "false")
        << "\n\n";
+
+    ss << "[gameplay.laser]\n";
+    ss << "damagePerSecond = " << config.gameplay.laser.damagePerSecond << "\n";
+    ss << "startupDelay = " << config.gameplay.laser.startupDelay << "\n";
+    ss << "maxDuration = " << config.gameplay.laser.maxDuration << "\n";
+    ss << "cooldownDuration = " << config.gameplay.laser.cooldownDuration
+       << "\n";
+    ss << "hitboxWidth = " << config.gameplay.laser.hitboxWidth << "\n";
+    ss << "hitboxHeight = " << config.gameplay.laser.hitboxHeight << "\n";
+    ss << "offsetX = " << config.gameplay.laser.offsetX << "\n\n";
 
     ss << "[input]\n";
     ss << "moveUp = \"" << config.input.moveUp << "\"\n";

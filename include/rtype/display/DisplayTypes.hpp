@@ -26,6 +26,7 @@ namespace rtype::display {
         static Color Cyan() { return {0, 255, 255, 255}; }
         static Color Green() { return {0, 255, 0, 255}; }
         static Color Blue() { return {0, 0, 255, 255}; }
+        static Color Magenta() { return {255, 0, 255, 255}; }
         static Color Yellow() { return { 245,224,80, 255 }; }
         static Color Transparent() { return {0, 0, 0, 0}; }
     };

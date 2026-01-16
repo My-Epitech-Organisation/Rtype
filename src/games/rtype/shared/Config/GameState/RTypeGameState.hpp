@@ -32,10 +32,11 @@ enum class PowerUpType : uint8_t {
     None = 0,
     SpeedBoost,
     Shield,
-    DoubleDamage,
     RapidFire,
+    DoubleDamage,
     ExtraLife,
-    Bomb
+    Bomb,
+    ForcePod
 };
 
 /**

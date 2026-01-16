@@ -8,7 +8,9 @@
 #ifndef SRC_SERVER_NETWORK_NETWORKSERVER_HPP_
 #define SRC_SERVER_NETWORK_NETWORKSERVER_HPP_
 
+#include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -46,7 +48,10 @@ struct NetworkServerConfig {
     network::Compressor::Config compressionConfig{};
     bool enableCompression = true;
 
+    bool enablePacketStats = false;
+
     std::string expectedLobbyCode{};
+    std::string levelId{"level_1"};
 };
 
 /**
@@ -134,6 +139,28 @@ class NetworkServer {
     void setExpectedLobbyCode(const std::string& code) {
         config_.expectedLobbyCode = code;
     }
+
+    /**
+     * @brief Set the server's level ID
+     * @param levelId The level ID to broadcast
+     */
+    void setLevelId(const std::string& levelId) { config_.levelId = levelId; }
+
+    /**
+     * @brief Broadcast the current level ID to all connected clients
+     * This forces clients to update their displayed level info.
+     */
+    void broadcastLevelInfo();
+
+    /**
+     * @brief Broadcast a level announcement for visual display
+     * @param levelName Name of the level to display
+     * @param background Name of the background plugin to load
+     * @param levelMusic Name of the music plugin to load
+     */
+    void broadcastLevelAnnounce(const std::string& levelName,
+                                const std::string& background = "",
+                                const std::string& levelMusic = "");
 
     /**
      * @brief Set the server metrics for tracking packet statistics
@@ -236,6 +263,13 @@ class NetworkServer {
                           float duration);
 
     /**
+     * @brief Broadcast a chat message to all clients
+     * @param senderId The sender's user ID (0 for system)
+     * @param message  The text message content
+     */
+    void broadcastChat(std::uint32_t senderId, const std::string& message);
+
+    /**
      * @brief Update game state on all clients
      *
      * Sent reliably - guaranteed delivery.
@@ -250,8 +284,10 @@ class NetworkServer {
      * Sent reliably to all clients so they can display the end-game screen.
      *
      * @param finalScore Final aggregated score for the session
+     * @param isVictory True if player won (completed all levels), false if
+     * defeated
      */
-    void sendGameOver(std::uint32_t finalScore);
+    void sendGameOver(std::uint32_t finalScore, bool isVictory = false);
 
     /**
      * @brief Broadcast game start with countdown
@@ -372,7 +408,8 @@ class NetworkServer {
      * @param callback Function receiving (userId, inputMask)
      */
     void onClientInput(
-        std::function<void(std::uint32_t userId, std::uint8_t input)> callback);
+        std::function<void(std::uint32_t userId, std::uint16_t input)>
+            callback);
 
     /**
      * @brief Register callback for get users request
@@ -386,6 +423,36 @@ class NetworkServer {
      */
     void onClientReady(
         std::function<void(std::uint32_t userId, bool isReady)> callback);
+
+    /**
+     * @brief Register callback for client chat messages
+     */
+    void onClientChat(
+        std::function<void(std::uint32_t, const std::string&)> callback);
+
+    /**
+     * @brief Register callback for admin commands (god mode, etc.)
+     * @param callback Function receiving (userId, commandType, param, clientIp)
+     *
+     * The clientIp parameter allows validation that commands only come from
+     * localhost for security purposes.
+     */
+    void onAdminCommand(
+        std::function<void(std::uint32_t userId, std::uint8_t commandType,
+                           std::uint8_t param, const std::string& clientIp)>
+            callback);
+
+    /**
+     * @brief Send admin command response to a specific client
+     * @param userId Target client's user ID
+     * @param commandType The command type being responded to
+     * @param success Whether the command succeeded
+     * @param newState The resulting state (0 = off, 1 = on)
+     * @param message Response message (max 60 chars)
+     */
+    void sendAdminResponse(std::uint32_t userId, std::uint8_t commandType,
+                           bool success, std::uint8_t newState,
+                           const std::string& message);
 
     /**
      * @brief Process incoming packets and dispatch callbacks
@@ -430,6 +497,38 @@ class NetworkServer {
                           network::DisconnectReason reason =
                               network::DisconnectReason::RemoteRequest);
 
+    /**
+     * @brief Check if a client is in low bandwidth mode
+     * @param userId Client's user ID
+     * @return true if client requested low bandwidth mode
+     */
+    [[nodiscard]] bool isLowBandwidthMode(std::uint32_t userId) const;
+
+    /**
+     * @brief Set bandwidth mode for a client
+     * @param userId Client's user ID
+     * @param lowBandwidth true for low bandwidth mode
+     */
+    void setClientBandwidthMode(std::uint32_t userId, bool lowBandwidth);
+
+    /**
+     * @brief Callback for client bandwidth mode changes
+     */
+    using BandwidthModeCallback =
+        std::function<void(std::uint32_t userId, bool lowBandwidth)>;
+    void onBandwidthModeChanged(BandwidthModeCallback callback);
+
+    /**
+     * @brief Set a callback to check if the game is currently running
+     * Used to prevent joins during active gameplay
+     * @param callback Function returning true if game is in Playing/Paused
+     * state
+     */
+    using GameStateCheckCallback = std::function<bool()>;
+    void setGameStateChecker(GameStateCheckCallback callback) {
+        _gameStateChecker = callback;
+    }
+
    private:
     /**
      * @brief Client connection state
@@ -441,6 +540,7 @@ class NetworkServer {
         std::chrono::steady_clock::time_point lastActivity;
         std::uint16_t nextSeqId{0};
         bool joined{false};
+        bool lowBandwidthMode{false};
 
         explicit ClientConnection(const network::Endpoint& ep, std::uint32_t id,
                                   const network::ReliableChannel::Config& cfg)
@@ -473,10 +573,20 @@ class NetworkServer {
     void handleReady(const network::Header& header,
                      const network::Buffer& payload,
                      const network::Endpoint& sender);
+    void handleChat(const network::Header& header,
+                    const network::Buffer& payload,
+                    const network::Endpoint& sender);
 
     void handleJoinLobby(const network::Header& header,
                          const network::Buffer& payload,
                          const network::Endpoint& sender);
+    void handleBandwidthMode(const network::Header& header,
+                             const network::Buffer& payload,
+                             const network::Endpoint& sender);
+
+    void handleAdminCommand(const network::Header& header,
+                            const network::Buffer& payload,
+                            const network::Endpoint& sender);
 
     [[nodiscard]] std::string makeConnectionKey(
         const network::Endpoint& ep) const;
@@ -486,6 +596,25 @@ class NetworkServer {
         std::uint32_t userId);
     void removeClient(std::uint32_t userId);
     void checkTimeouts();
+
+    static constexpr float kPosQuantScale = 16.0f;
+    static constexpr float kVelQuantScale = 16.0f;
+
+    static std::int16_t quantize(float value, float scale) noexcept {
+        float scaled = value * scale;
+        std::int64_t rounded = std::llround(scaled);
+        if (rounded > std::numeric_limits<std::int16_t>::max()) {
+            return std::numeric_limits<std::int16_t>::max();
+        }
+        if (rounded < std::numeric_limits<std::int16_t>::min()) {
+            return std::numeric_limits<std::int16_t>::min();
+        }
+        return static_cast<std::int16_t>(rounded);
+    }
+
+    [[nodiscard]] std::uint32_t nextServerTick() noexcept {
+        return serverTickCounter_.fetch_add(1, std::memory_order_acq_rel) + 1;
+    }
 
     [[nodiscard]] network::Buffer buildPacket(network::OpCode opcode,
                                               const network::Buffer& payload,
@@ -517,6 +646,8 @@ class NetworkServer {
 
     std::uint32_t nextUserIdCounter_{1};
 
+    std::atomic<std::uint32_t> serverTickCounter_{0};
+
     std::shared_ptr<network::Buffer> receiveBuffer_;
     std::shared_ptr<network::Endpoint> receiveSender_;
     std::atomic<bool> receiveInProgress_{false};
@@ -527,18 +658,44 @@ class NetworkServer {
     std::function<void(std::uint32_t)> onClientConnectedCallback_;
     std::function<void(std::uint32_t, network::DisconnectReason)>
         onClientDisconnectedCallback_;
-    std::function<void(std::uint32_t, std::uint8_t)> onClientInputCallback_;
+    std::function<void(std::uint32_t, std::uint16_t)> onClientInputCallback_;
     std::function<void(std::uint32_t)> onGetUsersRequestCallback_;
     std::function<void(std::uint32_t, bool)> onClientReadyCallback_;
+    std::function<void(std::uint32_t, const std::string&)>
+        onClientChatCallback_;
+    std::function<void(std::uint32_t, std::uint8_t, std::uint8_t,
+                       const std::string&)>
+        onAdminCommandCallback_;
+    std::function<void(std::uint32_t, bool)> onBandwidthModeChangedCallback_;
+
+    std::weak_ptr<BanManager> banManager_;
+
+    GameStateCheckCallback _gameStateChecker;
 
     mutable std::mutex clientsMutex_;
 
     std::shared_ptr<ServerMetrics> _metrics{nullptr};
 
-    std::weak_ptr<BanManager> banManager_;
+    struct PacketStats {
+        std::uint64_t count{0};
+        std::uint64_t totalBytes{0};
+
+        double getAvgSize() const {
+            return count > 0 ? static_cast<double>(totalBytes) / count : 0.0;
+        }
+    };
+
+    std::unordered_map<std::uint8_t, PacketStats>
+        sentPackets_;  // opcode -> stats
+    std::unordered_map<std::uint8_t, PacketStats> receivedPackets_;
+    mutable std::mutex statsMutex_;
 
    public:
     void setBanManager(std::shared_ptr<BanManager> bm) { banManager_ = bm; }
+
+    void printPacketStatistics() const;
+    void recordPacketSent(std::uint8_t opcode, std::size_t bytes);
+    void recordPacketReceived(std::uint8_t opcode, std::size_t bytes);
 };
 
 }  // namespace rtype::server

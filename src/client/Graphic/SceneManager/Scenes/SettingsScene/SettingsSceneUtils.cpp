@@ -231,10 +231,18 @@ std::string SettingsSceneUtils::actionToString(GameAction action) {
             return "Move Right";
         case GameAction::SHOOT:
             return "Shoot";
+        case GameAction::CHARGE_SHOT:
+            return "Charge Shot";
+        case GameAction::FORCE_POD:
+            return "Launch Pod";
         case GameAction::CHANGE_AMMO:
             return "Change Ammo";
         case GameAction::PAUSE:
             return "Pause";
+        case GameAction::TOGGLE_LOW_BANDWIDTH:
+            return "Toggle Low Bandwidth";
+        case GameAction::TOGGLE_CONSOLE:
+            return "Toggle Console";
         default:
             return "Unknown";
     }

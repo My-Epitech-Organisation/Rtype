@@ -9,6 +9,7 @@
 #include "CollisionSystem.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -23,6 +24,26 @@
 
 namespace rtype::games::rtype::server {
 
+static_assert(sizeof(ECS::Entity::id) == sizeof(std::uint32_t),
+              "Entity ID must be 32-bit for collision pair ID generation");
+
+/**
+ * @brief Generate a unique 64-bit collision pair ID from two entity IDs
+ * @details Uses bit-shifting to combine two 32-bit entity IDs into a single
+ * 64-bit value. The smaller ID is placed in the upper 32 bits to ensure
+ * consistent ordering.
+ * @param a First entity
+ * @param b Second entity
+ * @return Unique 64-bit collision pair identifier
+ */
+[[nodiscard]] inline constexpr std::uint64_t makeCollisionPairId(
+    ECS::Entity a, ECS::Entity b) noexcept {
+    const std::uint32_t id1 = std::min(a.id, b.id);
+    const std::uint32_t id2 = std::max(a.id, b.id);
+    return (static_cast<std::uint64_t>(id1) << 32) |
+           static_cast<std::uint64_t>(id2);
+}
+
 using shared::ActivePowerUpComponent;
 using shared::BoundingBoxComponent;
 using shared::CollisionPair;
@@ -31,8 +52,12 @@ using shared::DestroyTag;
 using shared::EnemyProjectileTag;
 using shared::EnemyTag;
 using shared::EntityType;
+using shared::ForcePodComponent;
+using shared::ForcePodState;
+using shared::ForcePodTag;
 using shared::HealthComponent;
 using shared::InvincibleTag;
+using shared::LaserBeamTag;
 using shared::NetworkIdComponent;
 using shared::ObstacleTag;
 using shared::PickupTag;
@@ -44,6 +69,7 @@ using shared::ProjectileOwner;
 using shared::ProjectileTag;
 using shared::QuadTreeSystem;
 using shared::TransformComponent;
+using shared::WeaponComponent;
 using shared::collision::overlaps;
 using shared::collision::Rect;
 
@@ -58,6 +84,9 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
     _quadTreeSystem->update(registry, deltaTime);
     auto collisionPairs = _quadTreeSystem->queryCollisionPairs(registry);
     ECS::CommandBuffer cmdBuffer(std::ref(registry));
+
+    _laserDamagedThisFrame.clear();
+    _obstacleCollidedThisFrame.clear();
 
     for (const auto& pair : collisionPairs) {
         ECS::Entity entityA = pair.entityA;
@@ -93,20 +122,41 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         bool bIsProjectile = registry.hasComponent<ProjectileTag>(entityB);
         bool aIsEnemy = registry.hasComponent<EnemyTag>(entityA);
         bool bIsEnemy = registry.hasComponent<EnemyTag>(entityB);
-        bool aIsPlayer = registry.hasComponent<PlayerTag>(entityA);
-        bool bIsPlayer = registry.hasComponent<PlayerTag>(entityB);
+        bool aIsForcePod = registry.hasComponent<ForcePodTag>(entityA);
+        bool bIsForcePod = registry.hasComponent<ForcePodTag>(entityB);
+        bool aIsPlayer =
+            registry.hasComponent<PlayerTag>(entityA) && !aIsForcePod;
+        bool bIsPlayer =
+            registry.hasComponent<PlayerTag>(entityB) && !bIsForcePod;
         bool aIsPickup = registry.hasComponent<PickupTag>(entityA);
         bool bIsPickup = registry.hasComponent<PickupTag>(entityB);
         bool aIsObstacle = registry.hasComponent<ObstacleTag>(entityA);
         bool bIsObstacle = registry.hasComponent<ObstacleTag>(entityB);
+        bool aIsLaser = registry.hasComponent<LaserBeamTag>(entityA);
+        bool bIsLaser = registry.hasComponent<LaserBeamTag>(entityB);
         bool aHasHealth = registry.hasComponent<HealthComponent>(entityA);
         bool bHasHealth = registry.hasComponent<HealthComponent>(entityB);
 
+        if (aIsForcePod && bIsPlayer) {
+            handleOrphanForcePodPickup(registry, cmdBuffer, entityA, entityB);
+            continue;
+        }
+        if (bIsForcePod && aIsPlayer) {
+            handleOrphanForcePodPickup(registry, cmdBuffer, entityB, entityA);
+            continue;
+        }
+
         if (aIsPickup && bIsPlayer) {
+            LOG_INFO(
+                "[CollisionSystem] Pickup-Player collision detected: pickup="
+                << entityA.id << " player=" << entityB.id);
             handlePickupCollision(registry, cmdBuffer, entityB, entityA);
             continue;
         }
         if (bIsPickup && aIsPlayer) {
+            LOG_INFO(
+                "[CollisionSystem] Player-Pickup collision detected: player="
+                << entityA.id << " pickup=" << entityB.id);
             handlePickupCollision(registry, cmdBuffer, entityA, entityB);
             continue;
         }
@@ -119,6 +169,17 @@ void CollisionSystem::update(ECS::Registry& registry, float deltaTime) {
         if (bIsObstacle && (aIsPlayer || aIsProjectile)) {
             handleObstacleCollision(registry, cmdBuffer, entityB, entityA,
                                     aIsPlayer);
+            continue;
+        }
+
+        if (aIsLaser && bIsEnemy) {
+            handleLaserEnemyCollision(registry, cmdBuffer, entityA, entityB,
+                                      deltaTime);
+            continue;
+        }
+        if (bIsLaser && aIsEnemy) {
+            handleLaserEnemyCollision(registry, cmdBuffer, entityB, entityA,
+                                      deltaTime);
             continue;
         }
 
@@ -179,6 +240,10 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
         return;
     }
 
+    if (isTargetPlayer && registry.hasComponent<InvincibleTag>(target)) {
+        return;
+    }
+
     LOG_DEBUG_CAT(::rtype::LogCategory::GameEngine,
                   "[CollisionSystem] Collision detected! Projectile "
                       << projectile.id << " hit target " << target.id
@@ -193,24 +258,25 @@ void CollisionSystem::handleProjectileCollision(ECS::Registry& registry,
                           << prevHealth << " -> " << health.current
                           << " (damage=" << damage << ")");
 
-        if (isTargetPlayer && _emitEvent &&
-            registry.hasComponent<NetworkIdComponent>(target)) {
+        if (_emitEvent && registry.hasComponent<NetworkIdComponent>(target)) {
             const auto& netId =
                 registry.getComponent<NetworkIdComponent>(target);
             if (netId.isValid()) {
-                LOG_DEBUG_CAT(
-                    ::rtype::LogCategory::GameEngine,
-                    "[CollisionSystem] Emitting EntityHealthChanged for player "
-                    "networkId="
-                        << netId.networkId << " health=" << health.current
-                        << "/" << health.max);
+                ::rtype::network::EntityType entityType =
+                    isTargetPlayer ? ::rtype::network::EntityType::Player
+                                   : ::rtype::network::EntityType::Bydos;
+                LOG_INFO("[CollisionSystem] Emitting EntityHealthChanged for "
+                         << (isTargetPlayer ? "player" : "enemy")
+                         << " networkId=" << netId.networkId
+                         << " health=" << health.current << "/" << health.max
+                         << " damage=" << damage);
                 engine::GameEvent event{};
                 event.type = engine::GameEventType::EntityHealthChanged;
                 event.entityNetworkId = netId.networkId;
-                event.entityType =
-                    static_cast<uint8_t>(::rtype::network::EntityType::Player);
+                event.entityType = static_cast<uint8_t>(entityType);
                 event.healthCurrent = health.current;
                 event.healthMax = health.max;
+                event.damage = damage;
                 _emitEvent(event);
             }
         }
@@ -251,16 +317,26 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                                             ECS::CommandBuffer& cmdBuffer,
                                             ECS::Entity player,
                                             ECS::Entity pickup) {
+    LOG_INFO("[CollisionSystem] handlePickupCollision called: player="
+             << player.id << " pickup=" << pickup.id);
+
     if (registry.hasComponent<DestroyTag>(pickup) ||
         registry.hasComponent<DestroyTag>(player)) {
+        LOG_INFO("[CollisionSystem] Entity already has DestroyTag, skipping");
         return;
     }
 
     if (!registry.hasComponent<PowerUpComponent>(pickup)) {
+        LOG_WARNING("[CollisionSystem] Pickup entity "
+                    << pickup.id << " missing PowerUpComponent!");
         return;
     }
 
     const auto& powerUp = registry.getComponent<PowerUpComponent>(pickup);
+
+    LOG_INFO("[CollisionSystem] PowerUp type="
+             << static_cast<int>(powerUp.type) << " duration="
+             << powerUp.duration << " magnitude=" << powerUp.magnitude);
 
     if (powerUp.type == shared::PowerUpType::None) {
         LOG_DEBUG_CAT(
@@ -271,12 +347,10 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
     }
 
     ActivePowerUpComponent* activePtr = nullptr;
+    bool wasShieldActive = false;
     if (registry.hasComponent<ActivePowerUpComponent>(player)) {
         auto& existing = registry.getComponent<ActivePowerUpComponent>(player);
-        if (existing.shieldActive &&
-            registry.hasComponent<shared::InvincibleTag>(player)) {
-            registry.removeComponent<shared::InvincibleTag>(player);
-        }
+        wasShieldActive = existing.shieldActive;
         if (existing.hasOriginalCooldown &&
             registry.hasComponent<shared::ShootCooldownComponent>(player)) {
             auto& cd =
@@ -288,6 +362,12 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
     } else {
         activePtr = &registry.emplaceComponent<ActivePowerUpComponent>(
             player, ActivePowerUpComponent{});
+    }
+
+    if (wasShieldActive &&
+        registry.hasComponent<shared::InvincibleTag>(player) &&
+        powerUp.type != shared::PowerUpType::Shield) {
+        registry.removeComponent<shared::InvincibleTag>(player);
     }
 
     auto& active = *activePtr;
@@ -334,6 +414,104 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
                     std::min(health.current + healthBoost, health.max);
             }
             break;
+        case shared::PowerUpType::ForcePod:
+            LOG_INFO("[CollisionSystem] Spawning Force Pod for player="
+                     << player.id);
+            if (registry.hasComponent<NetworkIdComponent>(player)) {
+                const auto& playerNetId =
+                    registry.getComponent<NetworkIdComponent>(player);
+                int existingPodCount = 0;
+                auto view =
+                    registry
+                        .view<shared::ForcePodTag, shared::ForcePodComponent>();
+                view.each([&existingPodCount, &playerNetId](
+                              ECS::Entity /*entity*/,
+                              const shared::ForcePodTag&,
+                              const shared::ForcePodComponent& podComp) {
+                    if (podComp.ownerNetworkId == playerNetId.networkId) {
+                        existingPodCount++;
+                    }
+                });
+
+                const float distance = 60.0F;
+                const std::vector<std::pair<float, float>> positions = {
+                    {0.0F, -distance},
+                    {0.0F, distance},
+                    {distance, 0.0F},
+                    {-distance, 0.0F},
+                    {distance * 0.7F, -distance * 0.7F},
+                    {distance * 0.7F, distance * 0.7F},
+                    {-distance * 0.7F, -distance * 0.7F},
+                    {-distance * 0.7F, distance * 0.7F}};
+
+                float offsetX = 0.0F;
+                float offsetY = 0.0F;
+                if (existingPodCount < static_cast<int>(positions.size())) {
+                    offsetX = positions[existingPodCount].first;
+                    offsetY = positions[existingPodCount].second;
+                } else {
+                    const float angle =
+                        2.0F * 3.14159265359F * existingPodCount / 8.0F;
+                    offsetX = distance * std::cos(angle);
+                    offsetY = distance * std::sin(angle);
+                }
+
+                LOG_INFO(
+                    "[CollisionSystem] Creating Force Pod entity with "
+                    "parentNetId="
+                    << playerNetId.networkId << " at position "
+                    << existingPodCount << " (offset: " << offsetX << ", "
+                    << offsetY << ")");
+
+                ECS::Entity forcePod = registry.spawnEntity();
+                registry.emplaceComponent<shared::ForcePodComponent>(
+                    forcePod, shared::ForcePodState::Attached, offsetX, offsetY,
+                    playerNetId.networkId);
+                registry.emplaceComponent<shared::PlayerTag>(forcePod);
+                registry.emplaceComponent<shared::ForcePodTag>(forcePod);
+                registry.emplaceComponent<TransformComponent>(forcePod, 0.0F,
+                                                              0.0F, 0.0F);
+                registry.emplaceComponent<BoundingBoxComponent>(forcePod, 32.0F,
+                                                                32.0F);
+
+                if (_emitEvent) {
+                    uint32_t forcePodNetId =
+                        playerNetId.networkId + 10000 + existingPodCount;
+                    registry.emplaceComponent<NetworkIdComponent>(
+                        forcePod, forcePodNetId);
+
+                    LOG_INFO(
+                        "[CollisionSystem] Emitting ForcePod spawn event: "
+                        "networkId="
+                        << forcePodNetId);
+
+                    engine::GameEvent evt{};
+                    evt.type = engine::GameEventType::EntitySpawned;
+                    evt.entityNetworkId = forcePodNetId;
+                    evt.entityType = 5;
+                    evt.x = 0.0F;
+                    evt.y = 0.0F;
+                    _emitEvent(evt);
+                }
+            } else {
+                LOG_INFO("[CollisionSystem] Player missing NetworkIdComponent");
+            }
+            break;
+        case shared::PowerUpType::LaserUpgrade:
+            LOG_INFO("[CollisionSystem] Applying LaserUpgrade for player="
+                     << player.id);
+            if (registry.hasComponent<WeaponComponent>(player)) {
+                auto& weapon = registry.getComponent<WeaponComponent>(player);
+                weapon.unlockSlot();
+                uint8_t newSlot = weapon.unlockedSlots - 1;
+                if (newSlot < shared::MAX_WEAPON_SLOTS) {
+                    weapon.weapons[newSlot] =
+                        shared::WeaponPresets::ContinuousLaser;
+                    LOG_INFO("[CollisionSystem] Laser weapon added to slot "
+                             << static_cast<int>(newSlot));
+                }
+            }
+            break;
         case shared::PowerUpType::None:
         default:
             break;
@@ -348,6 +526,11 @@ void CollisionSystem::handlePickupCollision(ECS::Registry& registry,
         evt.subType = static_cast<uint8_t>(powerUp.type);
         evt.duration = powerUp.duration;
         _emitEvent(evt);
+
+        LOG_INFO("[CollisionSystem] Emitted PowerUpApplied event: playerId="
+                 << netId.networkId
+                 << " type=" << static_cast<int>(powerUp.type)
+                 << " duration=" << powerUp.duration);
     }
 
     cmdBuffer.emplaceComponentDeferred<DestroyTag>(pickup, DestroyTag{});
@@ -363,17 +546,29 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
         return;
     }
 
+    const std::uint64_t collisionPairId = makeCollisionPairId(obstacle, other);
+
+    if (_obstacleCollidedThisFrame.find(collisionPairId) !=
+        _obstacleCollidedThisFrame.end()) {
+        return;
+    }
+    _obstacleCollidedThisFrame.insert(collisionPairId);
+
     int32_t damage = 15;
-    bool destroyObstacle = false;
+    bool destroyObstacleOnContact = false;
     if (registry.hasComponent<DamageOnContactComponent>(obstacle)) {
         const auto& dmgComp =
             registry.getComponent<DamageOnContactComponent>(obstacle);
         damage = dmgComp.damage;
-        destroyObstacle = dmgComp.destroySelf;
+        destroyObstacleOnContact = dmgComp.destroySelf;
     }
 
     if (otherIsPlayer) {
         if (registry.hasComponent<shared::InvincibleTag>(other)) {
+            if (destroyObstacleOnContact) {
+                cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle,
+                                                               DestroyTag{});
+            }
             return;
         }
         if (registry.hasComponent<HealthComponent>(other)) {
@@ -400,12 +595,24 @@ void CollisionSystem::handleObstacleCollision(ECS::Registry& registry,
         } else {
             cmdBuffer.emplaceComponentDeferred<DestroyTag>(other, DestroyTag{});
         }
+        if (destroyObstacleOnContact) {
+            cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle,
+                                                           DestroyTag{});
+        }
     } else {
+        bool isPlayerProjectile = false;
+        if (registry.hasComponent<PlayerProjectileTag>(other)) {
+            isPlayerProjectile = true;
+        } else if (registry.hasComponent<ProjectileComponent>(other)) {
+            const auto& projComp =
+                registry.getComponent<ProjectileComponent>(other);
+            isPlayerProjectile = (projComp.owner == ProjectileOwner::Player);
+        }
         cmdBuffer.emplaceComponentDeferred<DestroyTag>(other, DestroyTag{});
-    }
-
-    if (destroyObstacle) {
-        cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle, DestroyTag{});
+        if (isPlayerProjectile) {
+            cmdBuffer.emplaceComponentDeferred<DestroyTag>(obstacle,
+                                                           DestroyTag{});
+        }
     }
 }
 
@@ -461,6 +668,149 @@ void CollisionSystem::handleEnemyPlayerCollision(ECS::Registry& registry,
                                              << " destroyed on contact");
         cmdBuffer.emplaceComponentDeferred<DestroyTag>(enemy, DestroyTag{});
     }
+}
+
+void CollisionSystem::handleLaserEnemyCollision(ECS::Registry& registry,
+                                                ECS::CommandBuffer& cmdBuffer,
+                                                ECS::Entity laser,
+                                                ECS::Entity enemy,
+                                                float deltaTime) {
+    if (registry.hasComponent<DestroyTag>(laser) ||
+        registry.hasComponent<DestroyTag>(enemy)) {
+        return;
+    }
+
+    if (!registry.hasComponent<DamageOnContactComponent>(laser)) {
+        return;
+    }
+
+    auto& dmgComp = registry.getComponent<DamageOnContactComponent>(laser);
+
+    if (!dmgComp.isActive()) {
+        return;
+    }
+
+    if (!registry.hasComponent<HealthComponent>(enemy)) {
+        return;
+    }
+
+    uint32_t laserNetId = 0;
+    uint32_t enemyNetId = 0;
+
+    if (registry.hasComponent<NetworkIdComponent>(laser)) {
+        laserNetId = registry.getComponent<NetworkIdComponent>(laser).networkId;
+    }
+    if (registry.hasComponent<NetworkIdComponent>(enemy)) {
+        enemyNetId = registry.getComponent<NetworkIdComponent>(enemy).networkId;
+    }
+
+    uint64_t pairKey = (static_cast<uint64_t>(laserNetId) << 32) | enemyNetId;
+    if (_laserDamagedThisFrame.count(pairKey) > 0) {
+        return;
+    }
+    _laserDamagedThisFrame.insert(pairKey);
+
+    int32_t damage = dmgComp.calculateDamage(deltaTime);
+    auto& health = registry.getComponent<HealthComponent>(enemy);
+    int32_t prevHealth = health.current;
+    health.takeDamage(damage);
+
+    LOG_DEBUG("[CollisionSystem] Laser DPS hit enemy "
+              << enemy.id << ": " << prevHealth << " -> " << health.current
+              << " (damage=" << damage << ")");
+
+    if (_emitEvent && registry.hasComponent<NetworkIdComponent>(enemy)) {
+        const auto& netId = registry.getComponent<NetworkIdComponent>(enemy);
+        if (netId.isValid()) {
+            engine::GameEvent event{};
+            event.type = engine::GameEventType::EntityHealthChanged;
+            event.entityNetworkId = netId.networkId;
+            event.entityType =
+                static_cast<uint8_t>(::rtype::network::EntityType::Bydos);
+            event.healthCurrent = health.current;
+            event.healthMax = health.max;
+            event.damage = damage;
+            _emitEvent(event);
+        }
+    }
+
+    if (!health.isAlive()) {
+        LOG_DEBUG("[CollisionSystem] Enemy " << enemy.id
+                                             << " destroyed by laser");
+        cmdBuffer.emplaceComponentDeferred<DestroyTag>(enemy, DestroyTag{});
+    }
+}
+
+void CollisionSystem::handleOrphanForcePodPickup(ECS::Registry& registry,
+                                                 ECS::CommandBuffer& cmdBuffer,
+                                                 ECS::Entity forcePod,
+                                                 ECS::Entity player) {
+    if (!registry.hasComponent<ForcePodComponent>(forcePod)) {
+        return;
+    }
+
+    auto& podComp = registry.getComponent<ForcePodComponent>(forcePod);
+
+    if (podComp.state != ForcePodState::Orphan) {
+        return;
+    }
+
+    if (!registry.hasComponent<NetworkIdComponent>(player)) {
+        return;
+    }
+
+    const auto& playerNetId = registry.getComponent<NetworkIdComponent>(player);
+
+    LOG_INFO("[CollisionSystem] Player " << playerNetId.networkId
+                                         << " picking up orphan Force Pod "
+                                         << forcePod.id);
+
+    int existingPodCount = 0;
+    auto podView = registry.view<ForcePodTag, ForcePodComponent>();
+    podView.each([&existingPodCount, &playerNetId](
+                     ECS::Entity /*entity*/, const ForcePodTag&,
+                     const ForcePodComponent& comp) {
+        if (comp.ownerNetworkId == playerNetId.networkId &&
+            comp.state != ForcePodState::Orphan) {
+            existingPodCount++;
+        }
+    });
+
+    const float distance = 60.0F;
+    const std::vector<std::pair<float, float>> positions = {
+        {0.0F, -distance},
+        {0.0F, distance},
+        {distance, 0.0F},
+        {-distance, 0.0F},
+        {distance * 0.7F, -distance * 0.7F},
+        {distance * 0.7F, distance * 0.7F},
+        {-distance * 0.7F, -distance * 0.7F},
+        {-distance * 0.7F, distance * 0.7F}};
+
+    float offsetX = 0.0F;
+    float offsetY = 0.0F;
+    if (existingPodCount < static_cast<int>(positions.size())) {
+        offsetX = positions[existingPodCount].first;
+        offsetY = positions[existingPodCount].second;
+    } else {
+        const float angle = 2.0F * 3.14159265359F * existingPodCount / 8.0F;
+        offsetX = distance * std::cos(angle);
+        offsetY = distance * std::sin(angle);
+    }
+
+    podComp.adopt(playerNetId.networkId);
+    podComp.offsetX = offsetX;
+    podComp.offsetY = offsetY;
+
+    if (registry.hasComponent<shared::VelocityComponent>(forcePod)) {
+        auto& vel = registry.getComponent<shared::VelocityComponent>(forcePod);
+        vel.vx = 0.0F;
+        vel.vy = 0.0F;
+    }
+
+    LOG_INFO("[CollisionSystem] Force Pod adopted by player "
+             << playerNetId.networkId << " at position " << existingPodCount
+             << " (offset: " << offsetX << ", " << offsetY << ")");
 }
 
 }  // namespace rtype::games::rtype::server
